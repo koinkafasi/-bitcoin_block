@@ -29,7 +29,7 @@ Güvenlik hattı: [`guvenlik-hatti.md`](guvenlik-hatti.md)
 | Gerçek görsel + gerçek etiket | ✅ 119/179 görselli, 109 etiket |
 | `hreflang` + Organization/WebSite/NewsArticle JSON-LD | ✅ |
 | Sitemap + news sitemap + RSS + robots | ✅ |
-| Lighthouse bütçe kapısı | ✅ `make performans` |
+| Lighthouse bütçe kapısı | ✅ `make performans` — **perf 96 · SEO 100 · a11y 96 · BP 96**, LCP 1.4 s, CLS 0, TBT 0 ms |
 | **Kapsam dışı kalan görsel modüller** | ⏳ video, podcast, endeks, borsa tablosu |
 | EN dil | ⏳ |
 
