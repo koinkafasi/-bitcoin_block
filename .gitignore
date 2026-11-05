@@ -13,7 +13,11 @@ secrets/
 /bin/
 *.test
 *.out
-vendor/
+# DİKKAT: çıplak `vendor/` YAZILMAZ. Go'nun bağımlılık dizinini hedeflerken
+# `internal/webui/static/vendor/` (ikon sprite'ı, htmx, gsap) da eşleşir ve
+# statik varlıklar sessizce repo dışında kalır — 5 Kasım 2026'da CI'da
+# `TestIkonSprite…` testleri bu yüzden düştü. Yol açıkça yazılır.
+/go/vendor/
 
 # Node
 node_modules/
