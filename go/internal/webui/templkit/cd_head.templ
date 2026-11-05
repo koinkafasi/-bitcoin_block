@@ -1,0 +1,93 @@
+package templkit
+
+// CoinDesk sayfa başı (head) — TEK kaynak.
+//
+// Her sayfa bunu kullanır: <title>, meta description, canonical, hreflang,
+// Open Graph, tema rengi, preconnect ve Organization/WebSite JSON-LD.
+// Tekrar eden head bloğu, bir sayfada düzeltmenin diğerlerinde unutulması
+// demekti (theblock'ta yaşandı).
+
+// CDHead sayfa başı verisi.
+type CDHead struct {
+	Title     string
+	Desc      string
+	Canonical string
+	// OGType "website" | "article".
+	OGType string
+	// Image sosyal paylaşım görseli (mutlak URL, boş olabilir).
+	Image string
+	// Hreflang gerçek çeviriler: dil kodu → mutlak URL. Boşsa YALNIZ
+	// x-default basılır. Kural: çevirisi olmayan dil listelenmez
+	// (Google "aynı içerik" cezası).
+	Hreflang map[string]string
+	// SiteName Organization adı.
+	SiteName string
+	// RSSFeed besleme adresi (göreli).
+	RSSFeed string
+	// NoIndex arama/sayfalama gibi dizine girmemesi gereken sayfalar.
+	NoIndex bool
+}
+
+// templ func: haritayı sıralı basmak için sabit dil sırası.
+var cdDilSirasi = []string{"tr", "en", "de", "es", "ru", "fr", "ar"}
+
+templ cdHead(h CDHead) {
+	<meta charset="utf-8"/>
+	<meta name="viewport" content="width=device-width, initial-scale=1"/>
+	<title>{ h.Title }</title>
+	<meta name="description" content={ h.Desc }/>
+	<link rel="canonical" href={ h.Canonical }/>
+	if h.NoIndex {
+		<meta name="robots" content="noindex,follow"/>
+	}
+	<meta name="theme-color" content="#ffffff"/>
+
+	<!-- hreflang: yalnız GERÇEK çeviriler + x-default -->
+	for _, dil := range cdDilSirasi {
+		if url, ok := h.Hreflang[dil]; ok && url != "" {
+			<link rel="alternate" hreflang={ dil } href={ url }/>
+		}
+	}
+	<link rel="alternate" hreflang="x-default" href={ h.Canonical }/>
+
+	<meta property="og:site_name" content={ h.SiteName }/>
+	if h.OGType == "article" {
+		<meta property="og:type" content="article"/>
+	} else {
+		<meta property="og:type" content="website"/>
+	}
+	<meta property="og:title" content={ h.Title }/>
+	<meta property="og:description" content={ h.Desc }/>
+	<meta property="og:url" content={ h.Canonical }/>
+	if h.Image != "" {
+		<meta property="og:image" content={ h.Image }/>
+	}
+	<meta name="twitter:card" content="summary_large_image"/>
+
+	<!-- Görsel CDN'lerine erken bağlantı: LCP'yi ~50-100 ms iyileştirir -->
+	<link rel="preconnect" href="https://cdn.sanity.io" crossorigin="anonymous"/>
+	<link rel="preconnect" href="https://assets.coingecko.com" crossorigin="anonymous"/>
+
+	<link rel="stylesheet" href="/static/cd.css?v=1"/>
+	if h.RSSFeed != "" {
+		<link rel="alternate" type="application/rss+xml" title={ h.SiteName + " RSS" } href={ h.RSSFeed }/>
+	}
+
+	<script type="application/ld+json">
+	{
+		"@context": "https://schema.org",
+		"@graph": [
+			{
+				"@type": "Organization",
+				"name": {{ templ.JSONString(h.SiteName) }},
+				"url": {{ templ.JSONString(h.Canonical) }}
+			},
+			{
+				"@type": "WebSite",
+				"name": {{ templ.JSONString(h.SiteName) }},
+				"url": {{ templ.JSONString(h.Canonical) }}
+			}
+		]
+	}
+	</script>
+}

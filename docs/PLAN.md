@@ -17,14 +17,21 @@ Güvenlik hattı: [`guvenlik-hatti.md`](guvenlik-hatti.md)
 | `~/bitcosar` deposu, `main`, CI | ✅ |
 | Güvenlik hattı (6 kapı, tek betik) | ✅ |
 | `demo.bitcosar.com` → Tunnel → WSL | ✅ |
-| theblock kodu taşındı (`go/` 1.881 dosya, derleniyor) | ✅ |
-| Ayrı PostgreSQL (`bitcosar-pg`, :5434) + 111 migration | ✅ |
+| theblock kodu taşındı (`go/`, derleniyor + testler geçiyor) | ✅ |
+| Ayrı PostgreSQL (`bitcosar-pg`, :5434) | ✅ |
 | CoinDesk taksonomisi (`0110`) | ✅ 16 bölüm |
-| Kripto kaynak seed'i (`0111`) | ✅ 32 kaynak (22 aktif) |
-| Go uygulaması `demo.bitcosar.com`'da | ✅ 47 ms TTFB |
-| **CoinDesk tasarımı** | ⏳ sıradaki |
-| Kripto içerik toplama hattı (adaptörler) | ⏳ |
-| AI özet/çeviri | ⏳ |
+| Kripto kaynak seed'i (`0111`) | ✅ 32 kaynak |
+| CoinDesk tasarım sistemi (`cd.css` + kabuk) | ✅ |
+| **Ana sayfa: 23 modülün çekirdeği** | ✅ §3, §5, §8, §13, §14, §20, §21, §22 |
+| **Makale sayfası (§7)** | ✅ breadcrumb, görsel, kaynak atfı, etiket, ilgili |
+| **Bölüm sayfaları (§8)** | ✅ /markets /business /tech /policy … |
+| **`/price` + fiyat şeridi** | ✅ CoinGecko, 60 sn önbellek |
+| Gerçek görsel + gerçek etiket | ✅ 119/179 görselli, 109 etiket |
+| `hreflang` + Organization/WebSite/NewsArticle JSON-LD | ✅ |
+| Sitemap + news sitemap + RSS + robots | ✅ |
+| Lighthouse bütçe kapısı | ✅ `make performans` |
+| **Kapsam dışı kalan görsel modüller** | ⏳ video, podcast, endeks, borsa tablosu |
+| EN dil | ⏳ |
 
 ---
 

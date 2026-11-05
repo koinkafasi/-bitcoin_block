@@ -14,9 +14,22 @@ guvenlik-rapor: ## Güvenlik taraması, yalnız rapor (kırmaz)
 guvenlik-imaj: ## Kap imajlarını derle ve tara
 	@bash deploy/scripts/guvenlik-tara.sh --imaj
 
+performans: ## Lighthouse bütçesi (perf/SEO/a11y/best-practices)
+	@bash deploy/scripts/lighthouse-kapi.sh
+
+performans-rapor: ## Lighthouse, yalnız rapor (kırmaz)
+	@bash deploy/scripts/lighthouse-kapi.sh --rapor
+
+derle: ## Site binary'sini derle
+	@cd go && CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o bin/site ./cmd/site
+
+templ: ## templ şablonlarını üret
+	@go run github.com/a-h/templ/cmd/templ@v0.3.1070 generate
+
 tunnel-durum: ## demo.bitcosar.com tünelinin durumu
 	@systemctl --user --no-pager --lines=0 status bitcosar-tunnel.service || true
 	@curl -sS -o /dev/null -w 'https://demo.bitcosar.com → HTTP %{http_code}\n' \
 	  --max-time 15 https://demo.bitcosar.com/ || true
 
-.PHONY: yardim guvenlik-tara guvenlik-rapor guvenlik-imaj tunnel-durum
+.PHONY: yardim guvenlik-tara guvenlik-rapor guvenlik-imaj performans \
+        performans-rapor derle templ tunnel-durum

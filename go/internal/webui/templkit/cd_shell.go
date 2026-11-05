@@ -94,6 +94,14 @@ func cdSiraya(i int) string {
 	return strconv.Itoa(i + 1)
 }
 
+// cdOkumaMetni okuma süresi metni.
+func cdOkumaMetni(dk int) string {
+	if dk <= 0 {
+		dk = 1
+	}
+	return strconv.Itoa(dk) + " dk okuma"
+}
+
 // cdSlug sembolü fiyat yolu parçasına çevirir (BTC → btc).
 func cdSlug(sym string) string {
 	out := make([]rune, 0, len(sym))

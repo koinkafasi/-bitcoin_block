@@ -264,6 +264,8 @@ func (s *Server) routes() {
 	// Eski (theblock) düzeni karşılaştırma için korunur.
 	s.mux.HandleFunc("GET /klasik", s.handleHome)
 	s.mux.HandleFunc("GET /cd", s.handleCDHome)
+	// CoinDesk fiyat sayfası (§14).
+	s.mux.HandleFunc("GET /price", s.handleCDPrice)
 	// CoinDesk bölüm adresleri (§4): /markets, /business, /tech, /policy …
 	// Tek segment; slug closure ile sabitlenir (mux PathValue literal
 	// desende boş döner — bu tuzak canlı testte yakalandı).

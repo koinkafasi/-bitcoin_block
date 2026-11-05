@@ -1,0 +1,39 @@
+package templkit
+
+// CoinDesk fiyat sayfası (§14).
+
+// CDPricePage /price sayfasının verisidir.
+type CDPricePage struct {
+	Shell     CDShell
+	Title     string
+	Desc      string
+	Canonical string
+	Rows      []CDPriceRow
+}
+
+templ CDPricePageView(v CDPricePage) {
+	<!doctype html>
+	<html lang="tr">
+		<head>
+			@cdHead(CDHead{Title: v.Title, Desc: v.Desc, Canonical: v.Canonical,
+				OGType: "website", SiteName: v.Shell.SiteName, RSSFeed: "/rss.xml"})
+		</head>
+		<body class="cd">
+			@cdTopbar(v.Shell)
+			@cdTicker(v.Shell)
+			<main class="cd-wrap">
+				<header class="cd-section-title">
+					<h1>Kripto Fiyatları</h1>
+					<p class="cd-card__spot">{ v.Desc }</p>
+				</header>
+				<section class="cd-mod">
+					@cdPriceTable("Piyasa değerine göre", v.Rows)
+				</section>
+				if len(v.Rows) == 0 {
+					<p class="cd-card__spot">Fiyat verisi şu an alınamıyor; birkaç dakika sonra yeniden deneyin.</p>
+				}
+			</main>
+			@cdFooter(v.Shell)
+		</body>
+	</html>
+}

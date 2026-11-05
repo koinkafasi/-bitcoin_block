@@ -136,14 +136,9 @@ templ CDHome(v CDHomeView) {
 	<!doctype html>
 	<html lang="tr">
 		<head>
-			<meta charset="utf-8"/>
-			<meta name="viewport" content="width=device-width, initial-scale=1"/>
-			<title>{ v.Title }</title>
-			<meta name="description" content={ v.Desc }/>
-			<link rel="canonical" href={ v.Canonical }/>
-			<meta name="theme-color" content="#ffffff"/>
-			<link rel="stylesheet" href="/static/cd.css?v=1"/>
-			<link rel="alternate" type="application/rss+xml" title="bitcosar RSS" href="/rss.xml"/>
+			@cdHead(CDHead{Title: v.Title, Desc: v.Desc, Canonical: v.Canonical,
+				OGType: "website", Image: v.Lead.Image, Hreflang: v.Hreflang,
+				SiteName: v.Shell.SiteName, RSSFeed: "/rss.xml"})
 		</head>
 		<body class="cd">
 			@cdTopbar(v.Shell)

@@ -264,7 +264,26 @@
 .cd-table .num { text-align: right; }
 
 /* ---------------------------------------------------------------- makale */
+.cd-crumbs {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  font-size: 0.78rem;
+  color: var(--cd-muted);
+  padding: 16px 0 0;
+}
+.cd-crumbs a { color: var(--cd-link); }
+
 .cd-article { max-width: 720px; margin: 0 auto; }
+.cd-article h1 { margin: 8px 0 12px; }
+.cd-article__spot {
+  font-size: 1.1rem;
+  line-height: 1.55;
+  color: var(--cd-muted-strong);
+  margin: 0 0 16px;
+}
+.cd-article__cover { margin: 20px 0; }
+.cd-article__cover img { width: 100%; border-radius: var(--cd-radius); }
 .cd-article__meta {
   display: flex;
   flex-wrap: wrap;
@@ -344,6 +363,108 @@
 .cd-mod { margin-top: var(--cd-section-gap); }
 .cd-mod--tight { margin-top: 24px; }
 
+/* ---------------------------------------------------------------- bölüm bloğu (§22) */
+/* CoinDesk deseni: solda 1 büyük görselli haber + 2 alt başlık,
+   sağda 3 satır başlık. Izgara, gölge yok, ayırıcı çizgi. */
+.cd-block {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 28px;
+  align-items: start;
+}
+.cd-block__lead { display: flex; flex-direction: column; gap: 16px; }
+.cd-block__sub {
+  padding-top: 12px;
+  border-top: 1px solid var(--cd-border);
+}
+.cd-block__subtitle {
+  display: block;
+  font-size: 0.98rem;
+  font-weight: 700;
+  line-height: 1.35;
+}
+.cd-block__rows {
+  display: flex;
+  flex-direction: column;
+  border-left: 1px solid var(--cd-border);
+  padding-left: 20px;
+}
+.cd-block__row {
+  padding: 10px 0;
+  border-bottom: 1px solid var(--cd-border);
+  font-size: 0.9rem;
+  font-weight: 600;
+  line-height: 1.35;
+}
+.cd-block__row:last-child { border-bottom: 0; }
+
+/* ---------------------------------------------------------------- en çok okunan (§21) */
+.cd-most {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  align-items: start;
+}
+.cd-most__list { margin: 0; padding: 0; list-style: none; }
+.cd-most__item {
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--cd-border);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+.cd-most__item:last-child { border-bottom: 0; }
+.cd-most__rank {
+  flex: none;
+  width: 20px;
+  color: var(--cd-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------------------------------------------------------------- görüş (§20) */
+.cd-opinion { display: flex; flex-direction: column; }
+.cd-opinion__row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--cd-border);
+}
+.cd-opinion__row:last-child { border-bottom: 0; }
+.cd-opinion__avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  object-fit: cover;
+  flex: none;
+}
+.cd-opinion__title { display: block; font-size: 0.95rem; font-weight: 700; line-height: 1.35; }
+
+/* ---------------------------------------------------------------- bölüm başlığı (§8) */
+.cd-section-title { padding: 24px 0 8px; border-bottom: 2px solid var(--cd-fg); }
+.cd-section-title h1 { margin: 0 0 6px; }
+.cd-section-title .cd-card__spot { margin: 0 0 10px; }
+
+/* ---------------------------------------------------------------- sayfalama */
+.cd-pager {
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  margin: 32px 0 8px;
+}
+
+/* ---------------------------------------------------------------- promo (§3) */
+.cd-promo {
+  margin-top: 16px;
+  padding: 14px 18px;
+  border: 1px solid var(--cd-border);
+  background: var(--cd-surface-soft);
+  font-size: 0.85rem;
+  color: var(--cd-muted-strong);
+}
+
 /* Reklam yuvası: düzen kayması olmasın diye yükseklik ayrılır (CLS). */
 .cd-ad {
   min-height: 250px;
@@ -361,6 +482,9 @@
   .cd-hero { grid-template-columns: 1fr; gap: 24px; }
   .cd-grid--4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .cd-footer__cols { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .cd-block { grid-template-columns: 1fr; gap: 20px; }
+  .cd-block__rows { border-left: 0; padding-left: 0; border-top: 1px solid var(--cd-border); }
+  .cd-most { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 720px) {

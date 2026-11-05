@@ -110,29 +110,22 @@ func (s *Server) handleCDHome(w http.ResponseWriter, r *http.Request) {
 	}
 
 	d := templkit.CDHomeView{
-		Shell: templkit.CDShell{
-			SiteName:   s.siteName,
-			SearchHref: "/arama",
-			Locale:     "tr",
-			Nav: []templkit.CDNavLink{
-				{Label: "Son Haberler", Href: "/latest-crypto-news"},
-				{Label: "Markets", Href: "/markets"},
-				{Label: "Finance", Href: "/business"},
-				{Label: "Tech", Href: "/tech"},
-				{Label: "Policy", Href: "/policy"},
-				{Label: "Görüş", Href: "/opinion"},
-				{Label: "Fiyatlar", Href: "/price"},
-				{Label: "Video", Href: "/videos"},
-			},
-		},
+		Shell:     s.cdShell(""),
 		Title:     s.siteName + " — Kripto Haberleri ve Piyasa Verisi",
 		Desc:      "Bitcoin, Ethereum ve kripto piyasalarından son haberler, analizler ve canlı fiyatlar.",
 		Canonical: s.cfg.BaseURL + r.URL.Path,
 		Lead:      lead,
 		Side:      side,
 		Latest:    latest,
+		Prices:    s.cdFiyatSatirlari(r, 10),
 		Sections:  sections,
+		// hreflang: yalnız GERÇEK diller. Şu an içerik Türkçe; EN içerik
+		// üretildiğinde buraya eklenecek (çevirisi olmayan dili yazmak
+		// Google'da "aynı içerik" cezası riski).
+		Hreflang: map[string]string{"tr": s.cfg.BaseURL + "/"},
 	}
+	// Fiyat şeridi (§3) — veri yoksa boş kalır, şablon basmaz.
+	d.Shell.Ticker = s.cdTickerDoldur(r)
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.Header().Set("Cache-Control", cacheControlPublic)

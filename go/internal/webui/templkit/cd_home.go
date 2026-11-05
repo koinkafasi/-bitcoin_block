@@ -61,6 +61,9 @@ type CDHomeView struct {
 	Opinion  []CDStory    // §20 — yazar avatarlı
 	Prices   []CDPriceRow // §14
 	Sections []CDSection
+	// Hreflang gerçek çeviriler (dil → mutlak URL). Yalnız çevirisi
+	// olanlar; boşsa x-default basılır.
+	Hreflang map[string]string
 }
 
 // CDArticleView makale sayfası (§7).

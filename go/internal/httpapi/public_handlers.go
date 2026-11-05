@@ -387,7 +387,9 @@ func (s *Server) handlePublicSegment(w http.ResponseWriter, r *http.Request) {
 		id := articleIDFromSegment(seg)
 		slug := articleSlugFromSegment(seg)
 		if id > 0 {
-			s.handleArticle(w, r, lang, slug, id, false)
+			// CoinDesk makale şablonu (§7). Eski theblock makalesi
+			// /klasik/{slug}-{id} altında korunur (karşılaştırma için).
+			s.handleCDArticle(w, r, lang, slug, id)
 			return
 		}
 		// Kök adresli kurumsal sayfa (Faz 143): /kullanim-kosullari gibi.

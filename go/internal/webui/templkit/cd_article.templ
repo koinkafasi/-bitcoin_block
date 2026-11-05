@@ -1,0 +1,119 @@
+package templkit
+
+// CoinDesk makale sayfası (§7) — birebir yapı:
+//
+//	breadcrumb → kicker (bölüm) → H1 → spot → yazar/tarih/okuma →
+//	kapak görseli → gövde (tek sütun, 720 px) → kaynak atfı (ZORUNLU) →
+//	etiketler → ilgili haberler → önceki/sonraki.
+//
+// JS yok. Gövde sunucuda üretilmiş güvenilir HTML'dir (blok motoru).
+
+templ CDArticle(v CDArticleView) {
+	<!doctype html>
+	<html lang="tr">
+		<head>
+			@cdHead(CDHead{Title: v.Title, Desc: v.Desc, Canonical: v.Canonical,
+				OGType: "article", Image: v.Image, SiteName: v.Shell.SiteName})
+			<!-- NewsArticle yapısal verisi: Google Haber için zorunlu alanlar -->
+			@cdArticleJSONLD(v)
+		</head>
+		<body class="cd">
+			@cdTopbar(v.Shell)
+			@cdTicker(v.Shell)
+			<main class="cd-wrap">
+				<nav class="cd-crumbs" aria-label="Konum">
+					<a href="/">Ana sayfa</a>
+					<span>/</span>
+					<a href={ v.SectionHref }>{ v.SectionName }</a>
+				</nav>
+				<article class="cd-article">
+					<span class="cd-kicker">{ v.Kicker }</span>
+					<h1>{ v.Headline }</h1>
+					if v.Spot != "" {
+						<p class="cd-article__spot">{ v.Spot }</p>
+					}
+					<div class="cd-article__meta">
+						<span>{ v.Author }</span>
+						if v.PublishedAt != "" {
+							<span>·</span>
+							<span>{ v.PublishedAt }</span>
+						}
+						<span>·</span>
+						<span>{ cdOkumaMetni(v.ReadMinutes) }</span>
+					</div>
+					if v.Image != "" {
+						<figure class="cd-article__cover">
+							<img src={ v.Image } alt="" referrerpolicy="no-referrer" loading="eager"/>
+							if v.ImageCredit != "" {
+								<figcaption>{ v.ImageCredit }</figcaption>
+							}
+						</figure>
+					}
+					<div class="cd-article__body">
+						@templ.Raw(v.BodyHTML)
+					</div>
+
+					<!-- Kaynak atfı: toplayıcı sitede ZORUNLU ve görünür -->
+					if v.SourceName != "" {
+						<div class="cd-source">
+							<strong>Kaynak:</strong>
+							if v.SourceURL != "" {
+								<a href={ v.SourceURL } rel="nofollow noopener" target="_blank">{ v.SourceName }</a>
+							} else {
+								<span>{ v.SourceName }</span>
+							}
+							<span> — bu içerik özet ve atıf ile sunulur; tam metin kaynağındadır.</span>
+						</div>
+					}
+
+					if len(v.Tags) > 0 {
+						<div class="cd-tags">
+							for _, t := range v.Tags {
+								<a class="cd-tag" href={ "/tag/" + t.Slug }>{ t.Ad }</a>
+							}
+						</div>
+					}
+				</article>
+
+				if len(v.Related) > 0 {
+					<section class="cd-mod">
+						@cdSectionHead("İlgili Haberler", v.SectionHref)
+						<div class="cd-grid cd-grid--3">
+							for _, s := range v.Related {
+								@cdCard(s, false)
+							}
+						</div>
+					</section>
+				}
+
+				<nav class="cd-pager" aria-label="Haber gezinmesi">
+					if v.PrevHref != "" {
+						<a class="cd-btn cd-btn--ghost" href={ v.PrevHref }>← { v.PrevTitle }</a>
+					}
+					if v.NextHref != "" {
+						<a class="cd-btn cd-btn--ghost" href={ v.NextHref }>{ v.NextTitle } →</a>
+					}
+				</nav>
+			</main>
+			@cdFooter(v.Shell)
+		</body>
+	</html>
+}
+
+// cdArticleJSONLD NewsArticle yapısal verisi.
+templ cdArticleJSONLD(v CDArticleView) {
+	<script type="application/ld+json">
+	{
+		"@context": "https://schema.org",
+		"@type": "NewsArticle",
+		"headline": {{ templ.JSONString(v.Headline) }},
+		"description": {{ templ.JSONString(v.Desc) }},
+		"url": {{ templ.JSONString(v.Canonical) }},
+		"mainEntityOfPage": {{ templ.JSONString(v.Canonical) }},
+		"articleSection": {{ templ.JSONString(v.SectionName) }},
+		"author": {"@type": "Organization", "name": {{ templ.JSONString(v.Author) }}},
+		"publisher": {"@type": "Organization", "name": {{ templ.JSONString(v.Shell.SiteName) }}}
+		{{ if v.Image != "" }}, "image": [{{ templ.JSONString(v.Image) }}]{{ end }}
+	}
+	</script>
+}
