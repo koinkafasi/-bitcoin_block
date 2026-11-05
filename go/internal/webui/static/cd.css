@@ -574,3 +574,27 @@
   overflow: hidden; clip: rect(0 0 0 0);
   white-space: nowrap; border: 0;
 }
+
+/* ---------------------------------------------------------------- paylasim + yazar kutusu */
+.cd-article__paylas {
+  margin-left: auto;
+  display: inline-flex;
+  gap: 12px;
+}
+.cd-article__paylas a {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--cd-link);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.cd-yazar {
+  margin-top: 28px;
+  padding: 16px 18px;
+  border-top: 1px solid var(--cd-border);
+  border-bottom: 1px solid var(--cd-border);
+  font-size: 0.85rem;
+  color: var(--cd-muted-strong);
+}
+.cd-yazar strong { display: block; margin-bottom: 6px; color: var(--cd-fg); font-size: 0.95rem; }
+.cd-yazar p { margin: 0; line-height: 1.6; }

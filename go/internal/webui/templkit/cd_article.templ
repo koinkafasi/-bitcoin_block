@@ -39,6 +39,11 @@ templ CDArticle(v CDArticleView) {
 						}
 						<span>·</span>
 						<span>{ cdOkumaMetni(v.ReadMinutes) }</span>
+						<span class="cd-article__paylas">
+							<a href={ templ.SafeURL(v.ShareX) } rel="nofollow noopener" target="_blank" aria-label="X'te paylaş">X</a>
+							<a href={ templ.SafeURL(v.ShareWhatsApp) } rel="nofollow noopener" target="_blank" aria-label="WhatsApp'ta paylaş">WhatsApp</a>
+							<a href={ templ.SafeURL(v.ShareLinkedIn) } rel="nofollow noopener" target="_blank" aria-label="LinkedIn'de paylaş">LinkedIn</a>
+						</span>
 					</div>
 					if v.Image != "" {
 						<figure class="cd-article__cover">
@@ -72,6 +77,18 @@ templ CDArticle(v CDArticleView) {
 							}
 						</div>
 					}
+
+					<!-- Yazar kutusu + editör politikası (E-E-A-T sinyali).
+					     CoinDesk'te makale altında "Disclosure" kutusu var;
+					     toplayıcı sitede karşılığı KAYNAK + ŞEFFAFLIK kutusu. -->
+					<div class="cd-yazar">
+						<strong>{ v.Author }</strong>
+						<p>
+							Bu içerik, kaynağında yayımlanan haberin özetidir; tam metin
+							kaynağa aittir ve yukarıda bağlantısı verilmiştir. Düzeltme
+							talepleri için <a href="/iletisim">iletişim</a>.
+						</p>
+					</div>
 				</article>
 
 				if len(v.Related) > 0 {

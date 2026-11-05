@@ -17,6 +17,8 @@ type CDStory struct {
 	SourceURL string
 	Kicker    string
 	Tags      []string
+	// Paylasim/sosyal: makale altindaki dugmeler icin.
+	ShareURL string
 }
 
 // CDSection ana sayfadaki bölüm bloğu (Markets / Finance / Tech / Policy).
@@ -98,6 +100,12 @@ type CDArticleView struct {
 	BaseURL string
 	// JSONLD Go tarafında üretilmiş NewsArticle + BreadcrumbList.
 	JSONLD string
+	// ShareURL paylaşım bağlantıları için mutlak adres.
+	ShareURL string
+	// ShareX / ShareWhatsApp / ShareLinkedIn hazır paylaşım adresleri.
+	ShareX        string
+	ShareWhatsApp string
+	ShareLinkedIn string
 }
 
 // CDTag makale etiketi.

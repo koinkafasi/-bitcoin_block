@@ -2,6 +2,7 @@ package httpapi
 
 import (
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 	"unicode/utf8"
@@ -121,6 +122,13 @@ func (s *Server) handleCDArticle(w http.ResponseWriter, r *http.Request, lang, s
 
 	// NewsArticle + BreadcrumbList (Go tarafında; templ script içini ham sayar).
 	v.JSONLD = string(makaleJSONLD(v, makaleYayinISO(c)))
+
+	// Paylaşım bağlantıları: mutlak adres + başlık (URL-encoded).
+	v.ShareURL = v.Canonical
+	v.ShareX = "https://twitter.com/intent/tweet?url=" + url.QueryEscape(v.Canonical) +
+		"&text=" + url.QueryEscape(c.Title)
+	v.ShareWhatsApp = "https://wa.me/?text=" + url.QueryEscape(c.Title+" "+v.Canonical)
+	v.ShareLinkedIn = "https://www.linkedin.com/sharing/share-offsite/?url=" + url.QueryEscape(v.Canonical)
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.Header().Set("Cache-Control", cacheControlPublic)
