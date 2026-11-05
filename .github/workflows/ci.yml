@@ -79,15 +79,18 @@ jobs:
           set -euo pipefail
           D=$([ -f go/go.mod ] && echo go || echo .)
           cd "$D"
-          # Teşhis: gofmt kırmızıysa sürüm ve FARK basılır. Yalnız dosya
-          # adı görmek "yerelde temiz, CI'da değil" durumunu çözümsüz
-          # bırakıyordu (5 Kasım 2026: sürüm farkı).
-          go version
-          command -v gofmt
-          if [ -n "$(gofmt -l .)" ]; then
+          # gofmt'u TOOLCHAIN GOROOT'undan sabitle: PATH'teki `gofmt`
+          # runner'ın önceden kurulu Go'suna düşebiliyor ve sürüm farkı
+          # yüzünden "yerelde temiz, CI'da kirli" üretiyordu
+          # (5 Kasım 2026: 1.27.3 gofmt temiz, PATH'teki gofmt iki dosyayı
+          #  kirli saydı). GOROOT her zaman go.mod'daki toolchain'e eşit.
+          GF="$(go env GOROOT)/bin/gofmt"
+          echo "gofmt: $GF"
+          "$GF" -l . || true
+          if [ -n "$("$GF" -l .)" ]; then
             echo "::error::gofmt gerektiren dosyalar:"
-            gofmt -l .
-            gofmt -d . || true
+            "$GF" -l .
+            "$GF" -d . || true
             exit 1
           fi
           go vet ./...
