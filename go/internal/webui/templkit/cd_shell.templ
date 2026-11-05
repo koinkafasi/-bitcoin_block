@@ -53,15 +53,7 @@ templ cdTopbar(s CDShell) {
 		<div class="cd-wrap">
 			<div class="cd-topbar__inner">
 				@cdLogoMark(s.SiteName)
-				<nav class="cd-nav" aria-label="Ana menü">
-					for _, l := range s.Nav {
-						if l.Active {
-							<a class="cd-nav__link" href={ l.Href } aria-current="page">{ l.Label }</a>
-						} else {
-							<a class="cd-nav__link" href={ l.Href }>{ l.Label }</a>
-						}
-					}
-				</nav>
+				@cdMegaNav(s)
 				<div class="cd-topbar__actions">
 					<a class="cd-btn cd-btn--ghost" href={ s.SearchHref } aria-label="Ara">Ara</a>
 					if len(s.Diller) > 1 {

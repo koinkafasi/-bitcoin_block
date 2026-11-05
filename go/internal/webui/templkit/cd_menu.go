@@ -163,28 +163,8 @@ func cdMenuAktif(nav []CDNavLink, href string) bool {
 	}
 	for _, l := range nav {
 		if !l.Active || l.Href == "" {
-			continue		}
-		if l.Href == href || strings.HasSuffix(l.Href, href) {
-			return true
+			continue
 		}
-	}
-	return false
-}
-
-// cdMenuAktif, üst başlığın aktif olup olmadığını s.Nav'dan türetir.
-//
-// CDShell'de "geçerli yol" alanı yok; aktiflik, handler'ın s.Nav içinde
-// işaretlediği bağlantıdan okunur. Böylece mega menü, CDShell'e yeni alan
-// eklemeden ve handler'lara dokunmadan mevcut aria-current davranışını
-// korur. Karşılaştırma son ek üzerinden: s.Nav yolları dil ön eki
-// taşıyabilir ("/tr/markets"), menü tanımı taşımaz ("/markets").
-func cdMenuAktif(nav []CDNavLink, href string) bool {
-	if href == "" {
-		return false
-	}
-	for _, l := range nav {
-		if !l.Active || l.Href == "" {
-			continue		}
 		if l.Href == href || strings.HasSuffix(l.Href, href) {
 			return true
 		}

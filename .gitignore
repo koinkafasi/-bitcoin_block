@@ -41,3 +41,9 @@ Thumbs.db
 .trivy-cache/
 gosec-report.json
 semgrep.sarif
+
+# WSL/Windows yol karismasi: bir betik Windows yolunu TMPDIR sanip
+# depo kokunde "C:\Users\..." adli dizin acabiliyor (Lighthouse Chrome
+# profili boyle 40 MB cop birakmisti). Desen, tekrarini gorunmez kilmaz
+# ama commit edilmesini onler.
+C:\\Users\\*
