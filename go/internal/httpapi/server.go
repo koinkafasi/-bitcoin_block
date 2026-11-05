@@ -264,6 +264,14 @@ func (s *Server) routes() {
 	// Eski (theblock) düzeni karşılaştırma için korunur.
 	s.mux.HandleFunc("GET /klasik", s.handleHome)
 	s.mux.HandleFunc("GET /cd", s.handleCDHome)
+	// CoinDesk bölüm adresleri (§4): /markets, /business, /tech, /policy …
+	// Tek segment; slug closure ile sabitlenir (mux PathValue literal
+	// desende boş döner — bu tuzak canlı testte yakalandı).
+	for _, b := range []string{"markets", "business", "tech", "policy", "opinion",
+		"news-analysis", "latest-crypto-news", "focus", "research",
+		"press-release", "videos", "podcasts"} {
+		s.mux.HandleFunc("GET /"+b, s.cdBolumHandler(b))
+	}
 	s.mux.HandleFunc("GET /robots.txt", s.handleRobots)
 	// Takım logoları kendi altyapımızdan servis edilir (bkz. teamlogo_handlers.go).
 	s.mux.HandleFunc("GET /takim-logo/{key}", s.handleTeamLogo)

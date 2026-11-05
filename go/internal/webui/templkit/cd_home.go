@@ -105,6 +105,7 @@ type CDSectionPage struct {
 	Section   string
 	Href      string
 	Lead      CDStory
+	Side      []CDStory
 	Stories   []CDStory
 	MostRead  []CDStory
 	Page      int

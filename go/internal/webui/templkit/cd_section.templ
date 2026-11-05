@@ -1,0 +1,71 @@
+package templkit
+
+// CoinDesk bölüm sayfası (§8).
+//
+// Yapı: H1 bölüm adı + tek satır açıklama → öne çıkan (1 büyük görselli) →
+// kart ızgarası → sağ ray yok (Faz 1 sade; sayfalama altta).
+// JS yok.
+
+templ CDSectionPageView(v CDSectionPage) {
+	<!doctype html>
+	<html lang="tr">
+		<head>
+			<meta charset="utf-8"/>
+			<meta name="viewport" content="width=device-width, initial-scale=1"/>
+			<title>{ v.Title }</title>
+			<meta name="description" content={ v.Desc }/>
+			<link rel="canonical" href={ v.Canonical }/>
+			<meta name="theme-color" content="#ffffff"/>
+			<link rel="stylesheet" href="/static/cd.css?v=1"/>
+			<link rel="alternate" type="application/rss+xml" title="bitcosar RSS" href="/rss.xml"/>
+		</head>
+		<body class="cd">
+			@cdTopbar(v.Shell)
+			@cdTicker(v.Shell)
+			<main class="cd-wrap">
+				<header class="cd-section-title">
+					<h1>{ v.Section }</h1>
+					<p class="cd-card__spot">{ v.Desc }</p>
+				</header>
+
+				if v.Lead.Href != "" {
+					<section class="cd-mod">
+						<div class="cd-hero">
+							@cdCard(v.Lead, true)
+							<div class="cd-hero__side">
+								for _, s := range v.Side {
+									@cdCard(s, false)
+								}
+							</div>
+						</div>
+					</section>
+				}
+
+				if len(v.Stories) > 0 {
+					<section class="cd-mod">
+						@cdSectionHead("Son Haberler", "")
+						<div class="cd-grid cd-grid--3">
+							for _, s := range v.Stories {
+								@cdCard(s, false)
+							}
+						</div>
+					</section>
+				} else {
+					<p class="cd-card__spot">Bu bölümde henüz haber yok.</p>
+				}
+
+				@cdMostRead(v.MostRead)
+
+				<nav class="cd-pager" aria-label="Sayfalama">
+					if v.PrevHref != "" {
+						<a class="cd-btn cd-btn--ghost" href={ v.PrevHref }>← Önceki</a>
+					}
+					if v.NextHref != "" {
+						<a class="cd-btn cd-btn--ghost" href={ v.NextHref }>Sonraki →</a>
+					}
+				</nav>
+			</main>
+			@cdFooter(v.Shell)
+		</body>
+	</html>
+}

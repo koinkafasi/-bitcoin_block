@@ -457,8 +457,7 @@ func CrawlFeed(ctx context.Context, pool *pgxpool.Pool, f *Feed, rules []WordRul
 		return 0, err
 	}
 	// Kategori çözümü çekim başına bir kez okunur: her öğe için ayrı sorgu
-	// atmak 91 feed'lik turda gereksiz yük olurdu.
-	feedSlug, _ := categorySlug(ctx, pool, f.CategoryID)
+	// atmak gereksiz yük olurdu.
 	slugIDs, _ := categorySlugIDs(ctx, pool)
 	count := 0
 	for _, it := range items {
@@ -520,8 +519,12 @@ func CrawlFeed(ctx context.Context, pool *pgxpool.Pool, f *Feed, rules []WordRul
 		})
 		// Kategori: kaynak bölümü → editörün feed ataması → anahtar sözcük.
 		// Ayrıntı ve gerekçe: internal/classify (B5).
+		//
+		// KRİPTO PORTALI (bitcosar): bölümler CoinDesk taksonomisidir
+		// (markets/business/tech/policy). Eski Türkçe eşleme (gundem/ekonomi)
+		// kullanılırsa 179 içeriğin tamamı tek bölüme düşüyordu — ölçüldü.
 		catID := f.CategoryID
-		slug := classify.Slug(classify.Doc{Title: title, Spot: spot, Sections: it.Categories}, feedSlug)
+		slug := classify.CoinDeskSection(it.Categories, title, spot)
 		if id, ok := slugIDs[slug]; ok && (f.CategoryID == nil || *f.CategoryID != id) {
 			v := id
 			catID = &v
