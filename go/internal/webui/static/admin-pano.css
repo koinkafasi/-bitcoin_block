@@ -1,0 +1,2141 @@
+/* admin-pano.css — panelin tamamına Pacely görünümü (Faz 151)
+ *
+ * NEDEN AYRI KATMAN: panelde 40+ sayfa var ve hepsi aynı kabuğu
+ * (.admin-side, .admin-top, .card, .kpi, .table, .btn, .tabs…) paylaşıyor.
+ * Sayfa sayfa düzen yazmak hem bakımı imkânsız kılar hem de her yeni sayfada
+ * unutulan bir yer bırakır. Burada ORTAK katman giydiriliyor; yeni bir sayfa
+ * açıldığında kendiliğinden uyumlu doğuyor.
+ *
+ * SIRA: app.css → admin-only.css → admin-theme.css → admin-shadcn.css →
+ *        admin-pano.css. En sonda olduğu için aynı özgüllükte kazanır.
+ *
+ * MARKA: --accent'e (marka rengi) DOKUNULMUYOR; yalnızca nötr palet, yarıçap,
+ * gölge ve boşluklar değişiyor. Marka rengi inline CSS'ten geldiği için
+ * zaten her zaman üstte kalıyor.
+ */
+
+:root, [data-theme="light"] {
+	/* Sıcak nötr palet (Pacely'nin ölçülen değerleri) */
+	--sh-bg: #f3f2ef;
+	--sh-fg: #1b1a18;
+	--sh-card: #fdfdfb;
+	--sh-muted: #f6f5f2;
+	--sh-muted-fg: #67635b;
+	/* Ölçüldü: Pacely #1b1a1814 = %7,8 alfa. %10 fazla koyuydu,
+	 * kart kenarları zeminden daha keskin ayrışıyordu. */
+	--sh-border: rgba(27, 26, 24, .078);
+	--sh-input: rgba(27, 26, 24, .11);
+	--sh-sidebar: #e7e4dd;
+	--sh-sidebar-hover: rgba(27, 26, 24, .06);
+
+	/* Tip ölçeği — Pacely'den ölçüldü. Panelin yoğunluğu buradan geliyor:
+	 * taban 14px ve sıkı basamaklar. 16px tabanla aynı düzen "iri" duruyordu. */
+	/* Panel yazı ailesi tek yerde. pano.css de buradan okur; iki
+	 * dosyada iki ayrı liste tutmak fontun yarı yarıya uygulanmasına
+	 * yol açmıştı (gövde Urbanist, pano başlıkları Poppins). */
+	--admin-font: "Urbanist", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+
+	--fs-2xs: 11px;
+	--fs-xs: 12px;
+	--fs-sm: 12.5px;
+	--fs-md: 13.5px;
+	--fs-base: 14px;
+	--fs-lg: 15px;
+	--fs-xl: 17px;
+	--fs-2xl: 20px;
+	--fs-3xl: 22px;
+	--fs-4xl: 26px;
+	--fs-display: 34px;
+
+	/* Yarıçap dört basamak: küçük kontrol → büyük yüzey. Tek bir 16px
+	 * değeri büyük kartları yeterince yumuşatmıyordu. */
+	--r-sm: 10px;
+	--r-md: 14px;
+	--r-lg: 18px;
+	--r-xl: 24px;
+	--radius: var(--r-md);
+	--radius-sm: var(--r-sm);
+
+	--bg: var(--sh-bg);
+	--bg-soft: var(--sh-sidebar);
+	--surface: var(--sh-card);
+	--surface-2: var(--sh-muted);
+	--border: var(--sh-border);
+	--line: var(--sh-border);
+	/* Kullanici "Gorunum & Marka"da metin rengi sectiyse o; yoksa tema. */
+	--text: var(--text-kullanici, var(--sh-fg));
+	--text-2: #3a3834;
+	--text-3: var(--sh-muted-fg);
+
+	/* Pacely'nin katmanlı gölgesi: 1px iç çizgi + yakın + uzak yumuşak */
+	/* Pacely'nin gölgesi: ince yakın katman + geniş, çok yumuşak uzak katman.
+	 * Bizde yalnız 1px inset halka vardı; kartlar zeminden kalkmıyordu. */
+	--shadow: 0 1px 2px rgba(27, 26, 24, .05), 0 10px 26px -16px rgba(27, 26, 24, .22);
+	--shadow-lg: 0 2px 6px rgba(27, 26, 24, .07), 0 28px 60px -24px rgba(27, 26, 24, .34);
+
+	/* Yumuşak döşeme zeminleri (KPI kartları) */
+	--pn-t1: #f5e0d5;
+	--pn-t2: #e1e9da;
+	--pn-t3: #f1e6cd;
+	--pn-t4: #efdfe3;
+	--pn-ease: cubic-bezier(.22, 1, .36, 1);
+
+	/* ---- Pacely'den ölçülen ek basamaklar (Faz 159) ----
+	 * Bunlar bizde yoktu; eksikliği kart kenarlarında ve yan menüde
+	 * "düz" bir görünüm olarak hissediliyordu. Değerler ölçüldü,
+	 * kod alınmadı. */
+	--pn-line-2: rgba(27, 26, 24, .149);   /* #1b1a1826 */
+	--pn-card-3: #e9e7e2;                  /* üçüncü yüzey: baskı/aktif zemin */
+	--pn-rim: rgba(27, 26, 24, .18);       /* #1b1a182e: dış hat vurgusu */
+	--pn-info: #5c5850;
+	--pn-sig-text: #a63a16;                /* sinyal renginin okunur metin hâli */
+	--pn-sig-soft: rgba(217, 83, 42, .12);
+	--pn-good-soft: rgba(42, 122, 70, .12);
+	--pn-warn-soft: rgba(201, 138, 20, .17);
+	--pn-bad-soft: rgba(179, 38, 30, .10);
+	--pn-bad: #b3261e;                      /* Pacely --bad (açık tema) */
+
+	/* Yan menü kendi paletini taşır: gövde metniyle aynı grileri
+	 * kullanınca menü içerikten ayrışmıyordu. */
+	--pn-side-ink: #1b1a18;
+	--pn-side-muted: #5f5a51;
+	--pn-side-hover: rgba(27, 26, 24, .051);
+	--pn-side-line: rgba(27, 26, 24, .09);
+	--pn-side-tile: #fdfdfb;
+}
+
+[data-theme="dark"] {
+	--sh-bg: #17171a;
+	--sh-fg: #f2f1ee;
+	--sh-card: #1e1e22;
+	--sh-muted: #24242a;
+	--sh-muted-fg: #a09c94;
+	--sh-border: rgba(255, 255, 255, .10);
+	--sh-input: rgba(255, 255, 255, .16);
+	--sh-sidebar: #131316;
+	--sh-sidebar-hover: rgba(255, 255, 255, .07);
+
+	--bg: var(--sh-bg);
+	--bg-soft: var(--sh-sidebar);
+	--surface: var(--sh-card);
+	--surface-2: var(--sh-muted);
+	--border: var(--sh-border);
+	--line: var(--sh-border);
+	/* Koyu temada secilen metin renginin ACILMIS hali (aksi hâlde
+	 * #000000 secimi koyu zeminde okunmuyordu). */
+	--text: var(--text-dark, var(--sh-fg));
+	--text-2: #d6d4ce;
+	--text-3: var(--sh-muted-fg);
+
+	--shadow: inset 0 0 0 1px rgba(255, 255, 255, .06), 0 1px 2px rgba(0, 0, 0, .35);
+	--shadow-lg: inset 0 0 0 1px rgba(255, 255, 255, .08), 0 2px 6px rgba(0, 0, 0, .4), 0 24px 48px -28px rgba(0, 0, 0, .8);
+
+	--pn-t1: #3a2a24;
+	--pn-t2: #26302a;
+	--pn-t3: #35301f;
+	--pn-t4: #37262c;
+
+	--pn-line-2: rgba(255, 255, 255, .18);
+	--pn-card-3: #2a2a30;
+	--pn-rim: rgba(255, 255, 255, .22);
+	--pn-info: #a09c94;
+	--pn-sig-text: #ff9b78;
+	--pn-sig-soft: rgba(255, 122, 82, .16);
+	--pn-good-soft: rgba(42, 122, 70, .22);
+	--pn-warn-soft: rgba(201, 138, 20, .22);
+	--pn-bad-soft: rgba(179, 38, 30, .22);
+	--pn-bad: #f2877b;                      /* Pacely --bad (karanlık tema) */
+
+	--pn-side-ink: #f2f1ee;
+	--pn-side-muted: #a09c94;
+	--pn-side-hover: rgba(255, 255, 255, .06);
+	--pn-side-line: rgba(255, 255, 255, .10);
+	--pn-side-tile: #1e1e22;
+}
+
+/* ================= Kabuk ================= */
+
+body {
+	background: var(--bg);
+	color: var(--text);
+	/* Panel fontu Urbanist (fonts-admin.css, kendi sunucumuzdan).
+	 * Public site Poppins'te KALIYOR — değişen yalnız yönetim aracı.
+	 * Pacely'nin tipografisi Urbanist üzerine kurulu; Poppins'le aynı
+	 * ölçüler verildiğinde düzen doğru çıkıyor ama his tutmuyordu. */
+	font-family: var(--admin-font);
+	font-size: var(--fs-base);
+	/* Ölçüldü: Pacely gövdesi `font: 500 14px/1.45`.
+	 * 400 ağırlık Urbanist'te fazla ince kalıyordu; panel "soluk" duruyordu.
+	 * tabular-nums gövdede: tablo, KPI ve para/tarih sütunları hizalanır —
+	 * aksi hâlde her sayı farklı genişlikte olup satırlar titriyor. */
+	font-weight: 500;
+	line-height: 1.45;
+	font-variant-numeric: tabular-nums;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+}
+
+/* Form öğeleri ve tablolar body fontunu devralsın */
+.input, .select, .textarea, .btn, .tabs a, .tabs button, .table {
+	font-family: inherit;
+}
+
+.admin-wrap {
+	display: flex;
+	min-height: 100vh;
+	background: var(--bg);
+}
+
+/* --- Yan menü: 252 px, ray 84 px --- */
+.admin-side {
+	width: 252px;
+	flex: none;
+	padding: 0;
+	background: var(--bg-soft);
+	/* Ölçüldü: Pacely `box-shadow: inset -1px 0 0 var(--side-line)`.
+	 * border + inset birlikte vardı: çizgi iki kat koyu, içerik 1px dar. */
+	box-shadow: inset -1px 0 0 var(--pn-side-line);
+	position: sticky;
+	top: 0;
+	height: 100vh;
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+	/* Genişlik geçişi YOK (Pacely birebir).
+	 * Orada sınıf değişimi anlıktır; yumuşaklık `clip-path` perdesi ve ana
+	 * kolonun FLIP telafisinden gelir. CSS `transition: width` kalsaydı
+	 * ikisi üst üste biner ve menü iki kez hareket ederdi. */
+}
+
+.admin-side .side-head {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	min-height: 74px;
+	padding: 18px 14px 10px 18px;
+	flex: none;
+}
+
+.admin-side .brand {
+	flex: 1;
+	min-width: 0;
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	font-size: 17px;
+	font-weight: 700;
+	letter-spacing: -.03em;
+	color: var(--text);
+	text-decoration: none;
+	padding-left: 2px;
+}
+/* Ray modunda marka yerine kısa işaret */
+.admin-side .brand::before {
+	content: "";
+	width: 0;
+	height: 36px;
+	border-radius: 11px;
+	background: var(--text);
+	color: var(--bg-soft);
+	font-size: 13px;
+	font-weight: 700;
+	display: grid;
+	place-items: center;
+	overflow: hidden;
+	/* İşaret (ray modundaki "tb" kutusu) sınıf değişimiyle ANINDA belirir;
+	 * perde kapandıktan sonra büyüyen bir kutu görünmesin (Pacely'de mark
+	 * her iki modda da tam boy duruyor). */
+}
+
+.admin-side .side-collapse {
+	width: 32px;
+	height: 32px;
+	flex: none;
+	display: grid;
+	place-items: center;
+	border: 0;
+	border-radius: 9px;
+	background: transparent;
+	color: var(--text-3);
+	cursor: pointer;
+	transition: background .16s ease, color .16s ease;
+}
+.admin-side .side-collapse:hover { background: var(--sh-sidebar-hover); color: var(--text); }
+.admin-side .side-collapse .ti {
+	width: 18px;
+	height: 18px;
+	/* Dönüş artık JS'te, perde ile AYNI eğri ve sürede oynatılıyor
+	 * (admin-ui.js → tbRailGecis). CSS geçişi kalsaydı daraltmada sınıf
+	 * perdenin SONUNDA değiştiği için ok, menü kapandıktan sonra dönerdi. */
+}
+/* Dar moda geçince ok yönü ters çevrilir: "buradan geri açılır" ipucu. */
+html.admin-rail .admin-side .side-collapse .ti { transform: rotate(180deg); }
+
+.admin-side .side-scroll {
+	flex: 1;
+	overflow-y: auto;
+	overflow-x: hidden;
+	padding: 4px 10px 12px;
+	scrollbar-width: thin;
+}
+
+.admin-side .menu {
+	list-style: none;
+	margin: 0 0 10px;
+	padding: 0;
+	border-bottom: 1px solid var(--border);
+	padding-bottom: 10px;
+}
+.admin-side .menu:last-child { border-bottom: 0; padding-bottom: 0; }
+
+.admin-side .menu li { margin: 0; }
+
+.admin-side .menu a {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	/* Ölçüldü: Pacely menü öğesi 44px yüksek, r=12, iç boşluk 0 12 0 10.
+	 * 40px/11px ile öğeler bir tık sıkışık ve küçük duruyordu. */
+	height: 44px;
+	padding: 0 10px 0 12px;
+	margin-bottom: 2px;
+	border-radius: 12px;
+	/* Ölçüldü: Pacely pasif menü etiketi --side-muted (#5f5a51);
+	 * yalnız aktif öğe tam mürekkep renginde. Bizde hepsi siyahtı,
+	 * menü sayfanın en ağır bloğu gibi duruyordu. */
+	color: var(--pn-side-muted);
+	/* Ölçüldü: Pacely menü etiketi 600. Gövde 500 olduğu için menü de
+	 * 500'e düşüyordu; menü içerikten ayrışmıyordu. */
+	font-weight: 600;
+	font-size: 13.5px;
+	text-decoration: none;
+	white-space: nowrap;
+	overflow: hidden;
+	transition: background .14s ease, color .14s ease, transform .14s ease;
+}
+.admin-side .menu a:hover {
+	background: var(--pn-side-hover);
+	color: var(--pn-side-ink);
+	text-decoration: none;
+}
+.admin-side .menu a:active { transform: scale(.99); }
+
+/* Aktif öğe: zemin HAPTAN gelir (Pacely `nav__pill`).
+ *
+ * Önce her aktif öğe kendi kart yüzeyini çiziyordu; menüde gezinirken zemin
+ * anında yanıyor, yumuşak geçiş olmuyordu. Pacely'de
+ * `.nav__item[aria-current=page]{background:0 0}` — arka planı tek bir
+ * kayan hap (`.nav__pill`) veriyor. Aynı yapıya geçildi. */
+.admin-side .menu a.active,
+.admin-side .menu a[aria-current="page"] {
+	background: transparent;
+	color: var(--text);
+	font-weight: 600;
+}
+.admin-side .menu a.active .ti { color: var(--accent, currentColor); opacity: 1; }
+
+.admin-side .menu a .ti {
+	width: 18px;
+	height: 18px;
+	flex: none;
+	opacity: .75;
+	stroke-width: 1.7;
+}
+.admin-side .menu a:hover .ti,
+.admin-side .menu a.active .ti { opacity: 1; }
+
+/* ---- Yan menü hapı (Pacely `.nav__pill` birebir) ----
+ *
+ * Tek span, `.side-scroll` içinde mutlak konumlu; aktif öğenin yerine
+ * JS yerleştiriyor (clip-path inset + round 12). `pointer-events: none`
+ * olduğu için altındaki bağlantı tıklanabilir kalır. */
+.admin-side .side-scroll { position: relative; }
+
+.tb-sb-hap {
+	position: absolute;
+	inset: 0;
+	z-index: 0;
+	pointer-events: none;
+	opacity: 0;
+	background: var(--card);
+	border-radius: 12px;
+	box-shadow: inset 0 0 0 1px var(--border), 0 1px 2px rgba(27, 26, 24, .05);
+	/* clip-path JS'ten gelir. Opaklık geçişi YOK: hap hedefe otururken
+	 * solmasın (Pacely'de de yalnız clipPath oynuyor). */
+}
+
+/* Hap varken menü öğeleri hapın ÜSTÜNDE durmalı.
+ *
+ * DİKKAT: `.menu` (ul) de `position: relative` yapılırsa hapın koordinatları
+ * kayar. Hap `hedef.offsetTop` ile yerleşiyor; offsetTop ise EN YAKIN
+ * konumlanmış ataya göre ölçülür. ul konumlanınca offsetParent ul oluyor ve
+ * hap menünün başlığına değil, listenin içine düşüyordu (ölçüldü: aktif
+ * öğe 10 px aşağıdayken clip `t=0`). Yalnız <a> konumlanır. */
+.tb-sb-hap-var .menu a { position: relative; z-index: 1; }
+
+/* Ray modunda hap GÖRÜNÜR kalır (Pacely birebir).
+ *
+ * Pacely ray modunda yalnız etiketleri/grup başlıklarını gizliyor
+ * (`html.is-rail .nav__label, .side__group…{display:none}`); `.nav__pill`
+ * gizlenmiyor, aktif ikonun arkasında durmaya devam ediyor. Ray
+ * geçişinde hap animasyonsuz yeniden yerleşiyor
+ * (Pacely: `animate: railÖnceki === railŞimdiki` → ray değişince false),
+ * bunu ResizeObserver + `sbYerlestir(..., false)` sağlıyor. */
+html.admin-rail .tb-sb-hap { border-radius: 12px; }
+
+/* Grup başlığı (eski .menu-h varsa da uyumlu kalsın) */
+.admin-side .menu-h {
+	font-size: 10.5px;
+	font-weight: 700;
+	letter-spacing: .08em;
+	text-transform: uppercase;
+	color: var(--pn-side-muted);
+	padding: 8px 10px 5px;
+}
+
+/* --- Ray modu --- */
+html.admin-rail .admin-side { width: 88px; }
+html.admin-rail .admin-side .side-head {
+	flex-direction: column;
+	padding: 16px 0 8px;
+	min-height: 0;
+	gap: 10px;
+}
+html.admin-rail .admin-side .brand {
+	flex: none;
+	font-size: 0;          /* metin gizlenir, ::before işareti kalır */
+	padding: 0;
+}
+html.admin-rail .admin-side .brand::before {
+	content: "tb";
+	width: 38px;
+	height: 38px;
+}
+html.admin-rail .admin-side .menu a {
+	justify-content: center;
+	padding: 0;
+	font-size: 0;          /* etiket gizlenir, ikon kalır */
+	gap: 0;
+}
+html.admin-rail .admin-side .menu a .ti { width: 20px; height: 20px; opacity: .9; }
+html.admin-rail .admin-side .menu-h { display: none; }
+html.admin-rail .admin-side .pin-btn { display: none; }
+/* Ray modunda ipucu: başlık niteliği yerine tarayıcı tooltip'i yeter */
+html.admin-rail .admin-side .menu a[data-ws]:hover::after {
+	content: attr(data-ws);
+	position: absolute;
+	left: 74px;
+	z-index: 60;
+	padding: 5px 9px;
+	border-radius: 8px;
+	background: var(--text);
+	color: var(--bg);
+	font-size: 11.5px;
+	font-weight: 600;
+	white-space: nowrap;
+	pointer-events: none;
+	box-shadow: var(--shadow-lg);
+}
+
+/* --- Üst çubuk --- */
+.admin-main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+
+.admin-top {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	min-height: 68px;
+	/* Ölçüldü: 13px 28px 11px, zemin DÜZ (blur yok).
+	 * Yarı saydam + blur denemesi vardı; Pacely düz zemin kullanıyor ve
+	 * düz zemin kaydırmada hem daha ucuz hem daha okunur. */
+	padding: 13px 28px 11px;
+	background: var(--bg);
+	border-bottom: 0;
+	position: sticky;
+	top: 0;
+	z-index: 40;
+}
+.admin-top h1 {
+	font-size: 15px;
+	font-weight: 600;
+	letter-spacing: -.01em;
+	margin: 0;
+	flex: 1;
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.admin-top .icon-btn,
+.admin-top .icon-btn[type] {
+	width: 42px;
+	height: 42px;
+	flex: none;
+	border-radius: 13px;
+	background: var(--card);
+	color: var(--text-2);
+	border: 0;
+	box-shadow: var(--shadow);
+	display: grid;
+	place-items: center;
+	transition: transform .16s var(--pn-ease), color .16s ease;
+}
+.admin-top .icon-btn:hover { color: var(--text); transform: translateY(-1px); }
+.admin-top .icon-btn .ti { width: 20px; height: 20px; }
+
+/* Arama hapının biçimi artık .search-pill'de (dosyanın sonunda).
+ *
+ * Önceki sürüm metni #cmdkBtn::after ile basıyordu — şablona dokunmamak
+ * için bilinçli bir tercihti. Metin gerçek işaretlemeye alındı: CSS'e
+ * gömülü metin çevrilemiyor, ekran okuyucularda güvenilir değil ve ⌘K
+ * ipucu ayrı bir öge olunca biçimlendirilebiliyor. İki yol bir arada
+ * kalınca hap ekranda İKİ KEZ çiziliyordu. */
+
+.admin-top .select { max-width: 190px; }
+
+.admin-crumb {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	padding: 0 26px;
+	font-size: 11.5px;
+	color: var(--text-3);
+	min-height: 18px;
+}
+.admin-crumb a { color: var(--text-3); text-decoration: none; }
+.admin-crumb a:hover { color: var(--text); text-decoration: underline; }
+.admin-crumb:empty { display: none; }
+
+/* --- Gövde --- */
+.admin-body {
+	/* Pano ile aynı ritim: 6/26/44 ve 18 px aralık. Önce 10/26/48 idi ve
+	 * iki sayfa arasında birkaç piksel kayma görünüyordu. */
+	padding: 6px 28px 44px;
+	display: flex;
+	flex-direction: column;
+	gap: 18px;
+}
+.admin-body > * { margin: 0; }
+
+/* ================= Ortak bileşenler ================= */
+
+/* Kart */
+.card {
+	background: var(--card);
+	border: 0;
+	/* Ölçüldü: Pacely kartı r-lg (18px) kullanıyor; biz r-md (14) ile
+	 * bir basamak küçük kalıyorduk. */
+	border-radius: var(--r-lg);
+	/* İç 1px çizgi + gölge. `--shadow` tek başına halkasız: kart zeminden
+	 * yalnız gölgeyle ayrılıyordu ve kenarlar yumuşak kalıyordu. */
+	box-shadow: inset 0 0 0 1px var(--border), var(--shadow);
+	padding: 18px 20px 20px;
+	transition: box-shadow .2s ease;
+}
+.card-pad { padding: 18px 20px 20px; }
+
+/* KPI: Pacely'nin yumuşak, renkli döşemeleri.
+ * Renk YALNIZ ızgara içindeki ilk dört kartta; sayfa içinde tek başına
+ * duran .kpi (ör. abone özeti) sade kart kalır — dört renk yan yana
+ * gelmediğinde renkli zemin anlamsız bir vurgu olurdu. */
+.kpi {
+	background: var(--card);
+	border: 0;
+	border-radius: var(--radius);
+	box-shadow: var(--shadow);
+	padding: 15px 17px 13px;
+	transition: transform .2s var(--pn-ease), box-shadow .2s ease;
+}
+.kpi:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+.kpi .kpi-lbl {
+	font-size: 12.5px;
+	font-weight: 600;
+	color: var(--text-2);
+}
+.kpi .kpi-val {
+	font-size: 26px;
+	font-weight: 600;
+	letter-spacing: -.02em;
+	line-height: 1.15;
+	margin-top: 6px;
+	font-variant-numeric: tabular-nums;
+}
+
+.kpi-grid { display: grid; gap: 18px; }
+/* Renk yalnız İLK DÖRT döşemede: Pacely'de de dört vurgu kartı var.
+ * On KPI'nın tamamını renklendirmek vurguyu anlamsızlaştırıyor ve paneli
+ * bir renk cümbüşüne çeviriyordu. */
+.kpi-grid > .kpi:nth-child(1) { background: var(--pn-t1); }
+.kpi-grid > .kpi:nth-child(2) { background: var(--pn-t2); }
+.kpi-grid > .kpi:nth-child(3) { background: var(--pn-t3); }
+.kpi-grid > .kpi:nth-child(4) { background: var(--pn-t4); }
+/* Renkli döşemede ikincil metin de okunur kalmalı */
+.kpi-grid > .kpi .kpi-lbl { color: color-mix(in srgb, var(--text) 70%, transparent); }
+.kpi-grid > .kpi .muted,
+.kpi-grid > .kpi .small { color: color-mix(in srgb, var(--text) 62%, transparent); }
+
+/* Kart içine alınmamış tablolar (içerik listesi gibi sayfalar).
+ * 40+ sayfada şablonu tek tek sarmalamak yerine burada kart yüzeyine
+ * oturtuluyor: :has() ile yalnız "doğrudan tablo taşıyan" form/div seçilir,
+ * böylece filtre formları yanlışlıkla karta dönüşmez. */
+.admin-body > table.table,
+.admin-body form:has(> table.table),
+.admin-body div:has(> table.table) {
+	background: var(--card);
+	border-radius: var(--radius);
+	box-shadow: var(--shadow);
+	padding: 6px 14px 8px;
+	overflow-x: auto;
+}
+.admin-body form:has(> table.table) > .toplu-bar { margin: 8px 0 6px; }
+.admin-body form:has(> table.table) > table.table { margin: 0; }
+
+/* Tablo */
+.table { font-size: 13.5px; }
+
+/* Yapışkan başlık (Faz 164).
+ *
+ * Ölçüm: içerik listesi 118 satıra kadar çıkıyor; aşağı inildiğinde hangi
+ * sütunun ne olduğu kayboluyordu. `.admin-top` yapışkan DEĞİL, bu yüzden
+ * `top: 0` sayfa kaydırmasında temiz çalışır.
+ *
+ * Zemin zorunlu: yapışkan hücre saydam kalırsa altındaki satırlar
+ * görünür. Gölge, "başlık burada bitti" hissini verir.
+ */
+.table thead th {
+	position: sticky;
+	top: 0;
+	z-index: 2;
+	background: var(--card);
+}
+/* Kart içinde zemin kartla aynı olmalı; kart zemini farklıysa (ör. pano
+ * parlak yüzeyi) hücre kendi zeminini korur. */
+.card .table thead th { background: var(--card); }
+
+/* Uzun listeler: tablo kendi içinde kaydırsın, sayfa değil.
+ * Yalnız bu sınıfı taşıyan tablolara uygulanır — genel bir max-height
+ * koymak kısa tabloları gereksiz kaydırma kutusuna çevirirdi. */
+.table-scroll {
+	max-height: min(70vh, 720px);
+	overflow: auto;
+	border-radius: var(--r-sm);
+}
+.table-scroll .table thead th { background: var(--card); }
+.table th {
+	font-size: 10.5px;
+	font-weight: 700;
+	letter-spacing: .06em;
+	text-transform: uppercase;
+	color: var(--text-3);
+	padding: 9px 12px;
+	border-bottom: 1px solid var(--border);
+	background: transparent;
+	position: sticky;
+	top: 0;
+}
+.table td { padding: 11px 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+.table tbody tr:hover { background: color-mix(in srgb, var(--surface-2) 70%, transparent); }
+.table tbody tr:last-child td { border-bottom: 0; }
+
+/* Düğmeler */
+.btn {
+	/* Pacely: inline-flex + gap 8px. Simge eklenince etiketle aynı
+	 * çizgide durması ve aralarında nefes olması için gerekli. */
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
+	border-radius: 12px;
+	font-weight: 600;
+	font-size: 13.5px;
+	height: 40px;
+	/* Ölçüldü: Pacely taban düğmesi 0 16px. 15px bir tık sıkışıktı. */
+	padding: 0 16px;
+	border: 0;
+	background: var(--text);
+	color: var(--bg);
+	box-shadow: var(--shadow);
+	transition: transform .16s var(--pn-ease), opacity .16s ease, background .16s ease;
+}
+.btn:hover { opacity: .9; transform: translateY(-1px); }
+.btn:active { transform: scale(.985); }
+.btn.small { height: 32px; padding: 0 12px; font-size: 12.5px; border-radius: 10px; }
+
+/* Düğme içi simge boyutu (Pacely: .btn svg 18px, .btn--sm svg 16px).
+ * flex: none olmadan dar düğmede ikon sıkışıp eziliyor. */
+.btn .ti { width: 18px; height: 18px; flex: none; }
+.btn.small .ti { width: 16px; height: 16px; }
+.btn.ghost, .btn.secondary {
+	background: var(--card);
+	color: var(--text);
+	/* Pacely taban düğmesi `inset 0 0 0 1px var(--line-2)` taşıyor.
+	 * Yalnız gölgeyle bırakınca beyaz kart üstündeki hayalet düğme
+	 * (Düzenle, Arşiv…) düz metin gibi okunuyordu. */
+	box-shadow: inset 0 0 0 1px var(--pn-line-2);
+}
+.btn.ghost:hover, .btn.secondary:hover { background: var(--surface-2); opacity: 1; }
+.btn.ok { background: #2a7a46; color: #fff; }
+/* Yıkıcı eylem: Pacely'de dolu kırmızı değil, kart zemini + kırmızı metin
+ * (.btn--danger{color:var(--bad)}). Dolu kırmızı 40 satırlık tabloda
+ * sayfanın en ağır öğesi oluyordu; her satırda bir alarm gibi duruyor.
+ * Renk yine kırmızı: eylem tehlikeli olduğunu söylüyor, ama bağırmıyor. */
+.btn.danger {
+	background: var(--card);
+	color: var(--pn-bad);
+	box-shadow: inset 0 0 0 1px var(--pn-bad-soft);
+}
+.btn.danger:hover { background: var(--pn-bad-soft); opacity: 1; }
+.btn.warn { background: #8a5a00; color: #fff; }
+
+/* Form alanları — Pacely ölçüldü:
+ *   height 42px, r12, iç 1px çizgi (line-2), padding 0 13px, 14px/500.
+ * Bizde 36px ve kenarlıktı: alanlar bir tık küçük, satırlar sıkışık
+ * duruyordu; ayrıca kenarlık kutu ölçüsüne girip hizayı kaydırıyordu.
+ * İç çizgi (inset shadow) kutu ölçüsünü değiştirmez. */
+.input, .select, .textarea {
+	height: 42px;
+	border-radius: 12px;
+	border: 0;
+	box-shadow: inset 0 0 0 1px var(--pn-line-2);
+	background: var(--card);
+	color: var(--text);
+	padding: 0 13px;
+	font-size: var(--fs-base);
+	font-weight: 500;
+	transition: box-shadow .16s ease, background .16s ease;
+}
+.input:hover, .select:hover, .textarea:hover {
+	box-shadow: inset 0 0 0 1px var(--sh-input);
+}
+.input:focus, .select:focus, .textarea:focus {
+	outline: none;
+	box-shadow:
+		inset 0 0 0 1.5px var(--accent, var(--text)),
+		0 0 0 4px color-mix(in srgb, var(--accent, var(--text)) 12%, transparent);
+}
+
+/* Uzun metin alanı: sabit yükseklik olmaz. */
+textarea.input, textarea.textarea {
+	height: auto;
+	min-height: 96px;
+	padding: 11px 13px;
+	line-height: 1.5;
+	resize: vertical;
+}
+
+/* Açılır liste: tarayıcının kendi oku değil, Pacely'nin iki çizgili oku.
+ * appearance:none olmadan ok seçicinin iç boşluğuna göre kayıyor ve
+ * farklı işletim sistemlerinde farklı boyutta çiziliyordu. */
+select.input, select.select {
+	appearance: none;
+	-webkit-appearance: none;
+	padding-right: 34px;
+	background-image:
+		linear-gradient(45deg, transparent 50%, var(--text-3) 50%),
+		linear-gradient(135deg, var(--text-3) 50%, transparent 50%);
+	background-position: right 17px center, right 12px center;
+	background-repeat: no-repeat;
+	background-size: 5px 5px;
+}
+select.input::-ms-expand { display: none; }
+
+/* İçerik filtreleri: 10 denetim tek ızgarada.
+ *
+ * Önce her alana satır içi `max-width` verilmişti (150/170/130/150/150/190/
+ * 185/110 px). 2 sütunlu ızgarada her hücre kendi genişliğinde kaldığı için
+ * sağ kenarlar tırtıklı çıkıyordu; ekran görüntüsünde "dağınık" görünen
+ * şey buydu. Eşit sütun + span ile hizalar tek çizgiye oturuyor. */
+.filtre-grid {
+	display: grid;
+	grid-template-columns: repeat(6, minmax(0, 1fr));
+	gap: 10px;
+	margin-bottom: 6px;
+}
+.filtre-grid > * { min-width: 0; }
+.filtre-grid .fq-2 { grid-column: span 2; }
+.filtre-grid .fq-3 { grid-column: span 3; }
+.filtre-grid .fq-4 { grid-column: span 4; }
+@media (max-width: 1180px) {
+	.filtre-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+	.filtre-grid .fq-2, .filtre-grid .fq-3 { grid-column: span 2; }
+	.filtre-grid .fq-4 { grid-column: span 4; }
+}
+@media (max-width: 760px) {
+	.filtre-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+	.filtre-grid .fq-2, .filtre-grid .fq-3, .filtre-grid .fq-4 { grid-column: span 2; }
+}
+.field > label {
+	font-size: 12.5px;
+	font-weight: 600;
+	color: var(--text-2);
+	margin-bottom: 5px;
+	display: block;
+}
+
+/* Etiket / rozet — Pacely .badge ölçüldü:
+ *   min-width 20px, height 20px, bg card-3, renk ink-2,
+ *   yarıçap 99px, iç boşluk 0 6px, 11px/700, inline-grid (ortalanmış).
+ * Bizde zemin surface-2 (çok soluk) ve metin tam siyahtı; rozet
+ * "yüzüyor" gibi duruyordu. */
+.badge {
+	border-radius: 99px;
+	min-width: 20px;
+	height: 20px;
+	padding: 0 6px;
+	font-size: 11px;
+	font-weight: 700;
+	border: 0;
+	background: var(--pn-card-3);
+	color: var(--text-2);
+	display: inline-grid;
+	place-items: center;
+	line-height: 1.45;
+	white-space: nowrap;
+}
+
+/* Rozet içi simge (erişim ✓ / ✗). Rozet 20px yüksek; ikon 13px. */
+.badge .ti { width: 13px; height: 13px; flex: none; }
+.tag {
+	border-radius: 99px;
+	padding: 2px 9px;
+	font-size: 11px;
+	font-weight: 600;
+}
+
+/* Sekmeler: kayan "thumb" yok, ama kapsayıcı hap + aktif dolgu */
+.tabs {
+	display: inline-flex;
+	gap: 3px;
+	padding: 3px;
+	border-radius: 12px;
+	background: var(--surface-2);
+	box-shadow: inset 0 0 0 1px var(--border);
+	margin-bottom: 14px;
+	flex-wrap: wrap;
+}
+.tabs a, .tabs button {
+	border-radius: 9px;
+	padding: 6px 12px;
+	font-size: 12px;
+	font-weight: 600;
+	color: var(--text-3);
+	text-decoration: none;
+	border: 0;
+	background: transparent;
+	transition: color .16s ease, background .16s ease;
+}
+.tabs a:hover, .tabs button:hover { color: var(--text); text-decoration: none; }
+.tabs a.active, .tabs button.active {
+	background: var(--card);
+	color: var(--text);
+	box-shadow: 0 1px 3px rgba(27, 26, 24, .12);
+}
+
+/* Bildirim / geri bildirim şeridi */
+.flash {
+	border-radius: 12px;
+	border: 1px solid var(--border);
+	box-shadow: var(--shadow);
+	padding: 11px 14px;
+	font-size: 13px;
+	background: var(--card);
+}
+
+/* Başlık ve bölüm başlıkları */
+.admin-body h2, .dash-head h2 {
+	font-size: 15px;
+	font-weight: 600;
+	letter-spacing: -.005em;
+}
+.admin-body h3 { font-size: 14px; font-weight: 600; }
+.page-title { font-size: 24px; font-weight: 600; letter-spacing: -.02em; }
+
+/* Hızlı eylem döşemeleri (Ayar Merkezi) */
+.qtiles { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
+.qtile {
+	border-radius: var(--radius-sm);
+	background: var(--surface-2);
+	box-shadow: inset 0 0 0 1px var(--border);
+	padding: 12px 14px;
+	transition: transform .18s var(--pn-ease), background .18s ease;
+}
+.qtile:hover { transform: translateY(-2px); background: var(--card); }
+
+/* Boş durum */
+.empty {
+	border-radius: var(--radius-sm);
+	background: var(--surface-2);
+	box-shadow: inset 0 0 0 1px var(--border);
+	padding: 22px;
+	text-align: center;
+	color: var(--text-3);
+}
+
+/* Uzun tablo kapsayıcıları yatay kaydırılabilir kalsın */
+.admin-body > div > .table,
+.card > .table { display: table; }
+
+/* ================= İkon galerisi (Faz 153) ================= */
+
+.ik-bar {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	flex-wrap: wrap;
+	margin-bottom: 12px;
+}
+.ik-bar .input { max-width: 280px; }
+
+.ik-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+	gap: 8px;
+}
+.ik-kart {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 6px;
+	padding: 12px 6px 8px;
+	border: 0;
+	border-radius: var(--radius-sm);
+	background: var(--card);
+	box-shadow: inset 0 0 0 1px var(--border);
+	color: var(--text-2);
+	cursor: pointer;
+	transition: transform .16s var(--pn-ease), box-shadow .16s ease, color .16s ease, background .16s ease;
+}
+.ik-kart:hover {
+	transform: translateY(-2px);
+	color: var(--text);
+	background: var(--surface-2);
+	box-shadow: inset 0 0 0 1px var(--sh-input), 0 6px 16px -12px rgba(27, 26, 24, .7);
+}
+.ik-kart:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
+.ik-gorsel { width: 24px; height: 24px; }
+.ik-ad {
+	font-size: 10px;
+	line-height: 1.2;
+	text-align: center;
+	word-break: break-word;
+	color: var(--text-3);
+	font-variant-numeric: tabular-nums;
+}
+.ik-kart:hover .ik-ad { color: var(--text-2); }
+
+/* Kopyalandı geri bildirimi: kısa yeşil çerçeve. Toast eklemeye değmez —
+   kullanıcı tam tıkladığı karta bakıyor. */
+.ik-kopyalandi {
+	box-shadow: inset 0 0 0 2px #2a7a46 !important;
+	color: #2a7a46 !important;
+}
+.ik-bos { color: var(--text-3); font-size: 13px; padding: 18px 0; }
+
+.ik-anim-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+	gap: 10px;
+}
+.ik-anim {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 4px;
+	padding: 14px 10px 10px;
+	border-radius: var(--radius-sm);
+	background: var(--surface-2);
+	box-shadow: inset 0 0 0 1px var(--border);
+	text-align: center;
+}
+.ik-anim .ik-gorsel { width: 28px; height: 28px; margin-bottom: 4px; }
+.ik-anim code { font-size: 11px; color: var(--text); }
+
+.ik-spin-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+	gap: 10px;
+}
+.ik-spin {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 8px;
+	padding: 16px 10px 10px;
+	border-radius: var(--radius-sm);
+	background: var(--surface-2);
+	box-shadow: inset 0 0 0 1px var(--border);
+}
+.ik-spin .ikon-spin-svg { width: 28px; height: 28px; color: var(--text); }
+.ik-spin code { font-size: 11px; color: var(--text-2); }
+
+/* ================= Yatay taşma koruması =================
+ *
+ * Uzun bir tablo ya da ızgara hücresi (ör. bot sayfasındaki 70+ form)
+ * `min-width: auto` yüzünden kabı büyütüp sayfayı yatay kaydırıyordu.
+ * Izgara/flex çocuklarına min-width:0 vermek bunu keser; tablo içeren
+ * kutular kendi içinde kaydırılır (sayfa değil). */
+.admin-main, .admin-body,
+.card, .gap, .dash-2, .kpi-grid, .dash-2 > *, .gap > * {
+	min-width: 0;
+}
+.card:has(> table.table),
+.dash-2:has(> table.table),
+.gap:has(> table.table),
+div:has(> table.table) {
+	overflow-x: auto;
+}
+
+/* ================= Duyarlı =================
+ *
+ * ÖNEMLİ: ray durumu YALNIZ `html.admin-rail` sınıfından gelir.
+ *
+ * Önceki sürümde burada `.admin-side { width: 84px }` vardı ve dar
+ * ekranlarda menüyü zorla daraltıyordu. Aynı özgüllükte olduğu için
+ * `html.admin-rail` kuralıyla çakışıyor ve menü 1280 px altında ASLA
+ * açılamıyordu — katlama düğmesi "çalışmıyor" görünüyordu. Ölçüm:
+ * 1500 px'te 252→84 çalışıyor, 1280/1200/1024'te 84→84 (hiç değişmiyor).
+ *
+ * Artık genişlik kararı tek yerde: sınıfı açılışta ekleyen satır içi
+ * betik (admin_head) + katlama düğmesi. Medya sorgusu yalnız gerçekten
+ * dar ekranda menüyü gizler. */
+@media (max-width: 1280px) {
+	.kpi-grid { gap: 12px; }
+}
+@media (max-width: 900px) {
+	.admin-side { display: none; }
+	.admin-body { padding: 8px 14px 32px; }
+	.admin-top { padding: 10px 14px; min-height: 60px; }
+	.admin-crumb { padding: 0 14px; }
+	.admin-top h1 { font-size: 14px; }
+	.kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+}
+@media (prefers-reduced-motion: reduce) {
+	.admin-side, .card, .kpi, .btn, .qtile { transition: none !important; }
+	.kpi:hover, .btn:hover, .qtile:hover { transform: none !important; }
+}
+
+/* ================= Tipografi hiyerarşisi =================
+ *
+ * Ölçüm: sayfa başlığımız 15px idi, Pacely'de 28px. Hiyerarşi olmayınca
+ * sayfa "düz" okunuyor ve göz nereye bakacağını bulamıyor — kullanıcının
+ * "göz algısında yormasın" isteğinin karşılığı tam olarak bu.
+ * Negatif harf aralığı büyük boylarda zorunlu: Urbanist geniş açılır. */
+
+/* Ölçüldü: Pacely'nin büyük başlığı clamp(28px, 2.6vw, 38px),
+ * letter-spacing -.025em, line-height 1.04. Sabit 28px + 1.15 satır
+ * aralığı hem küçük hem gevşek duruyordu. */
+.admin-body h1,
+.admin-top h1 {
+	font-size: clamp(28px, 2.6vw, 38px);
+	font-weight: 600;
+	letter-spacing: -.025em;
+	line-height: 1.04;
+	margin: 0;
+	color: var(--text);
+}
+
+.admin-body h2 {
+	font-size: var(--fs-2xl);
+	font-weight: 600;
+	letter-spacing: -.35px;
+	line-height: 1.25;
+}
+
+.admin-body h3 {
+	font-size: var(--fs-xl);
+	font-weight: 600;
+	letter-spacing: -.2px;
+}
+
+/* Kart başlıkları ve bölüm etiketleri */
+.admin-body .card > h2,
+.admin-body .card > h3 {
+	margin: 0 0 10px;
+}
+
+.admin-body .small,
+.admin-body .hint {
+	font-size: var(--fs-sm);
+}
+
+.admin-body .muted,
+.admin-body .hint {
+	color: var(--text-3);
+}
+
+/* Sayısal alanlar hizalansın: KPI, tablo, para, tarih */
+.admin-body .kpi-val,
+.admin-body .table td,
+.admin-body .onc-rozet,
+.admin-body .skor-puan {
+	font-variant-numeric: tabular-nums;
+}
+
+/* Büyük yüzeyler üst basamak yarıçapı alsın */
+.admin-body > .card,
+.admin-body .kpi-grid > *,
+.admin-body .dash-2 > .card {
+	border-radius: var(--r-lg);
+}
+
+/* ---- Üst çubuk araması: Pano ile aynı "hap" ----
+ * Diğer sayfalarda arama yalın bir ikon düğmesiydi; panoda geniş bir hap.
+ * Aynı panelde iki farklı arama görünümü, "sayfalar birbirine benzemiyor"
+ * hissinin en görünür parçasıydı. Ölçüler Pano'nun .pn-search'ünden alındı.
+ *
+ * Gerçek <input> değil <button>: komut paletinin kendi girdisi var, iki
+ * girdi odak için yarışır ve ⌘K iki kez açmak gibi davranırdı. */
+
+/* Arama hapı: pano ile AYNI biçim (42 px, 13 px yarıçap).
+ *
+ * Önceki sürüm 38 px yükseklik ve 999 px (tam yuvarlak) kullanıyordu;
+ * pano ise 42/13 kullanıyordu. İki sayfa arasında gözle görülür fark
+ * bırakan kalemlerden biriydi. Tek kaynak: bu blok. */
+.admin-top .search-pill {
+	display: inline-flex;
+	align-items: center;
+	gap: 9px;
+	min-width: 0;
+	flex: 1 1 260px;
+	max-width: 340px;
+	height: 42px;
+	/* Ölçüldü: sol boşluk 14px, yazı fs-md (13.5px). Bizde 13px ve fs-sm
+	 * (12.5px) idi — hap bir tık küçük ve sıkışık duruyordu. */
+	padding: 0 8px 0 14px;
+	border: 0;
+	border-radius: 13px;
+	background: var(--surface);
+	color: var(--text-3);
+	box-shadow: var(--shadow);
+	font: inherit;
+	font-size: var(--fs-md);
+	cursor: pointer;
+	text-align: left;
+	transition: box-shadow .16s var(--pn-ease), color .16s ease;
+}
+
+.admin-top .search-pill:hover { color: var(--text-2); box-shadow: var(--shadow-lg); }
+
+.admin-top .search-pill:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
+
+.admin-top .search-pill .ti { width: 18px; height: 18px; flex: none; opacity: .75; }
+
+.search-pill__text {
+	flex: 1;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.search-pill__kbd {
+	flex: none;
+	font-size: var(--fs-2xs);
+	padding: 3px 7px;
+	border: 0;
+	border-radius: 7px;
+	color: var(--text-3);
+	background: var(--bg-soft);
+	box-shadow: inset 0 0 0 1px var(--border);
+}
+
+/* Dar ekranda yalnız ikon kalsın — eskiden #cmdkBtn için yapılan daraltma. */
+@media (max-width: 1100px) {
+	.admin-top .search-pill { flex: none; max-width: none; width: 42px; justify-content: center; padding: 0; }
+	.search-pill__text, .search-pill__kbd { display: none; }
+}
+
+/* Otomatik kaydet düğmesi: durum ikonu CSS'ten seçilir (tema düğmesiyle
+ * aynı desen). JS yalnız .on sınıfını değiştirir; işaretleme sabit kalır. */
+.as-toggle .icon-as-off { display: none; }
+.as-toggle:not(.on) .icon-as-on { display: none; }
+.as-toggle:not(.on) .icon-as-off { display: inline-block; }
+.as-toggle:not(.on) { color: var(--text-3); }
+
+/* =====================================================================
+ * Hareket ve geçiş katmanı (Faz 154)
+ * =====================================================================
+ *
+ * İlke: Pacely'de etkileyici his sürekli animasyondan değil, KISA ve
+ * YUMUŞAK geçişlerden geliyor (ölçüm: yalnız 3 @keyframes). Burada da
+ * aynı çizgi: her hareket 120–320 ms, hepsi `--pn-ease` eğrisiyle, ve
+ * hepsi `prefers-reduced-motion` altında kapanıyor.
+ *
+ * Kural: animasyon BİLGİ taşımalı (ekrana girdi, güncellendi, yüklendi);
+ * süs olsun diye hareket ettirmiyoruz.
+ */
+
+/* ---- 1. Sayfa girişinde kademeli belirme ----------------------------
+ * Kartlar ve KPI'lar sırayla belirir: göz içeriği soldan sağa tarar,
+ * hepsi aynı anda patlarsa hangi bilginin nerede olduğu kaybolur.
+ * Gecikme 6 öğeden sonra sabitlenir (uzun listede "bekleme" olmasın). */
+/* DİKKAT: animasyon opacity: 0'dan BAŞLAMIYOR.
+ *
+ * Ölçüm (Faz 156): kategoriler sayfasında DOM 51 ms'de hazırdı ama
+ * FCP 216 ms çıkıyordu. Sebep bu animasyondu — içerik 320 ms boyunca
+ * opaklık 0'da bekliyor, tarayıcı "içerik boyanmadı" sayıyor. Yani
+ * yumuşatma diye eklediğimiz hareket, sayfayı GERÇEKTEN yavaşlatıyordu
+ * (hem ölçümde hem gözde).
+ *
+ * Artık yalnız 3 px kayma var: içerik ilk karede görünür, hareket
+ * yumuşaklığı korunur. Kademeli gecikme de kısaldı (maks 60 ms). */
+@keyframes pn-gir {
+	from { transform: translateY(3px); }
+	to { transform: none; }
+}
+
+.admin-body > *,
+.admin-body > .gap > *,
+.admin-body > .kpi-grid > *,
+.admin-body > .dash-2 > *,
+.pn-view > *,
+.pn-view > .pn-grid > .pn-card,
+.pn-kpis > .pn-kpi {
+	animation: pn-gir .18s var(--pn-ease) both;
+}
+.admin-body > *:nth-child(2), .pn-view > *:nth-child(2) { animation-delay: 12ms; }
+.admin-body > *:nth-child(3), .pn-view > *:nth-child(3) { animation-delay: 24ms; }
+.admin-body > *:nth-child(4), .pn-view > *:nth-child(4) { animation-delay: 36ms; }
+.admin-body > *:nth-child(5), .pn-view > *:nth-child(5) { animation-delay: 48ms; }
+.admin-body > *:nth-child(n+6), .pn-view > *:nth-child(n+6) { animation-delay: 18ms; }
+
+.kpi-grid > *:nth-child(2) { animation-delay: 12ms; }
+.kpi-grid > *:nth-child(3) { animation-delay: 24ms; }
+.kpi-grid > *:nth-child(4) { animation-delay: 36ms; }
+.kpi-grid > *:nth-child(n+5) { animation-delay: 48ms; }
+
+.pn-grid > .pn-card:nth-child(2) { animation-delay: 18ms; }
+.pn-grid > .pn-card:nth-child(3) { animation-delay: 36ms; }
+
+/* ---- 2. HTMX ile güncellenen paneller ------------------------------
+ * Sayfa değişmeden içerik değişiyor. Sert bir "tak" yerine kısa bir
+ * belirme: kullanıcı neyin değiştiğini görüyor. */
+@keyframes pn-yenile {
+	from { opacity: .35; transform: translateY(3px); }
+	to { opacity: 1; transform: none; }
+}
+
+/* Sayfa geçişinde içerik YATAY süzülüyor (admin-ui.js → icerikSuzulme).
+ * O sırada pn-yenile (kap belirmesi) ve pn-gir (dikey 3 px) çalışırsa iki
+ * animasyon aynı öğede birleşir: içerik hem aşağı hem yana kayar, bulanık
+ * bir "çift hareket" görünür. Süzülme sürerken ikisi de susturulur. */
+.admin-main.tb-suzuluyor,
+.admin-main.tb-suzuluyor .admin-body > *,
+.admin-main.tb-suzuluyor .admin-body > .gap > *,
+.admin-main.tb-suzuluyor .admin-body > .kpi-grid > *,
+.admin-main.tb-suzuluyor .pn-view > * {
+	animation: none !important;
+}
+.htmx-settling,
+.htmx-added {
+	animation: pn-yenile .26s var(--pn-ease) both;
+}
+
+/* İstek sürerken hedef panel hafifçe solar: "eski veriye bakıyorsun"
+ * sinyali. İşlem bitince animasyon geri getirir. */
+.htmx-request.htmx-settling { animation: none; }
+.htmx-request > * { transition: opacity .18s ease; }
+.htmx-request { opacity: .62; }
+
+/* ---- 3. Üst çubuk: kaydırınca yükselir ----------------------------
+ * Sayfa kaydırıldığında üst çubuk zeminden ayrılır; içerik altından
+ * geçerken okunabilirlik korunur. JS yalnız .is-stuck sınıfını ekler. */
+.admin-top { transition: box-shadow .2s var(--pn-ease), background .2s ease; }
+.admin-top.is-stuck {
+	box-shadow: 0 1px 0 var(--border), 0 8px 24px -18px rgba(27, 26, 24, .55);
+}
+
+/* ---- 4. Tablo satırları -------------------------------------------
+ * Satırın tamamı hafifçe kalkar ve zemin koyulaşır: imlecin hangi
+ * satırda olduğu 40 satırlık listede kaybolmasın. Dönüşüm 1 px —
+ * daha fazlası satırları zıplatıyor. */
+.table tbody tr {
+	transition: background .12s ease, box-shadow .12s ease;
+}
+.table tbody tr:hover {
+	box-shadow: inset 2px 0 0 var(--accent, var(--text));
+}
+
+/* Satır içi işlem düğmeleri normalde soluk; satır aktifken belirginleşir.
+ * Böylece tablo kalabalık görünmüyor ama eylem kaybolmuyor. */
+.table tbody tr .btn.small { opacity: .82; transition: opacity .12s ease; }
+.table tbody tr:hover .btn.small { opacity: 1; }
+
+/* ---- 5. Düğme ve kart basışı -------------------------------------- */
+.btn, .icon-btn, .kpi, .card, .pn-kpi, .pn-card, .ik-kart, .qtile {
+	will-change: transform;
+}
+.btn:active:not([disabled]),
+.icon-btn:active,
+.pn-btn:active { transform: scale(.97); }
+
+/* ---- 6. Yükleme çubuğu --------------------------------------------
+ * HTMX isteği sürerken üstte ince bir ilerleme çubuğu. Uzun süren
+ * işlemlerde "dondu mu?" sorusunu kapatır. */
+.pn-progress {
+	position: fixed;
+	top: 0;
+	left: 0;
+	height: 2px;
+	width: 0;
+	z-index: 90;
+	background: var(--accent, var(--text));
+	box-shadow: 0 0 8px color-mix(in srgb, var(--accent, var(--text)) 60%, transparent);
+	transition: width .25s var(--pn-ease), opacity .3s ease;
+	opacity: 0;
+	pointer-events: none;
+}
+.pn-progress.on { opacity: 1; }
+
+/* ---- 7. Balonlar (toast) ------------------------------------------
+ * Panelin her yerinde kullanılabilir: window.tbToast("…"). Pano kendi
+ * listesini kullanıyordu; tek sistem daha iyi. */
+.pn-toasts {
+	position: fixed;
+	z-index: 80;
+	left: 50%;
+	bottom: 22px;
+	transform: translateX(-50%);
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	pointer-events: none;
+	width: min(440px, calc(100vw - 24px));
+}
+.pn-toast {
+	display: flex;
+	align-items: center;
+	gap: 9px;
+	padding: 11px 14px;
+	border-radius: 12px;
+	background: var(--text);
+	color: var(--bg);
+	font-size: var(--fs-sm);
+	font-weight: 500;
+	box-shadow: 0 18px 40px -22px rgba(0, 0, 0, .9);
+	animation: pn-toast-in .3s var(--pn-ease);
+}
+.pn-toast--hata { background: #b3261e; color: #fff; }
+.pn-toast--ok { background: #2a7a46; color: #fff; }
+@keyframes pn-toast-in {
+	from { opacity: 0; transform: translateY(10px) scale(.98); }
+}
+
+/* ---- 8. Sayfa geçişi: TEK sistem -----------------------------------
+ *
+ * KALDIRILDI: @view-transition { navigation: auto; } ve manuel
+ * startViewTransition çağrıları. Sebebi ölçümle görüldü:
+ *
+ * İki geçiş aynı anda çalışıyordu — tam sayfa görünüm geçişi (kök öğeyi
+ * 4 px aşağı kaydırıp solduruyor) ve sekme hapının kendi animasyonu.
+ * Tarayıcı geçiş sırasında sayfanın DONDURULMUŞ görüntüsünü gösterdiği
+ * için hap animasyonu o karelerde görünmüyor, geçiş bitince hap çoktan
+ * varmış oluyordu. Sonuç: "tutarsız kayma".
+ *
+ * Referans (Murmura) SPA olduğu için tam sayfa geçişi YOK; tek hareket
+ * eden şey sekme hapı. Biz de öyle yapıyoruz: hap kayar, kartlar
+ * kademeli belirir (pn-gir). Tek sistem, her sayfada aynı his.
+ */
+
+/* ---- 9. Bağlantı ve odak geri bildirimi --------------------------- */
+.admin-side .menu a,
+.admin-body a,
+.pn-item { transition: color .14s ease, background .14s ease, opacity .14s ease; }
+
+:focus-visible { outline-offset: 2px; }
+
+/* ---- 10. Hareketi azalt ------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+	.admin-body > *,
+	.admin-body > .gap > *,
+	.kpi-grid > *,
+	.pn-view > *,
+	.pn-grid > .pn-card,
+	.pn-kpis > .pn-kpi,
+	.htmx-settling, .htmx-added, .pn-toast {
+		animation: none !important;
+	}
+	.admin-top, .table tbody tr, .btn, .icon-btn, .pn-progress {
+		transition: none !important;
+	}
+	.btn:active, .icon-btn:active, .pn-btn:active { transform: none !important; }
+}
+
+/* =====================================================================
+ * Kayan "mürekkep hapı" (Faz 155)
+ * =====================================================================
+ *
+ * Murmura'daki sekme geçişinin aynısı. Hap, İKİ KENARI BAĞIMSIZ hareket eden
+ * kırpılmış bir katmandır; içinde etiketlerin zıt renkli kopyaları durur.
+ * Kırpma penceresi etiketin üstüne geldiği anda renk tam kenarda değişir.
+ *
+ * Neden tek arka plan kutusu değil: kutu büyütülünce metin de ölçeklenir ve
+ * yazı titrer. Kopya + kırpma, yazıyı hiç ölçeklemeden "esneme" hissi verir.
+ *
+ * Bu dosyada çünkü admin-theme.css'teki .ws-tabs kuralından SONRA yükleniyor
+ * ve onun aktif-zemin kuralını geçersiz kılması gerekiyor.
+ */
+
+.tb-hap {
+	position: absolute;
+	inset: 0;
+	z-index: 2;
+	display: flex;
+	box-sizing: border-box;
+	pointer-events: none;
+	opacity: 0;
+	background: var(--text);
+	color: var(--bg);
+	border-radius: 999px;
+	/* clip-path JS'ten gelir; JS çalışmazsa opacity 0 kalır ve eski
+	 * .on zemini görünür — bozulma değil, sadeleşme. */
+	transition: opacity .2s var(--pn-ease);
+}
+
+.tb-hap-kopya {
+	color: inherit;
+	background: none;
+	text-decoration: none;
+	border-color: transparent !important;
+}
+
+/* Hap kurulduğunda aktif öğenin kendi zemini gerekmez: zemini hap veriyor.
+ * Renk de verilmez — kopyanın krem metni hapın penceresinde görünür. */
+.tb-hap-var > a.on,
+.tb-hap-var > a.active,
+.tb-hap-var > button.active,
+.tb-hap-var > button.on {
+	background: transparent;
+	border-color: transparent;
+	box-shadow: none;
+	color: var(--text);
+}
+
+/* Hapın altındaki öğe tıklanabilir kalmalı; hap pointer-events: none. */
+.tb-hap-var > a,
+.tb-hap-var > button { position: relative; z-index: 1; }
+
+/* Hap eski yerinden kayarken kabın belirme animasyonu susturulur.
+ *
+ * İçerikler'deki durum sekmeleri `hx-target="#icerik-panel"` ile TÜM paneli
+ * değiştiriyor. htmx yeni panele `.htmx-added` veriyor, CSS de pn-yenile
+ * (opacity .35→1) oynatıyor. Hap bu kabın İÇİNDE olduğu için "kayma"
+ * yerine sönüp belirme görünüyordu (ölçüldü: opacity 1→0→1, clip sabit).
+ * admin-ui.js kayıtlı konumdan kaydırırken bu sınıfı ekliyor. */
+/* DİKKAT: kural YALNIZ sınıfı taşıyan öğeye uygulanır, torunlara DEĞİL.
+ * `.tb-hap-geliyor .tabs` yazıldığında panelin içindeki sekmeler kapsanıyor
+ * ve `transform: none !important` panelin çocuklarına da bulaşıyordu:
+ * içerik süzülme animasyonu (WAAPI) `!important` tarafından ezildiği için
+ * hiç oynamıyordu (ölçüldü: yön dizisi [0]). */
+.tb-hap-geliyor {
+	animation: none !important;
+	opacity: 1 !important;
+	transform: none !important;
+}
+
+/* Hap, kaymaya başlarken opacity 0→1 geçişini de oynatıyordu (CSS'te
+ * `.tb-hap { opacity: 0; transition: opacity .2s }`). Ölçüm: kayma
+ * sırasında opaklık 0 → 1 arasında süzülüyor, hareket "solma" gibi
+ * görünüyordu. Eski yerinden ANINDA görünmeli ki kayma okunsun. */
+.tb-hap-geliyor .tb-hap,
+.tb-hap-geliyor.tb-hap {
+	transition: none !important;
+}
+
+/* Çalışma alanı sekme çubuğu: hap için ray. */
+.ws-links { position: relative; }
+
+/* Ayar/içerik sekmeleri: hap 9 px köşeyle oturur (çubuğun iç yarıçapı). */
+.tabs { position: relative; }
+
+@media (prefers-reduced-motion: reduce) {
+	.tb-hap { transition: none; }
+}
+
+/* Odak halkası: hap aktif etiketi kapladığı için bağlantının kendi halkası
+ * görünmez olurdu. Aktif öğe odaklanınca halka HAPIN çevresine çizilir
+ * (hap bağlantılardan sonra geldiği için kardeş seçicisiyle erişilebiliyor). */
+.tb-hap-var > a:focus-visible ~ .tb-hap,
+.tb-hap-var > button:focus-visible ~ .tb-hap {
+	outline: 2px solid var(--text);
+	outline-offset: 2px;
+}
+/* Kategori kartı: gelişmiş alanlar <details> içinde (Faz 156)
+ *
+ * Ölçüm: /admin/kategoriler 5893 düğüm ve 89 kartın tamamı tüm alanlarıyla
+ * açıktı → FCP 216 ms (içerik listesi 92 ms). Kapalı <details> içeriği
+ * DÜZENLENMEZ; düğümler DOM'da kalır ve form normal gönderilir, ama yerleşim
+ * maliyeti düşer. Aynı desen içerik formunda da kullanıldı (Faz 147).
+ */
+
+.kat-gelismis {
+	border-top: 1px solid var(--border);
+	margin-top: 8px;
+	padding-top: 6px;
+}
+
+.kat-gelismis > summary {
+	cursor: pointer;
+	font-size: 12px;
+	font-weight: 600;
+	color: var(--text-3);
+	list-style: none;
+	padding: 4px 0;
+	border-radius: 8px;
+	user-select: none;
+}
+
+.kat-gelismis > summary::-webkit-details-marker { display: none; }
+
+/* Ok işareti: açıkken döner. ::before kullanılıyor ki summary metni
+ * ekran okuyucuda bozulmasın (içerik formundaki .form-grup ile aynı). */
+.kat-gelismis > summary::before {
+	content: "›";
+	display: inline-block;
+	margin-right: 6px;
+	font-size: 14px;
+	line-height: 1;
+	transition: transform .15s var(--pn-ease);
+}
+
+.kat-gelismis[open] > summary::before { transform: rotate(90deg); }
+
+.kat-gelismis > summary:hover { color: var(--text); }
+
+.kat-gelismis > summary:focus-visible {
+	outline: 2px solid var(--text);
+	outline-offset: 2px;
+}
+
+/* Açıkken üst çizgi kalksın: içerik zaten görünür. */
+.kat-gelismis[open] > summary { margin-bottom: 4px; }
+
+@media (prefers-reduced-motion: reduce) {
+	.kat-gelismis > summary::before { transition: none; }
+}
+
+/* ============================================================
+ * Komut paleti 2.0 (Faz 162)
+ *
+ * Palet artık varlık arıyor (içerik/kategori/medya/kişi) ve sonuçları
+ * gruplu gösteriyor. Ölçüler Pacely'nin palet kutusundan: kart zemini,
+ * r-lg, güçlü gölge, 560px genişlik, 12vh üst boşluk.
+ * ============================================================ */
+.cmdk-box {
+	width: min(640px, calc(100vw - 32px));
+	background: var(--card);
+	border-radius: var(--r-lg);
+	box-shadow: var(--shadow-lg);
+	overflow: hidden;
+	display: flex;
+	flex-direction: column;
+	max-height: min(70vh, 560px);
+}
+
+.cmdk-head {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	padding: 14px 16px;
+	border-bottom: 1px solid var(--border);
+	flex: none;
+}
+.cmdk-head .ti { width: 18px; height: 18px; color: var(--text-3); flex: none; }
+
+/* Palet girdisi: .input sınıfını bilinçli olarak KULLANMIYOR — kutu
+ * görünümü (çerçeve, 42px, iç çizgi) burada yanlış: girdi kutunun
+ * içinde, kenarlıksız durmalı. */
+.cmdk-input {
+	flex: 1;
+	min-width: 0;
+	border: 0;
+	background: none;
+	color: var(--text);
+	font: inherit;
+	font-size: 15px;
+	outline: none;
+	padding: 0;
+}
+.cmdk-input::placeholder { color: var(--text-3); }
+.cmdk-input::-webkit-search-cancel-button { display: none; }
+
+.cmdk-list {
+	list-style: none;
+	margin: 0;
+	padding: 6px;
+	overflow-y: auto;
+	flex: 1;
+	min-height: 0;
+}
+
+.cmdk-grup {
+	font-size: 11px;
+	font-weight: 700;
+	letter-spacing: .04em;
+	text-transform: uppercase;
+	color: var(--text-3);
+	padding: 10px 10px 4px;
+}
+
+.cmdk-oge {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	padding: 8px 10px;
+	border-radius: 10px;
+	cursor: pointer;
+	color: var(--text);
+	transition: background .12s ease;
+}
+.cmdk-oge.on { background: var(--surface-2); }
+.cmdk-oge__ikon {
+	width: 30px;
+	height: 30px;
+	flex: none;
+	display: grid;
+	place-items: center;
+	border-radius: 8px;
+	background: var(--pn-card-3);
+	color: var(--text-2);
+}
+.cmdk-oge__ikon .ti { width: 16px; height: 16px; }
+.cmdk-oge__govde { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.cmdk-oge__ad {
+	font-size: 13.5px;
+	font-weight: 600;
+	line-height: 1.3;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+.cmdk-oge__ad mark {
+	background: color-mix(in srgb, var(--accent, var(--text)) 22%, transparent);
+	color: inherit;
+	border-radius: 3px;
+	padding: 0 1px;
+}
+.cmdk-oge__alt {
+	font-size: 11.5px;
+	color: var(--text-3);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+.cmdk-oge__rozet { flex: none; }
+.cmdk-oge__ok {
+	width: 14px;
+	height: 14px;
+	flex: none;
+	color: var(--text-3);
+	opacity: 0;
+	transition: opacity .12s ease;
+}
+.cmdk-oge.on .cmdk-oge__ok { opacity: 1; }
+
+.cmdk-bos {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 4px;
+	padding: 28px 16px;
+	text-align: center;
+	color: var(--text-3);
+	font-size: 12.5px;
+}
+.cmdk-bos .ti { width: 22px; height: 22px; opacity: .7; }
+.cmdk-bos strong { color: var(--text); font-size: 13.5px; }
+
+.cmdk-foot {
+	display: flex;
+	align-items: center;
+	gap: 14px;
+	flex-wrap: wrap;
+	padding: 9px 16px;
+	border-top: 1px solid var(--border);
+	background: var(--bg-soft);
+	color: var(--text-3);
+	font-size: 11.5px;
+	flex: none;
+}
+.cmdk-foot kbd {
+	display: inline-grid;
+	place-items: center;
+	min-width: 18px;
+	height: 18px;
+	padding: 0 4px;
+	margin-right: 3px;
+	border-radius: 5px;
+	border: 1px solid var(--border);
+	background: var(--card);
+	font-family: inherit;
+	font-size: 10.5px;
+	line-height: 1;
+	color: var(--text-2);
+}
+.cmdk-ipucu { margin-left: auto; }
+
+@media (max-width: 620px) {
+	.cmdk-ipucu { display: none; }
+	.cmdk-box { max-height: 80vh; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.cmdk-oge, .cmdk-oge__ok { transition: none; }
+}
+
+/* Dikte düğmesi "dinliyor" durumu.
+ *
+ * Faz 161'de düğmenin içeriği yerel SVG oldu; JS eskiden textContent ile
+ * "● Dinliyor…" yazıyordu ve SVG'yi siliyordu. Artık durum sınıfla
+ * bildirilir, etiket ::after ile çizilir — ikon korunur.
+ */
+.btn.recording { color: var(--pn-bad); }
+.btn.recording .ti { animation: ico-nabiz 1s ease-in-out infinite; }
+.btn.recording::after {
+	content: "Dinliyor…";
+	font-size: 12px;
+	font-weight: 600;
+}
+@media (prefers-reduced-motion: reduce) {
+	.btn.recording .ti { animation: none; }
+}
+
+/* ============================================================
+ * Boş durum ve iskelet (Faz 163)
+ *
+ * Önce 31 ayrı yerde elle yazılmış boş-durum cümlesi vardı; yükleme
+ * durumu ise düz "Yükleniyor…" metniydi. İskelet, HTMX değişiminde
+ * yüksekliği korur: hedef boşalıp 20px'lik bir satıra düşünce sayfa
+ * 500-600px zıplıyordu (CLS).
+ * ============================================================ */
+.bos-durum {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
+	padding: 40px 20px;
+	text-align: center;
+	color: var(--text-3);
+}
+.bos-durum__ikon {
+	display: grid;
+	place-items: center;
+	width: 44px;
+	height: 44px;
+	border-radius: 12px;
+	background: var(--pn-card-3);
+	color: var(--text-2);
+	margin-bottom: 2px;
+}
+.bos-durum__ikon .ti { width: 22px; height: 22px; }
+.bos-durum__baslik {
+	margin: 0;
+	font-size: 14px;
+	font-weight: 600;
+	color: var(--text);
+}
+.bos-durum__aciklama {
+	margin: 0;
+	font-size: 12.5px;
+	line-height: 1.5;
+	max-width: 46ch;
+}
+.bos-durum .btn { margin-top: 6px; }
+
+/* Tablo hücresi içinde: dikey boşluğu azalt, hücreye yay. */
+td > .bos-durum, th > .bos-durum { padding: 24px 12px; }
+
+/* --- İskelet --- */
+.iskelet-tablo { display: flex; flex-direction: column; }
+.iskelet-satir {
+	display: flex;
+	align-items: center;
+	gap: 14px;
+	height: 44px;
+	padding: 0 12px;
+	border-bottom: 1px solid var(--border);
+}
+.iskelet-cizgi {
+	display: block;
+	height: 10px;
+	flex: 1;
+	border-radius: 5px;
+	background: linear-gradient(90deg, var(--surface-2) 25%, var(--pn-card-3) 50%, var(--surface-2) 75%);
+	background-size: 200% 100%;
+	animation: iskelet-kay 1.3s ease-in-out infinite;
+}
+.iskelet-cizgi--kisa { flex: 0 0 18%; }
+.iskelet-cizgi--baslik { height: 14px; flex: 0 0 42%; }
+
+.iskelet-kartlar { display: grid; gap: 12px; }
+.iskelet-kart {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	padding: 16px;
+	border-radius: var(--r-md);
+	background: var(--card);
+	box-shadow: inset 0 0 0 1px var(--border);
+}
+
+@keyframes iskelet-kay {
+	0% { background-position: 200% 0; }
+	100% { background-position: -200% 0; }
+}
+
+/* Hareket hassasiyeti: kayma durur, çubuklar sabit kalır. */
+@media (prefers-reduced-motion: reduce) {
+	.iskelet-cizgi { animation: none; background: var(--surface-2); }
+}
+
+/* Yükleniyor göstergesi (Faz 163): dönen halka + metin. */
+.yukleniyor {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	font-size: 12px;
+	color: var(--text-3);
+}
+.yukleniyor__halka {
+	width: 14px;
+	height: 14px;
+	flex: none;
+	animation: yukleniyor-don .9s linear infinite;
+}
+@keyframes yukleniyor-don { to { transform: rotate(360deg); } }
+
+@media (prefers-reduced-motion: reduce) {
+	.yukleniyor__halka { animation: none; }
+}
+
+/* ============================================================
+ * Yardım merkezi (Faz 165)
+ *
+ * SSS + klavye kısayolları + ekran ipuçları tek sayfada. Arama istemcide
+ * süzülür: 40+ madde için sunucuya sorgu atmak gereksiz.
+ * ============================================================ */
+.yardim { display: flex; flex-direction: column; gap: 14px; }
+
+.yardim-ara { position: relative; display: flex; align-items: center; }
+.yardim-ara .ti {
+	position: absolute;
+	left: 13px;
+	width: 17px;
+	height: 17px;
+	color: var(--text-3);
+	pointer-events: none;
+}
+.yardim-ara .input { padding-left: 38px; padding-right: 90px; }
+.yardim-ara__sayi {
+	position: absolute;
+	right: 13px;
+	font-size: 11.5px;
+	color: var(--text-3);
+	pointer-events: none;
+}
+
+.yardim-blok { display: flex; flex-direction: column; gap: 12px; }
+.yardim-baslik {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	margin: 0;
+	font-size: 13.5px;
+	font-weight: 700;
+	color: var(--text);
+}
+.yardim-baslik .ti { width: 17px; height: 17px; color: var(--text-3); }
+
+.yardim-kisayol-izgara {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+	gap: 8px;
+}
+.yardim-kisayol {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	font-size: 12.5px;
+	color: var(--text-2);
+	min-width: 0;
+}
+.yardim-tus {
+	flex: none;
+	display: inline-grid;
+	place-items: center;
+	min-width: 44px;
+	height: 24px;
+	padding: 0 7px;
+	border-radius: 6px;
+	border: 1px solid var(--border);
+	border-bottom-width: 2px;
+	background: var(--card);
+	font-family: inherit;
+	font-size: 11px;
+	font-weight: 600;
+	color: var(--text);
+	white-space: nowrap;
+}
+
+.yardim-izgara {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+	gap: 10px;
+}
+.yardim-madde {
+	display: flex;
+	gap: 10px;
+	padding: 12px;
+	border-radius: var(--r-md);
+	background: var(--bg-soft);
+	box-shadow: inset 0 0 0 1px var(--border);
+}
+.yardim-madde__ikon {
+	flex: none;
+	width: 30px;
+	height: 30px;
+	display: grid;
+	place-items: center;
+	border-radius: 8px;
+	background: var(--pn-card-3);
+	color: var(--text-2);
+}
+.yardim-madde__ikon .ti { width: 16px; height: 16px; }
+.yardim-madde__baslik {
+	margin: 0 0 3px;
+	font-size: 13px;
+	font-weight: 600;
+	color: var(--text);
+}
+.yardim-madde__metin {
+	margin: 0 0 6px;
+	font-size: 12.5px;
+	line-height: 1.55;
+	color: var(--text-2);
+}
+
+.yardim-sss { display: flex; flex-direction: column; gap: 6px; }
+.yardim-kutu {
+	border-radius: var(--r-md);
+	background: var(--bg-soft);
+	box-shadow: inset 0 0 0 1px var(--border);
+	overflow: hidden;
+}
+.yardim-kutu > summary {
+	cursor: pointer;
+	padding: 11px 13px;
+	font-size: 13px;
+	font-weight: 600;
+	color: var(--text);
+	list-style: none;
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+.yardim-kutu > summary::-webkit-details-marker { display: none; }
+.yardim-kutu > summary::before {
+	content: "";
+	width: 8px;
+	height: 8px;
+	flex: none;
+	border-right: 1.5px solid var(--text-3);
+	border-bottom: 1.5px solid var(--text-3);
+	transform: rotate(-45deg);
+	transition: transform .16s var(--pn-ease);
+}
+.yardim-kutu[open] > summary::before { transform: rotate(45deg); }
+.yardim-kutu > p {
+	margin: 0;
+	padding: 0 13px 12px 33px;
+	font-size: 12.5px;
+	line-height: 1.6;
+	color: var(--text-2);
+}
+
+.yardim-bag { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 8px; }
+.yardim-bag__oge {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	padding: 9px 11px;
+	border-radius: var(--r-md);
+	background: var(--bg-soft);
+	box-shadow: inset 0 0 0 1px var(--border);
+	color: var(--text);
+	text-decoration: none;
+	transition: background .14s ease;
+}
+.yardim-bag__oge:hover { background: var(--surface-2); text-decoration: none; }
+.yardim-bag__oge > .ti:last-child { width: 14px; height: 14px; color: var(--text-3); flex: none; }
+
+/* Filtre sonucu gizlenen öğe: display:none, arama indeksini bozmaz. */
+.yardim [hidden] { display: none !important; }
+
+@media (prefers-reduced-motion: reduce) {
+	.yardim-kutu > summary::before { transition: none; }
+}
+
+/* ============================================================
+ * Birleşik gelen kutusu (Faz 167)
+ *
+ * Üç kaynak tek listede. Kartlar kaynak başına "bekleyen" sayısını
+ * gösterir ve aynı zamanda süzgeçtir; seçili olan `.on` ile işaretlenir.
+ * ============================================================ */
+.gelen { display: flex; flex-direction: column; gap: 14px; }
+
+.gelen-ozet {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+	gap: 10px;
+}
+.gelen-kart {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	padding: 12px 14px;
+	border-radius: var(--r-md);
+	background: var(--card);
+	box-shadow: inset 0 0 0 1px var(--border);
+	color: var(--text);
+	text-decoration: none;
+	transition: background .14s ease, box-shadow .14s ease;
+}
+.gelen-kart:hover { background: var(--surface-2); text-decoration: none; }
+.gelen-kart.on {
+	box-shadow: inset 0 0 0 1.5px var(--accent, var(--text));
+	background: var(--card);
+}
+.gelen-kart .ti { width: 16px; height: 16px; color: var(--text-3); }
+.gelen-kart__sayi { font-size: 20px; font-weight: 700; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+.gelen-kart__ad { font-size: 11.5px; color: var(--text-3); font-weight: 600; }
+
+.gelen-liste { display: flex; flex-direction: column; gap: 6px; }
+.gelen-oge {
+	display: flex;
+	align-items: flex-start;
+	gap: 11px;
+	padding: 11px 13px;
+	border-radius: var(--r-md);
+	background: var(--card);
+	box-shadow: inset 0 0 0 1px var(--border);
+	color: var(--text);
+	text-decoration: none;
+	transition: background .14s ease;
+}
+.gelen-oge:hover { background: var(--surface-2); text-decoration: none; }
+.gelen-oge__ikon {
+	flex: none;
+	width: 30px;
+	height: 30px;
+	display: grid;
+	place-items: center;
+	border-radius: 8px;
+	background: var(--pn-card-3);
+	color: var(--text-2);
+	margin-top: 1px;
+}
+.gelen-oge__ikon .ti { width: 16px; height: 16px; }
+.gelen-oge__govde { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.gelen-oge__ust { display: flex; align-items: center; gap: 7px; min-width: 0; }
+.gelen-oge__baslik {
+	font-size: 13px;
+	font-weight: 600;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	flex: 1;
+	min-width: 0;
+}
+.gelen-oge__yeni { flex: none; background: var(--accent, var(--text)); color: #fff; }
+.gelen-oge__zaman { flex: none; font-size: 11px; color: var(--text-3); font-variant-numeric: tabular-nums; }
+.gelen-oge__ozet {
+	font-size: 12px;
+	line-height: 1.45;
+	color: var(--text-2);
+	overflow: hidden;
+	display: -webkit-box;
+	-webkit-line-clamp: 2;
+	-webkit-box-orient: vertical;
+}
+.gelen-oge__alt { display: flex; align-items: center; gap: 7px; font-size: 11px; color: var(--text-3); margin-top: 1px; }
+.gelen-oge__ok { flex: none; width: 14px; height: 14px; color: var(--text-3); align-self: center; }
+
+@media (max-width: 620px) {
+	.gelen-oge__ozet { -webkit-line-clamp: 3; }
+}
+
+/* ============================================================
+ * Genel "Yeni" menüsü (Faz 168)
+ *
+ * Üst barda genel oluşturma menüsü. Önce her ekranın kendi
+ * "Yeni …" düğmesi vardı; başka bir şey oluşturmak için önce o ekranı
+ * bulmak gerekiyordu.
+ *
+ * <details> + <summary> kullanılıyor: JS olmadan da açılır (progressive
+ * enhancement). Kapatma davranışı JS'te (dış tıklama + Esc).
+ * ============================================================ */
+.new-dd { position: relative; flex: none; }
+.new-dd > summary {
+	list-style: none;
+	cursor: pointer;
+	/* .btn sınıfı görünümü veriyor; summary'nin kendi oku gizlenir. */
+	gap: 6px;
+	padding: 0 14px 0 12px;
+}
+.new-dd > summary::-webkit-details-marker { display: none; }
+.new-dd > summary::marker { content: ""; }
+/* Zemin KAPALI durumdaki gibi kalir: `--text-2` koyu temada acik
+ * gri oldugu icin beyaz yaziyla kontrast 1.5'e dusuyordu.
+ * "Acik" durumu halkayla belirtilir (Faz 182). */
+.new-dd[open] > summary {
+	box-shadow: var(--shadow), inset 0 0 0 2px color-mix(in srgb, var(--bg) 45%, transparent);
+}
+
+.new-dd__menu {
+	position: absolute;
+	right: 0;
+	top: calc(100% + 6px);
+	z-index: 60;
+	min-width: 268px;
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	padding: 6px;
+	background: var(--card);
+	border-radius: var(--r-lg);
+	box-shadow: var(--shadow-lg);
+}
+.new-dd__menu a {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	padding: 8px 10px;
+	border-radius: 10px;
+	color: var(--text);
+	text-decoration: none;
+	transition: background .12s ease;
+}
+.new-dd__menu a:hover, .new-dd__menu a:focus-visible {
+	background: var(--surface-2);
+	text-decoration: none;
+}
+.new-dd__menu .ti {
+	width: 17px;
+	height: 17px;
+	flex: none;
+	color: var(--text-3);
+}
+.new-dd__menu a > span { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.new-dd__menu b { font-size: 13px; font-weight: 600; }
+.new-dd__menu small { font-size: 11.5px; color: var(--text-3); }
+
+@media (max-width: 620px) {
+	.new-dd > summary span { display: none; }
+	.new-dd > summary { padding: 0 10px; }
+	.new-dd__menu { right: -60px; min-width: 240px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.new-dd__menu a { transition: none; }
+}

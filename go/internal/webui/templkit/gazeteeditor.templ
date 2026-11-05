@@ -1,0 +1,68 @@
+// Gazete sayı editörü sayfa kabuğu (templ): toolbar + blok paleti + tuval + özellikler.
+// Motor static/gazete.js; sayfa JSON'u window.GZ_BOOT ile verilir.
+package templkit
+
+// GazeteEditorView gazete editörü kabuğu.
+type GazeteEditorView struct {
+	FlashKind string
+	FlashText string
+	Title     string
+	IssueDate string
+	Period    string
+	Status    string
+	PageJSON  string
+}
+
+// GazeteEditorPanel gazete sayı editörü gövdesi.
+templ GazeteEditorPanel(v GazeteEditorView) {
+	<div>
+		<div class="gz-toolbar card card-pad">
+			<a class="btn small" href="/admin/gazete"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-arrow-left"></use></svg> Panele Dön</a>
+			<strong id="gz-issue-title">{ v.Title }</strong>
+			<span class="small muted">{ v.IssueDate } · { v.Period } · <span id="gz-status">{ v.Status }</span></span>
+			<span style="flex:1"></span><span class="gz-zoom"><button class="btn small" id="gz-zoom-out" title="Uzaklaştır (Ctrl+-)"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-minus"></use></svg></button><span class="gz-zoom-etiket" id="gz-zoom-etiket">100%</span><button class="btn small" id="gz-zoom-in" title="Yakınlaştır (Ctrl++)"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-plus"></use></svg></button></span><button class="btn small" id="gz-izgara-ac" title="Sütun ızgarasını göster/gizle"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-layout-grid"></use></svg> Izgara</button>
+			<button class="btn small" id="gz-undo" title="Geri al (Ctrl+Z)"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-arrow-back-up"></use></svg> Geri</button>
+			<button class="btn small" id="gz-redo" title="Yinele (Ctrl+Shift+Z)"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-arrow-forward-up"></use></svg> Yinele</button>
+			<button class="btn small" id="gz-doldur"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-wand"></use></svg> Otomatik Doldur</button>
+			<button class="btn small" id="gz-sablon"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-template"></use></svg> Şablon olarak Kaydet</button>
+			<span class="gz-tasma-sayac" id="gz-tasma-sayac" hidden></span><button class="btn small" id="gz-dogrula" title="Baskıyı üretmeden ölç: hangi bloklar sayfaya sığmıyor?"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-ruler"></use></svg> Sığdır Denetimi</button><button class="btn small" id="gz-pdf"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-file-type-pdf"></use></svg> PDF Üret</button>
+			<button class="btn small" id="gz-matbaa" title="Matbaa dosyası üret: PDF/X, CMYK, kesim ve taşma payı"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-printer"></use></svg> Matbaa Dosyası</button><button class="btn small" id="gz-onizleme"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-eye"></use></svg> Önizleme</button>
+			<button class="btn" id="gz-kaydet"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-device-floppy"></use></svg> Kaydet</button>
+		</div>
+		<div class="gz-bildirim info" id="gz-bildirim" hidden></div><div class="gz-layout">
+			<aside class="gz-palette card">
+				<h3 class="gz-h">Bloklar</h3>
+				<p class="hint small">Blok eklemek için tıklayın; tuvalde sürükleyerek taşıyın.</p>
+				<button class="gz-add" data-tip="manset"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-news"></use></svg> Manşet</button>
+				<button class="gz-add" data-tip="liste"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-list"></use></svg> Liste</button>
+				<button class="gz-add" data-tip="kart"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-layout-grid"></use></svg> Kart</button>
+				<button class="gz-add" data-tip="baslik"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-letter-case"></use></svg> Bölüm Başlığı</button>
+				<button class="gz-add" data-tip="metin"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-file-text"></use></svg> Metin</button>
+				<button class="gz-add" data-tip="gorsel"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-photo"></use></svg> Görsel</button>
+				<button class="gz-add" data-tip="cizgi"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-minus"></use></svg> Çizgi</button>
+				<button class="gz-add" data-tip="reklam"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-speakerphone"></use></svg> Reklam</button>
+				<button class="gz-add" data-tip="kunye"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-info-circle"></use></svg> Künye</button>
+				<h3 class="gz-h" style="margin-top:14px">Sayfalar <button class="btn small" id="gz-sayfa-ekle" title="Aktif sayfadan sonra yeni sayfa ekle" style="float:right;padding:2px 6px"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-plus"></use></svg></button></h3>
+				<div id="gz-pages" class="gz-pages">@IskeletKart(2)</div>
+				<h3 class="gz-h" style="margin-top:14px">Şablon Uygula</h3>
+				<select class="input" id="gz-sablonlar" style="width:100%;margin-bottom:6px">
+					<option value="">Şablon seçin…</option>
+				</select>
+				<button class="gz-add" id="gz-sablon-uygula"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-puzzle"></use></svg> Seçili Şablonu Uygula</button>
+				<a class="gz-add" href="/admin/gazete/sablonlar"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-books"></use></svg> Şablon Galerisi</a>
+			</aside>
+			<section class="gz-canvas-wrap card">
+				<div id="gz-canvas-olcek" class="gz-canvas-olcek"><div id="gz-canvas" class="gazete-sayfa" aria-label="Gazete sayfası tuvali"></div></div>
+			</section>
+			<aside class="gz-props card">
+				<h3 class="gz-h">Katmanlar</h3>
+				<div id="gz-layers" class="gz-layers">@IskeletKart(2)</div>
+				<h3 class="gz-h" style="margin-top:14px">Özellikler</h3>
+				<div id="gz-props-form" class="gz-props-form">
+					<p class="hint small">Düzenlemek için tuvalden bir blok seçin.</p>
+				</div>
+			</aside>
+		</div>
+		<div id="gz-boot" hidden>{ v.PageJSON }</div>
+	</div>
+}

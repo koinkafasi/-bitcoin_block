@@ -1,0 +1,127 @@
+// Package templkit — templ + shadcn tarzı Go bileşenleri (Adım 2 pilot).
+//
+// Bu paket, yeni nesil admin modüllerinin html/template yerine tip-güvenli
+// templ bileşenleriyle yazılabileceğini kanıtlar. Görsel dil ortaktır:
+// admin-shadcn.css (shadcn token'ları) + mevcut sınıf adları.
+package templkit
+
+import "strconv"
+
+// Button shadcn butonu (variant: primary | ghost).
+templ Button(label string, variant string) {
+	<button type="button" class={ "btn", templ.KV("ghost", variant == "ghost"), templ.KV("small", variant == "small") }>
+		{ label }
+	</button>
+}
+
+// Card başlık + gövde kartı.
+templ Card(title string) {
+	<div class="card card-pad">
+		if title != "" {
+			<div class="dash-head"><h2>{ title }</h2></div>
+		}
+		{ children... }
+	</div>
+}
+
+// Badge durum rozeti.
+templ Badge(text string, tone string) {
+	<span class={ "badge", templ.KV("tone-ok", tone == "ok"), templ.KV("tone-warn", tone == "warn"), templ.KV("tone-danger", tone == "danger") }>
+		{ text }
+	</span>
+}
+
+// StatCard KPI kartı (sparkline opsiyonel).
+templ StatCard(label, value, icon, spark string) {
+	<a class="kpi" href="#">
+		<span class="kpi-ico"><svg class="ti"><use href={ "/static/vendor/tabler-icons.svg?v=b89545a6#ti-" + icon }></use></svg></span>
+		<span class="kpi-body"><span class="kpi-val">{ value }</span><span class="kpi-lbl">{ label }</span></span>
+		if spark != "" {
+			<svg class="spark" viewBox="0 0 84 26" aria-hidden="true"><polyline points={ spark }></polyline></svg>
+		}
+	</a>
+}
+
+// Input etiketli form alanı.
+templ Field(label, name, value, placeholder string) {
+	<label class="small">
+		{ label }
+		<input class="input" name={ name } value={ value } placeholder={ placeholder }/>
+	</label>
+}
+
+// TableRow örnek tablo satırı.
+type DemoRow struct {
+	Name   string
+	Status string
+	Count  int
+}
+
+// DataTable başlıklı basit tablo (admin-ui.js otomatik araçlar ekler).
+templ DataTable(rows []DemoRow) {
+	<table class="table">
+		<thead>
+			<tr><th>Ad</th><th>Durum</th><th>Sayı</th><th></th></tr>
+		</thead>
+		<tbody>
+			for _, r := range rows {
+				<tr>
+					<td>{ r.Name }</td>
+					<td>
+						if r.Status == "aktif" {
+							@Badge("aktif", "ok")
+						} else {
+							@Badge(r.Status, "")
+						}
+					</td>
+					<td>{ strconv.Itoa(r.Count) }</td>
+					<td style="width:1%">@Button("Düzenle", "ghost")</td>
+				</tr>
+			}
+		</tbody>
+	</table>
+}
+
+// Gallery pilot sayfa gövdesi — bileşen galerisi.
+templ Gallery() {
+	<div style="display:grid;gap:14px">
+		@Card("templ × shadcn bileşen kütüphanesi") {
+			<p class="hint">
+				Bu sayfa, yeni admin modüllerinin <b>tip-güvenli Go bileşenleri (templ)</b>
+				ile yazılabileceğini gösterir. Görsel dil ortaktır: admin-shadcn.css token'ları.
+				Mevcut html/template sayfaları ile yan yana çalışır.
+			</p>
+			<div style="display:flex;gap:8px;flex-wrap:wrap">
+				@Button("Ana Buton", "primary")
+				@Button("İkincil", "ghost")
+				@Button("Küçük", "small")
+				@Badge("bilgi", "")
+				@Badge("çalışıyor", "ok")
+				@Badge("dikkat", "warn")
+				@Badge("hata", "danger")
+			</div>
+		}
+		<div class="dash-2">
+			@Card("İstatistik kartları") {
+				<div class="kpi-grid">
+					@StatCard("İçerik", "1.284", "file-text", "2,20 18,14 34,16 50,10 66,12 84,6")
+					@StatCard("Abone", "312", "mail", "2,22 18,18 34,20 50,16 66,12 84,8")
+					@StatCard("Okunma", "84B", "report-analytics", "2,18 18,20 34,12 50,14 66,8 84,4")
+				</div>
+			}
+			@Card("Form alanları") {
+				<div style="display:grid;gap:8px">
+					@Field("Başlık", "baslik", "", "Haber başlığı")
+					@Field("Kategori", "kategori", "", "Gündem")
+				</div>
+			}
+		</div>
+		@Card("Veri tablosu (otomatik arama/sıralama/sayfalama ile)") {
+			@DataTable([]DemoRow{
+				{Name: "Gazete modülü", Status: "aktif", Count: 10},
+				{Name: "Bülten dağıtımı", Status: "aktif", Count: 312},
+				{Name: "WhatsApp", Status: "bekliyor", Count: 0},
+			})
+		}
+	</div>
+}

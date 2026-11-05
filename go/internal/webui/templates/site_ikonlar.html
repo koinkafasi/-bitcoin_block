@@ -1,0 +1,97 @@
+{{define "ikonlar"}}<!doctype html><html lang="tr" data-theme="{{.Theme}}"><head>{{template "admin_head" .}}</head>
+<body><div class="admin-wrap">{{template "admin_side" .}}<main class="admin-main">
+{{template "admin_top" .}}
+<div class="admin-body">
+  <div id="ikonlar-panel">
+  {{if .Flash}}<div class="flash {{.Flash.Kind}}">{{.Flash.Text}}</div>{{end}}
+  {{with .Ikonlar}}
+    <div class="ik-bar">
+      <input class="input" type="search" id="ikAra" placeholder="İkon ara (ad)…" autocomplete="off" aria-label="İkon ara">
+      <span class="small muted" id="ikSayi">{{.Toplam}} ikon</span>
+      <a class="btn ghost small" href="#ikAnimasyon">Animasyonlar</a>
+      <a class="btn ghost small" href="#ikSpinner">Yükleniyor</a>
+      <span class="small muted">Tabler Icons · MIT · yerel</span>
+    </div>
+    <p class="hint" style="margin:0 0 12px">
+      Kullanım: <code>&lt;svg class="ti"&gt;&lt;use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-AD"/&gt;&lt;/svg&gt;</code>
+      — ada tıklayınca panoya kopyalanır. Dış servise istek gitmez.
+    </p>
+
+    <div class="ik-grid" id="ikGrid">
+      {{range .Kartlar}}<button type="button" class="ik-kart" data-ikon="{{.Ad}}" title="{{.Ad}}"><svg class="ti ik-gorsel" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-{{.Ad}}"/></svg><span class="ik-ad">{{.Ad}}</span></button>
+      {{end}}
+    </div>
+    <p class="ik-bos" id="ikBos" hidden>Eşleşen ikon yok.</p>
+
+    <section class="card card-pad" id="ikAnimasyon" style="margin-top:18px">
+      <div class="dash-head"><h2>Animasyonlar</h2></div>
+      <p class="hint" style="margin:0 0 12px">
+        Herhangi bir ikona sınıf ekleyerek hareket verilir. Hepsi
+        <code>prefers-reduced-motion</code> altında otomatik durur.
+      </p>
+      <div class="ik-anim-grid">
+        {{range .Animasyon}}<div class="ik-anim">
+          <svg class="ti ik-gorsel {{.Sinif}}" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-{{.Ikon}}"/></svg>
+          <code>{{.Sinif}}</code>
+          <span class="small muted">{{.Ad}}</span>
+          <span class="hint">{{.Not}}</span>
+        </div>
+        {{end}}
+      </div>
+    </section>
+
+    <section class="card card-pad" id="ikSpinner" style="margin-top:14px">
+      <div class="dash-head"><h2>Yükleniyor göstergeleri</h2></div>
+      <p class="hint" style="margin:0 0 12px">
+        Gerçek animasyonlu SVG varlıkları (SVG Spinners · MIT). Satır içi
+        basıldıkları için renklerini temadan alırlar; animasyon dosyanın
+        içinde tanımlı, JS gerekmez.
+      </p>
+      <div class="ik-spin-grid">
+        {{range .Spinner}}<div class="ik-spin">{{.SVG}}<code>{{.Ad}}</code></div>
+        {{end}}
+      </div>
+    </section>
+  {{end}}
+  </div>
+</div></main></div>
+<script>
+/* Galeri etkileşimi: arama + ada tıklayınca panoya kopyalama.
+ * Ayrı dosya açmıyoruz: bu davranış yalnız bu sayfada var. */
+(function () {
+  var ara = document.getElementById('ikAra');
+  var grid = document.getElementById('ikGrid');
+  var bos = document.getElementById('ikBos');
+  var sayi = document.getElementById('ikSayi');
+  if (!grid) return;
+  var kartlar = [].slice.call(grid.querySelectorAll('.ik-kart'));
+  function filtrele() {
+    var q = (ara.value || '').trim().toLowerCase();
+    var n = 0;
+    kartlar.forEach(function (k) {
+      var ad = k.getAttribute('data-ikon') || '';
+      var gorunur = !q || ad.indexOf(q) !== -1;
+      k.hidden = !gorunur;
+      if (gorunur) n++;
+    });
+    bos.hidden = n !== 0;
+    if (sayi) sayi.textContent = q ? (n + ' / ' + kartlar.length + ' ikon') : (kartlar.length + ' ikon');
+  }
+  if (ara) { ara.addEventListener('input', filtrele); ara.addEventListener('search', filtrele); }
+  grid.addEventListener('click', function (e) {
+    var k = e.target.closest('.ik-kart');
+    if (!k) return;
+    var ad = 'ti-' + k.getAttribute('data-ikon');
+    var yaz = function () { k.classList.add('ik-kopyalandi'); setTimeout(function () { k.classList.remove('ik-kopyalandi'); }, 900); };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(ad).then(yaz, function () {});
+    } else {
+      var t = document.createElement('textarea');
+      t.value = ad; document.body.appendChild(t); t.select();
+      try { document.execCommand('copy'); yaz(); } catch (err) {}
+      t.remove();
+    }
+  });
+})();
+</script>
+</body></html>{{end}}

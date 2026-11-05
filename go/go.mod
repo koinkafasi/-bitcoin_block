@@ -1,0 +1,31 @@
+module theblock/site
+
+go 1.27
+
+toolchain go1.27.3
+
+require (
+	github.com/AssemblyAI/assemblyai-go-sdk v1.10.0
+	github.com/a-h/templ v0.3.1070
+	github.com/jackc/pgx/v5 v5.11.0
+	github.com/stretchr/testify v1.11.1
+	golang.org/x/crypto v0.58.1-0.20261009181718-2f1f834330b2
+	golang.org/x/image v0.47.0
+	golang.org/x/text v0.43.0
+)
+
+require (
+	github.com/cenkalti/backoff v2.2.1+incompatible // indirect
+	github.com/coder/websocket v1.8.12 // indirect
+	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/google/go-querystring v1.1.0 // indirect
+	github.com/jackc/pgpassfile v1.0.0 // indirect
+	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect
+	github.com/jackc/puddle/v2 v2.2.2 // indirect
+	github.com/kr/text v0.2.0 // indirect
+	github.com/pmezard/go-difflib v1.0.0 // indirect
+	github.com/rogpeppe/go-internal v1.12.0 // indirect
+	golang.org/x/sync v0.24.0 // indirect
+	golang.org/x/sys v0.49.0 // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
+)

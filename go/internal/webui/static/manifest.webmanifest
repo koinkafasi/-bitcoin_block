@@ -1,0 +1,25 @@
+{
+  "name": "theblock.com.tr",
+  "short_name": "theblock",
+  "description": "AI destekli, çok dilli haber platformu — hava durumu, namaz vakitleri, eczane, gündem ve günlük özet.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0b0e14",
+  "theme_color": "#121212",
+  "lang": "tr",
+  "dir": "ltr",
+  "categories": ["news", "magazines", "weather"],
+  "icons": [
+    { "src": "/static/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/static/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/static/icon-maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "/static/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Son Dakika", "url": "/son-dakika" },
+    { "name": "Hava Durumu", "url": "/hava-durumu" },
+    { "name": "Günlük Özet", "url": "/ping" }
+  ]
+}

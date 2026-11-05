@@ -1,0 +1,183 @@
+{{define "yeniden_yazim"}}<!doctype html><html lang="tr" data-theme="{{.Theme}}"><head>{{template "admin_head" .}}</head>
+<body><div class="admin-wrap">{{template "admin_side" .}}<main class="admin-main">
+{{template "admin_top" .}}
+<div class="admin-body">
+{{template "yeniden_yazim_panel" .}}
+</div></main></div></body></html>{{end}}
+
+{{define "yeniden_yazim_panel"}}<div id="yeniden-panel">
+  {{with .Yeniden}}
+  {{if .Flash}}<div class="flash {{.Flash.Kind}}">{{.Flash.Text}}</div>{{end}}
+
+  {{if .Detay}}
+  {{$d := .Detay}}
+  <div class="card card-pad" style="margin-bottom:14px">
+    <div class="dash-head">
+      <h2 style="display:flex;align-items:center;gap:8px;margin:0"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-arrows-shuffle"/></svg> Öneri #{{$d.ID}}</h2>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <a class="btn ghost small" href="/admin/yeniden-yazim">Listeye dön</a>
+        <a class="btn small" href="/admin/icerikler/{{$d.ContentID}}" target="_blank" rel="noopener">Canlı içeriği aç</a>
+      </div>
+    </div>
+    <p style="margin:8px 0 0"><b>{{$d.Baslik}}</b>
+      <span class="tag">{{$d.Locale}}</span>
+      {{if $d.Kategori}}<span class="tag">{{$d.Kategori}}</span>{{end}}
+      <span class="tag {{$d.DurumSinif}}">{{$d.DurumEtiket}}</span>
+      <span class="tag">{{$d.ModEtiket}}</span>
+      <span class="small muted">sürüm {{$d.Surum}} · {{$d.Olusturma}}</span>
+    </p>
+
+    {{if $d.Hata}}<div class="flash error" style="margin-top:10px">{{$d.Hata}}</div>{{end}}
+    {{if $d.Kaynaklar}}
+    <div class="card card-pad" style="margin-top:12px;background:var(--bg-2)">
+      <h3 class="gz-h" style="margin:0 0 6px">Kullanılan kaynaklar ({{len $d.Kaynaklar}})</h3>
+      <p class="small muted" style="margin:0 0 8px">Haber bu kaynaklardaki bilgiyle yazıldı. Onaylamadan önce açıp doğrulayın.</p>
+      <ol style="margin:0 0 0 18px">
+        {{range $d.Kaynaklar}}
+        <li style="margin:0 0 6px">
+          <a href="{{.URL}}" target="_blank" rel="noopener noreferrer nofollow">{{if .Baslik}}{{.Baslik}}{{else}}{{.URL}}{{end}}</a>
+          <span class="small muted">{{if .Yayinci}}· {{.Yayinci}}{{end}}{{if .YayinTari}} · {{.YayinTari}}{{end}}</span>
+        </li>
+        {{end}}
+      </ol>
+    </div>
+    {{end}}
+    {{if $d.Uyarilar}}
+    <div class="flash warn" style="margin-top:10px">
+      <b>Kalite uyarıları:</b>
+      <ul style="margin:6px 0 0 18px">{{range $d.Uyarilar}}<li>{{.}}</li>{{end}}</ul>
+    </div>
+    {{end}}
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:14px;margin-top:14px">
+      <div>
+        <h3 class="gz-h" style="margin:0 0 6px">Şu anki metin · {{$d.EskiParagrafN}} paragraf · {{$d.EskiKarakter}} karakter</h3>
+        {{if $d.EskiSpot}}<p class="small muted" style="margin:0 0 8px"><b>Spot:</b> {{$d.EskiSpot}}</p>{{end}}
+        {{range $d.EskiParagraf}}<p style="margin:0 0 10px;line-height:1.6">{{.}}</p>{{else}}<p class="muted">Gövde boş.</p>{{end}}
+      </div>
+      <div>
+        <h3 class="gz-h" style="margin:0 0 6px">AI önerisi · {{$d.YeniParagrafN}} paragraf · {{$d.YeniKarakter}} karakter</h3>
+        {{if $d.YeniSpot}}<p class="small muted" style="margin:0 0 8px"><b>Spot:</b> {{$d.YeniSpot}}</p>{{end}}
+        {{range $d.YeniParagraf}}<p style="margin:0 0 10px;line-height:1.6">{{.}}</p>{{else}}<p class="muted">Henüz öneri üretilmedi.</p>{{end}}
+      </div>
+    </div>
+
+    {{if or $d.YeniSeoBaslik $d.YeniSeoAcik}}
+    <table class="table" style="margin-top:14px">
+      <thead><tr><th>Alan</th><th>Şu anki</th><th>AI önerisi</th></tr></thead>
+      <tbody>
+        <tr><td>SEO başlığı</td><td class="small muted">{{if $d.EskiSeoBaslik}}{{$d.EskiSeoBaslik}}{{else}}—{{end}}</td><td class="small">{{$d.YeniSeoBaslik}}</td></tr>
+        <tr><td>Meta açıklama</td><td class="small muted">{{if $d.EskiSeoAcik}}{{$d.EskiSeoAcik}}{{else}}—{{end}}</td><td class="small">{{$d.YeniSeoAcik}}</td></tr>
+      </tbody>
+    </table>
+    {{end}}
+
+    <div class="form-bar" style="margin-top:16px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      {{if eq $d.Durum "hazir"}}
+      <form method="post" action="/admin/yeniden-yazim/{{$d.ID}}/onayla" style="display:inline">
+        <button class="btn" type="submit" data-confirm="Bu metin yayındaki içeriğe yazılacak. Eski hâl sürüm geçmişinde saklanır. Onaylıyor musunuz?">
+          <svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-check"/></svg> Onayla ve yayına yaz
+        </button>
+      </form>
+      <form method="post" action="/admin/yeniden-yazim/{{$d.ID}}/reddet" style="display:inline">
+        <button class="btn ghost" type="submit">Reddet</button>
+      </form>
+      {{end}}
+      {{if or (eq $d.Durum "hata") (eq $d.Durum "reddedildi")}}
+      <form method="post" action="/admin/yeniden-yazim/{{$d.ID}}/tekrar" style="display:inline">
+        <button class="btn" type="submit">Yeniden üret</button>
+      </form>
+      {{end}}
+      {{if $d.Provider}}<span class="small muted">{{$d.Provider}} · {{$d.Model}} · {{$d.TokenGirdi}} girdi / {{$d.TokenCikti}} çıktı token{{if $d.Deneme}} · {{$d.Deneme}} deneme{{end}}</span>{{end}}
+    </div>
+  </div>
+  {{else}}
+
+  <div class="card card-pad" style="margin-bottom:14px">
+    <div class="dash-head">
+      <h2 style="display:flex;align-items:center;gap:8px;margin:0"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-arrows-shuffle"/></svg> AI ile yeniden yazım</h2>
+    </div>
+    <p class="hint" style="margin:8px 0 0">
+      Yayındaki <b>tek paragraflık / ince</b> içerikler AI ile yeniden yazılır.
+      Öneri <b>yayına yazılmaz</b>: eski ve yeni metni yan yana görüp onaylarsınız.
+      Onayda eski hâl sürüm geçmişine arşivlenir. TR ve EN satırları ayrı ayrı,
+      kendi dilinde yeniden yazılır.
+    </p>
+    <p class="hint" style="margin:6px 0 0">
+      <b>Araştırmalı mod (varsayılan):</b> her içerik için web araması yapılır,
+      gerçek kaynaklar toplanır ve haber o kaynaklardan yazılır. Kaynaklar
+      öneriyle birlikte saklanır ve aşağıda bağlantılarıyla görünür — onaydan
+      önce neye dayandığını görürsünüz.
+      <b>Yalnız mevcut metin:</b> kaynak eklenmez, yalnız eldeki cümle düzenlenir
+      (ölçüldü: bu modda 700 karakterlik haber üretilemiyor, kapı reddediyor).
+    </p>
+    <p class="hint" style="margin:6px 0 0">
+      Kalite kapısı geçemeyen öneri <b>Hata</b> olur ve gerekçesi satırda yazar.
+      Sıra trafiğe göredir: en çok okunan ince içerik önce genişletilir.
+    </p>
+
+    <div style="display:flex;gap:18px;flex-wrap:wrap;margin-top:12px">
+      <span class="tag">Aday içerik: <b>{{.AdaySayisi}}</b></span>
+      <span class="tag">Sırada: <b>{{index .Ozet "bekliyor"}}</b></span>
+      <span class="tag">Yazılıyor: <b>{{index .Ozet "kuyrukta"}}</b></span>
+      <span class="tag hazir">Onay bekliyor: <b>{{index .Ozet "hazir"}}</b></span>
+      <span class="tag hata">Hata: <b>{{index .Ozet "hata"}}</b></span>
+      <span class="tag tamam">Uygulandı: <b>{{index .Ozet "uygulandi"}}</b></span>
+      <span class="tag red">Reddedildi: <b>{{index .Ozet "reddedildi"}}</b></span>
+    </div>
+
+    <form method="post" action="/admin/yeniden-yazim/pilot" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:14px">
+      <label class="small muted" for="yyKok">Pilot: kaç haber (TR+EN birlikte)?</label>
+      <input class="input" id="yyKok" name="kok" value="{{.PilotAdet}}" style="max-width:90px" inputmode="numeric">
+      <label class="small muted" for="yyMod">mod</label>
+      <select class="input" id="yyMod" name="mod" style="width:auto;min-height:0;padding:2px 6px">
+        <option value="arastirmali" selected>Araştırmalı (kaynaklı)</option>
+        <option value="yeniden">Yalnız mevcut metin</option>
+      </select>
+      <button class="btn" type="submit" data-confirm="Pilot kuyruğa alınacak; AI çağrıları token harcar. Başlatılsın mı?">
+        <svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-player-play"/></svg> Pilotu başlat
+      </button>
+      <span class="small muted">Örn. 10 → 10 TR + 10 EN = 20 öneri. Sonuçlar birkaç dakikada bu listede belirir.</span>
+    </form>
+  </div>
+
+  <div style="display:flex;gap:6px;flex-wrap:wrap;margin:0 0 10px">
+    <a class="btn ghost small{{if eq .FiltreDurum ""}} active{{end}}" href="/admin/yeniden-yazim">Tümü</a>
+    <a class="btn ghost small" href="/admin/yeniden-yazim?durum=hazir">Onay bekleyen</a>
+    <a class="btn ghost small" href="/admin/yeniden-yazim?durum=hata">Hatalı</a>
+    <a class="btn ghost small" href="/admin/yeniden-yazim?durum=uygulandi">Uygulanan</a>
+    <a class="btn ghost small" href="/admin/yeniden-yazim?durum=reddedildi">Reddedilen</a>
+    <span class="small muted" style="align-self:center;margin-left:auto">{{.Toplam}} kayıt</span>
+  </div>
+
+  <table class="table">
+    <thead><tr><th>Başlık</th><th>Dil</th><th>Mod</th><th>Durum</th><th>Paragraf</th><th>Karakter</th><th>Kaynak</th><th>Uyarı</th><th>Tarih</th><th></th></tr></thead>
+    <tbody>
+    {{range .Satirlar}}
+      <tr>
+        <td><a href="/admin/yeniden-yazim/{{.ID}}">{{.Baslik}}</a>{{if .Kategori}}<div class="small muted">{{.Kategori}}</div>{{end}}</td>
+        <td><span class="tag">{{.Locale}}</span></td>
+        <td class="small muted">{{.ModEtiket}}</td>
+        <td><span class="tag {{.DurumSinif}}">{{.DurumEtiket}}</span></td>
+        <td class="small muted">{{if eq .Durum "hazir"}}{{.EskiParagrafN}} → <b>{{.YeniParagrafN}}</b>{{else}}{{.EskiParagrafN}}{{end}}</td>
+        <td class="small muted">{{if eq .Durum "hazir"}}{{.EskiKarakter}} → <b>{{.YeniKarakter}}</b>{{else}}{{.EskiKarakter}}{{end}}</td>
+        <td class="small muted">{{if .Kaynaklar}}{{len .Kaynaklar}}{{else}}—{{end}}</td>
+        <td class="small muted">{{len .Uyarilar}}{{if .Hata}}<div class="small">{{.Hata}}</div>{{end}}</td>
+        <td class="small muted">{{.Olusturma}}</td>
+        <td style="white-space:nowrap">
+          <a class="btn ghost small" href="/admin/yeniden-yazim/{{.ID}}">İncele</a>
+          {{if eq .Durum "hazir"}}
+          <form method="post" action="/admin/yeniden-yazim/{{.ID}}/onayla" style="display:inline">
+            <button class="btn small" type="submit" data-confirm="Bu metin yayındaki içeriğe yazılacak. Onaylıyor musunuz?">Onayla</button>
+          </form>
+          {{end}}
+        </td>
+      </tr>
+    {{else}}
+      <tr><td colspan="10" class="muted">Henüz öneri yok. Yukarıdan pilotu başlatın.</td></tr>
+    {{end}}
+    </tbody>
+  </table>
+  {{end}}
+  {{end}}
+</div>{{end}}

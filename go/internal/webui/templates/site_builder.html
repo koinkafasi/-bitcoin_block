@@ -1,0 +1,3036 @@
+{{define "tasarimci"}}<!doctype html><html lang="tr" data-theme="{{.Theme}}"><head>{{template "admin_head" .}}
+<link rel="stylesheet" href="{{asset "public.css"}}">
+<style>
+.bld-wrap{display:grid;grid-template-columns:220px minmax(0,1fr);gap:16px;align-items:start}
+@media(max-width:980px){.bld-wrap{grid-template-columns:1fr}}
+.bld-pal{position:sticky;top:70px;display:flex;flex-direction:column;gap:6px}
+/* Dar ekranda palet üstte tam genişlik blok olur; yapışkan kalırsa kaydırınca
+   çiplerin üstünü örter ve sürükleme tutulmaz (dokunmatik sürükleme çalışmaz). */
+@media(max-width:980px){.bld-wrap{grid-template-columns:minmax(0,1fr)}.bld-pal{position:static;top:auto}}
+.bld-pal button{display:flex;align-items:center;gap:8px;text-align:left;width:100%;cursor:pointer}
+.bld-canvas{display:flex;flex-direction:column;gap:10px}
+.bld-block{background:var(--surface);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.bld-block.dragging{opacity:.45}
+.bld-block.drop-target{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent)}
+/* SortableJS gorselleri (fare + dokunmatik ortak) */
+.bp-chip.sortable-ghost{opacity:.3;background:var(--surface-2);border:1px dashed var(--accent);border-radius:8px}
+.bp-chip.sortable-drag{opacity:.95;box-shadow:0 10px 28px rgba(0,0,0,.22)}
+.bp-chip.sortable-chosen{background:var(--surface-2)}
+.bld-add.sortable-ghost{opacity:.35;border-style:dashed}
+.bp-chip .grip{cursor:grab;touch-action:none;user-select:none}
+.bp-chip .grip:active{cursor:grabbing}
+.bp-chip.locked{background:var(--surface-2)}
+.bp-chip.locked .grip{cursor:not-allowed;opacity:.35}
+.bld-block.sortable-ghost{opacity:.3;outline:2px dashed var(--accent)}
+.bld-block.sortable-drag{opacity:.95;box-shadow:0 10px 28px rgba(0,0,0,.2)}
+.bld-block .grip{cursor:grab;touch-action:none;user-select:none}
+.hint-drag{font-size:.72rem}
+.bld-head{display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--surface-2);cursor:grab}
+.bld-head .grip{color:var(--muted-fg);font-size:1.05rem;letter-spacing:-2px}
+.bld-name{font-weight:600}
+.bld-type{font-size:.72rem;color:var(--muted-fg);border:1px solid var(--line);border-radius:6px;padding:1px 6px}
+.bld-actions{margin-left:auto;display:flex;gap:4px}
+.bld-actions button{cursor:pointer;border:1px solid var(--line);background:var(--surface);border-radius:6px;padding:2px 7px;font-size:.85rem}
+.bld-body{padding:10px 12px;display:none}
+.bld-block.open .bld-body{display:block}
+.bld-field{display:flex;align-items:center;gap:8px;margin:6px 0}
+.bld-field label{min-width:120px;font-size:.85rem;color:var(--muted-fg)}
+.bld-field input[type=number],.bld-field input[type=text]{flex:1;max-width:260px}
+.bld-off .bld-name{text-decoration:line-through;opacity:.5}
+.bld-empty{border:2px dashed var(--line);border-radius:10px;padding:22px;text-align:center;color:var(--muted-fg)}
+/* Başlık işaret stili: metin yerine görsel mini önizlemeler. */
+.hs-pick{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;width:100%}
+.hs-opt{position:relative;display:flex;flex-direction:column;gap:5px;cursor:pointer;border:1px solid var(--line);border-radius:8px;padding:6px;background:var(--surface)}
+.hs-opt input{position:absolute;opacity:0;pointer-events:none}
+.hs-opt b{font-size:.68rem;font-weight:600;color:var(--muted-fg);line-height:1.15;text-align:center}
+.hs-opt input:checked + .hs-demo{outline:2px solid var(--accent);outline-offset:1px}
+.hs-opt input:checked ~ b{color:var(--accent)}
+.hs-demo{position:relative;display:flex;align-items:center;gap:4px;height:24px;padding:0 6px;border-radius:4px;background:var(--surface-2);color:var(--text);font-size:.62rem;font-weight:800;overflow:hidden}
+.hs-demo::after{content:"";flex:1;border-top:2px solid var(--line);margin-left:4px}
+.hs-demo-bar{box-shadow:inset 4px 0 0 var(--accent)}
+.hs-demo-bar::after{display:none}
+.hs-demo-underline{box-shadow:inset 0 -3px 0 var(--accent)}
+.hs-demo-underline::after{display:none}
+.hs-demo-pill{background:var(--accent);color:#fff;border-radius:999px;justify-content:center}
+.hs-demo-pill::after{display:none}
+.hs-demo-dot::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--accent);flex:0 0 6px}
+.hs-demo-dot::after{display:none}
+.hs-demo-corner{background:var(--surface-2);box-shadow:inset 4px 0 0 var(--accent);border-radius:0 5px 5px 0}
+.hs-demo-corner::after{display:none}
+.hs-demo-tab{background:#2f3556;color:#fff;border-radius:4px 4px 0 0;box-shadow:inset 0 -3px 0 var(--accent);justify-content:center}
+.hs-demo-tab::after{display:none}
+.hs-demo-boxed{border:1px solid var(--line);box-shadow:inset 4px 0 0 var(--accent)}
+.hs-demo-boxed::after{display:none}
+.hs-demo-gradient{background:linear-gradient(135deg,var(--accent),#242838);color:#fff;justify-content:center}
+.hs-demo-gradient::after{display:none}
+.hs-demo-none::after,.hs-demo-line::before{display:none}
+.bld-tabs{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}
+.bld-tabs a{display:inline-flex;align-items:center;gap:6px;padding:7px 16px;border:1px solid var(--line);border-radius:8px;text-decoration:none;font-weight:600;background:var(--surface);color:var(--text)}
+.bld-tabs a.on{background:var(--accent-fill,var(--accent));color:#fff;border-color:var(--accent-fill,var(--accent))}
+.bld-views{display:flex;gap:6px;margin-bottom:12px}
+.bld-views button{cursor:pointer}
+/* Faz 4 — sürüm geçmişi paneli */
+.bld-history{border:1px solid var(--line);border-radius:10px;background:var(--surface);margin-bottom:12px;overflow:hidden}
+.bld-history-h{display:flex;align-items:center;gap:10px;padding:8px 12px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.bld-history-list{max-height:280px;overflow:auto;padding:6px}
+.bld-history-empty{padding:14px;color:var(--muted-fg);font-size:.85rem}
+.bld-history-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;margin-bottom:6px;flex-wrap:wrap}
+.bld-history-item .vh-num{font-weight:700;min-width:24px}
+.bld-history-item .vh-meta{flex:1;min-width:160px;font-size:.8rem;color:var(--muted-fg);line-height:1.4}
+.bld-history-item .vh-types{font-size:.72rem;color:var(--muted-fg);display:flex;gap:4px;flex-wrap:wrap}
+.bld-history-item .vh-types span{background:var(--surface-2);border:1px solid var(--line);border-radius:999px;padding:0 7px}
+/* Faz 6 — zengin metin editörü */
+.rt-editor{border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--surface);color:var(--text)}
+.rt-toolbar{display:flex;gap:3px;padding:4px 6px;background:var(--surface-2);border-bottom:1px solid var(--line);flex-wrap:wrap}
+.rt-toolbar button{cursor:pointer;border:1px solid var(--line);background:var(--surface);color:var(--text);border-radius:5px;padding:2px 8px;font-size:.8rem;line-height:1.5}
+.rt-toolbar button:hover{border-color:var(--accent);color:var(--accent)}
+.rt-content{min-height:120px;max-height:240px;overflow:auto;padding:8px 10px;font-size:.9rem;line-height:1.55;outline:none}
+.rt-content:empty::before{content:attr(data-placeholder);color:var(--muted-fg)}
+.rt-content p{margin:0 0 .6em}
+.rt-content ul,.rt-content ol{margin:.4em 0;padding-left:1.3em}
+.rt-content a{color:var(--accent-text,var(--accent));text-decoration:underline}
+.rt-content blockquote{border-left:3px solid var(--line);padding-left:.7em;margin:.4em 0;color:var(--muted-fg);font-style:italic}
+/* Faz 7 — A/B testi paneli */
+.ab-controls{display:grid;gap:10px;padding:10px 12px;grid-template-columns:auto minmax(120px,1fr);align-items:start}
+.ab-field{display:flex;flex-direction:column;gap:4px;max-width:200px}
+.ab-controls .opt-switch{grid-column:1/-1}
+.ab-actions{display:flex;gap:6px;flex-wrap:wrap;grid-column:1/-1}
+.ab-note{grid-column:1/-1}
+.ab-stats{padding:8px 12px;border-top:1px solid var(--line)}
+.ab-stats table{width:100%;border-collapse:collapse;font-size:.82rem}
+.ab-stats th,.ab-stats td{border:1px solid var(--line);padding:4px 8px;text-align:left}
+.ab-stats th{background:var(--surface-2)}
+.ab-badge{display:inline-block;background:#0f766e;color:#fff;border-radius:4px;padding:1px 7px;font-size:.72rem}
+/* Faz 9 — kategori liste görünüm seçici */
+/* Kategori şablonu: görsel mini önizlemeli, sayfa/kategoriye özel seçim. */
+.catview-pick{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;padding:8px 10px 4px}
+.catview-btn{cursor:pointer;border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:5px;font-size:.72rem;color:var(--muted-fg);display:flex;flex-direction:column;gap:4px;text-align:left;line-height:1.15}
+.catview-btn:hover{border-color:var(--accent)}
+.catview-btn[data-on="1"]{border-color:var(--accent);box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 22%,transparent);color:var(--text)}
+.catview-btn b{font-size:.7rem;font-weight:700;color:inherit}
+.catview-btn small{font-size:.62rem;color:var(--muted-fg);font-weight:400}
+.bp-split-box{display:flex;gap:10px;align-items:center;justify-content:space-between;margin:4px 10px 8px;padding:8px 10px;border:1px dashed var(--line);border-radius:8px;background:color-mix(in srgb,var(--accent) 5%,var(--surface))}
+.bp-split-box>div{display:flex;flex-direction:column;gap:2px;min-width:0}
+.bp-split-box b{font-size:.74rem}
+.bp-split-box span{font-size:.68rem;color:var(--muted-fg);line-height:1.3}
+.bp-split-box .btn{flex:0 0 auto}
+.ct-demo{display:grid;gap:2px;height:46px;padding:4px;background:var(--surface-2);border-radius:5px;width:100%}
+.ct-demo b{background:var(--line);border-radius:2px;display:block;min-height:0}
+.ct-demo b.a{background:var(--accent)}
+.ct-d-portre{grid-template-columns:1.35fr 1fr;grid-template-rows:1fr 1fr}
+.ct-d-portre .a{grid-row:1/3}
+.ct-d-uclu{grid-template-columns:1fr 1.25fr 1fr;grid-template-rows:repeat(6,1fr)}
+.ct-d-uclu .a{grid-column:1;grid-row:1/3}
+.ct-d-uclu .b{grid-column:1;grid-row:3/5}
+.ct-d-uclu .c{grid-column:1;grid-row:5/7}
+.ct-d-uclu .d{grid-column:2;grid-row:1/7}
+.ct-d-uclu .e{grid-column:3;grid-row:1/4}
+.ct-d-uclu .f{grid-column:3;grid-row:4/7}
+.ct-d-klasik{grid-template-columns:1.35fr 1fr;grid-template-rows:1fr 1fr}
+.ct-d-klasik .a{grid-row:1/3}
+.ct-d-liste{grid-template-rows:repeat(3,minmax(0,1fr))}
+.ct-d-izgara{grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(2,1fr)}
+.ct-d-mozaik{grid-template-columns:2fr 1fr 1fr;grid-template-rows:1fr 1fr}
+.ct-d-mozaik .a{grid-column:1;grid-row:1/3}
+.catview-tag{margin-left:auto;font-size:.68rem;background:#0f766e;color:#fff;border-radius:999px;padding:1px 8px}
+.zone-chip{font-size:.68rem;padding:2px 8px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--muted-fg);white-space:nowrap}
+.zone-chip.z-ust{background:#0369a1;color:#fff;border-color:#0369a1}
+.zone-chip.z-ana{background:#15803d;color:#fff;border-color:#15803d}
+.zone-chip.z-yan{background:var(--accent-fill,var(--accent));color:#fff;border-color:var(--accent-fill,var(--accent))}
+.zone-chip.z-genis{background:#7e22ce;color:#fff;border-color:#7e22ce}
+.zone-chip.off{background:#6b7280;border-color:#6b7280}
+.zone-chip.on-c{background:#fff;color:var(--text);border-color:var(--line)}
+
+/* ---- Şablon (blueprint) görünümü ---- */
+.bp-page{background:var(--surface-2);border:2px solid var(--line);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.bp-row{display:grid;gap:10px}
+.bp-row.c2{grid-template-columns:minmax(0,2fr) minmax(0,1fr)}
+.bp-row.pl-off{grid-template-columns:minmax(0,1fr)!important}
+.bp-row.pl-off .bp-zone[data-zone="yan"]{opacity:.55;border-style:dotted}
+.pl-hidden-tag{display:none;font-size:.65rem;font-weight:700;color:var(--danger);background:color-mix(in srgb,var(--danger) 12%,transparent);border:1px solid color-mix(in srgb,var(--danger) 35%,transparent);border-radius:999px;padding:1px 7px}
+.bp-row.pl-off .pl-hidden-tag{display:inline-block}
+@media(max-width:760px){.bp-row.c2{grid-template-columns:1fr}}
+.bp-zone{border:2px dashed var(--line);border-radius:8px;padding:8px;min-height:78px;display:flex;flex-direction:column;gap:8px;background:var(--surface);min-width:0}
+.bp-zone.over{border-color:var(--accent);background:rgba(209,0,21,.07)}
+.bp-zone.fixed{border-style:solid;border-color:var(--line);background:var(--surface)}
+.bp-zone-h{display:flex;align-items:center;gap:7px;font-weight:700;font-size:.8rem;color:var(--text)}
+.bp-zone-h .cnt{font-size:.7rem;background:var(--text);color:var(--card);border-radius:999px;padding:1px 8px}
+.bp-slots{display:flex;flex-direction:column;gap:6px}
+/* Modül kartı: üstte sürükleme çubuğu, altta GERÇEK önizleme (Faz 2).
+   Çubuk = kulp (sürükleme + tıkla-çökert), önizleme = aynı public şablon çıktısı. */
+.bp-chip{background:var(--surface);border:1px solid var(--line);border-radius:8px;overflow:hidden;min-width:0;color:var(--text)}
+.bp-chip.dragging{opacity:.4}
+.bp-chip.off .bp-chipbar{background:var(--surface-2);color:var(--muted-fg);text-decoration:line-through}
+.bp-chip.over{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent)}
+.bp-chipbar{display:flex;align-items:center;gap:7px;padding:6px 8px;background:var(--surface-2);border-bottom:1px solid var(--line);color:var(--text);cursor:grab;font-size:.85rem;user-select:none;touch-action:none;flex-wrap:wrap}
+.bp-chipbar:hover{background:color-mix(in srgb,var(--text) 7%,var(--surface-2))}
+.bp-chip.locked .bp-chipbar{cursor:not-allowed}
+.bp-chipbar .nm{flex:1 1 8rem;min-width:0;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text)}
+.bp-chipbar .ty{font-size:.68rem;color:var(--muted-fg);border:1px solid var(--line);border-radius:5px;padding:0 5px;background:var(--surface)}
+.bp-chipbar .ops{display:flex;gap:3px;flex-wrap:wrap}
+.bp-chipbar .ops button{cursor:pointer;border:1px solid var(--line);background:var(--surface);color:var(--text);border-radius:5px;padding:1px 6px;font-size:.78rem;line-height:1.4}
+.bp-chipbar .ops button:hover{border-color:var(--accent);color:var(--accent)}
+.bp-prev{background:var(--hp-body-bg,#fff);max-height:360px;overflow:auto;pointer-events:none;scrollbar-width:thin}
+.bp-prev.bp-prev-loading{padding:10px;color:var(--muted-fg);font-size:.78rem}
+.bp-prev.bp-prev-empty{padding:10px;color:var(--muted-fg);font-size:.78rem;font-style:italic}
+.bp-chip.collapsed .bp-prev{display:none}
+.bp-opts{border-top:1px solid var(--line);background:var(--surface-2);padding:10px}
+/* ---- Modül ayar paneli (yerleşim + içerik + görünüm/ölçü) ---- */
+.opts-wrap{display:grid;grid-template-columns:repeat(auto-fit,minmax(148px,1fr));gap:9px 12px}
+.opt-field{display:flex;flex-direction:column;gap:4px;min-width:0}
+.opt-field.opt-full{grid-column:1/-1}
+.opt-field>label{font-size:.72rem;font-weight:600;color:var(--muted-fg)}
+.opt-input{display:flex;align-items:center;gap:6px}
+.opt-input input{flex:1;min-width:0}
+.opt-unit{font-size:.72rem;color:var(--muted-fg);flex:none}
+.opt-sec{grid-column:1/-1;display:flex;align-items:center;gap:8px;font-size:.66rem;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--muted-fg);margin-top:8px}
+.opt-sec:first-child{margin-top:0}
+.opt-sec::after{content:"";flex:1;height:1px;background:var(--line)}
+.opt-reset{margin-left:auto;border:0;background:none;color:var(--accent-text,var(--accent));font-size:.7rem;font-weight:700;cursor:pointer;padding:0;text-decoration:underline}
+.opt-color-row{display:flex;align-items:center;gap:8px}
+.opt-color-row input[type=color]{width:44px;height:30px;padding:2px;border:1px solid var(--line);border-radius:8px;background:var(--surface);cursor:pointer}
+.opt-color-row input[type=color]:disabled{opacity:.45;cursor:not-allowed}
+.opt-mini{display:inline-flex;align-items:center;gap:5px;font-size:.72rem;color:var(--muted-fg);font-weight:500}
+.opt-switch{display:flex;align-items:center;gap:8px;font-size:.8rem;font-weight:600;color:var(--text)}
+.opt-hint{grid-column:1/-1;font-size:.7rem;color:var(--muted-fg);margin-top:2px}
+/* Kategori sekmeli blok: sıralı çoklu kategori seçimi */
+.cats-multi{gap:6px}
+.cm-list{display:flex;flex-wrap:wrap;gap:6px;min-height:32px;padding:6px;border:1px solid var(--line);border-radius:8px;background:var(--surface)}
+.cm-chip{display:inline-flex;align-items:center;gap:2px;background:var(--surface-2);border:1px solid var(--line);border-radius:999px;padding:3px 4px 3px 10px;font-size:.74rem}
+.cm-chip b{font-weight:600;margin-right:2px}
+.cm-chip button{border:0;background:transparent;cursor:pointer;font-size:.7rem;padding:2px 4px;color:var(--muted-fg);border-radius:50%}
+.cm-chip button:hover{background:rgba(0,0,0,.08);color:var(--text)}
+.cm-chip button:disabled{opacity:.25;cursor:default}
+.cm-empty{font-size:.74rem;color:var(--muted-fg);font-style:italic}
+.cm-add{display:flex;gap:6px}
+.cm-add select{flex:1;min-width:0}
+.bp-ph{display:flex;align-items:center;justify-content:center;min-height:56px;border-radius:6px;background:var(--surface-2);color:var(--muted-fg);font-weight:700;font-size:.82rem;letter-spacing:.04em}
+.bp-legend{display:flex;gap:14px;flex-wrap:wrap;margin:10px 0 0;font-size:.78rem;color:var(--text-2)}
+.bp-legend i{display:inline-block;width:11px;height:11px;border-radius:3px;vertical-align:-1px;margin-right:4px;border:1px solid rgba(0,0,0,.15)}
+.bp-colctl{display:flex;align-items:center;gap:8px;margin:0 0 8px;font-size:.78rem;font-weight:600;color:var(--text);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:6px 10px}
+.bp-colctl input{width:70px}
+.bp-colctl .u{color:var(--muted-fg);font-weight:500}
+.bp-pal .hint{margin:0 0 4px}
+/* ---- Site arka planı paneli ---- */
+.bg-panel{margin-bottom:14px}
+.bg-panel>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.bg-panel>summary::-webkit-details-marker{display:none}
+.bg-panel>summary::before{content:"▸";color:var(--muted-fg);transition:transform .15s}
+.bg-panel[open]>summary::before{transform:rotate(90deg)}
+.bg-panel .badge{font-size:.7rem;background:var(--accent);color:#fff;border-radius:999px;padding:1px 9px}
+.bg-panel .badge-off{background:#6b7280}
+.bg-preview{width:180px;height:120px;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--surface-2);display:flex;align-items:center;justify-content:center;flex:none}
+.bg-preview img{width:100%;height:100%;object-fit:cover}
+.bg-preview-empty{font-size:.72rem;color:var(--text-2);text-align:center;padding:0 8px}
+.bg-panel .bld-field label{min-width:96px}
+/* ---- Ölçü & kenarlık paneli ---- */
+.ly-grid{display:grid;grid-template-columns:repeat(2,minmax(220px,1fr));gap:4px 22px}
+@media(max-width:640px){.ly-grid{grid-template-columns:1fr}}
+.ly-grid .bld-field label{min-width:170px}
+.ly-grid input[type=number]{max-width:110px}
+.ly-grid input[type=color]{width:48px;height:28px;padding:2px}
+.bp-tokens{margin-bottom:14px}
+.bp-tokens-h{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.bp-tokens-h .opt-reset{margin-left:auto}
+/* =====================================================================
+ * Marka rengi geri yükleme (Faz 182)
+ *
+ * public.css `:root{--accent:var(--hp-tema)}` yazıyor ve bu satır
+ * admin_head'teki marka değerini eziyor. Ölçüm: panelin geri kalanında
+ * --accent #fa0000, bu sayfada #d10015. Sonuç: marka yazısı ve
+ * `.opt-reset` gibi metinler koyu temada 3.1-3.3 kontrastta kalıyordu.
+ * Asıl değer `--tb-accent` olarak taşındığı için burada geri yüklenir;
+ * blok önizlemeleri kendi `--hp-*` değişkenlerini kullanmaya devam eder.
+ * ===================================================================== */
+:root {
+	--accent: var(--tb-accent, #e11d48);
+	--accent-2: var(--tb-accent-2, #be123c);
+}
+
+/* =====================================================================
+ * Sayfa Tasarımcısı — yerleşim düzeltmeleri (Faz 182)
+ *
+ * 1) ÇAKIŞMA: bu sayfa blok önizlemeleri için public.css yüklüyor. Orada
+ *    `.card-pad{display:flex;flex-direction:column;flex:1}` var. Aynı sınıf
+ *    admin kartlarında da kullanıldığı için her panel DİKEY flex oluyor ve
+ *    başlık ile düğmeler alt alta yığılıyordu. Ölçüm: panel yüksekliği
+ *    171px, olması gereken ~82px; tasarımcı alanı sayfada 1155px aşağıda
+ *    başlıyordu.
+ *    Yalnız doğrudan admin gövdesinin çocukları hedefleniyor; `.bp-prev`
+ *    içindeki gerçek site kartlarına dokunulmuyor.
+ *
+ * 2) TAŞMA: public.css `.card{overflow:hidden}` alanları kırpıyordu.
+ *    Ölçüm: 1024px'te #plBlockGap kutusu panelin 16px dışına taşıyor ve
+ *    görünmüyordu ("butonlar görünmüyor").
+ *
+ * 3) KOMPAKTLIK: ikincil paneller katlanabilir; tasarımcı listesi
+ *    ekranın üstüne çıkıyor.
+ * ===================================================================== */
+.admin-body > .card,
+.admin-body > details.card,
+.bld-wrap > section > .card {
+	display: block;
+	overflow: visible;
+	flex: none;
+	flex-direction: row;
+}
+.admin-body > .card-pad,
+.admin-body > details.card-pad,
+.bld-wrap > section > .card-pad {
+	padding: 16px 20px;
+	flex: none;
+}
+
+/* Katlanabilir ikincil panel başlığı (özet satırı) */
+.bld-sec { margin-bottom: 12px; }
+.bld-sec > summary {
+	list-style: none;
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	flex-wrap: wrap;
+}
+.bld-sec > summary::-webkit-details-marker { display: none; }
+.bld-sec > summary::before {
+	content: "▸";
+	color: var(--muted-fg);
+	transition: transform .15s;
+}
+.bld-sec[open] > summary::before { transform: rotate(90deg); }
+.bld-sec[open] > summary { margin-bottom: 12px; }
+.bld-sec-not {
+	margin-left: auto;
+	font-size: .72rem;
+	color: var(--muted-fg);
+}
+@media (prefers-reduced-motion: reduce) {
+	.bld-sec > summary::before { transition: none; }
+}
+
+/* Dar ekranda alanlar taşmasın: ızgara erken tek sütuna iner ve
+   etiket+denetim satırı gerektiğinde alt alta sarar. */
+.ly-grid { grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+.bld-field { flex-wrap: wrap; }
+.bld-field input, .bld-field select, .bld-field textarea { min-width: 0; }
+@media (max-width: 1200px) {
+	.ly-grid { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+	.ly-grid .bld-field label { min-width: 140px; }
+}
+</style>
+</head>
+<body><div class="admin-wrap">{{template "admin_side" .}}<main class="admin-main">
+{{template "admin_top" .}}
+<div class="admin-body">
+  {{if .Flash}}<div class="flash {{.Flash.Kind}}">{{.Flash.Text}}</div>{{end}}
+
+  <div class="card card-pad" style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-bottom:14px">
+    <div>
+      <strong style="font-size:1.05rem">Sayfa Tasarımcısı</strong>
+      <div class="small muted">Modülleri <b>hangi alanda</b> duracağına ve sıralarına göre yönetin. Kaydet ile yayına alınır.</div>
+    </div>
+    <div style="margin-left:auto;display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn" type="button" id="bldSave">Kaydet</button>
+      <a class="btn ghost" href="{{.Builder.PreviewURL}}" target="_blank" rel="noopener">Önizle</a>
+      <form method="post" action="/admin/tasarim/sifirla?sayfa={{.Builder.Page}}" style="display:inline" data-confirm="Bu sayfanın düzeni varsayılana sıfırlanacak. Emin misiniz?" data-confirm-her-zaman>
+        <button class="btn ghost" type="submit">Sıfırla</button>
+      </form>
+    </div>
+  </div>
+
+    <div id="bld-status" style="margin-bottom:10px"></div>
+  <span id="builder-yukleniyor" class="htmx-indicator small muted" role="status" aria-live="polite">Kaydediliyor…</span>
+  <form id="builderHtmxForm" method="post" action="/admin/tasarim/kaydet?sayfa={{.Builder.Page}}" hx-post="/admin/tasarim/kaydet?sayfa={{.Builder.Page}}" hx-target="#bld-status" hx-swap="innerHTML" hx-disabled-elt="#bldSave" hx-indicator="#builder-yukleniyor">
+    <input type="hidden" name="blocks">
+  </form>
+
+  <div class="bld-tabs">
+    <a href="/admin/tasarim?sayfa=home" class="{{if eq .Builder.Page "home"}}on{{end}}"><svg class="ti"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-home"/></svg> Ana Sayfa</a>
+    <a href="/admin/tasarim?sayfa=article" class="{{if eq .Builder.Page "article"}}on{{end}}"><svg class="ti"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-news"/></svg> Yazı Sayfası</a>
+    <a href="/admin/tasarim?sayfa=kategori" class="{{if .Builder.CatMode}}on{{end}}"><svg class="ti"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-folder"/></svg> Kategori Sayfası</a>
+    <a href="/admin/tasarim?sayfa=sayfa" class="{{if .Builder.SayfaMode}}on{{end}}"><svg class="ti"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-file-text"/></svg> Sayfa</a>
+  </div>
+
+  {{if .Builder.SayfaMode}}
+  <form method="get" action="/admin/tasarim" style="display:flex;align-items:center;gap:8px;margin:-4px 0 14px;flex-wrap:wrap">
+    <input type="hidden" name="sayfa" value="sayfa">
+    <label class="small muted" for="bldSayfa">Kurumsal sayfa</label>
+    <select id="bldSayfa" class="select" name="sayfa_slug" data-autosubmit style="min-width:240px">
+      {{range .Builder.Pages}}<option value="{{.Slug}}" {{if eq .Slug $.Builder.SelectedSayfa}}selected{{end}}>{{.Title}}</option>{{end}}
+    </select>
+    {{if .Builder.SelectedSayfa}}<a class="btn ghost small" href="/{{.Builder.SelectedSayfa}}" target="_blank" rel="noopener">Sayfayı aç</a>{{end}}
+  </form>
+  {{end}}
+
+  {{if .Builder.CatMode}}
+  <form method="get" action="/admin/tasarim" style="display:flex;align-items:center;gap:8px;margin:-4px 0 14px;flex-wrap:wrap">
+    <input type="hidden" name="sayfa" value="kategori">
+    <label class="small muted" for="bldCat">Kategori düzeni</label>
+    <select id="bldCat" class="select" name="kategori" data-autosubmit style="min-width:240px">
+      <option value="">Genel kategori düzeni</option>
+      {{range .Builder.Categories}}<option value="{{.Slug}}" {{if eq .Slug $.Builder.SelectedCat}}selected{{end}}>{{if .ParentSlug}}↳ {{end}}{{.Name}}</option>{{end}}
+    </select>
+    {{if .Builder.SelectedCat}}<a class="btn ghost small" href="/kategori/{{.Builder.SelectedCat}}" target="_blank" rel="noopener">Sayfayı aç</a>{{end}}
+  </form>
+  {{if .Builder.UsingGlobal}}<p class="hint" style="margin:-8px 0 14px">Bu kategori için özel düzen yok; genel kategori düzeni gösteriliyor. Kaydettiğinizde yalnızca bu kategoriye özel düzen oluşur.</p>{{end}}
+  {{end}}
+
+  {{if not .Builder.SayfaMode}}
+  {{$pl := .Builder.PageLayout}}
+  <details class="card card-pad bld-sec" id="plPanel" data-page="{{.Builder.Page}}">
+    <summary class="bp-tokens-h">
+      <strong><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-template"></use></svg> Sayfa Şablonu</strong>
+      <span class="small muted">— yalnız bu sayfa · <b>otomatik kaydedilir</b></span>
+      <span class="small muted" id="plStatus" role="status" aria-live="polite"></span>
+      <span class="bld-sec-not">aç / kapat</span>
+    </summary>
+    <div class="ly-grid">
+      <div class="bld-field"><label for="plTemplate">Şablon</label>
+        <select id="plTemplate" class="select">
+          <option value="icerik-sag">İçerik + sağ sütun</option>
+          <option value="esit">Eşit iki sütun</option>
+          <option value="genis">Geniş içerik + ince sağ</option>
+          <option value="ozel">Özel sütun oranı</option>
+          <option value="tek">Tek sütun (sağ sütun yok)</option>
+        </select>
+      </div>
+      <div class="bld-field"><label for="plMainWidth">Sol sütun</label>
+        <input type="number" id="plMainWidth" min="50" max="80" step="1" value="{{$pl.MainWidth}}"><span class="small muted">%</span>
+      </div>
+      <div class="bld-field"><label for="plSideWidth">Sağ sütun</label>
+        <input type="number" id="plSideWidth" min="20" max="50" step="1" value="{{$pl.SidebarWidth}}"><span class="small muted">%</span>
+      </div>
+      <div class="bld-field"><label>Sağ sütunu göster</label>
+        <label class="opt-switch"><input type="checkbox" id="plSidebar"{{if $pl.Sidebar}} checked{{end}}><span>sağ sütun açık</span></label>
+      </div>
+      <div class="bld-field"><label for="plContentWidth">Tek sütun genişliği</label>
+        <input type="number" id="plContentWidth" min="680" max="1600" step="10" value="{{$pl.ContentWidth}}"><span class="small muted">px</span>
+      </div>
+      <div class="bld-field"><label for="plBlockGap">Modüller arası boşluk</label>
+        <input type="text" id="plBlockGap" value="{{$pl.BlockGap}}" placeholder="örn. 12px / 1rem"><span class="small muted">dikey</span>
+      </div>
+      {{if .Builder.CatMode}}
+      <div class="bld-field" style="grid-column:1/-1"><label>Kategori sayfası üst alanı (sayfaya özel)</label>
+        <label class="opt-switch"><input type="checkbox" id="plHideTitle"{{if $pl}}{{if $pl.HideTitle}} checked{{end}}{{end}}><span>çerçeveli kategori başlığını gizle</span></label>
+        <label class="opt-switch"><input type="checkbox" id="plHideDesc"{{if $pl}}{{if $pl.HideDesc}} checked{{end}}{{end}}><span>açıklamayı (intro) gizle</span></label>
+        <label class="opt-switch"><input type="checkbox" id="plHideCrumb"{{if $pl}}{{if $pl.HideBreadcrumb}} checked{{end}}{{end}}><span>kırıntıyı (breadcrumb) gizle</span></label>
+        <span class="small muted">Gizlenen metinler SEO ve ekran okuyucular için sayfada kalır; yalnız görsel olarak gizlenir.</span>
+      </div>
+      {{end}}
+    </div>
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:10px">
+      <button type="button" class="opt-reset" id="plReset">varsayılana dön</button>
+      <span class="small muted">Sağ sütun kapatıldığında modüller silinmez; yalnız yayında gizlenir. Yazı sayfasında tek sütun içeriği ortalanır.</span>
+    </div>
+    {{if $pl.UsingGlobal}}<p class="hint" style="margin:8px 0 0">Bu kategori için özel şablon yok; genel kategori şablonu gösteriliyor. Kaydettiğinizde yalnızca bu kategoriye özel olur.</p>{{end}}
+  </details>
+  {{end}}
+
+  {{if .Builder.PageTexts}}
+  <details class="card card-pad bld-sec" id="ptPanel">
+    <summary class="bp-tokens-h">
+      <strong><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-writing"></use></svg> Sayfa Metinleri</strong>
+      <span class="small muted">— yalnız bu sayfa · <b>elle kaydedilir</b></span>
+      <span class="small muted" id="ptStatus" role="status" aria-live="polite"></span>
+      <span class="bld-sec-not">aç / kapat</span>
+    </summary>
+    <p class="small muted" style="margin:0 0 4px">Boş bırakılan alan koddaki varsayılan metne döner. Dil: <b>{{.Builder.PageTextLocale}}</b></p>
+    <div class="ly-grid">
+      {{range .Builder.PageTexts}}
+      <div class="bld-field"{{if and .Multiline (not .Rich)}} style="grid-column:1/-1"{{end}}{{if .Rich}} style="grid-column:1/-1;display:block"{{end}}>
+        <label for="pt-{{.Key}}" style="{{if .Rich}}display:block;margin-bottom:6px{{end}}">{{.Label}}</label>
+        {{if .Rich}}<div class="rt-editor" data-pt-rich="{{.Key}}">
+          <div class="rt-toolbar">
+            <button type="button" data-cmd="bold" title="Kalın"><b>B</b></button>
+            <button type="button" data-cmd="italic" title="İtalik"><i>İ</i></button>
+            <button type="button" data-cmd="underline" title="Alt çizgi"><u>U</u></button>
+            <button type="button" data-cmd="insertUnorderedList" title="Liste">• Liste</button>
+            <button type="button" data-cmd="insertOrderedList" title="Numaralı">1. Liste</button>
+            <button type="button" data-cmd="formatBlock-h3" title="Alt başlık">H3</button>
+            <button type="button" data-cmd="createLink" title="Bağlantı"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-link"></use></svg></button>
+            <button type="button" data-cmd="removeFormat" title="Temizle"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-x"></use></svg></button>
+          </div>
+          <div class="rt-content" contenteditable="true" data-placeholder="Sayfa metnini yazın…">{{.RichValue}}</div>
+        </div>
+        {{else if .Multiline}}<textarea class="textarea" id="pt-{{.Key}}" data-pt-key="{{.Key}}" rows="3" placeholder="{{.Default}}" aria-label="{{.Default}}">{{.Value}}</textarea>
+        {{else}}<input class="input" id="pt-{{.Key}}" data-pt-key="{{.Key}}" value="{{.Value}}" placeholder="{{.Default}}" aria-label="{{.Default}}">{{end}}
+        {{if .Hint}}<span class="small muted">{{.Hint}}</span>{{end}}
+      </div>
+      {{end}}
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;margin-top:12px">
+      <button type="button" class="btn" id="ptSave">Metinleri kaydet</button>
+      <span class="small muted">Kaydettikten sonra sayfayı yenileyin.</span>
+    </div>
+  </details>
+  {{end}}
+
+  {{$bg := .Builder.Bg}}
+  <details class="card card-pad bg-panel"{{if or $bg.HasCustom $bg.Config.Disabled}} open{{end}}>
+    <summary>
+      <strong><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-palette"></use></svg> Site Arka Planı</strong>
+      <span class="small muted">— tüm sayfaların gövde arka planı (header/footer dışı alan)</span>
+      {{if $bg.Config.Disabled}}<span class="badge badge-off">kapalı</span>
+      {{else if $bg.HasCustom}}<span class="badge">özel görsel</span>
+      {{else}}<span class="small muted">(varsayılan desen)</span>{{end}}
+    </summary>
+    <form method="post" action="/admin/arka-plan/kaydet?sayfa={{.Builder.Page}}" enctype="multipart/form-data" style="margin-top:12px;display:grid;gap:12px">
+      <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:flex-start">
+        <div class="bg-preview">
+          {{if $bg.HasCustom}}<img src="{{$bg.URL}}" alt="Arka plan önizleme">
+          {{else if $bg.Config.Disabled}}<div class="bg-preview-empty">Arka plan<br>kapalı</div>
+          {{else}}<div class="bg-preview-empty">Varsayılan desen<br>(ana-bg.svg)</div>{{end}}
+        </div>
+        <div style="flex:1;min-width:260px">
+          <div class="bld-field"><label for="bld_arka">Görsel</label>
+            <input type="file" id="bld_arka" name="arka" accept=".svg,image/svg+xml,image/png,image/jpeg,image/webp,image/gif">
+          </div>
+          <div class="small muted" style="margin:-2px 0 8px">SVG veya görsel (jpg, png, webp, gif). Önerilen genişlik ≥ 1920px. Yükleme mevcut görselin yerine geçer.</div>
+          <div class="bld-field"><label for="bld_bg_size">Boyut</label>
+            <select id="bld_bg_size" name="size">
+              <option value="cover"{{if eq $bg.Config.Size "cover"}} selected{{end}}>Kapla (cover)</option>
+              <option value="contain"{{if eq $bg.Config.Size "contain"}} selected{{end}}>Sığdır (contain)</option>
+              <option value="auto"{{if eq $bg.Config.Size "auto"}} selected{{end}}>Özgün boyut</option>
+              <option value="100% 100%"{{if eq $bg.Config.Size "100% 100%"}} selected{{end}}>Uzat (100% 100%)</option>
+            </select>
+          </div>
+          <div class="bld-field"><label for="bld_bg_repeat">Tekrar</label>
+            <select id="bld_bg_repeat" name="repeat">
+              <option value="no-repeat"{{if eq $bg.Config.Repeat "no-repeat"}} selected{{end}}>Tekrarsız</option>
+              <option value="repeat"{{if eq $bg.Config.Repeat "repeat"}} selected{{end}}>Döşe</option>
+              <option value="repeat-x"{{if eq $bg.Config.Repeat "repeat-x"}} selected{{end}}>Yatay döşe</option>
+              <option value="repeat-y"{{if eq $bg.Config.Repeat "repeat-y"}} selected{{end}}>Dikey döşe</option>
+            </select>
+          </div>
+          <div class="bld-field"><label for="bld_bg_pos">Konum</label>
+            <select id="bld_bg_pos" name="position">
+              <option value="center top"{{if eq $bg.Config.Position "center top"}} selected{{end}}>Üst orta</option>
+              <option value="center"{{if eq $bg.Config.Position "center"}} selected{{end}}>Orta</option>
+              <option value="top"{{if eq $bg.Config.Position "top"}} selected{{end}}>Üst</option>
+              <option value="bottom"{{if eq $bg.Config.Position "bottom"}} selected{{end}}>Alt</option>
+              <option value="left center"{{if eq $bg.Config.Position "left center"}} selected{{end}}>Sol orta</option>
+              <option value="right center"{{if eq $bg.Config.Position "right center"}} selected{{end}}>Sağ orta</option>
+            </select>
+          </div>
+          <div class="bld-field"><label for="bld_bg_attach">Kaydırma</label>
+            <select id="bld_bg_attach" name="attach">
+              <option value="fixed"{{if eq $bg.Config.Attach "fixed"}} selected{{end}}>Sabit (parallax)</option>
+              <option value="scroll"{{if eq $bg.Config.Attach "scroll"}} selected{{end}}>Sayfayla kayar</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        <button class="btn" type="submit">Yükle / Kaydet</button>
+        {{if or $bg.HasCustom $bg.Config.Disabled}}<button class="btn ghost" type="submit" name="remove_bg" value="1" data-confirm="Arka plan varsayılan desene dönecek. Emin misiniz?" data-confirm-her-zaman>Varsayılana dön</button>{{end}}
+        {{if not $bg.Config.Disabled}}<button class="btn ghost" type="submit" name="disable_bg" value="1" data-confirm="Arka plan görseli tamamen kapatılacak (düz renk zemin). Emin misiniz?" data-confirm-her-zaman>Arka planı kapat</button>{{end}}
+        <a class="btn ghost" href="/" target="_blank" rel="noopener">Sitede gör</a>
+      </div>
+    </form>
+  </details>
+
+  <div class="bld-views">
+    <button class="btn small on" type="button" data-view="bp">Şablon Görünümü</button>
+    <button class="btn ghost small" type="button" data-view="list">Liste</button>
+    <span style="flex:1"></span>
+    <button class="btn ghost small" type="button" id="bldUndo" title="Ctrl+Z" disabled>↶ Geri al</button>
+    <button class="btn ghost small" type="button" id="bldRedo" title="Ctrl+Shift+Z" disabled>↷ Yinele</button>
+    <button class="btn ghost small" type="button" id="bldHistoryBtn" title="Kayıtlı sürümler — geri al"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-history"></use></svg> Sürüm Geçmişi</button>
+    <button class="btn ghost small" type="button" id="bldABBtn" title="A/B testi — varyant B yayınla"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-flask"></use></svg> A/B Testi</button>
+    <button class="btn ghost small" type="button" id="bldCopyBtn" title="Bu düzeni başka sayfaya kopyala"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-clipboard"></use></svg> Kopyala</button>
+  </div>
+
+  {{/* Faz 4 — sürüm geçmişi paneli (sunucu tarafı kalıcı geri alma) */}}
+  <div class="bld-history" id="bldHistory" hidden>
+    <div class="bld-history-h"><strong><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-history"></use></svg> Sürüm Geçmişi</strong><span class="small muted">— her kayıt eski düzeni arşivler; geri almak yeni sürüm yazar</span><button type="button" class="btn ghost small" id="bldHistoryClose"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-x"></use></svg></button></div>
+    <div class="bld-history-list" id="bldHistoryList"></div>
+  </div>
+
+  {{/* Faz 7 — A/B testi paneli (varyant B yayını + istatistik) */}}
+  <div class="bld-history" id="bldAB" hidden>
+    <div class="bld-history-h"><strong><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-flask"></use></svg> A/B Testi</strong>
+      <span class="small muted">— A: bu düzen · B: ayrı blok dizisi; ziyaretçi çerezle ayrışır, günlük görüntüleme sayılır</span>
+      <button type="button" class="btn ghost small" id="bldABClose"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-x"></use></svg></button>
+    </div>
+    <div class="ab-controls" id="abControls">
+      <label class="opt-switch"><input type="checkbox" id="abEnabled"> <svg class="ti ti-metin" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-flask"></use></svg> <span>A/B testini aç</span></label>
+      <div class="ab-field"><label>B ağırlığı</label>
+        <div class="opt-input"><input type="number" id="abWeight" min="0" max="100" value="50"><span class="opt-unit">%</span></div>
+      </div>
+      <div class="ab-actions">
+        <button type="button" class="btn ghost small" id="abSetB"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-package"></use></svg> B'yi mevcut düzene eşitle</button>
+        <button type="button" class="btn ghost small" id="abClearB"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-trash"></use></svg> B'yi boşalt</button>
+        <button type="button" class="btn" id="abSave">Kaydet</button>
+      </div>
+      <div class="ab-note small muted" id="abNote">B varyantı boş — "B'yi mevcut düzene eşitle" ile başlatın.</div>
+    </div>
+    <div class="ab-stats" id="abStats"><strong>Görüntüleme (son 14 gün)</strong><div id="abStatsList" class="bld-history-empty">Yükleniyor…</div></div>
+  </div>
+
+  {{/* Faz 8 — düzeni başka sayfaya kopyala */}}
+  <div class="bld-history" id="bldCopy" hidden>
+    <div class="bld-history-h"><strong><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-clipboard"></use></svg> Düzeni başka sayfaya kopyala</strong>
+      <span class="small muted">— mevcut düzeni seçtiğiniz sayfaya kopyalar; hedefin eski düzeni sürüm geçmişine arşivlenir</span>
+      <button type="button" class="btn ghost small" id="bldCopyClose"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-x"></use></svg></button>
+    </div>
+    <div class="ab-controls" id="copyControls">
+      <div class="ab-field"><label>Hedef sayfa</label>
+        <select id="copyTarget">
+          <option value="home" {{if eq .Builder.Page "home"}}disabled{{end}}>Ana sayfa</option>
+          <option value="article" {{if eq .Builder.Page "article"}}disabled{{end}}>Yazı sayfası</option>
+          <option value="kategori" {{if eq .Builder.Page "kategori"}}disabled{{end}}>Kategori</option>
+        </select>
+      </div>
+      <div class="ab-actions">
+        <button type="button" class="btn" id="copyGo">Bu düzeni kopyala</button>
+      </div>
+      <div class="ab-note small muted" id="copyNote">Kaynak: {{.Builder.Page}} sayfasının mevcut düzeni.</div>
+    </div>
+  </div>
+
+  {{$ly := .Builder.Layout}}
+  <details class="card card-pad bp-tokens bld-sec" id="bpTokens">
+    <summary class="bp-tokens-h">
+      <strong><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-ruler-measure"></use></svg> Yerleşim &amp; Ölçü</strong>
+      <span class="small muted">— tüm sayfalar · <b>otomatik kaydedilir</b></span>
+      <span class="bld-sec-not">aç / kapat</span>
+    </summary>
+    <div class="ly-grid">
+      <div class="bld-field"><label for="bld_siteWidth">Site içerik genişliği</label>
+        <input type="number" data-tok="siteWidth" min="960" max="1600" step="10" value="{{$ly.SiteWidth}}" id="bld_siteWidth"><span class="small muted">px</span></div>
+      <div class="bld-field"><label for="bld_gapGrid">Kart ızgarası boşluğu</label>
+        <input type="number" data-tok="gapGrid" min="0" max="80" value="{{$ly.GapGrid}}" id="bld_gapGrid"><span class="small muted">px</span></div>
+      <div class="bld-field"><label for="bld_sidePad">Sağ sütun dolgusu</label>
+        <input type="number" data-tok="sidePad" min="0" max="80" value="{{$ly.SidePad}}" id="bld_sidePad"><span class="small muted">px</span></div>
+      <div class="bld-field"><label for="bld_sideLineW">Ayraç çizgisi kalınlığı</label>
+        <input type="number" data-tok="sideLineW" min="0" max="8" value="{{$ly.SideLineW}}" id="bld_sideLineW"><span class="small muted">px</span></div>
+      <div class="bld-field"><label for="bld_gapSide">Sağ sütun içi boşluk</label>
+        <input type="number" data-tok="gapSide" min="0" max="80" value="{{$ly.GapSide}}" id="bld_gapSide"><span class="small muted">px</span></div>
+      <div class="bld-field"><label for="bld_gapSmall">Küçük boşluk (galeri/trend)</label>
+        <input type="number" data-tok="gapSmall" min="0" max="80" value="{{$ly.GapSmall}}" id="bld_gapSmall"><span class="small muted">px</span></div>
+      <div class="bld-field"><label for="bld_borderWidth">Kenarlık kalınlığı</label>
+        <input type="number" data-tok="borderWidth" min="0" max="8" value="{{$ly.BorderW}}" id="bld_borderWidth"><span class="small muted">px</span></div>
+      <div class="bld-field"><label for="bld_radius">Köşe yuvarlaklığı</label>
+        <input type="number" data-tok="radius" min="0" max="40" value="{{$ly.Radius}}" id="bld_radius"><span class="small muted">px</span></div>
+      <div class="bld-field"><span class="small" style="font-weight:600" role="group" aria-label="Kenarlık rengi">Kenarlık rengi</span>
+        <label class="small" style="display:inline-flex;gap:6px;align-items:center;font-weight:400">
+          <input type="checkbox" data-tokon="borderColor"{{if $ly.HasColor}} checked{{end}}> özel renk
+        </label>
+        <input type="color" data-tok="borderColor" aria-label="Kenarlık rengi (özel)" value="{{if $ly.HasColor}}{{$ly.BorderColor}}{{else}}#e4e4e7{{end}}"{{if not $ly.HasColor}} disabled{{end}}>
+      </div>
+    </div>
+    <div class="small muted" style="margin-top:8px">Boş alan = varsayılan. <b>Site içerik genişliği</b> üst menü, gövde ve footer için ortaktır; varsayılan <b>1280 px</b>. <b>Sütunlar arası boşluk</b> aşağıda şablonun üzerinde ayarlanır.</div>
+  </details>
+
+  <div class="bld-wrap">
+    <aside class="bld-pal card card-pad bp-pal">
+      <div class="small muted bp-hint">Modül Ekle<br><span class="hint-drag">(sürükleyip alana bırakın veya tıklayın)</span></div>
+      {{range .Builder.Types}}
+      <button class="btn ghost small bld-add" type="button" data-type="{{.Type}}" title="{{.Desc}}">＋ {{.Name}}</button>
+      {{end}}
+    </aside>
+
+    <section>
+      <div id="bldBP"></div>
+      <div class="bld-canvas" id="bldCanvas" style="display:none"></div>
+      <p id="bldEmpty" class="bld-empty" style="display:none">Henüz blok yok. Soldan modül ekleyin.</p>
+      <div class="bp-legend">
+        {{range $i, $z := .Builder.Zones}}<span><i style="background:{{if eq $z.Key "ust"}}#0369a1{{else if eq $z.Key "ana"}}#15803d{{else if eq $z.Key "yan"}}var(--accent-fill,var(--accent)){{else}}#7e22ce{{end}}"></i>{{$z.Name}}</span>{{end}}
+      </div>
+      <p class="hint" style="margin-top:10px">Modülleri <b>alanlara sürükleyin</b>; alan içinde sürükleyerek <b>sıralayın</b>, alanlar arasında sürükleyerek <b>taşıyın</b>. <svg class="ti ti-metin" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-settings"></use></svg> ile ayarları açılır.</p>
+
+      <div class="card card-pad bp-tokens" id="kpPanel" style="margin-top:14px">
+        <div class="bp-tokens-h">
+          <strong><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-puzzle"></use></svg> Kategori Panelleri</strong>
+          <span class="small muted">— artık her panel ayrı bir modül</span>
+        </div>
+        <p class="small muted" style="margin:8px 0 0">
+          Kategori panelleri <b>Kategori Paneli</b> modülüne dönüştürüldü. Soldaki modül
+          listesinden <b>Kategori Paneli</b> ekleyin; kategori, vitrin düzeni, renk ve haber
+          sayısını her modülün <svg class="ti ti-metin" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-settings"></use></svg> ayarlarından ayrı ayrı belirleyin. Sıralama ve görünürlük
+          diğer modüller gibi sürükleyerek yönetilir.
+        </p>
+      </div>
+    </section>
+  </div>
+</div></main></div>
+
+<script src="{{asset "vendor/sortable.min.js"}}"></script>
+<script>
+(function(){
+  var PAGE = "{{.Builder.Page}}";
+  /* Kategoriye özel düzen anahtarı "kategori:<slug>" olur; şablon görünümü
+     hem genel hem özel kategori sayfalarında kategori düzenini göstermeli. */
+  var IS_CAT = PAGE.indexOf('kategori') === 0;
+  var INIT = {{.Builder.Blocks}};
+  window.__bldInit = INIT; // e2e testlerinin orijinal düzeni geri yüklemesi için
+  /* Kategoriye özel düzen yoksa builder genel düzeni gösterir; testler
+     bitince özel kaydı silerek genel düzene dönebilsin. */
+  window.__bldUsingGlobal = {{if .Builder.UsingGlobal}}true{{else}}false{{end}};
+  /* Faz 9 — kategori liste görünüm şablonu seçici */
+  var CATVIEW = "{{.Builder.CatView}}";
+  var CAT_VIEWS = [
+    {id:'klasik', name:'Klasik'},
+    {id:'liste',  name:'Sıkı Liste'},
+    {id:'izgara', name:'Izgara Kart'},
+    {id:'mozaik', name:'Mozaik'},
+    {id:'akis',   name:'Akış (Enerji)'}
+  ];
+  /* Kategori sekmeli blok için tüm yayındaki kategoriler. */
+  var CATS = [
+    {{/* JS bağlamında düz string eylemi tırnaklanır; %q ile birleşince
+         değerler tırnak karakteriyle zehirleniyordu (seçim kaydı bozuk). */}}
+    {{range .Builder.AllCategories}}{slug:{{.Slug}}, name:{{.Name}}},{{end}}
+  ];
+  /* İçerik modülleri: "Kategori" seçimi gösterilir ve seçilen kategorinin
+     en yeni haberleri o modülde kullanılır. */
+  var CAT_SOURCE_BLOCKS = {
+    slider:1, manset6:1, manset2:1, manset:1, one_cikanlar:1, son_dakika:1,
+    trend_numarali:1, hikayeler:1, ust_manset:1, kari_kartlar:1, canli_yayin:1,
+    kategori_panel:1
+  };
+  /* GÖVDE şablon seçici: manşet düzeni + liste görünümleri tek yerde.
+     Seçim bloğun opts'ına yazılır; böylece genel veya kategoriye özel
+     düzende ayrı ayrı saklanır. */
+  var CAT_TEMPLATES = [
+    {id:'portre', name:'Portre manşet', desc:'5 slayt + 2 yan'},
+    {id:'uclu',   name:'Üçlü manşet',  desc:'3 + slider + 2'},
+    {id:'klasik', name:'Klasik manşet',desc:'1 büyük + 2 yan'},
+    {id:'liste',  name:'Sıkı liste',   desc:'Görsel solda'},
+    {id:'izgara', name:'Izgara',       desc:'Kart ızgarası'},
+    {id:'mozaik', name:'Mozaik',       desc:'Büyük + küçük'},
+    {id:'akis',   name:'Akış (Enerji)',desc:'4 kart + enerji akışı'}
+  ];
+  var GAPCOL = {{.Builder.Layout.GapColumn}};
+  var PAGELAYOUT = {
+    sidebar: {{if .Builder.PageLayout}}{{.Builder.PageLayout.Sidebar}}{{else}}true{{end}},
+    sidebarWidth: {{if .Builder.PageLayout}}{{.Builder.PageLayout.SidebarWidth}}{{else}}33{{end}},
+    contentWidth: {{if .Builder.PageLayout}}{{.Builder.PageLayout.ContentWidth}}{{else}}960{{end}},
+    hideTitle: {{if .Builder.PageLayout}}{{.Builder.PageLayout.HideTitle}}{{else}}false{{end}},
+    hideDesc: {{if .Builder.PageLayout}}{{.Builder.PageLayout.HideDesc}}{{else}}false{{end}},
+    hideBreadcrumb: {{if .Builder.PageLayout}}{{.Builder.PageLayout.HideBreadcrumb}}{{else}}false{{end}},
+    blockGap: "{{if .Builder.PageLayout}}{{.Builder.PageLayout.BlockGap}}{{end}}"
+  };
+  var ZONES = [
+    {{range $i, $z := .Builder.Zones}}{{if $i}},{{end}}{key:"{{$z.Key}}",name:"{{$z.Name}}"}{{end}}
+  ];
+  var DEFAULT_ZONE = ZONES.length ? ZONES[0].key : '';
+  var blocks = Array.isArray(INIT) ? INIT.slice() : [];
+  var seq = 1, view = 'bp';
+  var uid = function(){ return 'b'+(Date.now().toString(36))+'-'+(seq++); };
+  var esc = function(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;'); };
+  /* Tek bir ölçü alanını AJAX ile kaydeder (sayfa yenilenmez). */
+  function saveToken(key, value){
+    var body = new URLSearchParams();
+    body.append('key', key); body.append('value', value);
+    return fetch('/admin/olcu/parca', {
+      method:'POST', credentials:'same-origin',
+      headers:{'Content-Type':'application/x-www-form-urlencoded'},
+      body:body.toString()
+    });
+  }
+  /* ---------- sayfa şablonu: sağ sütun + sütun genişlikleri ---------- */
+  function pageLayoutTemplate(w){
+    if(!PAGELAYOUT.sidebar) return 'tek';
+    if(w===50) return 'esit';
+    if(w<=28) return 'genis';
+    if(w===33) return 'icerik-sag';
+    return 'ozel';
+  }
+  function paintPageLayout(){
+    var side=document.getElementById('plSidebar');
+    var sw=document.getElementById('plSideWidth');
+    var mw=document.getElementById('plMainWidth');
+    var cw=document.getElementById('plContentWidth');
+    var tpl=document.getElementById('plTemplate');
+    var bg=document.getElementById('plBlockGap');
+    if(!side || !sw || !mw) return;
+    side.checked=!!PAGELAYOUT.sidebar;
+    sw.value=PAGELAYOUT.sidebar ? PAGELAYOUT.sidebarWidth : 33;
+    mw.value=PAGELAYOUT.sidebar ? (100-PAGELAYOUT.sidebarWidth) : 100;
+    if(cw) cw.value=PAGELAYOUT.contentWidth || 960;
+    if(bg) bg.value=PAGELAYOUT.blockGap || '';
+    if(tpl) tpl.value=pageLayoutTemplate(PAGELAYOUT.sidebar ? PAGELAYOUT.sidebarWidth : 0);
+    sw.disabled=!PAGELAYOUT.sidebar;
+    mw.disabled=!PAGELAYOUT.sidebar;
+    if(cw) cw.disabled=!!PAGELAYOUT.sidebar;
+  }
+  function rowAttrs(){
+    var s='gap:'+GAPCOL+'px;'+(PAGELAYOUT.sidebar
+      ? 'grid-template-columns:minmax(0,1fr) minmax(0,'+PAGELAYOUT.sidebarWidth+'%)'
+      : 'grid-template-columns:minmax(0,1fr)');
+    return ' class="bp-row c2'+(PAGELAYOUT.sidebar?'':' pl-off')+'" style="'+s+'"';
+  }
+  function applyPageLayoutPreview(){
+    document.querySelectorAll('#bldBP .bp-row.c2').forEach(function(row){
+      row.classList.toggle('pl-off', !PAGELAYOUT.sidebar);
+      row.style.gap=GAPCOL+'px';
+      row.style.gridTemplateColumns=PAGELAYOUT.sidebar
+        ? 'minmax(0,1fr) minmax(0,'+PAGELAYOUT.sidebarWidth+'%)'
+        : 'minmax(0,1fr)';
+    });
+    /* Modüller arası dikey boşluk önizlemesi: şablon kutularının iç
+       boşluğu ayarlanan değere eşitlenir (boşsa CSS varsayılanı). */
+    document.querySelectorAll('#bldBP .bp-zone').forEach(function(z){
+      z.style.gap = PAGELAYOUT.blockGap || '';
+    });
+    paintPageLayout();
+  }
+  var _plTimer=null, _plPending={};
+  /* Sayfa şablonunu yamalı kaydeder: yalnız gönderilen alanlar yazılır.
+     Böylece tek bir ayarla oynanınca diğer alanlar genel kategori düzeninden
+     miraslanmaya devam eder (alan bazlı miras). Hızlı art arda değişiklikler
+     tek istekte birleştirilir; hiçbir yama kaybolmaz. */
+  function savePageLayout(patch){
+    var st=document.getElementById('plStatus');
+    if(st) st.textContent='Kaydediliyor…';
+    if(patch){ for(var k in patch){ if(Object.prototype.hasOwnProperty.call(patch,k)) _plPending[k]=patch[k]; } }
+    clearTimeout(_plTimer);
+    _plTimer=setTimeout(function(){
+      var body=_plPending; _plPending={};
+      fetch('/admin/tasarim/yerlesim?sayfa='+encodeURIComponent(PAGE), {
+        method:'POST', credentials:'same-origin',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify(body)
+      }).then(function(r){return r.json();}).then(function(j){
+        if(!j.ok) throw new Error(j.error||'kaydedilemedi');
+        if(j.layout){
+          PAGELAYOUT.sidebar=!!j.layout.sidebar;
+          PAGELAYOUT.sidebarWidth=j.layout.sidebarWidth;
+          PAGELAYOUT.contentWidth=j.layout.contentWidth;
+          PAGELAYOUT.hideTitle=!!j.layout.hideTitle;
+          PAGELAYOUT.hideDesc=!!j.layout.hideDesc;
+          PAGELAYOUT.hideBreadcrumb=!!j.layout.hideBreadcrumb;
+          PAGELAYOUT.blockGap=j.layout.blockGap || '';
+          var bgEl=document.getElementById('plBlockGap');
+          if(bgEl) bgEl.value=PAGELAYOUT.blockGap;
+        }
+        applyPageLayoutPreview();
+        if(st) st.textContent='Kaydedildi';
+      }).catch(function(e){
+        if(st) st.textContent='Kaydedilemedi';
+      });
+    },350);
+  }
+  /* Sütun düzeni alanları birlikte yazılır (biri diğerini etkiler). */
+  function saveLayoutCols(){
+    savePageLayout({
+      sidebar:PAGELAYOUT.sidebar,
+      sidebarWidth:PAGELAYOUT.sidebarWidth,
+      contentWidth:PAGELAYOUT.contentWidth
+    });
+  }
+  function bindPageLayout(){
+    var side=document.getElementById('plSidebar');
+    var sw=document.getElementById('plSideWidth');
+    var mw=document.getElementById('plMainWidth');
+    var cw=document.getElementById('plContentWidth');
+    var tpl=document.getElementById('plTemplate');
+    var reset=document.getElementById('plReset');
+    if(!side || !sw || !mw || !tpl) return;
+    tpl.addEventListener('change', function(){
+      var v=tpl.value;
+      if(v==='tek'){ PAGELAYOUT.sidebar=false; }
+      else {
+        PAGELAYOUT.sidebar=true;
+        if(v==='icerik-sag') PAGELAYOUT.sidebarWidth=33;
+        else if(v==='esit') PAGELAYOUT.sidebarWidth=50;
+        else if(v==='genis') PAGELAYOUT.sidebarWidth=26;
+        else if(v==='ozel') PAGELAYOUT.sidebarWidth=parseInt(sw.value,10)||33;
+      }
+      applyPageLayoutPreview(); saveLayoutCols();
+    });
+    side.addEventListener('change', function(){
+      PAGELAYOUT.sidebar=side.checked;
+      if(PAGELAYOUT.sidebar && !PAGELAYOUT.sidebarWidth) PAGELAYOUT.sidebarWidth=33;
+      applyPageLayoutPreview(); saveLayoutCols();
+    });
+    sw.addEventListener('change', function(){
+      var v=parseInt(sw.value,10); if(isNaN(v)) v=33;
+      v=Math.max(20,Math.min(50,v));
+      PAGELAYOUT.sidebar=true; PAGELAYOUT.sidebarWidth=v;
+      applyPageLayoutPreview(); saveLayoutCols();
+    });
+    mw.addEventListener('change', function(){
+      var v=parseInt(mw.value,10); if(isNaN(v)) v=67;
+      v=Math.max(50,Math.min(80,v));
+      PAGELAYOUT.sidebar=true; PAGELAYOUT.sidebarWidth=100-v;
+      applyPageLayoutPreview(); saveLayoutCols();
+    });
+    if(cw) cw.addEventListener('change', function(){
+      var v=parseInt(cw.value,10); if(isNaN(v)) v=960;
+      v=Math.max(680,Math.min(1600,v));
+      PAGELAYOUT.contentWidth=v;
+      applyPageLayoutPreview(); saveLayoutCols();
+    });
+    var bg=document.getElementById('plBlockGap');
+    if(bg) bg.addEventListener('change', function(){
+      var v=String(bg.value||'').trim();
+      PAGELAYOUT.blockGap=v;
+      applyPageLayoutPreview();
+      savePageLayout({blockGap:v});
+    });
+    /* Kategori sayfası üst alanı görünürlüğü (sayfaya özel). Her anahtar
+       yalnız kendi alanını yazar; diğerleri genel düzenden miraslanır. */
+    [['plHideTitle','hideTitle'],['plHideDesc','hideDesc'],['plHideCrumb','hideBreadcrumb']].forEach(function(pair){
+      var el=document.getElementById(pair[0]);
+      if(!el) return;
+      el.addEventListener('change', function(){
+        PAGELAYOUT[pair[1]]=el.checked;
+        var patch={}; patch[pair[1]]=el.checked;
+        savePageLayout(patch);
+      });
+    });
+    if(reset) reset.addEventListener('click', function(){
+      if(!confirm('Bu sayfanın şablonu varsayılana dönecek. Emin misiniz?')) return;
+      fetch('/admin/tasarim/yerlesim?sayfa='+encodeURIComponent(PAGE), {
+        method:'POST', credentials:'same-origin',
+        headers:{'Content-Type':'application/json'}, body:JSON.stringify({reset:true})
+      }).then(function(r){return r.json();}).then(function(j){
+        if(!j.ok) throw new Error(j.error||'sıfırlanamadı');
+        if(j.layout){
+          PAGELAYOUT.sidebar=!!j.layout.sidebar;
+          PAGELAYOUT.sidebarWidth=j.layout.sidebarWidth;
+          PAGELAYOUT.contentWidth=j.layout.contentWidth;
+          PAGELAYOUT.hideTitle=!!j.layout.hideTitle;
+          PAGELAYOUT.hideDesc=!!j.layout.hideDesc;
+          PAGELAYOUT.hideBreadcrumb=!!j.layout.hideBreadcrumb;
+          PAGELAYOUT.blockGap=j.layout.blockGap || '';
+          var bgEl=document.getElementById('plBlockGap');
+          if(bgEl) bgEl.value=PAGELAYOUT.blockGap;
+        }
+        ['plHideTitle','plHideDesc','plHideCrumb'].forEach(function(id){
+          var el=document.getElementById(id);
+          if(el) el.checked=!!PAGELAYOUT[{plHideTitle:'hideTitle',plHideDesc:'hideDesc',plHideCrumb:'hideBreadcrumb'}[id]];
+        });
+        applyPageLayoutPreview();
+        var st=document.getElementById('plStatus'); if(st) st.textContent='Varsayılana döndü';
+      }).catch(function(){ var st=document.getElementById('plStatus'); if(st) st.textContent='Sıfırlanamadı'; });
+    });
+    paintPageLayout();
+  }
+
+  /* Blok düzenini (modül sırası/görünürlük/ayar) kaydeder. */
+  function saveBlocks(manual){
+    return fetch('/admin/tasarim/kaydet?sayfa='+PAGE,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({blocks:blocks})})
+      .then(function(r){return r.json();})
+      .then(function(j){
+        if(j.ok){ flash('Otomatik kaydedildi ('+j.count+' modül)','ok'); }
+        else if(manual){ flash('Hata: '+(j.error||'bilinmeyen'),'error'); }
+      })
+      .catch(function(){ if(manual){ flash('Bağlantı hatası.','error'); } });
+  }
+  /* Modül değişikliklerini kısa gecikmeyle otomatik kaydeder (aç/kapa'ya saygılı). */
+  var _saveTimer=null;
+  function autosaveEnabled(){ try{ return localStorage.getItem('tb_autosave')!=='0'; }catch(e){ return true; } }
+  function scheduleSave(){
+    // Önizleme, otomatik kayıt kapalıyken de çalışmalı. Aksi halde içerik
+    // ayarları (slider sayısı, stil, gösterge...) ancak sayfa yenilenince
+    // görünür hale geliyordu.
+    if(autosaveEnabled()){
+      clearTimeout(_saveTimer);
+      _saveTimer=setTimeout(function(){ saveBlocks(false); }, 900);
+    }
+    schedulePreview();
+  }
+
+  /* ---------- gerçek modül önizlemesi (Faz 2) ----------
+     Bloklar SUNUCUDA public şablonlarla render edilir ve canvas'a gömülür.
+     İstemcide ayrı bir render yolu yoktur → önizlemede görünen = sitedeki.
+     HTML önbellekte tutulur; sıradan çizim (sürükle/çökert/geri al) şebekeye
+     çıkmadan önbellekten doldurulur, yalnız gerçek değişiklik refetch yapar. */
+  var _prevHtml = {}, _prevTimer = null, _prevSeq = 0;
+  /* Çökertme durumu (Önizlemeyi Aç/Kapat) yalnız bu oturuma özeldir ve
+     saveBlocks'a hiç gönderilmez — sunucu layout JSON'una kirlilik bulaşmaz. */
+  var _folded = {};
+
+  function schedulePreview(){
+    clearTimeout(_prevTimer);
+    _prevTimer = setTimeout(loadPreviews, 700);
+  }
+
+  function applyCachedPreviews(){
+    bp.querySelectorAll('.bp-chip[data-id]').forEach(function(ch){
+      var prev = ch.querySelector('.bp-prev');
+      if(!prev) return;
+      if(Object.prototype.hasOwnProperty.call(_prevHtml, ch.dataset.id)){
+        prev.innerHTML = _prevHtml[ch.dataset.id] || '';
+        prev.classList.remove('bp-prev-loading');
+      }
+    });
+  }
+
+  function loadPreviews(){
+    if(!blocks.length) return;
+    var seq = ++_prevSeq;
+    fetch('/admin/tasarim/onizleme?sayfa='+PAGE,{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({blocks: blocks})
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(j){
+      if(seq !== _prevSeq || !j || !j.ok) return;
+      (j.items||[]).forEach(function(it){ _prevHtml[it.id] = it.html || ''; });
+      applyCachedPreviews();
+    })
+    .catch(function(){});
+  }
+
+  function zoneOf(b){ var z=(b.opts&&b.opts.zone)||''; for(var i=0;i<ZONES.length;i++){ if(ZONES[i].key===z) return z; } return DEFAULT_ZONE; }
+  function zoneName(k){ for(var i=0;i<ZONES.length;i++){ if(ZONES[i].key===k) return ZONES[i].name; } return k; }
+
+  var NAMES = {};
+  {{range .Builder.Types}}NAMES["{{.Type}}"] = "{{.Name}}";{{end}}
+  /* Faz 3 — blok başına kapak şablonu eşlemesi: Manşet Editörü tasarımları. */
+  var DESIGNS = [
+    {{range .Builder.Designs}}{ id: {{.ID}}, name: {{.Name}}, is_default: {{.IsDefault}} },
+    {{end}}
+  ];
+  var COVER_BLOCKS = {slider:1, manset6:1, manset:1, one_cikanlar:1, ust_manset:1};
+  var CAT_MODULE_TYPES = ['kategori_slider','kategori_secimli','kategori_4lu','kategori_akis'];
+  var SCHEMA = {
+    slider:[['count','Görsel sayısı','number'],['allow_over_20','20 üzeri sayıya izin ver','bool'],['slider_style','Slider stili','choice',[['default','Klasik'],['edirne','Stil 1'],['minimal','Stil 2'],['magazin','Stil 3'],['sinema','Stil 4'],['stil5','Stil 5'],['sayili','Stil 6 · Sayılı Şerit']]],['m2_bg','Stil 5 arka plan rengi','color'],['m2_fade','Stil 5 geçiş efekti rengi','color'],['m2_num_bg','Stil 5 sayı barı arka planı','color'],['m2_num_active_bg','Stil 5 aktif sayı arka planı','color'],['m2_accent','Stil 5 aktif sayı rengi','color'],['m2_side','Stil 5 görsel tarafı','choice',[['alternate','Dönüşümlü'],['right','Sağ'],['left','Sol']]],['interval','Geçiş (sn)','number'],['autoplay','Otomatik','bool'],['pager_type','Gösterge','choice',[['dots','Noktalar'],['numbers','Sayılar'],['none','Yok']]],['pager_shape','Sayı biçimi','choice',[['square','Kare'],['round','Yuvarlak'],['outline','Çerçeveli']]],['pager_pos','Gösterge konumu','choice',[['left','Sol'],['center','Orta'],['right','Sağ']]],['pager_color','Gösterge rengi','color'],['pager_size','Sayı büyüklüğü (px)','number'],['arrows','Oklar','bool'],['kapak_tasarim','Kapak Şablonu','design'],['title_color','Başlık yazı rengi','color'],['title_font','Başlık fontu','choice',[['system','Sistem'],['serif','Serif'],['sans','Sans'],['condensed','Condensed'],['display','Display'],['mono','Mono']]],['title_line_height','Satır yüksekliği','decimal'],['title_letter_spacing','Harf aralığı (px)','number'],['title_word_spacing','Kelime aralığı (px)','number'],['title_case','Başlık harf biçimi','choice',[['none','Değiştirme (Normal)'],['uppercase','TÜMÜ BÜYÜK'],['capitalize','Her Kelime Baş Harfi Büyük'],['sentence','İlk Harf Büyük, Diğerleri Küçük'],['lowercase','tümü küçük']]],['cat_pos','Kategori konumu','choice',[['inline','Başlıkla aynı hizada'],['top-left','Sol üst'],['top-right','Sağ üst'],['bottom-left','Sol alt'],['bottom-center','Alt orta'],['bottom-right','Sağ alt']]],['cat_size','Kategori boyutu','number'],['cat_color','Kategori etiketi rengi','color'],['overlay_title','Başlık üst yazısını göster (SEO korunur)','bool'],['overlay_badge','Kategori etiketini göster (SEO korunur)','bool'],['overlay_spot','Spot üst yazısını göster (SEO korunur)','bool'],['show_all','Tüm manşetler bağlantısı','bool']],
+    manset6:[['count','Slayt sayısı','number'],['allow_over_20','20 üzeri sayıya izin ver','bool'],['interval','Geçiş (sn)','number'],['autoplay','Otomatik','bool'],['pager_type','Gösterge','choice',[['numbers','Sayılar'],['dots','Noktalar']]],['pager_layout','Gösterge düzeni','choice',[['vertical','Dikey'],['horizontal','Yatay']]],['pager_shape','Sayı biçimi','choice',[['square','Kare'],['round','Yuvarlak'],['outline','Çerçeveli']]],['pager_pos','Gösterge konumu','choice',[['left','Sol'],['center','Orta'],['right','Sağ']]],['pager_color','Gösterge rengi','color'],['pager_size','Sayı büyüklüğü (px)','number'],['arrows','Oklar','bool'],['kapak_tasarim','Kapak Şablonu','design'],['title_color','Başlık yazı rengi','color'],['title_font','Başlık fontu','choice',[['system','Sistem'],['serif','Serif'],['sans','Sans'],['condensed','Condensed'],['display','Display'],['mono','Mono']]],['title_line_height','Satır yüksekliği','decimal'],['title_letter_spacing','Harf aralığı (px)','number'],['title_word_spacing','Kelime aralığı (px)','number'],['title_case','Başlık harf biçimi','choice',[['none','Değiştirme (Normal)'],['uppercase','TÜMÜ BÜYÜK'],['capitalize','Her Kelime Baş Harfi Büyük'],['sentence','İlk Harf Büyük, Diğerleri Küçük'],['lowercase','tümü küçük']]],['cat_pos','Kategori konumu','choice',[['inline','Başlıkla aynı hizada'],['top-left','Sol üst'],['top-right','Sağ üst'],['bottom-left','Sol alt'],['bottom-center','Alt orta'],['bottom-right','Sağ alt']]],['cat_size','Kategori boyutu','number'],['cat_color','Kategori etiketi rengi','color'],['overlay_title','Başlık üst yazısını göster (SEO korunur)','bool'],['overlay_badge','Kategori etiketini göster (SEO korunur)','bool'],['overlay_spot','Spot üst yazısını göster (SEO korunur)','bool'],['show_all','Tüm manşetler bağlantısı','bool']],
+    manset2:[['count','Slayt sayısı','number'],['m2_side','Görsel tarafı','choice',[['alternate','Dönüşümlü'],['right','Sağ'],['left','Sol']]],['m2_height','Yükseklik (px)','number'],['m2_bg','Arka plan rengi','color'],['m2_fade','Geçiş efekti rengi','color'],['m2_num_bg','Sayı barı arka planı','color'],['m2_num_active_bg','Aktif sayı arka planı','color'],['m2_accent','Aktif sayı rengi','color'],['title_color','Başlık yazı rengi','color'],['title_font','Başlık fontu','choice',[['system','Sistem'],['serif','Serif'],['sans','Sans'],['condensed','Condensed'],['display','Display'],['mono','Mono']]],['title_line_height','Satır yüksekliği','decimal'],['title_letter_spacing','Harf aralığı (px)','number'],['title_word_spacing','Kelime aralığı (px)','number'],['title_case','Başlık harf biçimi','choice',[['none','Değiştirme (Normal)'],['uppercase','TÜMÜ BÜYÜK'],['capitalize','Her Kelime Baş Harfi Büyük'],['sentence','İlk Harf Büyük, Diğerleri Küçük'],['lowercase','tümü küçük']]],['cat_pos','Kategori konumu','choice',[['inline','Başlıkla aynı hizada'],['top-left','Sol üst'],['top-right','Sağ üst'],['bottom-left','Sol alt'],['bottom-center','Alt orta'],['bottom-right','Sağ alt']]],['cat_size','Kategori boyutu','number'],['cat_color','Kategori etiketi rengi','color'],['overlay_title','Başlık üst yazısını göster (SEO korunur)','bool'],['overlay_badge','Kategori etiketini göster (SEO korunur)','bool'],['overlay_spot','Spot üst yazısını göster (SEO korunur)','bool']],
+    son_dakika:[['count','Adet','number']],
+    manset:[['count','Adet','number'],['kapak_tasarim','Kapak Şablonu','design'],['title_color','Başlık yazı rengi','color'],['title_font','Başlık fontu','choice',[['system','Sistem'],['serif','Serif'],['sans','Sans'],['condensed','Condensed'],['display','Display'],['mono','Mono']]],['title_line_height','Satır yüksekliği','decimal'],['title_letter_spacing','Harf aralığı (px)','number'],['title_word_spacing','Kelime aralığı (px)','number'],['title_case','Başlık harf biçimi','choice',[['none','Değiştirme (Normal)'],['uppercase','TÜMÜ BÜYÜK'],['capitalize','Her Kelime Baş Harfi Büyük'],['sentence','İlk Harf Büyük, Diğerleri Küçük'],['lowercase','tümü küçük']]],['cat_pos','Kategori konumu','choice',[['inline','Başlıkla aynı hizada'],['top-left','Sol üst'],['top-right','Sağ üst'],['bottom-left','Sol alt'],['bottom-center','Alt orta'],['bottom-right','Sağ alt']]],['cat_size','Kategori boyutu','number'],['cat_color','Kategori etiketi rengi','color'],['overlay_title','Başlık üst yazısını göster (SEO korunur)','bool'],['overlay_badge','Kategori etiketini göster (SEO korunur)','bool'],['overlay_spot','Spot üst yazısını göster (SEO korunur)','bool'],['show_all','Tüm manşetler bağlantısı','bool']],
+    kategori_sekmeli:[
+      ['sekmeler','Sekmeler (kategori seç ve sırala)','cats-multi'],
+      ['count','Sekme başına haber','number','5','adet'],
+      ['tab_nav','Sekme içinde sağ/sol oklar (5\'erli geçiş)','bool'],
+      ['tab_style','Sekme stili','choice',[
+        ['segmented','Segmentli (varsayılan)'],
+        ['square','Köşe düz'],
+        ['pill','Kapsül'],
+        ['underline','Alt çizgi'],
+        ['boxed','Çerçeveli'],
+        ['minimal','Sade'],
+        ['tab','Sekme (dosya)'],
+        ['tabflat','Sekme (dosya, köşeli)']
+      ]],
+      ['tab_bg','Sekme çubuğu arka planı','color'],
+      ['tab_color','Pasif sekme yazı rengi','color'],
+      ['tab_active_bg','Aktif sekme arka planı','color'],
+      ['tab_active_color','Aktif sekme yazı rengi','color'],
+      ['tab_radius','Sekme köşe yarıçapı','number','','px']
+    ],
+    trend_numarali:[
+      ['count','Adet','number'],
+      ['tn_stil','Sayısal alan stili','choice',[
+        ['blok','Blok (dolu kutu — varsayılan)'],
+        ['duz','Düz (köşesiz dolu blok)'],
+        ['serit','İnce şerit'],
+        ['rozet','Rozet (yuvarlak)'],
+        ['buyuk','Büyük sayı (saydam zemin)'],
+        ['kontur','Kontur (çerçeveli)']
+      ]],
+      ['tn_radius','Sayısal alan köşe yarıçapı (0 = düz, boş = tema)','number','','px'],
+      ['tn_bg','Sayı arka planı / konturu','color'],
+      ['tn_fg','Sayı rengi','color']
+    ],
+    galeri_foto:[['count','Adet','number']],
+    galeri_video:[['count','Adet','number']],
+    one_cikanlar:[
+      ['count','Adet','number'],
+      ['card_style','Kart stili (Bloomberg ve alternatifleri)','choice',[
+        ['','Klasik (varsayılan)'],
+        ['bloomberg','Bloomberg — başlık bandı görselin ÜSTÜNDE'],
+        ['bloomberg-cizgi','Bloomberg II — başlık kutusu görselin üstüne taşar'],
+        ['bant-alt','Bant — başlık bandı görselin ALTINDA'],
+        ['vurgu','Vurgu — aksan renginde dolu bant'],
+        ['cerceve','Çerçeve — başlık ince çerçeve içinde'],
+        ['kose','Köşe — köşe vurgulu bant'],
+        ['cam','Cam — yarı saydam bulanık bant'],
+        ['alt-cizgi','Alt çizgi — bant + alt aksan çizgisi']
+      ]],
+      ['card_title_bg','Kart bandı arka planı (açık tema)','color'],
+      ['card_title_fg','Kart bandı yazı rengi (açık tema)','color'],
+      ['card_dark_bg','Kart bandı arka planı (koyu tema)','color'],
+      ['card_dark_fg','Kart bandı yazı rengi (koyu tema)','color'],
+      ['card_accent','Kart vurgu rengi (çizgi/köşe)','color'],
+      ['card_title_size','Kart başlık boyutu','number','','px'],
+      ['title_case','Başlık harf biçimi','choice',[['none','Değiştirme (Normal)'],['uppercase','TÜMÜ BÜYÜK'],['capitalize','Her Kelime Baş Harfi Büyük'],['sentence','İlk Harf Büyük, Diğerleri Küçük'],['lowercase','tümü küçük']]],['kapak_tasarim','Kapak Şablonu','design'],['overlay_title','Başlık üst yazısını göster (SEO korunur)','bool'],['overlay_badge','Kategori etiketini göster (SEO korunur)','bool'],['overlay_spot','Spot üst yazısını göster (SEO korunur)','bool'],['show_all','Tüm manşetler bağlantısı','bool']],
+    /* Bağımsız kategori modülleri: kategori gövdesi tek blok yerine dört
+       parçaya ayrılabilir. Her modül kendi haber aralığını (item_offset) ve
+       satır yuvasını (row_layout) taşır. */
+    kategori_slider:[
+      ['count','Slayt sayısı','number','5','adet'],
+      ['row_layout','Satır yerleşimi','choice',[
+        ['','Kendi satırı'],
+        ['hero-left','Manşet satırı — sol'],
+        ['hero-center','Manşet satırı — orta'],
+        ['hero-right','Manşet satırı — sağ']
+      ]],
+      ['item_offset','Haber başlangıcı (boş = otomatik)','number'],
+      ['hero_width','Manşet genişliği (satır ortası)','number','44','%'],
+      ['hero_ratio','Manşet oranı','choice',[['4/5','4:5 dikey'],['3/4','3:4 dikey'],['1/1','Kare'],['16/9','Yatay']]]
+    ],
+    kategori_secimli:[
+      ['count','Kart sayısı','number','3','adet'],
+      ['row_layout','Satır yerleşimi','choice',[
+        ['','Kendi satırı'],
+        ['hero-left','Manşet satırı — sol'],
+        ['hero-center','Manşet satırı — orta'],
+        ['hero-right','Manşet satırı — sağ']
+      ]],
+      ['item_offset','Haber başlangıcı (boş = otomatik)','number'],
+      ['rail_style','Kart görünümü','choice',[
+        ['overlay','Görsel üzerinde başlık (gradyan)'],
+        ['yatay','Görsel solda, başlık sağda']
+      ]]
+    ],
+    kategori_4lu:[
+      ['count','Kart sayısı','number','4','adet'],
+      ['row_layout','Satır yerleşimi','choice',[
+        ['','Kendi satırı'],
+        ['hero-left','Manşet satırı — sol'],
+        ['hero-center','Manşet satırı — orta'],
+        ['hero-right','Manşet satırı — sağ']
+      ]],
+      ['item_offset','Haber başlangıcı (boş = otomatik)','number'],
+      ['list_cols','Sütun sayısı','choice',[['2','2 sütun'],['3','3 sütun'],['4','4 sütun']]],
+      ['card_style','Kart stili (Bloomberg ve alternatifleri)','choice',[
+        ['','Klasik (varsayılan)'],
+        ['bloomberg','Bloomberg — başlık bandı görselin ÜSTÜNDE'],
+        ['bloomberg-cizgi','Bloomberg II — başlık kutusu görselin üstüne taşar'],
+        ['bant-alt','Bant — başlık bandı görselin ALTINDA'],
+        ['vurgu','Vurgu — aksan renginde dolu bant'],
+        ['cerceve','Çerçeve — başlık ince çerçeve içinde'],
+        ['kose','Köşe — köşe vurgulu bant'],
+        ['cam','Cam — yarı saydam bulanık bant'],
+        ['alt-cizgi','Alt çizgi — bant + alt aksan çizgisi']
+      ]],
+      ['card_title_bg','Kart bandı arka planı (açık tema)','color'],
+      ['card_title_fg','Kart bandı yazı rengi (açık tema)','color'],
+      ['card_dark_bg','Kart bandı arka planı (koyu tema)','color'],
+      ['card_dark_fg','Kart bandı yazı rengi (koyu tema)','color'],
+      ['card_accent','Kart vurgu rengi (çizgi/köşe)','color'],
+      ['card_title_size','Kart başlık boyutu','number','','px'],
+      ['card_box_bg','Kart gövdesi arka planı (açık tema)','color'],
+      ['card_box_dark_bg','Kart gövdesi arka planı (koyu tema)','color'],
+      ['card_shadow','Kart gölgesi','bool']
+    ],
+    kategori_akis:[
+      ['item_offset','Haber başlangıcı (boş = otomatik)','number'],
+      ['akis_limit','Akış haber sınırı (toplam)','number','60','haber'],
+      ['akis_per','Her yüklemede haber','choice',[['12','12 haber'],['24','24 haber'],['36','36 haber']]],
+      ['akis_auto','Kaydırınca otomatik yükle','bool'],
+      ['akis_font','Akış kart yazı fontu (tüm akış tek font)','choice',[
+        ['','Tema başlık fontu (slider ile aynı) — varsayılan'],
+        ['serif','Coinhit (Serif — Georgia)'],
+        ['system','Sistem'],
+        ['sans','Sans'],
+        ['condensed','Condensed'],
+        ['display','Display'],
+        ['mono','Mono']
+      ]],
+      ['card_style','Kart stili (Bloomberg ve alternatifleri)','choice',[
+        ['','Klasik (varsayılan)'],
+        ['bloomberg','Bloomberg — başlık bandı görselin ÜSTÜNDE'],
+        ['bloomberg-cizgi','Bloomberg II — başlık kutusu görselin üstüne taşar'],
+        ['bant-alt','Bant — başlık bandı görselin ALTINDA'],
+        ['vurgu','Vurgu — aksan renginde dolu bant'],
+        ['cerceve','Çerçeve — başlık ince çerçeve içinde'],
+        ['kose','Köşe — köşe vurgulu bant'],
+        ['cam','Cam — yarı saydam bulanık bant'],
+        ['alt-cizgi','Alt çizgi — bant + alt aksan çizgisi']
+      ]],
+      ['card_title_bg','Kart bandı arka planı (açık tema)','color'],
+      ['card_title_fg','Kart bandı yazı rengi (açık tema)','color'],
+      ['card_dark_bg','Kart bandı arka planı (koyu tema)','color'],
+      ['card_dark_fg','Kart bandı yazı rengi (koyu tema)','color'],
+      ['card_accent','Kart vurgu rengi (çizgi/köşe)','color'],
+      ['card_title_size','Kart başlık boyutu','number','','px']
+    ],
+    kategori_izgara:[['count','Adet','number']],
+    trend:[['count','Adet','number']],
+    reklam:[['slot','Slot anahtarı','text'],['label','Etiket (ops)','text']],
+    baslik:[['text','Başlık metni','text']],
+    kategori_liste:[
+      ['view','Liste görünümü (boş = üstteki şablon)','view-sel'],
+      ['hero_style','Manşet düzeni','choice',[['klasik','Klasik (1 büyük + 2 yan)'],['portre','Portre slider (5 slayt + 2 yan)'],['uclu','Üçlü: 3 + slider + 2']]],
+      ['hero_count','Slider slayt sayısı','number','5','adet'],
+      ['hero_width','Manşet genişliği (portre: sol, üçlü: orta)','number','58','%'],
+      ['hero_ratio','Sol manşet oranı','choice',[['4/5','4:5 dikey'],['3/4','3:4 dikey'],['1/1','Kare'],['16/9','Yatay']]],
+      ['list_cols','Alt kart sütunu','choice',[['2','2 sütun'],['3','3 sütun'],['4','4 sütun']]],
+      ['akis_limit','Akış haber sınırı (toplam)','number','60','haber'],
+      ['akis_per','Her yüklemede haber','choice',[['12','12 haber'],['24','24 haber'],['36','36 haber']]],
+      ['akis_auto','Kaydırınca otomatik yükle','bool'],
+      ['akis_hero','Üstte manşet alanını göster (portre/üçlü)','bool'],
+      ['akis_font','Akış kart yazı fontu (tüm akış tek font)','choice',[
+        ['','Tema başlık fontu (slider ile aynı) — varsayılan'],
+        ['serif','Coinhit (Serif — Georgia)'],
+        ['system','Sistem'],
+        ['sans','Sans'],
+        ['condensed','Condensed'],
+        ['display','Display'],
+        ['mono','Mono']
+      ]],
+      ['card_style','Kart stili (Bloomberg ve alternatifleri)','choice',[
+        ['','Klasik (varsayılan)'],
+        ['bloomberg','Bloomberg — başlık bandı görselin ÜSTÜNDE'],
+        ['bloomberg-cizgi','Bloomberg II — başlık kutusu görselin üstüne taşar'],
+        ['bant-alt','Bant — başlık bandı görselin ALTINDA'],
+        ['vurgu','Vurgu — aksan renginde dolu bant'],
+        ['cerceve','Çerçeve — başlık ince çerçeve içinde'],
+        ['kose','Köşe — köşe vurgulu bant'],
+        ['cam','Cam — yarı saydam bulanık bant'],
+        ['alt-cizgi','Alt çizgi — bant + alt aksan çizgisi']
+      ]],
+      ['card_title_bg','Kart bandı arka planı (açık tema)','color'],
+      ['card_title_fg','Kart bandı yazı rengi (açık tema)','color'],
+      ['card_dark_bg','Kart bandı arka planı (koyu tema)','color'],
+      ['card_dark_fg','Kart bandı yazı rengi (koyu tema)','color'],
+      ['card_accent','Kart vurgu rengi (çizgi/köşe)','color'],
+      ['card_title_size','Kart başlık boyutu','number','','px'],
+      ['card_box_bg','Kart gövdesi arka planı (açık tema)','color'],
+      ['card_box_dark_bg','Kart gövdesi arka planı (koyu tema)','color'],
+      ['card_shadow','Kart gölgesi','bool'],
+    ],
+    metin:[['html','Biçimlendirilmiş metin','richtext']],
+    yazi_govde:[],
+    sayfa_govde:[],
+    servis_bandi:[
+      ['sv_bg','Arka plan','choice',[
+        ['kart','Kart (modül yüzeyi — varsayılan)'],
+        ['yok','Yok (saydam)'],
+        ['zemin','Yumuşak zemin'],
+        ['ozel','Özel renk (aşağıdaki Arka plan rengi)']
+      ]],
+      ['kur_bist','BIST 100','bool'],
+      ['kur_usd','Dolar (USD)','bool'],
+      ['kur_eur','Euro (EUR)','bool'],
+      ['kur_altin','Altın (gram)','bool'],
+      ['kur_btc','Bitcoin (BTC)','bool'],
+      ['kur_ons','Ons altın','bool']
+    ],
+    /* Kur & Borsa: kalem kimlikleriyle (görünen ad değişse de düzen bozulmaz).
+       Sıra referans ekranla aynı: BIST, Dolar, Euro, Gram Altın, Bitcoin,
+       Tahvil, Gümüş, Sterlin, Euro/Dolar, Brent, Çeyrek. */
+    kur_borsa:[
+      ['kb_style','Şablon','choice',[
+        ['referans','Referans (Habertürk birebir)'],
+        ['sade','Sade (nötr fiyat)'],
+        ['kart','Kart (her kalem çerçeveli)'],
+        ['dar','Dar şerit (tek satır)']
+      ]],
+      ['kb_bg','Arka plan','choice',[
+        ['yok','Yok (saydam — referans)'],
+        ['kart','Kart (çerçeveli yüzey)'],
+        ['zemin','Yumuşak zemin'],
+        ['ozel','Özel renk (aşağıdaki Arka plan rengi)']
+      ]],
+      ['kb_arrow','Yön göstergesi','choice',[
+        ['noktali','Noktalı ok (referans)'],
+        ['ucgen','Dolu üçgen'],
+        ['ok','İnce ok'],
+        ['uzun','Uzun ok'],
+        ['yok','Gösterge yok']
+      ]],
+      ['piyasa_bist100','BIST 100','bool'],
+      ['piyasa_usd','Dolar','bool'],
+      ['piyasa_eur','Euro','bool'],
+      ['piyasa_gram-altin','Gram Altın','bool'],
+      ['piyasa_btc','Bitcoin','bool'],
+      ['piyasa_tahvil2y','2 Yıllık Tahvil','bool'],
+      ['piyasa_gumus','Gümüş (gram)','bool'],
+      ['piyasa_gbp','Sterlin','bool'],
+      ['piyasa_eurusd','Euro/Dolar','bool'],
+      ['piyasa_brent','Brent Petrol','bool'],
+      ['piyasa_ceyrek-altin','Çeyrek Altın','bool'],
+      ['count','En fazla kalem (0 = tümü)','number'],
+      ['gorunum_kats','Yalnız bu kategorilerin yazılarında göster','cats-multi']
+    ],
+    hikayeler:[['count','Hikâye sayısı','number']],
+    ust_manset:[
+      ['count','Kart sayısı','number'],
+      ['um_layout','Düzen','choice',[['serit','Yatay şerit (kaydırmalı)'],['izgara','Izgara kartlar']]],
+      ['um_cols','Izgara sütun sayısı','choice',[['2','2 sütun'],['3','3 sütun'],['4','4 sütun']]],
+      ['um_style','Kart stili','choice',[
+        ['klasik','Klasik (başlık görselin altında)'],
+        ['overlay','Başlık görsel üstünde (alt, gradyan)'],
+        ['overlay-top','Başlık görsel üstünde (üst, gradyan)'],
+        ['band','Başlık görsel üstünde (yarı saydam bant)'],
+        ['frame','Başlık görsel üstünde (çerçeveli kutu)'],
+        ['corner','Başlık görsel üstünde (köşe vurgulu)']
+      ]],
+      ['um_title_color','Başlık yazı rengi','color'],
+      ['um_title_bg','Bant / kutu arka planı','color'],
+      ['um_title_size','Başlık boyutu','number','','px'],
+      ['um_title_pad','Başlık yan boşluğu','number','','px'],
+      ['um_grad_color','Gradyan rengi','color'],
+      ['um_grad_opacity','Gradyan saydamlığı','number','','%'],
+      ['um_shadow','Başlık gölgesi','bool'],
+      ['card_style','Kart stili (Bloomberg ve alternatifleri)','choice',[
+        ['','Klasik (varsayılan)'],
+        ['bloomberg','Bloomberg — başlık bandı görselin ÜSTÜNDE'],
+        ['bloomberg-cizgi','Bloomberg II — başlık kutusu görselin üstüne taşar'],
+        ['bant-alt','Bant — başlık bandı görselin ALTINDA'],
+        ['vurgu','Vurgu — aksan renginde dolu bant'],
+        ['cerceve','Çerçeve — başlık ince çerçeve içinde'],
+        ['kose','Köşe — köşe vurgulu bant'],
+        ['cam','Cam — yarı saydam bulanık bant'],
+        ['alt-cizgi','Alt çizgi — bant + alt aksan çizgisi']
+      ]],
+      ['card_title_bg','Kart bandı arka planı (açık tema)','color'],
+      ['card_title_fg','Kart bandı yazı rengi (açık tema)','color'],
+      ['card_dark_bg','Kart bandı arka planı (koyu tema)','color'],
+      ['card_dark_fg','Kart bandı yazı rengi (koyu tema)','color'],
+      ['card_accent','Kart vurgu rengi (çizgi/köşe)','color'],
+      ['card_title_size','Kart başlık boyutu','number','','px'],
+      ['um_card_bg','Kart arka planı (açık tema)','color'],
+      ['um_card_dark_bg','Kart arka planı (koyu tema)','color'],
+      ['um_card_shadow','Kart gölgesi','bool'],
+      ['title_case','Başlık harf biçimi','choice',[['none','Değiştirme (Normal)'],['uppercase','TÜMÜ BÜYÜK'],['capitalize','Her Kelime Baş Harfi Büyük'],['sentence','İlk Harf Büyük, Diğerleri Küçük'],['lowercase','tümü küçük']]],
+      ['kapak_tasarim','Kapak Şablonu','design'],
+      ['overlay_title','Başlık üst yazısını göster (SEO korunur)','bool'],
+      ['overlay_badge','Kategori etiketini göster (SEO korunur)','bool']
+    ],
+    canli_yayin:[],
+    /* Tek kategori paneli: eski "Kategori Panelleri" tablosundaki düzen ve
+       renk seçenekleri artık her modülün kendi ayarında. */
+    kategori_panel:[
+      ['duzen','Vitrin düzeni','choice',[
+        ['iki','2 büyük + liste'],
+        ['ust3alt2','3 üst + 2 alt (haberpi Güncel)'],
+        ['mozaik','Mozaik (1 büyük + 4)'],
+        ['solbuyuk','Sol büyük + 2 + alt 3 (haberpi Siyaset)'],
+        ['buyuk','Büyük + 3 kolon liste'],
+        ['ekonomi','Ekonomi vitrini (Habertürk birebir)'],
+        ['gastro','Gastro vitrini (Habertürk birebir)']
+      ]],
+      ['tone','Renk','choice',[
+        ['kirmizi','Kırmızı (tema)'],
+        ['yesil','Yeşil'],
+        ['mavi','Mavi'],
+        ['turuncu','Turuncu'],
+        ['mor','Mor'],
+        ['sari','Sarı'],
+        ['lacivert','Lacivert'],
+        ['gri','Gri']
+      ]],
+      ['count','Manşet dışı haber sayısı','number','9','haber']
+    ],
+    kategori_bloklari:[['count','Kategori sayısı','number']],
+    puan_durumu:[
+      ['count','Takım sayısı','number'],
+      ['gorunum_kats','Yalnız bu kategorilerin yazılarında göster','cats-multi']
+    ],
+    /* Kripto Para — Habertürk ekonomi "KRİPTO PARA" bölümü.
+       Veri CoinGecko (TRY) "kripto" önbelleğinden. Görünüm ve akış
+       seçenekleri Hisseler modülüyle aynı sözlüğü kullanır. */
+    kripto_para:[
+      ['kp_layout','Yerleşim','choice',[
+        ['izgara','Izgara (Habertürk vitrini)'],
+        ['serit','Kayan şerit']
+      ]],
+      ['kp_style','Şablon','choice',[
+        ['otomatik','Otomatik (geniş: vitrin · yan sütun: liste)'],
+        ['referans','Referans (çerçeveli kart, yön rengi)'],
+        ['sade','Sade (çerçevesiz, nötr fiyat)'],
+        ['kart','Kart (gölgeli, belirgin)'],
+        ['dar','Dar (tek satır kompakt kart)'],
+        ['rail','Yan sütun listesi (ikon · kod · fiyat · %24s)'],
+        ['mini','Mini şerit (çok sıkı tek satır)']
+      ]],
+      ['count','Kripto sayısı','number','12','adet'],
+      ['kp_kolon','Sütun sayısı (ızgara)','choice',[['2','2 sütun'],['3','3 sütun'],['4','4 sütun'],['5','5 sütun'],['6','6 sütun']]],
+      ['kp_sirala','Sıralama','choice',[
+        ['deger','Piyasa değeri (referans)'],
+        ['yukselen','En çok yükselen'],
+        ['dusen','En çok düşen'],
+        ['kod','Koda göre (alfabetik)']
+      ]],
+      ['kp_degisim','Yüzde değişimini göster','bool'],
+      ['kp_ikon','Kripto ikonlarını göster','bool'],
+      ['kp_bg','Arka plan','choice',[
+        ['kart','Kart (modül yüzeyi — varsayılan)'],
+        ['yok','Yok (saydam)'],
+        ['zemin','Yumuşak zemin'],
+        ['ozel','Özel renk (aşağıdaki Arka plan rengi)']
+      ]],
+      ['kp_gecis','Akış modeli (şerit)','choice',[
+        ['surekli','Sürekli akış (Habertürk modeli)'],
+        ['adim','Aralıklı: bekle + yumuşak kaydır']
+      ]],
+      ['kp_hiz_secim','Akış hızı (şerit)','choice',[
+        ['20','Çok yavaş — 20 px/sn'],
+        ['30','Yavaş — 30 px/sn'],
+        ['45','Orta — 45 px/sn'],
+        ['60','Normal — 60 px/sn (Habertürk)'],
+        ['90','Hızlı — 90 px/sn'],
+        ['120','Çok hızlı — 120 px/sn'],
+        ['180','Ultra — 180 px/sn'],
+        ['ozel','Özel (aşağıdaki px/sn)']
+      ]],
+      ['kp_speed','Özel hız (px/sn)','number','60','px/sn'],
+      ['kp_bekle','Aralıklı bekleme (sn)','number','4','sn'],
+      ['kp_kayma','Aralıklı geçiş süresi (ms)','number','700','ms'],
+      ['gorunum_kats','Yalnız bu kategorilerin yazılarında göster','cats-multi']
+    ],
+    /* Kur Çevirici — Habertürk "KUR ÇEVİRİCİ" bölümü (12+ para birimi). */
+    kur_cevirici:[
+      ['kc_baslik','Başlık metni','text'],
+      ['kc_from','Varsayılan kaynak','choice',[
+        ['USD','USD — Amerikan Doları'],
+        ['EUR','EUR — Euro'],
+        ['GBP','GBP — İngiliz Sterlini'],
+        ['TRY','TRY — Türk Lirası'],
+        ['JPY','JPY — Japon Yeni'],
+        ['CHF','CHF — İsviçre Frangı'],
+        ['SAR','SAR — Suudi Riyali'],
+        ['AUD','AUD — Avustralya Doları'],
+        ['CAD','CAD — Kanada Doları']
+      ]],
+      ['kc_to','Varsayılan hedef','choice',[
+        ['TRY','TRY — Türk Lirası'],
+        ['USD','USD — Amerikan Doları'],
+        ['EUR','EUR — Euro'],
+        ['GBP','GBP — İngiliz Sterlini'],
+        ['JPY','JPY — Japon Yeni'],
+        ['CHF','CHF — İsviçre Frangı'],
+        ['SAR','SAR — Suudi Riyali'],
+        ['AUD','AUD — Avustralya Doları'],
+        ['CAD','CAD — Kanada Doları']
+      ]],
+      ['kc_miktar','Varsayılan tutar','number','100'],
+      ['kc_bg','Arka plan','choice',[
+        ['kart','Kart (modül yüzeyi — varsayılan)'],
+        ['yok','Yok (saydam)'],
+        ['zemin','Yumuşak zemin'],
+        ['ozel','Özel renk (aşağıdaki Arka plan rengi)']
+      ]],
+      ['gorunum_kats','Yalnız bu kategorilerin yazılarında göster','cats-multi']
+    ],
+    /* Hisseler — Habertürk ekonomi "HİSSELER" bölümü.
+       Veri scheduler'ın "hisseler" önbelleğinden gelir (BIST kodları).
+       Görünüm seçenekleri Kur & Borsa modülüyle AYNI sözlüğü kullanır:
+       referans/sade/kart/dar · noktali/ucgen/ok/uzun/yok · yok/zemin/ozel.
+       gorunum_kats: yalnız seçilen kategorilerin YAZILARINDA göster. */
+    hisseler:[
+      ['count','Hisse sayısı','number','20','adet'],
+      ['hs_layout','Yerleşim','choice',[
+        ['serit','Kayan şerit (Habertürk birebir)'],
+        ['izgara','Izgara (sabit kutu)']
+      ]],
+      ['hs_style','Şablon','choice',[
+        ['otomatik','Otomatik (geniş: referans · yan sütun: dar)'],
+        ['referans','Referans (Habertürk — fiyat yön renginde)'],
+        ['sade','Sade (nötr fiyat)'],
+        ['kart','Kart (her hisse çerçeveli)'],
+        ['dar','Dar (tek satır kompakt)']
+      ]],
+      ['hs_arrow','Yön göstergesi','choice',[
+        ['noktali','Noktalı ok (referans)'],
+        ['ucgen','Dolu üçgen'],
+        ['ok','İnce ok'],
+        ['uzun','Uzun ok'],
+        ['yok','Gösterge yok']
+      ]],
+      ['hs_bg','Arka plan','choice',[
+        ['kart','Kart (modül yüzeyi — varsayılan)'],
+        ['yok','Yok (saydam)'],
+        ['zemin','Yumuşak zemin'],
+        ['ozel','Özel renk (aşağıdaki Arka plan rengi)']
+      ]],
+      ['hs_sirala','Sıralama','choice',[
+        ['kod','Koda göre (alfabetik)'],
+        ['yukselen','En çok yükselen'],
+        ['dusen','En çok düşen']
+      ]],
+      ['hs_hiz_secim','Akış hızı','choice',[
+        ['20','Çok yavaş — 20 px/sn'],
+        ['30','Yavaş — 30 px/sn'],
+        ['45','Orta — 45 px/sn'],
+        ['60','Normal — 60 px/sn (Habertürk)'],
+        ['90','Hızlı — 90 px/sn'],
+        ['120','Çok hızlı — 120 px/sn'],
+        ['180','Ultra — 180 px/sn'],
+        ['ozel','Özel (aşağıdaki px/sn)']
+      ]],
+      ['hs_speed','Özel hız (px/sn)','number','60','px/sn'],
+      ['hs_gecis','Geçiş modeli','choice',[
+        ['surekli','Sürekli akış (Habertürk modeli)'],
+        ['adim','Aralıklı: bekle + yumuşak kaydır']
+      ]],
+      ['hs_bekle','Aralıklı bekleme (sn)','number','4','sn'],
+      ['hs_kayma','Aralıklı geçiş süresi (ms)','number','700','ms'],
+      ['hs_ara','Altında hisse arama kutusu','bool'],
+      ['hs_degisim','Yüzde değişimini göster','bool'],
+      ['gorunum_kats','Yalnız bu kategorilerin yazılarında göster','cats-multi']
+    ],
+    /* Puan Durumu Şeridi — Habertürk spor yazısı düzeni.
+       gorunum_kats: modül yalnız seçilen kategorilerin YAZILARINDA basılır
+       (boş = her yerde). */
+    puan_serit:[
+      ['puan_baslik','Başlık metni','text'],
+      ['lig','Lig','choice',[
+        ['superlig','Süper Lig'],
+        ['premierlig','Premier Lig'],
+        ['laliga','La Liga'],
+        ['seriea','Serie A'],
+        ['bundesliga','Bundesliga'],
+        ['ligue1','Ligue 1']
+      ]],
+      ['count','Takım sayısı','number'],
+      ['gorunum_kats','Yalnız bu kategorilerin yazılarında göster','cats-multi']
+    ]
+  };
+  /* Başlık arkasındaki katman: yalnız görselli slider/manşet bloklarında. */
+  var OVERLAY_FIELDS = [
+    ['overlay_gradient','Gölge efekti','choice',[
+      ['none','Gölge yok'],
+      ['solid','Düz renk'],
+      ['bottom','Aşağıdan yukarı geçiş'],
+      ['left','Soldan sağa geçiş'],
+      ['right','Sağdan sola geçiş'],
+      ['diagonal','Çapraz geçiş']
+    ]],
+    ['overlay_color','Başlık arkası rengi','color'],
+    ['overlay_opacity_preset','Başlık arkası saydamlığı','choice',[
+      ['0','Tamamen saydam'],
+      ['20','Çok hafif'],
+      ['40','Hafif'],
+      ['60','Orta'],
+      ['80','Koyu'],
+      ['100','Tam opak'],
+      ['custom','Özel (%)']
+    ]],
+    ['overlay_opacity','Özel saydamlık','number','','%'],
+    ['overlay_height','Başlık arkası yüksekliği','number','','%'],
+    ['overlay_blur','Arka plan bulanıklığı','number']
+  ];
+  /* Kategori Haber Listesi manşet slider'ı (portre/üçlü): slider modülündeki
+     sayı göstergesi çerçevesi, sayı boyutu/rengi, başlık gölgesi ve yazı
+     rengi/fontu blok bazında seçilebilir. */
+  var HERO_SLIDER_FIELDS = [
+    ['pager_shape','Sayı çerçeve stili','choice',[
+      ['square','Kare'],
+      ['round','Yuvarlak'],
+      ['outline','Çerçeveli']
+    ]],
+    ['pager_pos','Sayı konumu','choice',[
+      ['left','Sol'],
+      ['center','Orta'],
+      ['right','Sağ']
+    ]],
+    ['pager_size','Sayı büyüklüğü','number','','px'],
+    ['pager_color','Sayı / gösterge rengi','color'],
+    ['hero_shadow','Başlık gölgesi','bool'],
+    ['title_color','Başlık yazı rengi','color'],
+    ['title_font','Başlık fontu','choice',[
+      ['system','Sistem'],
+      ['serif','Serif'],
+      ['sans','Sans'],
+      ['condensed','Condensed'],
+      ['display','Display'],
+      ['mono','Mono']
+    ]]
+  ];
+  function opt(b,k,d){ return (b.opts&&b.opts[k]!==undefined)?b.opts[k]:d; }
+
+  /* Her modüle eklenen ortak görünüm/ölçü alanları (modül modül ayar).
+     Alan boş bırakılırsa opt silinir ve modül varsayılana döner. */
+  var STYLE_FIELDS = [
+    ['stPad','İç dolgu (padding)','length','örn. 1rem veya 10px 20px'],
+    ['stMargin','Dış boşluk (margin)','length','örn. 1rem veya 10px auto'],
+    ['stGapX','Kart yan boşluk (sütun gap)','length','örn. 1rem'],
+    ['stGapY','Kart dikey boşluk (satır gap)','length','örn. 12px'],
+    ['stGapTop','Dış boşluk üst (margin-top)','length','0'],
+    ['stGapBottom','Dış boşluk alt (margin-bottom)','length','0'],
+    ['stBorderW','Çerçeve kalınlığı','number','0'],
+    ['stBorderColor','Çerçeve rengi','color',''],
+    ['stRadius','Köşe yuvarlaklığı (0 = köşeli · boş = tema)','number',''],
+    ['stBg','Arka plan rengi','color',''],
+    ['mod_style','Modül görünümü','choice',[
+      ['boxed','Kart (çerçeveli)'],
+      ['soft','Yumuşak zemin'],
+      ['accent','Üst vurgu çizgili'],
+      ['glass','Cam efekti']
+    ]],
+    ['hide_mobile','Mobil görünümde gizle','bool'],
+    ['hide_badge','Kategori etiketini gizle','bool'],
+    ['hide_heading','Modül başlığını gizle','bool'],
+    ['head_style','Başlık işaret stili','head-style'],
+    ['cat_shape','Kategori etiket stili','choice',[
+      ['badge','Rozet (varsayılan)'],
+      ['pin','Harita pin (sol alt)'],
+      ['pin2','Harita pin 2 (alt orta üçgen)'],
+      ['pill','Kapsül'],
+      ['outline','Çerçeve'],
+      ['corner','Köşe kesimli']
+    ]],
+    ['cat_clip','Etiket clip-path','text'],
+    ['cat_left','Etiket left','text'],
+    ['cat_bottom','Etiket bottom','text'],
+    ['stAbs','Serbest konum (absolute)','bool'],
+    ['stX','Sol (px)','number','0'],
+    ['stY','Üst (px)','number','0'],
+    ['stW','Genişlik (px)','number','0'],
+    ['stZ','Katman (z-index)','number','0']
+  ];
+  /* Seçili etiket stilinin varsayılan gelişmiş özellikleri. Bu değerler
+     alanlarda gösterilir; kullanıcı değiştirirse opts.cat_clip/cat_left/
+     cat_bottom olarak blok bazında saklanır. */
+  var CAT_SHAPE_PRESETS = {
+    badge:   { clip: 'none', left: '8px', bottom: 'auto' },
+    pin:     { clip: 'polygon(0 0, 100% 0, 100% 76%, 24% 76%, 0 100%, 0 76%)', left: '12px', bottom: '-8px' },
+    pin2:    { clip: 'polygon(0 0, 100% 0, 100% 80%, 58% 80%, 50% 100%, 42% 80%, 0 80%)', left: '50%', bottom: '-8px' },
+    pill:    { clip: 'none', left: '8px', bottom: 'auto' },
+    outline: { clip: 'none', left: '8px', bottom: 'auto' },
+    corner:  { clip: 'none', left: '8px', bottom: 'auto' }
+  };
+  function catPreset(b) {
+    return CAT_SHAPE_PRESETS[(b.opts && b.opts.cat_shape) || 'badge'] || CAT_SHAPE_PRESETS.badge;
+  }
+  function catName(slug){
+    for(var i=0;i<CATS.length;i++){ if(CATS[i].slug===slug) return CATS[i].name; }
+    return slug;
+  }
+  /* Kategori çoklu seçimi: sıralı çipler. */
+  function cmChips(list){
+    if(!list.length) return '<div class="cm-empty">Genel ayar kullanılıyor.</div>';
+    return list.map(function(slug,i){
+      return '<span class="cm-chip" data-slug="'+esc(slug)+'">'+
+        '<b>'+esc(catName(slug))+'</b>'+
+        '<button type="button" data-cm-up="'+i+'" title="Yukarı"'+ (i===0?' disabled':'') +'>↑</button>'+
+        '<button type="button" data-cm-down="'+i+'" title="Aşağı"'+ (i===list.length-1?' disabled':'') +'>↓</button>'+
+        '<button type="button" data-cm-del="'+i+'" title="Kaldır"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-x"></use></svg></button>'+
+      '</span>';
+    }).join('');
+  }
+  function cmOptions(sel){
+    var h='<option value="">Kategori seç…</option>';
+    CATS.forEach(function(c){
+      if(sel.indexOf(c.slug)>=0) return;
+      h+='<option value="'+esc(c.slug)+'">'+esc(c.name)+'</option>';
+    });
+    return h;
+  }
+  function fieldHTML(f, b){
+    var k=f[0], lbl=esc(f[1]), t=f[2], ph=f[3]||'';
+    var defaultBool = true;
+    if (t === 'bool' && (k === 'show_all' || k === 'allow_over_20' ||
+        k === 'hide_mobile' || k === 'hide_badge' || k === 'hide_heading' ||
+        k === 'hero_shadow' || k === 'hs_degisim')) defaultBool = false;
+    if (t === 'bool' && (k === 'overlay_title' || k === 'overlay_badge' || k === 'overlay_spot')) {
+      defaultBool = Number(opt(b, 'kapak_tasarim', 0)) === 0;
+    }
+    var v=opt(b,k, t==='bool'?defaultBool:'');
+    if(t==='bool'){
+      return '<label class="opt-switch"><input type="checkbox" data-k="'+k+'" '+(v?'checked':'')+'><span>'+lbl+'</span></label>';
+    }
+    if(t==='cats-multi'){
+      var cur=String(v||'').split(',').filter(function(s){return s!=='';});
+      var h='<div class="opt-field opt-full cats-multi" data-cm>'+
+        '<label>'+lbl+'</label>'+
+        '<div class="cm-list" data-cm-list>'+cmChips(cur)+'</div>'+
+        '<div class="cm-add">'+
+          '<select class="cm-pick">'+cmOptions(cur)+'</select>'+
+          '<button type="button" class="btn small" data-cm-add>Ekle</button>'+
+        '</div>'+
+        '<input type="hidden" data-k="'+k+'" value="'+esc(cur.join(','))+'">'+
+        '<div class="opt-hint">Boş bırakılırsa yönetimdeki genel sekme seçimi, o da yoksa menüdeki ilk kategoriler kullanılır. Sıralamayı ↑ ↓ ile değiştirebilirsiniz.</div>'+
+      '</div>';
+      return h;
+    }
+    if(t==='cat-sel'){
+      var curCat=String(v||'');
+      var isPanel = !!(b && b.type==='kategori_panel');
+      var sub = isPanel ? '(zorunlu — panel bu kategoriden beslenir)' : '(boş = sayfanın varsayılan akışı)';
+      var emptyLabel = isPanel ? '— Kategori seçin —' : '— Tüm kategoriler (varsayılan) —';
+      var hc='<div class="opt-field opt-full"><label>'+lbl+' <span class="opt-sub" style="font-weight:400;color:var(--muted-fg)">'+sub+'</span></label>'+
+        '<select data-k="'+k+'" data-type="catsel">'+
+        '<option value=""'+(curCat===''?' selected':'')+'>'+emptyLabel+'</option>';
+      var found=false;
+      CATS.forEach(function(c){
+        if(c.slug===curCat) found=true;
+        hc+='<option value="'+esc(c.slug)+'"'+(curCat===c.slug?' selected':'')+'>'+esc(c.name)+'</option>';
+      });
+      if(curCat!=='' && !found){
+        hc+='<option value="'+esc(curCat)+'" selected>'+esc(curCat)+' (bulunamadı)</option>';
+      }
+      return hc+'</select></div>';
+    }
+    if(t==='view-sel'){
+      var cur=String(v||'');
+      var h='<div class="opt-field opt-full"><label>'+lbl+'</label>'+
+        '<select data-k="'+k+'" data-type="listview">'+
+        '<option value=""'+(cur===''?' selected':'')+'>— Genel ayar (kategori görünümü) —</option>';
+      CAT_VIEWS.forEach(function(vv){
+        h+='<option value="'+vv.id+'"'+(cur===vv.id?' selected':'')+'>'+esc(vv.name)+'</option>';
+      });
+      h+='</select></div>';
+      return h;
+    }
+    if(t==='design'){
+      var cur=Number(v)||0;
+      var h='<div class="opt-field opt-full"><label>'+lbl+' <span class="opt-sub" style="font-weight:400;color:var(--muted-fg)">(Manşet Editörü şablonu — içerik kapakları otomatik üretilir)</span></label>'+
+        '<select data-k="'+k+'" data-type="design">'+
+        '<option value="0"'+(cur===0?' selected':'')+'>— Kapak şablonu yok (içeriğin kendi görseli) —</option>';
+      DESIGNS.forEach(function(ds){
+        h+='<option value="'+ds.id+'"'+(cur===ds.id?' selected':'')+'>'+esc(ds.name)+(ds.is_default?' (varsayılan)':'')+'</option>';
+      });
+      h+='</select></div>';
+      return h;
+    }
+    if(t==='richtext'){
+      // Faz 6: zengin metin — contenteditable + küçük biçimlendirme çubuğu.
+      // Değer opts.html olarak saklanır; sunucuda güvenli alt kümeye indirgenir.
+      var curHtml=String(v||'');
+      return '<div class="opt-field opt-full"><label>'+lbl+'</label>'+
+        '<div class="rt-editor" data-k="'+k+'">'+
+          '<div class="rt-toolbar">'+
+            '<button type="button" data-cmd="bold" title="Kalın"><b>B</b></button>'+
+            '<button type="button" data-cmd="italic" title="İtalik"><i>İ</i></button>'+
+            '<button type="button" data-cmd="underline" title="Alt çizgi"><u>U</u></button>'+
+            '<button type="button" data-cmd="insertUnorderedList" title="Liste">• Liste</button>'+
+            '<button type="button" data-cmd="insertOrderedList" title="Numaralı">1. Liste</button>'+
+            '<button type="button" data-cmd="formatBlock-h3" title="Alt başlık">H3</button>'+
+            '<button type="button" data-cmd="createLink" title="Bağlantı"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-link"></use></svg></button>'+
+            '<button type="button" data-cmd="removeFormat" title="Temizle"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-x"></use></svg></button>'+
+          '</div>'+
+          '<div class="rt-content" contenteditable="true" data-placeholder="Metin yazın…">'+curHtml+'</div>'+
+        '</div></div>';
+    }
+    if(t==='head-style'){
+      var hs=String(v||'line');
+      var items=[
+        ['line','Çizgi'],['bar','Sol çubuk'],['underline','Alt çizgi'],
+        ['pill','Etiket'],['dot','Nokta'],['corner','Köşeli'],
+        ['tab','Sekme'],['boxed','Çerçeve'],['gradient','Gradyan'],
+        ['none','İşaretsiz']
+      ];
+      var name='hs-'+(b.id||'blk')+'-'+k;
+      var hh='<div class="opt-field opt-full"><label>'+lbl+'</label><div class="hs-pick">';
+      items.forEach(function(it){
+        hh+='<label class="hs-opt" title="'+esc(it[1])+'">'+
+          '<input type="radio" name="'+esc(name)+'" data-k="'+k+'" value="'+it[0]+'"'+(hs===it[0]?' checked':'')+'>'+
+          '<span class="hs-demo hs-demo-'+it[0]+'">Aa</span><b>'+esc(it[1])+'</b></label>';
+      });
+      return hh+'</div></div>';
+    }
+    if(t==='choice'){
+      var choices=f[3]||[];
+      var curChoice=String(v||'');
+      var hasEmpty=choices.some(function(cp){ return cp[0]===''; });
+      var ch='<div class="opt-field opt-full"><label>'+lbl+'</label><select data-k="'+k+'" data-type="choice">'+
+        (hasEmpty?'':'<option value=""'+(curChoice===''?' selected':'')+'>Varsayılan</option>');
+      choices.forEach(function(cp){
+        ch+='<option value="'+esc(cp[0])+'"'+(curChoice===cp[0]?' selected':'')+'>'+esc(cp[1])+'</option>';
+      });
+      return ch+'</select></div>';
+    }
+    if(t==='color'){
+      var cv=(v==null?'':String(v));
+      var on=cv!=='';
+      return '<div class="opt-field"><label>'+lbl+'</label>'+
+        '<div class="opt-color-row">'+
+        '<input type="color" data-k="'+k+'" value="'+(on?esc(cv):'#e4e4e7')+'"'+(on?'':' disabled')+'>'+
+        '<label class="opt-mini"><input type="checkbox" data-k="'+k+'__on"'+(on?' checked':'')+'> özel</label>'+
+        '</div></div>';
+    }
+    if(k==='cat_clip' || k==='cat_left' || k==='cat_bottom'){
+      var preset=catPreset(b);
+      var def=preset[k.replace('cat_','')] || '';
+      var cv=opt(b,k,def);
+      return '<div class="opt-field'+(k==='cat_clip'?' opt-full':'')+'"><label>'+lbl+
+        ' <span class="opt-sub" style="font-weight:400;color:var(--muted-fg)">(seçili stilin değeri)</span></label>'+
+        '<input type="text" data-k="'+k+'" data-type="tagprop" value="'+esc(cv)+'" placeholder="'+esc(def)+'" aria-label="'+esc(def)+'">'+
+        '</div>';
+    }
+    if(t==='length'){
+      // CSS uzunluğu: px/rem/em/%/vw/vh/calc() ve birimsiz sayı (px).
+      // padding/margin alanlarında 1-4 değerli kısayol da yazılabilir.
+      return '<div class="opt-field"><label>'+lbl+'</label>'+
+        '<div class="opt-input"><input type="text" data-k="'+k+'" data-type="length" value="'+esc(v)+'" placeholder="'+esc(ph)+'" aria-label="'+esc(ph)+'"></div></div>';
+    }
+    var it=(t==='number'||t==='decimal')?'number':'text';
+    var unit=f.length>4 ? f[4] : (t==='number'?'px':'');
+    return '<div class="opt-field"><label>'+lbl+'</label>'+
+      '<div class="opt-input"><input type="'+it+'" data-k="'+k+'"'+(t==='decimal'?' step="0.05" data-type="decimal"':'')+' value="'+esc(v)+'" placeholder="'+ph+'" aria-label="'+ph+'">'+
+      (unit?'<span class="opt-unit">'+esc(unit)+'</span>':'')+'</div></div>';
+  }
+  /* Bir modülün tüm ayar gövdesi: yerleşim + içerik + görünüm/ölçü. */
+  function optsBodyHTML(b){
+    var z=zoneOf(b), sc=SCHEMA[b.type]||[];
+    var h='<div class="opts-wrap">';
+    h+='<div class="opt-sec">Yerleşim</div>';
+    h+='<div class="opt-field opt-full"><label>Konum</label><select data-k="zone">';
+    ZONES.forEach(function(zz){ h+='<option value="'+zz.key+'"'+(z===zz.key?' selected':'')+'>'+esc(zz.name)+'</option>'; });
+    h+='</select></div>';
+    /* İçerik modülleri: hangi kategorinin haberlerini göstereceği seçilebilir.
+       Boş seçim sayfanın varsayılan akışını (manşet/son haberler) kullanır. */
+    if(CAT_SOURCE_BLOCKS[b.type]){
+      h+='<div class="opt-sec">Haber kaynağı</div>';
+      h+=fieldHTML(['kategori','Kategori','cat-sel'], b);
+    }
+    if(sc.length){
+      h+='<div class="opt-sec">İçerik ayarları</div>';
+      sc.forEach(function(f){ h+=fieldHTML(f,b); });
+      if(['slider','manset6','manset','kategori_liste','kategori_slider'].indexOf(b.type)>=0){
+        var catHero = b.type==='kategori_liste';
+        var heroSlider = catHero || b.type==='kategori_slider';
+        h+='<div class="opt-sec">'+(heroSlider
+          ? (catHero ? 'Manşet slider\'ı — başlık arkası / gölge (portre / üçlü)' : 'Slider — başlık arkası / gölge')
+          : 'Başlık arkası / gölge')+'</div>';
+        if(catHero){
+          h+='<div class="opt-hint">Bu ayarlar GÖVDE manşet slider\'ının başlık arkası katmanını, başlık yazısını ve sayı göstergesini değiştirir. Diğer liste şablonlarında etkisizdir.</div>';
+        } else if(b.type==='kategori_slider'){
+          h+='<div class="opt-hint">Bu ayarlar yalnız bu slider modülünün başlık arkası katmanını, başlık yazısını ve sayı göstergesini değiştirir.</div>';
+        }
+        h+='<div data-ov-fields>';
+        OVERLAY_FIELDS.forEach(function(f){ h+='<div data-ov-field="'+f[0]+'">'+fieldHTML(f,b)+'</div>'; });
+        h+='</div>';
+        if(heroSlider){
+          HERO_SLIDER_FIELDS.forEach(function(f){ h+=fieldHTML(f,b); });
+        }
+        h+='<div class="opt-hint" data-ov-note></div>';
+      }
+    }
+    h+='<div class="opt-sec">Görünüm &amp; Ölçü<button type="button" class="opt-reset" data-reset="style">sıfırla</button></div>';
+    STYLE_FIELDS.forEach(function(f){ h+=fieldHTML(f,b); });
+    h+='<div class="opt-hint">Seçili kategori etiket stilinin clip-path / left / bottom değerleri yukarıda gösterilir. Bu değerleri değiştirirseniz yalnız bu modüle özel stil uygulanır.</div>';
+    h+='<div class="opt-hint">Ölçü alanlarında <b>px, rem, em, %, vw/vh</b> ve <b>calc()</b> kullanılabilir (örn. <b>1rem</b>). Padding/margin 1-4 değerli CSS kısayolu kabul eder (örn. <b>1rem 0</b>).</div>';
+    h+='<div class="opt-hint">Boş bırakılan alanlar varsayılan değere döner.</div>';
+    h+='</div>';
+    return h;
+  }
+  /* Girdi değişimini blok opts'a uygular. Boş metin/sayı → opt silinir. */
+  function applyInput(inp, b){
+    b.opts = b.opts || {};
+    var k=inp.dataset.k;
+    if(k.indexOf('__on')>=0){
+      var base=k.slice(0,-4);
+      var row=inp.closest('.opt-color-row');
+      var ci=row?row.querySelector('input[type=color]'):null;
+      if(inp.checked && ci){ b.opts[base]=ci.value; } else { delete b.opts[base]; }
+      return;
+    }
+    if(inp.type==='checkbox'){ b.opts[k]=inp.checked; return; }
+    if(inp.type==='color'){ if(inp.value){ b.opts[k]=inp.value; } else { delete b.opts[k]; } return; }
+    if(inp.type==='number'){
+      var s=String(inp.value).trim();
+      if(s===''){ delete b.opts[k]; return; }
+      var n = inp.dataset.type==='decimal' ? parseFloat(s) : parseInt(s,10);
+      if(isNaN(n)){ delete b.opts[k]; } else {
+        b.opts[k]=n;
+        // Slider/6'lı manşette 20 üstü sayı girilirse izni otomatik aç;
+        // aksi halde kullanıcı 24 yazsa da sunucu 20'de kırpıyordu.
+        if(k==='count' && n>20 && (b.type==='slider'||b.type==='manset6')){
+          b.opts.allow_over_20=true;
+          var allow=(inp.closest('.bp-opts')||document).querySelector('input[data-k="allow_over_20"]');
+          if(allow) allow.checked=true;
+        }
+      }
+      return;
+    }
+    var txt=String(inp.value);
+    if(txt===''){ delete b.opts[k]; return; }
+    if(inp.dataset.type==='design'){
+      var d=parseInt(txt,10);
+      if(!d){ delete b.opts[k]; } else { b.opts[k]=d; }
+      return;
+    }
+    if(inp.dataset.type==='listview'){
+      // kategori_liste bloğuna özel görünüm — geçerli değerler dışı silinir
+      if(['klasik','liste','izgara','mozaik','akis'].indexOf(txt)>=0){ b.opts[k]=txt; }
+      else { delete b.opts[k]; }
+      return;
+    }
+    if(inp.dataset.type==='length'){
+      var lv=txt.trim();
+      if(lv===''){ delete b.opts[k]; } else { b.opts[k]=lv; }
+      return;
+    }
+    b.opts[k]=txt;
+  }
+  /* Seçilen gölge efektine göre yalnız ilgili ayarları gösterir. */
+  function refreshOverlayUI(scope, b){
+    var fields=scope.querySelector('[data-ov-fields]');
+    if(!fields) return;
+    var o=b.opts||{};
+    var mode=o.overlay_gradient||'';
+    var hasDet = o.overlay_color || o.overlay_opacity!==undefined ||
+      o.overlay_height!==undefined || o.overlay_blur!==undefined;
+    if(!mode && hasDet) mode='solid';
+    var show = mode!=='' && mode!=='none';
+    var preset=scope.querySelector('[data-k="overlay_opacity_preset"]');
+    if(preset && !preset.value && o.overlay_opacity!==undefined) preset.value='custom';
+    var custom = !preset || preset.value==='custom' || preset.value==='';
+    fields.querySelectorAll('[data-ov-field]').forEach(function(w){
+      var k=w.dataset.ovField;
+      // Yükseklik, renk/geçiş katmanı kapalıyken de başlık alanının
+      // görsel üzerindeki yüksekliğini belirlediği için her zaman görünür.
+      var visible=(k==='overlay_gradient'||k==='overlay_height')
+        ? true : (show && (k!=='overlay_opacity' || custom));
+      w.style.display=visible?'':'none';
+    });
+    var note=scope.querySelector('[data-ov-note]');
+    if(note){
+      note.style.display=show?'none':'';
+      var catHero = b.type==='kategori_liste';
+      note.textContent = mode==='none'
+        ? (catHero
+            ? 'Başlık arkası katmanı kapalı. Yükseklik, başlığın görsel üzerindeki alt alanını belirler.'
+            : 'Gölge kapalı. Yükseklik, başlık alanının görsel üzerindeki yüksekliğini belirler.')
+        : 'Ayarları görmek için önce bir gölge efekti seçin.';
+    }
+  }
+
+  /* Etiket stili değişince clip-path / left / bottom alanlarını seçili
+     stilin varsayılan değerleriyle yeniler; eski özel değerleri temizler. */
+  function syncCatStyleFields(scope, b){
+    var preset=catPreset(b);
+    ['cat_clip','cat_left','cat_bottom'].forEach(function(k){
+      if(b.opts){ delete b.opts[k]; }
+      var inp=scope.querySelector('input[data-k="'+k+'"]');
+      if(inp){ inp.value=preset[k.replace('cat_','')] || ''; }
+    });
+  }
+
+  /* Bir kapsayıcıdaki ayar girdilerini bağlar; rerender alan değişince çağrılır. */
+  function bindOpts(scope, b, rerender){
+    scope.querySelectorAll('input,select').forEach(function(inp){
+      var h=function(){
+        var k=inp.dataset.k;
+        applyInput(inp, b);
+        scheduleSave();
+        if(k==='overlay_opacity_preset'){
+          var pv=parseInt(inp.value,10);
+          if(inp.value && inp.value!=='custom' && !isNaN(pv)){ b.opts.overlay_opacity=pv; }
+          refreshOverlayUI(scope, b);
+        }
+        if(k==='overlay_gradient'||k==='overlay_height'||k==='overlay_color'||
+           k==='overlay_color__on'||k==='overlay_blur'){ refreshOverlayUI(scope, b); }
+        if(k==='hero_style'){
+          // Üçlü şablon seçilince ortadaki slider için dar genişlik ve
+          // 4'lü alt kart ızgarası varsayılan olarak önerilir.
+          if(inp.value==='uclu'){
+            if(!b.opts.hero_width || Number(b.opts.hero_width)===58){ b.opts.hero_width=44; }
+            if(!b.opts.list_cols || String(b.opts.list_cols)==='2'){ b.opts.list_cols='4'; }
+          } else if(inp.value==='portre'){
+            if(Number(b.opts.hero_width)===44){ b.opts.hero_width=58; }
+          }
+          var wi=scope.querySelector('input[data-k="hero_width"]');
+          if(wi){ wi.value=b.opts.hero_width||''; }
+          var lc=scope.querySelector('select[data-k="list_cols"]');
+          if(lc){ lc.value=String(b.opts.list_cols||''); }
+          schedulePreview();
+        }
+        if(k==='cat_shape'){ syncCatStyleFields(scope, b); }
+        // Sayılı şerit stili numaralı göstergenin parçası: şerit olmadan
+        // stil eksik kalır. Seçildiğinde gösterge otomatik numaraya döner
+        // ve son hücredeki "+" (tüm manşetler) açılır. Sunucu tarafı da
+        // aynı kuralı uygular; bu yalnızca panelin anında tutarlı olması için.
+        if(k==='slider_style'){
+          if(inp.value==='sayili'){
+            b.opts.pager_type='numbers';
+            b.opts.show_all=true;
+            var pt=scope.querySelector('select[data-k="pager_type"]');
+            if(pt){ pt.value='numbers'; }
+            var sa=scope.querySelector('input[data-k="show_all"]');
+            if(sa){ sa.checked=true; }
+          }
+          schedulePreview();
+        }
+        if(k==='zone'){ rerender(); }
+        if(k.slice(0,2)==='st'){ refreshChipbar(b); schedulePreview(); }
+        if(k.indexOf('__on')>=0){
+          var row=inp.closest('.opt-color-row');
+          var ci=row?row.querySelector('input[type=color]'):null;
+          if(ci){ ci.disabled=!inp.checked; }
+        }
+      };
+      inp.addEventListener('input',h); inp.addEventListener('change',h);
+    });
+    scope.querySelectorAll('[data-reset="style"]').forEach(function(btn){
+      btn.addEventListener('click',function(e){
+        e.preventDefault(); e.stopPropagation();
+        STYLE_FIELDS.forEach(function(f){ delete b.opts[f[0]]; });
+        var box=btn.closest('.bp-opts')||btn.closest('.bld-body');
+        if(box){ box.innerHTML=optsBodyHTML(b); bindOpts(box, b, rerender); }
+      });
+    });
+
+    /* Faz 6 — zengin metin editörü: toolbar + contenteditable → b.opts.html */
+    scope.querySelectorAll('.rt-editor').forEach(function(ed){
+      var ce=ed.querySelector('.rt-content');
+      if(ce){
+        var sync=function(){
+          var h=ce.innerHTML;
+          if(h==='<br>'|| h==='<br><br>') h='';
+          if(h!==(b.opts&&b.opts.html||'')){
+            b.opts=b.opts||{};
+            b.opts.html=h;
+            scheduleSave();
+            schedulePreview();
+            refreshChipbar(b);
+          }
+        };
+        ce.addEventListener('input',sync);
+        ce.addEventListener('blur',sync);
+        ce.addEventListener('paste',function(e){
+          e.preventDefault();
+          var txt=(e.clipboardData||window.clipboardData).getData('text/plain');
+          document.execCommand('insertText',false,txt);
+          sync();
+        });
+      }
+      ed.querySelectorAll('.rt-toolbar button[data-cmd]').forEach(function(btn){
+        btn.addEventListener('click',function(e){
+          e.preventDefault(); e.stopPropagation();
+          var cmd=btn.dataset.cmd;
+          if(cmd==='formatBlock-h3'){ document.execCommand('formatBlock',false,'h3'); }
+          else if(cmd==='createLink'){
+            var url=prompt('Bağlantı adresi (https://… veya /icerik/…)');
+            if(url){ document.execCommand('createLink',false,url); }
+          } else { document.execCommand(cmd,false,null); }
+          ce.focus();
+          sync();
+        });
+      });
+    });
+    /* Kategori sekmeli blok: sıralı kategori çoklu seçimi. */
+    scope.querySelectorAll('[data-cm]').forEach(function(box){
+      var hidden=box.querySelector('input[data-k]');
+      var listEl=box.querySelector('[data-cm-list]');
+      var pick=box.querySelector('.cm-pick');
+      function read(){
+        // Tırnaklı eski kayıtları onar: "spor" → spor (sunucu tarafı da
+        // temizler, burada kullanıcı ayarı açtığında kalıcı düzelir).
+        return String(hidden.value||'').split(',').map(function(s){
+          return s.replace(/^["'\s]+|["'\s]+$/g,'');
+        }).filter(function(s){return s!=='';});
+      }
+      function render(list){
+        hidden.value=list.join(',');
+        if(listEl) listEl.innerHTML=cmChips(list);
+        if(pick) pick.innerHTML=cmOptions(list);
+        applyInput(hidden,b);
+        scheduleSave();
+        schedulePreview();
+      }
+      box.addEventListener('click',function(e){
+        var list=read();
+        var del=e.target.closest('[data-cm-del]');
+        if(del){ list.splice(Number(del.dataset.cmDel),1); render(list); return; }
+        var up=e.target.closest('[data-cm-up]');
+        if(up){
+          var i=Number(up.dataset.cmUp);
+          if(i>0){ var t=list[i]; list[i]=list[i-1]; list[i-1]=t; render(list); }
+          return;
+        }
+        var down=e.target.closest('[data-cm-down]');
+        if(down){
+          var j=Number(down.dataset.cmDown);
+          if(j<list.length-1){ var t2=list[j]; list[j]=list[j+1]; list[j+1]=t2; render(list); }
+        }
+      });
+      var add=box.querySelector('[data-cm-add]');
+      if(add){
+        add.addEventListener('click',function(){
+          if(!pick || !pick.value) return;
+          var list=read();
+          if(list.indexOf(pick.value)<0){ list.push(pick.value); }
+          render(list);
+        });
+      }
+    });
+  }
+
+  var bp = document.getElementById('bldBP');
+  var canvas = document.getElementById('bldCanvas');
+
+  function zoneBlocks(z){ return blocks.filter(function(b){ return zoneOf(b)===z; }); }
+  function reindex(id){ for(var i=0;i<blocks.length;i++){ if(blocks[i].id===id) return i; } return -1; }
+
+  /* Diziyi, hedef alanda görsel sırayı koruyacak şekilde düzenler.
+     beforeId = null ise alanın sonuna ekler. */
+  function placeInZone(z, block, beforeId){
+    var bi = blocks.indexOf(block);
+    if(bi>=0) blocks.splice(bi,1);
+    block.opts = block.opts || {};
+    block.opts.zone = z;
+    var zb = zoneBlocks(z);
+    if(!zb.length){ blocks.push(block); return; }
+    if(!beforeId){
+      var last = zb[zb.length-1];
+      blocks.splice(blocks.indexOf(last)+1, 0, block);
+      return;
+    }
+    var tgt = reindex(beforeId);
+    if(tgt<0){ blocks.push(block); return; }
+    blocks.splice(tgt, 0, block);
+  }
+
+  /* Yeni kategori paneli için haberpi varsayılanları (Go tarafıyla aynı). */
+  function panelDuzenFor(slug){
+    if(slug==='guncel' || slug==='gundem') return 'ust3alt2';
+    if(slug==='ekonomi') return 'ekonomi';
+    if(slug==='gastro') return 'gastro';
+    if(slug==='siyaset') return 'solbuyuk';
+    return 'mozaik';
+  }
+  function panelToneFor(slug){
+    return (slug==='gundem' || slug==='guncel') ? 'yesil' : 'kirmizi';
+  }
+  /* Tip için varsayılan opts'lu yeni blok üretir (tıklama ve sürükleme aynı yolu kullanır). */
+  function makeBlock(type, zone){
+    var nb = {id:uid(), type:type, visible:true, opts:{zone:zone}};
+    if(type==='slider') nb.opts={zone:zone,count:5,interval:6,autoplay:true,dots:true,arrows:true};
+    else if(type==='manset6') nb.opts={zone:zone,count:6,interval:6,autoplay:true,arrows:true};
+    else if(type==='manset2') nb.opts={zone:zone,count:23,m2_side:'alternate',m2_height:330,m2_bg:'#0c1021',m2_accent:'#c90914',arrows:true};
+    else if(type==='reklam') nb.opts={zone:zone,slot:'',label:''};
+    else if(type==='baslik') nb.opts={zone:zone,text:'Bölüm Başlığı'};
+    else if(type==='yazi_govde') nb.opts={zone:zone};
+    else if(type==='sayfa_govde') nb.opts={zone:zone};
+    else if(type==='puan_durumu') nb.opts={zone:zone,count:10};
+    else if(type==='trend_numarali') nb.opts={zone:zone,count:6,tn_stil:'blok'};
+    else if(type==='puan_serit') nb.opts={zone:zone,count:18,lig:'superlig',puan_baslik:'PUAN DURUMU',gorunum_kats:''};
+    else if(type==='kur_borsa') nb.opts={zone:zone,count:0,kb_style:'referans',kb_bg:'yok',kb_arrow:'noktali'};
+    else if(type==='kur_cevirici') nb.opts={zone:zone,kc_baslik:'KUR ÇEVİRİCİ',kc_from:'USD',kc_to:'TRY',kc_miktar:100,kc_bg:'kart'};
+    else if(type==='kripto_para') nb.opts={zone:zone,count:12,kp_layout:'izgara',kp_style:'otomatik',kp_kolon:'4',kp_sirala:'deger',kp_degisim:true,kp_ikon:true,kp_bg:'kart',kp_gecis:'surekli',kp_hiz_secim:'60',kp_speed:60,kp_bekle:4,kp_kayma:700};
+    else if(type==='hisseler') nb.opts={zone:zone,count:20,hs_layout:'serit',hs_style:'otomatik',hs_arrow:'noktali',hs_bg:'kart',hs_gecis:'surekli',hs_hiz_secim:'60',hs_speed:60,hs_bekle:4,hs_kayma:700,hs_ara:true,hs_sirala:'kod',hs_degisim:false};
+    else if(type==='kategori_slider') nb.opts={zone:zone,count:5,hero_width:44,hero_ratio:'16/9'};
+    else if(type==='kategori_secimli') nb.opts={zone:zone,count:3,rail_style:'overlay'};
+    else if(type==='kategori_4lu') nb.opts={zone:zone,count:4,list_cols:'4'};
+    else if(type==='kategori_akis') nb.opts={zone:zone,akis_limit:60,akis_per:12,akis_auto:true};
+    else if(type==='kategori_panel'){
+      var firstCat = CATS.length ? CATS[0].slug : '';
+      nb.opts={zone:zone,kategori:firstCat,count:9,duzen:panelDuzenFor(firstCat),tone:panelToneFor(firstCat)};
+    }
+    else nb.opts.count=6;
+    return nb;
+  }
+
+  /* ---------- alan şeması (şablon görünümü) ---------- */
+  function zoneBox(z, extraCls){
+    var n = zoneBlocks(z).length;
+    return '<div class="bp-zone '+(extraCls||'')+'" data-zone="'+z+'">'+
+      '<div class="bp-zone-h"><span class="zone-chip z-'+z+'">'+esc(zoneName(z))+'</span>'+
+      '<span class="cnt">'+n+'</span>'+
+      (z==='yan'?'<span class="pl-hidden-tag">yayında gizli</span>':'')+'</div>'+
+      '<div class="bp-slots" data-slots="'+z+'"></div></div>';
+  }
+
+  /* GÖVDE'deki kategori_liste bloğu — şablon seçicinin hedefi. */
+  function catTemplateBlock(){
+    var list = blocks.filter(function(b){
+      return b && b.type === 'kategori_liste' && b.visible !== false;
+    });
+    for (var i=0;i<list.length;i++){
+      if(list[i].opts && list[i].opts.zone === 'govde') return list[i];
+    }
+    return list[0] || null;
+  }
+  function catTemplateName(v){
+    for(var i=0;i<CAT_TEMPLATES.length;i++){ if(CAT_TEMPLATES[i].id===v) return CAT_TEMPLATES[i].name; }
+    return v || 'Portre manşet';
+  }
+  function catTemplateOf(b){
+    if(!b) return CATVIEW || 'portre';
+    var o=b.opts||{};
+    if(o.view==='liste'||o.view==='izgara'||o.view==='mozaik'||o.view==='akis') return o.view;
+    if(o.hero_style==='uclu'||o.hero_style==='klasik') return o.hero_style;
+    return 'portre';
+  }
+  function catDemo(v){
+    var parts={
+      portre:'<b class="a"></b><b class="b"></b><b class="c"></b>',
+      uclu:'<b class="a"></b><b class="b"></b><b class="c"></b><b class="d"></b><b class="e"></b><b class="f"></b>',
+      klasik:'<b class="a"></b><b class="b"></b><b class="c"></b>',
+      liste:'<b></b><b></b><b></b>',
+      izgara:'<b></b><b></b><b></b><b></b><b></b><b></b>',
+      mozaik:'<b class="a"></b><b></b><b></b><b></b><b></b>',
+      akis:'<b class="a"></b><b class="a"></b><b class="a"></b><b class="a"></b><b></b><b></b><b></b><b></b>'
+    };
+    return '<span class="ct-demo ct-d-'+v+'">'+(parts[v]||'')+'</span>';
+  }
+  function catTemplatePickHTML(){
+    var cur=catTemplateOf(catTemplateBlock());
+    return '<div class="catview-pick" data-view="1">'+
+      CAT_TEMPLATES.map(function(v){
+        return '<button type="button" class="catview-btn" data-view="'+v.id+'"'+(v.id===cur?' data-on="1"':'')+' title="'+esc(v.name+' — '+v.desc)+'">'+
+          catDemo(v.id)+'<b>'+esc(v.name)+'</b><small>'+esc(v.desc)+'</small></button>';
+      }).join('')+'</div>';
+  }
+  function paintCatTemplates(){
+    if(!bp) return;
+    var cur=catTemplateOf(catTemplateBlock());
+    var tag=document.getElementById('catViewTag');
+    if(tag) tag.textContent=catHasModules()?'Bağımsız modüller':catTemplateName(cur);
+    bp.querySelectorAll('.catview-pick .catview-btn').forEach(function(b){
+      if(b.dataset.view===cur){ b.dataset.on='1'; } else { delete b.dataset.on; }
+    });
+  }
+  /* Bağımsız kategori modülleri var mı? Varsa şablon seçici yerine modül
+     özeti gösterilir; yeni modül eklemek kullanıcının elindedir. */
+  function catHasModules(){
+    return blocks.some(function(b){
+      return b && CAT_MODULE_TYPES.indexOf(b.type)>=0;
+    });
+  }
+  /* Eski tek bloklu akış düzenini dört bağımsız modüle çevirir. Haber
+     aralıkları açıkça yazılır; böylece modüller sunucuda sırayla beslenir ve
+     aynı haber iki kez basılmaz. */
+  function catSplitHTML(){
+    var legacy=catTemplateBlock();
+    if(!legacy || catHasModules()) return '';
+    var o=legacy.opts||{};
+    if(o.view && o.view!=='akis') return '';
+    return '<div class="bp-split-box">'+
+      '<div><b>Modüllere ayır</b><span>Slider, seçimli manşetler, 4\'lü ızgara ve akış ayrı ayrı taşınıp ayarlanabilsin.</span></div>'+
+      '<button class="btn ghost small" type="button" id="catSplitBtn">Modüllere ayır</button></div>';
+  }
+  function splitCategoryModules(){
+    var legacy=catTemplateBlock();
+    if(!legacy || catHasModules()) return;
+    var o=legacy.opts||{};
+    var heroStyle=o.hero_style||'portre';
+    if(['klasik','portre','uclu'].indexOf(heroStyle)<0) heroStyle='portre';
+    var heroCount=parseInt(o.hero_count,10);
+    if(isNaN(heroCount)||heroCount<2) heroCount=5;
+    if(heroCount>10) heroCount=10;
+    var heroWidth=parseInt(o.hero_width,10);
+    if(isNaN(heroWidth)) heroWidth=heroStyle==='uclu'?44:58;
+    var heroRatio=o.hero_ratio||'4/5';
+    if(['4/5','3/4','1/1','16/9'].indexOf(heroRatio)<0) heroRatio='4/5';
+    var listCols=String(o.list_cols||'');
+    if(['2','3','4'].indexOf(listCols)<0) listCols=heroStyle==='uclu'?'4':'2';
+    var copyKeys=['overlay_gradient','overlay_color','overlay_opacity','overlay_height','overlay_blur',
+      'pager_shape','pager_pos','pager_size','pager_color','hero_shadow','title_color','title_font',
+      'hide_badge','card_style','card_title_bg','card_title_fg','card_dark_bg','card_dark_fg',
+      'card_accent','card_title_size','card_box_bg','card_box_dark_bg','card_shadow',
+      'akis_limit','akis_per','akis_auto','akis_font'];
+    /* Modül türüne göre yalnız ilgili görünüm anahtarları taşınır; aksi halde
+       slider'a akış, akışa pager ayarları gibi anlamsız anahtarlar yazılır. */
+    function copyKeysFor(type){
+      var card=['card_style','card_title_bg','card_title_fg','card_dark_bg','card_dark_fg',
+        'card_accent','card_title_size'];
+      // Kart gövdesi/gölge yalnız kart ızgarasında anlamlıdır; akış
+      // kartlarının gövdesi banttan oluştuğu için akışa taşınmaz.
+      var cardBox=card.concat(['card_box_bg','card_box_dark_bg','card_shadow']);
+      if(type==='kategori_slider'){
+        return ['overlay_gradient','overlay_color','overlay_opacity','overlay_height','overlay_blur',
+          'pager_shape','pager_pos','pager_size','pager_color','hero_shadow','title_color','title_font',
+          'hide_badge'];
+      }
+      if(type==='kategori_secimli') return [];
+      if(type==='kategori_4lu') return ['hide_badge'].concat(cardBox);
+      return ['hide_badge'].concat(card,['akis_limit','akis_per','akis_auto','akis_font']);
+    }
+    var copy={};
+    copyKeys.forEach(function(k){ if(o[k]!==undefined) copy[k]=o[k]; });
+    function mk(type, extra){
+      var nb=makeBlock(type,'govde');
+      var opts={};
+      copyKeysFor(type).forEach(function(k){ if(copy[k]!==undefined) opts[k]=copy[k]; });
+      Object.keys(extra).forEach(function(k){ opts[k]=extra[k]; });
+      opts.zone='govde';
+      nb.opts=opts;
+      return nb;
+    }
+    var list=[];
+    var cursor=0;
+    if(heroStyle==='uclu'){
+      list.push(mk('kategori_slider',{count:heroCount,item_offset:0,row_layout:'hero-center',hero_width:heroWidth,hero_ratio:heroRatio}));
+      list.push(mk('kategori_secimli',{count:3,item_offset:heroCount,row_layout:'hero-left',rail_style:'overlay'}));
+      list.push(mk('kategori_secimli',{count:2,item_offset:heroCount+3,row_layout:'hero-right',rail_style:'overlay'}));
+      cursor=heroCount+5;
+    } else if(heroStyle==='klasik'){
+      list.push(mk('kategori_slider',{count:1,item_offset:0,row_layout:'hero-left',hero_width:heroWidth,hero_ratio:heroRatio}));
+      list.push(mk('kategori_secimli',{count:2,item_offset:1,row_layout:'hero-right',rail_style:'overlay'}));
+      cursor=3;
+    } else {
+      list.push(mk('kategori_slider',{count:heroCount,item_offset:0,row_layout:'hero-left',hero_width:heroWidth,hero_ratio:heroRatio}));
+      list.push(mk('kategori_secimli',{count:2,item_offset:heroCount,row_layout:'hero-right',rail_style:'overlay'}));
+      cursor=heroCount+2;
+    }
+    list.push(mk('kategori_4lu',{count:4,item_offset:cursor,list_cols:listCols}));
+    list.push(mk('kategori_akis',{item_offset:cursor+4}));
+    var idx=blocks.indexOf(legacy);
+    if(idx<0) return;
+    pushHistory();
+    blocks.splice.apply(blocks,[idx,1].concat(list));
+    commitState();
+    renderAll();
+    scheduleSave();
+    schedulePreview();
+    flash('Kategori gövdesi bağımsız modüllere ayrıldı.','ok');
+  }
+
+  function buildBP(){
+    var html = '<div class="bp-page">';
+    if(PAGE==='home'){
+      html += zoneBox('ust');
+      html += '<div class="bp-colctl">↔ <span id="bpGapColLbl">Sütun boşluğu</span>'+
+        '<input type="number" id="bpGapCol" aria-labelledby="bpGapColLbl" min="0" max="80" value="'+GAPCOL+'"><span class="u">px</span>'+
+        '<span class="muted">(sol ana ↔ sağ sütun arası)</span></div>';
+      html += '<div'+rowAttrs()+'>'+ zoneBox('ana') + zoneBox('yan') +'</div>';
+      html += zoneBox('genis');
+    } else if(IS_CAT){
+      // Kategori gövdesi: MODÜLER (govde zonu) — Faz 10. Liste görünümü seçici
+      // govde kutusunun başlığında durur; bloklar sürüklenebilir kutudayr.
+      html += zoneBox('ust');
+      html += '<div'+rowAttrs()+'>'+
+        '<div class="bp-zone" data-zone="govde"><div class="bp-zone-h"><span class="cnt">GÖVDE (Haber Listesi)</span><span class="catview-tag" id="catViewTag">'+esc(catHasModules()?'Bağımsız modüller':catTemplateName(catTemplateOf(catTemplateBlock())))+'</span></div>'+
+          (catHasModules()?'<div class="bp-ph small muted">Gövde bağımsız modüllerden oluşuyor: slider, seçimli manşetler, 4\'lü ızgara ve akış ayrı ayrı taşınabilir.</div>':'')+
+          (catHasModules()?'':catTemplatePickHTML())+
+          catSplitHTML()+
+          '<div class="bp-ph small muted">Kategori şablonu '+(PAGE==='kategori'?'<b>genel kategori düzenine (tüm kategoriler)</b>':'<b>yalnız bu kategoriye</b>')+' kaydedilir. Manşet düzeni ve liste görünümü tek tıkla değişir; ayrıntılı ölçüler modül ayarlarındadır.</div>'+
+          '<div class="bp-slots" data-slots="govde"></div>'+
+        '</div>'+
+        zoneBox('yan')+
+      '</div>';
+      html += zoneBox('genis');
+    } else {
+      // Yazı sayfası: gövde sabit, genis (içerik altı) onun içinde.
+      // "ust" bölgesi EN ÜSTTE, YAZI İÇERİĞİ ve sağ sütunun üstünde —
+      // buraya eklenen modül sayfada başlıktan önce, tam genişlikte basılır.
+      html += zoneBox('ust');
+      html += '<div'+rowAttrs()+'>'+
+        '<div class="bp-zone fixed"><div class="bp-zone-h"><span class="cnt">YAZI İÇERİĞİ</span></div>'+
+          '<div class="bp-ph">Başlık · metin · görseller · yorumlar</div>'+
+          zoneBox('genis','')+
+        '</div>'+
+        zoneBox('yan')+
+      '</div>';
+    }
+    html += '</div>';
+    bp.innerHTML = html;
+
+    var gc = document.getElementById('bpGapCol');
+    if(gc){
+      gc.addEventListener('change', function(){
+        var v = parseInt(gc.value||'0',10); if(isNaN(v)) v=0; if(v<0) v=0; if(v>80) v=80;
+        GAPCOL = v; gc.value = v;
+        applyPageLayoutPreview();
+        saveToken('gapColumn', v);
+      });
+    }
+
+    ZONES.forEach(function(z){ fillSlots(z.key); });
+    paintPageLayout();
+  }
+
+  function fillSlots(z){
+    var box = bp.querySelector('[data-slots="'+z+'"]');
+    if(!box) return;
+    var list = zoneBlocks(z);
+    if(!list.length){
+      box.innerHTML = '<div class="bp-empty small muted" style="border:1px dashed #c9cde0;border-radius:6px;padding:10px;text-align:center">Modül sürükleyin</div>';
+      return;
+    }
+    box.innerHTML = list.map(chipHTML).join('');
+  }
+
+  /* Simgeler yerel sprite'tan (Faz 170). Emoji ve braille glifleri fonta
+     bağlıydı; ⁇ bazı sistemlerde kutu (tofu) çıkıyordu. */
+  function tiIkon(ad){
+    return '<svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-'+ad+'"></use></svg>';
+  }
+
+  function chipbarHTML(b){
+    var off = b.visible===false, lk = b.locked===true;
+    var pos = (b.opts&&b.opts.stAbs)?' <span class="ty abs-pos" title="Serbest konum: x='+(b.opts.stX||0)+' y='+(b.opts.stY||0)+' w='+(b.opts.stW||'oto')+'"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-map"></use></svg> '+esc((b.opts.stX||0))+','+esc((b.opts.stY||0))+'</span>':'';
+    var cat = (b.opts&&b.opts.kategori)?' <span class="ty" title="Haber kaynağı: '+esc(catName(b.opts.kategori))+'"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-folder"></use></svg> '+esc(catName(b.opts.kategori))+'</span>':'';
+    return '<span class="grip" style="color:#8b90a5">'+(lk?tiIkon('lock'):tiIkon('grip-vertical'))+'</span>'+
+      '<span class="nm">'+(b.opts&&b.opts.text?esc(b.opts.text):esc(NAMES[b.type]||b.type))+'</span>'+
+      '<span class="ty">'+esc(b.type)+'</span>'+cat+pos+
+      '<span class="ops">'+
+        '<button type="button" data-act="up" title="Yukarı"'+(lk?' disabled':'')+'>'+tiIkon('arrow-up')+'</button>'+
+        '<button type="button" data-act="down" title="Aşağı"'+(lk?' disabled':'')+'>'+tiIkon('arrow-down')+'</button>'+
+        '<button type="button" data-act="vis" title="Görünürlük">'+(off?'gizli':'görünür')+'</button>'+
+        '<button type="button" data-act="lock" title="Kilit (sürükleme/silme kapanır)">'+(lk?tiIkon('lock-open'):tiIkon('lock'))+'</button>'+
+        '<button type="button" data-act="cfg" title="Ayarlar"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-settings"></use></svg></button>'+
+        '<button type="button" data-act="fold" title="Önizlemeyi aç/kapat">'+(b.opts&&_folded[b.id]?tiIkon('chevron-right'):tiIkon('chevron-down'))+'</button>'+
+        '<button type="button" data-act="del" title="Sil"'+(lk?' disabled':'')+'><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-x"></use></svg></button>'+
+      '</span>';
+  }
+  function chipInnerHTML(b){
+    return '<div class="bp-chipbar">'+chipbarHTML(b)+'</div>'+
+    '<div class="bp-prev bp-prev-loading">Önizleme yükleniyor…</div>'+
+    '<div class="bp-opts" style="display:none"></div>';
+  }
+
+  /* Faz 5: serbest konum rozeti — stAbs/stX/stY/stW değişince çip barı yenilenir. */
+  function refreshChipbar(b){
+    var chips=[].slice.call(document.querySelectorAll('.bp-chip[data-id]'));
+    for(var i=0;i<chips.length;i++){
+      if(chips[i].dataset.id===b.id){
+        var bar=chips[i].querySelector('.bp-chipbar');
+        if(bar) bar.innerHTML=chipbarHTML(b);
+        return;
+      }
+    }
+  }
+
+  function chipHTML(b){
+    var off = b.visible===false;
+    return '<div class="bp-chip'+(off?' off':'')+(b.locked?' locked':'')+(_folded[b.id]?' collapsed':'')+'" data-id="'+esc(b.id)+'">'+
+      chipInnerHTML(b)+
+    '</div>';
+  }
+
+  function openOpts(chip, b){
+    var box = chip.querySelector('.bp-opts');
+    if(box.style.display==='block'){ box.style.display='none'; return; }
+    box.innerHTML = optsBodyHTML(b);
+    box.style.display='block';
+    bindOpts(box, b, buildBP);
+    refreshOverlayUI(box, b);
+  }
+
+  function move(b, dir){
+    if(b.locked===true) return;
+    var z = zoneOf(b), list = zoneBlocks(z);
+    var i = list.indexOf(b);
+    var j = i + dir;
+    if(j<0 || j>=list.length) return;
+    pushHistory();
+    var other = list[j];
+    if(dir>0) placeInZone(z, b, null), placeInZone(z, other, b.id);
+    else placeInZone(z, other, null), placeInZone(z, b, other.id);
+    buildBP();
+    commitState();
+    scheduleSave();
+  }
+
+  function renderAll(){
+    if(view==='bp'){ buildBP(); bp.style.display=''; canvas.style.display='none'; }
+    else { renderList(); bp.style.display='none'; canvas.style.display=''; }
+    var kp=document.getElementById('kpPanel');
+    if(kp){ kp.style.display = view==='bp' ? '' : 'none'; }
+    document.getElementById('bldEmpty').style.display = blocks.length? 'none':'block';
+    // sayaç rozetleri (kullanılmayabiliyor ama tutarlılık için)
+  }
+
+  /* ---------- liste görünümü ---------- */
+  function renderList(){
+    canvas.innerHTML='';
+    blocks.forEach(function(b){
+      var el=document.createElement('div');
+      var lk = b.locked===true;
+      el.className='bld-block'+(b.visible===false?' bld-off':'')+(lk?' locked':'');
+      el.dataset.id=b.id;
+      var z=zoneOf(b);
+      var body=optsBodyHTML(b);
+      el.innerHTML='<div class="bld-head"><span class="grip">'+(lk?tiIkon('lock'):tiIkon('grip-vertical'))+'</span><span class="bld-name">'+
+        (b.opts&&b.opts.text?esc(b.opts.text):esc(NAMES[b.type]||b.type))+'</span>'+
+        '<span class="bld-type">'+esc(b.type)+'</span>'+
+        '<span class="zone-chip z-'+z+'">'+esc(zoneName(z))+'</span>'+
+        '<span class="bld-actions">'+
+          '<button type="button" data-act="vis">'+(b.visible===false?'gizli':'görünür')+'</button>'+
+          '<button type="button" data-act="lock">'+(lk?tiIkon('lock-open'):tiIkon('lock'))+'</button>'+
+          '<button type="button" data-act="dup"'+(lk?' disabled':'')+'>'+tiIkon('copy')+'</button>'+
+          '<button type="button" data-act="del"'+(lk?' disabled':'')+'><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-x"></use></svg></button>'+
+          '<button type="button" data-act="cfg"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-settings"></use></svg></button></span></div>'+
+        '<div class="bld-body">'+body+'</div>';
+      canvas.appendChild(el);
+    });
+    bindList();
+    initListSortable();
+  }
+
+  function initListSortable(){
+    if(typeof Sortable==='undefined') return;
+    if(_listSortable){ try{ _listSortable.destroy(); }catch(e){} _listSortable=null; }
+    _listSortable = new Sortable(canvas, {
+      group:'bld2', sort:true, handle:'.grip',
+      draggable:'.bld-block:not(.locked)',
+      animation:150, ghostClass:'sortable-ghost', chosenClass:'sortable-chosen', dragClass:'sortable-drag',
+      filter:'.bld-body,.bld-actions', preventOnFilter:true,
+      onStart:function(){ _dragCommitted=false; },
+      onUpdate:function(){
+        if(_dragCommitted) return;
+        _dragCommitted=true;
+        pushHistory(); syncListFromDOM(); commitState();
+        setTimeout(function(){ renderList(); scheduleSave(); }, 0);
+      }
+    });
+  }
+  var _listSortable=null;
+
+  function bindList(){
+    canvas.querySelectorAll('.bld-block').forEach(function(el){
+      var id=el.dataset.id, idx=reindex(id), b=blocks[idx];
+      if(!b) return;
+      bindOpts(el.querySelector('.bld-body'), b, renderList);
+      el.querySelectorAll('.bld-actions button').forEach(function(btn){
+        btn.addEventListener('click',function(e){ e.stopPropagation();
+          var a=btn.dataset.act;
+          if(a==='cfg'){ el.classList.toggle('open'); return; }
+          if(b.locked===true && a!=='lock' && a!=='vis') return;
+          if(a==='del' && !confirm('Blok silinsin mi?')) return;
+          pushHistory();
+          if(a==='vis') b.visible=b.visible===false;
+          else if(a==='lock') b.locked = !(b.locked===true);
+          else if(a==='dup'){ var c=JSON.parse(JSON.stringify(b)); c.id=uid(); c.locked=false; blocks.splice(idx+1,0,c); }
+          else if(a==='del') blocks.splice(idx,1);
+          commitState();
+          renderList();
+          scheduleSave();
+        });
+      });
+    });
+  }
+
+  /* ---------- geçmiş: geri al / yinele ----------
+     _committed = bir işlem başlamadan önceki geçerli durum.
+     Her mutasyon: pushHistory() -> değiştir -> commitState().
+     Sürükleme gibi DOM'a bağlı işlemlerde olay sırasına güvenilmez;
+     bu yüzden karşılaştırma _committed üzerinden yapılır. */
+  var _undo=[], _redo=[], _committed=snap(), HIST_MAX=60;
+
+  function snap(){ return JSON.stringify(blocks); }
+
+  function pushHistory(){
+    if(_undo.length && _undo[_undo.length-1]===_committed) return;  // aynı durumu yazma
+    _undo.push(_committed);
+    while(_undo.length>HIST_MAX) _undo.shift();
+    _redo.length=0;
+    updateHistoryButtons();
+  }
+  function commitState(){
+    _committed = snap();
+    updateHistoryButtons();
+  }
+  function updateHistoryButtons(){
+    var u=document.getElementById('bldUndo'), r=document.getElementById('bldRedo');
+    if(u) u.disabled = !_undo.length;
+    if(r) r.disabled = !_redo.length;
+  }
+  function undo(){
+    if(!_undo.length) return;
+    _redo.push(_committed);
+    blocks = JSON.parse(_undo.pop());
+    _committed = snap();
+    updateHistoryButtons(); renderAll(); scheduleSave();
+  }
+  function redo(){
+    if(!_redo.length) return;
+    _undo.push(_committed);
+    blocks = JSON.parse(_redo.pop());
+    _committed = snap();
+    updateHistoryButtons(); renderAll(); scheduleSave();
+  }
+
+  /* ---------- DOM <-> model senkronu ---------- */
+  function syncFromDOM(){
+    var byId={}, i;
+    for(i=0;i<blocks.length;i++) byId[blocks[i].id]=blocks[i];
+    var order=[];
+    ZONES.forEach(function(z){
+      var slots = bp.querySelector('[data-slots="'+z.key+'"]');
+      if(!slots) return;
+      slots.querySelectorAll('.bp-chip[data-id]').forEach(function(ch){
+        var b = byId[ch.dataset.id];
+        if(b && order.indexOf(b)<0){ b.opts=b.opts||{}; b.opts.zone=z.key; order.push(b); }
+      });
+    });
+    for(i=0;i<blocks.length;i++) if(order.indexOf(blocks[i])<0) order.push(blocks[i]);
+    blocks = order;
+  }
+
+  function syncListFromDOM(){
+    var byId={}, i, out=[];
+    for(i=0;i<blocks.length;i++) byId[blocks[i].id]=blocks[i];
+    canvas.querySelectorAll('.bld-block[data-id]').forEach(function(el){
+      var b=byId[el.dataset.id];
+      if(b && out.indexOf(b)<0) out.push(b);
+    });
+    for(i=0;i<blocks.length;i++) if(out.indexOf(blocks[i])<0) out.push(blocks[i]);
+    blocks = out;
+  }
+
+  /* ---------- sürükle-bırak: SortableJS (fare + dokunmatik) ---------- */
+  var _sortables=[];
+  var _lastDragT = 0;   // çubuk tıklaması ile sürükleme sonrası "üstte bırakma"yı ayırt eder
+  var SORT_OPTS = {
+    group:'bld', sort:true, handle:'.bp-chipbar',
+    draggable:'.bp-chip:not(.locked)',
+    animation:150,
+    ghostClass:'sortable-ghost', chosenClass:'sortable-chosen', dragClass:'sortable-drag',
+    emptyInsertThreshold:12,
+    swapThreshold:0.35,          // sığ eşik: dokunmakta derin nişan almak zorunda kalma
+    fallbackOnBody:true, fallbackTolerance:3,
+    // Her cihazda aynı yol (SortableJS pointer/fallback simülasyonu).
+    // HTML5 native DnD masaüstünde çalışır ama dokunmatikte hiç çalışmaz ve
+    // iki yolun davranışı farklıdır; tek yol hem tutarlı hem test edilebilir.
+    forceFallback:true,
+    // Dokunmatikte sürükleme uzun basla başlar (iOS/Android davranışı):
+    // kısa dokunuş = kaydırma, uzun bas + sürükle = modül taşı.
+    delay:120, delayOnTouchOnly:true, touchStartThreshold:4,
+    filter:'.bp-opts,.ops', preventOnFilter:true
+  };
+
+  var _dragCommitted=false;
+  /* Hayalet çip temizliği.
+     SortableJS klon üretir (`pull:'clone'`); klonu gerçek bloğa çevirdiğimizde
+     SortableJS hâlâ onu "klon" sayar ve instance destroy() edilirken konteynere
+     geri koyabilir. Sonuç: modelde olmayan DOM çipi kalır. Bu yüzden render'ın
+     sonunda modelde karşılığı bulunmayan her çip silinir. */
+  function purgeGhostChips(){
+    var ids={}, ghosts=[];
+    for(var i=0;i<blocks.length;i++) ids[blocks[i].id]=1;
+    document.querySelectorAll('.bp-chip[data-id]').forEach(function(el){
+      if(!ids[el.dataset.id]){ ghosts.push(el.dataset.id); el.remove(); }
+    });
+  }
+  /* Render, SortableJS olayı TAMAMLANINCA yapılmalı: onAdd içinde senkron
+     render edersek SortableJS bıraktığında DOM'u kendi düzeltir. */
+  function commitDrop(){
+    if(_dragCommitted) return;   // aynı sürükleme için onAdd/onUpdate ikisi de ateşlenir
+    _dragCommitted = true;
+    _lastDragT = Date.now();     // bırakmanın hemen ardındaki obur tıklama çökertmesin
+    pushHistory();
+    syncFromDOM();
+    commitState();
+    setTimeout(function(){ renderAll(); scheduleSave(); }, 0);
+  }
+
+  function initSortables(){
+    _sortables.forEach(function(s){ try{ s.destroy(); }catch(e){} });
+    _sortables=[];
+    // destroy() sırasında SortableJS klonu konteynere geri koyabiliyor;
+    // yeni instance'lar oluşturulmadan hemen önce temizlenir.
+    purgeGhostChips();
+    if(typeof Sortable==='undefined') return;   // kütüphane yoksa tıklama yöntemi çalışmaya devam eder
+
+    var pal = document.querySelector('.bp-pal');
+    if(pal){
+      _sortables.push(new Sortable(pal, {
+        group:{name:'bld', pull:'clone', put:false},
+        sort:false, draggable:'.bld-add', animation:150,
+        ghostClass:'sortable-ghost',
+        forceFallback:true, fallbackOnBody:true, fallbackTolerance:3,
+        delay:120, delayOnTouchOnly:true, touchStartThreshold:4,
+        onStart: function(){ _dragCommitted=false; }
+      }));
+    }
+    ZONES.forEach(function(z){
+      var slots = bp.querySelector('[data-slots="'+z.key+'"]');
+      if(!slots) return;
+      var o={};
+      for(var k in SORT_OPTS) o[k]=SORT_OPTS[k];
+      o.onStart = function(){ _dragCommitted=false; };
+      o.onAdd = function(evt){
+        var el=evt.item;
+        if(el.dataset && el.dataset.type && !el.dataset.id){
+          var nb = makeBlock(el.dataset.type, z.key);
+          blocks.push(nb);
+          el.dataset.id = nb.id;
+          el.className = 'bp-chip';
+          el.innerHTML = chipInnerHTML(nb);
+          wireChip(el);
+        }
+        commitDrop();
+      };
+      o.onUpdate = commitDrop;
+      o.onRemove = commitDrop;
+      _sortables.push(new Sortable(slots, o));
+    });
+  }
+
+  function wireChip(chip){
+    var id=chip.dataset.id, b=blocks[reindex(id)];
+    if(!b) return;
+    chip.querySelectorAll('.ops button').forEach(function(btn){
+      btn.addEventListener('click',function(e){ e.stopPropagation(); e.preventDefault();
+        var a=btn.dataset.act;
+        if(a==='cfg'){ openOpts(chip,b); return; }
+        if(a==='up'||a==='down'){ move(b, a==='up'?-1:1); return; }
+        if(a==='fold'){ _folded[b.id] = !(_folded[b.id]); chip.classList.toggle('collapsed', _folded[b.id]); return; }
+        if(b.locked===true && a!=='lock' && a!=='vis') return;  // kilitli: sadece görünürlük/kilit
+        if(a==='del' && !confirm('Modül silinsin mi?')) return;
+        pushHistory();
+        if(a==='vis') b.visible = b.visible===false;
+        else if(a==='lock') b.locked = !(b.locked===true);
+        else if(a==='del') blocks.splice(reindex(id),1);
+        buildBP(); commitState(); scheduleSave();
+      });
+    });
+    // Çubuk üstüne tıklayınca önizleme açılır/kapanır (sürükleme değilse).
+    // Sadece çubuk tetikleyicidir; önizleme gövdesi pointer-events:none olduğu
+    // için tıklamalar istemeden çipe düşerdi. SortableJS sürüklemeden hemen
+    // sonra "tık" üretebilir; _lastDragT ile ayırt edilir.
+    var bar = chip.querySelector('.bp-chipbar');
+    bar.addEventListener('click',function(e){
+      if(e.target.closest('.ops') || e.target.closest('.bp-opts')) return;
+      if(Date.now() - _lastDragT < 350) return;
+      _folded[b.id] = !(_folded[b.id]);
+      chip.classList.toggle('collapsed', _folded[b.id]);
+    });
+  }
+
+  function wireChips(){
+    bp.querySelectorAll('.bp-chip').forEach(wireChip);
+  }
+
+  /* Kategori şablon seçici: seçim doğrudan GÖVDE'deki kategori_liste
+     bloğunun opts'ına yazılır. Genel düzende tüm kategoriler, kategoriye
+     özel düzende yalnız o kategori etkilenir; liste görünümü seçmek
+     gerekmeden manşet düzeni de değiştirilebilir. */
+  function wireCatView(){
+    bp.querySelectorAll('.catview-pick .catview-btn').forEach(function(btn){
+      btn.addEventListener('click',function(e){
+        if(e){ e.preventDefault(); e.stopPropagation(); }
+        var v=btn.dataset.view;
+        var target=catTemplateBlock();
+        if(!v) return;
+        if(!target){
+          flash('Önce GÖVDE alanına "Kategori Haber Listesi" modülü ekleyin.','error');
+          return;
+        }
+        if(v===catTemplateOf(target)) return;
+        pushHistory();
+        target.opts = target.opts || {};
+        if(v==='liste'||v==='izgara'||v==='mozaik'||v==='akis'){
+          target.opts.view = v;
+        } else {
+          delete target.opts.view;
+          target.opts.hero_style = v;
+          if(v==='portre'){
+            if(target.opts.hero_width===undefined || Number(target.opts.hero_width)===44){ target.opts.hero_width=58; }
+            if(target.opts.list_cols===undefined || String(target.opts.list_cols)==='4'){ target.opts.list_cols='2'; }
+          } else if(v==='uclu'){
+            if(target.opts.hero_width===undefined || Number(target.opts.hero_width)===58){ target.opts.hero_width=44; }
+            if(target.opts.list_cols===undefined || String(target.opts.list_cols)==='2'){ target.opts.list_cols='4'; }
+          } else if(v==='klasik'){
+            // Genel kategori görünümü (ör. izgara) klasik manşeti ezmesin.
+            target.opts.view='klasik';
+            if(target.opts.list_cols===undefined){ target.opts.list_cols='2'; }
+          }
+        }
+        CATVIEW=v;
+        commitState();
+        renderAll();
+        scheduleSave();
+        schedulePreview();
+        flash('Kategori şablonu: '+catTemplateName(v),'ok');
+      });
+    });
+    var splitBtn=document.getElementById('catSplitBtn');
+    if(splitBtn){
+      splitBtn.addEventListener('click',function(e){
+        if(e){ e.preventDefault(); e.stopPropagation(); }
+        splitCategoryModules();
+      });
+    }
+    paintCatTemplates();
+  }
+
+  // buildBP sonrası yeniden bağla
+  var _buildBP = buildBP;
+  /* SortableJS klonu bırakırken bazen bir sonraki karede konteynere geri
+     koyar; bu yüzden hem senkron hem bir sonraki karede temizlik yapılır. */
+  buildBP = function(){
+    _buildBP(); wireChips(); initSortables();
+    purgeGhostChips();
+    applyCachedPreviews();
+    requestAnimationFrame(function(){ purgeGhostChips(); });
+    updateHistoryButtons();
+    wireCatView();
+  };
+
+  /* ---------- olaylar ---------- */
+  document.querySelectorAll('.bld-add').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      pushHistory();
+      placeInZone(DEFAULT_ZONE, makeBlock(btn.dataset.type, DEFAULT_ZONE), null);
+      commitState();
+      renderAll();
+      scheduleSave();
+    });
+  });
+
+  // Yalnızca görünüm düğmeleri: geri al/yinele düğmeleri de bu kapsayıcının
+  // içinde olduğu için data-view filtresi şart (aksi halde view=undefined olur).
+  document.querySelectorAll('.bld-views button[data-view]').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      document.querySelectorAll('.bld-views button[data-view]').forEach(function(x){ x.classList.remove('on'); x.classList.add('ghost'); });
+      this.classList.add('on'); this.classList.remove('ghost');
+      view=this.dataset.view; renderAll();
+    });
+  });
+
+  document.getElementById('bldUndo').addEventListener('click', undo);
+  document.getElementById('bldRedo').addEventListener('click', redo);
+  document.addEventListener('keydown',function(e){
+    if(!(e.ctrlKey||e.metaKey)) return;
+    var k=(e.key||'').toLowerCase();
+    if(k==='z' && !e.shiftKey){ e.preventDefault(); undo(); }
+    else if((k==='z'&&e.shiftKey)||k==='y'){ e.preventDefault(); redo(); }
+  });
+
+  document.getElementById('bldSave').addEventListener('click',function(){
+    var btn=this;
+    if (window.htmx) {
+      var f = document.getElementById('builderHtmxForm');
+      f.querySelector('[name=blocks]').value = JSON.stringify(blocks);
+      htmx.trigger(f, 'submit');
+      setTimeout(loadPreviews, 500);
+      return;
+    }
+    btn.disabled=true; btn.textContent='Kaydediliyor…';
+    fetch('/admin/tasarim/kaydet?sayfa='+PAGE,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({blocks:blocks})})
+      .then(function(r){return r.json();})
+      .then(function(j){
+        btn.disabled=false; btn.textContent='Kaydet';
+        if(j.ok){ flash('Kaydedildi ('+j.count+' modül). '+(j.page==='article'?'Yazı sayfası':'Ana sayfa')+' güncellendi.','ok'); schedulePreview(); }
+        else { flash('Hata: '+(j.error||'bilinmeyen'),'error'); }
+      })
+      .catch(function(){ btn.disabled=false; btn.textContent='Kaydet'; flash('Bağlantı hatası.','error'); });
+  });
+
+  function flash(msg,kind){
+    var el=document.createElement('div'); el.className='flash '+(kind||'ok'); el.textContent=msg;
+    el.style.position='fixed'; el.style.bottom='18px'; el.style.right='18px'; el.style.zIndex='9999';
+    document.body.appendChild(el);
+    setTimeout(function(){ el.remove(); },3200);
+  }
+
+  /* ---------- yerleşim & ölçü token'ları (şablon üstü, otomatik kaydet) ---------- */
+  function bindTokens(){
+    var box=document.getElementById('bpTokens');
+    if(!box) return;
+    box.querySelectorAll('[data-tok]').forEach(function(inp){
+      inp.addEventListener('change', function(){
+        var k=inp.dataset.tok, v=String(inp.value).trim();
+        saveToken(k, v);
+      });
+    });
+    box.querySelectorAll('[data-tokon]').forEach(function(cb){
+      cb.addEventListener('change', function(){
+        var k=cb.dataset.tokon;
+        var field=cb.closest('.bld-field');
+        var ci=field?field.querySelector('input[data-tok="'+k+'"]'):null;
+        if(ci){ ci.disabled=!cb.checked; }
+        saveToken(k, cb.checked && ci ? ci.value : '');
+      });
+    });
+    var rb=box.querySelector('[data-tokreset]');
+    if(rb){ rb.addEventListener('click',function(){
+      if(!confirm('Yerleşim ve ölçü ayarları varsayılana dönecek. Emin misiniz?')) return;
+      saveToken('reset','').then(function(){ location.reload(); });
+    }); }
+  }
+
+  bindTokens();
+  renderAll();
+  loadPreviews();   // ilk gerçek modül önizlemeleri
+
+  /* ---------- Faz 4: sürüm geçmişi (kalıcı geri alma) ---------- */
+  function historyOpen(){
+    var box=document.getElementById('bldHistory');
+    var list=document.getElementById('bldHistoryList');
+    if(!box||!list) return;
+    box.hidden=false;
+    list.innerHTML='<div class="bld-history-empty">Yükleniyor…</div>';
+    fetch('/admin/tasarim/gecmis?sayfa='+PAGE)
+      .then(function(r){ return r.json(); })
+      .then(function(j){
+        if(!j||!j.ok){ list.innerHTML='<div class="bld-history-empty">Geçmiş alınamadı.</div>'; return; }
+        if(!j.versions.length){ list.innerHTML='<div class="bld-history-empty">Henüz sürüm yok — bir kayıt yapınca eski düzen burada arşivlenir.</div>'; return; }
+        var h='';
+        j.versions.forEach(function(v,i){
+          h+='<div class="bld-history-item">'+
+            '<span class="vh-num">#'+(j.versions.length-i)+'</span>'+
+            '<span class="vh-meta"><strong>'+esc(v.note||('Sürüm #'+v.id))+'</strong><br>'+
+              esc(v.created_at)+' · '+v.count+' blok</span>'+
+            '<button type="button" class="btn ghost small" data-vid="'+v.id+'">↩ Geri al</button>'+
+            '</div>';
+        });
+        list.innerHTML=h;
+        list.querySelectorAll('button[data-vid]').forEach(function(btn){
+          btn.addEventListener('click',function(){
+            if(!confirm('Bu sürümü geri almak istediğinize emin misiniz? Mevcut düzen geçmişe sürüm olarak eklenir.')) return;
+            fetch('/admin/tasarim/surum/'+btn.dataset.vid+'/geri?sayfa='+PAGE,{method:'POST'})
+              .then(function(r){ return r.json(); })
+              .then(function(j2){
+                if(j2&&j2.ok){ location.reload(); }
+                else { alert('Geri alınamadı.'); }
+              })
+              .catch(function(){ alert('Geri alınamadı.'); });
+          });
+        });
+      })
+      .catch(function(){ list.innerHTML='<div class="bld-history-empty">Geçmiş alınamadı.</div>'; });
+  }
+  var hb=document.getElementById('bldHistoryBtn');
+  var hc=document.getElementById('bldHistoryClose');
+  if(hb){ hb.addEventListener('click',historyOpen); }
+  if(hc){ hc.addEventListener('click',function(){ var b=document.getElementById('bldHistory'); if(b) b.hidden=true; }); }
+
+  /* ---------- Faz 7: A/B testi paneli ---------- */
+  function abOpen(){
+    var box=document.getElementById('bldAB');
+    if(!box) return;
+    box.hidden=false;
+    fetch('/admin/tasarim/ab?sayfa='+PAGE)
+      .then(function(r){ return r.json(); })
+      .then(function(j){
+        if(!j||!j.ok){ return; }
+        var en=document.getElementById('abEnabled');
+        var wg=document.getElementById('abWeight');
+        if(en) en.checked=!!j.enabled;
+        if(wg) wg.value=String(j.weight_b||0);
+        var note=document.getElementById('abNote');
+        if(note){
+          var cur=(j.enabled?'<svg class="ti ti-metin" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-flask"></use></svg> AKTİF · B ağırlığı %'+j.weight_b:'Test kapalı (A yayında)');
+          note.textContent=cur+' · B: '+(j.b_count?(j.b_count+' blok'):'boş');
+        }
+        renderABStats(j.hits_list||[]);
+      })
+      .catch(function(){});
+  }
+  function renderABStats(list){
+    var box=document.getElementById('abStatsList');
+    if(!box) return;
+    if(!list.length){ box.innerHTML='<div class="bld-history-empty">Henüz görüntüleme yok (test açılınca sayılır).</div>'; return; }
+    var byDay={};
+    list.forEach(function(h){ (byDay[h.day]=byDay[h.day]||{})[h.variant]=h.hits; });
+    var days=Object.keys(byDay).sort().reverse();
+    var h='<table><thead><tr><th>Gün</th><th>A</th><th>B</th><th>B oranı</th></tr></thead><tbody>';
+    days.forEach(function(d){
+      var a=byDay[d].a||0, b=byDay[d].b||0, tot=a+b;
+      var oran = tot? Math.round(b*100/tot)+'%' : '—';
+      h+='<tr><td>'+esc(d)+'</td><td>'+a+'</td><td>'+b+'</td><td>'+oran+'</td></tr>';
+    });
+    h+='</tbody></table>';
+    box.innerHTML=h;
+  }
+  function abSave(payload){
+    return fetch('/admin/tasarim/ab/kaydet?sayfa='+PAGE,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
+      .then(function(r){ return r.json(); });
+  }
+  var abBtn=document.getElementById('bldABBtn');
+  var abClose=document.getElementById('bldABClose');
+  var abSaveBtn=document.getElementById('abSave');
+  var abSetBtn=document.getElementById('abSetB');
+  var abClearBtn=document.getElementById('abClearB');
+  if(abBtn){ abBtn.addEventListener('click',abOpen); }
+  if(abClose){ abClose.addEventListener('click',function(){ var b=document.getElementById('bldAB'); if(b) b.hidden=true; }); }
+  if(abSaveBtn){
+    abSaveBtn.addEventListener('click',function(){
+      var w=parseInt(document.getElementById('abWeight').value||'0',10); if(isNaN(w))w=0;
+      var on=document.getElementById('abEnabled').checked;
+      abSave({enabled:on, weight_b:w}).then(function(j){
+        if(j&&j.ok){ flash('A/B ayarları kaydedildi.','ok'); abOpen(); }
+        else { flash('A/B kaydedilemedi.','error'); }
+      });
+    });
+  }
+  if(abSetBtn){
+    abSetBtn.addEventListener('click',function(){
+      if(!confirm("B varyantı mevcut düzenle eşitlensin mi? (B, A'nın şu anki kopyası olur)")) return;
+      abSave({mode:'set-b', blocks: blocks}).then(function(j){
+        if(j&&j.ok){ flash('B, mevcut düzene eşitlendi.','ok'); abOpen(); }
+        else { flash('B eşitlenemedi.','error'); }
+      });
+    });
+  }
+  if(abClearBtn){
+    abClearBtn.addEventListener('click',function(){
+      if(!confirm('B varyantı boşaltılsın mı? (A/B kapatılıp B sıfırlanır)')) return;
+      abSave({mode:'set-b', enabled:false, weight_b:50, blocks:[]}).then(function(j){
+        if(j&&j.ok){ flash('B boşaltıldı.','ok'); abOpen(); }
+        else { flash('B boşaltılamadı.','error'); }
+      });
+    });
+  }
+
+  /* ---------- Faz 8: düzeni başka sayfaya kopyala ---------- */
+  var copyBtn=document.getElementById('bldCopyBtn');
+  var copyClose=document.getElementById('bldCopyClose');
+  var copyGo=document.getElementById('copyGo');
+  if(copyBtn){
+    copyBtn.addEventListener('click',function(){
+      var b=document.getElementById('bldCopy');
+      if(b) b.hidden=false;
+    });
+  }
+  if(copyClose){
+    copyClose.addEventListener('click',function(){ var b=document.getElementById('bldCopy'); if(b) b.hidden=true; });
+  }
+  if(copyGo){
+    copyGo.addEventListener('click',function(){
+      var t=document.getElementById('copyTarget');
+      var hedef=t?t.value:'';
+      if(!hedef || hedef===PAGE){ flash('Hedef sayfa seçin.','error'); return; }
+      if(!confirm('Bu düzen "'+hedef+'" sayfasına kopyalansın mı? Hedefin eski düzeni sürüm geçmişine eklenir.')) return;
+      fetch('/admin/tasarim/kopyala?sayfa='+PAGE,{
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ hedef: hedef, blocks: blocks })
+      })
+        .then(function(r){ return r.json(); })
+        .then(function(j){
+          if(j&&j.ok){ flash('Düzen "'+hedef+'" sayfasına kopyalandı ('+j.count+' blok).','ok'); }
+          else { flash('Kopyalanamadı: '+(j&&j.error||'bilinmeyen'),'error'); }
+        })
+        .catch(function(){ flash('Kopyalama hatası.','error'); });
+    });
+  }
+
+  /* Sayfa Metinleri (Faz 142): şablon metinlerini kaydeder. */
+  function bindPageTexts(){
+    var panel = document.getElementById('ptPanel');
+    var btn = document.getElementById('ptSave');
+    var st = document.getElementById('ptStatus');
+    if(!panel || !btn) return;
+    var locale = "{{.Builder.PageTextLocale}}";
+    // Zengin metin alanları (sayfa gövdesi): araç çubuğu + contenteditable.
+    panel.querySelectorAll('[data-pt-rich]').forEach(function(ed){
+      var ce = ed.querySelector('.rt-content');
+      if(!ce) return;
+      ed.querySelectorAll('.rt-toolbar button[data-cmd]').forEach(function(btn){
+        btn.addEventListener('click', function(e){
+          e.preventDefault();
+          var cmd = btn.dataset.cmd;
+          if(cmd==='formatBlock-h3'){ document.execCommand('formatBlock', false, 'h3'); }
+          else if(cmd==='createLink'){
+            var url = prompt('Bağlantı adresi (https://… veya /icerik/…)');
+            if(url){ document.execCommand('createLink', false, url); }
+          } else { document.execCommand(cmd, false, null); }
+          ce.focus();
+        });
+      });
+      ce.addEventListener('paste', function(e){
+        e.preventDefault();
+        var txt = (e.clipboardData||window.clipboardData).getData('text/plain');
+        document.execCommand('insertText', false, txt);
+      });
+    });
+    btn.addEventListener('click', function(){
+      var texts = {};
+      panel.querySelectorAll('[data-pt-key]').forEach(function(el){
+        texts[el.getAttribute('data-pt-key')] = el.value;
+      });
+      panel.querySelectorAll('[data-pt-rich]').forEach(function(ed){
+        var ce = ed.querySelector('.rt-content');
+        var h = ce ? ce.innerHTML : '';
+        if(h==='<br>'||h==='<br><br>') h='';
+        texts[ed.getAttribute('data-pt-rich')] = h;
+      });
+      st.textContent = 'Kaydediliyor…';
+      fetch('/admin/tasarim/sayfa-metinleri' + location.search, {
+        method:'POST',
+        credentials:'same-origin',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({locale:locale, texts:texts})
+      })
+        .then(function(r){ return r.json(); })
+        .then(function(j){
+          if(j && j.ok){ st.textContent = 'Kaydedildi (' + j.saved + ' metin).'; }
+          else { st.textContent = 'Kaydedilemedi: ' + ((j && j.error) || 'bilinmeyen'); }
+        })
+        .catch(function(){ st.textContent = 'Bağlantı hatası.'; });
+    });
+  }
+
+  bindPageLayout();
+  bindPageTexts();
+})();
+</script>
+</body></html>{{end}}

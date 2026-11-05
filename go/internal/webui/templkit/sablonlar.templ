@@ -1,0 +1,154 @@
+// Gazete şablon galerisi (templ) — Adım 2'nin ilk gerçek modülü.
+//
+// Şablonların 10 sayfalık düzenlerini mini SVG önizlemelerle gösterir;
+// varsayılan yapma / yeni sayı üretme / silme aksiyonlarını barındırır.
+package templkit
+
+import "strconv"
+
+// BlockBox şablon önizlemesi için blok kutusu (sayfa yüzdesi).
+type BlockBox struct {
+	X, Y, W, H float64
+	Tip        string
+}
+
+// PageDoc önizlenecek şablon sayfası.
+type PageDoc struct {
+	No    int
+	Ad    string
+	Boxes []BlockBox
+}
+
+// Sablon şablon galerisi kartı verisi.
+type Sablon struct {
+	ID          int64
+	Ad          string
+	Aciklama    string
+	Varsayilan  bool
+	SayfaSayisi int
+	Pages       []PageDoc
+}
+
+// PageThumb sayfanın mini SVG önizlemesi.
+templ PageThumb(p PageDoc) {
+	<svg class="gz-thumb" viewBox="0 0 29.7 42" aria-label={ "Sayfa " + strconv.Itoa(p.No) }>
+		<rect x="0" y="0" width="29.7" height="42" fill="#fff" stroke="currentColor" stroke-width="0.4"></rect>
+		for _, b := range p.Boxes {
+			<rect
+				x={ ftoa(b.X*0.297) }
+				y={ ftoa(b.Y*0.42) }
+				width={ ftoa(b.W*0.297) }
+				height={ ftoa(b.H*0.42) }
+				fill={ boxFill(b.Tip) }
+				rx="0.3"
+			></rect>
+		}
+	</svg>
+}
+
+// SablonCard tek şablon kartı.
+templ SablonCard(s Sablon) {
+	<div class="card card-pad">
+		<div class="dash-head">
+			<h2>
+				{ s.Ad }
+				if s.Varsayilan {
+					@Badge("varsayılan", "ok")
+				}
+			</h2>
+			<span class="small muted">{ strconv.Itoa(s.SayfaSayisi) } sayfa</span>
+		</div>
+		if s.Aciklama != "" {
+			<p class="hint small">{ s.Aciklama }</p>
+		}
+		<div class="gz-thumbs">
+			for _, p := range s.Pages {
+				@PageThumb(p)
+			}
+		</div>
+		<div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+			<form method="post" action={ templ.SafeURL("/admin/gazete/sayilar?sablon_id=" + strconv.FormatInt(s.ID, 10)) }>
+				<input type="hidden" name="sablon_id" value={ strconv.FormatInt(s.ID, 10) }/>
+				<input type="hidden" name="doldur" value="1"/>
+				<button class="btn small" type="submit"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-news"></use></svg> Bu Şablondan Sayı</button>
+			</form>
+			if !s.Varsayilan {
+				<form method="post" action={ templ.SafeURL("/admin/gazete/sablonlar/" + strconv.FormatInt(s.ID, 10) + "/varsayilan") }>
+					<button class="btn ghost small" type="submit"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-star"></use></svg> Varsayılan Yap</button>
+				</form>
+			}
+			<form
+				method="post"
+				action={ templ.SafeURL("/admin/gazete/sablonlar/" + strconv.FormatInt(s.ID, 10) + "/sil") }
+				data-confirm="Şablon silinsin mi?"
+			>
+				<button class="btn ghost small" type="submit">Sil</button>
+			</form>
+		</div>
+	</div>
+}
+
+// SablonGaleri şablon galerisi sayfa gövdesi.
+templ SablonGaleri(items []Sablon) {
+	<div style="display:grid;gap:14px">
+		<div class="card card-pad">
+			<div class="dash-head">
+				<h2><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-ruler-measure"></use></svg> Gazete Şablon Galerisi</h2>
+				<div style="display:flex;gap:8px">
+					<form method="post" action="/admin/gazete/sablonlar/tohum" style="margin:0">
+						<button class="btn ghost small" type="submit" title="Projeyle gelen hazır peyzajları yükler; var olanı değiştirmez. Şablonsuz sayıları da uygun düzene bağlar.">
+							<svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-download"></use></svg> Hazır Şablonları Yükle
+						</button>
+					</form>
+					<a class="btn ghost small" href="/admin/gazete"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-arrow-left"></use></svg> Gazete Paneli</a>
+				</div>
+			</div>
+			<p class="hint">
+				Şablonlar 10 sayfalık düzen kalıplarıdır. Bir sayıyı düzenledikten sonra
+				<b>"Şablon olarak Kaydet"</b> ile mevcut düzeni şablona çevirebilirsiniz.
+				Otomatik doldurma, şablonu seçilen sayılara uygular.
+			</p>
+		</div>
+		if len(items) == 0 {
+			<div class="card card-pad">
+				<p class="muted">
+					Henüz şablon yok. Yukarıdan <b>"Hazır Şablonları Yükle"</b> ile
+					projeyle gelen peyzajları (A4 Klasik Manşet, İki Kolon Ağırlıklı,
+					Görsel Ağırlıklı, Kategori Eki, A3 Mevcut Düzen) alabilir ya da
+					editörde bir sayıyı düzenleyip "Şablon olarak Kaydet" diyebilirsiniz.
+				</p>
+				<a class="btn small" href="/admin/gazete">Gazete Paneline Git</a>
+			</div>
+		}
+		<div class="dash-2">
+			for _, s := range items {
+				@SablonCard(s)
+			}
+		</div>
+	</div>
+}
+
+// ---- yardımcılar ----
+
+func ftoa(f float64) string {
+	return strconv.FormatFloat(f, 'f', 2, 64)
+}
+
+func boxFill(tip string) string {
+	switch tip {
+	case "manset":
+		return "#7c3aed"
+	case "liste":
+		return "#a78bfa"
+	case "kart":
+		return "#c4b5fd"
+	case "baslik":
+		return "#111827"
+	case "metin":
+		return "#d1d5db"
+	case "reklam":
+		return "#fbbf24"
+	default:
+		return "#e5e7eb"
+	}
+}

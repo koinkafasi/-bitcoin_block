@@ -1,0 +1,148 @@
+{{define "header_panel"}}<div id="header-panel">
+  {{if .Flash}}<div class="flash {{.Flash.Kind}}">{{.Flash.Text}}</div>{{end}}
+  <span id="header-yukleniyor" class="htmx-indicator small muted" role="status" aria-live="polite">Kaydediliyor…</span>
+  <form id="headerHtmxForm" method="post" action="/admin/header/kaydet" hx-post="/admin/header/kaydet" hx-target="#header-panel" hx-swap="outerHTML" hx-indicator="#header-yukleniyor">
+    <input type="hidden" name="config">
+  </form>
+  {{$h := .HeaderEdit.Config}}
+  <div class="card card-pad">
+    <div class="row" style="justify-content:space-between;align-items:center;gap:12px">
+      <div>
+        <h2 style="margin:0;font-size:1.15rem">Header Yönetimi</h2>
+        <p class="hint" style="margin:4px 0 0">Header modeli, renk modu, genişlik ve görünen modülleri yönetin.</p>
+      </div>
+      <button class="btn" type="button" id="hSave"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-device-floppy"></use></svg> Kaydet</button>
+    </div>
+
+    <h3 style="margin:20px 0 8px;font-size:.96rem">Header Modeli</h3>
+    <div class="header-models">
+      <label class="header-model-pick">
+        <input type="radio" name="headerModel" value="model1" {{if eq $h.Model "model1"}}checked{{end}}>
+        <span class="hm-mini hm-mini-1"><i></i><b></b><em></em></span>
+        <strong>Model 1 — Klasik</strong>
+        <small>Logo solda, menü ortada, araçlar sağda.</small>
+      </label>
+      <label class="header-model-pick">
+        <input type="radio" name="headerModel" value="model2" {{if eq $h.Model "model2"}}checked{{end}}>
+        <span class="hm-mini hm-mini-2"><i></i><b></b><em></em></span>
+        <strong>Model 2 — Satır içi</strong>
+        <small>Logo ve menü aynı satırda, araçlar sağda.</small>
+      </label>
+      <label class="header-model-pick">
+        <input type="radio" name="headerModel" value="model3" {{if eq $h.Model "model3"}}checked{{end}}>
+        <span class="hm-mini hm-mini-3"><i></i><b></b><em></em></span>
+        <strong>Model 3 — Ortada logo</strong>
+        <small>Logo üstte ortada, menü alt satırda ortada.</small>
+      </label>
+      <label class="header-model-pick">
+        <input type="radio" name="headerModel" value="model4" {{if eq $h.Model "model4"}}checked{{end}}>
+        <span class="hm-mini hm-mini-4"><i></i><b></b><em></em></span>
+        <strong>Model 4 — Alt menü</strong>
+        <small>Logo solda, menü tam genişlikte alt satırda.</small>
+      </label>
+    </div>
+
+    <div class="grid-2" style="margin-top:18px">
+      <div class="field">
+        <label for="hSkin">Renk modu</label>
+        <select class="input" id="hSkin">
+          <option value="auto" {{if eq $h.Skin "auto"}}selected{{end}}>Otomatik (site teması)</option>
+          <option value="dark" {{if eq $h.Skin "dark"}}selected{{end}}>Koyu</option>
+          <option value="light" {{if eq $h.Skin "light"}}selected{{end}}>Açık</option>
+          <option value="accent" {{if eq $h.Skin "accent"}}selected{{end}}>Tema rengi</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="hWidth">Genişlik</label>
+        <select class="input" id="hWidth">
+          <option value="normal" {{if eq $h.Width "normal"}}selected{{end}}>Normal (ortalanmış)</option>
+          <option value="wide" {{if eq $h.Width "wide"}}selected{{end}}>Geniş (tam ekran)</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="opt-sec" style="margin-top:16px">Görünüm</div>
+    <div class="header-toggles">
+      <label class="tag"><input type="checkbox" id="hSticky" {{if $h.Sticky}}checked{{end}}> Sabit header</label>
+      <label class="tag"><input type="checkbox" id="hTopbar" {{if $h.Topbar}}checked{{end}}> Üst bilgi şeridi</label>
+      <label class="tag"><input type="checkbox" id="hTagline" {{if $h.ShowTagline}}checked{{end}}> Slogan göster</label>
+      <label class="tag"><input type="checkbox" id="hHome" {{if $h.ShowHome}}checked{{end}}> Ana sayfa ikonu</label>
+      <label class="tag"><input type="checkbox" id="hSearch" {{if $h.ShowSearch}}checked{{end}}> Arama</label>
+      <label class="tag"><input type="checkbox" id="hTheme" {{if $h.ShowTheme}}checked{{end}}> Tema düğmesi</label>
+      <label class="tag"><input type="checkbox" id="hMenu" {{if $h.ShowMenu}}checked{{end}}> Menü düğmesi</label>
+    </div>
+    <div class="field" id="hTopbarWrap" style="margin-top:10px;{{if not $h.Topbar}}display:none{{end}}">
+      <label>Üst şerit metni</label>
+      <input class="input" id="hTopbarText" value="{{$h.TopbarText}}" placeholder="örn. Edirne ve bölge haberleri" aria-label="örn. Edirne ve bölge haberleri">
+    </div>
+
+    <div class="opt-sec" style="margin-top:16px">Header Butonları</div>
+    <p class="hint" style="margin-top:0">İsteğe bağlı CTA bağlantıları. En fazla 4 adet.</p>
+    <div id="hButtons"></div>
+    <button class="btn ghost small" type="button" id="hButtonAdd">+ Buton Ekle</button>
+
+    <div class="opt-hint" style="margin-top:14px">Kaydettikten sonra değişiklikler yayındaki tüm sayfalara uygulanır.</div>
+  </div>
+
+<script>
+(function(){
+  var cfg = {
+    model: {{printf "%q" $h.Model}},
+    skin: {{printf "%q" $h.Skin}},
+    width: {{printf "%q" $h.Width}},
+    sticky: {{if $h.Sticky}}true{{else}}false{{end}},
+    topbar: {{if $h.Topbar}}true{{else}}false{{end}},
+    topbar_text: {{printf "%q" $h.TopbarText}},
+    show_tagline: {{if $h.ShowTagline}}true{{else}}false{{end}},
+    show_search: {{if $h.ShowSearch}}true{{else}}false{{end}},
+    show_theme: {{if $h.ShowTheme}}true{{else}}false{{end}},
+    show_menu: {{if $h.ShowMenu}}true{{else}}false{{end}},
+    show_home: {{if $h.ShowHome}}true{{else}}false{{end}},
+    buttons: [
+      {{range $i, $b := $h.Buttons}}{{if $i}},{{end}}{label:{{printf "%q" $b.Label}},url:{{printf "%q" $b.URL}},style:{{printf "%q" $b.Style}}}{{end}}
+    ]
+  };
+  var q=function(s){return document.querySelector(s)};
+  var qa=function(s){return [].slice.call(document.querySelectorAll(s))};
+  function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;')}
+  function buttonRow(b){
+    var row=document.createElement('div');
+    row.className='header-btn-row';
+    row.style.cssText='display:flex;gap:6px;align-items:center;margin-bottom:6px;flex-wrap:wrap';
+    row.innerHTML='<input class="input hb-label" placeholder="Buton adı" value="'+esc(b.label)+'" style="flex:1;min-width:120px" aria-label="Buton adı"><input class="input hb-url" placeholder="/sayfa/..." value="'+esc(b.url)+'" style="flex:2;min-width:150px" aria-label="/sayfa/..."><select class="input hb-style" style="max-width:120px"><option value="primary"'+(b.style==='primary'?' selected':'')+'>Dolu</option><option value="ghost"'+(b.style==='ghost'?' selected':'')+'>Çerçeveli</option></select><button type="button" class="btn danger small hb-del"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-x"></use></svg></button>';
+    return row;
+  }
+  function renderButtons(){
+    var box=q('#hButtons'); box.innerHTML='';
+    cfg.buttons.forEach(function(b){ box.appendChild(buttonRow(b)); });
+  }
+  function sync(){
+    cfg.model=(q('input[name="headerModel"]:checked')||{}).value||'model1';
+    cfg.skin=q('#hSkin').value; cfg.width=q('#hWidth').value;
+    cfg.sticky=q('#hSticky').checked; cfg.topbar=q('#hTopbar').checked;
+    cfg.topbar_text=q('#hTopbarText').value;
+    cfg.show_tagline=q('#hTagline').checked; cfg.show_home=q('#hHome').checked;
+    cfg.show_search=q('#hSearch').checked; cfg.show_theme=q('#hTheme').checked;
+    cfg.show_menu=q('#hMenu').checked;
+    cfg.buttons=qa('#hButtons .header-btn-row').map(function(r){
+      return {label:q('.hb-label',r).value,url:q('.hb-url',r).value,style:q('.hb-style',r).value};
+    });
+    q('#hTopbarWrap').style.display=cfg.topbar?'':'none';
+  }
+  q('#hTopbar').addEventListener('change',sync);
+  q('#hButtonAdd').addEventListener('click',function(){ cfg.buttons.push({label:'',url:'',style:'primary'}); renderButtons(); });
+  document.addEventListener('click',function(e){
+    if(e.target.closest('.hb-del')){ sync(); var r=e.target.closest('.header-btn-row'); var i=qa('#hButtons .header-btn-row').indexOf(r); if(i>=0) cfg.buttons.splice(i,1); renderButtons(); }
+  });
+  q('#hSave').addEventListener('click',function(){
+    sync();
+    var form=q('#headerHtmxForm');
+    form.querySelector('[name=config]').value=JSON.stringify(cfg);
+    if(window.htmx){ htmx.trigger(form,'submit'); return; }
+    fetch('/admin/header/kaydet',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({config:cfg})})
+      .then(function(r){return r.json()}).then(function(j){ if(j.ok) location.reload(); else alert(j.error||'Hata'); });
+  });
+  renderButtons();
+})();
+</script>
+</div>{{end}}

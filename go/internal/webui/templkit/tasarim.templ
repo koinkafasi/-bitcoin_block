@@ -1,0 +1,270 @@
+// Tasarım panelleri (templ): Header Yönetimi (+ Footer sonraki bölümde).
+// Etkileşimler static/header.js'te; yapılandırma JSON girdisiyle taşınır.
+package templkit
+
+// HeaderBtnV header CTA butonu.
+type HeaderBtnV struct {
+	Label string
+	URL   string
+	Style string
+}
+
+// HeaderView header yönetimi paneli.
+type HeaderView struct {
+	FlashKind   string
+	FlashText   string
+	Model       string
+	Skin        string
+	Width       string
+	Sticky      bool
+	Topbar      bool
+	TopbarText  string
+	ShowTagline bool
+	ShowHome    bool
+	ShowSearch  bool
+	ShowTheme   bool
+	ShowMenu    bool
+	HideMember  bool
+	ConfigJSON  string
+}
+
+// HeaderPanel header yönetimi (HTMX hedefi: #header-panel).
+templ HeaderPanel(v HeaderView) {
+	<div id="header-panel">
+		if v.FlashText != "" {
+			<div class={ "flash", v.FlashKind }>{ v.FlashText }</div>
+		}
+		@Yukleniyor("header-yukleniyor", "Kaydediliyor…")
+		<form id="headerHtmxForm" method="post" action="/admin/header/kaydet" hx-post="/admin/header/kaydet" hx-target="#header-panel" hx-swap="outerHTML" hx-indicator="#header-yukleniyor">
+			<input type="hidden" name="config"/>
+		</form>
+		<input type="hidden" id="header-config" value={ v.ConfigJSON }/>
+		<div class="card card-pad">
+			<div class="row" style="justify-content:space-between;align-items:center;gap:12px">
+				<div>
+					<h2 style="margin:0;font-size:1.15rem">Header Yönetimi</h2>
+					<p class="hint" style="margin:4px 0 0">Header modeli, renk modu, genişlik ve görünen modülleri yönetin.</p>
+				</div>
+				<button class="btn" type="button" id="hSave"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-device-floppy"></use></svg> Kaydet</button>
+			</div>
+			<h3 style="margin:20px 0 8px;font-size:.96rem">Header Modeli</h3>
+			<div class="header-models">
+				<label class="header-model-pick">
+					<input type="radio" name="headerModel" value="model1" if v.Model == "model1" { checked }/>
+					<span class="hm-mini hm-mini-1"><i></i><b></b><em></em></span>
+					<strong>Model 1 — Klasik</strong>
+					<small>Logo solda, menü ortada, araçlar sağda.</small>
+				</label>
+				<label class="header-model-pick">
+					<input type="radio" name="headerModel" value="model2" if v.Model == "model2" { checked }/>
+					<span class="hm-mini hm-mini-2"><i></i><b></b><em></em></span>
+					<strong>Model 2 — Satır içi</strong>
+					<small>Logo ve menü aynı satırda, araçlar sağda.</small>
+				</label>
+				<label class="header-model-pick">
+					<input type="radio" name="headerModel" value="model3" if v.Model == "model3" { checked }/>
+					<span class="hm-mini hm-mini-3"><i></i><b></b><em></em></span>
+					<strong>Model 3 — Ortada logo</strong>
+					<small>Logo üstte ortada, menü alt satırda ortada.</small>
+				</label>
+				<label class="header-model-pick">
+					<input type="radio" name="headerModel" value="model4" if v.Model == "model4" { checked }/>
+					<span class="hm-mini hm-mini-4"><i></i><b></b><em></em></span>
+					<strong>Model 4 — Alt menü</strong>
+					<small>Logo solda, menü tam genişlikte alt satırda.</small>
+				</label>
+			</div>
+			<div class="grid-2" style="margin-top:18px">
+				<div class="field">
+					<label for="hSkin">Renk modu</label>
+					<select class="input" id="hSkin">
+						<option value="auto" if v.Skin == "auto" { selected }>Otomatik (site teması)</option>
+						<option value="dark" if v.Skin == "dark" { selected }>Koyu</option>
+						<option value="light" if v.Skin == "light" { selected }>Açık</option>
+						<option value="accent" if v.Skin == "accent" { selected }>Tema rengi</option>
+					</select>
+				</div>
+				<div class="field">
+					<label for="hWidth">Genişlik</label>
+					<select class="input" id="hWidth">
+						<option value="normal" if v.Width == "normal" { selected }>Normal (ortalanmış)</option>
+						<option value="wide" if v.Width == "wide" { selected }>Geniş (tam ekran)</option>
+					</select>
+				</div>
+			</div>
+			<div class="opt-sec" style="margin-top:16px">Görünüm</div>
+			<div class="header-toggles">
+				<label class="tag"><input type="checkbox" id="hSticky" if v.Sticky { checked }/> Sabit header</label>
+				<label class="tag"><input type="checkbox" id="hTopbar" if v.Topbar { checked }/> Üst bilgi şeridi</label>
+				<label class="tag"><input type="checkbox" id="hTagline" if v.ShowTagline { checked }/> Slogan göster</label>
+				<label class="tag"><input type="checkbox" id="hHome" if v.ShowHome { checked }/> Ana sayfa ikonu</label>
+				<label class="tag"><input type="checkbox" id="hSearch" if v.ShowSearch { checked }/> Arama</label>
+				<label class="tag"><input type="checkbox" id="hMember" if !v.HideMember { checked }/> Üye girişi</label>
+				<label class="tag"><input type="checkbox" id="hTheme" if v.ShowTheme { checked }/> Tema düğmesi</label>
+				<label class="tag"><input type="checkbox" id="hMenu" if v.ShowMenu { checked }/> Menü düğmesi</label>
+			</div>
+			<div class="field" id="hTopbarWrap" style={ topbarWrapStyle(v.Topbar) }>
+				<label>Üst şerit metni</label>
+				<input class="input" id="hTopbarText" value={ v.TopbarText } placeholder="örn. Edirne ve bölge haberleri" aria-label="örn. Edirne ve bölge haberleri"/>
+			</div>
+			<div class="opt-sec" style="margin-top:16px">Header Butonları</div>
+			<p class="hint" style="margin-top:0">İsteğe bağlı CTA bağlantıları. En fazla 4 adet.</p>
+			<div id="hButtons"></div>
+			<button class="btn ghost small" type="button" id="hButtonAdd">+ Buton Ekle</button>
+			<div class="opt-hint" style="margin-top:14px">Kaydettikten sonra değişiklikler yayındaki tüm sayfalara uygulanır.</div>
+		</div>
+	</div>
+}
+
+func topbarWrapStyle(topbar bool) string {
+	if topbar {
+		return "margin-top:10px"
+	}
+	return "margin-top:10px;display:none"
+}
+
+// ---- Footer Yönetimi ----
+
+// FooterLinkV footer link satırı.
+type FooterLinkV struct {
+	Slug  string
+	Label string
+	URL   string
+}
+
+// FooterColV footer sütunu.
+type FooterColV struct {
+	Title string
+	Links []FooterLinkV
+}
+
+// FooterView footer yönetimi paneli.
+type FooterView struct {
+	FlashKind   string
+	FlashText   string
+	Layout      string
+	Skin        string
+	LogoPos     string
+	Tagline     string
+	BottomText  string
+	ShowSocial  bool
+	ShowBrand   bool
+	ShowTagline bool
+	ShowBottom  bool
+	Strip       []FooterLinkV
+	Cols        []FooterColV
+	Cats        []MenuCatV
+}
+
+// FooterPanel footer yönetimi (HTMX hedefi: #footer-panel).
+templ FooterPanel(v FooterView) {
+	<div id="footer-panel">
+		if v.FlashText != "" {
+			<div class={ "flash", v.FlashKind }>{ v.FlashText }</div>
+		}
+		@Yukleniyor("footer-yukleniyor", "Kaydediliyor…")
+		<form id="footerHtmxForm" method="post" action="/admin/footer/kaydet" hx-post="/admin/footer/kaydet" hx-target="#footer-panel" hx-swap="outerHTML" hx-indicator="#footer-yukleniyor">
+			<input type="hidden" name="config"/>
+		</form>
+		<div id="footerStatus"></div>
+		<div class="card card-pad">
+			<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+				<h2 style="margin:0;font-size:1.1rem">Footer Yönetimi</h2>
+				<button class="btn" type="button" id="fSave"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-device-floppy"></use></svg> Kaydet</button>
+			</div>
+			<div class="grid-2" style="grid-template-columns:1fr 1fr;margin-top:14px">
+				<div class="field">
+					<label for="footModel">Tasarım Modeli</label>
+					<select class="input" id="footModel">
+						<option value="klasik" if v.Layout == "klasik" { selected }>Model 1 — Klasik (üst şeritli)</option>
+						<option value="compact" if v.Layout == "compact" { selected }>Model 2 — Compact (şeritsiz)</option>
+						<option value="sade" if v.Layout == "sade" { selected }>Model 3 — Sade (yalnız marka + alt satır)</option>
+					</select>
+				</div>
+				<div class="field">
+					<label for="footSkin">Footer Renk Modu</label>
+					<select class="input" id="footSkin">
+						<option value="auto" if v.Skin == "auto" { selected }>Otomatik (site teması)</option>
+						<option value="dark" if v.Skin == "dark" { selected }>Koyu</option>
+						<option value="light" if v.Skin == "light" { selected }>Açık</option>
+						<option value="accent" if v.Skin == "accent" { selected }>Tema rengi</option>
+					</select>
+				</div>
+				<div class="field">
+					<label>Logo Konumu</label>
+					<div class="input-row">
+						<label class="tag" style="cursor:pointer"><input type="radio" name="footLogo" value="left" if v.LogoPos == "left" { checked }/> Sol</label>
+						<label class="tag" style="cursor:pointer"><input type="radio" name="footLogo" value="center" if v.LogoPos == "center" { checked }/> Orta</label>
+						<label class="tag" style="cursor:pointer"><input type="radio" name="footLogo" value="right" if v.LogoPos == "right" { checked }/> Sağ</label>
+					</div>
+				</div>
+			</div>
+			<div class="field" style="margin-top:12px">
+				<label>Logo Altı Yazı (slogan)</label>
+				<input class="input" id="footTagline" value={ v.Tagline } placeholder="Slogan" aria-label="Slogan"/>
+				<p class="hint">Logo kutusunun hemen altında görünür. Boş bırakırsan varsayılan slogan kullanılır.</p>
+			</div>
+			<div class="header-toggles" style="margin-top:10px">
+				<label class="tag"><input type="checkbox" id="footShowSocial" if v.ShowSocial { checked }/> Sosyal ikonlar</label>
+				<label class="tag"><input type="checkbox" id="footShowBrand" if v.ShowBrand { checked }/> Marka / logo</label>
+				<label class="tag"><input type="checkbox" id="footShowTagline" if v.ShowTagline { checked }/> Slogan</label>
+				<label class="tag"><input type="checkbox" id="footShowBottom" if v.ShowBottom { checked }/> Alt telif satırı</label>
+			</div>
+			<div class="field" style="margin-top:10px">
+				<label>Alt telif / alt yazı</label>
+				<input class="input" id="footBottomText" value={ v.BottomText } placeholder="Boşsa: © yıl site adı" aria-label="Boşsa: © yıl site adı"/>
+			</div>
+			<hr style="margin:16px 0;border:0;border-top:1px dashed var(--border)"/>
+			<h3 style="margin:0 0 8px;font-size:.95rem">Üst Şerit Linkleri (klasik modelde)</h3>
+			<ul id="stripItems" style="list-style:none;margin:0;padding:0">
+				for _, l := range v.Strip {
+					<li class="f-row" data-slug={ l.Slug } style="display:flex;gap:6px;align-items:center;margin-bottom:6px">
+						<button type="button" class="btn ghost small r-up"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-arrow-up"></use></svg></button>
+						<button type="button" class="btn ghost small r-down"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-arrow-down"></use></svg></button>
+						<input class="input r-label" value={ l.Label } placeholder="Etiket" style="flex:1;min-width:100px" aria-label="Etiket"/>
+						<input class="input r-url" value={ l.URL } placeholder="/sayfa/..." style="flex:2;min-width:140px" aria-label="/sayfa/..."/>
+						<button type="button" class="btn danger small r-del"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-x"></use></svg></button>
+					</li>
+				}
+			</ul>
+			<button class="btn ghost small" type="button" id="stripAdd" style="margin-top:6px">+ Şerit Linki Ekle</button>
+			<hr style="margin:16px 0;border:0;border-top:1px dashed var(--border)"/>
+			<h3 style="margin:0 0 8px;font-size:.95rem">Sütunlar</h3>
+			<div id="footCols">
+				for _, c := range v.Cols {
+					<div class="fc card card-pad" style="margin-bottom:12px">
+						<div style="display:flex;gap:6px;align-items:center;margin-bottom:8px">
+							<button type="button" class="btn ghost small col-up"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-arrow-up"></use></svg></button>
+							<button type="button" class="btn ghost small col-down"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-arrow-down"></use></svg></button>
+							<input class="input fc-title" value={ c.Title } placeholder="Sütun Başlığı" style="flex:1" aria-label="Sütun Başlığı"/>
+							<button type="button" class="btn danger small col-del">Sütunu Sil</button>
+						</div>
+						<ul class="fc-links" style="list-style:none;margin:0;padding:0">
+							for _, l := range c.Links {
+								<li class="f-row" data-slug={ l.Slug } style="display:flex;gap:6px;align-items:center;margin-bottom:6px">
+									<button type="button" class="btn ghost small r-up"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-arrow-up"></use></svg></button>
+									<button type="button" class="btn ghost small r-down"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-arrow-down"></use></svg></button>
+									<input class="input r-label" value={ l.Label } placeholder="Etiket" style="flex:1;min-width:100px" aria-label="Etiket"/>
+									<input class="input r-url" value={ l.URL } placeholder="/sayfa/... veya slug için boş" style="flex:2;min-width:140px" aria-label="/sayfa/... veya slug için boş"/>
+									<button type="button" class="btn danger small r-del"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-x"></use></svg></button>
+								</li>
+							}
+						</ul>
+						<div style="display:flex;gap:6px;align-items:center;margin-top:8px;flex-wrap:wrap">
+							<input class="input al-label" placeholder="Yeni link etiketi" style="flex:1;min-width:110px" aria-label="Yeni link etiketi"/>
+							<input class="input al-url" placeholder="URL (/sayfa/...)" style="flex:1;min-width:140px" aria-label="URL (/sayfa/...)"/>
+							<button type="button" class="btn ghost small al-add">Link Ekle</button>
+							<select class="input select add-cat" style="max-width:180px" title="Kategoriden link ekle">
+								<option value="">— Kategori ekle —</option>
+								for _, cat := range v.Cats {
+									<option value={ cat.Slug }>{ cat.Name }</option>
+								}
+							</select>
+						</div>
+					</div>
+				}
+			</div>
+			<button class="btn ghost small" type="button" id="colAdd" style="margin-top:6px">+ Yeni Sütun Ekle</button>
+		</div>
+	</div>
+}

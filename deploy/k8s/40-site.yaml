@@ -1,0 +1,143 @@
+# theblock Go web/API — SSR + yönetim + API.
+#
+# Tek kopya, çünkü:
+#   · medya PVC'si ReadWriteOnce (local-path),
+#   · süreç içinde zamanlayıcı/arka plan işçileri var (eczane, hava, finans,
+#     trend, AI kuyruğu); iki kopya aynı işi iki kez yapar.
+# Ölçekleme istenirse işçiler ayrı bir Deployment'a alınmalı.
+#
+# ÖNEMLİ — imaj etiketi: `${IMAJ_ETIKETI}` bir YER TUTUCUDUR, k8s onu
+# çözmez. Bu dosya `kubectl apply -f` ile DOĞRUDAN uygulanmaz; sevk
+# betiği yer tutucuyu doldurur:
+#
+#     bash deploy/scripts/k8s-sevk.sh            # HEAD commit'inin etiketi
+#     bash deploy/scripts/k8s-sevk.sh sha-abc1234
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: theblock-site
+  namespace: theblock
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate          # RWO medya diski
+  selector:
+    matchLabels: { app: theblock-site }
+  template:
+    metadata:
+      labels: { app: theblock-site }
+    spec:
+      imagePullSecrets: [{ name: ghcr }]
+      securityContext:
+        runAsUser: 10001
+        runAsNonRoot: true
+        fsGroup: 10001
+        seccompProfile: { type: RuntimeDefault }
+      # Şema göçü uygulamadan önce koşar; migrate binary'si aynı imajda.
+      initContainers:
+        - name: migrate
+          image: ghcr.io/koinkafasi/theblock-site:${IMAJ_ETIKETI}
+          command: ["/app/migrate"]
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: { drop: ["ALL"] }
+          envFrom:
+            - secretRef: { name: theblock-env }
+          env:
+            - name: DATABASE_URL
+              value: postgres://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@theblock-postgres:5432/$(POSTGRES_DB)?sslmode=disable
+          volumeMounts:
+            - { name: tmp, mountPath: /tmp }
+          resources:
+            requests: { cpu: 50m, memory: 64Mi }
+            limits:   { cpu: "1",  memory: 256Mi }
+      containers:
+        - name: site
+          image: ghcr.io/koinkafasi/theblock-site:${IMAJ_ETIKETI}
+          securityContext:
+            allowPrivilegeEscalation: false
+            # Salt-okunur kök: imajın dosyaları çalışma anında değiştirilemez.
+            # Yazılabilir iki yol var:
+            #   /data — medya PVC'si (storage + storage-private)
+            #   /tmp  — emptyDir; ffmpeg/ffprobe geçici dosyaları ve Go'nun
+            #           os.CreateTemp'i buraya yazar (os.TempDir() = /tmp).
+            # Doğrulandı: `--read-only --tmpfs /tmp` ile migrate geçiyor ve
+            # site /healthz 200 veriyor.
+            readOnlyRootFilesystem: true
+            capabilities: { drop: ["ALL"] }
+          # Sırların tamamı deploy/.env'den üretilen Secret'tan gelir.
+          envFrom:
+            - secretRef: { name: theblock-env }
+          env:
+            # Küme içi adresler .env'deki 127.0.0.1 değerlerini EZER:
+            # envFrom'dan sonra geldiği için bunlar kazanır.
+            - name: APP_ENV
+              value: production
+            - name: PORT
+              value: "8070"
+            - name: APP_BASE_URL
+              value: https://theblock.com.tr
+            - name: DATABASE_URL
+              value: postgres://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@theblock-postgres:5432/$(POSTGRES_DB)?sslmode=disable
+            - name: REDIS_URL
+              value: redis://theblock-redis:6379/0
+            - name: SEARCH_SVC_URL
+              value: http://theblock-search-svc:8171
+            - name: IMAGE_SVC_URL
+              value: http://theblock-image-svc:8170
+            # AI yönlendirici: küme içi OmniRoute (omniroute namespace'i).
+            # .env'deki değer 172.18.128.1 (WSL host) idi ve kümeden
+            # erişilemiyordu — her AI çağrısı i/o timeout veriyordu.
+            # Küme içi adres internete çıkmaz, ingress'e de bağımlı değil.
+            - name: OMNIROUTE_BASE_URL
+              value: http://omniroute.omniroute.svc.cluster.local:20128/v1
+            # Tarayıcıdan açılır; CSP connect-src buradan türetilir.
+            - name: COLLAB_URL
+              value: wss://theblock.com.tr/collab
+            - name: STORAGE_DIR
+              value: /data/storage
+            - name: PRIVATE_STORAGE_DIR
+              value: /data/storage-private
+          ports:
+            - { name: http, containerPort: 8070 }
+          volumeMounts:
+            - { name: media, mountPath: /data }
+            - { name: tmp, mountPath: /tmp }
+          readinessProbe:
+            httpGet: { path: /healthz, port: 8070 }
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 5
+          livenessProbe:
+            httpGet: { path: /healthz, port: 8070 }
+            initialDelaySeconds: 60
+            periodSeconds: 30
+            timeoutSeconds: 10
+            failureThreshold: 3
+          # Kapanışta uçuştaki istekler bitsin (config.ShutdownTimeout).
+          lifecycle:
+            preStop:
+              exec: { command: ["sleep", "5"] }
+          resources:
+            requests: { cpu: 200m, memory: 512Mi }
+            limits:   { cpu: "2",  memory: 1Gi }
+      terminationGracePeriodSeconds: 45
+      volumes:
+        - name: media
+          persistentVolumeClaim: { claimName: theblock-media }
+        # Salt-okunur kökün yazılabilir penceresi. ffmpeg transkripsiyon
+        # için büyük geçici dosya yazabilir; emptyDir düğüm diskinde durur
+        # (tmpfs DEĞİL), yoksa bellek limitini yer.
+        - name: tmp
+          emptyDir: {}
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: theblock-site
+  namespace: theblock
+spec:
+  selector: { app: theblock-site }
+  ports: [{ name: http, port: 8070, targetPort: 8070 }]

@@ -1,0 +1,6 @@
+{{define "header"}}<!doctype html><html lang="{{.Lang}}" {{if .RTL}}dir="rtl"{{end}} data-theme="{{.Theme}}"><head>{{template "admin_head" .}}</head>
+<body><div class="admin-wrap">{{template "admin_side" .}}<main class="admin-main">
+{{template "admin_top" .}}
+<div class="admin-body">
+{{template "header_panel" .}}
+</div></main></div></body></html>{{end}}

@@ -1,0 +1,62 @@
+# Redis 7 — deploy/compose.yml ile aynı: appendonly açık (kalıcı).
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: theblock-redis
+  namespace: theblock
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels: { app: theblock-redis }
+  template:
+    metadata:
+      labels: { app: theblock-redis }
+    spec:
+      securityContext:
+        # redis:7-alpine gercek kimlik: uid 999 / gid 1000 (dogrulandi).
+        runAsUser: 999
+        runAsGroup: 1000
+        fsGroup: 1000
+        runAsNonRoot: true
+        seccompProfile: { type: RuntimeDefault }
+      containers:
+        - name: redis
+          image: redis:7-alpine
+          securityContext:
+            allowPrivilegeEscalation: false
+            # Salt-okunur kök. Redis yalnız /data'ya (PVC) ve /tmp'ye yazar.
+            # Doğrulandı: `--read-only` ile PONG, `set` ve `bgrewriteaof`
+            # (AOF yazımı) geçiyor.
+            readOnlyRootFilesystem: true
+            capabilities: { drop: ["ALL"] }
+          args: ["redis-server", "--appendonly", "yes", "--dir", "/data"]
+          ports:
+            - { name: redis, containerPort: 6379 }
+          volumeMounts:
+            - { name: data, mountPath: /data }
+            - { name: tmp, mountPath: /tmp }
+          readinessProbe:
+            exec: { command: ["redis-cli", "ping"] }
+            initialDelaySeconds: 3
+            periodSeconds: 10
+          resources:
+            requests: { cpu: 25m, memory: 64Mi }
+            limits:   { cpu: 500m, memory: 256Mi }
+      volumes:
+        - name: data
+          persistentVolumeClaim: { claimName: theblock-redis }
+        - name: tmp
+          emptyDir: {}
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: theblock-redis
+  namespace: theblock
+spec:
+  selector: { app: theblock-redis }
+  ports:
+    - { name: redis, port: 6379, targetPort: 6379 }

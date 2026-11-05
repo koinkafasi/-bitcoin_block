@@ -1,0 +1,143 @@
+{{define "admin_gorunum"}}<!doctype html><html lang="tr" data-theme="{{.Theme}}"><head>{{template "admin_head" .}}</head>
+<body><div class="admin-wrap">{{template "admin_side" .}}<main class="admin-main">
+{{template "admin_top" .}}
+<div class="admin-body">
+  {{if .Flash}}<div class="flash {{.Flash.Kind}}">{{.Flash.Text}}</div>{{end}}
+  {{$g := .Gorunum}}
+
+  <div class="card card-pad">
+    <div class="dash-head"><h2><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-palette"></use></svg> Görünüm &amp; Marka</h2></div>
+    <p class="hint">Panelinizi markanıza benzetin: logo yükleyin, renkler otomatik çıkarılsın; dilediğiniz gibi ayarlayın.
+      Değişiklikler bu tarayıcıda değil, panel ayarlarında saklanır.</p>
+
+    <form method="post" action="/admin/gorunum" enctype="multipart/form-data" id="gorunumForm">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px">
+        <div>
+          <h3 class="gz-h" style="margin-bottom:6px">Logo</h3>
+          <div style="display:flex;gap:10px;align-items:center">
+            <div id="logoPrev" class="gorunum-logo">{{if $g.Logo}}<img src="{{$g.Logo}}" alt="logo">{{else}}<span class="muted small">Logo yok</span>{{end}}</div>
+            <div>
+              <input class="input" type="file" name="logo" id="logoInput" accept="image/*" aria-label="Logo görseli">
+              <div class="small muted">veya URL: <input class="input" name="logo_url" value="{{$g.Logo}}" placeholder="https://…" aria-label="Logo URL"></div>
+            </div>
+          </div>
+          <p class="hint small">Logo yüklendiğinde ana/ikincil renkler otomatik çıkarılır.</p>
+        </div>
+        <div>
+          <h3 class="gz-h" style="margin-bottom:6px">Simge (favicon / dar menü)</h3>
+          <div style="display:flex;gap:10px;align-items:center">
+            <div id="iconPrev" class="gorunum-icon">{{if $g.Icon}}<img src="{{$g.Icon}}" alt="simge">{{else}}<span class="muted small">—</span>{{end}}</div>
+            <div>
+              <input class="input" type="file" name="icon" accept="image/*" aria-label="Panel simgesi görseli">
+              <div class="small muted">veya URL: <input class="input" name="icon_url" value="{{$g.Icon}}" placeholder="https://…" aria-label="Panel simgesi URL"></div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <h3 class="gz-h" style="margin-bottom:6px">Renkler</h3>
+          <div class="gorunum-colors">
+            <label class="small">Ana renk<input type="color" name="primary" id="primaryInput" value="{{if $g.Primary}}{{$g.Primary}}{{else}}#7c3aed{{end}}"></label>
+            <label class="small">İkincil<input type="color" name="secondary" value="{{if $g.Secondary}}{{$g.Secondary}}{{else}}#e11d48{{end}}"></label>
+            <label class="small">Metin<input type="color" name="text" value="{{if $g.TextColor}}{{$g.TextColor}}{{else}}#111827{{end}}"></label>
+          </div>
+        </div>
+        <div>
+          <h3 class="gz-h" style="margin-bottom:6px">Tipografi &amp; Yerleşim</h3>
+          <label class="small" style="display:block;margin-bottom:6px">Yazı tipi
+            <select class="input" name="font" id="fontInput">
+              <option value="">Sistem varsayılanı</option>
+              {{range $.GorunumFonts}}<option value="{{.}}" {{if eq $.Gorunum.Font .}}selected{{end}}>{{.}}</option>{{end}}
+            </select>
+          </label>
+          <label class="small" style="display:block;margin-bottom:6px">Menü yönü
+            <select class="input" name="navbar">
+              <option value="dikey" {{if eq $g.Navbar "dikey"}}selected{{end}}>Dikey (sol menü)</option>
+              <option value="yatay" {{if eq $g.Navbar "yatay"}}selected{{end}}>Yatay (üst menü)</option>
+            </select>
+          </label>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:14px;align-items:center" class="form-bar">
+        <button class="btn" type="submit">Kaydet</button>
+        <button class="btn ghost" type="submit" name="sifirla" value="1"
+                data-confirm="Görünüm varsayılana döndürülsün mü?">Varsayılana Dön</button>
+      </div>
+    </form>
+  </div>
+
+  <div class="card card-pad">
+    <div class="dash-head"><h2>Canlı Önizleme</h2></div>
+    <div class="gorunum-preview" id="gorunumPreview">
+      <div class="gp-side"><b>the<b style="color:var(--accent-text,var(--accent))">block</b></b><span>Pano</span><span class="gp-on">İçerikler</span><span>Medya</span><span>Ayarlar</span></div>
+      <div class="gp-main">
+        <div class="gp-top"><b>Yönetim Paneli</b></div>
+        <div class="gp-cards"><i></i><i></i><i></i></div>
+        <div class="gp-btn">Ana Buton</div>
+      </div>
+    </div>
+  </div>
+</div>
+</main></div>
+<script>
+(function () {
+  // Logo'dan renk çıkarma (dominant renk, canvas).
+  var input = document.getElementById('logoInput');
+  if (!input) return;
+  input.addEventListener('change', function () {
+    var f = input.files && input.files[0];
+    if (!f) return;
+    var url = URL.createObjectURL(f);
+    var prev = document.getElementById('logoPrev');
+    prev.innerHTML = '<img src="' + url + '" alt="logo">';
+    var img = new Image();
+    img.onload = function () {
+      try {
+        var c = document.createElement('canvas');
+        c.width = 32; c.height = 32;
+        var ctx = c.getContext('2d');
+        ctx.drawImage(img, 0, 0, 32, 32);
+        var d = ctx.getImageData(0, 0, 32, 32).data;
+        var r = 0, g = 0, b = 0, n = 0;
+        for (var i = 0; i < d.length; i += 4) {
+          if (d[i + 3] < 128) continue;          // şeffaf atla
+          if (d[i] > 245 && d[i + 1] > 245 && d[i + 2] > 245) continue; // beyaz atla
+          r += d[i]; g += d[i + 1]; b += d[i + 2]; n++;
+        }
+        if (n > 0) {
+          var hex = '#' + [r / n, g / n, b / n].map(function (v) {
+            return ('0' + Math.round(v).toString(16)).slice(-2);
+          }).join('');
+          var pi = document.getElementById('primaryInput');
+          if (pi) { pi.value = hex; pi.dispatchEvent(new Event('input')); }
+        }
+      } catch (e) { /* canvas güvenlik hatası — sessiz */ }
+      URL.revokeObjectURL(url);
+    };
+    img.src = url;
+  });
+
+  // Canlı önizleme
+  var form = document.getElementById('gorunumForm');
+  if (form) {
+    form.addEventListener('input', function () {
+      var pv = document.getElementById('gorunumPreview');
+      if (!pv) return;
+      var p = form.primary.value, s = form.secondary.value, t = form.text.value, f = form.font.value;
+      pv.style.setProperty('--accent', p);
+      pv.style.setProperty('--accent-2', p);
+      pv.style.setProperty('--brand', s);
+      pv.style.setProperty('--text', t);
+      pv.style.fontFamily = f ? ("'" + f + "', sans-serif") : '';
+    });
+    form.font.addEventListener('change', function () {
+      var f = form.font.value;
+      if (!f) return;
+      var l = document.createElement('link');
+      l.rel = 'stylesheet';
+      l.href = 'https://fonts.googleapis.com/css2?family=' + encodeURIComponent(f) + ':wght@400;600;700&display=swap';
+      document.head.appendChild(l);
+    });
+  }
+})();
+</script>
+</body></html>{{end}}

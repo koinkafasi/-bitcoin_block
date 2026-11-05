@@ -1,0 +1,148 @@
+{{define "abonelik"}}<!doctype html><html lang="{{.Lang}}" {{if .RTL}}dir="rtl"{{end}} data-theme="{{.Theme}}"><head>{{template "public_head" .}}
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"Product","name":"{{.SiteName}} Abonelik","description":"Dijital haber aboneliği"}</script>
+</head>
+<body>
+{{template "site_header" .}}
+<main class="page" id="main"><div class="container">
+  {{$ab := .Abonelik}}
+  <div class="abon-header">
+    <h1>Abonelik Paketleri</h1>
+    <p class="abon-sub">Katmanınıza göre ayrıcalıklı haberlere, analizlere ve reklamsız okuma deneyimine erişin.</p>
+    <div class="abon-toggle" role="group" aria-label="Fatura dönemi">
+      <button type="button" class="abon-toggle-btn is-active" data-cycle="monthly">Aylık</button>
+      <button type="button" class="abon-toggle-btn" data-cycle="annual">Yıllık <span class="abon-badge">2 ay hediye</span></button>
+    </div>
+  </div>
+
+  {{if $ab.Error}}<div class="flash error" role="alert">{{$ab.Error}}</div>{{end}}
+  {{if $ab.Info}}<div class="flash info">{{$ab.Info}}</div>{{end}}
+
+  <div class="abon-grid">
+    {{range $ab.Tiers}}
+    {{$t := .}}
+    <article class="abon-card{{if eq $t.ID $ab.CurrentID}} is-current{{end}}" style="--tier:{{$t.ColorHex}}">
+      {{if eq $t.ID $ab.CurrentID}}<span class="abon-current">Mevcut planınız</span>{{end}}
+      <h2>{{$t.Name}}</h2>
+      <p class="abon-desc">{{$t.Description}}</p>
+      <div class="abon-price">
+        <span class="abon-price-monthly" data-monthly>{{printf "%.0f" $t.MonthlyPrice}} ₺<small>/ay</small></span>
+        <span class="abon-price-annual" data-annual hidden>{{printf "%.0f" $t.AnnualPrice}} ₺<small>/yıl</small></span>
+      </div>
+      <ul class="abon-perks">{{range $t.Perks}}<li>{{.}}</li>{{end}}</ul>
+      {{if $ab.IsLoggedIn}}
+      <button class="btn abon-cta" type="button"
+        data-tier="{{$t.Slug}}" data-tier-name="{{$t.Name}}"
+        data-monthly="{{printf "%.2f" $t.MonthlyPrice}}" data-annual="{{printf "%.2f" $t.AnnualPrice}}"
+        {{if eq $t.ID $ab.CurrentID}}disabled{{end}}>{{if eq $t.ID $ab.CurrentID}}Aktif plan{{else}}Bu paketi seç{{end}}</button>
+      {{else}}
+      <a class="btn abon-cta" href="{{$.LangBase}}/giris?redirect=abonelik">Giriş yapıp abone ol</a>
+      {{end}}
+    </article>
+    {{else}}
+    <p class="muted">Henüz tanımlı abonelik paketi yok.</p>
+    {{end}}
+  </div>
+
+  <section class="abon-faq">
+    <h2>Sık sorulan sorular</h2>
+    <details><summary>Kart bilgilerim sitede saklanıyor mu?</summary><p>Hayır. Ödeme iyzico'nun güvenli ödeme sayfasında alınır; kart bilgisi sitemize girmez.</p></details>
+    <details><summary>Aboneliğim ne zaman başlar?</summary><p>Ödeme onaylandığı anda katmanınız etkinleşir ve hesabınızdan görüntülenebilir.</p></details>
+    <details><summary>Yıllık planda avantaj var mı?</summary><p>Yıllık ödemede 2 ay hediye: 12 ay yerine 10 aylık fiyat ödersiniz.</p></details>
+    <details><summary>Aboneliğimi iptal edebilir miyim?</summary><p>Dönem sonuna kadar erişiminiz devam eder; iptal talebi için hesabınızdan destek ile iletişime geçebilirsiniz.</p></details>
+    <details><summary>Cayma hakkım var mı?</summary><p>Mesafeli satış mevzuatı gereği kural olarak 14 gün içinde cayma hakkınızı kullanabilirsiniz. Dijital içerik ve elektronik ortamda anında ifa edilen hizmetlerde mevzuattaki istisnalar geçerli olabilir; hangi hâlde ne olduğu <a href="{{.LangBase}}/mesafeli-satis-sozlesmesi">Mesafeli Satış Sözleşmesi</a> ve <a href="{{.LangBase}}/on-bilgilendirme-formu">Ön Bilgilendirme Formu</a>'nda yazılıdır. İptal ve iade talepleri de bu belgelere göre değerlendirilir.</p></details>
+    <details><summary>Faturamı alabilir miyim?</summary><p>Ödeme sonrası e-arşiv fatura talep edebilirsiniz; fatura düzenlenmesi için hesabınızdaki e-posta ve TCKN kullanılır.</p></details>
+  </section>
+
+  {{if $ab.IsLoggedIn}}
+  <form id="abonForm" method="post" action="{{.LangBase}}/abonelik/odeme" class="abon-modal" hidden aria-modal="true" role="dialog" aria-labelledby="abonFormTitle">
+    <div class="abon-modal-card">
+      <div class="abon-modal-head">
+        <h2 id="abonFormTitle">Ödeme bilgileri</h2>
+        <button type="button" class="abon-modal-close" data-abon-close aria-label="Kapat">&times;</button>
+      </div>
+      <p class="small muted" id="abonSummary"></p>
+      <input type="hidden" name="tier" id="abonTier">
+      <input type="hidden" name="cycle" id="abonCycle" value="monthly">
+      <label class="uye-field">TCKN (iyzico zorunlu tutar)<input class="input" name="tckn" inputmode="numeric" pattern="[0-9]{11}" maxlength="11" required></label>
+      <label class="uye-field">Şehir<input class="input" name="city" value="İstanbul" required></label>
+      <label class="uye-field">Adres<input class="input" name="address" placeholder="Fatura adresi" required></label>
+      <label class="uye-field">İndirim kodu (varsa)<input class="input" name="kupon" placeholder="örn. YAZ2026" autocapitalize="characters"></label>
+      <p class="uye-hint">Devam ettiğinizde iyzico ödeme sayfasına yönlendirilirsiniz. Kart bilgisi bu sitede toplanmaz.</p>
+      <!-- Ön bilgilendirme ve sözleşme onayı.
+           Mesafeli Sözleşmeler Yönetmeliği uyarınca sağlayıcı, sözleşme
+           kurulmadan ÖNCE ön bilgilendirme yapmak zorundadır. Tüketici cayma
+           hakkı konusunda gereği gibi bilgilendirilmezse 14 günlük süre
+           işlemez; cayma hakkı, sürenin bittiği tarihten bir yıl sonrasına
+           kadar kullanılabilir. Onay sunucu tarafında da zorunlu tutulur
+           (abonelik_handlers.go) — yalnız arayüzde "required" yeterli değil. -->
+      <label class="uye-field abon-onay">
+        <input type="checkbox" name="sozlesme_onay" value="1" required>
+        <span><a href="{{.LangBase}}/on-bilgilendirme-formu" target="_blank" rel="noopener">Ön Bilgilendirme Formu</a>'nu ve
+        <a href="{{.LangBase}}/mesafeli-satis-sozlesmesi" target="_blank" rel="noopener">Mesafeli Satış Sözleşmesi</a>'ni
+        okudum, onaylıyorum.</span>
+      </label>
+      <!-- Aydınlatma metni BİLEREK onay kutusuna bağlanmadı. Kurulun
+           18.02.2026 tarihli 2026/347 sayılı ilke kararı, aydınlatma metni
+           ile açık rıza metninin ayrı düzenlenmesini ve aydınlatmanın
+           yapıldığına dair ilgili kişiden ONAY İSTENMEMESİNİ gerektiriyor.
+           Aydınlatma, hukuki sebep ne olursa olsun yerine getirilir; kabule
+           bağlanmaz. -->
+      <p class="small muted abon-aydinlatma">Kişisel verilerinizin nasıl
+        işlendiğini <a href="{{.LangBase}}/kvkk" target="_blank" rel="noopener">KVKK Aydınlatma Metni</a>
+        ile <a href="{{.LangBase}}/gizlilik-politikasi" target="_blank" rel="noopener">Gizlilik Politikası</a>'nda
+        bulabilirsiniz.</p>
+      <button class="btn" type="submit">Ödemeye geç</button>
+    </div>
+  </form>
+  {{end}}
+</div></main>
+{{template "site_footer" .}}
+<script>
+(function () {
+  var cycle = 'monthly';
+  function applyCycle() {
+    document.querySelectorAll('[data-monthly]').forEach(function (el) { el.hidden = cycle !== 'monthly'; });
+    document.querySelectorAll('[data-annual]').forEach(function (el) { el.hidden = cycle !== 'annual'; });
+    document.querySelectorAll('[data-cycle]').forEach(function (b) { b.classList.toggle('is-active', b.getAttribute('data-cycle') === cycle); });
+    var f = document.getElementById('abonCycle');
+    if (f) f.value = cycle;
+  }
+  document.querySelectorAll('[data-cycle]').forEach(function (b) {
+    b.addEventListener('click', function () { cycle = b.getAttribute('data-cycle'); applyCycle(); });
+  });
+  applyCycle();
+
+  var form = document.getElementById('abonForm');
+  document.querySelectorAll('[data-tier]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      if (!form) return;
+      document.getElementById('abonTier').value = btn.getAttribute('data-tier');
+      var price = cycle === 'annual' ? btn.getAttribute('data-annual') : btn.getAttribute('data-monthly');
+      document.getElementById('abonSummary').textContent = btn.getAttribute('data-tier-name') + ' — ' + price + ' ₺ (' + (cycle === 'annual' ? 'yıllık' : 'aylık') + ')';
+      form.hidden = false;
+      var first = form.querySelector('input[name=tckn]');
+      if (first) first.focus();
+    });
+  });
+  document.querySelectorAll('[data-abon-close]').forEach(function (b) {
+    b.addEventListener('click', function () { form.hidden = true; });
+  });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && form) form.hidden = true; });
+})();
+</script>
+</body></html>{{end}}
+
+{{define "abonelik-odeme"}}<!doctype html><html lang="{{.Lang}}" {{if .RTL}}dir="rtl"{{end}} data-theme="{{.Theme}}"><head>{{template "public_head" .}}</head>
+<body>
+{{template "site_header" .}}
+<main class="page" id="main"><div class="container narrow">
+  <div class="card card-pad">
+    <h1 style="margin-top:0">Ödeme</h1>
+    {{if .Abonelik.Info}}<p class="muted">{{.Abonelik.Info}}</p>{{end}}
+    {{if .Abonelik.Error}}<div class="flash error" role="alert">{{.Abonelik.Error}}</div>{{end}}
+    <div id="iyzico-checkout">{{.Abonelik.CheckoutHTML}}</div>
+    <p class="small muted">Ödeme tamamlandığında aboneliğiniz otomatik etkinleşir. Sayfa kapanırsa <a href="{{.LangBase}}/hesabim/abonelik">aboneliğim</a> sayfasından kontrol edebilirsiniz.</p>
+  </div>
+</div></main>
+{{template "site_footer" .}}
+</body></html>{{end}}

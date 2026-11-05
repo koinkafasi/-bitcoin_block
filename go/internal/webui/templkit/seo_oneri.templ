@@ -1,0 +1,115 @@
+package templkit
+
+// SeoOneriView AI'nın ürettiği SEO alanlarının önizlemesidir (Faz 188).
+//
+// Akış bilinçli olarak "öner → uygula": üretilen metin doğrudan forma
+// yazılmaz, kullanıcı görür ve tek düğmeyle iki alanı birden doldurur.
+// Kaydetme yine formun kendi düğmesiyle yapılır, yani editör son sözü
+// söyler.
+type SeoOneriView struct {
+	ContentID int64
+	Baslik    string
+	Aciklama  string
+	Anahtar   []string
+	Uyarilar  []string
+	Hata      string
+
+	// Mevcut alanlar dolu ise uygulama sırasında üzerine yazılır; kullanıcı
+	// bunu bilmeli.
+	MevcutBaslik   string
+	MevcutAciklama string
+
+	Provider string
+	Model    string
+
+	// BaslikLen / AciklamaLen karakter sayacıdır (rune).
+	BaslikLen   int
+	AciklamaLen int
+}
+
+// DoluMu mevcut SEO alanlarından biri dolu mu?
+func (v SeoOneriView) DoluMu() bool {
+	return v.MevcutBaslik != "" || v.MevcutAciklama != ""
+}
+
+// SeoOneriPanel AI SEO önerisini ve "Uygula" eylemini basar.
+//
+// data-seo-uygula düğmesi admin-ui.js'te form alanlarını doldurur:
+// [name=seo_baslik] ve [name=seo_aciklama]. Değerler data-* içinde taşınır,
+// böylece ek bir istek gerekmez.
+templ SeoOneriPanel(v SeoOneriView) {
+	<div id="seoOneri" class="seo-oneri" aria-live="polite">
+		if v.Baslik == "" && v.Aciklama == "" && v.Hata == "" {
+			<!-- Boş hedef: düğme buraya sonucu yazar. -->
+		} else if v.Hata != "" {
+			<div class="seo-oneri__hata" role="alert">
+				<svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-alert-triangle"></use></svg>
+				<span>{ v.Hata }</span>
+			</div>
+		} else {
+			<div class="seo-oneri__ust">
+				<span class="seo-oneri__kicker">
+					<svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-sparkles"></use></svg>
+					AI önerisi
+				</span>
+				if v.Provider != "" {
+					<span class="small muted">{ v.Provider } · { v.Model }</span>
+				}
+			</div>
+
+			<div class="seo-oneri__alan">
+				<span class="seo-oneri__ad">SEO başlığı <b>{ itoaT(v.BaslikLen) }</b></span>
+				<p class="seo-oneri__metin">{ v.Baslik }</p>
+				if v.MevcutBaslik != "" {
+					<p class="seo-oneri__eski">Şu anki: { v.MevcutBaslik }</p>
+				}
+			</div>
+
+			<div class="seo-oneri__alan">
+				<span class="seo-oneri__ad">Meta açıklama <b>{ itoaT(v.AciklamaLen) }</b></span>
+				<p class="seo-oneri__metin">{ v.Aciklama }</p>
+				if v.MevcutAciklama != "" {
+					<p class="seo-oneri__eski">Şu anki: { v.MevcutAciklama }</p>
+				}
+			</div>
+
+			if len(v.Anahtar) > 0 {
+				<div class="seo-oneri__anahtar">
+					for _, k := range v.Anahtar {
+						<span class="seo-oneri__cip">{ k }</span>
+					}
+				</div>
+			}
+
+			for _, u := range v.Uyarilar {
+				<p class="seo-oneri__uyari">
+					<svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-info-circle"></use></svg>
+					{ u }
+				</p>
+			}
+
+			<div class="seo-oneri__eylem">
+				<button
+					type="button"
+					class="btn small"
+					data-seo-uygula
+					data-baslik={ v.Baslik }
+					data-aciklama={ v.Aciklama }
+				>
+					<svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-check"></use></svg>
+					İki alanı doldur
+				</button>
+				<button
+					type="button"
+					class="btn ghost small"
+					hx-post={ "/admin/icerikler/" + itoaT64(v.ContentID) + "/ai/seo-doldur" }
+					hx-target="#seoOneri"
+					hx-swap="outerHTML"
+					hx-indicator="#seoOneri"
+				>Yeniden üret</button>
+				<button type="button" class="btn ghost small" data-seo-kapat>Kapat</button>
+			</div>
+			<p class="hint" style="margin:8px 0 0">Alanlar forma yazılır; kaydetmek için sayfanın altındaki Kaydet düğmesini kullanın.</p>
+		}
+	</div>
+}

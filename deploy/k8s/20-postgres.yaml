@@ -1,0 +1,97 @@
+# PostgreSQL 17 — deploy/compose.yml ile aynı sürüm.
+#
+# Tek kopya (Deployment, replicas:1) ve RWO disk: local-path tek düğümde
+# ReadWriteMany veremez, zaten tek düğümlü küme. strategy Recreate:
+# RollingUpdate iki pod'u aynı anda ayağa kaldırıp aynı diski bağlamaya
+# çalışır ve takılır.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: theblock-postgres
+  namespace: theblock
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels: { app: theblock-postgres }
+  template:
+    metadata:
+      labels: { app: theblock-postgres }
+    spec:
+      securityContext:
+        # postgres:17-alpine gercek kimlik: uid 70 / gid 70 (dogrulandi).
+        # fsGroup PVC'yi bu gruba verir; entrypoint root degilse chown'u
+        # atlar ve dogrudan calisir.
+        runAsUser: 70
+        runAsGroup: 70
+        fsGroup: 70
+        runAsNonRoot: true
+        seccompProfile: { type: RuntimeDefault }
+      containers:
+        - name: postgres
+          image: postgres:17-alpine
+          securityContext:
+            allowPrivilegeEscalation: false
+            # Salt-okunur kök: imajın kendi dosyaları çalışma anında
+            # değiştirilemez. Postgres'in yazması gereken İKİ yol emptyDir
+            # olarak veriliyor (aşağıdaki volumeMounts):
+            #   /var/run/postgresql — unix soketi; olmadan başlamıyor
+            #   /tmp                — geçici dosyalar
+            # PGDATA zaten PVC'de, o yüzden listede yok.
+            # Doğrulandı: `--read-only` ile konteyner ayağa kalkıyor,
+            # pg_isready ve `select 1` geçiyor.
+            readOnlyRootFilesystem: true
+            capabilities: { drop: ["ALL"] }
+          env:
+            - name: POSTGRES_USER
+              valueFrom: { secretKeyRef: { name: theblock-env, key: POSTGRES_USER } }
+            - name: POSTGRES_PASSWORD
+              valueFrom: { secretKeyRef: { name: theblock-env, key: POSTGRES_PASSWORD } }
+            - name: POSTGRES_DB
+              valueFrom: { secretKeyRef: { name: theblock-env, key: POSTGRES_DB } }
+            # PGDATA'yı alt dizine al: local-path kökünde lost+found vb.
+            # kalırsa initdb "dizin boş değil" diye reddediyor.
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
+          ports:
+            - { name: postgres, containerPort: 5432 }
+          volumeMounts:
+            - { name: pgdata, mountPath: /var/lib/postgresql/data }
+            - { name: run, mountPath: /var/run/postgresql }
+            - { name: tmp, mountPath: /tmp }
+          readinessProbe:
+            exec:
+              command: ["sh", "-c", "pg_isready -U \"$POSTGRES_USER\" -d \"$POSTGRES_DB\""]
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 3
+          livenessProbe:
+            exec:
+              command: ["sh", "-c", "pg_isready -U \"$POSTGRES_USER\" -d \"$POSTGRES_DB\""]
+            initialDelaySeconds: 30
+            periodSeconds: 20
+            timeoutSeconds: 5
+          resources:
+            requests: { cpu: 100m, memory: 384Mi }
+            limits:   { cpu: "2",  memory: 1Gi }
+      volumes:
+        - name: pgdata
+          persistentVolumeClaim: { claimName: theblock-pgdata }
+        # Salt-okunur kökün yazılabilir pencereleri. Bellekte değil diskte
+        # (medium boş): soket dizini küçük, /tmp'ye sıralama dosyası düşebilir.
+        - name: run
+          emptyDir: {}
+        - name: tmp
+          emptyDir: {}
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: theblock-postgres
+  namespace: theblock
+spec:
+  selector: { app: theblock-postgres }
+  ports:
+    - { name: postgres, port: 5432, targetPort: 5432 }

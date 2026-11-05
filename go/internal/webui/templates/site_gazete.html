@@ -1,0 +1,383 @@
+{{define "admin_gazete"}}<!doctype html><html lang="tr" data-theme="{{.Theme}}"><head>{{template "admin_head" .}}</head>
+<body><div class="admin-wrap">{{template "admin_side" .}}<main class="admin-main">
+{{template "admin_top" .}}
+<div class="admin-body">
+{{template "gazete_panel" .}}
+</div></main></div></body></html>{{end}}
+
+{{define "gazete_panel"}}<div id="gazete-panel">
+  {{if .Flash}}<div class="flash {{.Flash.Kind}}">{{.Flash.Text}}</div>{{end}}
+  {{$g := .Gazete}}
+  <nav class="gz-bolumler" id="gz-bolumler" aria-label="Gazete bölümleri">
+    <a href="#ozet">Özet</a>
+    {{if $g.Perm.lisans}}<a href="#lisans">Lisans</a><a href="#depolama">Depolama</a><a href="#otomasyon">Otomasyon</a>{{end}}
+    {{if $g.Perm.ekip}}<a href="#ekip">Ekip</a>{{end}}
+    <a href="#sablonlar">Şablonlar</a>
+    <a href="#sayilar">Sayılar</a>
+    {{if $g.Perm.abone}}<a href="#aboneler">Aboneler</a>{{end}}
+    <a href="/admin/gazete/sablonlar"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-books"></use></svg> Galeri</a>
+    <a href="/admin/gazeteler"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-news"></use></svg> Manşetler</a>
+  </nav>
+  <div class="card card-pad" id="ozet" style="display:flex;gap:16px;flex-wrap:wrap;align-items:center">
+    <div><div class="small muted">Lisans</div>
+      {{if $g.Licensed}}<span class="badge" style="background:var(--ok-fill,var(--ok));color:#fff">Aktif</span>
+      {{else}}<span class="badge" style="background:var(--warn-fill,var(--warn));color:#fff">Pasif</span>{{end}}</div>
+    <div><div class="small muted">Sayılar</div><div class="big">{{len $g.Issues}}</div></div>
+    <div><div class="small muted">Şablonlar</div><div class="big">{{len $g.Templates}}</div></div>
+    <div><div class="small muted">Aboneler</div><div class="big">{{$g.SubCount}}</div></div>
+    <div><div class="small muted">Rolünüz</div><div class="big" style="font-size:1rem">{{$g.Role}}</div></div>
+    {{if $g.Perm.duzenle}}
+    <form method="post" action="/admin/gazete/sayilar" style="margin-left:auto"
+          hx-post="/admin/gazete/sayilar" hx-target="#gazete-panel" hx-swap="outerHTML"
+          data-set-alan="doldur=1">
+      <input type="hidden" name="doldur" value="1">
+      <input class="input" type="date" name="tarih" value="" style="width:150px" aria-label="Sayı tarihi (boş = bugün)">
+      <select class="input" name="periyot"><option value="gunluk">Günlük</option><option value="haftalik">Haftalık</option><option value="aylik">Aylık</option></select>
+      <button class="btn" type="submit"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-news"></use></svg> Yeni Sayı (otomatik doldur)</button>
+    </form>
+    {{end}}
+  </div>
+
+  {{if $g.Perm.lisans}}
+  <h2 style="font-size:1.05rem;margin-top:20px" id="lisans">Site Lisansları (Ticari Paket)</h2>
+  <div class="card card-pad">
+    <table class="table">
+      <thead><tr><th>Site</th><th>Domain</th><th>Durum</th><th style="width:120px"></th></tr></thead>
+      <tbody>
+      {{range $g.Sites}}
+        <tr>
+          <td>{{.Name}}</td><td class="small muted">{{.Domain}}</td>
+          <td>{{if .Enabled}}<span class="badge" style="background:var(--ok-fill,var(--ok));color:#fff">Açık</span>{{else}}<span class="badge" style="background:#888;color:#fff">Kapalı</span>{{end}}</td>
+          <td>
+            <form method="post" action="/admin/gazete/lisans">
+              <input type="hidden" name="site_id" value="{{.ID}}">
+              <input type="hidden" name="acik" value="{{if .Enabled}}0{{else}}1{{end}}">
+              <button class="btn small" type="submit">{{if .Enabled}}Kapat{{else}}Aç{{end}}</button>
+            </form>
+          </td>
+        </tr>
+      {{end}}
+      </tbody>
+    </table>
+    <p class="hint" style="margin-top:8px">Bu özellik yalnızca açık sitelerde görünür ve çalışır; kapalı sitelerde gazete modülü tamamen devre dışıdır.</p>
+  </div>
+
+  <h2 style="font-size:1.05rem;margin-top:20px" id="depolama">Depolama (Cloudflare R2 / S3 — site bazlı)</h2>
+  <form method="post" action="/admin/gazete/depolama" class="card card-pad">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:6px">
+      <select class="input" name="provider">
+        <option value="local" {{if eq $g.Storage.Provider "local"}}selected{{end}}>Yerel disk</option>
+        <option value="r2" {{if eq $g.Storage.Provider "r2"}}selected{{end}}>Cloudflare R2</option>
+        <option value="s3" {{if eq $g.Storage.Provider "s3"}}selected{{end}}>AWS S3</option>
+        <option value="minio" {{if eq $g.Storage.Provider "minio"}}selected{{end}}>MinIO</option>
+      </select>
+      <input class="input" name="endpoint" value="{{$g.Storage.Endpoint}}" aria-label="Depolama endpoint" placeholder="Endpoint (https://<account>.r2.cloudflarestorage.com)">
+      <input class="input" name="bucket" value="{{$g.Storage.Bucket}}" placeholder="Bucket (site-2-medya)" aria-label="Bucket (site-2-medya)">
+      <input class="input" name="region" value="{{$g.Storage.Region}}" placeholder="region (auto)" aria-label="region (auto)">
+      <input class="input" name="access_key" value="{{$g.Storage.AccessKeyID}}" placeholder="Access Key ID" aria-label="Access Key ID">
+      <input class="input" type="password" name="secret" placeholder="Secret Key {{if $g.StorageSecret}}(kayıtlı — boş bırakılırsa korunur){{end}}" aria-label="Secret Key {{if $g.StorageSecret}}(kayıtlı — boş bırakılırsa korunur){{end}}">
+      <input class="input" name="public_url" value="{{$g.Storage.PublicBaseURL}}" placeholder="Genel URL / CDN (https://cdn.site.com)" aria-label="Genel URL / CDN (https://cdn.site.com)">
+      <input class="input" name="prefix" value="{{$g.Storage.PathPrefix}}" placeholder="Yol eki (opsiyonel)" aria-label="Yol eki (opsiyonel)">
+    </div>
+    <label class="small" style="display:block;margin-top:8px"><input type="checkbox" name="acik" value="1" {{if $g.Storage.Enabled}}checked{{end}}> R2/S3 depolamayı bu site için aktif et</label>
+    <div style="display:flex;gap:8px;margin-top:10px">
+      <button class="btn" type="submit">Kaydet</button>
+      <button class="btn small" type="submit" formaction="/admin/gazete/depolama/test">Bağlantıyı Test Et</button>
+    </div>
+    <p class="hint" style="margin:.5em 0">Her site kendi bucket'ında ve kendi anahtarıyla tutulur; siteler birbirinden tamamen izoledir. Gizli anahtar şifreli saklanır.</p>
+  </form>
+
+  <h2 style="font-size:1.05rem;margin-top:20px" id="otomasyon">Otomasyon &amp; WhatsApp Dağıtımı</h2>
+  <form method="post" action="/admin/gazete/ayar" class="card card-pad">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:6px">
+      <label class="small">Günlük üretim saati<input class="input" name="saat" value="{{index $g.Ayar "saat"}}" placeholder="07:00"></label>
+      <label class="small">Haftalık gönderim günü (0=Pazar)
+        <input class="input" name="haftalik_gun" type="number" min="0" max="6" value="{{if index $g.Ayar "haftalik_gun"}}{{index $g.Ayar "haftalik_gun"}}{{else}}1{{end}}"></label>
+      <label class="small">Aylık gönderim günü
+        <input class="input" name="aylik_gun" type="number" min="1" max="28" value="{{if index $g.Ayar "aylik_gun"}}{{index $g.Ayar "aylik_gun"}}{{else}}1{{end}}"></label>
+      <label class="small">Otomatik yayın
+        <select class="input" name="otomatik_yayin">
+          <option value="0" {{if ne (index $g.Ayar "otomatik_yayin") "1"}}selected{{end}}>Kapalı (taslak)</option>
+          <option value="1" {{if eq (index $g.Ayar "otomatik_yayin") "1"}}selected{{end}}>Açık (doğrudan yayına)</option>
+        </select></label>
+      <label class="small">WhatsApp Phone Number ID<input class="input" name="wa_phone" value="{{index $g.WA "phone_id"}}"></label>
+      <label class="small">WhatsApp API Token<input class="input" type="password" name="wa_token" placeholder="{{if index $g.WA "token"}}(kayıtlı){{else}}boş = kapalı{{end}}"></label>
+      <label class="small">API sürümü<input class="input" name="wa_version" value="{{if index $g.WA "api_version"}}{{index $g.WA "api_version"}}{{else}}v21.0{{end}}"></label>
+      <label class="small">Onaylı şablon adı<input class="input" name="wa_template" value="{{index $g.WA "template"}}" placeholder="gazete_bulten"></label>
+    </div>
+    <button class="btn" type="submit" style="margin-top:10px">Kaydet</button>
+    <p class="hint" style="margin:.5em 0">Günlük iş belirtilen saatte bir kez çalışır: sayı üretir (otomatik doldurur), PDF oluşturur ve abonelere iletir.
+      WhatsApp anahtarı yoksa gönderimler e-postaya düşer; WhatsApp için Meta Cloud API onaylı şablon gerekir.</p>
+  </form>
+  {{end}}
+
+  {{if $g.Perm.ekip}}
+  <h2 style="font-size:1.05rem;margin-top:20px" id="ekip">Ekip &amp; Yetkiler</h2>
+  <div class="card card-pad">
+    <form method="post" action="/admin/gazete/ekip" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <select class="input" name="user_id" style="min-width:220px">
+        {{range $g.Users}}<option value="{{.ID}}">{{.Name}} ({{.Role}})</option>{{end}}
+      </select>
+      <select class="input" name="rol">
+        <option value="sorumlu">Sorumlu (tam yetki)</option>
+        <option value="editor">Editör (düzenleme)</option>
+        <option value="izleyici">İzleyici (görüntüleme)</option>
+      </select>
+      <button class="btn small" type="submit">Ata</button>
+    </form>
+    <table class="table" style="margin-top:10px">
+      <thead><tr><th>Kullanıcı</th><th>E-posta</th><th>Sistem Rolü</th><th>Gazete Rolü</th><th style="width:90px"></th></tr></thead>
+      <tbody>
+      {{range $g.Team}}
+        <tr>
+          <td>{{.UserName}}</td><td class="small muted">{{.UserEmail}}</td><td class="small">{{.UserRole}}</td>
+          <td><span class="badge">{{.Rol}}</span></td>
+          <td><form method="post" action="/admin/gazete/ekip/{{.UserID}}/sil"><button class="btn small" type="submit">Kaldır</button></form></td>
+        </tr>
+      {{else}}<tr><td colspan="5" class="muted small">Henüz atama yok.</td></tr>{{end}}
+      </tbody>
+    </table>
+    <p class="hint">Atanan kullanıcılar yalnızca bu sitenin gazetesini yönetir. Yöneticiler her zaman tam yetkilidir.</p>
+  </div>
+  {{end}}
+
+  <h2 style="font-size:1.05rem;margin-top:20px" id="sablonlar">Şablonlar
+    <a class="btn ghost small" href="/admin/gazete/sablonlar" style="margin-left:8px"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-books"></use></svg> Galeri</a></h2>
+  <div class="card card-pad">
+    {{if $g.Perm.duzenle}}
+    <form method="post" action="/admin/gazete/sablonlar" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <input class="input" name="ad" placeholder="Şablon adı" style="min-width:200px" required aria-label="Şablon adı">
+      <input class="input" name="aciklama" placeholder="Açıklama (ops)" style="min-width:200px" aria-label="Açıklama">
+      <label class="small"><input type="checkbox" name="varsayilan" value="1"> Varsayılan</label>
+      <button class="btn small" type="submit">Şablon Ekle</button>
+    </form>
+    {{end}}
+    <table class="table" style="margin-top:10px">
+      <thead><tr><th>Ad</th><th>Açıklama</th><th>Varsayılan</th><th style="width:90px"></th></tr></thead>
+      <tbody>
+      {{range $g.Templates}}
+        <tr>
+          <td>{{.Name}}</td><td class="small muted">{{.Description}}</td>
+          <td>{{if .IsDefault}}<svg class="ti ti-metin" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-star"></use></svg>{{end}}</td>
+          <td>{{if $g.Perm.duzenle}}<form method="post" action="/admin/gazete/sablonlar/{{.ID}}/sil"><button class="btn small" type="submit">Sil</button></form>{{end}}</td>
+        </tr>
+      {{else}}<tr><td colspan="4" class="muted small">Şablon yok — sayılar varsayılan 10 sayfalık düzen ile üretilir.</td></tr>{{end}}
+      </tbody>
+    </table>
+    <p class="hint">Şablon sayfaları editörden "Şablon olarak kaydet" ile de doldurulabilir; şablon seçilen sayı, otomatik doldurmada bu düzeni kullanır.</p>
+  </div>
+
+  <h2 style="font-size:1.05rem;margin-top:20px" id="sayilar">Sayılar (Baskılar)</h2>
+  <div class="card card-pad">
+    <table class="table">
+      <thead><tr><th>Tarih</th><th>Periyot</th><th>Başlık</th><th>Durum</th><th>Sayfa</th><th style="width:340px">İşlemler</th></tr></thead>
+      <tbody>
+      {{range $g.Issues}}
+        <tr>
+          <td>{{.IssueDate}}</td>
+          <td class="small">{{.Period}}</td>
+          <td class="small">{{.Title}}</td>
+          <td><span class="badge">{{.Status}}</span></td>
+          <td class="small">{{.PageCount}}</td>
+          <td>
+            <a class="btn small" href="/admin/gazete/sayilar/{{.ID}}/duzenle">Düzenle</a>
+            {{if $g.Perm.duzenle}}
+            <form method="post" action="/admin/gazete/sayilar/{{.ID}}/pdf" style="display:inline"><button class="btn small" type="submit">PDF</button></form>
+            <form method="post" action="/admin/gazete/sayilar/{{.ID}}/durum" style="display:inline">
+              <input type="hidden" name="durum" value="{{if eq .Status "yayinda"}}arsiv{{else}}yayinda{{end}}">
+              <button class="btn small" type="submit">{{if eq .Status "yayinda"}}Geri Çek{{else}}Yayınla{{end}}</button>
+            </form>
+            {{end}}
+            {{if $g.Perm.abone}}
+            <form method="post" action="/admin/gazete/sayilar/{{.ID}}/gonder" style="display:inline"
+                  data-confirm="Bu baskı abonelere gönderilsin mi?"><button class="btn small" type="submit">Dağıt</button></form>
+            {{end}}
+            {{if $g.Perm.duzenle}}
+            <form method="post" action="/admin/gazete/sayilar/{{.ID}}/sil" style="display:inline"
+                  data-confirm="Sayı silinsin mi?"><button class="btn small" type="submit">Sil</button></form>
+            {{end}}
+          </td>
+        </tr>
+      {{else}}<tr><td colspan="6" class="muted small">Henüz sayı yok. Yukarıdan "Yeni Sayı" ile oluşturun.</td></tr>{{end}}
+      </tbody>
+    </table>
+  </div>
+
+  <h2 style="font-size:1.05rem;margin-top:20px" id="aboneler">Aboneler
+    <a class="btn ghost small" href="/admin/aboneler" style="margin-left:8px"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-users"></use></svg> Tüm Aboneler</a></h2>
+  <div class="card card-pad">
+    {{if $g.Perm.abone}}
+    <form method="post" action="/admin/gazete/aboneler" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <input class="input" name="email" placeholder="E-posta" style="min-width:220px" aria-label="E-posta">
+      <input class="input" name="telefon" placeholder="Telefon (+90...)" style="min-width:160px" aria-label="Telefon (+90...)">
+      <select class="input" name="kanal"><option value="email">E-posta</option><option value="whatsapp">WhatsApp</option></select>
+      <select class="input" name="siklik"><option value="gunluk">Günlük</option><option value="haftalik">Haftalık</option><option value="aylik">Aylık</option></select>
+      <button class="btn small" type="submit">Abone Ekle</button>
+    </form>
+    {{end}}
+    <table class="table" style="margin-top:10px">
+      <thead><tr><th>E-posta</th><th>Telefon</th><th>Kanal</th><th>Sıklık</th><th>Durum</th><th style="width:150px"></th></tr></thead>
+      <tbody>
+      {{range $g.Subs}}
+        <tr>
+          <td class="small">{{.Email}}</td><td class="small">{{.Phone}}</td>
+          <td class="small">{{.Channel}}</td><td class="small">{{.Frequency}}</td>
+          <td><span class="badge">{{.Status}}</span></td>
+          <td>
+            {{if $g.Perm.abone}}
+            <form method="post" action="/admin/gazete/aboneler/{{.ID}}/durum" style="display:inline">
+              <input type="hidden" name="durum" value="{{if eq .Status "aktif"}}iptal{{else}}aktif{{end}}">
+              <button class="btn small" type="submit">{{if eq .Status "aktif"}}İptal Et{{else}}Aktif Et{{end}}</button>
+            </form>
+            <form method="post" action="/admin/gazete/aboneler/{{.ID}}/sil" style="display:inline"
+                  data-confirm="Abone kaydı (KVKK) silinsin mi?"><button class="btn small" type="submit">Sil</button></form>
+            {{end}}
+          </td>
+        </tr>
+      {{else}}<tr><td colspan="6" class="muted small">Abone yok.</td></tr>{{end}}
+      </tbody>
+    </table>
+    <p class="hint">Aboneler <a href="/gazete">/gazete</a> sayfasından da kaydolabilir; her gönderimde tek tıkla çıkış bağlantısı bulunur (KVKK).</p>
+  </div>
+</div>{{end}}
+
+{{define "admin_gazete_duzen"}}<!doctype html><html lang="tr" data-theme="{{.Theme}}"><head>{{template "admin_head" .}}
+<link rel="stylesheet" href="{{asset "gazete.css"}}">
+<script src="{{asset "gazete.js"}}" defer></script>
+</head>
+<body><div class="admin-wrap">{{template "admin_side" .}}<main class="admin-main">
+{{template "admin_top" .}}
+{{$g := .Gazete}}
+<div class="admin-body">
+  {{if .Flash}}<div class="flash {{.Flash.Kind}}">{{.Flash.Text}}</div>{{end}}
+  <div class="gz-toolbar card card-pad">
+    <a class="btn small" href="/admin/gazete">← Panele Dön</a>
+    <strong id="gz-issue-title">{{$g.Issue.Title}}</strong>
+    <span class="small muted">{{$g.Issue.IssueDate}} · {{$g.Issue.Period}} · <span id="gz-status">{{$g.Issue.Status}}</span></span>
+    <span style="flex:1"></span>
+    <button class="btn small" id="gz-undo" title="Geri al (Ctrl+Z)">↶ Geri</button>
+    <button class="btn small" id="gz-redo" title="Yinele (Ctrl+Shift+Z)">↷ Yinele</button>
+    <button class="btn small" id="gz-doldur"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-wand"></use></svg> Otomatik Doldur</button>
+    <button class="btn small" id="gz-sablon"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-ruler-measure"></use></svg> Şablon olarak Kaydet</button>
+    <button class="btn small" id="gz-pdf"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-file-type-pdf"></use></svg> PDF Üret</button>
+    <button class="btn small" id="gz-onizleme"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-eye"></use></svg> Önizleme</button>
+    <button class="btn" id="gz-kaydet"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-device-floppy"></use></svg> Kaydet</button>
+  </div>
+
+  <div class="gz-layout">
+    <aside class="gz-palette card">
+      <h3 class="gz-h">Bloklar</h3>
+      <p class="hint small">Blok eklemek için tıklayın; tuvalde sürükleyerek taşıyın.</p>
+      <button class="gz-add" data-tip="manset"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-news"></use></svg> Manşet</button>
+      <button class="gz-add" data-tip="liste"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-clipboard"></use></svg> Liste</button>
+      <button class="gz-add" data-tip="kart"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-layout-grid"></use></svg> Kart</button>
+      <button class="gz-add" data-tip="baslik"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-letter-case"></use></svg> Bölüm Başlığı</button>
+      <button class="gz-add" data-tip="metin"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-pencil"></use></svg> Metin</button>
+      <button class="gz-add" data-tip="gorsel"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-photo"></use></svg> Görsel</button>
+      <button class="gz-add" data-tip="cizgi"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-minus"></use></svg> Çizgi</button>
+      <button class="gz-add" data-tip="reklam"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-speakerphone"></use></svg> Reklam</button>
+      <button class="gz-add" data-tip="kunye">ℹ️ Künye</button>
+      <h3 class="gz-h" style="margin-top:14px">Sayfalar</h3>
+      <div id="gz-pages" class="gz-pages"></div>
+      <h3 class="gz-h" style="margin-top:14px">Şablon Uygula</h3>
+      <select class="input" id="gz-sablonlar" style="width:100%;margin-bottom:6px">
+        <option value="">Şablon seçin…</option>
+      </select>
+      <button class="gz-add" id="gz-sablon-uygula"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-puzzle"></use></svg> Seçili Şablonu Uygula</button>
+      <a class="gz-add" href="/admin/gazete/sablonlar" style="display:block;text-align:center"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-books"></use></svg> Şablon Galerisi</a>
+    </aside>
+
+    <section class="gz-canvas-wrap card">
+      <div id="gz-canvas" class="gz-canvas" aria-label="Gazete sayfası tuvali"></div>
+    </section>
+
+    <aside class="gz-props card">
+      <h3 class="gz-h">Katmanlar</h3>
+      <div id="gz-layers" class="gz-layers"></div>
+      <h3 class="gz-h" style="margin-top:14px">Özellikler</h3>
+      <div id="gz-props-form" class="gz-props-form">
+        <p class="hint small">Düzenlemek için tuvalden bir blok seçin.</p>
+      </div>
+    </aside>
+  </div>
+</div>
+<script id="gz-boot" type="application/json">{{$g.PageJSON}}</script>
+</main></div></body></html>{{end}}
+
+{{define "gazete-arsiv"}}<!doctype html><html lang="{{.Lang}}" {{if .RTL}}dir="rtl"{{end}} data-theme="{{.Theme}}"><head>{{template "public_head" .}}
+<link rel="stylesheet" href="{{asset "gazete.css"}}">
+</head>
+<body>
+{{template "site_header" .}}
+<main class="page"><div class="container">
+  <h1 class="page-title"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-news"></use></svg> Gazete Arşivi</h1>
+  {{$v := .GazetePublic}}
+  {{if $v.Message}}<div class="flash info">{{$v.Message}}</div>{{end}}
+
+  <form method="get" action="{{.LangBase}}/gazete" class="card card-pad" style="display:flex;gap:8px;flex-wrap:wrap;align-items:end;margin-bottom:16px">
+    <label class="small">Periyot
+      <select class="input" name="periyot">
+        <option value="" {{if eq $v.Period ""}}selected{{end}}>Tümü</option>
+        <option value="gunluk" {{if eq $v.Period "gunluk"}}selected{{end}}>Günlük</option>
+        <option value="haftalik" {{if eq $v.Period "haftalik"}}selected{{end}}>Haftalık</option>
+      </select>
+    </label>
+    <label class="small">Başlangıç<input class="input" type="date" name="bas" value="{{$v.From}}"></label>
+    <label class="small">Bitiş<input class="input" type="date" name="bit" value="{{$v.To}}"></label>
+    <button class="btn" type="submit">Filtrele</button>
+  </form>
+
+  <div class="grid-2">
+  {{range $v.Issues}}
+    <div class="card card-pad" style="text-align:center">
+      <strong>{{if .Title}}{{.Title}}{{else}}Gazete — {{.IssueDate}}{{end}}</strong>
+      <div class="small muted" style="margin:4px 0">{{.IssueDate}} · {{.Period}} · {{.PageCount}} sayfa</div>
+      <a class="btn small" href="{{$.LangBase}}/gazete/{{.IssueDate}}?periyot={{.Period}}">📖 Çevirerek Oku</a>
+      {{if .PDFPath}} <a class="btn small" href="{{$.LangBase}}/gazete/{{.IssueDate}}/pdf?periyot={{.Period}}" target="_blank" rel="noopener">📄 PDF</a>{{end}}
+    </div>
+  {{else}}<p class="muted">Bu filtreyle eşleşen baskı yok.</p>{{end}}
+  </div>
+
+  <div class="card card-pad" style="margin-top:20px">
+    <h2 style="font-size:1.05rem">Gazeteye abone olun</h2>
+    <p class="small muted">Günlük, haftalık veya aylık gazeteniz e-posta veya WhatsApp ile iletilir.</p>
+    <form method="post" action="{{.LangBase}}/gazete/abone" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <input class="input" type="email" name="email" placeholder="E-posta" style="min-width:220px" aria-label="E-posta">
+      <input class="input" name="telefon" placeholder="Telefon (+90...)" style="min-width:160px" aria-label="Telefon (+90...)">
+      <select class="input" name="kanal"><option value="email">E-posta</option><option value="whatsapp">WhatsApp</option></select>
+      <select class="input" name="siklik"><option value="gunluk">Günlük</option><option value="haftalik">Haftalık</option><option value="aylik">Aylık</option></select>
+      <button class="btn" type="submit">Abone Ol</button>
+    </form>
+    <p class="hint small">Kaydolarak aydınlatma metnini kabul etmiş olursunuz; her gönderimde tek tıkla çıkabilirsiniz.</p>
+  </div>
+</div></main>
+{{template "site_footer" .}}
+</body></html>{{end}}
+
+{{define "gazete-okuyucu"}}<!doctype html><html lang="{{.Lang}}" {{if .RTL}}dir="rtl"{{end}} data-theme="{{.Theme}}"><head>{{template "public_head" .}}
+<link rel="stylesheet" href="{{asset "gazete.css"}}">
+<script src="{{asset "vendor/page-flip.browser.js"}}" defer></script>
+<script src="{{asset "gazete.js"}}" defer></script>
+</head>
+<body>
+{{template "site_header" .}}
+{{$v := .GazetePublic}}
+<main class="page"><div class="container">
+  <h1 class="page-title"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-news"></use></svg> Gazete — {{$v.Issue.IssueDate}}</h1>
+  <div class="gz-read-toolbar">
+    <a class="btn small" href="{{.LangBase}}/gazete">← Arşiv</a>
+    <button class="btn small" id="gz-prev">‹ Önceki</button>
+    <span class="small" id="gz-pageinfo">Sayfa 1 / {{len $v.Pages}}</span>
+    <button class="btn small" id="gz-next">Sonraki ›</button>
+    <button class="btn small" id="gz-grid">⊞ Tüm Sayfalar</button>
+    {{if $v.HasPDF}}<a class="btn small" href="{{.LangBase}}/gazete/{{$v.Issue.IssueDate}}/pdf?periyot={{$v.Period}}" target="_blank" rel="noopener">📄 PDF İndir</a>{{end}}
+  </div>
+  <div id="gz-flip" class="gz-flip">
+    {{range $v.Pages}}<div class="gz-flip-page">{{.}}</div>{{end}}
+  </div>
+  <div id="gz-grid-view" class="gz-grid-view" hidden>
+    {{range $v.Pages}}<div class="gz-grid-item">{{.}}</div>{{end}}
+  </div>
+</div></main>
+{{template "site_footer" .}}
+</body></html>{{end}}

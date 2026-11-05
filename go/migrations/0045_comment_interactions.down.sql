@@ -1,0 +1,3 @@
+DROP TABLE IF EXISTS comment_likes;
+ALTER TABLE comments DROP COLUMN IF EXISTS likes;
+ALTER TABLE comments DROP COLUMN IF EXISTS parent_id;

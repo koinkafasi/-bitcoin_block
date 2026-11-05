@@ -1,0 +1,266 @@
+// Reklamlar paneli (templ) — html/template reklamlar_panel karşılığı.
+package templkit
+
+// ReklamStat reklam istatistikleri (30 gün).
+type ReklamStat struct {
+	Views  string
+	Clicks string
+	CTR    string
+	EstTL  string
+}
+
+// ReklamOge reklam kartı.
+type ReklamOge struct {
+	ID        string
+	Kind      string
+	Name      string
+	SlotKey   string
+	Status    string
+	Created   string
+	ImageURL  string
+	TargetURL string
+	StartsAt  string
+	EndsAt    string
+	Weight    string
+	HTML      string
+	HTMLLen   string
+	ImageID   string
+	Active    bool
+}
+
+// ReklamSlot reklam yerleşimi satırı.
+type ReklamSlot struct {
+	ID     string
+	Key    string
+	Label  string
+	Width  string
+	Height string
+	Sticky bool
+	Status string
+}
+
+// ReklamlarView reklam yönetimi paneli.
+type ReklamlarView struct {
+	FlashKind string
+	FlashText string
+	Stats     ReklamStat
+	Ads       []ReklamOge
+	Slots     []ReklamSlot
+}
+
+// ReklamlarPanel reklam yönetimi (HTMX hedefi: #reklamlar-panel).
+templ ReklamlarPanel(v ReklamlarView) {
+	<div id="reklamlar-panel">
+		if v.FlashText != "" {
+			<div class={ "flash", v.FlashKind }>{ v.FlashText }</div>
+		}
+		@Yukleniyor("reklamlar-yukleniyor", "")
+		<div class="card card-pad" style="display:flex;gap:16px;flex-wrap:wrap;align-items:center">
+			<div><div class="small muted">Son 30 gün · Gösterim</div><div class="big">{ v.Stats.Views }</div></div>
+			<div><div class="small muted">Tıklama</div><div class="big">{ v.Stats.Clicks }</div></div>
+			<div><div class="small muted">TO (%)</div><div class="big">{ v.Stats.CTR }</div></div>
+			<div><div class="small muted">Tahmini Gelir (kural bazlı)</div><div class="big">₺{ v.Stats.EstTL }</div></div>
+			<a class="btn small" style="margin-left:auto" href="/admin/reklamlar?durum=tumu" hx-get="/admin/reklamlar?durum=tumu" hx-target="#reklamlar-panel" hx-swap="outerHTML" hx-push-url="true" hx-indicator="#reklamlar-yukleniyor">Tümü</a>
+			<a class="btn small" href="/admin/reklamlar?durum=aktif" hx-get="/admin/reklamlar?durum=aktif" hx-target="#reklamlar-panel" hx-swap="outerHTML" hx-push-url="true" hx-indicator="#reklamlar-yukleniyor">Aktif</a>
+		</div>
+		<h2 style="font-size:1.05rem;margin-top:22px">Reklamlar</h2>
+		<div class="gap">
+			if len(v.Ads) == 0 {
+				<p class="muted">Reklam yok. Aşağıdan ekleyin.</p>
+			}
+			for _, a := range v.Ads {
+				<div class="card card-pad" style={ eventBorderStyle(a.Active) }>
+					<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+						<span class="tag">{ a.Kind }</span>
+						<strong>{ a.Name }</strong>
+						<span class="muted small">Yer: { a.SlotKey }</span>
+						<span class="tag" style="margin-left:auto">{ a.Status }</span>
+						<span class="small muted">{ a.Created }</span>
+					</div>
+					if a.ImageURL != "" {
+						<div class="muted small" style="margin:.4em 0 0">Görsel: { a.ImageURL }</div>
+					}
+					if a.TargetURL != "" {
+						<div class="muted small">Hedef: { a.TargetURL }</div>
+					}
+					<div class="small muted">Aralık: { a.StartsAt } → { a.EndsAt } · Ağırlık: { a.Weight }</div>
+					if a.HTML != "" {
+						<details class="small muted" style="margin-top:.3em">
+							<summary>HTML ({ a.HTMLLen } karakter)</summary>
+							<code style="word-break:break-all">{ a.HTML }</code>
+						</details>
+					}
+					<form
+						method="post"
+						action={ templ.SafeURL("/admin/reklamlar/" + a.ID) }
+						style="margin-top:8px"
+						hx-post={ "/admin/reklamlar/" + a.ID }
+						hx-target="#reklamlar-panel"
+						hx-swap="outerHTML"
+						hx-indicator="#reklamlar-yukleniyor"
+					>
+						<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:6px">
+							<input class="input" name="ad" value={ a.Name } placeholder="Ad" aria-label={ "Reklam adı — " + a.Name }/>
+							<select class="select" name="tur" aria-label={ "Reklam türü — " + a.Name }>
+								<option value="display" if a.Kind == "display" { selected }>Display/Banner</option>
+								<option value="banner" if a.Kind == "banner" { selected }>Banner</option>
+								<option value="native" if a.Kind == "native" { selected }>Native</option>
+								<option value="article" if a.Kind == "article" { selected }>İçerik içi</option>
+								<option value="sticky" if a.Kind == "sticky" { selected }>Yapışkan</option>
+							</select>
+							<input class="input" name="yer" value={ a.SlotKey } placeholder="Yer anahtarı (örn. header_728x90)" aria-label={ "Yer anahtarı — " + a.Name }/>
+							<input class="input" name="gorsel_id" value={ a.ImageID } placeholder="Görsel ID (ops)" style="max-width:90px" aria-label={ "Görsel ID — " + a.Name }/>
+							<input class="input" name="hedef" value={ a.TargetURL } placeholder="https://… (hedef)" aria-label={ "Hedef URL — " + a.Name }/>
+							<input class="input" name="baslangic" type="date" aria-label="Başlangıç tarihi (ops)"/>
+							<input class="input" name="bitis" type="date" aria-label="Bitiş tarihi (ops)"/>
+							<input class="input" name="agirlik" value={ a.Weight } placeholder="Ağırlık" style="max-width:90px" aria-label={ "Ağırlık — " + a.Name }/>
+						</div>
+						<div class="small muted" style="margin:.3em 0">HTML (boş bırakınca görsel/hedef veya ad bağlantısı gösterilir):</div>
+						<textarea class="input" name="html" rows="2" placeholder="<ins class=...>…</ins> veya <img>…" aria-label={ "HTML kodu — " + a.Name }>{ a.HTML }</textarea>
+						<div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap">
+							<select class="select" name="durum" aria-label={ "Durum — " + a.Name }>
+								<option value="taslak" if a.Status == "taslak" { selected }>Taslak</option>
+								<option value="aktif" if a.Status == "aktif" { selected }>Aktif</option>
+								<option value="bitmis" if a.Status == "bitmis" { selected }>Bitmiş</option>
+								<option value="pasif" if a.Status == "pasif" { selected }>Pasif</option>
+							</select>
+							<button class="btn small" type="submit">Güncelle</button>
+						</div>
+					</form>
+					<form
+						method="post"
+						action={ templ.SafeURL("/admin/reklamlar/" + a.ID + "/sil") }
+						style="margin-top:4px"
+						hx-post={ "/admin/reklamlar/" + a.ID + "/sil" }
+						hx-target="#reklamlar-panel"
+						hx-swap="outerHTML"
+						hx-confirm="Reklam silinsin mi?"
+						hx-indicator="#reklamlar-yukleniyor"
+					>
+						<button class="btn small danger" type="submit">Sil</button>
+					</form>
+				</div>
+			}
+		</div>
+		<h2 style="font-size:1.05rem;margin-top:22px">Yeni Reklam</h2>
+		<form
+			method="post"
+			action="/admin/reklamlar/yeni"
+			class="card card-pad"
+			hx-post="/admin/reklamlar/yeni"
+			hx-target="#reklamlar-panel"
+			hx-swap="outerHTML"
+			hx-indicator="#reklamlar-yukleniyor"
+		>
+			<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:6px">
+				<input class="input" name="ad" required placeholder="Reklam adı" aria-label="Yeni reklam adı"/>
+				<select class="select" name="tur" aria-label="Yeni reklam türü">
+					<option value="display">Display/Banner</option>
+					<option value="banner">Banner</option>
+					<option value="native">Native</option>
+					<option value="article">İçerik içi</option>
+					<option value="sticky">Yapışkan</option>
+				</select>
+				<select class="select" name="yer" aria-label="Yeni reklam yerleşimi">
+					for _, s := range v.Slots {
+						<option value={ s.Key }>{ s.Label } ({ s.Key })</option>
+					}
+				</select>
+				<input class="input" name="hedef" placeholder="https://… (hedef)" aria-label="Yeni reklam hedef URL"/>
+			</div>
+			<div class="small muted" style="margin:.5em 0 .2em">HTML kodu (AdSense vb.):</div>
+			<textarea class="input" name="html" rows="2" placeholder="<ins class=&quot;adsbygoogle&quot;…></ins>" aria-label="Yeni reklam HTML kodu"></textarea>
+			<div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;align-items:center">
+				<input class="input" name="baslangic" type="date" aria-label="Başlangıç tarihi (ops)" title="Başlangıç (ops)" style="width:150px"/>
+				<input class="input" name="bitis" type="date" aria-label="Bitiş tarihi (ops)" title="Bitiş (ops)" style="width:150px"/>
+				<input class="input" name="agirlik" value="1" placeholder="Ağırlık" style="max-width:90px" aria-label="Yeni reklam ağırlığı"/>
+				<select class="select" name="durum" aria-label="Yeni reklam durumu">
+					<option value="aktif">Aktif</option>
+					<option value="taslak">Taslak</option>
+				</select>
+				<button class="btn" type="submit">Ekle</button>
+			</div>
+		</form>
+		<h2 style="font-size:1.05rem;margin-top:22px">Yerleşimler (Slots)</h2>
+		<table class="table">
+			<thead>
+				<tr><th>Anahtar</th><th>Etiket</th><th>Boyut</th><th>Yapışkan</th><th>Durum</th><th></th></tr>
+			</thead>
+			<tbody>
+				if len(v.Slots) == 0 {
+					@TabloBos(6, "layout-grid", "Yerleşim yok", "Önerilenler aşağıda; kullanıcı adı/anahtar ile de ekleyebilirsiniz.", "", "")
+				}
+				for _, s := range v.Slots {
+					<tr>
+						<td>{ s.Key }</td>
+						<td>{ s.Label }</td>
+						<td>{ s.Width }×{ s.Height }</td>
+						<td>
+							if s.Sticky {
+								<svg class="ti ti-metin" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-check"></use></svg>
+							} else {
+								—
+							}
+						</td>
+						<td>{ s.Status }</td>
+						<td>
+							<details>
+								<summary class="btn small">Düzenle</summary>
+								<form
+									method="post"
+									action={ templ.SafeURL("/admin/reklam-yerleri/" + s.ID) }
+									style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap"
+									hx-post={ "/admin/reklam-yerleri/" + s.ID }
+									hx-target="#reklamlar-panel"
+									hx-swap="outerHTML"
+									hx-indicator="#reklamlar-yukleniyor"
+								>
+									<input class="input" name="key" value={ s.Key } style="max-width:150px" aria-label={ "Yerleşim anahtarı — " + s.Key }/>
+									<input class="input" name="label" value={ s.Label } aria-label={ "Yerleşim etiketi — " + s.Key }/>
+									<input class="input" name="genislik" value={ s.Width } style="max-width:80px" aria-label={ "Yerleşim genişliği — " + s.Key }/>
+									<input class="input" name="yukseklik" value={ s.Height } style="max-width:80px" aria-label={ "Yerleşim yüksekliği — " + s.Key }/>
+									<label class="small"><input type="checkbox" name="yapistir" value="1" if s.Sticky { checked }/> Yapışkan</label>
+									<select class="select" name="durum" aria-label={ "Yerleşim durumu — " + s.Key }>
+										<option value="aktif" if s.Status == "aktif" { selected }>Aktif</option>
+										<option value="pasif" if s.Status == "pasif" { selected }>Pasif</option>
+									</select>
+									<button class="btn small" type="submit">Kaydet</button>
+								</form>
+								<form
+									method="post"
+									action={ templ.SafeURL("/admin/reklam-yerleri/" + s.ID + "/sil") }
+									style="margin-top:4px"
+									hx-post={ "/admin/reklam-yerleri/" + s.ID + "/sil" }
+									hx-target="#reklamlar-panel"
+									hx-swap="outerHTML"
+									hx-confirm="Yerleşim silinsin mi?"
+									hx-indicator="#reklamlar-yukleniyor"
+								>
+									<button class="btn small danger" type="submit">Sil</button>
+								</form>
+							</details>
+						</td>
+					</tr>
+				}
+			</tbody>
+		</table>
+		<form
+			method="post"
+			action="/admin/reklam-yerleri/yeni"
+			class="card card-pad"
+			style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap"
+			hx-post="/admin/reklam-yerleri/yeni"
+			hx-target="#reklamlar-panel"
+			hx-swap="outerHTML"
+			hx-indicator="#reklamlar-yukleniyor"
+		>
+			<input class="input" name="key" required placeholder="anahtar (örn. header_728x90)" style="max-width:200px" aria-label="Yeni yerleşim anahtarı"/>
+			<input class="input" name="label" required placeholder="Etiket (örn. Üst Banner)" aria-label="Yeni yerleşim etiketi"/>
+			<input class="input" name="genislik" placeholder="W (728)" style="max-width:80px" aria-label="Yeni yerleşim genişliği"/>
+			<input class="input" name="yukseklik" placeholder="H (90)" style="max-width:80px" aria-label="Yeni yerleşim yüksekliği"/>
+			<label class="small" style="align-self:center"><input type="checkbox" name="yapistir" value="1"/> Yapışkan</label>
+			<button class="btn" type="submit">Yerleşim Ekle</button>
+		</form>
+		<p class="hint" style="margin-top:10px"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-pin"></use></svg> Önerilen anahtarlar: <code>header_728x90</code>, <code>sidebar_300x250</code>, <code>icerik_arasi_300x250</code>, <code>anasayfa_native</code>, <code>sticky_mobil</code>. Şablon bunlardan <code>header_728x90</code> ve <code>sticky_mobil</code> yerleşimlerini otomatik işler.</p>
+	</div>
+}

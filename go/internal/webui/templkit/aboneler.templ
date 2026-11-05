@@ -1,0 +1,197 @@
+// Aboneler merkezi (templ) — bülten (subscribers) ve gazete
+// (gazete_subscriptions) abone listeleri tek sayfada. Kanal/durum/sıklık
+// filtreleri, ekleme ve KVKK silme işlemleri.
+package templkit
+
+// AboneStat özet sayaç kartı.
+type AboneStat struct {
+	Label string
+	Value string
+	Tone  string // "", ok, warn, danger
+}
+
+// BultenAbone bülten abonesi satırı.
+type BultenAbone struct {
+	ID      string
+	Email   string
+	Locale  string
+	Status  string
+	Time    string
+	Onay    string
+}
+
+// GazeteAbone gazete abonesi satırı.
+type GazeteAbone struct {
+	ID        string
+	Email     string
+	Phone     string
+	Channel   string
+	Frequency string
+	Status    string
+	Time      string
+}
+
+// AbonelerView birleşik abone görünümü.
+type AbonelerView struct {
+	FlashKind string
+	FlashText string
+	Durum     string
+	Stats     []AboneStat
+	Bulten    []BultenAbone
+	Gazete    []GazeteAbone
+}
+
+// AbonelerPanel birleşik abone yönetimi (HTMX hedefi: #aboneler-panel).
+templ AbonelerPanel(v AbonelerView) {
+	<div id="aboneler-panel">
+		if v.FlashText != "" {
+			<div class={ "flash", v.FlashKind }>{ v.FlashText }</div>
+		}
+		@Yukleniyor("aboneler-yukleniyor", "İşleniyor…")
+
+		<div class="kpi-grid">
+			for _, s := range v.Stats {
+				<a class={ "kpi", templ.KV("tone-ok", s.Tone == "ok"), templ.KV("tone-warn", s.Tone == "warn"), templ.KV("tone-danger", s.Tone == "danger") } href="#">
+					<span class="kpi-body"><span class="kpi-val">{ s.Value }</span><span class="kpi-lbl">{ s.Label }</span></span>
+				</a>
+			}
+		</div>
+
+		<div class="card card-pad" style="margin-top:12px">
+			<div class="dash-head"><h2><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-search"></use></svg> Filtre</h2></div>
+			<div style="display:flex;gap:6px;flex-wrap:wrap">
+				<a class={ "btn", "small", templ.KV("ghost", v.Durum != "") } href="/admin/aboneler">Tümü</a>
+				<a class={ "btn", "small", templ.KV("ghost", v.Durum != "aktif") } href="/admin/aboneler?durum=aktif">Aktif</a>
+				<a class={ "btn", "small", templ.KV("ghost", v.Durum != "onay bekliyor") } href="/admin/aboneler?durum=onay%20bekliyor">Onay Bekleyen</a>
+				<a class={ "btn", "small", templ.KV("ghost", v.Durum != "iptal") } href="/admin/aboneler?durum=iptal">İptal</a>
+			</div>
+		</div>
+
+		<div class="dash-2" style="margin-top:12px">
+			<div class="card card-pad">
+				<div class="dash-head"><h2><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-mail"></use></svg> Bülten Aboneleri</h2></div>
+				<form
+					method="post"
+					action="/admin/aboneler/bulten"
+					style="display:flex;gap:6px;margin:0 0 10px;flex-wrap:wrap"
+					hx-post="/admin/aboneler/bulten"
+					hx-target="#aboneler-panel"
+					hx-swap="outerHTML"
+					hx-indicator="#aboneler-yukleniyor"
+				>
+					<input class="input" type="email" name="email" placeholder="E-posta" required style="flex:1;min-width:180px" aria-label="Abone e-postası"/>
+					<button class="btn small" type="submit">Ekle</button>
+				</form>
+				<table class="table">
+					<thead>
+						<tr><th>E-posta</th><th>Dil</th><th>Durum</th><th>Kayıt</th><th></th></tr>
+					</thead>
+					<tbody>
+						if len(v.Bulten) == 0 {
+							@TabloBos(5, "mail", "Henüz bülten abonesi yok", "Abonelikler geldikçe burada listelenir.", "", "")
+						}
+						for _, b := range v.Bulten {
+							<tr>
+								<td class="small">{ b.Email }</td>
+								<td class="small">{ b.Locale }</td>
+								<td><span class={ "status-pill", abonePill(b.Status) }>{ b.Status }</span></td>
+								<td class="small muted">{ b.Time }</td>
+								<td style="white-space:nowrap">
+									<form method="post" action={ templ.SafeURL("/admin/aboneler/bulten/" + b.ID + "/durum") } style="display:inline"
+										hx-post={ "/admin/aboneler/bulten/" + b.ID + "/durum" } hx-target="#aboneler-panel" hx-swap="outerHTML" hx-indicator="#aboneler-yukleniyor">
+										<input type="hidden" name="durum" value={ aboneTersDurum(b.Status) }/>
+										<button class="btn ghost small" type="submit">{ aboneTersEtiket(b.Status) }</button>
+									</form>
+									<form method="post" action={ templ.SafeURL("/admin/aboneler/bulten/" + b.ID + "/sil") } style="display:inline"
+										hx-post={ "/admin/aboneler/bulten/" + b.ID + "/sil" } hx-target="#aboneler-panel" hx-swap="outerHTML"
+										data-confirm="Abone kaydı (KVKK) silinsin mi?" hx-indicator="#aboneler-yukleniyor">
+										<button class="btn danger small" type="submit">Sil</button>
+									</form>
+								</td>
+							</tr>
+						}
+					</tbody>
+				</table>
+			</div>
+
+			<div class="card card-pad">
+				<div class="dash-head"><h2><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-news"></use></svg> Gazete Aboneleri</h2></div>
+				<form
+					method="post"
+					action="/admin/aboneler/gazete"
+					style="display:flex;gap:6px;margin:0 0 10px;flex-wrap:wrap"
+					hx-post="/admin/aboneler/gazete"
+					hx-target="#aboneler-panel"
+					hx-swap="outerHTML"
+					hx-indicator="#aboneler-yukleniyor"
+				>
+					<input class="input" type="email" name="email" placeholder="E-posta" style="flex:1;min-width:150px" aria-label="Abone e-postası"/>
+					<input class="input" name="telefon" placeholder="Telefon (+90…)" style="min-width:130px" aria-label="Abone telefonu"/>
+					<select class="input" name="kanal" aria-label="Abone kanalı"><option value="email">E-posta</option><option value="whatsapp">WhatsApp</option><option value="sms">SMS</option></select>
+					<select class="input" name="siklik" aria-label="Gönderim sıklığı"><option value="gunluk">Günlük</option><option value="haftalik">Haftalık</option><option value="aylik">Aylık</option></select>
+					<button class="btn small" type="submit">Ekle</button>
+				</form>
+				<table class="table">
+					<thead>
+						<tr><th>E-posta</th><th>Telefon</th><th>Kanal</th><th>Sıklık</th><th>Durum</th><th></th></tr>
+					</thead>
+					<tbody>
+						if len(v.Gazete) == 0 {
+							@TabloBos(6, "news", "Henüz gazete abonesi yok", "E-baskı abonelikleri geldikçe burada listelenir.", "", "")
+						}
+						for _, g := range v.Gazete {
+							<tr>
+								<td class="small">{ g.Email }</td>
+								<td class="small">{ g.Phone }</td>
+								<td class="small">{ g.Channel }</td>
+								<td class="small">{ g.Frequency }</td>
+								<td><span class={ "status-pill", abonePill(g.Status) }>{ g.Status }</span></td>
+								<td style="white-space:nowrap">
+									<form method="post" action={ templ.SafeURL("/admin/aboneler/gazete/" + g.ID + "/durum") } style="display:inline"
+										hx-post={ "/admin/aboneler/gazete/" + g.ID + "/durum" } hx-target="#aboneler-panel" hx-swap="outerHTML" hx-indicator="#aboneler-yukleniyor">
+										<input type="hidden" name="durum" value={ aboneTersDurum(g.Status) }/>
+										<button class="btn ghost small" type="submit">{ aboneTersEtiket(g.Status) }</button>
+									</form>
+									<form method="post" action={ templ.SafeURL("/admin/aboneler/gazete/" + g.ID + "/sil") } style="display:inline"
+										hx-post={ "/admin/aboneler/gazete/" + g.ID + "/sil" } hx-target="#aboneler-panel" hx-swap="outerHTML"
+										data-confirm="Abone kaydı (KVKK) silinsin mi?" hx-indicator="#aboneler-yukleniyor">
+										<button class="btn danger small" type="submit">Sil</button>
+									</form>
+								</td>
+							</tr>
+						}
+					</tbody>
+				</table>
+			</div>
+		</div>
+		<p class="hint small" style="margin-top:10px">
+			Bu sayfa iki abone listesini bir arada gösterir: <b>Bülten</b> (günlük özet e-postaları) ve
+			<b>Gazete</b> (e-baskı dağıtımı). Her gönderimde tek tıkla çıkış bağlantısı bulunur (KVKK).
+		</p>
+	</div>
+}
+
+func abonePill(status string) string {
+	switch status {
+	case "aktif":
+		return "st-yayinda"
+	case "iptal":
+		return "st-cop"
+	default:
+		return "st-taslak"
+	}
+}
+
+func aboneTersDurum(status string) string {
+	if status == "aktif" {
+		return "iptal"
+	}
+	return "aktif"
+}
+
+func aboneTersEtiket(status string) string {
+	if status == "aktif" {
+		return "İptal Et"
+	}
+	return "Aktif Et"
+}

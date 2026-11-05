@@ -1,0 +1,292 @@
+// Pano 2.0 — yönetici ana ekranı (Faz 149).
+//
+// Pacely düzeninden uyarlanmıştır: solda katlanabilir ray, üstte yapışkan
+// araç çubuğu, dört renkli KPI döşemesi, okunma akışı + kategori halkası,
+// yayın ritmi + en çok okunanlar, sürüklenebilir yayın şeridi ve aktivite.
+//
+// Tasarım kararı: grafikler SUNUCUDA SVG olarak üretilir (pano_svg.go).
+// Panelin geri kalanı gibi HTMX/HTML ile çalışır; istemci yalnız etkileşim
+// (ray katlama, sekme kaydırma, grafik balonu, sürükle-bırak, ⌘K) ekler.
+package templkit
+
+import "html/template"
+
+// PanoNav yan menüdeki tek bağlantı.
+type PanoNav struct {
+	Label string
+	Href  string
+	Icon  string // tabler ikon adı
+	Badge string // "" ise gösterilmez
+	On    bool
+}
+
+// PanoNavGrup menü bölümü.
+type PanoNavGrup struct {
+	Title string
+	Items []PanoNav
+}
+
+// PanoKPI üst sıradaki renkli döşeme.
+type PanoKPI struct {
+	Label  string
+	Value  string
+	Note   string // küçük açıklama
+	Delta  string // "↑ 6.8%"
+	DeltaT string // up | down | flat
+	Icon   string
+	Href   string
+	Tone   int // 1..4 renk
+	Spark  template.HTML
+}
+
+// PanoSeri grafik aralığı seçeneği (7 / 14 / 30 gün).
+type PanoSeri struct {
+	Key   string
+	Label string
+	Chart template.HTML
+	On    bool
+}
+
+// PanoDilimLegend halka grafiğinin açıklama satırı.
+type PanoDilimLegend struct {
+	Name  string
+	Count int
+	Pct   int
+	Tone  int
+}
+
+// PanoPlanRow yayın şeridindeki kart.
+type PanoPlanRow struct {
+	ID     int64
+	Title  string
+	Time   string
+	Status string
+	Tone   string
+	Left   int // şerit üzerindeki yüzde konum
+	Width  int // yüzde genişlik
+	Lane   int // dikey şerit (çakışmayı önler)
+}
+
+// PanoPlanTick şerit eksenindeki işaret.
+type PanoPlanTick struct {
+	Left  int // yüzde
+	Label string
+}
+
+// PanoActRow aktivite satırı.
+type PanoActRow struct {
+	Icon  string
+	Title string
+	Meta  string
+	When  string
+}
+
+// PanoView ana ekranın tamamı.
+type PanoView struct {
+	FlashKind string
+	FlashText string
+
+	Selam    string
+	Tarih    string
+	UserName string
+	UserRole string
+	SiteName string
+
+	Nav     []PanoNavGrup
+	KPIs    []PanoKPI
+	Seriler []PanoSeri
+
+	OkunmaToplam string
+	Halka        template.HTML
+	HalkaLegend  []PanoDilimLegend
+
+	Sutun template.HTML
+	Yatay template.HTML
+
+	PlanRows   []PanoPlanRow
+	PlanBos    bool
+	PlanSimdi  string
+	PlanNowPct int  // "şimdi" çizgisinin konumu (yüzde)
+	PlanNowVar bool // şimdi pencerenin içinde mi (son yayınlar modunda dışarıda kalır)
+	PlanLanes  int  // şeritte kaç dikey sıra kullanıldı (en az 1)
+	PlanEtiket string
+	PlanTicks  []PanoPlanTick
+
+	Aktivite []PanoActRow
+	BosAkt   bool
+
+	// Yayın hedefi (yan menü altındaki ilerleme kutusu).
+	HedefBugun int
+	HedefGun   int
+}
+
+// PanoIkon tabler ikonunu basar (sprite /static/vendor/tabler-icons.svg).
+templ PanoIkon(name string) {
+	<svg class="pn-ico" aria-hidden="true"><use href={ "/static/vendor/tabler-icons.svg?v=b89545a6#ti-" + name }></use></svg>
+}
+
+// PanoPanel ana ekran gövdesi.
+templ PanoPanel(v PanoView) {
+	<div class="pn-view">
+		<section class="pn-head">
+			<div>
+				<h1>{ v.Selam }, { v.UserName }</h1>
+				<p class="pn-head__sub">{ v.Tarih } · sitenin bugünkü durumu</p>
+			</div>
+			<div class="pn-head__side">
+				<span class="pn-chip">{ v.OkunmaToplam } okunma</span>
+			</div>
+		</section>
+
+		<div class="pn-kpis">
+			for _, k := range v.KPIs {
+				<a class={ "pn-kpi", "pn-kpi--" + itoaT(k.Tone) } href={ k.Href }>
+					<span class="pn-kpi__label">
+						@PanoIkon(k.Icon)
+						<span>{ k.Label }</span>
+						@PanoIkon("arrow-right")
+					</span>
+					<span class="pn-kpi__value">{ k.Value }</span>
+					<span class="pn-kpi__foot">
+						<span class="pn-kpi__note">
+							if k.Delta != "" {
+								<span class={ "pn-delta", "pn-delta--" + k.DeltaT }>{ k.Delta }</span>
+							}
+							<span>{ k.Note }</span>
+						</span>
+						@templ.Raw(string(k.Spark))
+					</span>
+				</a>
+			}
+		</div>
+
+		<div class="pn-grid pn-grid--2">
+			<section class="pn-card">
+				<div class="pn-chead">
+					<div class="pn-chead__text">
+						<h2>Okunma akışı</h2>
+						<p>Günlük toplam okunma</p>
+					</div>
+					<div class="pn-seg" role="group" aria-label="Zaman aralığı" id="pnSeg">
+						<span class="pn-seg__thumb" id="pnSegThumb"></span>
+						for _, s := range v.Seriler {
+							<button type="button" data-pn-seri={ s.Key } aria-pressed={ boolStr(s.On) }>{ s.Label }</button>
+						}
+					</div>
+				</div>
+				<div class="pn-chartbox" id="pnChartBox">
+					for _, s := range v.Seriler {
+						<div class={ "pn-seriwrap", templ.KV("on", s.On) } data-pn-w={ s.Key }>
+							@templ.Raw(string(s.Chart))
+						</div>
+					}
+					<div class="pn-balon" id="pnBalon" hidden></div>
+				</div>
+			</section>
+
+			<section class="pn-card">
+				<div class="pn-chead">
+					<div class="pn-chead__text">
+						<h2>Kategori dağılımı</h2>
+						<p>Yayındaki içeriklerin kategori payı</p>
+					</div>
+				</div>
+				<div class="pn-halka__kutu">
+					@templ.Raw(string(v.Halka))
+					<ul class="pn-lejant">
+						for _, d := range v.HalkaLegend {
+							<li>
+								<i class={ "pn-lejant__renk", "pn-c" + itoaT(d.Tone) }></i>
+								<span class="pn-lejant__ad">{ d.Name }</span>
+								<span class="pn-lejant__sayi">{ itoaT(d.Count) }</span>
+								<span class="pn-lejant__pct">{ itoaT(d.Pct) }%</span>
+							</li>
+						}
+					</ul>
+				</div>
+			</section>
+		</div>
+
+		<div class="pn-grid pn-grid--3">
+			<section class="pn-card">
+				<div class="pn-chead">
+					<div class="pn-chead__text">
+						<h2>Yayın ritmi</h2>
+						<p>Son altı ayın yayın sayısı</p>
+					</div>
+				</div>
+				<div class="pn-chartbox pn-chartbox--kisa">@templ.Raw(string(v.Sutun))</div>
+			</section>
+			<section class="pn-card">
+				<div class="pn-chead">
+					<div class="pn-chead__text">
+						<h2>En çok okunanlar</h2>
+						<p>Toplam okunmaya göre</p>
+					</div>
+					<a class="pn-link" href="/admin/raporlar">Raporlar</a>
+				</div>
+				@templ.Raw(string(v.Yatay))
+			</section>
+			<section class="pn-card">
+				<div class="pn-chead">
+					<div class="pn-chead__text">
+						<h2>Aktivite</h2>
+						<p>Bugün ekipte ne oldu</p>
+					</div>
+				</div>
+				if v.BosAkt {
+					<p class="pn-bos">Henüz kayıt yok.</p>
+				}
+				<ol class="pn-akt">
+					for _, a := range v.Aktivite {
+						<li>
+							<span class="pn-akt__ico">@PanoIkon(a.Icon)</span>
+							<span class="pn-akt__govde">
+								<b>{ a.Title }</b>
+								<small>{ a.Meta }</small>
+							</span>
+							<span class="pn-akt__zaman">{ a.When }</span>
+						</li>
+					}
+				</ol>
+			</section>
+		</div>
+
+		<section class="pn-card" id="pnPlan">
+			<div class="pn-chead">
+				<div class="pn-chead__text">
+					<h2>Yayın şeridi</h2>
+					<p>Kartı sürükleyip bırakın — yayın saati değişir · kırmızı çizgi şimdi</p>
+				</div>
+				<span class="pn-chip pn-chip--sade" id="pnPlanDurum">{ v.PlanEtiket }</span>
+			</div>
+			if v.PlanBos {
+				<p class="pn-bos">Bu aralıkta yayınlanmış ya da planlanmış içerik yok.</p>
+			} else {
+				<div class="pn-plan">
+					<div class="pn-plan__eksen">
+						for _, tk := range v.PlanTicks {
+							<span class="pn-plan__tick" style={ templ.SafeCSS("left:" + itoaT(tk.Left) + "%") }>{ tk.Label }</span>
+						}
+						if v.PlanNowVar {
+							<span class="pn-plan__imdi" style={ templ.SafeCSS("left:" + itoaT(v.PlanNowPct) + "%") }><b>{ v.PlanSimdi }</b></span>
+						}
+					</div>
+					<div class="pn-plan__ray" id="pnPlanRay" data-url="/admin/pano/tasi" data-lanes={ itoaT(v.PlanLanes) }
+						style={ templ.SafeCSS("height:" + itoaT(14+v.PlanLanes*66) + "px") }>
+						for _, r := range v.PlanRows {
+							<div class={ "pn-visit", "pn-visit--" + r.Tone } data-id={ itoaT64(r.ID) }
+								draggable="true" tabindex="0"
+								style={ templ.SafeCSS("left:" + itoaT(r.Left) + "%;width:" + itoaT(r.Width) + "%;top:" + itoaT(8+r.Lane*66) + "px") }
+								title={ r.Time + " · " + r.Status }>
+								<b>{ r.Title }</b>
+								<small>{ r.Time }</small>
+							</div>
+						}
+					</div>
+				</div>
+			}
+		</section>
+	</div>
+	<div class="pn-toasts" id="pnToasts" aria-live="polite"></div>
+}

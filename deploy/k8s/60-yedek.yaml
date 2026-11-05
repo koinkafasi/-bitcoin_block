@@ -1,0 +1,197 @@
+# Otomatik yedekleme — runbook §9'daki "Postgres yedeği otomatik değil"
+# açığını kapatır.
+#
+# Tasarım kararları
+# -----------------
+# 1. Yedekler AYRI bir PVC'de (`theblock-backup`) durur. Medya PVC'sine
+#    yazsaydık, yedek ile canlı veri aynı diski paylaşırdı; disk dolduğunda
+#    hem site hem yedek birlikte giderdi.
+# 2. DB: günlük `pg_dump -Fc` + `pg_restore --list` ile OKUNABİLİRLİK
+#    doğrulaması. Yalnız dosya boyutuna bakmak yetmez: bozuk bir dump da
+#    boyut gösterir. `--list` açılamayan arşivi yakalar.
+# 3. Saklama: 14 gün. 409 MB × 14 ≈ 5.7 GB; 20 Gi PVC'de bol yer kalır.
+# 4. Medya: haftalık `tar.gz`. Kopyalamak yerine arşiv: local-path ext4'te
+#    hardlink destekli rsync anlık görüntüsü daha zarif olurdu ama yedek
+#    imajında rsync yok (postgres:17-alpine) ve çalışma anında paket kurmak
+#    readOnlyRootFilesystem + tedarik zinciri açısından istenmez. tar her
+#    imajda var, deterministik ve doğrulanabilir (`tar -tzf`).
+# 5. İki iş de `readOnlyRootFilesystem` + düşürülmüş yeteneklerle koşar;
+#    yazılabilir tek yol /tmp (emptyDir).
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: theblock-backup
+  namespace: theblock
+  labels: { app: theblock-yedek }
+spec:
+  accessModes: [ReadWriteOnce]
+  storageClassName: local-path
+  resources:
+    requests:
+      storage: 20Gi
+
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: theblock-yedek-db
+  namespace: theblock
+  labels: { app: theblock-yedek }
+spec:
+  schedule: "15 3 * * *"          # her gün 03:15 (Europe/Istanbul)
+  timeZone: Europe/Istanbul
+  concurrencyPolicy: Forbid
+  startingDeadlineSeconds: 600
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 1
+      activeDeadlineSeconds: 3600
+      template:
+        metadata:
+          labels: { app: theblock-yedek-db }
+        spec:
+          restartPolicy: Never
+          securityContext:
+            runAsUser: 70          # postgres:17-alpine kimliği
+            runAsGroup: 70
+            fsGroup: 70
+            runAsNonRoot: true
+            seccompProfile: { type: RuntimeDefault }
+          containers:
+            - name: yedek
+              image: postgres:17-alpine
+              securityContext:
+                allowPrivilegeEscalation: false
+                readOnlyRootFilesystem: true
+                capabilities: { drop: ["ALL"] }
+              env:
+                - name: PGUSER
+                  valueFrom: { secretKeyRef: { name: theblock-env, key: POSTGRES_USER } }
+                - name: PGPASSWORD
+                  valueFrom: { secretKeyRef: { name: theblock-env, key: POSTGRES_PASSWORD } }
+                - name: PGDATABASE
+                  valueFrom: { secretKeyRef: { name: theblock-env, key: POSTGRES_DB } }
+                - name: PGHOST
+                  value: theblock-postgres
+                - name: SAKLAMA_GUN
+                  value: "14"
+              command: ["/bin/sh", "-c"]
+              args:
+                - |
+                  set -eu
+                  damga="$(date -u +%Y%m%d-%H%M%S)"
+                  hedef="/yedek/db-${damga}.dump"
+                  gecici="${hedef}.tmp"
+                  # Yarim kalan arsiv "yedek var" gibi gorunmesin: hata
+                  # durumunda gecici dosya silinir (atomik mv asagida).
+                  trap 'rm -f "$gecici"' EXIT INT TERM
+                  echo "[yedek] basliyor: $hedef"
+                  pg_dump --format=custom --compress=6 --file="$gecici"
+                  # OKUNABILIRLIK KAPISI: arsiv gercekten acilabiliyor mu?
+                  pg_restore --list "$gecici" >/dev/null
+                  mv -f "$gecici" "$hedef"
+                  echo "[yedek] dogrulandi: $(du -h "$hedef" | cut -f1)"
+                  # Saklama: SAKLAMA_GUN'den eski dump'lari sil.
+                  find /yedek -maxdepth 1 -name 'db-*.dump' -type f \
+                    -mtime "+${SAKLAMA_GUN}" -print -delete
+                  echo "[yedek] bitti"
+              volumeMounts:
+                - { name: yedek, mountPath: /yedek }
+                - { name: tmp, mountPath: /tmp }
+              resources:
+                requests: { cpu: 50m, memory: 64Mi }
+                limits:   { cpu: 500m, memory: 256Mi }
+          volumes:
+            - name: yedek
+              persistentVolumeClaim: { claimName: theblock-backup }
+            - name: tmp
+              emptyDir: {}
+
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: theblock-yedek-medya
+  namespace: theblock
+  labels: { app: theblock-yedek }
+spec:
+  schedule: "30 4 * * 0"          # pazar 04:30 (Europe/Istanbul)
+  timeZone: Europe/Istanbul
+  concurrencyPolicy: Forbid
+  startingDeadlineSeconds: 1800
+  successfulJobsHistoryLimit: 2
+  failedJobsHistoryLimit: 2
+  jobTemplate:
+    spec:
+      backoffLimit: 1
+      activeDeadlineSeconds: 7200
+      template:
+        metadata:
+          labels: { app: theblock-yedek-medya }
+        spec:
+          restartPolicy: Never
+          securityContext:
+            # MEDYA dosyaları site konteynerine ait: uid 10001, mod 600
+            # (ölçüldü: /data/storage/logos/teams/*.png). local-path bir
+            # hostPath hacmidir; kubelet fsGroup'u var olan dosyalara
+            # UYGULAMAZ. Bu yüzden yedek pod'u site ile AYNI kimlikle koşar —
+            # aksi hâlde tar "Permission denied" ile düşer (5 Kasım'da oldu).
+            runAsUser: 10001
+            runAsGroup: 999
+            fsGroup: 10001
+            runAsNonRoot: true
+            seccompProfile: { type: RuntimeDefault }
+          containers:
+            - name: yedek
+              image: postgres:17-alpine
+              securityContext:
+                allowPrivilegeEscalation: false
+                readOnlyRootFilesystem: true
+                capabilities: { drop: ["ALL"] }
+              env:
+                - name: SAKLAMA_GUN
+                  value: "56"     # 8 haftalık arşiv
+              command: ["/bin/sh", "-c"]
+              args:
+                - |
+                  set -eu
+                  damga="$(date -u +%Y%m%d)"
+                  hedef="/yedek/medya-${damga}.tar.gz"
+                  gecici="${hedef}.tmp"
+                  # Yarim kalan arsiv "yedek var" gibi gorunmesin: hata
+                  # durumunda gecici dosya silinir (atomik mv asagida).
+                  trap 'rm -f "$gecici"' EXIT INT TERM
+                  echo "[yedek] medya arsivi: $hedef"
+                  # Ayni gun ikinci kosu: onceki hedef BASKA bir uid'e ait
+                  # olabilir (5 Kasim: 70:70, mod 644). /yedek dizini 777 ve
+                  # sticky degil; unlink izinli. rm olmadan tar "Permission
+                  # denied" ile duser.
+                  rm -f "$hedef"
+                  # Canli medya READ-ONLY baglanir; arsiv yedek PVC'sine yazilir.
+                  tar -czf "$gecici" -C /veri .
+                  # DOGRULAMA: arsiv okunabiliyor mu (ilk 20 girdi).
+                  tar -tzf "$gecici" | head -20 >/dev/null
+                  mv -f "$gecici" "$hedef"
+                  echo "[yedek] dogrulandi: $(du -h "$hedef" | cut -f1)"
+                  find /yedek -maxdepth 1 -name 'medya-*.tar.gz' -type f \
+                    -mtime "+${SAKLAMA_GUN}" -print -delete
+                  echo "[yedek] bitti"
+              volumeMounts:
+                - { name: yedek, mountPath: /yedek }
+                - { name: medya, mountPath: /veri, readOnly: true }
+                - { name: tmp, mountPath: /tmp }
+              resources:
+                requests: { cpu: 50m, memory: 64Mi }
+                # 500m: kota limits.cpu 8 iken çalışan yükler 7 kullanıyor.
+                # 1 CPU isteseydik yedek sırasında bir rollout kota yüzünden
+                # takılabilirdi (5 Kasım'da collab'ta tam bu oldu).
+                limits:   { cpu: 500m, memory: 256Mi }
+          volumes:
+            - name: yedek
+              persistentVolumeClaim: { claimName: theblock-backup }
+            - name: medya
+              persistentVolumeClaim: { claimName: theblock-media }
+            - name: tmp
+              emptyDir: {}

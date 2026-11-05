@@ -1,0 +1,147 @@
+// Yazar/editör yönetimi paneli (templ).
+package templkit
+
+// KisiSatir yazar listesi satırı.
+type KisiSatir struct {
+	ID           string
+	Name         string
+	Slug         string
+	Role         string
+	Title        string
+	ArticleCount string
+	Status       string
+}
+
+// KisiMedya profil görseli seçeneği.
+type KisiMedya struct {
+	ID       string
+	Filename string
+	Thumb    string
+	Selected bool
+}
+
+// KisiDuzenle profil düzenleme formu.
+type KisiDuzenle struct {
+	ID            string
+	Name          string
+	Slug          string
+	Title         string
+	Bio           string
+	RoleOptions   []IOpt
+	StatusOptions []IOpt
+	Media         []KisiMedya
+	AvatarID      string
+	SosyalX       string
+	SosyalLinkedIn string
+	SosyalWebsite string
+	SosyalEmail   string
+}
+
+// PeopleView yazar yönetimi paneli.
+type PeopleView struct {
+	FlashKind string
+	FlashText string
+	Items     []KisiSatir
+	Edit      *KisiDuzenle
+}
+
+// PeoplePanel yazar/editör yönetimi (HTMX hedefi: #people-panel).
+templ PeoplePanel(v PeopleView) {
+	<div id="people-panel">
+		if v.FlashText != "" {
+			<div class={ "flash", v.FlashKind }>{ v.FlashText }</div>
+		}
+		@Yukleniyor("people-yukleniyor", "Kaydediliyor…")
+		<div style="display:flex;gap:8px;align-items:center;margin-bottom:12px;flex-wrap:wrap">
+			<h2 style="margin:0;font-size:1.05rem">Yazarlar &amp; Editörler</h2>
+			<span class="small muted">Profil, unvan, biyografi ve sosyal bağlantılar; yazı künyesinde görünür.</span>
+			<a class="btn ghost small" href="/yazarlar" target="_blank" rel="noopener" style="margin-left:auto">Sitede gör <svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-external-link"></use></svg></a>
+		</div>
+		<div class="grid-2" style="grid-template-columns:1fr 1fr;align-items:start">
+			<div>
+				<table class="table">
+					<thead>
+						<tr><th>Ad</th><th>Rol</th><th>Yazı</th><th>Durum</th><th></th></tr>
+					</thead>
+					<tbody>
+						if len(v.Items) == 0 {
+							@TabloBos(5, "users", "Kayıt yok", "Bu listede henüz kişi bulunmuyor.", "", "")
+						}
+						for _, p := range v.Items {
+							<tr>
+								<td>
+									<strong>{ p.Name }</strong>
+									if p.Slug != "" {
+										<div class="small muted">/yazar/{ p.Slug }</div>
+									}
+								</td>
+								<td>
+									{ p.Role }
+									if p.Title != "" {
+										<div class="small muted">{ p.Title }</div>
+									}
+								</td>
+								<td>{ p.ArticleCount }</td>
+								<td><span class="badge">{ p.Status }</span></td>
+								<td><a class="btn ghost small" href="#" hx-get={ "/admin/yazarlar/" + p.ID } hx-target="#people-panel" hx-swap="outerHTML" hx-indicator="#people-yukleniyor">Düzenle</a></td>
+							</tr>
+						}
+					</tbody>
+				</table>
+			</div>
+			<div>
+				if v.Edit != nil {
+					<form method="post" action={ templ.SafeURL("/admin/yazarlar/" + v.Edit.ID) } hx-post={ "/admin/yazarlar/" + v.Edit.ID } hx-target="#people-panel" hx-swap="outerHTML" hx-indicator="#people-yukleniyor">
+						<h3 style="margin-top:0">Profili düzenle</h3>
+						<div class="field"><label for="f_ad">Ad soyad</label><input id="f_ad" class="input" name="ad" value={ v.Edit.Name } required maxlength="120"/></div>
+						<div class="field">
+							<label for="f_slug">URL slug</label>
+							<input id="f_slug" class="input" name="slug" value={ v.Edit.Slug } placeholder="otomatik" maxlength="120"/>
+							<div class="hint">/yazar/<strong>slug</strong> — boş bırakılırsa addan üretilir.</div>
+						</div>
+						<div class="field"><label for="f_unvan">Unvan</label><input id="f_unvan" class="input" name="unvan" value={ v.Edit.Title } placeholder="Ekonomi Editörü" maxlength="120"/></div>
+						<div class="field"><label for="f_biyografi">Biyografi</label><textarea id="f_biyografi" class="input" name="biyografi" rows="4" maxlength="1200">{ v.Edit.Bio }</textarea></div>
+						<div class="grid-2" style="grid-template-columns:1fr 1fr">
+							<div class="field">
+								<label for="f_rol">Rol</label>
+								<select id="f_rol" class="input" name="rol">
+									for _, o := range v.Edit.RoleOptions {
+										<option value={ o.Value } selected?={ o.Selected }>{ o.Label }</option>
+									}
+								</select>
+							</div>
+							<div class="field">
+								<label for="f_durum">Durum</label>
+								<select id="f_durum" class="input" name="durum">
+									for _, o := range v.Edit.StatusOptions {
+										<option value={ o.Value } selected?={ o.Selected }>{ o.Label }</option>
+									}
+								</select>
+							</div>
+						</div>
+						<div class="field">
+							<label for="f_avatar_media_id">Profil fotoğrafı</label>
+							<select id="f_avatar_media_id" class="input media-slot-select" name="avatar_media_id">
+								<option value="">— Yok —</option>
+								for _, m := range v.Edit.Media {
+									<option value={ m.ID } data-thumb={ m.Thumb } selected?={ m.Selected }>{ m.Filename }</option>
+								}
+							</select>
+							<img class="media-slot-preview" alt="" hidden/>
+						</div>
+						<div class="field"><label for="f_sosyal_x">X (Twitter)</label><input id="f_sosyal_x" class="input" name="sosyal_x" value={ v.Edit.SosyalX } placeholder="https://x.com/kullanici"/></div>
+						<div class="field"><label for="f_sosyal_linkedin">LinkedIn</label><input id="f_sosyal_linkedin" class="input" name="sosyal_linkedin" value={ v.Edit.SosyalLinkedIn } placeholder="https://linkedin.com/in/kullanici"/></div>
+						<div class="field"><label for="f_sosyal_website">Web sitesi</label><input id="f_sosyal_website" class="input" name="sosyal_website" value={ v.Edit.SosyalWebsite } placeholder="https://..."/></div>
+						<div class="field"><label for="f_sosyal_email">E-posta</label><input id="f_sosyal_email" class="input" name="sosyal_email" value={ v.Edit.SosyalEmail } placeholder="ad@site.com"/></div>
+						<div style="display:flex;gap:8px;margin-top:10px">
+							<button class="btn" type="submit">Kaydet</button>
+							<a class="btn ghost" href="/admin/yazarlar">Kapat</a>
+						</div>
+					</form>
+				} else {
+					<div class="card card-pad muted small">Düzenlemek için soldan bir kişi seçin. Profil alanları yazı sayfasındaki künyede ve <a href="/yazarlar" target="_blank" rel="noopener">/yazarlar</a> dizininde görünür.</div>
+				}
+			</div>
+		</div>
+	</div>
+}

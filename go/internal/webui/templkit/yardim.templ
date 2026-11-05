@@ -1,0 +1,133 @@
+// Package templkit — panel içi yardım merkezi (Faz 165).
+//
+// NEDEN: bilgi `docs/` içindeydi; editör panelde aramıyor. Pacely'nin
+// /help ekranı üç şeyi bir arada veriyor: sık sorulanlar, iletişim ve
+// talepler. Bizde SSS + klavye kısayolları + ekran ipuçları yeterli;
+// talep/iletişim zaten /admin/geri-bildirim ve /admin/iletisim'de.
+//
+// Arayüz filtresi istemcide: 40+ maddeyi sunucuya sorgu atmadan süzmek
+// için. Her madde `data-ara` taşır (başlık + gövde, küçük harfe çevrilmiş).
+package templkit
+
+// YardimMadde tek bir soru/ipucu.
+type YardimMadde struct {
+	Soru   string
+	Cevap  string
+	Ekran  string // hangi ekranla ilgili ("" = genel)
+	Ikon   string
+	Baglar string // "etiket|href" biçiminde opsiyonel bağlantı
+}
+
+// YardimKisayol klavye kısayolu satırı.
+type YardimKisayol struct {
+	Tus     string
+	Aciklama string
+}
+
+// YardimView yardım sayfasının tamamı.
+type YardimView struct {
+	Kisayollar []YardimKisayol
+	Ipuclari   []YardimMadde
+	SSS        []YardimMadde
+	Baglantilar []YardimBaglanti
+}
+
+// YardimBaglanti ilgili panel ekranı.
+type YardimBaglanti struct {
+	Ad    string
+	Href  string
+	Ikon  string
+	Not   string
+}
+
+// YardimPanel yardım merkezi gövdesi.
+templ YardimPanel(v YardimView) {
+	<div class="yardim">
+		<div class="yardim-ara">
+			<svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-search"></use></svg>
+			<input class="input" type="search" id="yardimAra" placeholder="Yardımda ara… (ör. kısayol, gazete, medya)" aria-label="Yardımda ara" autocomplete="off"/>
+			<span class="yardim-ara__sayi" id="yardimSayi" aria-live="polite"></span>
+		</div>
+
+		<section class="card card-pad yardim-blok">
+			<h2 class="yardim-baslik">
+				<svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-keyboard"></use></svg>
+				Klavye kısayolları
+			</h2>
+			<div class="yardim-kisayol-izgara">
+				for _, k := range v.Kisayollar {
+					<div class="yardim-kisayol" data-ara={ lowerTR(k.Tus + " " + k.Aciklama) }>
+						<kbd class="yardim-tus">{ k.Tus }</kbd>
+						<span>{ k.Aciklama }</span>
+					</div>
+				}
+			</div>
+		</section>
+
+		<section class="card card-pad yardim-blok">
+			<h2 class="yardim-baslik">
+				<svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-bulb"></use></svg>
+				Ekran ipuçları
+			</h2>
+			<div class="yardim-izgara">
+				for _, m := range v.Ipuclari {
+					@yardimMadde(m, "ipucu")
+				}
+			</div>
+			<p class="bos-durum__aciklama" id="yardimBos" hidden>Bu aramaya uyan ipucu yok.</p>
+		</section>
+
+		<section class="card card-pad yardim-blok">
+			<h2 class="yardim-baslik">
+				<svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-help-circle"></use></svg>
+				Sık sorulanlar
+			</h2>
+			<div class="yardim-sss">
+				for _, m := range v.SSS {
+					<details class="yardim-kutu" data-ara={ lowerTR(m.Soru + " " + m.Cevap + " " + m.Ekran) }>
+						<summary>{ m.Soru }</summary>
+						<p>{ m.Cevap }</p>
+					</details>
+				}
+			</div>
+		</section>
+
+		<section class="card card-pad yardim-blok">
+			<h2 class="yardim-baslik">
+				<svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-link"></use></svg>
+				İlgili ekranlar
+			</h2>
+			<div class="yardim-bag">
+				for _, b := range v.Baglantilar {
+					<a class="yardim-bag__oge" href={ templ.SafeURL(b.Href) } data-ara={ lowerTR(b.Ad + " " + b.Not) }>
+						<span class="cmdk-oge__ikon">
+							<svg class="ti" aria-hidden="true"><use href={ "/static/vendor/tabler-icons.svg?v=b89545a6#ti-" + b.Ikon }></use></svg>
+						</span>
+						<span class="cmdk-oge__govde">
+							<span class="cmdk-oge__ad">{ b.Ad }</span>
+							<span class="cmdk-oge__alt">{ b.Not }</span>
+						</span>
+						<svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-arrow-up-right"></use></svg>
+					</a>
+				}
+			</div>
+		</section>
+	</div>
+}
+
+templ yardimMadde(m YardimMadde, tur string) {
+	<article class={ "yardim-madde", "yardim-madde--"+tur } data-ara={ lowerTR(m.Soru + " " + m.Cevap + " " + m.Ekran) }>
+		if m.Ikon != "" {
+			<span class="yardim-madde__ikon" aria-hidden="true">
+				<svg class="ti"><use href={ "/static/vendor/tabler-icons.svg?v=b89545a6#ti-" + m.Ikon }></use></svg>
+			</span>
+		}
+		<div>
+			<h3 class="yardim-madde__baslik">{ m.Soru }</h3>
+			<p class="yardim-madde__metin">{ m.Cevap }</p>
+			if m.Ekran != "" {
+				<span class="badge">{ m.Ekran }</span>
+			}
+		</div>
+	</article>
+}

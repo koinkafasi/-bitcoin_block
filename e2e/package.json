@@ -1,0 +1,19 @@
+{
+  "name": "theblock-e2e",
+  "version": "1.0.0",
+  "private": true,
+  "description": "theblock.com.tr uçtan uca testler (Puppeteer + node:test, ücretsiz)",
+  "type": "commonjs",
+  "scripts": {
+    "test": "node --test --test-concurrency=1 --test-timeout=180000 tests/*.test.js",
+    "test:responsive": "node --test --test-timeout=120000 tests/responsive.test.js",
+    "test:smoke": "node --test --test-timeout=120000 tests/smoke.test.js",
+    "test:fikstur": "node --test --test-timeout=120000 tests/fikstur.test.js",
+    "test:admin": "node --test --test-timeout=120000 tests/admin.test.js",
+    "test:media": "node --test --test-timeout=180000 tests/media_library.test.js",
+    "install:browser": "npx puppeteer browsers install chrome"
+  },
+  "devDependencies": {
+    "puppeteer": "^25.16.0"
+  }
+}

@@ -1,0 +1,17 @@
+package templkit
+
+// CeviriHata çeviri üretilemediğinde gösterilen panel (Faz 190).
+//
+// Neden ayrı bileşen: hata HTMX hedefinin içine basılıyor (düğmenin yanına
+// değil), çünkü çeviri düğmesi bir satır içinde ve satır yüksekliği
+// değişmemeli. Kullanıcıya neden + tekrar deneme + kaynağa dönüş verilir.
+templ CeviriHata(mesaj, kaynakURL string) {
+	<div class="ceviri-hata" role="alert">
+		<svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-alert-triangle"></use></svg>
+		<div>
+			<b>Çeviri üretilemedi</b>
+			<p>{ mesaj }</p>
+			<a class="btn ghost small" href={ templ.SafeURL(kaynakURL) }>İçeriğe dön</a>
+		</div>
+	</div>
+}

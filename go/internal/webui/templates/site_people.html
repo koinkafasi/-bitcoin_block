@@ -1,0 +1,73 @@
+{{define "people_list"}}<!doctype html><html lang="{{.Lang}}" {{if .RTL}}dir="rtl"{{end}} data-theme="{{.Theme}}"><head>{{template "public_head" .}}</head>
+<body>
+{{template "site_header" .}}
+<main class="page" id="main"><div class="container animate-in">
+  <nav class="breadcrumb" aria-label="kırıntı"><a href="{{.HomeURL}}">Anasayfa</a><span class="bc-sep">›</span><span class="bc-cur">Yazarlar</span></nav>
+  <h1 class="page-title">Yazarlar &amp; Editörler</h1>
+  <p class="muted" style="margin-top:-6px">Haberleri kaleme alan yazarlar, muhabirler ve editörler.</p>
+  <div class="people-grid">
+    {{range .People}}
+    <a class="person-card" href="{{$.LangBase}}/yazar/{{.Slug}}">
+      {{if .AvatarMediaID}}<img class="person-avatar" src="{{mediaURL .AvatarMediaID}}" alt="{{.Name}}" loading="lazy">
+      {{else}}<span class="person-avatar person-initial" aria-hidden="true">{{printf "%.1s" .Name}}</span>{{end}}
+      <span class="person-body">
+        <strong class="person-name">{{.Name}}</strong>
+        <span class="person-role">{{.Role}}{{if .Title}} · {{.Title}}{{end}}</span>
+        {{if .Bio}}<span class="person-bio">{{printf "%.130s" .Bio}}</span>{{end}}
+        <span class="person-count">{{.ArticleCount}} yazı</span>
+      </span>
+    </a>
+    {{else}}<p class="muted">Henüz yazar profili yok.</p>{{end}}
+  </div>
+</div></main>
+{{template "site_footer" .}}
+</body></html>{{end}}
+
+{{define "person"}}<!doctype html><html lang="{{.Lang}}" {{if .RTL}}dir="rtl"{{end}} data-theme="{{.Theme}}"><head>{{template "public_head" .}}
+</head>
+<body>
+{{template "site_header" .}}
+<main class="page" id="main"><div class="container animate-in">
+  <nav class="breadcrumb" aria-label="kırıntı">
+    <a href="{{.HomeURL}}">Anasayfa</a><span class="bc-sep">›</span>
+    <a href="{{.LangBase}}/yazarlar">Yazarlar</a><span class="bc-sep">›</span>
+    <span class="bc-cur">{{.Person.Name}}</span>
+  </nav>
+
+  <header class="person-head">
+    {{if .Person.AvatarMediaID}}<img class="person-avatar person-avatar-lg" src="{{mediaURL .Person.AvatarMediaID}}" alt="{{.Person.Name}}">
+    {{else}}<span class="person-avatar person-avatar-lg person-initial" aria-hidden="true">{{printf "%.1s" .Person.Name}}</span>{{end}}
+    <div class="person-head-body">
+      <h1 class="person-name-lg">{{.Person.Name}}</h1>
+      <div class="person-role">{{.Person.Role}}{{if .Person.Title}} · {{.Person.Title}}{{end}}</div>
+      {{if .Person.Bio}}<p class="person-bio-lg">{{.Person.Bio}}</p>{{end}}
+      <div class="person-links">
+        {{with index .Person.Socials "x"}}<a href="{{.}}" target="_blank" rel="noopener me">X</a>{{end}}
+        {{with index .Person.Socials "linkedin"}}<a href="{{.}}" target="_blank" rel="noopener me">LinkedIn</a>{{end}}
+        {{with index .Person.Socials "website"}}<a href="{{.}}" target="_blank" rel="noopener me">Web sitesi</a>{{end}}
+        {{with index .Person.Socials "email"}}<a href="mailto:{{.}}">E-posta</a>{{end}}
+      </div>
+    </div>
+  </header>
+
+  <h2 class="page-title" style="margin-top:26px">Yazıları <span class="muted" style="font-size:.9rem;font-weight:600">({{.PersonTotal}})</span></h2>
+  <div class="grid-2">
+    {{range .PersonContents}}
+    <a class="card" href="{{$.LangBase}}/{{.DisplaySlug}}-{{.ID}}">
+      {{if .CoverMediaID}}<img class="thumb" src="{{mediaURL .CoverMediaID}}" alt="" loading="lazy">{{end}}
+      <div class="card-pad"><h3>{{.Title}}</h3>
+        <div class="shape">{{if .CategoryName}}{{.CategoryName}} · {{end}}{{formatTime .PublishedAt}}</div>
+      </div>
+    </a>
+    {{else}}<p class="muted">Bu kişiye ait yayınlanmış yazı yok.</p>{{end}}
+  </div>
+
+  {{if or .PersonHasPrev .PersonHasNext}}
+  <nav class="pager" aria-label="sayfalama" style="display:flex;gap:8px;justify-content:center;margin:22px 0">
+    {{if .PersonHasPrev}}<a class="btn ghost small" href="{{.LangBase}}/yazar/{{.Person.Slug}}?sayfa={{.PersonPrevPage}}">← Önceki</a>{{end}}
+    {{if .PersonHasNext}}<a class="btn ghost small" href="{{.LangBase}}/yazar/{{.Person.Slug}}?sayfa={{.PersonNextPage}}">Sonraki →</a>{{end}}
+  </nav>
+  {{end}}
+</div></main>
+{{template "site_footer" .}}
+</body></html>{{end}}

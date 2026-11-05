@@ -1,0 +1,48 @@
+{{define "geri_bildirim_panel"}}<div id="geri-bildirim-panel">
+  {{if .Flash}}<div class="flash {{.Flash.Kind}}">{{.Flash.Text}}</div>{{end}}
+  <span id="geri-bildirim-yukleniyor" class="htmx-indicator small muted" role="status" aria-live="polite">Yükleniyor…</span>
+  <div class="card card-pad" style="display:flex;gap:14px;align-items:center;flex-wrap:wrap">
+    <strong>Geri Bildirim &amp; Asistan</strong>
+    <a class="tag" href="/admin/geri-bildirim?durum=bekliyor" hx-get="/admin/geri-bildirim?durum=bekliyor" hx-target="#geri-bildirim-panel" hx-swap="outerHTML" hx-push-url="true" hx-indicator="#geri-bildirim-yukleniyor">Bekleyen: {{index .Feedback.Counts "bekliyor"}}</a>
+    <a class="tag" href="/admin/geri-bildirim?durum=cozuldu" hx-get="/admin/geri-bildirim?durum=cozuldu" hx-target="#geri-bildirim-panel" hx-swap="outerHTML" hx-push-url="true" hx-indicator="#geri-bildirim-yukleniyor">Çözülen: {{index .Feedback.Counts "cozuldu"}}</a>
+    <a class="tag" href="/admin/geri-bildirim?durum=tumu" hx-get="/admin/geri-bildirim?durum=tumu" hx-target="#geri-bildirim-panel" hx-swap="outerHTML" hx-push-url="true" hx-indicator="#geri-bildirim-yukleniyor">Tümü</a>
+    <span class="muted small" style="margin-left:auto">Asistan sorgusu: {{.Feedback.AsstCnt}}</span>
+  </div>
+
+  <div class="gap" style="margin-top:14px">
+    {{range .Feedback.Items}}
+    <div class="card card-pad">
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <span class="tag">{{.Kind}}</span>
+        <strong><a href="/admin/icerikler/{{.ContentID}}">{{.Title}}</a></strong>
+        <span class="muted small">{{.CreatedAt.Format "2006-01-02 15:04"}}</span>
+        <span class="tag" style="margin-left:auto">{{.Status}}</span>
+      </div>
+      {{if .Detail}}<p class="muted small" style="margin:.4em 0 0">{{.Detail}}</p>{{end}}
+      {{if .Reporter}}<p class="small muted" style="margin:.2em 0 0">Bildiren: {{.Reporter}}</p>{{end}}
+      {{if .Resolution}}<p class="small" style="margin:.4em 0 0">Çözüm: {{.Resolution}}</p>{{end}}
+      <form method="post" action="/admin/geri-bildirim/{{.ID}}" style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap"
+            hx-post="/admin/geri-bildirim/{{.ID}}" hx-target="#geri-bildirim-panel" hx-swap="outerHTML" hx-indicator="#geri-bildirim-yukleniyor">
+        <input class="input" name="cozum" placeholder="Çözüm notu" style="flex:1;min-width:180px" value="{{.Resolution}}" aria-label="Çözüm notu">
+        <select class="select" name="durum">
+          <option value="incelendi">İncelendi</option>
+          <option value="cozuldu">Çözüldü</option>
+          <option value="reddedildi">Reddedildi</option>
+        </select>
+        <button class="btn small" type="submit">Kaydet</button>
+      </form>
+    </div>
+    {{else}}<p class="muted">Bu filtrede bildirim yok.</p>{{end}}
+  </div>
+
+  <h2 style="font-size:1.05rem;margin-top:24px">Son Asistan Sorguları</h2>
+  <div class="gap">
+    {{range .Feedback.Logs}}
+    <div class="card card-pad">
+      <div class="small muted">{{.CreatedAt.Format "2006-01-02 15:04"}} · {{.Provider}}</div>
+      <p style="margin:.3em 0"><strong>S:</strong> {{.Question}}</p>
+      {{if .Answer}}<p class="muted small" style="margin:0"><strong>A:</strong> {{.Answer}}</p>{{end}}
+    </div>
+    {{else}}<p class="muted">Henüz asistan sorgusu yok.</p>{{end}}
+  </div>
+</div>{{end}}

@@ -1,0 +1,396 @@
+// Modül panelleri (templ): Sinemalar, Resmi İlanlar, Etkinlikler.
+// html/template karşılıklarının birebir taşınması; HTMX hedefleri korunur.
+package templkit
+
+// ---- Sinemalar ----
+
+// FilmOge film kartı.
+type FilmOge struct {
+	ID          string
+	Title       string
+	Cinema      string
+	Genre       string
+	DurationMin int
+	PosterURL   string
+	Synopsis    string
+}
+
+// SinemalarView sinemalar paneli.
+type SinemalarView struct {
+	FlashKind string
+	FlashText string
+	Total     string
+	Week      string
+	Weeks     []string
+	Items     []FilmOge
+}
+
+// SinemalarPanel film listesi yönetimi (HTMX hedefi: #sinemalar-panel).
+templ SinemalarPanel(v SinemalarView) {
+	<div id="sinemalar-panel">
+		if v.FlashText != "" {
+			<div class={ "flash", v.FlashKind }>{ v.FlashText }</div>
+		}
+		@Yukleniyor("sinemalar-yukleniyor", "")
+		<div class="card card-pad" style="display:flex;gap:14px;flex-wrap:wrap;align-items:center">
+			<div><div class="small muted">Toplam film</div><div class="big">{ v.Total }</div></div>
+			<div><div class="small muted">Bu hafta</div><div class="big">{ v.Week }</div></div>
+			if len(v.Weeks) > 0 {
+				<form
+					method="get"
+					action="/admin/sinemalar"
+					style="margin-left:auto"
+					hx-get="/admin/sinemalar"
+					hx-target="#sinemalar-panel"
+					hx-swap="outerHTML"
+					hx-push-url="true"
+					hx-indicator="#sinemalar-yukleniyor"
+				>
+					<select class="select" name="hafta" data-autosubmit>
+						for _, w := range v.Weeks {
+							<option value={ w } if w == v.Week { selected }>{ w }</option>
+						}
+					</select>
+				</form>
+			}
+			<a class="btn small" href="/sinemalar" target="_blank">Genel sayfa</a>
+		</div>
+		<h2 style="font-size:1.05rem;margin-top:20px">Filmler ({ v.Week })</h2>
+		<div class="gap">
+			if len(v.Items) == 0 {
+				<p class="muted">Bu hafta film yok. Aşağıdan ekleyin.</p>
+			}
+			for _, f := range v.Items {
+				<div class="card card-pad" style="display:flex;gap:12px;align-items:flex-start">
+					if f.PosterURL != "" {
+						<img src={ templ.SafeURL(f.PosterURL) } alt={ f.Title } loading="lazy" style="width:64px;height:92px;object-fit:cover;border-radius:4px"/>
+					}
+					<div style="flex:1">
+						<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+							<strong>{ f.Title }</strong>
+							<span class="tag">{ f.Cinema }</span>
+							<span class="small muted">
+								{ f.Genre }
+								if f.DurationMin > 0 {
+									 · { itoaT(f.DurationMin) } dk
+								}
+							</span>
+						</div>
+						if f.Synopsis != "" {
+							<div class="small muted">{ f.Synopsis }</div>
+						}
+						<form
+							method="post"
+							action={ templ.SafeURL("/admin/sinemalar/" + f.ID + "/sil") }
+							style="margin-top:6px"
+							hx-post={ "/admin/sinemalar/" + f.ID + "/sil" }
+							hx-target="#sinemalar-panel"
+							hx-swap="outerHTML"
+							hx-confirm="Film silinsin mi?"
+							hx-indicator="#sinemalar-yukleniyor"
+						>
+							<button class="btn small danger" type="submit">Sil</button>
+						</form>
+					</div>
+				</div>
+			}
+		</div>
+		<h2 style="font-size:1.05rem;margin-top:22px">Yeni Film Ekle / Güncelle</h2>
+		<form
+			method="post"
+			action="/admin/sinemalar/yeni"
+			class="card card-pad"
+			hx-post="/admin/sinemalar/yeni"
+			hx-target="#sinemalar-panel"
+			hx-swap="outerHTML"
+			hx-indicator="#sinemalar-yukleniyor"
+		>
+			<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:6px">
+				<input class="input" name="film" required placeholder="Film adı" aria-label="Film adı"/>
+				<input class="input" name="sinema" placeholder="Sinema (örn. Cineverse)" value="Genel" aria-label="Sinema"/>
+				<input class="input" name="tur" placeholder="Tür (örn. Aksiyon)" aria-label="Tür"/>
+				<input class="input" name="sure" placeholder="Süre (dk)" style="max-width:120px" aria-label="Süre (dakika)"/>
+				<input class="input" name="hafta" type="date" aria-label="Hafta başı (boş = bu hafta)"/>
+				<input class="input" name="afis" placeholder="Afiş görsel URL" aria-label="Afiş görsel URL"/>
+				<input class="input" name="fragman" placeholder="Fragman URL" aria-label="Fragman URL"/>
+				<input class="input" name="sira" placeholder="Sıra (0)" style="max-width:120px" aria-label="Sıra"/>
+			</div>
+			<textarea class="input" name="ozet" rows="2" style="margin-top:6px" placeholder="Özet (ops)" aria-label="Özet"></textarea>
+			<p class="hint" style="margin:.5em 0">Hafta boş bırakılırsa bu hafta kullanılır. Aynı sinema + film + hafta tekrar girilirse güncellenir.</p>
+			<button class="btn" type="submit">Kaydet</button>
+		</form>
+	</div>
+}
+
+// ---- Resmi İlanlar ----
+
+// IlanOge resmi ilan satırı.
+type IlanOge struct {
+	ID          string
+	Title       string
+	Institution string
+	City        string
+	NoticeDate  string
+	URL         string
+}
+
+// IlanlarView resmi ilanlar paneli.
+type IlanlarView struct {
+	FlashKind string
+	FlashText string
+	Total     string
+	Date      string
+	Dates     []string
+	Items     []IlanOge
+}
+
+// IlanlarPanel resmi ilan yönetimi (HTMX hedefi: #ilanlar-panel).
+templ IlanlarPanel(v IlanlarView) {
+	<div id="ilanlar-panel">
+		if v.FlashText != "" {
+			<div class={ "flash", v.FlashKind }>{ v.FlashText }</div>
+		}
+		@Yukleniyor("ilanlar-yukleniyor", "")
+		<div class="card card-pad" style="display:flex;gap:14px;flex-wrap:wrap;align-items:center">
+			<div><div class="small muted">Toplam ilan</div><div class="big">{ v.Total }</div></div>
+			<div><div class="small muted">Bu tarih</div><div class="big">{ v.Date }</div></div>
+			if len(v.Dates) > 0 {
+				<form
+					method="get"
+					action="/admin/resmi-ilanlar"
+					style="margin-left:auto"
+					hx-get="/admin/resmi-ilanlar"
+					hx-target="#ilanlar-panel"
+					hx-swap="outerHTML"
+					hx-push-url="true"
+					hx-indicator="#ilanlar-yukleniyor"
+				>
+					<select class="select" name="tarih" data-autosubmit aria-label="İlan tarihi">
+						for _, dt := range v.Dates {
+							<option value={ dt } if dt == v.Date { selected }>{ dt }</option>
+						}
+					</select>
+				</form>
+			}
+			<a class="btn small" href="/resmi-ilanlar" target="_blank">Genel sayfa</a>
+		</div>
+		<h2 style="font-size:1.05rem;margin-top:20px">İlanlar ({ v.Date })</h2>
+		<table class="table">
+			<thead>
+				<tr><th>Başlık</th><th>Kurum</th><th>Şehir</th><th>Tarih</th><th>Belge</th><th></th></tr>
+			</thead>
+			<tbody>
+				if len(v.Items) == 0 {
+					@TabloBos(6, "license", "Bu tarih için ilan yok", "Aşağıdaki formdan resmî ilan ekleyebilirsiniz.", "", "")
+				}
+				for _, n := range v.Items {
+					<tr>
+						<td>{ n.Title }</td>
+						<td class="small muted">{ n.Institution }</td>
+						<td class="small muted">{ n.City }</td>
+						<td class="small muted">{ n.NoticeDate }</td>
+						<td>
+							if n.URL != "" {
+								<a href={ templ.SafeURL(n.URL) } target="_blank" rel="noopener">aç</a>
+							} else {
+								—
+							}
+						</td>
+						<td>
+							<form
+								method="post"
+								action={ templ.SafeURL("/admin/resmi-ilanlar/" + n.ID + "/sil") }
+								hx-post={ "/admin/resmi-ilanlar/" + n.ID + "/sil" }
+								hx-target="#ilanlar-panel"
+								hx-swap="outerHTML"
+								hx-confirm="İlan silinsin mi?"
+								hx-indicator="#ilanlar-yukleniyor"
+							>
+								<button class="btn small danger" type="submit">Sil</button>
+							</form>
+						</td>
+					</tr>
+				}
+			</tbody>
+		</table>
+		<h2 style="font-size:1.05rem;margin-top:22px">Yeni İlan Ekle / Güncelle</h2>
+		<form
+			method="post"
+			action="/admin/resmi-ilanlar/yeni"
+			class="card card-pad"
+			hx-post="/admin/resmi-ilanlar/yeni"
+			hx-target="#ilanlar-panel"
+			hx-swap="outerHTML"
+			hx-indicator="#ilanlar-yukleniyor"
+		>
+			<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:6px">
+				<input class="input" name="baslik" required placeholder="İlan başlığı" aria-label="İlan başlığı"/>
+				<input class="input" name="kurum" placeholder="Kurum (örn. Belediye)" aria-label="Kurum"/>
+				<input class="input" name="sehir" placeholder="Şehir" aria-label="Şehir"/>
+				<input class="input" name="tarih" type="date" aria-label="İlan tarihi (boş = bugün)"/>
+				<input class="input" name="url" placeholder="Belge URL (PDF/ilan)" aria-label="Belge URL"/>
+				<input class="input" name="sira" placeholder="Sıra (0)" style="max-width:110px" aria-label="Sıra"/>
+			</div>
+			<textarea class="input" name="metin" rows="2" style="margin-top:6px" placeholder="İlan metni (ops)" aria-label="İlan metni"></textarea>
+			<p class="hint" style="margin:.5em 0">Aynı başlık + tarih tekrar girilirse güncellenir.</p>
+			<button class="btn" type="submit">Kaydet</button>
+		</form>
+	</div>
+}
+
+// ---- Etkinlikler ----
+
+// EtkinlikOge etkinlik kartı.
+type EtkinlikOge struct {
+	ID          string
+	Title       string
+	When        string
+	Status      string
+	Active      bool
+	Range       string
+	Description string
+	EditTitle   string
+	StartLocal  string
+	EndLocal    string
+	Location    string
+	URL         string
+	Remind      string
+	CategoryID  string
+}
+
+// EtkinlikCat etkinlik kategorisi seçeneği.
+type EtkinlikCat struct {
+	ID       string
+	Name     string
+	Selected bool
+}
+
+// EtkinliklerView etkinlikler paneli.
+type EtkinliklerView struct {
+	FlashKind string
+	FlashText string
+	Items     []EtkinlikOge
+	Cats      []EtkinlikCat
+}
+
+// EtkinliklerPanel etkinlik yönetimi (HTMX hedefi: #etkinlikler-panel).
+templ EtkinliklerPanel(v EtkinliklerView) {
+	<div id="etkinlikler-panel">
+		if v.FlashText != "" {
+			<div class={ "flash", v.FlashKind }>{ v.FlashText }</div>
+		}
+		@Yukleniyor("etkinlikler-yukleniyor", "")
+		<div class="card card-pad" style="display:flex;gap:14px;flex-wrap:wrap;align-items:center">
+			<div><div class="small muted">Etkinlik sayısı</div><div class="big">{ itoaT(len(v.Items)) }</div></div>
+			<span class="hint" style="margin-left:auto">Yaklaşan etkinlikler ana sayfada <b>hatırlatma şeridi</b> olarak gösterilir (Bugün / Yarın / X gün sonra).</span>
+		</div>
+		<h2 style="font-size:1.05rem;margin-top:20px">Etkinlikler</h2>
+		<div class="gap">
+			if len(v.Items) == 0 {
+				<p class="muted">Etkinlik yok. Aşağıdan ekleyin.</p>
+			}
+			for _, e := range v.Items {
+				<div class="card card-pad" style={ eventBorderStyle(e.Active) }>
+					<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+						<strong>{ e.Title }</strong>
+						<span class="tag">{ e.When }</span>
+						<span class="tag" style="margin-left:auto">{ e.Status }</span>
+					</div>
+					<div class="small muted">
+						{ e.Range }
+						if e.Location != "" {
+							 · <svg class="ti ti-metin" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-map-pin"></use></svg> { e.Location }
+						}
+					</div>
+					if e.Description != "" {
+						<div class="small muted">{ e.Description }</div>
+					}
+					<form
+						method="post"
+						action={ templ.SafeURL("/admin/etkinlikler/" + e.ID) }
+						style="margin-top:8px"
+						hx-post={ "/admin/etkinlikler/" + e.ID }
+						hx-target="#etkinlikler-panel"
+						hx-swap="outerHTML"
+						hx-indicator="#etkinlikler-yukleniyor"
+					>
+						<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:6px">
+							<input class="input" name="baslik" value={ e.EditTitle } aria-label="Etkinlik başlığı"/>
+							<input class="input" name="baslangic" value={ e.StartLocal } type="datetime-local" aria-label="Etkinlik başlangıcı"/>
+							<input class="input" name="bitis" value={ e.EndLocal } type="datetime-local" aria-label="Etkinlik bitişi"/>
+							<input class="input" name="yer" value={ e.Location } placeholder="Yer" aria-label="Yer"/>
+							<input class="input" name="url" value={ e.URL } placeholder="https://… (ayrıntı)" aria-label="Ayrıntı URL"/>
+							<input class="input" name="hatirlatma" value={ e.Remind } placeholder="Hatırlatma günleri (1,3,7)" aria-label="Hatırlatma günleri"/>
+						</div>
+						<textarea class="input" name="aciklama" rows="2" style="margin-top:6px" placeholder="Açıklama" aria-label="Açıklama">{ e.Description }</textarea>
+						<div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap;align-items:center">
+							<select class="select" name="kategori" aria-label="Kategori">
+								<option value="">— kategori —</option>
+								for _, c := range v.Cats {
+									<option value={ c.ID } if c.ID == e.CategoryID { selected }>{ c.Name }</option>
+								}
+							</select>
+							<select class="select" name="durum" aria-label="Durum">
+								<option value="aktif" if e.Status == "aktif" { selected }>Aktif</option>
+								<option value="taslak" if e.Status == "taslak" { selected }>Taslak</option>
+								<option value="iptal" if e.Status == "iptal" { selected }>İptal</option>
+							</select>
+							<button class="btn small" type="submit">Güncelle</button>
+						</div>
+					</form>
+					<div style="display:flex;gap:6px;margin-top:6px">
+						<form method="post" action={ templ.SafeURL("/admin/etkinlikler/" + e.ID + "/haber") }><button class="btn small" type="submit"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-pencil"></use></svg> Haber Taslağı</button></form>
+						<form
+							method="post"
+							action={ templ.SafeURL("/admin/etkinlikler/" + e.ID + "/sil") }
+							hx-post={ "/admin/etkinlikler/" + e.ID + "/sil" }
+							hx-target="#etkinlikler-panel"
+							hx-swap="outerHTML"
+							hx-confirm="Etkinlik silinsin mi?"
+							hx-indicator="#etkinlikler-yukleniyor"
+						>
+							<button class="btn small danger" type="submit">Sil</button>
+						</form>
+					</div>
+				</div>
+			}
+		</div>
+		<h2 style="font-size:1.05rem;margin-top:22px">Yeni Etkinlik</h2>
+		<form
+			method="post"
+			action="/admin/etkinlikler/yeni"
+			class="card card-pad"
+			hx-post="/admin/etkinlikler/yeni"
+			hx-target="#etkinlikler-panel"
+			hx-swap="outerHTML"
+			hx-indicator="#etkinlikler-yukleniyor"
+		>
+			<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:6px">
+				<input class="input" name="baslik" required placeholder="Etkinlik başlığı" aria-label="Etkinlik başlığı"/>
+				<input class="input" name="baslangic" type="datetime-local" required aria-label="Etkinlik başlangıcı"/>
+				<input class="input" name="bitis" type="datetime-local" aria-label="Etkinlik bitişi"/>
+				<input class="input" name="yer" placeholder="Yer (örn. İstanbul Kongre Merkezi)" aria-label="Yer"/>
+				<input class="input" name="url" placeholder="https://… (ayrıntı, ops)" aria-label="Ayrıntı URL"/>
+				<input class="input" name="hatirlatma" value="1,3,7" placeholder="Hatırlatma günleri" aria-label="Hatırlatma günleri"/>
+			</div>
+			<textarea class="input" name="aciklama" rows="2" style="margin-top:6px" placeholder="Açıklama" aria-label="Açıklama"></textarea>
+			<div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;align-items:center">
+				<select class="select" name="kategori" aria-label="Kategori">
+					<option value="">— kategori —</option>
+					for _, c := range v.Cats {
+						<option value={ c.ID }>{ c.Name }</option>
+					}
+				</select>
+				<select class="select" name="durum" aria-label="Durum"><option value="aktif">Aktif</option><option value="taslak">Taslak</option></select>
+				<button class="btn" type="submit">Ekle</button>
+			</div>
+		</form>
+	</div>
+}
+
+func eventBorderStyle(active bool) string {
+	if active {
+		return "border-left:3px solid var(--accent)"
+	}
+	return "border-left:3px solid #666"
+}

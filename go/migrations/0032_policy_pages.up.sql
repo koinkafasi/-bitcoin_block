@@ -1,0 +1,23 @@
+-- 0032_policy_pages: Kurumsal yasal/politika sayfaları seed (spec 05 §3 P5-E)
+-- AdSense/GA politikaları ve KVKK için gerekli sayfalar. Kilitlidir (silinemez).
+INSERT INTO pages (kind, title, slug, spot, detail, status, in_menu, in_footer, is_locked) VALUES
+('kurumsal','Gizlilik Politikası ve KVKK Aydınlatma Metni','gizlilik-politikasi',
+ 'Kişisel verilerin işlenmesi, çerezler ve ilgili kişi hakları hakkında bilgilendirme.',
+ '[{"type":"p","text":"Bu metin, 6698 sayılı Kişisel Verilerin Korunması Kanunu (KVKK) kapsamında, theblock.com.tr ziyaretçilerinin kişisel verilerinin nasıl işlendiğini açıklar."},{"type":"p","text":"Toplanan veriler: sunucu erişim kayıtları (IP, tarayıcı, ziyaret edilen sayfa), çerezler, bülten aboneliği sırasında verdiğiniz e-posta adresi ve formlarla ilettiğiniz bilgiler."},{"type":"p","text":"İşleme amaçları: sitenin güvenliği ve işleyişi, içerik sunumu, okuyucu istatistikleri, reklam gösterimi (Google AdSense), bülten gönderimi ve taleplerinize yanıt verilmesi."},{"type":"p","text":"Hukuki dayanak: açık rıza, sözleşmenin ifası, meşru menfaat ve hukuki yükümlülükler. Veriler üçüncü taraflarla (reklam ve analitik sağlayıcıları) yalnızca ilgili amaçla ve mevzuata uygun olarak paylaşılabilir."},{"type":"p","text":"Saklama süresi: amaç için gerekli süre ve mevzuatta öngörülen süreler kadar. İlgili kişi olarak; verilerinize erişme, düzeltilmesini, silinmesini veya işlenmesinin sınırlanmasını isteme ve itiraz etme haklarına sahipsiniz."},{"type":"p","text":"Başvuru: info@theblock.com.tr adresinden taleplerinizi iletebilirsiniz."}]'::jsonb,
+ 'yayinda', false, true, true),
+
+('kurumsal','Kullanım Koşulları','kullanim-kosullari',
+ 'theblock.com.tr kullanımına ilişkin hak ve yükümlülükler.',
+ '[{"type":"p","text":"theblock.com.tr''yi ziyaret ederek veya kullanarak bu koşulları kabul etmiş sayılırsınız. Koşullar zaman zaman güncellenebilir; güncel sürüm bu sayfada yayımlanır."},{"type":"p","text":"Sitede yer alan haber, metin, görsel ve diğer içerikler telif hakkı ile korunur. Kaynak gösterilerek alıntı yapılabilir; içeriklerin ticari amaçla izinsiz çoğaltılması, yeniden yayımlanması yasaktır."},{"type":"p","text":"İçerikler bilgilendirme amacı taşır; yatırım, hukuk veya sağlık tavsiyesi niteliğinde değildir. Dış bağlantıların içeriğinden ilgili siteler sorumludur."},{"type":"p","text":"Kullanıcı yorumları ve katkıları; yasa dışı, hakaret, nefret söylemi veya telif ihlali içermemelidir. Uygunsuz içerikler yayımdan kaldırılabilir; gerekli hâllerde ilgili makamlarla paylaşılabilir."},{"type":"p","text":"Sitenin kesintisiz veya hatasız çalışacağı garanti edilmez. Koşullardan doğabilecek uyuşmazlıklarda Türkiye Cumhuriyeti mevzuatı ve yetkili mahkemeleri geçerlidir."},{"type":"p","text":"İletişim: info@theblock.com.tr"}]'::jsonb,
+ 'yayinda', false, true, true),
+
+('kurumsal','Çerez Politikası','cerez-politikasi',
+ 'Sitemizde kullanılan çerezler ve yönetimi.',
+ '[{"type":"p","text":"Çerezler, ziyaret ettiğiniz web siteleri tarafından tarayıcınıza kaydedilen küçük metin dosyalarıdır. Sitenin çalışması, tercihlerin hatırlanması ve istatistik/reklam amaçlarıyla kullanılır."},{"type":"p","text":"Zorunlu çerezler: oturum yönetimi, tema (karanlık/aydınlık) ve güvenlik için gereklidir; bu çerezler olmadan site düzgün çalışmayabilir."},{"type":"p","text":"Ölçüm/analitik ve reklam çerezleri: ziyaret istatistikleri ve ilgi alanına dayalı reklamlar için Google Analytics ve Google AdSense gibi üçüncü taraf sağlayıcılar tarafından yerleştirilebilir. Google''ın reklam çerezlerini kapatma yolu: adssettings.google.com."},{"type":"p","text":"Çerezleri tarayıcı ayarlarınızdan silebilir veya engelleyebilirsiniz. Tarayıcı bazlı engelleme adımları için tarayıcınızın yardım bölümüne bakabilirsiniz."},{"type":"p","text":"Çerez tercihleriniz ve sorularınız için: info@theblock.com.tr"}]'::jsonb,
+ 'yayinda', false, true, true),
+
+('kurumsal','Reklam ve Sponsorluk Politikası','reklam-politikasi',
+ 'Reklam yerleşimi, sponsorlu içerik ve editoryal bağımsızlık ilkeleri.',
+ '[{"type":"p","text":"theblock.com.tr, yayınlarını reklam gelirleri (Google AdSense) ve sponsorluklarla sürdürür. Reklamlar editoryal içerikten açıkça ayrılır ve ''Reklam'' etiketiyle gösterilir."},{"type":"p","text":"Sponsorlu veya iş birliği içeren içerikler ayrıca belirtilir. Reklam verenlerin içerik üzerinde editoryal etkisi yoktur; haber ve analizler bağımsız olarak hazırlanır."},{"type":"p","text":"Yanıltıcı, yasa dışı veya politikalara aykırı reklamlar kabul edilmez. Reklam yerleşimi, okuyucu deneyimini ve içeriğe erişimi engellemeyecek biçimde planlanır."},{"type":"p","text":"Reklam ve sponsorluk başvuruları: reklam@theblock.com.tr"}]'::jsonb,
+ 'yayinda', false, true, true)
+ON CONFLICT (slug) DO NOTHING;

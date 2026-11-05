@@ -1,0 +1,337 @@
+// SEO ve servis panelleri (templ): SEO Merkezi (evergreen + iç link önerisi) ve Servisler.
+package templkit
+
+// ---- SEO ----
+
+// SeoBayat evergreen satırı.
+type SeoBayat struct {
+	ID           string
+	Title        string
+	CategoryName string
+	YasGun       string
+	Updated      string
+}
+
+// SeoOneri iç link önerisi satırı.
+type SeoOneri struct {
+	Title   string
+	URL     string
+	Score   string
+	Reasons string
+	HTML    string
+}
+
+// SeoView SEO merkezi paneli.
+type SeoView struct {
+	FlashKind string
+	FlashText string
+	StaleDays string
+	Evergreen []SeoBayat
+	Contents  []IOpt
+	HasTarget bool
+	TargetID  string
+	Target    string
+	Suggs     []SeoOneri
+}
+
+// SeoPanel SEO merkezi (HTMX hedefi: #seo-panel).
+templ SeoPanel(v SeoView) {
+	<div id="seo-panel">
+		if v.FlashText != "" {
+			<div class={ "flash", v.FlashKind }>{ v.FlashText }</div>
+		}
+		@Yukleniyor("seo-yukleniyor", "")
+		<h2 style="font-size:1.05rem;margin-top:4px"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-refresh"></use></svg> Evergreen — Güncelleme Önerisi</h2>
+		<form method="get" action="/admin/seo" class="card card-pad" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap" hx-get="/admin/seo" hx-target="#seo-panel" hx-swap="outerHTML" hx-push-url="true" hx-indicator="#seo-yukleniyor">
+			<label class="small muted" for="f_stale_gun">Son güncellemeden bu yana geçen gün ≥</label>
+			<input class="input" id="f_stale_gun" name="gun" value={ v.StaleDays } style="max-width:90px"/>
+			<button class="btn small" type="submit">Filtrele</button>
+			<span class="hint">Yayındaki içerikler içinde bayatlayanlar; SEO için güncellenmeleri önerilir.</span>
+		</form>
+		<table class="table" style="margin-top:10px">
+			<thead>
+				<tr><th>Başlık</th><th>Kategori</th><th>Yaş (gün)</th><th>Son Güncelleme</th><th></th></tr>
+			</thead>
+			<tbody>
+				if len(v.Evergreen) == 0 {
+					@TabloBos(5, "circle-check", "Bayat içerik yok", "Bu eşikte güncellenmesi gereken içerik bulunmuyor.", "", "")
+				}
+				for _, e := range v.Evergreen {
+					<tr>
+						<td><a href={ templ.SafeURL("/admin/icerikler/" + e.ID) }>{ e.Title }</a></td>
+						<td class="small muted">
+							if e.CategoryName != "" {
+								{ e.CategoryName }
+							} else {
+								—
+							}
+						</td>
+						<td><span class="tag">{ e.YasGun }</span></td>
+						<td class="small muted">{ e.Updated }</td>
+						<td style="white-space:nowrap">
+							<form method="post" action="/admin/seo/guncelle" style="display:inline" hx-post="/admin/seo/guncelle" hx-target="#seo-panel" hx-swap="outerHTML" hx-indicator="#seo-yukleniyor">
+								<input type="hidden" name="id" value={ e.ID }/>
+								<button class="btn small" type="submit" title="Güncellendi olarak işaretle"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-check"></use></svg> Güncellendi</button>
+							</form>
+							<a class="btn small" href={ templ.SafeURL("/admin/icerikler/" + e.ID) }>Düzenle</a>
+						</td>
+					</tr>
+				}
+			</tbody>
+		</table>
+		<h2 style="font-size:1.05rem;margin-top:24px"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-link"></use></svg> İç Link Önerisi</h2>
+		<form method="get" action="/admin/seo" class="card card-pad" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap" hx-get="/admin/seo" hx-target="#seo-panel" hx-swap="outerHTML" hx-push-url="true" hx-indicator="#seo-yukleniyor">
+			<label class="small muted" for="f_oneri_icerik">Hedef içerik</label>
+			<select class="select" id="f_oneri_icerik" name="icerik" style="flex:1;min-width:260px" data-autosubmit>
+				for _, c := range v.Contents {
+					<option value={ c.Value } selected?={ c.Selected }>{ c.Label }</option>
+				}
+			</select>
+			<input type="hidden" name="gun" value={ v.StaleDays }/>
+			<button class="btn small" type="submit">Öner</button>
+		</form>
+		if v.HasTarget {
+			<p class="muted small" style="margin:10px 0 4px">Hedef: <b>{ v.Target }</b></p>
+			<table class="table">
+				<thead>
+					<tr><th>Önerilen İçerik</th><th>Kategori</th><th>Puan</th><th>Gerekçe</th><th>Bağlantı Kodu</th></tr>
+				</thead>
+				<tbody>
+					if len(v.Suggs) == 0 {
+						@TabloBos(5, "link", "Öneri bulunamadı", "Bu içerik için küme/etiket/kategori eşleşmesi yok.", "", "")
+					}
+					for _, s := range v.Suggs {
+						<tr>
+							<td><a href={ templ.SafeURL(s.URL) } target="_blank" rel="noopener">{ s.Title }</a></td>
+							<td class="small muted">—</td>
+							<td><span class="tag">{ s.Score }</span></td>
+							<td class="small muted">{ s.Reasons }</td>
+							<td><button class="btn small" type="button" data-copy={ s.HTML } data-kopyala>Kopyala</button></td>
+						</tr>
+					}
+				</tbody>
+			</table>
+			<p class="hint">Puanlama: aynı konu kümesi (+6) · ortak etiket (+3/etiket) · aynı kategori (+2) · başlık benzerliği (+1/kelime). Kodu içerik gövdesine yapıştırın.</p>
+		}
+	</div>
+}
+
+// ---- Servisler ----
+
+// ServisHava hava durumu satırı.
+type ServisHava struct {
+	City     string
+	Sicak    string
+	Aciklama string
+	Demo     bool
+}
+
+// ServisBorsa borsa satırı.
+type ServisBorsa struct {
+	Name    string
+	Kind    string
+	Code    string
+	Value   string
+	Delta   string
+	Pozitif bool
+}
+
+// ServisMac fikstür satırı.
+type ServisMac struct {
+	Tarih     string
+	Ev        string
+	Deplasman string
+}
+
+// ServisBurc astroloji satırı.
+type ServisBurc struct {
+	Ad     string
+	Sembol string
+	Sayi   string
+	Renk   string
+}
+
+// ServislerView servisler paneli.
+type ServislerView struct {
+	FlashKind  string
+	FlashText  string
+	USD        string
+	EUR        string
+	ALTIN      string
+	KurVar     bool
+	KurDemo    bool
+	Weather    []ServisHava
+	Borsa      []ServisBorsa
+	BorsaDemo  bool
+	Fikstur    []ServisMac
+	FiksturDemo bool
+	FiksturKey string
+	EczaneKey  string
+	AstroTarih string
+	Astro      []ServisBurc
+}
+
+// ServislerPanel servisler (HTMX hedefi: #servisler-panel).
+templ ServislerPanel(v ServislerView) {
+	<div id="servisler-panel">
+		if v.FlashText != "" {
+			<div class={ "flash", v.FlashKind }>{ v.FlashText }</div>
+		}
+		@Yukleniyor("servisler-yukleniyor", "İşleniyor…")
+		<div style="display:flex;gap:8px;align-items:center;margin-bottom:12px;flex-wrap:wrap">
+			<span class="badge" style="background:var(--ok-fill,var(--ok));color:#fff"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-sun"></use></svg> Hava (Open-Meteo)</span>
+			<span class="badge" style="background:var(--ok-fill,var(--ok));color:#fff"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-cash"></use></svg> Piyasa (truncgil + Yahoo)</span>
+			<span class="badge" style="background:var(--ok-fill,var(--ok));color:#fff"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-building"></use></svg> Namaz (Aladhan, 81 il)</span>
+			<span class="badge" style="background:var(--ok-fill,var(--ok));color:#fff"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-calendar"></use></svg> İmsakiye (Ankara)</span>
+			if v.EczaneKey != "" {
+				<span class="badge" style="background:var(--ok-fill,var(--ok));color:#fff"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-building-hospital"></use></svg> Eczane (NosyAPI)</span>
+			} else {
+				<span class="badge" style="background:var(--warn-fill,var(--warn));color:#fff"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-building-hospital"></use></svg> Eczane (anahtar yok · demo)</span>
+			}
+			<span class="badge" style="background:var(--ok-fill,var(--ok));color:#fff"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-trending-up"></use></svg> Borsa (BIST + kripto)</span>
+			<span class="badge" style="background:var(--ok-fill,var(--ok));color:#fff"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-ball-football"></use></svg> Fikstür (Süper Lig)</span>
+			<span class="badge" style="background:var(--ok-fill,var(--ok));color:#fff"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-crystal-ball"></use></svg> Astroloji (günlük)</span>
+			<form method="post" action="/admin/servisler/yenile" style="margin-left:auto" hx-post="/admin/servisler/yenile" hx-target="#servisler-panel" hx-swap="outerHTML" hx-indicator="#servisler-yukleniyor">
+				<button class="btn small" type="submit"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-clock"></use></svg> Şimdi Yenile</button>
+			</form>
+		</div>
+		<div class="grid-2" style="grid-template-columns:1fr 1fr;align-items:start">
+			<div class="card card-pad">
+				<h2 style="margin:0 0 8px;font-size:1.1rem">Piyasa (TRY)</h2>
+				if v.KurVar {
+					<div style="display:flex;gap:14px;flex-wrap:wrap">
+						<span class="tag" style="font-size:.95rem">USD <b>{ v.USD }</b></span>
+						<span class="tag" style="font-size:.95rem">EUR <b>{ v.EUR }</b></span>
+						<span class="tag" style="font-size:.95rem">ALTIN <b>{ v.ALTIN }</b></span>
+						if v.KurDemo {
+							<span class="badge" style="background:var(--warn-fill,var(--warn));color:#fff">demo</span>
+						}
+					</div>
+				} else {
+					<p class="muted">Veri yok.</p>
+				}
+				<p class="hint" style="margin-top:8px">Kaynak: finans.truncgil.com (döviz + gram altın) ve Yahoo Finance (BIST). Kur &amp; Borsa modülü ile aynı canlı akış — 2 dakikada bir tazelenir.</p>
+			</div>
+			<div class="card card-pad">
+				<h2 style="margin:0 0 8px;font-size:1.1rem">Hava Durumu (81 il)</h2>
+				<div style="max-height:420px;overflow:auto">
+					<table class="table">
+						<thead>
+							<tr><th>İl</th><th>°C</th><th>Durum</th></tr>
+						</thead>
+						<tbody>
+							if len(v.Weather) == 0 {
+								@TabloBosMetin(3, "Şehir yok.")
+							}
+							for _, w := range v.Weather {
+								<tr>
+									<td><a href="/hava-durumu">{ w.City }</a></td>
+									<td>{ w.Sicak }</td>
+									<td class="small">
+										{ w.Aciklama }
+										if w.Demo {
+											<span class="badge" style="background:var(--warn-fill,var(--warn));color:#fff">demo</span>
+										}
+									</td>
+								</tr>
+							}
+						</tbody>
+					</table>
+				</div>
+			</div>
+			<div class="card card-pad">
+				<h2 style="margin:0 0 8px;font-size:1.1rem">
+					Borsa &amp; Kripto
+					if v.BorsaDemo {
+						<span class="badge" style="background:var(--warn-fill,var(--warn));color:#fff">demo</span>
+					}
+				</h2>
+				<div style="max-height:420px;overflow:auto">
+					<table class="table">
+						<thead>
+							<tr><th>Ad</th><th>Kod</th><th>Değer</th><th>%</th></tr>
+						</thead>
+						<tbody>
+							if len(v.Borsa) == 0 {
+								@TabloBosMetin(4, "Veri yok.")
+							}
+							for _, b := range v.Borsa {
+								<tr>
+									<td>{ b.Name } <span class="small muted">{ b.Kind }</span></td>
+									<td class="small">{ b.Code }</td>
+									<td>{ b.Value }</td>
+									<td class="small">
+										<span style={ borsaDeltaStyle(b.Pozitif) }>{ b.Delta }</span>
+									</td>
+								</tr>
+							}
+						</tbody>
+					</table>
+				</div>
+				<p class="hint" style="margin-top:8px">Kaynak: Yahoo Finance (BIST) + CoinGecko (kripto, TRY).</p>
+			</div>
+			<div class="card card-pad">
+				<h2 style="margin:0 0 8px;font-size:1.1rem">
+					Fikstür (Süper Lig)
+					if v.FiksturDemo {
+						<span class="badge" style="background:var(--warn-fill,var(--warn));color:#fff">demo</span>
+					}
+				</h2>
+				<table class="table">
+					<thead>
+						<tr><th>Tarih</th><th>Maç</th></tr>
+					</thead>
+					<tbody>
+						if len(v.Fikstur) == 0 {
+							@TabloBosMetin(2, "Yaklaşan maç yok.")
+						}
+						for _, m := range v.Fikstur {
+							<tr><td class="small">{ m.Tarih }</td><td>{ m.Ev } - { m.Deplasman }</td></tr>
+						}
+					</tbody>
+				</table>
+				<p class="hint" style="margin-top:8px">Yaklaşan maçlar (TheSportsDB). Sonuçlar <a href="/fikstur">/fikstur</a> sayfasında.</p>
+				<form method="post" action="/admin/servisler/ayar" style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;align-items:center" hx-post="/admin/servisler/ayar" hx-target="#servisler-panel" hx-swap="outerHTML" hx-indicator="#servisler-yukleniyor">
+					<label class="small muted">TheSportsDB API anahtarı</label>
+					<input class="input" name="fikstur_key" value={ v.FiksturKey } placeholder="boş = test anahtarı (123)" style="min-width:240px" aria-label="TheSportsDB API anahtarı"/>
+					<button class="btn" type="submit">Kaydet</button>
+				</form>
+				<p class="hint" style="margin-top:6px">Fikstür+puan kaynağı: TheSportsDB (haftalık maçlar) + ESPN. Ücretsiz test anahtarı rate-limit'e takılırsa <a href="https://www.thesportsdb.com/api.php" target="_blank" rel="noopener">ücretsiz kendi anahtarınızı</a> girin.</p>
+			</div>
+			<div class="card card-pad">
+				<h2 style="margin:0 0 8px;font-size:1.1rem">Nöbetçi Eczane</h2>
+				<p class="hint" style="margin-top:0">Kaynak: <b>NosyAPI (RapidAPI)</b> — şehir bazlı uç. <b>İl başına günde bir</b> istek yapılır (en çok 81 istek/gün); yanıtlar il bazında gün boyu önbellekte kalır, aynı gün yenileme ek istek harcamaz.</p>
+				<form method="post" action="/admin/servisler/ayar" style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;align-items:center" hx-post="/admin/servisler/ayar" hx-target="#servisler-panel" hx-swap="outerHTML" hx-indicator="#servisler-yukleniyor">
+					<label class="small muted">RapidAPI anahtarı</label>
+					<input class="input" name="eczane_api_key" value={ v.EczaneKey } placeholder="boş = kaynak kapalı" style="min-width:280px" aria-label="NosyAPI RapidAPI anahtarı"/>
+					<button class="btn" type="submit">Kaydet</button>
+				</form>
+				<p class="hint" style="margin-top:6px">Anahtar yalnız <code>settings</code> tablosunda tutulur; repoya yazılmaz. Boş bırakıp kaydetmek kaynağı kapatır.</p>
+			</div>
+			<div class="card card-pad">
+				<h2 style="margin:0 0 8px;font-size:1.1rem">Astroloji ({ v.AstroTarih })</h2>
+				<div style="max-height:340px;overflow:auto">
+					<table class="table">
+						<thead>
+							<tr><th>Burç</th><th>Sayı</th><th>Renk</th></tr>
+						</thead>
+						<tbody>
+							for _, b := range v.Astro {
+								<tr><td>{ b.Sembol } { b.Ad }</td><td>{ b.Sayi }</td><td>{ b.Renk }</td></tr>
+							}
+						</tbody>
+					</table>
+				</div>
+				<p class="hint" style="margin-top:8px">Günlük burç yorumları <a href="/astroloji">/astroloji</a> sayfasında.</p>
+			</div>
+		</div>
+	</div>
+}
+
+// borsaDeltaStyle yüzde değişim rengi.
+func borsaDeltaStyle(positive bool) string {
+	if positive {
+		return "color:#2f9e44"
+	}
+	return "color:#e5484d"
+}

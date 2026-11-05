@@ -1,0 +1,21 @@
+package templkit
+
+// CeviriBekliyor AI çeviri sıraya alındığında gösterilen panel (Faz 190).
+//
+// Neden ayrı bileşen: AI çeviri 20–160 sn sürüyor ve istek HTTP yanıtı
+// içinde bekletilemiyor (sunucu WriteTimeout 60 sn, Cloudflare ~100 sn).
+// Bu yüzden düğme yalnız kuyruğa yazar; panel 2 sn'de bir durumu yoklar ve
+// çeviri hazır olunca HX-Redirect ile editörü açar.
+//
+// `hx-trigger="every 2s"` + `hx-swap="outerHTML"`: yanıt aynı düğümü
+// döndürürse yoklama kendini yeniler; bitti/hata yanıtı düğümü değiştirir.
+templ CeviriBekliyor(dilAdi, durumURL, kaynakURL string) {
+	<div class="ceviri-bekliyor" role="status" aria-live="polite" hx-get={ durumURL } hx-trigger="every 2s" hx-swap="outerHTML">
+		<span class="ceviri-bekliyor__halka" aria-hidden="true"></span>
+		<div>
+			<b>{ dilAdi } çevirisi hazırlanıyor</b>
+			<p>Uzun haberlerde 1–2 dakika sürebilir. Hazır olunca editör kendiliğinden açılır.</p>
+			<a class="btn ghost small" href={ templ.SafeURL(kaynakURL) }>Vazgeç</a>
+		</div>
+	</div>
+}

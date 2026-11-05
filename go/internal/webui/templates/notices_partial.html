@@ -1,0 +1,55 @@
+{{define "ilanlar_panel"}}<div id="ilanlar-panel">
+  {{if .Flash}}<div class="flash {{.Flash.Kind}}">{{.Flash.Text}}</div>{{end}}
+  <span id="ilanlar-yukleniyor" class="htmx-indicator small muted" role="status" aria-live="polite">Yükleniyor…</span>
+  {{$p := .IlanlarPanel}}
+
+  <div class="card card-pad" style="display:flex;gap:14px;flex-wrap:wrap;align-items:center">
+    <div><div class="small muted">Toplam ilan</div><div class="big">{{$p.Total}}</div></div>
+    <div><div class="small muted">Bu tarih</div><div class="big">{{$p.Date}}</div></div>
+    {{if $p.Dates}}
+    <form method="get" action="/admin/resmi-ilanlar" style="margin-left:auto"
+          hx-get="/admin/resmi-ilanlar" hx-target="#ilanlar-panel" hx-swap="outerHTML" hx-push-url="true" hx-indicator="#ilanlar-yukleniyor">
+      <select class="select" name="tarih" data-autosubmit>{{$cur := $p.Date}}{{range $p.Dates}}<option value="{{.}}" {{if eq . $cur}}selected{{end}}>{{.}}</option>{{end}}</select>
+    </form>
+    {{end}}
+    <a class="btn small" href="/resmi-ilanlar" target="_blank">Genel sayfa</a>
+  </div>
+
+  <h2 style="font-size:1.05rem;margin-top:20px">İlanlar ({{$p.Date}})</h2>
+  <table class="table">
+    <thead><tr><th>Başlık</th><th>Kurum</th><th>Şehir</th><th>Tarih</th><th>Belge</th><th></th></tr></thead>
+    <tbody>
+    {{range $p.Items}}
+      <tr>
+        <td>{{.Title}}</td>
+        <td class="small muted">{{.Institution}}</td>
+        <td class="small muted">{{.City}}</td>
+        <td class="small muted">{{.NoticeDate}}</td>
+        <td>{{if .URL}}<a href="{{.URL}}" target="_blank" rel="noopener">aç</a>{{else}}—{{end}}</td>
+        <td><form method="post" action="/admin/resmi-ilanlar/{{.ID}}/sil"
+                  hx-post="/admin/resmi-ilanlar/{{.ID}}/sil" hx-target="#ilanlar-panel" hx-swap="outerHTML"
+                  hx-confirm="İlan silinsin mi?" hx-indicator="#ilanlar-yukleniyor"
+                  data-confirm="İlan silinsin mi?">
+          <button class="btn small danger" type="submit">Sil</button>
+        </form></td>
+      </tr>
+    {{else}}<tr><td colspan="6" class="muted">Bu tarih için ilan yok. Aşağıdan ekleyin.</td></tr>{{end}}
+    </tbody>
+  </table>
+
+  <h2 style="font-size:1.05rem;margin-top:22px">Yeni İlan Ekle / Güncelle</h2>
+  <form method="post" action="/admin/resmi-ilanlar/yeni" class="card card-pad"
+        hx-post="/admin/resmi-ilanlar/yeni" hx-target="#ilanlar-panel" hx-swap="outerHTML" hx-indicator="#ilanlar-yukleniyor">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:6px">
+      <input class="input" name="baslik" required placeholder="İlan başlığı" aria-label="İlan başlığı">
+      <input class="input" name="kurum" placeholder="Kurum (örn. Belediye)" aria-label="Kurum">
+      <input class="input" name="sehir" placeholder="Şehir" aria-label="Şehir">
+      <input class="input" name="tarih" type="date" aria-label="İlan tarihi (boş = bugün)">
+      <input class="input" name="url" placeholder="Belge URL (PDF/ilan)" aria-label="Belge URL">
+      <input class="input" name="sira" placeholder="Sıra (0)" style="max-width:110px" aria-label="Sıra (0)">
+    </div>
+    <textarea class="input" name="metin" rows="2" style="margin-top:6px" placeholder="İlan metni (ops)" aria-label="İlan metni"></textarea>
+    <p class="hint" style="margin:.5em 0">Aynı başlık + tarih tekrar girilirse güncellenir.</p>
+    <button class="btn" type="submit">Kaydet</button>
+  </form>
+</div>{{end}}

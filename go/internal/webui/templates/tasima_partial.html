@@ -1,0 +1,110 @@
+{{define "tasima_panel"}}<div id="tasima-panel">
+  {{if .Flash}}<div class="flash {{.Flash.Kind}}">{{.Flash.Text}}</div>{{end}}
+  <span id="tasima-yukleniyor" class="htmx-indicator small muted" role="status" aria-live="polite">Yükleniyor…</span>
+
+  {{$t := .Tasima}}
+
+  <div class="card card-pad" style="display:flex;gap:16px;flex-wrap:wrap;align-items:center">
+    <div><div class="small muted">Toplam Yönlendirme</div><div class="big">{{$t.Count}}</div></div>
+    <div><div class="small muted">Aktif Kural Motoru</div><div class="big">301/302</div></div>
+    <a class="btn small" style="margin-left:auto" href="/admin/tasima/ornek-csv?tur=yonlendirme">↓ Örnek CSV (yönlendirme)</a>
+    <a class="btn small" href="/admin/tasima/ornek-csv?tur=icerik">↓ Örnek CSV (içerik)</a>
+  </div>
+
+  <h2 style="font-size:1.05rem;margin-top:22px">301 Yönlendirmeler</h2>
+  <form method="get" action="/admin/tasima" class="card card-pad" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"
+        hx-get="/admin/tasima" hx-target="#tasima-panel" hx-swap="outerHTML" hx-push-url="true" hx-indicator="#tasima-yukleniyor">
+    <input class="input" name="q" value="{{$t.Query}}" placeholder="Ara: kaynak veya hedef" style="max-width:320px" aria-label="Ara: kaynak veya hedef">
+    <button class="btn small" type="submit">Ara</button>
+    {{if $t.Query}}<a class="btn small" href="/admin/tasima">Temizle</a>{{end}}
+  </form>
+
+  <table class="table" style="margin-top:10px">
+    <thead><tr><th>Kaynak Yol</th><th>Hedef</th><th>Kod</th><th>Hit</th><th>Not</th><th></th></tr></thead>
+    <tbody>
+    {{range $t.Redirects}}
+      <tr>
+        <td><code>{{.SourcePath}}</code></td>
+        <td style="max-width:360px;word-break:break-all"><a href="{{.TargetURL}}" target="_blank" rel="noopener">{{.TargetURL}}</a></td>
+        <td>{{.StatusCode}}</td>
+        <td>{{.Hits}}</td>
+        <td class="muted small">{{.Note}}</td>
+        <td>
+          <form method="post" action="/admin/tasima/yonlendirme-sil"
+              hx-post="/admin/tasima/yonlendirme-sil" hx-target="#tasima-panel" hx-swap="outerHTML"
+              hx-confirm="Yönlendirme silinsin mi?" hx-indicator="#tasima-yukleniyor"
+              data-confirm="Yönlendirme silinsin mi?">
+            <input type="hidden" name="kaynak" value="{{.SourcePath}}">
+            <button class="btn small danger" type="submit">Sil</button>
+          </form>
+        </td>
+      </tr>
+    {{else}}<tr><td colspan="6" class="muted">Kayıt yok. Aşağıdan ekleyin veya CSV ile toplu içe aktarın.</td></tr>{{end}}
+    </tbody>
+  </table>
+
+  <h2 style="font-size:1rem;margin-top:18px">Yeni / Güncelle Yönlendirme</h2>
+  <form method="post" action="/admin/tasima/yonlendirme" class="card card-pad"
+        hx-post="/admin/tasima/yonlendirme" hx-target="#tasima-panel" hx-swap="outerHTML" hx-indicator="#tasima-yukleniyor">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:6px">
+      <input class="input" name="kaynak" required placeholder="Eski yol (örn. /2019/05/haber)" aria-label="Eski yol">
+      <input class="input" name="hedef" required placeholder="Yeni URL (örn. https://theblock.com.tr/…)" aria-label="Yeni URL">
+      <select class="select" name="kod"><option value="301">301 Kalıcı</option><option value="302">302 Geçici</option></select>
+      <input class="input" name="not" placeholder="Not (ops)" aria-label="Not">
+    </div>
+    <div style="margin-top:8px"><button class="btn" type="submit">Kaydet</button>
+      <span class="hint">Kaynak yol baştaki <code>/</code> otomatik eklenir. Aynı kaynak yol tekrar girilirse hedef güncellenir.</span></div>
+  </form>
+
+  <h2 style="font-size:1rem;margin-top:18px">CSV ile Toplu Yönlendirme İçe Aktarım</h2>
+  <form method="post" action="/admin/tasima/yonlendirme-ice-aktar" enctype="multipart/form-data" class="card card-pad">
+    <p class="hint" style="margin:0 0 8px">Sütunlar: <code>kaynak</code> (eski yol), <code>hedef</code> (yeni URL), ops. <code>kod</code> (301/302), <code>not</code>. Başlık satırı zorunlu; Excel Türkçe uyumludur (BOM/; otomatik algılanır).</p>
+    <input class="input" type="file" name="dosya" accept=".csv,text/csv" style="margin-bottom:6px">
+    <textarea class="input" name="csv" rows="4" placeholder="kaynak,hedef,kod&#10;/eski-haber,https://theblock.com.tr/yeni-haber,301" aria-label="kaynak,hedef,kod&#10;/eski-haber,https://theblock.com.tr/yeni-haber,301"></textarea>
+    <div style="margin-top:8px"><button class="btn" type="submit">İçe Aktar</button></div>
+  </form>
+
+  <h2 style="font-size:1.05rem;margin-top:26px">CSV İçerik Toplu İçe Aktarım (Geçiş / Taşıma)</h2>
+  {{if $t.Preview}}
+  <div class="card card-pad" style="border-left:3px solid var(--accent)">
+    <strong>Önizleme — {{len $t.Preview}} satır çözümlendi{{if $t.Apply}}, {{$t.Imported}} kayıt oluşturuldu{{end}}</strong>
+    {{if $t.ImportErrs}}<div class="small" style="color:#e5484d;margin-top:6px">{{range $t.ImportErrs}}• {{.}}<br>{{end}}</div>{{end}}
+    <table class="table" style="margin-top:8px">
+      <thead><tr><th>#</th><th>Başlık</th><th>Kategori</th><th>Durum</th><th>Etiketler</th><th>Durum</th></tr></thead>
+      <tbody>
+      {{range $t.Preview}}
+        <tr>
+          <td class="muted">{{.Line}}</td>
+          <td>{{.Title}}</td>
+          <td>{{.Category}}</td>
+          <td>{{.Status}}</td>
+          <td class="muted small">{{.Tags}}</td>
+          <td>{{if .OK}}<span class="tag">hazır</span>{{else}}<span class="tag" style="color:#e5484d">{{.Err}}</span>{{end}}</td>
+        </tr>
+      {{end}}
+      </tbody>
+    </table>
+    {{if not $t.Apply}}
+    <form method="post" action="/admin/tasima/icerik-ice-aktar" style="margin-top:10px">
+      <input type="hidden" name="uygula" value="1">
+      <textarea name="csv" hidden>{{$t.RawCSV}}</textarea>
+      <button class="btn" type="submit">Onayla ve İçe Aktar ({{len $t.Preview}} satır)</button>
+      <a class="btn small" href="/admin/tasima" style="margin-left:6px">İptal</a>
+    </form>
+    {{end}}
+  </div>
+  {{end}}
+
+  <form method="post" action="/admin/tasima/icerik-ice-aktar" enctype="multipart/form-data" class="card card-pad" style="margin-top:12px">
+    <p class="hint" style="margin:0 0 8px">
+      Sütunlar: <code>baslik</code> (zorunlu), <code>spot</code>, <code>detay</code> (gövde; satır = paragraf),
+      <code>kategori</code> (ad veya slug), <code>etiketler</code> (virgül/| ile), <code>durum</code> (taslak/yayinda/arsiv),
+      <code>slug</code>, <code>seo_baslik</code>, <code>seo_aciklama</code>, <code>kaynak_url</code>.
+      Önce <b>önizleme</b> gösterilir; onaylayınca kaydedilir.
+    </p>
+    <p class="hint" style="margin:0 0 8px">Mevcut kategoriler: {{range $i, $c := $t.Categories}}{{if $i}}, {{end}}{{$c}}{{else}}<em>yok</em>{{end}}</p>
+    <input class="input" type="file" name="dosya" accept=".csv,text/csv" style="margin-bottom:6px">
+    <textarea class="input" name="csv" rows="4" placeholder="baslik,spot,detay,kategori,etiketler,durum&#10;Örnek Başlık,Kısa özet,Gövde paragrafı.,Ekonomi,&quot;ekonomi,piyasa&quot;,taslak" aria-label="baslik,spot,detay,kategori,etiketler,durum&#10;Örnek Başlık,Kısa özet,Gövde paragrafı.,Ekonomi,&quot;ekonomi,piyasa&quot;,taslak"></textarea>
+    <div style="margin-top:8px"><button class="btn" type="submit">Önizle</button></div>
+  </form>
+</div>{{end}}

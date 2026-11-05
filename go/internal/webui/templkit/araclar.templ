@@ -1,0 +1,389 @@
+// İçerik araç panelleri (templ): Bülten, Etiketler, Gazeteler, Çeviriler, Sekme Kategorileri.
+package templkit
+
+import (
+	"encoding/json"
+)
+
+// ---- Bülten ----
+
+// BultenView bülten (SMTP) paneli.
+type BultenView struct {
+	FlashKind string
+	FlashText string
+	Aktif     string
+	OnayBek   string
+	Iptal     string
+	HasSMTP   bool
+	Host      string
+	Port      string
+	User      string
+	From      string
+	FromName  string
+	Implicit  bool
+}
+
+// BultenPanel bülten paneli (HTMX hedefi: #bulten-panel).
+templ BultenPanel(v BultenView) {
+	<div id="bulten-panel">
+		if v.FlashText != "" {
+			<div class={ "flash", v.FlashKind }>{ v.FlashText }</div>
+		}
+		@Yukleniyor("bulten-yukleniyor", "İşleniyor…")
+		<div class="card card-pad" style="display:flex;gap:16px;flex-wrap:wrap;align-items:center">
+			<div><div class="small muted">Aktif abone</div><div class="big">{ v.Aktif }</div></div>
+			<div><div class="small muted">Onay bekleyen</div><div class="big">{ v.OnayBek }</div></div>
+			<div><div class="small muted">İptal</div><div class="big">{ v.Iptal }</div></div>
+			<a class="btn ghost small" href="/admin/aboneler" style="align-self:center"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-users"></use></svg> Tüm Aboneler (bülten + gazete)</a>
+			<form method="post" action="/admin/bulten/gonder" style="margin-left:auto" hx-post="/admin/bulten/gonder" hx-target="#bulten-panel" hx-swap="outerHTML" hx-confirm="Tüm onaylı abonelere günlük özet gönderilsin mi?" hx-indicator="#bulten-yukleniyor" data-confirm="Tüm onaylı abonelere günlük özet gönderilsin mi?">
+				<button class="btn small" type="submit" disabled?={ !v.HasSMTP }><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-mail"></use></svg> Tüm Abonelere Gönder</button>
+			</form>
+		</div>
+		<h2 style="font-size:1.05rem;margin-top:20px">SMTP Ayarları</h2>
+		<form method="post" action="/admin/bulten/ayar" class="card card-pad" hx-post="/admin/bulten/ayar" hx-target="#bulten-panel" hx-swap="outerHTML" hx-indicator="#bulten-yukleniyor">
+			<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:6px">
+				<input class="input" name="smtp_host" value={ v.Host } placeholder="SMTP sunucu (örn. smtp.gmail.com)" aria-label="SMTP sunucu"/>
+				<input class="input" name="smtp_port" value={ v.Port } placeholder="Port (587)" aria-label="Port (587)"/>
+				<input class="input" name="smtp_user" value={ v.User } placeholder="Kullanıcı (ops)" aria-label="Kullanıcı"/>
+				<input class="input" type="password" name="smtp_pass" placeholder="Şifre (boş = değişmez)" aria-label="Şifre (boş = değişmez)"/>
+				<input class="input" name="smtp_from" value={ v.From } placeholder="Gönderen e-posta (from)" aria-label="Gönderen e-posta (from)"/>
+				<input class="input" name="smtp_from_name" value={ v.FromName } placeholder="Gönderen adı (ops)" aria-label="Gönderen adı"/>
+			</div>
+			<label class="small" style="display:block;margin-top:8px"><input type="checkbox" name="smtp_tls" value="1" checked?={ v.Implicit }/> 465 için örtük TLS (implicit TLS)</label>
+			<p class="hint" style="margin:.5em 0">587/STARTTLS ve düz SMTP otomatik algılanır. Şifre boş bırakılırsa mevcut şifre korunur.</p>
+			<button class="btn" type="submit">Kaydet</button>
+		</form>
+		<h2 style="font-size:1.05rem;margin-top:20px">Test Gönderimi</h2>
+		<form method="post" action="/admin/bulten/test" class="card card-pad" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center" hx-post="/admin/bulten/test" hx-target="#bulten-panel" hx-swap="outerHTML" hx-indicator="#bulten-yukleniyor">
+			<input class="input" name="eposta" placeholder="Alıcı e-posta (boş = gönderen adresine)" style="min-width:260px" aria-label="Alıcı e-posta (boş = gönderen adresine)"/>
+			<button class="btn small" type="submit" disabled?={ !v.HasSMTP }>Test Gönder</button>
+			if !v.HasSMTP {
+				<span class="badge" style="background:var(--warn-fill,var(--warn));color:#fff">SMTP yapılandırılmadı</span>
+			}
+		</form>
+		<p class="hint" style="margin-top:14px">Gönderilen içerik: son 8 yayınlanmış içerikten oluşan <b>Günlük Özet</b> HTML e-postası. Aboneler <a href="/admin/ayarlar">Ayarlar</a> / <code>/bulten</code> kaydından toplanır.</p>
+	</div>
+}
+
+// ---- Etiketler ----
+
+// EtiketRow etiket satırı.
+type EtiketRow struct {
+	ID    string
+	Name  string
+	Slug  string
+	Count string
+}
+
+// EtiketlerView etiket yönetimi paneli.
+type EtiketlerView struct {
+	FlashKind string
+	FlashText string
+	Total     string
+	Q         string
+	Items     []EtiketRow
+}
+
+// EtiketlerPanel etiket yönetimi (HTMX hedefi: #etiketler-panel).
+templ EtiketlerPanel(v EtiketlerView) {
+	<div id="etiketler-panel">
+		if v.FlashText != "" {
+			<div class={ "flash", v.FlashKind }>{ v.FlashText }</div>
+		}
+		@Yukleniyor("etiketler-yukleniyor", "")
+		<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px">
+			<h2 style="margin:0;font-size:1.1rem">Etiketler <span class="badge">{ v.Total }</span></h2>
+			<form method="get" action="/admin/etiketler" style="display:flex;gap:6px;flex:1;min-width:220px;justify-content:flex-end" hx-get="/admin/etiketler" hx-target="#etiketler-panel" hx-swap="outerHTML" hx-push-url="true" hx-indicator="#etiketler-yukleniyor">
+				<input class="input" type="search" name="q" value={ v.Q } placeholder="Etiket ara…" aria-label="Etiket ara"/>
+				<button class="btn ghost" type="submit">Ara</button>
+			</form>
+		</div>
+		if v.Q != "" {
+			<p class="hint" style="margin:2px 0 10px">Filtre: "{ v.Q }" · <a href="/admin/etiketler" hx-get="/admin/etiketler" hx-target="#etiketler-panel" hx-swap="outerHTML" hx-push-url="true" hx-indicator="#etiketler-yukleniyor" style="text-decoration:underline">temizle</a></p>
+		}
+		<table class="table">
+			<thead>
+				<tr><th>Etiket</th><th>Slug</th><th>İçerik</th><th>İşlem</th></tr>
+			</thead>
+			<tbody>
+				if len(v.Items) == 0 {
+					@TabloBos(4, "tag", "Etiket yok", "İçeriklere etiket eklendikçe burada listelenir.", "", "")
+				}
+				for _, t := range v.Items {
+					<tr>
+						<td>
+							<form method="post" action={ templ.SafeURL("/admin/etiketler/" + t.ID + "/adlandir") } style="display:flex;gap:6px;align-items:center" hx-post={ "/admin/etiketler/" + t.ID + "/adlandir" } hx-target="#etiketler-panel" hx-swap="outerHTML" hx-indicator="#etiketler-yukleniyor">
+								<input class="input" name="yeni_ad" value={ t.Name } style="max-width:220px" aria-label="Yeni ad"/>
+								<button class="btn ghost small" type="submit" title="Yeniden adlandır"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-pencil"></use></svg> Kaydet</button>
+							</form>
+						</td>
+						<td class="small muted">{ t.Slug }</td>
+						<td>{ t.Count }</td>
+						<td style="white-space:nowrap">
+							<form method="post" action="/admin/etiketler/birlestir" style="display:inline-flex;gap:6px;align-items:center" hx-post="/admin/etiketler/birlestir" hx-target="#etiketler-panel" hx-swap="outerHTML" hx-indicator="#etiketler-yukleniyor">
+								<input type="hidden" name="kaynak" value={ t.ID }/>
+								<input class="input" name="hedef" placeholder="Birleştir → etiket adı" style="max-width:180px" aria-label="Hedef etiket adı"/>
+								<button class="btn ghost small" type="submit" title="Bu etiketi hedefe birleştir"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-arrows-exchange"></use></svg></button>
+							</form>
+							<form method="post" action={ templ.SafeURL("/admin/etiketler/" + t.ID + "/sil") } style="display:inline" data-tag-del hx-post={ "/admin/etiketler/" + t.ID + "/sil" } hx-target="#etiketler-panel" hx-swap="outerHTML" hx-confirm="Etiket silinsin mi? İçeriklerden kaldırılır (geri alınamaz)." hx-indicator="#etiketler-yukleniyor" data-confirm="Etiket silinsin mi? İçeriklerden kaldırılır (geri alınamaz).">
+								<button class="btn danger small" type="submit" title="Sil"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-x"></use></svg></button>
+							</form>
+						</td>
+					</tr>
+				}
+			</tbody>
+		</table>
+		<p class="hint" style="margin-top:8px">Yeniden adlandırma slug'ı da tazeler. Birleştirme: kaynak etiketin tüm içerik bağları hedefe taşınır, kaynak silinir (aynı ad/slug kısıtlarına dikkat).</p>
+	</div>
+}
+
+// ---- Gazeteler (basılı ön sayfalar) ----
+
+// GazeteManset manşet kartı.
+type GazeteManset struct {
+	ID       string
+	Name     string
+	ImageURL string
+	ThumbURL string
+	PageDate string
+	Sort     string
+}
+
+// GazetelerView gazete manşetleri paneli.
+type GazetelerView struct {
+	FlashKind string
+	FlashText string
+	Total     string
+	Date      string
+	Dates     []IOpt
+	HasDates  bool
+	Items     []GazeteManset
+}
+
+// GazetelerPanel gazete manşetleri (HTMX hedefi: #gazeteler-panel).
+templ GazetelerPanel(v GazetelerView) {
+	<div id="gazeteler-panel">
+		if v.FlashText != "" {
+			<div class={ "flash", v.FlashKind }>{ v.FlashText }</div>
+		}
+		@Yukleniyor("gazeteler-yukleniyor", "")
+		<div class="card card-pad" style="display:flex;gap:14px;flex-wrap:wrap;align-items:center">
+			<div><div class="small muted">Toplam manşet</div><div class="big">{ v.Total }</div></div>
+			<div><div class="small muted">Bu tarih</div><div class="big">{ v.Date }</div></div>
+			if v.HasDates {
+				<form method="get" action="/admin/gazeteler" style="margin-left:auto" hx-get="/admin/gazeteler" hx-target="#gazeteler-panel" hx-swap="outerHTML" hx-push-url="true" hx-indicator="#gazeteler-yukleniyor">
+					<select class="select" name="tarih" data-autosubmit>
+						for _, d := range v.Dates {
+							<option value={ d.Value } selected?={ d.Selected }>{ d.Label }</option>
+						}
+					</select>
+				</form>
+			}
+			<a class="btn small" href="/gazete-mansetleri" target="_blank">Genel sayfa</a>
+			<form method="post" action="/admin/gazeteler/cek" hx-post="/admin/gazeteler/cek" hx-target="#gazeteler-panel" hx-swap="outerHTML" hx-indicator="#gazeteler-yukleniyor">
+				<button class="btn small" type="submit">Kaynaktan çek</button>
+			</form>
+			<p class="hint" style="flex-basis:100%;margin:0">Kaynak: gazeteoku.com (günün ön sayfaları). Zamanlayıcı bunu günde bir kendiliğinden yapar; düğme elle çekim içindir.</p>
+		</div>
+		<h2 style="font-size:1.05rem;margin-top:20px">Manşetler ({ v.Date })</h2>
+		<div class="grid-2" style="grid-template-columns:repeat(auto-fill,minmax(220px,1fr))">
+			if len(v.Items) == 0 {
+				<p class="muted">Bu tarih için manşet yok. Aşağıdan ekleyin.</p>
+			}
+			for _, it := range v.Items {
+				<div class="card card-pad" style="text-align:center">
+					<img src={ templ.SafeURL(orStrT(it.ThumbURL, it.ImageURL)) } alt={ it.Name } loading="lazy" style="width:100%;height:auto;border:1px solid var(--border);border-radius:6px"/>
+					<div style="margin-top:6px"><strong>{ it.Name }</strong></div>
+					<div class="small muted">{ it.PageDate } · sıra { it.Sort }</div>
+					<form method="post" action={ templ.SafeURL("/admin/gazeteler/" + it.ID + "/sil") } style="margin-top:6px" hx-post={ "/admin/gazeteler/" + it.ID + "/sil" } hx-target="#gazeteler-panel" hx-swap="outerHTML" hx-confirm="Manşet silinsin mi?" hx-indicator="#gazeteler-yukleniyor" data-confirm="Manşet silinsin mi?">
+						<button class="btn small danger" type="submit">Sil</button>
+					</form>
+				</div>
+			}
+		</div>
+		<h2 style="font-size:1.05rem;margin-top:22px">Yeni Manşet Ekle / Güncelle</h2>
+		<form method="post" action="/admin/gazeteler/yeni" class="card card-pad" hx-post="/admin/gazeteler/yeni" hx-target="#gazeteler-panel" hx-swap="outerHTML" hx-indicator="#gazeteler-yukleniyor">
+			<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:6px">
+				<input class="input" name="gazete" required placeholder="Gazete adı (örn. Hürriyet)" aria-label="Gazete adı"/>
+				<input class="input" name="tarih" type="date" aria-label="Manşet tarihi (boş = bugün)"/>
+				<input class="input" name="gorsel" required placeholder="Ön sayfa görsel URL" aria-label="Ön sayfa görsel URL"/>
+				<input class="input" name="kucuk" placeholder="Küçük görsel URL (ops)" aria-label="Küçük görsel URL"/>
+				<input class="input" name="sira" placeholder="Sıra (0)" style="max-width:120px" aria-label="Sıra"/>
+			</div>
+			<p class="hint" style="margin:.5em 0">Tarih boş bırakılırsa bugün kullanılır. Aynı gazete + tarih tekrar girilirse güncellenir. Görselleri <a href="/admin/dosyalar">Medya</a>'ya yükleyip URL'sini buraya yapıştırabilirsiniz.</p>
+			<button class="btn" type="submit">Kaydet</button>
+		</form>
+	</div>
+}
+
+// orStrT ilk boş olmayan değeri döndürür.
+func orStrT(a, b string) string {
+	if a != "" {
+		return a
+	}
+	return b
+}
+
+// ---- Çeviriler ----
+
+// CeviriSatir çeviri tablosu satırı.
+type CeviriSatir struct {
+	Key      string
+	TrValue  string
+	Value    string
+	SilVals  string // hx-vals JSON
+	SilURL   string
+}
+
+// CevirilerView çeviri yönetimi paneli.
+type CevirilerView struct {
+	FlashKind  string
+	FlashText  string
+	Locales    []IOpt
+	Locale     string
+	LocaleName string
+	KeyCount   string
+	Rows       []CeviriSatir
+}
+
+// CevirilerPanel çeviri yönetimi (HTMX hedefi: #ceviriler-panel).
+templ CevirilerPanel(v CevirilerView) {
+	<div id="ceviriler-panel">
+		if v.FlashText != "" {
+			<div class={ "flash", v.FlashKind }>{ v.FlashText }</div>
+		}
+		@Yukleniyor("ceviriler-yukleniyor", "")
+		<div class="tabs" style="flex-wrap:wrap;row-gap:6px">
+			for _, l := range v.Locales {
+				<a href={ templ.SafeURL("/admin/ceviriler?dil=" + l.Value) } hx-get={ "/admin/ceviriler?dil=" + l.Value } hx-target="#ceviriler-panel" hx-swap="outerHTML" hx-push-url="true" hx-indicator="#ceviriler-yukleniyor" class={ templ.KV("active", l.Selected) }>{ l.Label } <span class="small muted">{ l.Value }</span></a>
+			}
+		</div>
+		<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:14px 0 8px">
+			<h2 style="margin:0;font-size:1.1rem">Çeviriler — { v.LocaleName } ({ v.Locale })</h2>
+			<span class="badge">{ v.KeyCount } anahtar</span>
+			<form method="post" action="/admin/ceviriler/anahtar-ekle" style="display:flex;gap:6px;margin-left:auto" hx-post="/admin/ceviriler/anahtar-ekle" hx-target="#ceviriler-panel" hx-swap="outerHTML" hx-indicator="#ceviriler-yukleniyor">
+				<input type="hidden" name="dil" value={ v.Locale }/>
+				<input class="input" name="anahtar" placeholder="Yeni anahtar (örn. footer_about)" style="max-width:240px" aria-label="Yeni anahtar"/>
+				<button class="btn ghost small" type="submit">Ekle</button>
+			</form>
+		</div>
+		<form method="post" action="/admin/ceviriler/kaydet" hx-post="/admin/ceviriler/kaydet" hx-target="#ceviriler-panel" hx-swap="outerHTML" hx-indicator="#ceviriler-yukleniyor">
+			<input type="hidden" name="dil" value={ v.Locale }/>
+			<table class="table">
+				<thead>
+					<tr><th>Anahtar</th><th>TR (referans)</th><th>{ v.LocaleName }</th><th></th></tr>
+				</thead>
+				<tbody>
+					for _, r := range v.Rows {
+						<tr>
+							<td class="small"><code>{ r.Key }</code></td>
+							<td class="small muted" style="max-width:260px">{ r.TrValue }</td>
+							<td style="min-width:300px"><input class="input" name={ "v" + r.Key } value={ r.Value }/></td>
+							<td style="white-space:nowrap">
+								<input type="hidden" name="anahtar" value={ r.Key }/>
+								<button class="btn danger small" type="submit" formaction="/admin/ceviriler/anahtar-sil" name="sil_anahtar" value={ r.Key } formnovalidate hx-post="/admin/ceviriler/anahtar-sil" hx-vals={ r.SilVals } hx-target="#ceviriler-panel" hx-swap="outerHTML" hx-confirm="Bu anahtar TÜM dillerden silinsin mi?" hx-indicator="#ceviriler-yukleniyor" data-confirm="Bu anahtar TÜM dillerden silinsin mi?" title="Tüm dillerde sil"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-x"></use></svg></button>
+							</td>
+						</tr>
+					}
+				</tbody>
+			</table>
+			<button class="btn" type="submit">Tümünü Kaydet</button>
+		</form>
+		<p class="hint" style="margin-top:6px">Anahtar kaydı, alan adının başına "v" eklenerek gönderilir (örn. <code>vfooter_about</code>); "TR" sütunu referanstır. Kayıt sonrası paket canlıya yeniden yüklenir (yeniden başlatma gerekmez).</p>
+	</div>
+}
+
+// hxValsJSON hx-vals için güvenli JSON üretir.
+func hxValsJSON(pairs ...string) string {
+	m := map[string]string{}
+	for i := 0; i+1 < len(pairs); i += 2 {
+		m[pairs[i]] = pairs[i+1]
+	}
+	b, err := json.Marshal(m)
+	if err != nil {
+		return "{}"
+	}
+	return string(b)
+}
+
+// ---- Ana sayfa sekmeleri ----
+
+// TabCatsKategori seçilebilir kategori.
+type TabCatsKategori struct {
+	Slug   string
+	Name   string
+	Yayinda bool
+}
+
+// TabCatsView ana sayfa sekme kategorileri paneli.
+type TabCatsView struct {
+	FlashKind  string
+	FlashText  string
+	Configured bool
+	Slugs      []string
+	Count      string
+	Categories []TabCatsKategori
+	Summary    string
+}
+
+// TabCatsPanel sekme kategorileri (HTMX hedefi: #tabcats-panel).
+templ TabCatsPanel(v TabCatsView) {
+	<div id="tabcats-panel" data-tabcats>
+		if v.FlashText != "" {
+			<div class={ "flash", v.FlashKind }>{ v.FlashText }</div>
+		}
+		@Yukleniyor("tabcats-yukleniyor", "Kaydediliyor…")
+		<form id="tabcatsHtmxForm" method="post" action="/admin/tab-kategorileri/kaydet" hx-post="/admin/tab-kategorileri/kaydet" hx-target="#tabcats-panel" hx-swap="outerHTML" hx-indicator="#tabcats-yukleniyor">
+			<input type="hidden" name="slugs"/>
+		</form>
+		<div class="grid-2" style="grid-template-columns:2.1fr 1fr;align-items:start">
+			<div class="card card-pad">
+				<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+					<h2 style="margin-top:0;font-size:1.1rem">Ana Sayfa Sekmeleri</h2>
+					<div style="display:flex;gap:6px">
+						<button class="btn" type="button" id="tcSave">Kaydet</button>
+						<button class="btn danger small" type="button" id="tcReset" title="Varsayılana dön" hx-post="/admin/tab-kategorileri/sifirla" hx-target="#tabcats-panel" hx-swap="outerHTML" hx-confirm="Sekme listesini sıfırlayın mı? Blok menüdeki ilk 8 kategoriye döner." hx-indicator="#tabcats-yukleniyor">Sıfırla</button>
+					</div>
+				</div>
+				<p class="hint">
+					Ana sayfadaki <b>tab geçişli kategori bloğunda</b> hangi kategorilerin sekme olarak çıkacağını ve <b>sırasını</b> buradan belirlersiniz. Sürükle-bırak veya ok butonlarıyla sıralayın.
+					<br/>
+					if v.Configured {
+						<b style="color:var(--tema,#d10015)">Şu an özel seçim aktif.</b>
+					} else {
+						<b>Kaydetmediğiniz sürece</b> blok menüdeki ilk 8 kategoriyi gösterir.
+					}
+				</p>
+				<div id="tcStatus"></div>
+				<ul id="tcItems" style="list-style:none;margin:12px 0 0;padding:0;min-height:40px">
+					for _, s := range v.Slugs {
+						<li data-slug={ s } draggable="true" style="display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--border);border-radius:10px;margin-bottom:8px;background:var(--surface,#fff)">
+							<span style="cursor:grab;color:#a1a1aa;font-size:18px;user-select:none" title="Sürükle"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-grip-vertical"></use></svg></span>
+							<button type="button" class="btn ghost small tc-up" title="Yukarı"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-arrow-up"></use></svg></button>
+							<button type="button" class="btn ghost small tc-down" title="Aşağı"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-arrow-down"></use></svg></button>
+							<span class="tc-ad" style="flex:1;min-width:120px;font-weight:600">/{ s }</span>
+							<a class="btn danger small tc-del" href="#" title="Kaldır"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-x"></use></svg></a>
+						</li>
+					}
+				</ul>
+				<p class="hint" style="margin-top:8px">Sekme sayısı: <span id="tcCount">{ v.Count }</span></p>
+			</div>
+			<div class="gap">
+				<div class="card card-pad">
+					<h2 style="margin-top:0;font-size:1.1rem">Kategori Ekle</h2>
+					<div class="gap">
+						for _, c := range v.Categories {
+							<label class="tag" style="cursor:pointer;display:flex;gap:6px;align-items:center" data-slug={ c.Slug }>
+								<input type="checkbox" class="tc-cat" value={ c.Slug }/> { c.Name }
+								if !c.Yayinda {
+									<span class="badge" style="color:var(--warn)">yayında değil</span>
+								}
+							</label>
+						}
+					</div>
+					<button class="btn" type="button" id="tcAddCats" style="margin-top:10px">Seçilenleri Ekle</button>
+				</div>
+			</div>
+		</div>
+	</div>
+}

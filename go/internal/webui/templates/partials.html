@@ -1,0 +1,671 @@
+{{define "public_head"}}<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{{.MetaTitle}}</title>
+<meta name="description" content="{{.MetaDesc}}">
+<meta name="robots" content="{{.Robots}}">
+{{/* Search Console site doğrulaması (panel: Ayarlar → Google Site Doğrulama).
+     Boşsa hiç basılmaz; değer sunucuda biçim denetiminden geçer. */}}
+{{if .GVerification}}<meta name="google-site-verification" content="{{.GVerification}}">{{end}}
+{{if .AdsPublisher}}<meta name="google-adsense-account" content="{{.AdsPublisher}}">{{end}}
+{{if .Canonical}}<link rel="canonical" href="{{.Canonical}}">{{if .Hreflangs}}{{range .Hreflangs}}<link rel="alternate" hreflang="{{.Code}}" href="{{.URL}}">
+{{end}}{{end}}{{if .I18nJSON}}<script>window.__tbI18nSeed={{.I18nJSON}};</script>{{end}}{{end}}
+<meta property="og:site_name" content="{{.SiteName}}">
+<meta property="og:locale" content="{{if eq .Lang "tr"}}tr_TR{{else}}en_US{{end}}">
+<meta property="og:type" content="{{if .OGType}}{{.OGType}}{{else}}website{{end}}">
+<meta property="og:title" content="{{.MetaTitle}}">
+<meta property="og:description" content="{{.MetaDesc}}">
+{{if .Canonical}}<meta property="og:url" content="{{.Canonical}}">{{end}}
+{{if .OGImage}}<meta property="og:image" content="{{.OGImage}}">{{end}}
+{{if .Article}}{{with .Article.BIK}}<!-- Basın İlan Kurumu teknik kuralları.
+     Site resmî ilan yayımladığı için (/resmi-ilanlar) tebliğ kapsamındadır ve
+     uyum otomatik teknik kontrolle ölçülür. Değerler bik.go'da üretilir.
+     articleAuthor, sayfada görünen kaynak bilgisiyle AYNI olmak zorundadır;
+     bu yüzden hiçbir harf dönüşümü uygulanmaz. Boş alan hiç basılmaz —
+     yanlış değer basmaktansa eksik bırakmak yeğdir. -->
+{{if .Title}}<meta name="title" content="{{.Title}}">{{end}}
+{{if .URL}}<meta name="url" content="{{.URL}}">{{end}}
+{{if .Section}}<meta name="articleSection" content="{{.Section}}">{{end}}
+{{if .Published}}<meta name="datePublished" content="{{.Published}}">{{end}}
+{{if .Modified}}<meta name="dateModified" content="{{.Modified}}">{{end}}
+{{if .Author}}<meta name="articleAuthor" content="{{.Author}}">{{end}}
+{{end}}{{end}}
+<meta name="twitter:card" content="{{if .OGImageGenis}}summary_large_image{{else}}summary{{end}}">
+<meta name="twitter:title" content="{{.MetaTitle}}">
+<meta name="twitter:description" content="{{.MetaDesc}}">
+{{if .OGImage}}<meta name="twitter:image" content="{{.OGImage}}">{{end}}
+<!-- Poppins kendi sunucumuzdan (static/fonts.css). Daha önce
+     fonts.googleapis.com ve fonts.gstatic.com kullanılıyordu; bu, sayfayı
+     açan her ziyaretçinin IP ve User-Agent bilgisinin rızası alınmadan
+     Google'a (ABD) gitmesi demekti — KVKK m.9 anlamında yurt dışına
+     aktarım. Artık sayfa açılışında üçüncü taraf font isteği yok.
+     En sık kullanılan iki dosya preload edilir; gerisini tarayıcı
+     unicode-range'e göre gerektiğinde çeker. Preload adresleri bilerek
+     sürümsüzdür: fonts.css fontlara sürümsüz başvuruyor, asset() ile
+     ?v=… eklenirse tarayıcı için iki ayrı URL olur ve preload boşa gider
+     (dosya iki kez inerdi). Font dosya adları ağırlık+alt küme ile sabit,
+     içerikleri değişmez; /static/ uzun süreli önbelleklenir. -->
+<link rel="preload" href="/static/fonts/poppins-400-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/static/fonts/poppins-600-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="{{asset "fonts.css"}}">
+<link rel="stylesheet" href="{{asset "app.css"}}">
+{{/* İkon animasyon yardımcıları (ico-spin, ico-pulse…). Ön yüzde de
+     "yükleniyor" ve canlı gösterge durumları kullanıldığı için global. */}}
+<link rel="stylesheet" href="{{asset "ikonlar.css"}}">
+<link rel="stylesheet" href="{{asset "public.css"}}">
+{{/* Gazete Manşetleri modülü (Faz 197). Tek dosya: yalnız modülü olan
+     sayfalarda yüklenir, gerisi public.css'te. */}}
+<link rel="stylesheet" href="{{asset "gazete-manset.css"}}">
+{{/* Tasarım denetimi düzeltmeleri: görsel hiyerarşi, yatay şeridin
+     keşfedilebilirliği, dokunma hedefleri. public.css'ten SONRA gelir. */}}
+<link rel="stylesheet" href="{{asset "public-gelistirme.css"}}">
+{{/* Çerez onay bandı. Önceden stil JS ile <style> olarak enjekte ediliyordu;
+     CSP `style-src` 'unsafe-inline' kaldırılınca engellenirdi (Faz 211). */}}
+<link rel="stylesheet" href="{{asset "cerez.css"}}">
+<!-- Site arka planı. Yönetici Sayfa Tasarımcısı'ndan özel bir görsel
+     (SVG veya raster) yükleyebilir; yüklenmemişse varsayılan desen basılır.
+     URL `asset` ile sürümlendirilir; statik CSS içinde url() sabit olsaydı
+     tarayıcı/Cloudflare eski kopyayı servis ederdi.
+     Üreteç: tools/build-mesh.js -->
+{{if .SiteBg}}<style>{{.SiteBg}}</style>{{else}}<style>body{background-image:url("{{asset "ana-bg.svg"}}")}</style>{{end}}
+{{if .DesignCSS}}<style>{{.DesignCSS}}</style>{{end}}
+{{if .MenuBgCSS}}<style>{{.MenuBgCSS}}</style>{{end}}
+<link rel="alternate" type="application/rss+xml" title="{{.SiteName}} RSS" href="{{.LangBase}}/rss.xml">
+<link rel="manifest" href="/manifest.webmanifest">
+{{/* Tek sabit değer koyu renkti; açık temada tarayıcı çubuğu sayfayla
+     çelişiyordu. İki ayrı media sorgusu temayla uyumlu çalışır. */}}
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#18181b" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+{{if and .Brand .Brand.FaviconID}}<link rel="icon" href="{{mediaURL .Brand.FaviconID}}">
+<link rel="apple-touch-icon" href="{{mediaURL .Brand.FaviconID}}">{{else}}<link rel="icon" href="/static/icon-192.png">
+<link rel="apple-touch-icon" href="/static/icon-192.png">{{end}}
+<script>
+/* FOUC önleyici: tema + yazı ölçeği (erişilebilirlik, spec 06 K-J) */
+(function(){try{
+  var t=localStorage.getItem('tb_theme');
+  if(t==='system'||!t){t=window.matchMedia('(prefers-color-scheme: light)').matches?'light':'dark';}
+  document.documentElement.setAttribute('data-theme',t);
+  var fs=localStorage.getItem('tb_font_scale');
+  if(fs==='1.25'||fs==='1.5'){document.documentElement.style.fontSize=(parseFloat(fs)*100)+'%';}
+}catch(e){}})();
+</script>
+{{if .GA4Measurement}}<!-- Analitik, çerez onayının ARKASINDA.
+     gtag.js burada YÜKLENMEZ; ölçüm kimliği yalnız data-ga4 ile cerez.js'e
+     geçirilir ve betik, ziyaretçi açıkça kabul ederse scripti kendisi
+     ekler. Kurulun 08.08.2024 tarihli 2024/1361 sayılı kararı, kesinlikle
+     gerekli olmayan analitik çerez için sitenin ilk girişinde açık rıza
+     alacak bir mekanizma bulunmamasını ihlal saydı.
+     Google Consent Mode bilerek tercih edilmedi: o yöntemde gtag.js yine
+     yüklenir ve tarayıcı Google'a (ABD) istek atar; çerez yazılmasa bile
+     ziyaretçinin IP adresi aktarılmış olur (6698 s.K. m.9).
+     Ayar boşsa bu blok hiç basılmaz — ne bant çıkar ne betik yüklenir. -->
+<script src="{{asset "cerez.js"}}" data-ga4="{{.GA4Measurement}}" defer></script>
+{{end}}
+<script src="{{asset "app.js"}}" defer></script>
+<script src="{{asset "csp-delegated.js"}}" defer></script>
+<script src="{{asset "piyasa.js"}}" defer></script>
+<script src="{{asset "hisse.js"}}" defer></script>
+<script src="{{asset "cevirici.js"}}" defer></script>
+<script src="{{asset "gazete-manset.js"}}" defer></script>
+{{/* GSAP yereldir: CDN yok, eval yok — CSP'ye yeni kaynak açmaz.
+     defer sırası korunur, bu yüzden hareket katmanı gsap'tan sonra gelir. */}}
+<script src="{{asset "vendor/gsap.min.js"}}" defer></script>
+<script src="{{asset "public-hareket.js"}}" defer></script>
+{{end}}
+
+{{define "site_header"}}
+<a class="skip-link" href="#main">{{.T "skip_to_content"}}</a>
+<div class="reading-bar" id="readingBar"></div>
+{{- $cats := .NavCategories}}{{$menu := .Menu}}{{$h := .Header}}
+{{if $h.Topbar}}<div class="hp-header-topbar"><div class="container"><span>{{$h.TopbarText}}</span><span class="hp-header-topbar-site">{{.SiteName}}</span></div></div>{{end}}
+<header class="site-header header-model-{{$h.Model}} header-skin-{{$h.Skin}} header-width-{{$h.Width}}{{if not $h.Sticky}} header-not-sticky{{end}}">
+  <div class="container">
+    <div class="row">
+      {{$b := .Brand}}<a class="brand{{if and $b (eq $b.Mode "image") $b.ImageID}} brand-img{{end}}" href="{{.HomeURL}}">{{if and $b (eq $b.Mode "image") $b.ImageID}}<img src="{{mediaURL $b.ImageID}}" alt="{{.SiteName}}">{{else}}{{if and $b $b.Text}}{{$b.Text}}{{else}}the<b>block</b>{{end}}{{end}}</a>
+      {{if $h.ShowTagline}}<span class="header-tagline">{{if and $b $b.Tagline}}{{$b.Tagline}}{{else}}{{.SiteSlogan}}{{end}}</span>{{end}}
+      <nav class="site-nav" aria-label="Ana menü">
+        {{if $menu}}
+        {{range $i, $m := $menu}}{{$label := $m.Label}}{{if not $label}}{{$label = $m.Name}}{{end}}{{if not $label}}{{$label = $m.Slug}}{{end}}<span class="nav-item{{if $m.Children}} has-mega{{end}}" data-tb-nav{{if $m.Sub}} data-tb-pin{{end}}>{{if $m.Children}}<a href="{{if $m.URL}}{{$m.URL}}{{else}}{{$.LangBase}}/kategori/{{$m.Slug}}{{end}}" data-mega-btn aria-expanded="false" aria-haspopup="true">{{$label}}<svg class="nav-caret" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.4" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg></a>
+          <div class="nav-mega nav-mega-{{$.MenuDesign}}" data-mega-panel hidden>
+            <div class="nav-mega-inner">
+              <div class="nav-mega-head">
+                <div class="nav-mega-title"><span>Kategori</span><strong>{{$label}}</strong></div>
+                <div class="nav-mega-head-actions">
+                  <a class="nav-mega-all" href="{{if $m.URL}}{{$m.URL}}{{else}}{{$.LangBase}}/kategori/{{$m.Slug}}{{end}}">{{$.T "all_in"}} {{$label}} {{$.T "news_word"}} <span aria-hidden="true">→</span></a>
+                  {{if ne $.MenuDesign "kisa"}}<button type="button" class="nav-mega-close" data-mega-close aria-label="Menüyü kapat">&times;</button>{{end}}
+                </div>
+              </div>
+              <div class="nav-mega-body">
+                {{if eq $.MenuDesign "sayfa"}}
+                <aside class="nav-mega-rail" aria-label="Üst kategoriler">
+                  {{range $menu}}{{if ne .Slug "diger"}}{{$l3 := .Label}}{{if not $l3}}{{$l3 = .Name}}{{end}}{{if not $l3}}{{$l3 = .Slug}}{{end}}<a class="{{if eq .Slug $m.Slug}}on{{end}}" href="{{if .URL}}{{.URL}}{{else}}{{$.LangBase}}/kategori/{{.Slug}}{{end}}">{{$l3}}</a>{{end}}{{end}}
+                </aside>
+                {{end}}
+                <div class="nav-mega-main">
+                  <div class="nav-mega-grid" role="menu">
+                    {{range $m.Children}}<a role="menuitem" href="{{$.LangBase}}/kategori/{{.Slug}}">{{.Name}}</a>{{end}}
+                  </div>
+                  {{if and (ne $.MenuDesign "kisa") (ne $.MenuDesign "sayfa")}}
+                  <div class="nav-mega-foot">
+                    <span class="nav-mega-foot-title">Diğer kategoriler</span>
+                    <div class="nav-mega-others">
+                      {{range $menu}}{{if and (ne .Slug $m.Slug) (ne .Slug "diger")}}{{$l2 := .Label}}{{if not $l2}}{{$l2 = .Name}}{{end}}{{if not $l2}}{{$l2 = .Slug}}{{end}}<a href="{{if .URL}}{{.URL}}{{else}}{{$.LangBase}}/kategori/{{.Slug}}{{end}}">{{$l2}}</a>{{end}}{{end}}
+                    </div>
+                  </div>
+                  {{end}}
+                </div>
+              </div>
+            </div>
+          </div>{{else}}<a href="{{if $m.URL}}{{$m.URL}}{{else}}{{$.LangBase}}/kategori/{{$m.Slug}}{{end}}">{{$label}}</a>{{end}}</span>{{end}}
+        {{else}}
+        {{range $i, $c := $cats}}{{if ne $c.Slug "diger"}}<span class="nav-item" data-tb-nav{{if or (eq $c.Slug "ilceler") (eq $c.Slug "sanat")}} data-tb-pin{{end}}><a href="{{$.LangBase}}/kategori/{{$c.Slug}}">{{$c.Name}}</a></span>{{end}}{{end}}
+        {{end}}
+        <div class="nav-dd tb-sakli" id="navDiger">
+          <button class="nav-dd-btn" type="button" aria-haspopup="true" aria-expanded="false">Diğer
+            <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+          </button>
+          <div class="nav-dd-menu" role="menu"></div>
+        </div>
+      </nav>
+      <div class="header-tools">
+        {{if $h.ShowHome}}<a class="icon-btn header-home" href="{{.HomeURL}}" title="Ana sayfa" aria-label="Ana sayfa"><svg class="ti"><use href="/static/vendor/ikon-cekirdek.svg#ti-home"/></svg></a>{{end}}
+        {{range $h.Buttons}}{{if .Label}}<a class="header-cta{{if eq .Style "ghost"}} ghost{{end}}" href="{{urlAbs .URL $.LangBase}}">{{.Label}}</a>{{end}}{{end}}
+        {{if $h.ShowTheme}}<button class="icon-btn" type="button" data-theme-btn title="Koyu/açık tema" aria-label="Tema">
+          <svg class="ti icon-moon"><use href="/static/vendor/ikon-cekirdek.svg#ti-moon"/></svg>
+          <svg class="ti icon-sun"><use href="/static/vendor/ikon-cekirdek.svg#ti-sun"/></svg>
+        </button>{{end}}
+        {{if $h.ShowSearch}}<button class="icon-btn search-btn" type="button" data-search-btn title="Ara" aria-label="Arama">
+          <svg class="ti"><use href="/static/vendor/ikon-cekirdek.svg#ti-search"/></svg>
+        </button>{{end}}
+        {{if not $h.HideMember}}{{if .MemberLoggedIn}}<a class="icon-btn member-btn" href="{{.MemberURL}}" title="{{.MemberName}} — Hesabım{{if .MemberUnread}} ({{.MemberUnread}} okunmamış bildirim){{end}}" aria-label="Hesabım{{if .MemberUnread}} · {{.MemberUnread}} okunmamış bildirim{{end}}"><span class="member-avatar" aria-hidden="true">{{.MemberInitial}}</span>{{if .MemberUnread}}<span class="member-badge" aria-hidden="true">{{if gt .MemberUnread 9}}9+{{else}}{{.MemberUnread}}{{end}}</span>{{end}}</a>{{else}}<a class="icon-btn member-btn" href="{{.LangBase}}/giris" title="Üye girişi" aria-label="Üye girişi"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.9" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"/><path stroke-linecap="round" stroke-linejoin="round" d="M4 21c0-3.5 3.6-6 8-6s8 2.5 8 6"/></svg></a>{{end}}{{end}}
+        {{if $h.ShowMenu}}<button class="icon-btn menu-btn" type="button" data-menu-btn title="Menü" aria-label="Menü">
+          <svg width="24" height="24" stroke="currentColor" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M2 6h16"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M2 12h12"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M2 18h16"/></svg>
+        </button>{{end}}
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="hp-search" id="hpSearch" role="dialog" aria-modal="true" aria-label="Arama">
+  <div class="hp-search-inner">
+    <form class="hp-search-form" method="get" action="{{.LangBase}}/arama">
+      <input class="input" type="search" name="q" placeholder="Haber ara…" autocomplete="off" aria-label="Arama kelimesi">
+      <button class="btn" type="submit">Ara</button>
+    </form>
+    <div class="hp-search-hint muted">{{.T "search_hint"}}</div>
+  </div>
+</div>
+
+<div class="hp-drawer" id="hpDrawer">
+  <div class="hp-drawer-bg" data-drawer-close></div>
+  <aside class="hp-drawer-panel" role="dialog" aria-label="Menü">
+    <div class="hp-drawer-head">
+      <span class="hp-drawer-title">the<b style="color:var(--hp-tema)">block</b> {{.T "menu"}}</span>
+      <button class="hp-drawer-close" type="button" data-drawer-close aria-label="{{.T "menu_close"}}">&times;</button>
+    </div>
+    <div class="hp-drawer-main" id="hpDrawerMain">
+    <div class="hp-drawer-group">Kategoriler</div>
+    {{if $cats}}
+    {{/* Faz 19: iki <ul> grubu — 14 kategori = solda 7, sağda 7. */}}
+    {{$catsol := catCols $cats 7}}
+    <div class="hp-drawer-cats">
+      {{range $col := $catsol}}
+      {{if $col}}<ul class="hp-drawer-list">{{range $col}}{{$cslug := .Slug}}<li class="hp-drawer-cat">
+        <a href="{{$.LangBase}}/kategori/{{.Slug}}">{{.Name}}</a>
+        {{range $menu}}{{if eq .Slug $cslug}}{{if .Children}}<button type="button" class="hp-drawer-subtoggle" data-subopen="{{$cslug}}" aria-expanded="false" aria-controls="hpSubView-{{$cslug}}" aria-label="{{.Name}} {{$.T "subcategories"}}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg></button>{{end}}{{end}}{{end}}
+      </li>{{end}}</ul>{{end}}
+      {{end}}
+    </div>
+    {{else}}<span class="hint" style="color:var(--hp-text-muted)">Kategori tanımlı değil.</span>{{end}}
+    <div class="hp-drawer-group">İçerikler</div>
+    {{/* Faz 24: bu iki grup da kategori listesi gibi iki sütuna geçti.
+         column-count sütunları DENGELER ve yukarıdan aşağı doldurur
+         (JS/sayaç gerekmez): Akış·Son Dakika·Arşiv·Bülten solda,
+         servisler sağda dengelenir. */}}
+    <div class="hp-drawer-grid">
+      <a href="{{.LangBase}}/akis">📰 {{.T "footer.akis"}}</a>
+      <a href="{{.LangBase}}/son-dakika">{{.T "breaking"}}</a>
+      <a href="{{.LangBase}}/arsiv">{{.T "recent"}}</a>
+      <a href="{{.LangBase}}/bulten">✉ {{.T "footer.bulten"}}</a>
+      <a href="{{.LangBase}}/abonelik">💳 {{.T "subscription"}}</a>
+    </div>
+    <div class="hp-drawer-group">{{.T "services"}}</div>
+    <div class="hp-drawer-grid">
+      <a href="{{.LangBase}}/hava-durumu">☀ {{.T "footer.hava-durumu"}}</a>
+      <a href="{{.LangBase}}/namaz-vakitleri">🕌 {{.T "footer.namaz-vakitleri"}}</a>
+      <a href="{{.LangBase}}/borsa">📈 {{.T "footer.borsa"}}</a>
+      <a href="{{.LangBase}}/fikstur">⚽ {{.T "footer.fikstur"}}</a>
+      <a href="{{.LangBase}}/astroloji">🔮 {{.T "footer.astroloji"}}</a>
+      <a href="{{.LangBase}}/nobetci-eczaneler">🏥 {{.T "footer.nobetci-eczaneler"}}</a>
+      <a href="{{.LangBase}}/gazete-mansetleri">📰 {{.T "footer.gazete-mansetleri"}}</a>
+    </div>
+    {{if .MemberStaff}}
+    <div class="hp-drawer-group">{{.T "admin_group"}}</div>
+    <div class="hp-drawer-grid">
+      <a href="/admin">{{.T "staff_panel"}}</a>
+      <a href="/admin/icerikler">İçerikler</a>
+      <a href="/admin/ai-kaynak">AI Kaynak</a>
+      <a href="/admin/gelen-kutusu">Gelen Kutusu</a>
+    </div>
+    {{end}}
+    <div class="hp-drawer-group">{{.T "preferences"}}</div>
+    <label class="hint" style="color:var(--hp-text-muted);display:block;margin-bottom:4px">{{.T "language"}}</label>
+    <select class="select" data-lang-select data-base="{{.LangBase}}" aria-label="{{.T "language"}}">
+      {{range .Locales}}<option value="{{.Code}}" {{if eq $.Lang .Code}}selected{{end}}>{{.NativeName}}</option>{{end}}
+    </select>
+    <label class="hint" style="color:var(--hp-text-muted);display:block;margin:10px 0 4px">{{.T "font_size"}}</label>
+    <select class="select" data-font-scale aria-label="{{.T "font_size"}}">
+      <option value="1">{{if eq .Lang "tr"}}Normal{{else}}Normal{{end}}</option>
+      <option value="1.25">{{if eq .Lang "tr"}}Büyük (A+){{else}}Large (A+){{end}}</option>
+      <option value="1.5">{{if eq .Lang "tr"}}Çok büyük (A++){{else}}Extra large (A++){{end}}</option>
+    </select>
+    </div>
+
+    {{range $menu}}{{if .Children}}
+    <section class="hp-drawer-subview" id="hpSubView-{{.Slug}}" data-subview hidden>
+      <div class="hp-subview-head">
+        <button type="button" class="hp-subview-back" data-subback aria-label="Kategorilere dön">←</button>
+        <div class="hp-subview-title">
+          <span>Kategori</span>
+          <strong>{{.Name}}</strong>
+        </div>
+        <span class="hp-subview-count">{{len .Children}} {{$.T "subcategories"}}</span>
+      </div>
+      <div class="hp-subview-list">
+        <a class="hp-subview-all" href="{{$.LangBase}}/kategori/{{.Slug}}">{{$.T "all_in"}} {{.Name}} {{$.T "news_word"}} <span aria-hidden="true">→</span></a>
+        {{range .Children}}<a href="{{$.LangBase}}/kategori/{{.Slug}}">{{.Name}}</a>{{end}}
+      </div>
+    </section>
+    {{end}}{{end}}
+  </aside>
+</div>
+{{with .Ads}}{{if .Has}}{{if index .SlotMap "header_728x90"}}<!-- BİK Tebliği 6/A: reklam alanını kapsayan öğe işaretlenir; kimlik sayfa içinde benzersizdir. --><div class="container ad-band" data-bik-reklam="true" data-bik-reklam-id="header_728x90">{{index .SlotMap "header_728x90"}}</div>{{end}}{{end}}{{end}}
+{{end}}
+
+{{define "site_footer"}}
+{{- $cats := .NavCategories}}{{$f := .Footer}}
+<footer class="site-footer{{if $f}} foot-layout-{{$f.Layout}} foot-logo-{{$f.LogoPos}} foot-skin-{{$f.Skin}}{{end}}">
+{{if $f}}
+  {{if eq $f.Layout "klasik"}}
+  <div class="hp-footer-ust"><div class="container">
+    <div class="hp-footer-links">
+      {{range $f.Strip}}<a href="{{if .Slug}}{{$.LangBase}}/kategori/{{.Slug}}{{else}}{{urlAbs .URL $.LangBase}}{{end}}">{{.Label}}</a>{{end}}
+    </div>
+    {{if $f.ShowSocial}}{{template "foot_social" .}}{{end}}
+  </div></div>
+  {{end}}
+  {{if ne $f.Layout "sade"}}
+  <div class="cols">
+    {{range $f.Cols}}
+    <div class="small foot-col">
+      <span class="fh">{{.Title}}</span>
+      {{range .Links}}<a href="{{if .Slug}}{{$.LangBase}}/kategori/{{.Slug}}{{else}}{{urlAbs .URL $.LangBase}}{{end}}">{{.Label}}</a><br>{{end}}
+      {{if not .Links}}<span class="muted">—</span>{{end}}
+    </div>
+    {{end}}
+  </div>
+  {{end}}
+  {{if $f.ShowBrand}}<div class="foot-brand-row">{{template "foot_brand" .}}</div>{{end}}
+  {{if eq $f.Layout "compact"}}
+  <div class="foot-compact-strip">
+    {{if $f.Strip}}<div class="hp-footer-links">{{range $f.Strip}}<a href="{{if .Slug}}{{$.LangBase}}/kategori/{{.Slug}}{{else}}{{urlAbs .URL $.LangBase}}{{end}}">{{.Label}}</a>{{end}}</div>{{end}}
+    {{if $f.ShowSocial}}{{template "foot_social" .}}{{end}}
+  </div>
+  {{end}}
+  {{if eq $f.Layout "sade"}}
+  <div class="foot-compact-strip foot-sade-strip">
+    {{if $f.ShowSocial}}{{template "foot_social" .}}{{end}}
+  </div>
+  {{end}}
+{{else}}
+  <div class="cols">
+    <div class="small foot-col"><span class="fh">{{.SiteName}}</span><p class="muted">{{.SiteSlogan}}</p></div>
+    <div class="small foot-col"><span class="fh">Kategoriler</span>{{range $cats}}{{if lt .SortOrder 8}}<a href="{{$.LangBase}}/kategori/{{.Slug}}">{{.Name}}</a><br>{{end}}{{end}}</div>
+  </div>
+  <div class="foot-brand-row">{{template "foot_brand" .}}</div>
+{{end}}
+  {{if $f}}{{if $f.ShowBottom}}<div class="hp-copy">{{if $f.BottomText}}{{$f.BottomText}}{{else}}© {{.Year}} {{.SiteName}} — {{.T "all_rights"}}{{end}}</div>{{end}}{{else}}<div class="hp-copy">© {{.Year}} {{.SiteName}} — {{.T "all_rights"}}</div>{{end}}
+  {{if .GA4Measurement}}<!-- Rızanın geri alınması, verilmesi kadar kolay olmalı:
+       bu bağlantı çerez bandını yeniden açar (cerez.js, data-cerez-ayar). -->
+  <div class="hp-copy foot-cerez"><a href="{{.LangBase}}/cerez-politikasi" data-cerez-ayar>Çerez tercihleri</a></div>{{end}}
+  <a class="honeypot" href="{{.LangBase}}/arsiv/dizin" rel="nofollow noindex" tabindex="-1" aria-hidden="true">arsiv dizini</a>
+  <button class="to-top" id="toTop" type="button" aria-label="Başa dön" title="Başa dön">↑</button>
+</footer>
+{{end}}
+
+{{define "foot_brand"}}
+<div class="hp-logo-box"><a class="brand" href="{{.HomeURL}}">{{if and .Brand (eq .Brand.Mode "image") .Brand.ImageID}}<img src="{{mediaURL .Brand.ImageID}}" alt="{{.SiteName}}">{{else}}{{if and .Brand .Brand.Text}}{{.Brand.Text}}{{else}}the<b>block</b>{{end}}{{end}}</a></div>
+{{if .Footer}}{{if .Footer.ShowTagline}}<p class="small muted foot-tagline">{{if and .Brand .Brand.Tagline}}{{.Brand.Tagline}}{{else if .Footer.Tagline}}{{.Footer.Tagline}}{{else}}{{.SiteSlogan}}{{end}}</p>{{end}}{{else}}<p class="small muted foot-tagline">{{if and .Brand .Brand.Tagline}}{{.Brand.Tagline}}{{else}}{{.SiteSlogan}}{{end}}</p>{{end}}
+{{end}}
+
+{{define "foot_social"}}
+<div class="hp-social">
+  <a class="hp-s-fb" href="#" aria-label="Facebook" rel="noopener"><svg fill="currentColor" viewBox="0 0 320 512"><path d="M279.14 288l14.22-92.66h-88.91v-60.13c0-25.35 12.42-50.06 52.24-50.06h40.42V6.26S260.43 0 225.36 0c-73.22 0-121.08 44.38-121.08 124.72v70.62H22.89V288h81.39v224h100.17V288z"/></svg></a>
+  <a class="hp-s-x" href="#" aria-label="X" rel="noopener"><svg fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.737-8.835L1.254 2.25H8.08l4.253 5.622 5.91-5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a>
+  <a class="hp-s-in" href="#" aria-label="LinkedIn" rel="noopener"><svg fill="currentColor" viewBox="0 0 24 24"><path d="M20.45 20.45h-3.56v-5.57c0-1.33-.02-3.04-1.85-3.04-1.85 0-2.13 1.45-2.13 2.94v5.67H9.35V9h3.41v1.56h.05c.48-.9 1.64-1.85 3.37-1.85 3.6 0 4.27 2.37 4.27 5.46v6.28zM5.34 7.43a2.06 2.06 0 110-4.12 2.06 2.06 0 010 4.12zM7.12 20.45H3.56V9h3.56v11.45zM22.22 0H1.77C.79 0 0 .77 0 1.72v20.56C0 23.23.79 24 1.77 24h20.45c.98 0 1.78-.77 1.78-1.72V1.72C24 .77 23.2 0 22.22 0z"/></svg></a>
+  <a class="hp-s-yt" href="#" aria-label="YouTube" rel="noopener"><svg fill="currentColor" viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg></a>
+</div>
+{{end}}
+
+{{define "admin_head"}}<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+{{/* Kullanıcı arayüz tercihleri (Faz 173, A-3). Sunucudaki değerler
+     localStorage'a tohumlanır; böylece grup açık/kapalı durumu ve daralmış
+     menü başka cihazda da aynı. meta seçildi: <script> içinde JSON
+     kaçırma kuralları farklı, öznitelikte html/template doğru kaçırıyor. */}}
+{{if .Tercihler}}<meta name="tb-prefs" content="{{.Tercihler}}">{{end}}
+<title>{{.Title}} — theblock Panel</title>
+{{/* Ray durumu İLK BOYADAN ÖNCE uygulanır: yoksa geniş menü bir an görünüp
+     daralıyor (FOUC) ve kullanıcı her sayfa geçişinde zıplama görüyor.
+     Tercih `pn:rail` anahtarında; pano sayfası da aynı anahtarı kullanır. */}}
+<script>
+(function () {
+  try {
+    var k = JSON.parse(localStorage.getItem('pn:rail'));
+    // Faz 173: tercih artık sunucuda da tutuluyor. Yeni bir cihazda
+    // localStorage boştur; sunucudaki değer okunmazsa menü her sayfa
+    // geçişinde önce geniş görünüp sonra daralır (FOUC) — bu betik
+    // admin-ui.js'ten ÖNCE çalıştığı için oradaki tohumlama yetmiyor.
+    if (k === null) {
+      var m = document.querySelector('meta[name="tb-prefs"]');
+      if (m && m.content) {
+        try {
+          var p = JSON.parse(m.content);
+          if (Object.prototype.hasOwnProperty.call(p, 'pn:rail')) k = p['pn:rail'];
+        } catch (e2) {}
+      }
+    }
+    var dar = k === true || (k === null && window.innerWidth < 1280);
+    if (dar) document.documentElement.classList.add('admin-rail');
+  } catch (e) {}
+})();
+</script>
+<link rel="icon" href="/static/icon-192.png">
+<link rel="apple-touch-icon" href="/static/icon-192.png">
+<link rel="stylesheet" href="{{asset "app.css"}}">
+{{/* İkon animasyon yardımcıları (ico-spin, ico-pulse…): panelde dönen
+     yenileme, nabız atan canlı gösterge, çizilerek beliren ikonlar. */}}
+<link rel="stylesheet" href="{{asset "ikonlar.css"}}">
+{{/* Marka fontu (Poppins) panelde de kullanılır — public head ile aynı
+     kendi sunucumuzdaki dosya; üçüncü taraf bağlantısı yok. */}}
+<link rel="stylesheet" href="{{asset "fonts.css"}}">
+{{/* admin-only.css: app.css'ten ayrılmış, yalnızca panelde kullanılan
+     kurallar. Sırası önemli — app.css'in HEMEN ardından, admin-theme'den
+     ÖNCE; aksi hâlde aynı özgüllükteki çakışmalarda kazanan değişir. */}}
+<link rel="stylesheet" href="{{asset "admin-only.css"}}">
+<link rel="stylesheet" href="{{asset "admin-theme.css"}}">
+<link rel="stylesheet" href="{{asset "admin-shadcn.css"}}">
+{{/* admin-pano.css: panelin TAMAMINA Pacely görünümü (Faz 151). En sonda
+     yüklenir; aynı özgüllükteki kuralları devralır. Marka rengine dokunmaz. */}}
+{{/* Panel fontu Urbanist (kendi sunucumuzdan). Public site Poppins'te
+     kalıyor; bu dosya yalnız admin_head'de yüklenir. */}}
+<link rel="stylesheet" href="{{asset "fonts-admin.css"}}">
+<link rel="stylesheet" href="{{asset "admin-pano.css"}}">
+{{/* ProseMirror temel yerleşimi: TipTap bunu çalışma anında <style> olarak
+     enjekte ediyor; CSP style-src 'unsafe-inline' içermediği için statik
+     kopya gerekiyor (Faz 211). */}}
+<link rel="stylesheet" href="{{asset "prosemirror.css"}}">
+<style>{{.AdminCSS}}</style>
+<script src="{{asset "app.js"}}" defer></script>
+<script src="{{asset "csp-delegated.js"}}" defer></script>
+{{/* HTMX yalnızca yönetim panelinde; public site edge cache'ine dokunmaz.
+     includeIndicatorStyles KAPALI: htmx açıkken kendi gösterge stilini
+     `<style>` olarak enjekte eder; CSP `style-src` 'unsafe-inline'
+     içermediği için o blok engellenir (Faz 211). Stiller zaten
+     admin-only.css'te tanımlı. */}}
+<meta name="htmx-config" content='{"includeIndicatorStyles":false}'>
+<script src="{{asset "vendor/htmx.min.js"}}" defer></script>
+<script src="{{asset "admin-ui.js"}}" defer></script>
+<!-- Sayfaya özel betikler. Ağır paketler (editor.js 770 KB,
+     manset.js 33 KB) her admin sayfasında değil, yalnız ihtiyaç
+     duyan sayfada yüklenir — bkz. internal/httpapi/adminassets.go -->
+{{range .Scripts}}<script src="{{asset .}}" defer></script>
+{{end}}<script src="{{asset "media.js"}}" defer></script>
+<script src="{{asset "marka.js"}}" defer></script>
+<script src="{{asset "kumeler.js"}}" defer></script>
+<script src="{{asset "menu.js"}}" defer></script>
+<script src="{{asset "header.js"}}" defer></script>
+<script src="{{asset "footer.js"}}" defer></script>
+<script src="{{asset "raporlar.js"}}" defer></script>
+<script src="{{asset "ai-sohbet.js"}}" defer></script>
+<script src="{{asset "tabcats.js"}}" defer></script>
+{{if .Gorunum}}{{if .Gorunum.Font}}<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family={{.Gorunum.Font}}:wght@400;500;600;700&display=swap">{{end}}{{end}}{{end}}
+
+{{define "admin_side"}}
+{{if not .Embed}}
+<aside class="admin-side">
+  <div class="side-head">
+    <a class="brand" href="/admin">the<b>block</b></a>
+    <button class="side-collapse" id="adminRail" type="button" aria-label="Menüyü daralt" aria-expanded="true" title="Menüyü daralt (kalıcı)">
+      <svg class="ti"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-layout-sidebar-left-collapse"/></svg>
+    </button>
+  </div>
+  {{/* Ray geçişi Pacely birebir: etiketler <span class="mn"> içinde,
+       çünkü daraltmada önce YALNIZ etiketler solduruluyor (ikonlar kalır),
+       sonra menü sağdan `clip-path` perdesiyle kapanıyor. Ayrıntı:
+       admin-ui.js → tbRailGecis. */}}
+  {{/* Sadeleşik gezinme: 11 çalışma alanı (docs/ADMIN-IA.md Faz A).
+       Alt sayfalar sayfa içi sekme çubuğunda; aktiflik admin-ui.js ile. */}}
+  {{/* Kabuk korumalı gezinme (Faz 156): yalnız .admin-main değişir.
+       Yan menü DOM'da kalır — CSS/JS yeniden çalışmaz, parlama olmaz,
+       kaydırma korunur. Ağır sayfalar (içerik formu, manşet, ses) kendi
+       bağlantılarında hx-boost="false" taşır: betikleri <head>'de ve
+       boost head'i yenilemez. */}}
+  {{/* hx-swap OUTERHTML olmalı: INNERHTML + hx-select=".admin-main" iken
+       yanıttaki <main class="admin-main"> mevcut olanın İÇİNE giriyor ve
+       her gezinmede iç içe ikinci bir <main class="admin-main"> oluşuyordu
+       (ölçüldü: ilk sekme geçişinden sonra mainSayisi 1 → 2). İki <main>
+       yer imi, çift flex kabı ve animasyonun yanlış kaba uygulanması
+       demekti. OUTERHTML seçilen öğeyi yerinde değiştirir. */}}
+  <nav class="side-scroll" hx-boost="true" hx-target=".admin-main" hx-select=".admin-main" hx-swap="outerHTML show:window:top" hx-push-url="true">
+  <ul class="menu ws-menu">
+    <li><a href="/admin" data-ws="pano" hx-boost="false"><svg class="ti"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-layout-dashboard"/></svg> <span class="mn">Pano</span></a></li>
+    <li><a href="/admin/icerikler" data-ws="icerik"><svg class="ti"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-file-text"/></svg> <span class="mn">İçerik</span></a></li>
+    <li><a href="/admin/dosyalar" data-ws="medya"><svg class="ti"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-photo"/></svg> <span class="mn">Medya</span></a></li>
+    {{/* Sayfa tasarımcısı boost DIŞI: betiği gövdenin sonunda ve head'deki
+         SortableJS'e bağlı; boost yalnız .admin-main'i değiştirince tuval
+         hiç kurulmuyordu (ilk girişte boş sayfa, F5 ile düzeliyordu). */}}
+    <li><a href="/admin/tasarim" data-ws="tasarim" hx-boost="false"><svg class="ti"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-layout-grid"/></svg> <span class="mn">Site &amp; Tasarım</span></a></li>
+    <li><a href="/admin/gazete" data-ws="gazete"><svg class="ti"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-news"/></svg> <span class="mn">Gazete</span></a></li>
+    <li><a href="/admin/yorumlar" data-ws="topluluk"><svg class="ti"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-message-2"/></svg> <span class="mn">Topluluk</span></a></li>
+    <li><a href="/admin/seo" data-ws="seo"><svg class="ti"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-search"/></svg> <span class="mn">SEO &amp; Dağıtım</span></a></li>
+    <li><a href="/admin/reklamlar" data-ws="gelir"><svg class="ti"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-report-analytics"/></svg> <span class="mn">Gelir</span></a></li>
+    <li><a href="/admin/bot" data-ws="otomasyon"><svg class="ti"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-robot"/></svg> <span class="mn">Otomasyon &amp; AI</span></a></li>
+    <li><a href="/admin/ayarlar" data-ws="sistem"><svg class="ti"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-settings"/></svg> <span class="mn">Sistem</span></a></li>
+    <li><a href="/admin/ikonlar" data-ws="ikonlar"><svg class="ti"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-icons"/></svg> <span class="mn">İkonlar</span></a></li>
+    <li><a href="/admin/iletisim"><svg class="ti"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-mail"/></svg> <span class="mn">İletişim &amp; Form</span></a></li>
+  </ul>
+  <ul class="menu">
+    <li><a href="{{.HomeURL}}" target="_blank" hx-boost="false"><svg class="ti"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-external-link"/></svg> <span class="mn">Siteyi Gör</span></a></li>
+    <li><a href="/admin/cikis" hx-boost="false"><svg class="ti"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-logout"/></svg> <span class="mn">{{.T "logout"}}</span></a></li>
+  </ul>
+  </nav>
+</aside>
+{{end}}
+{{end}}
+
+{{define "admin_top"}}
+{{if not .Embed}}
+{{if .AdminHNav}}<script>document.body.classList.add('admin-hnav');</script>{{end}}
+<nav class="admin-crumb" id="adminCrumb" aria-label="Konum"></nav>
+<div class="admin-top">
+  <h1>{{.Title}}</h1>
+  {{if .Sites}}<select class="select" data-site-select style="min-width:160px" aria-label="Site">
+    {{range .Sites}}<option value="{{.ID}}"{{if and $.CurSite (eq $.CurSite.ID .ID)}} selected{{end}}>{{.Name}}</option>{{end}}
+  </select>{{end}}
+  {{/* Arama: Pano'daki ile aynı "hap" biçimi. Yalın ikon düğmesiydi ve
+       panoya göre eksik duruyordu. Gerçek <input> yerine düğme: komut
+       paletinin kendi girdisi var, iki girdi odak için yarışırdı. */}}
+  <button class="search-pill" id="cmdkBtn" type="button" title="Ara (Ctrl+K)" aria-label="Ara">
+    <svg class="ti"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-search"/></svg>
+    <span class="search-pill__text">Ara ya da bir komuta git…</span>
+    <span class="search-pill__kbd">⌘K</span>
+  </button>
+  <details class="notif-dd">
+    <summary class="icon-btn" title="Bekleyen işler" aria-label="Bekleyen işler">
+      <svg class="ti"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-bell"/></svg>
+      {{if .Bekleyen}}{{if gt .Bekleyen.Total 0}}<span class="notif-badge">{{.Bekleyen.Total}}</span>{{end}}{{end}}
+    </summary>
+    <div class="notif-menu">
+      <a href="/admin/gelen-kutusu"><b>Tümünü gör</b> — birleşik gelen kutusu</a>
+      <a href="/admin/yorumlar">Bekleyen Yorum <b>{{if .Bekleyen}}{{.Bekleyen.Comments}}{{else}}0{{end}}</b></a>
+      <a href="/admin/geri-bildirim">Geri Bildirim <b>{{if .Bekleyen}}{{.Bekleyen.Feedback}}{{else}}0{{end}}</b></a>
+      <a href="/admin/bot">Trend Uyarıları <b>{{if .Bekleyen}}{{.Bekleyen.Trend}}{{else}}0{{end}}</b></a>
+      <a href="/admin/raporlar">Raporlar</a>
+    </div>
+  </details>
+  <button class="icon-btn" data-theme-btn title="Tema">
+    <svg class="ti icon-moon"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-moon"/></svg>
+    <svg class="ti icon-sun"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-sun"/></svg>
+  </button>
+  {{/* Otomatik kaydet: açık/kapalı ikonu CSS ile seçilir. Önceden JS
+       textContent'i emojiyle değiştiriyordu ve işaretlemedeki SVG'yi
+       siliyordu — tema düğmesiyle aynı desene geçildi. */}}
+  <button class="icon-btn as-toggle on" id="asToggle" type="button" title="Otomatik kaydet: AÇIK" aria-label="Otomatik kaydet">
+    <svg class="ti icon-as-on"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-cloud-upload"/></svg>
+    <svg class="ti icon-as-off"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-cloud-off"/></svg>
+  </button>
+  <button class="icon-btn" id="tblDenseBtn" type="button" title="Tablo yoğunluğu: sıkışık / geniş" aria-label="Tablo yoğunluğu">
+    <svg class="ti"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-adjustments"/></svg>
+  </button>
+  {{/* Genel "Yeni" (Faz 168). Önce her ekranın kendi "Yeni …" düğmesi
+       vardı; başka bir şey oluşturmak için önce o ekranı bulmak
+       gerekiyordu. Şimdilik altı hedef tek listede; bağlama göre
+       sıralama (bulunduğunuz bölümün eylemi en üstte) sonraki adım. */}}
+  <details class="new-dd">
+    <summary class="btn new-dd__btn" aria-label="Yeni oluştur">
+      <svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-plus"/></svg>
+      <span>Yeni</span>
+    </summary>
+    <div class="new-dd__menu" role="menu">
+      <a role="menuitem" href="/admin/icerikler/yeni">
+        <svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-file-plus"/></svg>
+        <span><b>İçerik</b><small>Haber, röportaj, galeri…</small></span>
+      </a>
+      <a role="menuitem" href="/admin/gazete">
+        <svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-news"/></svg>
+        <span><b>Gazete sayısı</b><small>E-baskı üret</small></span>
+      </a>
+      <a role="menuitem" href="/admin/dosyalar">
+        <svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-photo-plus"/></svg>
+        <span><b>Medya yükle</b><small>Görsel, ses, belge</small></span>
+      </a>
+      <a role="menuitem" href="/admin/kategoriler">
+        <svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-folder-plus"/></svg>
+        <span><b>Kategori</b><small>Menü ve sıralama</small></span>
+      </a>
+      <a role="menuitem" href="/admin/yazarlar">
+        <svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-user-plus"/></svg>
+        <span><b>Kullanıcı</b><small>Yazar ve editör</small></span>
+      </a>
+      <a role="menuitem" href="/admin/reklamlar">
+        <svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-speakerphone"/></svg>
+        <span><b>Reklam</b><small>Kampanya ve yerleşim</small></span>
+      </a>
+    </div>
+  </details>
+</div>
+{{/* Komut paleti (Faz 162). Girdi artık yalnız sayfa değil, varlık
+     arıyor: içerik, kategori, etiket, medya, kişi (/admin/ara).
+     Sonuç listesi JS'ten gelir; metin düğüm olarak kurulur (XSS yok). */}}
+<div class="cmdk" id="cmdk" role="dialog" aria-modal="true" aria-label="Komut paleti">
+  <div class="cmdk-box">
+    <div class="cmdk-head">
+      <svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-search"/></svg>
+      <input class="cmdk-input" id="cmdkInput" type="search" placeholder="İçerik, kategori, medya ya da sayfa ara…" autocomplete="off" spellcheck="false" aria-label="Ara" aria-controls="cmdkList" role="combobox" aria-expanded="true">
+      <kbd>Esc</kbd>
+    </div>
+    <ul class="cmdk-list" id="cmdkList" role="listbox" aria-label="Sonuçlar"></ul>
+    <div class="cmdk-foot">
+      <span><kbd>↑</kbd><kbd>↓</kbd> gez</span>
+      <span><kbd>Enter</kbd> aç</span>
+      <span><kbd>Esc</kbd> kapat</span>
+      <span class="cmdk-ipucu">Ctrl+K her yerden açar</span>
+    </div>
+  </div>
+</div>
+{{end}}
+{{template "admin_autosave" .}}
+{{end}}
+
+{{define "admin_autosave"}}
+<style>
+.as-toggle.on{color:var(--accent)}
+.as-toast{position:fixed;right:18px;bottom:18px;z-index:9999;display:flex;flex-direction:column;gap:8px;align-items:flex-end}
+.as-toast .m{background:#111827;color:#fff;border-radius:10px;padding:9px 14px;font-size:.85rem;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+.as-toast .m.ok{background:#065f46}
+.as-toast .m.error{background:#991b1b}
+.as-toast .m.info{background:#1e3a8a}
+form.as-saving{box-shadow:0 0 0 2px rgba(37,99,235,.28);border-radius:10px;transition:box-shadow .15s}
+</style>
+<script>
+(function(){
+  var KEY='tb_autosave';
+  var enabled=true;
+  try{ var sv=localStorage.getItem(KEY); if(sv!==null){ enabled=(sv==='1'); } }catch(e){}
+  var DESTRUCT=/sil|delete|remove|g[öo]nder|send|ekle|add|yeni|new|olu[sş]tur|create|temizle|clear|yenile|refresh|index|push|export|import|ice-?aktar|test|iptal|cancel|vazge[cç]|[sş]ifirla|reset|[cç]ikis|logout|abone|unsubscribe|onayla|approve|reddet|reject|oyl/i;
+  var SAVEWORD=/kaydet|kayded|g[üu]ncelle|uygula|sakla|update|save/i;
+
+  function toast(msg,kind){
+    var box=document.getElementById('asToast');
+    if(!box){ box=document.createElement('div'); box.id='asToast'; box.className='as-toast'; document.body.appendChild(box); }
+    var el=document.createElement('div'); el.className='m '+(kind||'info'); el.textContent=msg; box.appendChild(el);
+    setTimeout(function(){ el.remove(); },2600);
+  }
+  function hasSaveBtn(f){
+    var btns=f.querySelectorAll('button:not([type="button"]):not([type="reset"]),input[type="submit"]');
+    for(var i=0;i<btns.length;i++){
+      var t=(btns[i].textContent||btns[i].value||'').trim();
+      if(SAVEWORD.test(t)) return true;
+    }
+    return false;
+  }
+  function eligible(f){
+    if(!f || (f.method||'').toLowerCase()!=='post') return false;
+    if(f.hasAttribute('data-noautosave') || f.classList.contains('no-autosave')) return false;
+    if((f.getAttribute('enctype')||'').toLowerCase().indexOf('multipart')>=0) return false;
+    if(f.querySelector('input[type=password],input[type=file]')) return false;
+    var a=f.getAttribute('action')||'';
+    if(DESTRUCT.test(a)) return false;
+    if(f.hasAttribute('data-autosave')) return true;
+    return hasSaveBtn(f);
+  }
+  var timers=new WeakMap();
+  function save(f){
+    var fd=new FormData(f);
+    var usp=new URLSearchParams();
+    fd.forEach(function(v,k){ usp.append(k, v); });
+    var act=f.getAttribute('action')||location.href;
+    f.classList.add('as-saving');
+    fetch(act,{method:'POST',credentials:'same-origin',
+        headers:{'Content-Type':'application/x-www-form-urlencoded'},
+        body:usp.toString()})
+      .then(function(r){ f.classList.remove('as-saving'); if(r.ok){ toast('Otomatik kaydedildi','ok'); } else { toast('Kaydetme hatası ('+r.status+')','error'); } })
+      .catch(function(){ f.classList.remove('as-saving'); toast('Bağlantı hatası','error'); });
+  }
+  function arm(f){
+    var h=function(){ if(!enabled) return;
+      clearTimeout(timers.get(f));
+      timers.set(f, setTimeout(function(){ save(f); },800));
+    };
+    f.addEventListener('input', h, true);
+    f.addEventListener('change', h, true);
+  }
+  function paint(){
+    var b=document.getElementById('asToggle'); if(!b) return;
+    b.classList.toggle('on', enabled);
+    b.title='Otomatik kaydet: '+(enabled?'AÇIK':'KAPALI');
+  }
+  function init(){
+    var b=document.getElementById('asToggle');
+    if(b){ b.addEventListener('click',function(){ enabled=!enabled; try{ localStorage.setItem(KEY,enabled?'1':'0'); }catch(e){} paint(); toast(enabled?'Otomatik kaydet açık':'Otomatik kaydet kapalı','info'); }); }
+    paint();
+    var forms=document.querySelectorAll('form');
+    var n=0;
+    for(var i=0;i<forms.length;i++){ if(eligible(forms[i])){ arm(forms[i]); n++; } }
+    if(n>0 && b){ b.title='Otomatik kaydet: '+(enabled?'AÇIK':'KAPALI')+' ('+n+' form)'; }
+  }
+  if(document.readyState!=='loading'){ init(); } else { document.addEventListener('DOMContentLoaded', init); }
+})();
+</script>
+{{end}}

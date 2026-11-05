@@ -1,0 +1,142 @@
+{{define "iletisimadmin"}}<!doctype html><html lang="tr" data-theme="{{.Theme}}"><head>{{template "admin_head" .}}</head>
+<body><div class="admin-wrap">{{template "admin_side" .}}<main class="admin-main">
+{{template "admin_top" .}}
+<div class="admin-body">
+  {{if .Flash}}<div class="flash {{.Flash.Kind}}">{{.Flash.Text}}</div>{{end}}
+  {{$c := .Iletisim.Config}}
+
+  <div class="card card-pad" style="margin-bottom:16px">
+    <div class="dash-head"><h2><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-mail"></use></svg> İletişim Bilgileri</h2></div>
+    <p class="hint" style="margin-top:0">
+      Buradaki bilgiler <b>tüm kurumsal sayfalarda</b> kullanılır. Sayfa metinlerinde
+      <code>{domain}</code>, <code>{eposta_info}</code>, <code>{eposta_reklam}</code>,
+      <code>{telefon}</code>, <code>{adres}</code> gibi yer tutucular yazabilirsiniz.
+      <b>Alan adını değiştirdiğinizde</b> aynı alan adını taşıyan tüm adresler ve
+      sayfalardaki tüm bağlantılar tek seferde güncellenir.
+    </p>
+
+    <form method="post" action="/admin/iletisim/kaydet" style="margin-top:12px">
+      <div class="grid-2" style="gap:14px;align-items:start">
+        <div>
+          <h3 class="gz-h" style="margin:0 0 8px">Alan adı</h3>
+          <div class="field">
+            <label for="ctDomain">Site alan adı</label>
+            <input class="input" id="ctDomain" name="domain" value="{{$c.Domain}}" placeholder="theblock.com.tr" required>
+            <span class="small muted">Şema ve yol yazmayın. Örn. <code>theblock.com.tr</code></span>
+          </div>
+          <div class="field">
+            <label for="ctTel">Telefon (opsiyonel)</label>
+            <input class="input" id="ctTel" name="telefon" value="{{$c.Telefon}}" placeholder="+90 212 000 00 00">
+          </div>
+          <div class="field">
+            <label for="ctAdres">Adres (opsiyonel)</label>
+            <textarea class="textarea" id="ctAdres" name="adres" rows="2" placeholder="Mahalle, Cadde No, İlçe / İstanbul">{{$c.Adres}}</textarea>
+          </div>
+          <div class="field">
+            <label for="ctCalisma">Çalışma saatleri</label>
+            <input class="input" id="ctCalisma" name="calisma" value="{{$c.Calisma}}" placeholder="Hafta içi 09.00–18.00 · Haber merkezi 7/24">
+          </div>
+        </div>
+        <div>
+          <h3 class="gz-h" style="margin:0 0 8px">E-posta adresleri</h3>
+          <div class="field"><label for="ctInfo">Genel iletişim</label><input class="input" id="ctInfo" name="eposta_info" value="{{$c.Info}}" type="email" required></div>
+          <div class="field"><label for="ctHaber">Haber merkezi / ihbar</label><input class="input" id="ctHaber" name="eposta_haber" value="{{$c.Haber}}" type="email"></div>
+          <div class="field"><label for="ctReklam">Reklam ve iş birliği</label><input class="input" id="ctReklam" name="eposta_reklam" value="{{$c.Reklam}}" type="email"></div>
+          <div class="field"><label for="ctDestek">Teknik destek</label><input class="input" id="ctDestek" name="eposta_destek" value="{{$c.Destek}}" type="email"></div>
+          <div class="field"><label for="ctTelif">Telif bildirimi</label><input class="input" id="ctTelif" name="eposta_telif" value="{{$c.Telif}}" type="email"></div>
+          <div class="field"><label for="ctDuzeltme">Düzeltme / yayın etiği</label><input class="input" id="ctDuzeltme" name="eposta_duzeltme" value="{{$c.Duzeltme}}" type="email"></div>
+          <div class="field"><label for="ctKVKK">KVKK başvuruları</label><input class="input" id="ctKVKK" name="eposta_kvkk" value="{{$c.KVKK}}" type="email"></div>
+          <div class="field"><label for="ctKariyer">İnsan kaynakları</label><input class="input" id="ctKariyer" name="eposta_kariyer" value="{{$c.Kariyer}}" type="email"></div>
+        </div>
+      </div>
+      <label class="opt-switch" style="margin-top:12px;display:inline-flex">
+        <input type="checkbox" name="form_aktif" value="1"{{if $c.FormAktif}} checked{{end}}><span>İletişim formu açık</span>
+      </label>
+      <div class="form-bar" style="margin-top:14px;display:flex;gap:8px;align-items:center">
+        <button class="btn" type="submit">Kaydet</button>
+        <a class="btn ghost" href="/iletisim" target="_blank" rel="noopener">İletişim sayfasını gör</a>
+        <span class="small muted">Kaydettikten sonra önbellek otomatik temizlenir.</span>
+      </div>
+    </form>
+  </div>
+
+  <div class="card card-pad" style="margin-bottom:16px">
+    <div class="dash-head"><h2><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-bookmark"></use></svg> Yer tutucular</h2></div>
+    <p class="hint" style="margin-top:0">Sayfa Tasarımcısı → Sayfa → <b>Sayfa içeriği</b> alanında bu kodları kullanın.</p>
+    <table class="table">
+      <thead><tr><th>Yer tutucu</th><th>Şu anki değeri</th></tr></thead>
+      <tbody>
+        <tr><td><code>{domain}</code></td><td>{{$c.Domain}}</td></tr>
+        <tr><td><code>{eposta_info}</code></td><td>{{$c.Info}}</td></tr>
+        <tr><td><code>{eposta_haber}</code></td><td>{{$c.Haber}}</td></tr>
+        <tr><td><code>{eposta_reklam}</code></td><td>{{$c.Reklam}}</td></tr>
+        <tr><td><code>{eposta_destek}</code></td><td>{{$c.Destek}}</td></tr>
+        <tr><td><code>{eposta_telif}</code></td><td>{{$c.Telif}}</td></tr>
+        <tr><td><code>{eposta_duzeltme}</code></td><td>{{$c.Duzeltme}}</td></tr>
+        <tr><td><code>{eposta_kvkk}</code></td><td>{{$c.KVKK}}</td></tr>
+        <tr><td><code>{eposta_kariyer}</code></td><td>{{$c.Kariyer}}</td></tr>
+        <tr><td><code>{telefon}</code></td><td>{{if $c.Telefon}}{{$c.Telefon}}{{else}}<span class="muted">boş</span>{{end}}</td></tr>
+        <tr><td><code>{adres}</code></td><td>{{if $c.Adres}}{{$c.Adres}}{{else}}<span class="muted">boş</span>{{end}}</td></tr>
+        <tr><td><code>{calisma}</code></td><td>{{if $c.Calisma}}{{$c.Calisma}}{{else}}<span class="muted">boş</span>{{end}}</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card card-pad" style="margin-bottom:16px">
+    <div class="dash-head"><h2><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-repeat"></use></svg> Toplu metin değiştir</h2></div>
+    <p class="hint" style="margin-top:0">
+      Kurumsal sayfa gövdelerinde ve Sayfa Tasarımcısı metinlerinde geçen bir ifadeyi
+      tek seferde değiştirir. Örnek: eski bir e-posta adresini veya alan adını
+      güncellemek. Değişiklik geri alınamaz; önce küçük bir deneme metniyle test edin.
+    </p>
+    <form method="post" action="/admin/iletisim/degistir" style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;margin-top:10px">
+      <div class="field" style="margin:0;flex:1;min-width:220px">
+        <label for="rpFrom">Aranacak metin</label>
+        <input class="input" id="rpFrom" name="eski" placeholder="eski-alanadi.com.tr" required>
+      </div>
+      <div class="field" style="margin:0;flex:1;min-width:220px">
+        <label for="rpTo">Yeni metin</label>
+        <input class="input" id="rpTo" name="yeni" placeholder="yeni-alanadi.com.tr">
+      </div>
+      <button class="btn" type="submit" data-confirm="Bu metin tüm sayfalarda değiştirilecek. Emin misiniz?">Tümünde değiştir</button>
+    </form>
+  </div>
+
+  <div class="card card-pad">
+    <div class="dash-head">
+      <h2><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-inbox"></use></svg> İletişim Mesajları</h2>
+      <span class="small muted">yeni {{.Iletisim.Yeni}} · okundu {{.Iletisim.Okundu}} · arşiv {{.Iletisim.Arsiv}}</span>
+    </div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin:10px 0">
+      <a class="btn small {{if or (eq .Iletisim.Filtre "") (eq .Iletisim.Filtre "tumu")}}on{{else}}ghost{{end}}" href="/admin/iletisim">Tümü</a>
+      <a class="btn small {{if eq .Iletisim.Filtre "yeni"}}on{{else}}ghost{{end}}" href="/admin/iletisim?durum=yeni">Yeni</a>
+      <a class="btn small {{if eq .Iletisim.Filtre "okundu"}}on{{else}}ghost{{end}}" href="/admin/iletisim?durum=okundu">Okundu</a>
+      <a class="btn small {{if eq .Iletisim.Filtre "arsiv"}}on{{else}}ghost{{end}}" href="/admin/iletisim?durum=arsiv">Arşiv</a>
+    </div>
+    {{if .Iletisim.Messages}}
+    <div style="display:grid;gap:10px">
+      {{range .Iletisim.Messages}}
+      <article class="card card-pad" style="border-left:3px solid {{if eq .Status "yeni"}}var(--accent){{else}}var(--line){{end}}">
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+          <strong>{{.Name}}</strong>
+          <a class="small" href="mailto:{{.Email}}">{{.Email}}</a>
+          {{if .Phone}}<span class="small muted">{{.Phone}}</span>{{end}}
+          <span class="badge">{{index $.Iletisim.Topics .Subject}}</span>
+          {{if eq .Status "yeni"}}<span class="badge badge-off">yeni</span>{{end}}
+          <span class="small muted" style="margin-left:auto">{{.CreatedAt.Format "02.01.2006 15:04"}}</span>
+        </div>
+        <p style="margin:.6em 0;white-space:pre-wrap">{{.Body}}</p>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          {{if ne .Status "okundu"}}<form method="post" action="/admin/iletisim/mesaj/{{.ID}}" style="display:inline"><input type="hidden" name="durum" value="okundu"><input type="hidden" name="filtre" value="{{$.Iletisim.Filtre}}"><button class="btn ghost small" type="submit">Okundu</button></form>{{end}}
+          {{if ne .Status "arsiv"}}<form method="post" action="/admin/iletisim/mesaj/{{.ID}}" style="display:inline"><input type="hidden" name="durum" value="arsiv"><input type="hidden" name="filtre" value="{{$.Iletisim.Filtre}}"><button class="btn ghost small" type="submit">Arşivle</button></form>{{end}}
+          <form method="post" action="/admin/iletisim/mesaj/{{.ID}}" style="display:inline" data-confirm="Mesaj silinsin mi?" data-confirm-her-zaman><input type="hidden" name="durum" value="sil"><input type="hidden" name="filtre" value="{{$.Iletisim.Filtre}}"><button class="btn danger small" type="submit">Sil</button></form>
+        </div>
+      </article>
+      {{end}}
+    </div>
+    {{else}}
+    <p class="hint" style="margin:12px 0 0">Henüz mesaj yok. İletişim sayfasındaki form doldurulduğunda mesajlar burada listelenir.</p>
+    {{end}}
+  </div>
+</div>
+</main></div></body></html>{{end}}

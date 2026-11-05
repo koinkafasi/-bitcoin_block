@@ -1,0 +1,31 @@
+# errcheck hariç listesi (Faz 207)
+#
+# Her satır GEREKÇELİ bir istisna. Yeni bir satır eklemek için
+# "bu hatayı yutmak neden zararsız?" sorusuna cevap yazılmalı.
+#
+# Kural: burada listelenen çağrıların hatası YAPISAL olarak eyleme dönüşmez.
+# Veri yazımı (Exec/Scan/Copy) ve dosya yazımı ASLA buraya eklenmez.
+
+# Kapatma: kaynak zaten bırakılıyor; Close hatası geri alınamaz ve
+# çağıranın yapabileceği bir şey yok. Okuma yollarında yaygın Go kalıbı.
+(io.Closer).Close
+(*os.File).Close
+(*github.com/jackc/pgx/v5.Conn).Close
+(*net/smtp.Client).Close
+
+# Rollback: `defer tx.Rollback(ctx)` — Commit başarılıysa pgx "tx closed"
+# döndürür (beklenen). Hata yutulması veri kaybı değildir.
+(github.com/jackc/pgx/v5.Tx).Rollback
+
+# HTTP yanıtına yazma: istemci bağlantıyı kapatmışsa yazma hatası beklenir;
+# geri dönüşü yok, tarayıcı zaten gitmiş. Asıl iş (DB/ağ) hataları ayrı yakalanır.
+(net/http.ResponseWriter).Write
+fmt.Fprint
+fmt.Fprintf
+fmt.Fprintln
+io.WriteString
+
+# Geçici dosya/dizin temizliği: silinemezse sonraki çalıştırmada temizlenir
+# ya da işletim sistemi toplar; akışı durdurmak daha kötü.
+os.Remove
+os.RemoveAll

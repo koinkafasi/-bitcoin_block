@@ -1,0 +1,101 @@
+{{define "bulten"}}<!doctype html><html lang="{{.Lang}}" {{if .RTL}}dir="rtl"{{end}} data-theme="{{.Theme}}"><head>{{template "public_head" .}}</head>
+<body>
+{{template "site_header" .}}
+<main class="page"><div class="container narrow">
+  <h1 class="page-title">📬 Bülten</h1>
+  {{if .Digest.Done}}
+    <div class="card card-pad"><p>{{.Digest.DoneMsg}}</p><p><a class="btn ghost" href="/bulten">Abone ol / çıkış yap</a></p></div>
+  {{else}}
+  <div class="card card-pad">
+    <p class="muted">Günün özeti, her sabah e-postanızda. Çift kayıt (double opt-in) ile abone olun — onay bağlantısı e-postanıza gelir.</p>
+    <form method="post" action="{{.Digest.FormPath}}" id="bultenForm">
+      <div class="field"><label for="f_email">E-posta</label><input id="f_email" class="input" type="email" name="email" required placeholder="ornek@site.com"></div>
+      <button class="btn" type="submit">Abone ol</button>
+    </form>
+    <p class="hint" id="bultenNote"></p>
+  </div>
+  {{if .Digest.Counts}}<p class="small muted" style="margin-top:10px">
+    Aboneler: <b>{{index .Digest.Counts "aktif"}}</b> aktif · {{index .Digest.Counts "onay bekliyor"}} onay bekliyor
+  </p>{{end}}
+  <script>
+  (function(){
+    var f=document.getElementById('bultenForm'); if(!f) return;
+    f.addEventListener('submit',function(e){
+      e.preventDefault();
+      fetch(f.action,{method:'POST',body:new FormData(f),credentials:'same-origin'})
+        .then(function(r){return r.json()})
+        .then(function(j){document.getElementById('bultenNote').textContent = j.mesaj || j.hata || 'Tamam';})
+        .catch(function(){document.getElementById('bultenNote').textContent='Hata: kayıt yapılamadı.'});
+    });
+  })();
+  </script>
+  {{end}}
+  {{if .Digest.Digests}}
+  <h2 style="font-size:1.05rem;margin-top:22px">Son günlük özetler</h2>
+  <div class="gap">
+    {{range .Digest.Digests}}<a class="card card-pad" href="/ping/{{.Date.Format "2006-01-02"}}">
+      <h3 style="margin:0">{{.Title}}</h3>
+      {{if .Summary}}<p class="muted small" style="margin:.4em 0 0">{{.Summary}}</p>{{end}}
+    </a>{{end}}
+  </div>
+  {{end}}
+</div></main>
+{{template "site_footer" .}}
+</body></html>{{end}}
+
+{{define "ping"}}<!doctype html><html lang="{{.Lang}}" {{if .RTL}}dir="rtl"{{end}} data-theme="{{.Theme}}"><head>{{template "public_head" .}}</head>
+<body>
+{{template "site_header" .}}
+<main class="page"><div class="container narrow">
+  <h1 class="page-title">{{.Digest.Day.Title}}</h1>
+  {{if .Digest.Day.Summary}}<p class="muted">{{.Digest.Day.Summary}}</p>{{end}}
+  <p class="small muted">{{len .Digest.Items}} haber · {{.Digest.Day.WordCount}} kelime · <a href="/ping">tüm özetler</a> · <a href="/podcast/{{.Digest.Day.Date.Format "2006-01-02"}}">🎧 sesli</a></p>
+  <div class="gap" style="margin-top:14px">
+    {{range .Digest.Items}}
+    <a class="card card-pad" href="{{$.LangBase}}/{{.DisplaySlug}}-{{.ID}}">
+      <h3 style="margin:0">{{.Title}}</h3>
+      {{if .Spot}}<p class="muted small" style="margin:.4em 0 0">{{.Spot}}</p>{{end}}
+    </a>{{else}}<p class="muted">Bu gün yayınlanan haber yok.</p>{{end}}
+  </div>
+</div></main>
+{{template "site_footer" .}}
+</body></html>{{end}}
+
+{{define "podcast"}}<!doctype html><html lang="{{.Lang}}" {{if .RTL}}dir="rtl"{{end}} data-theme="{{.Theme}}"><head>{{template "public_head" .}}</head>
+<body>
+{{template "site_header" .}}
+<main class="page"><div class="container narrow">
+  <h1 class="page-title">🎧 {{.Digest.Day.Title}}</h1>
+  {{if .Digest.Day.AudioPath}}
+  <audio controls preload="none" style="width:100%;margin:14px 0" src="{{.Digest.AudioURL}}"></audio>
+  {{else}}
+  <p class="muted" id="podNote">Ses dosyası hazırlanıyor…</p>
+  {{end}}
+  {{if .Digest.Day.Summary}}<p class="muted">{{.Digest.Day.Summary}}</p>{{end}}
+  <div class="gap" style="margin-top:14px">
+    {{range .Digest.Items}}
+    <a class="card card-pad" href="{{$.LangBase}}/{{.DisplaySlug}}-{{.ID}}">
+      <h3 style="margin:0">{{.Title}}</h3>
+      {{if .Spot}}<p class="muted small" style="margin:.4em 0 0">{{.Spot}}</p>{{end}}
+    </a>{{else}}<p class="muted">Bu gün yayınlanan haber yok.</p>{{end}}
+  </div>
+  <p class="small muted" style="margin-top:16px"><a href="/ping/{{.Digest.Day.Date.Format "2006-01-02"}}">Metin özet</a> · <a href="/ping">tüm özetler</a></p>
+</div></main>
+{{template "site_footer" .}}
+</body></html>{{end}}
+
+{{define "ping-arsiv"}}<!doctype html><html lang="{{.Lang}}" {{if .RTL}}dir="rtl"{{end}} data-theme="{{.Theme}}"><head>{{template "public_head" .}}</head>
+<body>
+{{template "site_header" .}}
+<main class="page"><div class="container narrow">
+  <h1 class="page-title"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-news"></use></svg> Günlük Özet Arşivi</h1>
+  <div class="gap">
+    {{range .Digest.Archive}}
+    <a class="card card-pad" href="/ping/{{.Date.Format "2006-01-02"}}">
+      <h3 style="margin:0">{{.Title}}</h3>
+      <p class="small muted" style="margin:.3em 0 0">{{len .ContentIDs}} haber</p>
+    </a>{{else}}<p class="muted">Henüz özet üretilmedi.</p>{{end}}
+  </div>
+</div></main>
+{{template "site_footer" .}}
+</body></html>{{end}}

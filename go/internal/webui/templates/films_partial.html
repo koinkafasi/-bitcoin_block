@@ -1,0 +1,54 @@
+{{define "sinemalar_panel"}}<div id="sinemalar-panel">
+  {{if .Flash}}<div class="flash {{.Flash.Kind}}">{{.Flash.Text}}</div>{{end}}
+  <span id="sinemalar-yukleniyor" class="htmx-indicator small muted" role="status" aria-live="polite">Yükleniyor…</span>
+  {{$p := .FilmlerPanel}}
+
+  <div class="card card-pad" style="display:flex;gap:14px;flex-wrap:wrap;align-items:center">
+    <div><div class="small muted">Toplam film</div><div class="big">{{$p.Total}}</div></div>
+    <div><div class="small muted">Bu hafta</div><div class="big">{{$p.Week}}</div></div>
+    {{if $p.Weeks}}
+    <form method="get" action="/admin/sinemalar" style="margin-left:auto"
+          hx-get="/admin/sinemalar" hx-target="#sinemalar-panel" hx-swap="outerHTML" hx-push-url="true" hx-indicator="#sinemalar-yukleniyor">
+      <select class="select" name="hafta" data-autosubmit>{{$cur := $p.Week}}{{range $p.Weeks}}<option value="{{.}}" {{if eq . $cur}}selected{{end}}>{{.}}</option>{{end}}</select>
+    </form>
+    {{end}}
+    <a class="btn small" href="/sinemalar" target="_blank">Genel sayfa</a>
+  </div>
+
+  <h2 style="font-size:1.05rem;margin-top:20px">Filmler ({{$p.Week}})</h2>
+  <div class="gap">
+  {{range $p.Items}}
+    <div class="card card-pad" style="display:flex;gap:12px;align-items:flex-start">
+      {{if .PosterURL}}<img src="{{.PosterURL}}" alt="{{.Title}}" loading="lazy" style="width:64px;height:92px;object-fit:cover;border-radius:4px">{{end}}
+      <div style="flex:1">
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><strong>{{.Title}}</strong><span class="tag">{{.Cinema}}</span><span class="small muted">{{.Genre}}{{if .DurationMin}} · {{.DurationMin}} dk{{end}}</span></div>
+        {{if .Synopsis}}<div class="small muted">{{.Synopsis}}</div>{{end}}
+        <form method="post" action="/admin/sinemalar/{{.ID}}/sil" style="margin-top:6px"
+              hx-post="/admin/sinemalar/{{.ID}}/sil" hx-target="#sinemalar-panel" hx-swap="outerHTML"
+              hx-confirm="Film silinsin mi?" hx-indicator="#sinemalar-yukleniyor"
+              data-confirm="Film silinsin mi?">
+          <button class="btn small danger" type="submit">Sil</button>
+        </form>
+      </div>
+    </div>
+  {{else}}<p class="muted">Bu hafta film yok. Aşağıdan ekleyin.</p>{{end}}
+  </div>
+
+  <h2 style="font-size:1.05rem;margin-top:22px">Yeni Film Ekle / Güncelle</h2>
+  <form method="post" action="/admin/sinemalar/yeni" class="card card-pad"
+        hx-post="/admin/sinemalar/yeni" hx-target="#sinemalar-panel" hx-swap="outerHTML" hx-indicator="#sinemalar-yukleniyor">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:6px">
+      <input class="input" name="film" required placeholder="Film adı" aria-label="Film adı">
+      <input class="input" name="sinema" placeholder="Sinema (örn. Cineverse)" value="Genel" aria-label="Sinema">
+      <input class="input" name="tur" placeholder="Tür (örn. Aksiyon)" aria-label="Tür">
+      <input class="input" name="sure" placeholder="Süre (dk)" style="max-width:120px" aria-label="Süre (dk)">
+      <input class="input" name="hafta" type="date" aria-label="Hafta başı (boş = bu hafta)">
+      <input class="input" name="afis" placeholder="Afiş görsel URL" aria-label="Afiş görsel URL">
+      <input class="input" name="fragman" placeholder="Fragman URL" aria-label="Fragman URL">
+      <input class="input" name="sira" placeholder="Sıra (0)" style="max-width:120px" aria-label="Sıra (0)">
+    </div>
+    <textarea class="input" name="ozet" rows="2" style="margin-top:6px" placeholder="Özet (ops)" aria-label="Özet"></textarea>
+    <p class="hint" style="margin:.5em 0">Aynı sinema + film + hafta tekrar girilirse güncellenir.</p>
+    <button class="btn" type="submit">Kaydet</button>
+  </form>
+</div>{{end}}

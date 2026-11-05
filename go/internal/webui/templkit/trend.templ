@@ -1,0 +1,616 @@
+// Trend Merkezi / Bot paneli (templ) — bot_panel karşılığı.
+// Tablo/kart kalıpları veri odaklı; tüm sayısal alanlar önceden biçimlenir.
+package templkit
+
+// TrendOge trend terimi satırı.
+type TrendOge struct {
+	ID        string
+	Term      string
+	Source    string
+	Traffic   string
+	Score     int
+	ScoreColor string
+	SparkPath string
+	SparkTitle string
+	SparkX    string
+	SparkY    string
+	HasSpark  bool
+	Coverage  int
+	FirstSeen string
+	LastSeen  string
+}
+
+// TrendKaynak trend kaynağı satırı.
+type TrendKaynak struct {
+	ID       string
+	Name     string
+	URL      string
+	Kind     string
+	LastFetch string
+	Status   string // saglikli | hata | pasif | diger
+	LastError string
+	Aktif    bool
+}
+
+// TrendUyari trend uyarı rozeti.
+type TrendUyari struct {
+	Term  string
+	Score string
+}
+
+// TrendBasit ortak ad/değer satırı (GSC, arama, GA4 sayfaları).
+type TrendBasit struct {
+	A string
+	B string
+	C string
+}
+
+// TrendGundem gündem maddesi.
+type TrendGundem struct {
+	ID     string
+	Source string
+	Title  string
+	URL    string
+}
+
+// TrendFeed ajans/RSS kaynağı.
+type TrendFeed struct {
+	ID    string
+	Name  string
+	URL   string
+	Aktif bool
+}
+
+// TrendBrief AI brifing kartı.
+type TrendBrief struct {
+	Term string
+	Text string
+}
+
+// TrendView bot/trend panelinin tamamı.
+type TrendView struct {
+	FlashKind    string
+	FlashText    string
+	Brief        *TrendBrief
+	Stats        []TrendBasit
+	TCQ          string
+	TCFilter     string
+	TCMinScore   string
+	Items        []TrendOge
+	Alerts       []TrendUyari
+	AlertCount   string
+	Sources      []TrendKaynak
+	Weights      []TrendBasit // trafik/tazelik/haber/alaka/talep + eşik
+	Auto         bool
+	Notify       bool
+	Paid         bool
+	GSCProperty  string
+	GSCReady     bool
+	GSCTop       []TrendBasit
+	SearchTop    []TrendBasit
+	GA4Property  string
+	GA4Olcum     string
+	GA4Ready     bool
+	GA4Aktif     string
+	GA4Time      string
+	GA4Pages     []TrendBasit
+	Feeds        []TrendFeed
+	Cats         []TrendBasit
+	RulesTxt     string
+	BotAuto      bool
+	BotDakika    string
+	// Faz 194 — otomatik AI ile yazım.
+	//
+	// YazimOtomatik açıksa kaynaklı yeni taslaklar AI'dan geçer: başlık,
+	// spot, gövde ve SEO alanları AI metniyle doldurulur. Kapalıyken bot
+	// yalnız RSS özetini yazar (eski davranış).
+	YazimOtomatik bool
+	YazimDakika   string
+	YazimDurum    string
+
+	// SeoOtomatik: otomatik çekilen haberlerin SEO başlığı ve meta
+	// açıklaması arka planda doldurulsun mu (Faz 188).
+	SeoOtomatik bool
+	// SeoDakika: dakikada kaç haber işlenecek (hız).
+	SeoDakika string
+
+	// Faz 189 — otomatik çeviri (İngilizce içerik).
+	CeviriOtomatik bool
+	CeviriDiller   string
+	CeviriDurum    string
+	CeviriDakika   string
+	// CeviriBekleyen kuyruk derinliği (çevirisi olmayan yayımlanmış haber).
+	CeviriBekleyen int
+	Recent       []TrendBasit
+	TrendTxt     string
+	TrendDakika  string
+	Trends       []TrendGundem
+}
+
+// TrendPanel Trend Merkezi (HTMX hedefi: #bot-panel).
+templ TrendPanel(v TrendView) {
+	<div id="bot-panel">
+		if v.FlashText != "" {
+			<div class={ "flash", v.FlashKind }>{ v.FlashText }</div>
+		}
+		@Yukleniyor("bot-yukleniyor", "İşleniyor…")
+		if v.Brief != nil {
+			<div class="card card-pad" style="margin-bottom:14px;border-left:4px solid var(--ok)">
+				<div style="display:flex;gap:8px;justify-content:space-between;align-items:center">
+					<h2 style="margin:0;font-size:1.05rem">AI Brifing — { v.Brief.Term }</h2>
+					<a class="btn ghost small" href="/admin/bot">Kapat</a>
+				</div>
+				<div style="white-space:pre-wrap;margin-top:8px;line-height:1.55">{ v.Brief.Text }</div>
+			</div>
+		}
+		<div class="card card-pad" style="margin-bottom:14px">
+			<div style="display:flex;gap:12px;justify-content:space-between;align-items:flex-start;flex-wrap:wrap">
+				<div>
+					<h2 style="margin:0;font-size:1.15rem">Trend Merkezi <span class="badge" style="background:var(--surface-2);color:var(--text-2)">Google Trends</span></h2>
+					<p class="small muted" style="margin:4px 0 0">Google Trends Daily RSS · kapsama analizi · Search Console · site içi arama · GA4</p>
+				</div>
+				<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+					<form method="post" action="/admin/trend/cek" hx-post="/admin/trend/cek" hx-target="#bot-panel" hx-swap="outerHTML" hx-indicator="#bot-yukleniyor"><button class="btn small" type="submit"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-clock"></use></svg> Tüm Kaynakları Çek</button></form>
+					<form method="post" action="/admin/trend/toplu-taslak" hx-post="/admin/trend/toplu-taslak" hx-target="#bot-panel" hx-swap="outerHTML" hx-indicator="#bot-yukleniyor" hx-confirm="İçerik boşluğu olan en iği 3 trendden taslak oluşturulsun mu?"><button class="btn ghost small" type="submit"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-pencil"></use></svg> Boşluklardan Taslak</button></form>
+					<a class="btn ghost small" href="/admin/trend/rapor.csv"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-download"></use></svg> CSV Rapor</a>
+					if v.AlertCount != "" && v.AlertCount != "0" {
+						<form method="post" action="/admin/trend/uyarilar/okundu" hx-post="/admin/trend/uyarilar/okundu" hx-target="#bot-panel" hx-swap="outerHTML"><button class="btn ghost small" type="submit"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-bell"></use></svg> { v.AlertCount } uyarıyı okundu işaretle</button></form>
+					}
+				</div>
+			</div>
+			<div style="display:flex;gap:8px;flex-wrap:wrap;margin:12px 0">
+				<span class="badge" style="background:var(--surface-2);color:var(--text-2)">Toplam: { trendStat(v.Stats, 0) }</span>
+				<span class="badge" style="background:var(--ok-fill,var(--ok));color:#fff">Kapsandı: { trendStat(v.Stats, 1) }</span>
+				<span class="badge" style="background:var(--warn-fill,var(--warn));color:#fff">Zayıf: { trendStat(v.Stats, 2) }</span>
+				<span class="badge" style="background:#b91c1c;color:#fff">Boşluk: { trendStat(v.Stats, 3) }</span>
+				<span class="badge" style="background:#1d4ed8;color:#fff">Yükselen: { trendStat(v.Stats, 4) }</span>
+			</div>
+			<form method="get" action="/admin/bot" hx-get="/admin/bot" hx-target="#bot-panel" hx-swap="outerHTML" hx-indicator="#bot-yukleniyor" class="input-row" style="margin-bottom:10px">
+				<input class="input" name="tq" value={ v.TCQ } placeholder="Terimde ara…" style="flex:1;min-width:160px" aria-label="Terimde ara"/>
+				<select class="input" name="tf" style="width:190px" aria-label="Terim filtresi">
+					<option value="">Tüm terimler</option>
+					<option value="bosluk" if v.TCFilter == "bosluk" { selected }>Yalnız içerik boşluğu</option>
+					<option value="yukselen" if v.TCFilter == "yukselen" { selected }>Yalnız yükselen (24s)</option>
+				</select>
+				<input class="input" name="tskor" type="number" min="0" max="100" value={ v.TCMinScore } placeholder="Min skor" style="width:110px" aria-label="En düşük skor"/>
+				<button class="btn small" type="submit">Filtrele</button>
+				<a class="btn ghost small" href="/admin/bot">Temizle</a>
+			</form>
+			<div style="overflow-x:auto">
+				<table class="table">
+					<thead>
+						<tr><th>Terim</th><th>Trafik</th><th>Skor</th><th title="Google Trends sıralaması; yukarı = daha yüksek">Sıra (7g)</th><th>Kapsama</th><th>İlk / son görülme</th><th>İşlem</th></tr>
+					</thead>
+					<tbody>
+						if len(v.Items) == 0 {
+							@TabloBos(7, "trending-up", "Henüz trend terimi yok", "“Tüm Kaynakları Çek” ile Google Trends RSS beslemelerinden ilk veriyi alın.", "", "")
+						}
+						for _, t := range v.Items {
+							<tr>
+								<td style="min-width:180px">
+									<strong>{ t.Term }</strong>
+									<div class="small muted">{ t.Source }</div>
+								</td>
+								<td style="white-space:nowrap">{ t.Traffic }</td>
+								<td style="min-width:90px">
+									<div style="display:flex;align-items:center;gap:6px">
+										<strong>{ itoaT(t.Score) }</strong>
+										<div style="height:6px;background:var(--surface-2);border-radius:3px;flex:1;min-width:40px"><div style={ scoreBarStyle(t.Score, t.ScoreColor) }></div></div>
+									</div>
+								</td>
+								<td style="min-width:110px">
+									if t.HasSpark {
+										<svg class="trend-spark" viewBox="0 0 100 28" width="100" height="28" role="img" aria-label={ t.SparkTitle }>
+											<title>{ t.SparkTitle }</title>
+											<path d={ t.SparkPath } fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+											<circle cx={ t.SparkX } cy={ t.SparkY } r="2.4" fill="currentColor"></circle>
+										</svg>
+									} else {
+										<span class="muted small">—</span>
+									}
+								</td>
+								<td style="white-space:nowrap">
+									@coverageBadgeT(t.Coverage)
+								</td>
+								<td class="small muted" style="white-space:nowrap">{ t.FirstSeen }<br/>{ t.LastSeen }</td>
+								<td style="white-space:nowrap">
+									<form method="post" action={ templ.SafeURL("/admin/trend/terim/" + t.ID + "/brifing") } style="display:inline" hx-post={ "/admin/trend/terim/" + t.ID + "/brifing" } hx-target="#bot-panel" hx-swap="outerHTML" hx-indicator="#bot-yukleniyor"><button class="btn ghost small" type="submit">AI Brifing</button></form>
+									<form method="post" action={ templ.SafeURL("/admin/trend/terim/" + t.ID + "/taslak") } style="display:inline" hx-post={ "/admin/trend/terim/" + t.ID + "/taslak" } hx-swap="none" hx-indicator="#bot-yukleniyor"><button class="btn small" type="submit">Taslağa Al</button></form>
+									<form method="post" action={ templ.SafeURL("/admin/trend/terim/" + t.ID + "/gizle") } style="display:inline" hx-post={ "/admin/trend/terim/" + t.ID + "/gizle" } hx-target="#bot-panel" hx-swap="outerHTML" hx-confirm="Bu trend terimi panelden gizlensin mi?"><button class="btn danger small" type="submit"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-x"></use></svg></button></form>
+								</td>
+							</tr>
+						}
+					</tbody>
+				</table>
+			</div>
+			if len(v.Alerts) > 0 {
+				<div style="margin-top:12px;border-top:1px dashed var(--border);padding-top:10px">
+					<div class="small muted" style="margin-bottom:6px">Son trend uyarıları (eşik üstü yükselen terimler)</div>
+					<div style="display:flex;gap:8px;flex-wrap:wrap">
+						for _, a := range v.Alerts {
+							<span class="badge" style="background:var(--surface-2);color:var(--text-2)"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-bell"></use></svg> { a.Term } · { a.Score }</span>
+						}
+					</div>
+				</div>
+			}
+		</div>
+		<div class="grid-2" style="grid-template-columns:1.2fr 1fr;align-items:start;margin-bottom:14px">
+			<div class="card card-pad">
+				<h2 style="margin:0;font-size:1.05rem">Trend Kaynakları ve Sağlık</h2>
+				<div style="overflow-x:auto;margin-top:8px">
+					<table class="table">
+						<thead>
+							<tr><th>Kaynak</th><th>Tür</th><th>Son çekim</th><th>Durum</th><th>İşlem</th></tr>
+						</thead>
+						<tbody>
+							if len(v.Sources) == 0 {
+								@TabloBos(5, "rss", "Kaynak yok", "Trend beslemeleri eklendikçe burada listelenir.", "", "")
+							}
+							for _, s := range v.Sources {
+								<tr>
+									<td><strong>{ s.Name }</strong><div class="small muted" style="max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{ s.URL }</div></td>
+									<td class="small">{ s.Kind }</td>
+									<td class="small" style="white-space:nowrap">{ s.LastFetch }</td>
+									<td class="small" style="white-space:nowrap">
+										@sourceBadgeT(s)
+									</td>
+									<td style="white-space:nowrap">
+										<form method="post" action={ templ.SafeURL("/admin/trend/kaynak/" + s.ID + "/cek") } style="display:inline" hx-post={ "/admin/trend/kaynak/" + s.ID + "/cek" } hx-target="#bot-panel" hx-swap="outerHTML" hx-indicator="#bot-yukleniyor"><button class="btn ghost small" type="submit">Çek</button></form>
+										<form method="post" action={ templ.SafeURL("/admin/trend/kaynak/" + s.ID + "/durum") } style="display:inline" hx-post={ "/admin/trend/kaynak/" + s.ID + "/durum" } hx-target="#bot-panel" hx-swap="outerHTML">
+											<input type="hidden" name="durum" value={ bool01(!s.Aktif) }/>
+											<button class="btn ghost small" type="submit">
+												if s.Aktif {
+													Kapat
+												} else {
+													Aç
+												}
+											</button>
+										</form>
+										<form method="post" action={ templ.SafeURL("/admin/trend/kaynak/" + s.ID + "/sil") } style="display:inline" hx-post={ "/admin/trend/kaynak/" + s.ID + "/sil" } hx-target="#bot-panel" hx-swap="outerHTML" hx-confirm="Bu trend kaynağı silinsin mi?"><button class="btn danger small" type="submit"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-x"></use></svg></button></form>
+									</td>
+								</tr>
+							}
+						</tbody>
+					</table>
+				</div>
+				<form method="post" action="/admin/trend/kaynak-ekle" hx-post="/admin/trend/kaynak-ekle" hx-target="#bot-panel" hx-swap="outerHTML" hx-indicator="#bot-yukleniyor" style="margin-top:12px;border-top:1px dashed var(--border);padding-top:10px" hx-on::after-request="if (event.detail.successful) this.reset();">
+					<div class="input-row">
+						<input class="input" name="name" placeholder="Kaynak adı" required aria-label="Kaynak adı"/>
+						<input class="input" name="url" placeholder="RSS URL" required style="flex:2" aria-label="RSS URL"/>
+					</div>
+					<div style="display:flex;gap:8px;margin-top:8px;align-items:center;flex-wrap:wrap">
+						<select class="input" name="kind" style="width:160px" aria-label="Kaynak türü"><option value="google_trends">Google Trends</option><option value="google_news">Google News</option><option value="rss">RSS</option></select>
+						<input class="input" name="geo" value="TR" placeholder="geo" style="width:70px" aria-label="Bölge kodu (geo)"/>
+						<input class="input" name="hl" value="tr-TR" placeholder="hl" style="width:90px" aria-label="Dil kodu (hl)"/>
+						<label class="small muted">her <input type="number" name="interval" value="900" min="300" style="width:72px"/> sn</label>
+						<label class="tag" style="cursor:pointer"><input type="checkbox" name="pasif"/> pasif</label>
+						<button class="btn small" type="submit" style="margin-left:auto">＋ Kaynak Ekle</button>
+					</div>
+				</form>
+			</div>
+			<div class="gap">
+				<div class="card card-pad">
+					<h2 style="margin:0;font-size:1.05rem">Skor ve Uyarı Ayarları</h2>
+					<form method="post" action="/admin/trend/ayar" hx-post="/admin/trend/ayar" hx-target="#bot-panel" hx-swap="outerHTML">
+						<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:8px">
+							for i, w := range v.Weights {
+								<label class="small muted">{ trendWeightLabel(i) }<input class="input" type="number" name={ trendWeightName(i) } min="0" max="100" value={ w.B }/></label>
+							}
+						</div>
+						<div style="display:flex;gap:10px;align-items:center;margin-top:8px;flex-wrap:wrap">
+							<label class="tag" style="cursor:pointer"><input type="checkbox" name="otomatik_taslak" if v.Auto { checked }/> Otomatik taslak</label>
+							<label class="tag" style="cursor:pointer"><input type="checkbox" name="bildirim_aktif" if v.Notify { checked }/> Uyarı bildirimi</label>
+							<label class="tag" style="cursor:pointer"><input type="checkbox" name="odeme_aktif" if v.Paid { checked }/> Ücretli adaptör</label>
+							<button class="btn small" type="submit" style="margin-left:auto">Kaydet</button>
+						</div>
+						<p class="small muted" style="margin:8px 0 0">Ücretli sağlayıcılar (DataForSEO/SerpAPI) varsayılan kapalıdır; API anahtarı tanımlanmadan dış istek yapılmaz.</p>
+					</form>
+				</div>
+				<div class="card card-pad">
+					<h2 style="margin:0;font-size:1.05rem">Search Console (GSC)</h2>
+					<p class="small muted" style="margin:4px 0 8px">SEO > İndeksleme panelindeki servis hesabı kullanılır. Özellik alanına <code>sc-domain:alanadiniz.com</code> veya <code>https://alanadiniz.com/</code> yazın.</p>
+					<form method="post" action="/admin/trend/gsc/ayar" hx-post="/admin/trend/gsc/ayar" hx-target="#bot-panel" hx-swap="outerHTML">
+						<div class="input-row"><input class="input" name="gsc_property" value={ v.GSCProperty } placeholder="sc-domain:theblock.com.tr" style="flex:1" aria-label="Search Console özelliği"/><button class="btn small" type="submit">Kaydet</button></div>
+					</form>
+					<div style="display:flex;gap:8px;align-items:center;margin-top:8px">
+						<span class="small muted">{ gscReadyText(v.GSCReady) }</span>
+						<form method="post" action="/admin/trend/gsc/senkron" hx-post="/admin/trend/gsc/senkron" hx-target="#bot-panel" hx-swap="outerHTML" style="margin-left:auto"><button class="btn ghost small" type="submit">⟳ Şimdi Senkronla</button></form>
+					</div>
+					<div style="margin-top:8px">
+						if len(v.GSCTop) == 0 {
+							<p class="small muted">Henüz GSC verisi yok.</p>
+						}
+						for _, g := range v.GSCTop {
+							<div style="display:flex;justify-content:space-between;gap:8px;padding:4px 0;border-bottom:1px dashed var(--border)"><span class="small" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{ g.A }</span><span class="small muted" style="white-space:nowrap">{ g.B }</span></div>
+						}
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="grid-2" style="grid-template-columns:1fr 1fr;align-items:start;margin-bottom:14px">
+			<div class="card card-pad">
+				<h2 style="margin:0;font-size:1.05rem">Site İçi Arama Talebi</h2>
+				<p class="small muted" style="margin:4px 0 8px">Son 30 günün anonim arama sayacı; trend skorunda “talep” bileşenini besler.</p>
+				if len(v.SearchTop) == 0 {
+					<p class="small muted">Henüz site içi arama kaydı yok.</p>
+				}
+				for _, g := range v.SearchTop {
+					<div style="display:flex;justify-content:space-between;gap:8px;padding:4px 0;border-bottom:1px dashed var(--border)"><span class="small">{ g.A }</span><span class="small muted">{ g.B }</span></div>
+				}
+			</div>
+			<div class="card card-pad">
+				<h2 style="margin:0;font-size:1.05rem">GA4 Canlı</h2>
+				<p class="small muted" style="margin:4px 0 8px"><b>Mülk kimliği</b> raporlar içindir (ör. <code>properties/561087489</code> yerine <code>561087489</code>). <b>Ölçüm kimliği</b> sitedeki izleme kodu içindir.</p>
+				<form method="post" action="/admin/trend/ga4/ayar" hx-post="/admin/trend/ga4/ayar" hx-target="#bot-panel" hx-swap="outerHTML">
+					<div class="input-row"><input class="input" name="ga4_property" value={ v.GA4Property } placeholder="561087489" style="flex:1" aria-label="GA4 özellik kimliği"/><input class="input" name="ga4_olcum" value={ v.GA4Olcum } placeholder="G-XXXXXXXXXX" style="flex:1" aria-label="GA4 ölçüm kimliği"/><button class="btn small" type="submit">Kaydet</button></div>
+				</form>
+				<p class="small muted" style="margin:6px 0 0">
+					if v.GA4Olcum == "" {
+						Ölçüm kimliği boş — sitede <b>hiçbir izleme kodu basılmıyor</b>. Doldurursanız gtag.js tüm public sayfalara eklenir.
+					} else {
+						Ölçüm kodu etkin: <code>{ v.GA4Olcum }</code> — gtag.js public sayfalara basılıyor.
+					}
+				</p>
+				<div style="display:flex;gap:8px;align-items:center;margin-top:8px">
+					<span class="small muted">{ ga4ReadyText(v.GA4Ready) }</span>
+					<form method="post" action="/admin/trend/ga4/senkron" hx-post="/admin/trend/ga4/senkron" hx-target="#bot-panel" hx-swap="outerHTML" style="margin-left:auto"><button class="btn ghost small" type="submit">⟳ Canlıyı Yenile</button></form>
+				</div>
+				if v.GA4Ready && v.GA4Aktif != "" {
+					<div style="margin-top:8px"><span class="badge" style="background:var(--ok-fill,var(--ok));color:#fff">{ v.GA4Aktif } aktif kullanıcı</span> <span class="small muted">{ v.GA4Time }</span></div>
+					for _, p := range v.GA4Pages {
+						<div style="display:flex;justify-content:space-between;gap:8px;padding:4px 0;border-bottom:1px dashed var(--border)"><span class="small" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{ p.A }</span><span class="small muted">{ p.B }</span></div>
+					}
+				} else {
+					<p class="small muted" style="margin-top:8px">Henüz GA4 canlı verisi yok.</p>
+				}
+			</div>
+		</div>
+		<div class="grid-2" style="grid-template-columns:1.2fr 1fr;align-items:start">
+			<div class="card card-pad">
+				<div style="display:flex;gap:8px;justify-content:space-between;align-items:center">
+					<h2 style="margin:0;font-size:1.1rem">Ajans / RSS Kaynakları</h2>
+					<form method="post" action="/admin/bot/hepsi-cek" hx-post="/admin/bot/hepsi-cek" hx-target="#bot-panel" hx-swap="outerHTML" hx-indicator="#bot-yukleniyor"><button class="btn small" type="submit"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-clock"></use></svg> Tümünü Çek</button></form>
+				</div>
+				<table class="table" style="margin-top:10px">
+					<thead>
+						<tr><th>Kaynak</th><th>Kategori</th><th>Durum</th><th>İşlem</th></tr>
+					</thead>
+					<tbody>
+						if len(v.Feeds) == 0 {
+							@TabloBos(4, "rss", "Henüz kaynak yok", "Google Trends ya da RSS kaynağı ekleyerek başlayın.", "", "")
+						}
+						for _, f := range v.Feeds {
+							<tr>
+								<td><strong>{ f.Name }</strong><div class="small muted" style="max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{ f.URL }</div></td>
+								<td class="small">
+									if f.Aktif {
+										aktif
+									} else {
+										pasif
+									}
+								</td>
+								<td>
+									@feedBadgeT(f.Aktif)
+								</td>
+								<td style="white-space:nowrap">
+									<form method="post" action={ templ.SafeURL("/admin/bot/" + f.ID + "/cek") } style="display:inline" hx-post={ "/admin/bot/" + f.ID + "/cek" } hx-target="#bot-panel" hx-swap="outerHTML" hx-indicator="#bot-yukleniyor"><button class="btn ghost small" type="submit">Çek</button></form>
+									<a class="btn danger small" href="#" data-confirm={ "/admin/bot/" + f.ID + "/sil" } hx-post={ "/admin/bot/" + f.ID + "/sil" } hx-target="#bot-panel" hx-swap="outerHTML" hx-confirm="Bu kaynak silinsin mi?" hx-indicator="#bot-yukleniyor"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-x"></use></svg></a>
+								</td>
+							</tr>
+						}
+					</tbody>
+				</table>
+				<form method="post" action="/admin/bot/ekle" hx-post="/admin/bot/ekle" hx-target="#bot-panel" hx-swap="outerHTML" hx-indicator="#bot-yukleniyor" class="field" style="margin-top:14px;border-top:1px dashed var(--border);padding-top:12px" hx-on::after-request="if (event.detail.successful) this.reset();">
+					<div class="input-row">
+						<input class="input" name="name" placeholder="Kaynak adı (örn: AA Gündem)" required aria-label="Kaynak adı"/>
+						<input class="input" name="url" placeholder="RSS URL" required aria-label="RSS URL"/>
+					</div>
+					<div style="display:flex;gap:8px;margin-top:8px;align-items:center">
+						<select class="input" name="kategori" style="width:220px" aria-label="Kaynak kategorisi">
+							<option value="">— kategori —</option>
+							for _, c := range v.Cats {
+								<option value={ c.A }>{ c.B }</option>
+							}
+						</select>
+						<label class="tag" style="cursor:pointer"><input type="checkbox" name="pasif"/> pasif</label>
+						<button class="btn" type="submit" style="margin-left:auto">＋ Ekle</button>
+					</div>
+				</form>
+			</div>
+			<div class="gap">
+				<div class="card card-pad">
+					<h2 style="margin:0;font-size:1.1rem">Kelime Değiştirici</h2>
+					<form method="post" action="/admin/bot/kelime" hx-post="/admin/bot/kelime" hx-target="#bot-panel" hx-swap="outerHTML" hx-indicator="#bot-yukleniyor">
+						<div class="field" style="margin-top:8px">
+							<label class="small muted">Her satır: <code>eski|yeni</code></label>
+							<textarea class="textarea" name="kelimeler" style="min-height:110px;font-family:monospace;font-size:.8rem" aria-label="Kelime eşlemeleri">{ v.RulesTxt }</textarea>
+						</div>
+						<div style="display:flex;gap:10px;align-items:center">
+							<label class="tag" style="cursor:pointer"><input type="checkbox" name="otomatik" if v.BotAuto { checked }/> Otomatik Çek</label>
+							<label class="small muted">her <input type="number" name="dakika" value={ v.BotDakika } style="width:56px" min="1"/> dk</label>
+							<label class="tag" style="cursor:pointer" title="Çekilen haberlerin SEO başlığı ve meta açıklaması boşsa AI ile doldurulur; elle yazılan alanlar korunur."><input type="checkbox" name="seo_otomatik" if v.SeoOtomatik { checked }/> SEO'yu otomatik doldur</label>
+							<label class="small muted">dakikada <input type="number" name="seo_dakika" value={ v.SeoDakika } style="width:62px" min="1" max="120"/> haber</label>
+						</div>
+						<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:8px;padding-top:8px;border-top:1px dashed var(--border)">
+							<label class="tag" style="cursor:pointer" title="Açıkken kaynaklı yeni taslaklar AI'dan geçer: başlık, spot, gövde ve SEO alanları AI metniyle yazılır. Taslak olarak kalır; yayın editörün kararıdır. Kapalıyken bot yalnız RSS özetini yazar."><input type="checkbox" name="yazim_otomatik" if v.YazimOtomatik { checked }/> AI ile yazım</label>
+							<label class="small muted">dakikada <input type="number" name="yazim_dakika" value={ v.YazimDakika } style="width:62px" min="1" max="60"/> taslak</label>
+							if v.YazimDurum != "" {
+								<span class="small muted">{ v.YazimDurum }</span>
+							}
+							<a class="btn ghost small" href="/admin/yeniden-yazim" style="margin-left:auto">Yeniden yazım</a>
+						</div>
+						/* Faz 204: yeni taslakların yanında YAYINDAKİ ince metinler
+						   için ayrı ekran. Orada öneri üretilir; yayına yazma
+						   yalnız editör onayıyla olur. */
+						<p class="small muted" style="margin:6px 0 0">
+							Yayında kalmış <b>tek paragraflık</b> içerikler bu ayardan geçmez.
+							<a href="/admin/yeniden-yazim">Toplu yeniden yazım</a> ekranında eski/yeni
+							metni karşılaştırıp onaylarsınız.
+						</p>
+						<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:8px;padding-top:8px;border-top:1px dashed var(--border)">
+							<label class="tag" style="cursor:pointer" title="Yayımlanmış Türkçe haberler seçili dillere AI ile çevrilir; ayrı içerik olarak kaydedilir. /en bölümleri bu içerikle dolar."><input type="checkbox" name="ceviri_otomatik" if v.CeviriOtomatik { checked }/> Otomatik çeviri</label>
+							<label class="small muted">diller <input class="input" name="ceviri_diller" value={ v.CeviriDiller } style="width:96px;min-height:0;padding:2px 6px" placeholder="en" aria-label="Hedef diller (virgülle)"/></label>
+							<label class="small muted">durum
+								<select class="input" name="ceviri_durum" style="width:auto;min-height:0;padding:2px 6px" aria-label="Çeviri kayıt durumu">
+									<option value="yayinda" if v.CeviriDurum == "yayinda" { selected }>Yayında</option>
+									<option value="taslak" if v.CeviriDurum == "taslak" { selected }>Taslak</option>
+								</select>
+							</label>
+							<label class="small muted">dakikada <input type="number" name="ceviri_dakika" value={ v.CeviriDakika } style="width:62px" min="1" max="120"/> haber</label>
+							<span class="small muted">bekleyen: <b>{ itoaT(v.CeviriBekleyen) }</b></span>
+							<button class="btn small" type="submit" style="margin-left:auto">Kaydet</button>
+						</div>
+					</form>
+				</div>
+				<div class="card card-pad">
+					<h2 style="margin:0;font-size:1.1rem">Son Çekilenler (taslak)</h2>
+					<div style="margin-top:8px">
+						if len(v.Recent) == 0 {
+							<p class="muted">Kayıt yok — "Çek" ile ilk aktarımı yap.</p>
+						}
+						for _, r := range v.Recent {
+							<div style="display:flex;justify-content:space-between;gap:8px;padding:6px 0;border-bottom:1px dashed var(--border)">
+								<a href={ templ.SafeURL("/admin/icerikler/" + r.A) }>{ r.B }</a><span class="small muted">{ r.C }</span>
+							</div>
+						}
+					</div>
+				</div>
+				<div class="card card-pad">
+					<div style="display:flex;gap:8px;justify-content:space-between;align-items:center">
+						<h2 style="margin:0;font-size:1.1rem">Gündem (RSS agrega)</h2>
+						<form method="post" action="/admin/trend/yenile" hx-post="/admin/trend/yenile" hx-target="#bot-panel" hx-swap="outerHTML" hx-indicator="#bot-yukleniyor"><button class="btn ghost small" type="submit"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-clock"></use></svg> Yenile</button></form>
+					</div>
+					<form method="post" action="/admin/trend/kaynak" hx-post="/admin/trend/kaynak" hx-target="#bot-panel" hx-swap="outerHTML" hx-indicator="#bot-yukleniyor">
+						<div class="field" style="margin:8px 0 0">
+							<label class="small muted">Kaynaklar — her satır: <code>Ad|URL</code></label>
+							<textarea class="textarea" name="gundem_kaynak" style="min-height:64px;font-family:monospace;font-size:.78rem" aria-label="Gündem kaynakları">{ v.TrendTxt }</textarea>
+						</div>
+						<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:8px 0">
+							<label class="small muted">Otomatik çekim: her <input class="input" type="number" name="gundem_dakika" min="5" max="1440" value={ v.TrendDakika } style="width:76px"/> dakika</label>
+							<button class="btn ghost small" type="submit">Kaynakları Kaydet</button>
+						</div>
+					</form>
+					<div style="margin-top:10px">
+						if len(v.Trends) == 0 {
+							<p class="muted">Gündem boş — "Yenile" ile kaynakları çek.</p>
+						}
+						for _, t := range v.Trends {
+							<div style="display:flex;gap:8px;align-items:center;padding:6px 0;border-bottom:1px dashed var(--border)">
+								<span class="badge" style="background:var(--surface-2);color:var(--text-2)">{ t.Source }</span>
+								<a href={ templ.SafeURL(t.URL) } target="_blank" rel="nofollow" style="flex:1">{ t.Title }</a>
+								<form method="post" action={ templ.SafeURL("/admin/trend/" + t.ID + "/taslak") }><button class="btn small" type="submit">Taslağa Al</button></form>
+							</div>
+						}
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+}
+
+func scoreBarStyle(score int, color string) string {
+	return "height:6px;border-radius:3px;width:" + itoaT(score) + "%;background:" + color
+}
+
+func bool01(b bool) string {
+	if b {
+		return "1"
+	}
+	return "0"
+}
+
+func trendStat(stats []TrendBasit, i int) string {
+	if i < len(stats) {
+		return stats[i].B
+	}
+	return "0"
+}
+
+func trendWeightLabel(i int) string {
+	switch i {
+	case 0:
+		return "Trafik"
+	case 1:
+		return "Tazelik"
+	case 2:
+		return "Haber"
+	case 3:
+		return "Alaka"
+	case 4:
+		return "Talep"
+	default:
+		return "Uyarı eşiği"
+	}
+}
+
+func trendWeightName(i int) string {
+	switch i {
+	case 0:
+		return "w_trafik"
+	case 1:
+		return "w_tazelik"
+	case 2:
+		return "w_haber"
+	case 3:
+		return "w_alaka"
+	case 4:
+		return "w_talep"
+	default:
+		return "uyari_esik"
+	}
+}
+
+func gscReadyText(ready bool) string {
+	if ready {
+		return "servis hesabı hazır"
+	}
+	return "servis hesabı yok"
+}
+
+func ga4ReadyText(ready bool) string {
+	if ready {
+		return "servis hesabı hazır"
+	}
+	return "servis hesabı yok"
+}
+
+func feedBadge(aktif bool) string {
+	if aktif {
+		return "aktif"
+	}
+	return "pasif"
+}
+
+// feedBadgeT ajans kaynağı durum rozeti.
+templ feedBadgeT(aktif bool) {
+	if aktif {
+		<span class="badge" style="background:var(--ok-fill,var(--ok));color:#fff">aktif</span>
+	} else {
+		<span class="badge" style="background:var(--warn-fill,var(--warn));color:#fff">pasif</span>
+	}
+}
+
+// coverageBadgeT trend kapsama rozeti.
+templ coverageBadgeT(count int) {
+	if count == 0 {
+		<span class="badge" style="background:#b91c1c;color:#fff">boşluk</span>
+	} else if count == 1 {
+		<span class="badge" style="background:var(--warn-fill,var(--warn));color:#fff">zayıf (1)</span>
+	} else {
+		<span class="badge" style="background:var(--ok-fill,var(--ok));color:#fff">kapsandı ({ itoaT(count) })</span>
+	}
+}
+
+// sourceBadgeT trend kaynağı sağlık rozeti.
+templ sourceBadgeT(s TrendKaynak) {
+	switch s.Status {
+		case "saglikli":
+			<span class="badge" style="background:var(--ok-fill,var(--ok));color:#fff">sağlıklı</span>
+		case "hata":
+			<span class="badge" style="background:#b91c1c;color:#fff" title={ s.LastError }>hata</span>
+		case "pasif":
+			<span class="badge" style="background:var(--warn-fill,var(--warn));color:#fff">pasif</span>
+		default:
+			<span class="badge" style="background:var(--surface-2);color:var(--text-2)">{ s.Status }</span>
+	}
+}

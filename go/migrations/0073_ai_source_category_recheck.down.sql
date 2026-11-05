@@ -1,0 +1,1 @@
+-- 0073 geri alımı: yeniden kontrol işareti geri alınamaz.

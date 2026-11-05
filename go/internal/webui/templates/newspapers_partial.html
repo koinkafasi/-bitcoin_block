@@ -1,0 +1,48 @@
+{{define "gazeteler_panel"}}<div id="gazeteler-panel">
+  {{if .Flash}}<div class="flash {{.Flash.Kind}}">{{.Flash.Text}}</div>{{end}}
+  <span id="gazeteler-yukleniyor" class="htmx-indicator small muted" role="status" aria-live="polite">Yükleniyor…</span>
+  {{$p := .GazetelerPanel}}
+
+  <div class="card card-pad" style="display:flex;gap:14px;flex-wrap:wrap;align-items:center">
+    <div><div class="small muted">Toplam manşet</div><div class="big">{{$p.Total}}</div></div>
+    <div><div class="small muted">Bu tarih</div><div class="big">{{$p.Date}}</div></div>
+    {{if $p.Dates}}
+    <form method="get" action="/admin/gazeteler" style="margin-left:auto"
+          hx-get="/admin/gazeteler" hx-target="#gazeteler-panel" hx-swap="outerHTML" hx-push-url="true" hx-indicator="#gazeteler-yukleniyor">
+      <select class="select" name="tarih" data-autosubmit>{{$cur := $p.Date}}{{range $p.Dates}}<option value="{{.}}" {{if eq . $cur}}selected{{end}}>{{.}}</option>{{end}}</select>
+    </form>
+    {{end}}
+    <a class="btn small" href="/gazete-mansetleri" target="_blank">Genel sayfa</a>
+  </div>
+
+  <h2 style="font-size:1.05rem;margin-top:20px">Manşetler ({{$p.Date}})</h2>
+  <div class="grid-2" style="grid-template-columns:repeat(auto-fill,minmax(220px,1fr))">
+  {{range $p.Items}}
+    <div class="card card-pad" style="text-align:center">
+      <img src="{{orStr .ThumbURL .ImageURL}}" alt="{{.Name}}" loading="lazy" style="width:100%;height:auto;border:1px solid var(--border);border-radius:6px">
+      <div style="margin-top:6px"><strong>{{.Name}}</strong></div>
+      <div class="small muted">{{.PageDate}} · sıra {{.Sort}}</div>
+      <form method="post" action="/admin/gazeteler/{{.ID}}/sil" style="margin-top:6px"
+            hx-post="/admin/gazeteler/{{.ID}}/sil" hx-target="#gazeteler-panel" hx-swap="outerHTML"
+            hx-confirm="Manşet silinsin mi?" hx-indicator="#gazeteler-yukleniyor"
+            data-confirm="Manşet silinsin mi?">
+        <button class="btn small danger" type="submit">Sil</button>
+      </form>
+    </div>
+  {{else}}<p class="muted">Bu tarih için manşet yok. Aşağıdan ekleyin.</p>{{end}}
+  </div>
+
+  <h2 style="font-size:1.05rem;margin-top:22px">Yeni Manşet Ekle / Güncelle</h2>
+  <form method="post" action="/admin/gazeteler/yeni" class="card card-pad"
+        hx-post="/admin/gazeteler/yeni" hx-target="#gazeteler-panel" hx-swap="outerHTML" hx-indicator="#gazeteler-yukleniyor">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:6px">
+      <input class="input" name="gazete" required placeholder="Gazete adı (örn. Hürriyet)" aria-label="Gazete adı">
+      <input class="input" name="tarih" type="date" aria-label="Sayı tarihi (boş = bugün)">
+      <input class="input" name="gorsel" required placeholder="Ön sayfa görsel URL" aria-label="Ön sayfa görsel URL">
+      <input class="input" name="kucuk" placeholder="Küçük görsel URL (ops)" aria-label="Küçük görsel URL">
+      <input class="input" name="sira" placeholder="Sıra (0)" style="max-width:120px" aria-label="Sıra">
+    </div>
+    <p class="hint" style="margin:.5em 0">Aynı gazete + tarih tekrar girilirse güncellenir. Görselleri <a href="/admin/dosyalar">Medya</a>'ya yükleyip URL'sini buraya yapıştırabilirsiniz.</p>
+    <button class="btn" type="submit">Kaydet</button>
+  </form>
+</div>{{end}}

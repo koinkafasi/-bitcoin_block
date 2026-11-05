@@ -1,0 +1,69 @@
+{{define "bookmarks"}}<!doctype html><html lang="{{.Lang}}" {{if .RTL}}dir="rtl"{{end}} data-theme="{{.Theme}}"><head>{{template "public_head" .}}</head>
+<body>
+{{template "site_header" .}}
+<main class="page"><div class="container narrow">
+  <h1 class="page-title"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-bookmark"></use></svg> Kaydedilenler</h1>
+  <div class="gap">
+    {{range .Community.Bookmarks}}
+    <a class="card card-pad" href="{{$.LangBase}}/{{.DisplaySlug}}-{{.ID}}">
+      <h3 style="margin:0">{{.Title}}</h3>
+      {{if .Spot}}<p class="muted small" style="margin:.4em 0 0">{{.Spot}}</p>{{end}}
+    </a>{{else}}<p class="muted">Henüz kaydettiğiniz haber yok. Haber sayfasındaki "Kaydet" düğmesini kullanın.</p>{{end}}
+  </div>
+</div></main>
+{{template "site_footer" .}}
+</body></html>{{end}}
+
+{{define "bildirimler"}}<!doctype html><html lang="{{.Lang}}" {{if .RTL}}dir="rtl"{{end}} data-theme="{{.Theme}}"><head>{{template "public_head" .}}</head>
+<body>
+{{template "site_header" .}}
+<main class="page"><div class="container narrow">
+  <h1 class="page-title">🔔 Bildirimler{{if .Community.Unread}} <span class="tag">{{.Community.Unread}} okunmamış</span>{{end}}</h1>
+  {{if .Community.Points}}<p class="small muted">Puan: <b>{{.Community.Points.Points}}</b> · seri: <b>{{.Community.Points.Streak}}</b> gün
+    {{range .Community.Points.Achievements}}<span class="tag">{{.}}</span>{{end}}</p>{{end}}
+  {{if .Community.Notifications}}
+  <div class="gap">
+    {{range .Community.Notifications}}<div class="card card-pad">
+      <div class="small muted">{{.Kind}} · {{.CreatedAt.Format "2006-01-02 15:04"}}</div>
+      <h3 style="margin:.2em 0">{{.Title}}</h3>
+      {{if .Body}}<p class="muted small" style="margin:.3em 0 0">{{.Body}}</p>{{end}}
+      {{if .URL}}<p style="margin:.5em 0 0"><a class="btn ghost small" href="{{.URL}}">Görüntüle</a></p>{{end}}
+    </div>{{end}}
+  </div>
+  {{else}}<p class="muted">Bildirim yok.</p>{{end}}
+  {{if .Community.Follows}}
+  <h2 style="font-size:1.05rem;margin-top:22px">Takip edilenler</h2>
+  <p>{{range .Community.Follows}}<span class="tag">{{.Type}}: {{.Slug}}</span> {{end}}</p>
+  {{end}}
+</div></main>
+{{template "site_footer" .}}
+</body></html>{{end}}
+
+{{define "rozetler"}}<!doctype html><html lang="{{.Lang}}" {{if .RTL}}dir="rtl"{{end}} data-theme="{{.Theme}}"><head>{{template "public_head" .}}</head>
+<body>
+{{template "site_header" .}}
+<main class="page"><div class="container narrow">
+  <h1 class="page-title">🏆 Başarımlar</h1>
+  {{if .Community.Points}}<p class="small muted">Puan: <b>{{.Community.Points.Points}}</b> · seri: <b>{{.Community.Points.Streak}}</b> gün</p>{{end}}
+  <div class="gap">
+    {{$pts := .Community.Points}}
+    {{range .Community.Definitions}}
+      {{$def := .}}{{$kazanildi := false}}
+      {{if $pts}}{{range $pts.Achievements}}{{if eq . $def.Key}}{{$kazanildi = true}}{{end}}{{end}}{{end}}
+      <div class="card card-pad" {{if $kazanildi}}style="border-color:var(--accent)"{{end}}>
+        <h3 style="margin:0">{{.Ad}}{{if $kazanildi}} ✓{{end}}</h3>
+        <p class="small muted" style="margin:.3em 0 0">{{if .Min}}{{.Min}}+ puan{{else}}{{.Streak}}+ günlük seri{{end}}</p>
+      </div>
+    {{end}}
+  </div>
+  {{if .Community.Leaderboard}}
+  <h2 style="font-size:1.05rem;margin-top:22px">Liderlik Tablosu</h2>
+  <div class="gap">
+    {{range .Community.Leaderboard}}<div class="card card-pad" style="display:flex;justify-content:space-between">
+      <span>#{{.UserID}}</span><span>{{.Points}} puan · {{.Streak}} gün</span>
+    </div>{{end}}
+  </div>
+  {{end}}
+</div></main>
+{{template "site_footer" .}}
+</body></html>{{end}}

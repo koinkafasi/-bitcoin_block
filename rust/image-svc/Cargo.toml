@@ -1,0 +1,13 @@
+[package]
+name = "image-svc"
+version = "0.2.0"
+edition = "2021"
+description = "Rust görsel dönüşüm mikroservisi — 16:9 kırpma + ölçekleme + JPEG/PNG (sıcak yol)"
+
+[dependencies]
+image = { version = "0.25", default-features = false, features = ["jpeg", "png", "webp"] }
+
+[profile.release]
+lto = true
+codegen-units = 1
+strip = true

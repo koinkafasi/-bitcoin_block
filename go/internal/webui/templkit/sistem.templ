@@ -1,0 +1,438 @@
+// Sistem panelleri (templ): Ayarlar (sekmeli) ve Siteler (yayın ağı).
+// Renk alanları veri-odaklı döngüyle üretilir (22 renk alanı tek desende).
+package templkit
+
+// AyarRenk tema renk alanı.
+type AyarRenk struct {
+	Name   string
+	Label  string
+	Value  string
+	Number bool
+}
+
+// AyarFont font seçimi alanı.
+type AyarFont struct {
+	Name    string
+	Label   string
+	Value   string
+	Options []IOpt
+}
+
+// AyarIzinSatır yetki matrisi satırı.
+type AyarIzinSatir struct {
+	Key   string
+	Label string
+	Cells []bool
+}
+
+// AyarLog denetim kaydı satırı.
+type AyarLog struct {
+	Time   string
+	User   string
+	Action string
+	Detail string
+}
+
+// AyarlarView ayarlar paneli.
+type AyarlarView struct {
+	FlashKind    string
+	FlashText    string
+	SiteBaslik   string
+	Slogan       string
+	Dil          string
+	Locales      []IOpt
+	BakimModu    bool
+	BakimMesaji  string
+	Renkler      []AyarRenk
+	KoyuRenkler  []AyarRenk
+	Fonts        []AyarFont
+	ModulSirasi  string
+	IzinKeys     []string
+	IzinRows     []AyarIzinSatir
+	GCode        string
+	GVerification string
+	AdSense      string
+	RobotsHTML   string
+	AIEnabled    bool
+	AIProvider   string
+	AIModel      string
+	AIBaseURL    string
+	AIProviders  []IOpt
+	Logs         []AyarLog
+	// Kunye BİK tebliği künye alanları (md. 8/1-d). Yedek doluysa alan
+	// boş bırakıldığında canlıda o değer basılır — ipucu olarak gösterilir.
+	Kunye      []AyarKunye
+	KunyeEksik []string
+}
+
+// AyarKunye tek bir künye alanı.
+type AyarKunye struct {
+	Key   string
+	Label string
+	Value string
+	Yedek string
+}
+
+// AyarlarPanel ayarlar (HTMX hedefi: #ayarlar-panel).
+templ AyarlarPanel(v AyarlarView) {
+	<div id="ayarlar-panel">
+		if v.FlashText != "" {
+			<div class={ "flash", v.FlashKind }>{ v.FlashText }</div>
+		}
+		@Yukleniyor("ayarlar-yukleniyor", "Kaydediliyor…")
+		<div class="card card-pad" id="ayar-hub">
+			<div class="dash-head"><h2><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-settings"></use></svg> Ayar Merkezi</h2></div>
+			<p class="hint small" style="margin-top:0">Sık kullanılan ayarlar tek yerde. Aşağıdaki sekmeler sayfa içi ayarlar içindir; modüle özel ayarlar kendi merkezlerindedir.</p>
+			<div class="qtiles">
+				<a class="qtile" href="/admin/bulten"><span class="qt-ico"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-mail"></use></svg></span>E-posta (SMTP)<small>Bülten &amp; bildirim gönderimi</small></a>
+				<a class="qtile" href="/admin/gazete#otomasyon"><span class="qt-ico"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-news"></use></svg></span>Gazete &amp; WhatsApp<small>Otomasyon saati, dağıtım kanalları</small></a>
+				<a class="qtile" href="/admin/gorunum"><span class="qt-ico"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-palette"></use></svg></span>Görünüm &amp; Marka<small>Logo, renk, font, menü yönü</small></a>
+				<a class="qtile" href="/admin/members"><span class="qt-ico"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-credit-card"></use></svg></span>Üyelik &amp; Paywall<small>Premium, içerik eşiği</small></a>
+				<a class="qtile" href="/admin/siteler"><span class="qt-ico"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-world"></use></svg></span>Siteler &amp; Lisanslar<small>Domain, Gazete lisansı</small></a>
+				<a class="qtile" href="/admin/ayarlar?seke=kunye"><span class="qt-ico"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-license"></use></svg></span>Künye (BİK)<small>Tebliğ md. 8/1-d — on zorunlu alan</small></a>
+				<a class="qtile" href="/admin/gazete#depolama"><span class="qt-ico"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-cloud"></use></svg></span>Depolama (R2/S3)<small>Site bazlı bucket</small></a>
+			</div>
+		</div>
+		<form method="post" action="/admin/ayarlar" hx-post="/admin/ayarlar" hx-target="#ayarlar-panel" hx-swap="outerHTML" hx-indicator="#ayarlar-yukleniyor">
+			<input type="hidden" name="tab" value="genel"/>
+			<div class="tabs" id="ayar-tabs" data-aktif="genel">
+				<a href="#" data-sek="genel" class="active">genel</a>
+				<a href="#" data-sek="gorsel">gorsel</a>
+				<a href="#" data-sek="moduller">moduller</a>
+				<a href="#" data-sek="izinler">izinler</a>
+				<a href="#" data-sek="baglantilar">baglantilar</a>
+				<a href="#" data-sek="kunye">kunye</a>
+				<a href="#" data-sek="yapay_zeka">yapay_zeka</a>
+				<a href="#" data-sek="loglar">loglar</a>
+			</div>
+			<section class="card card-pad animate-in" data-sek="genel">
+				<div class="card card-pad" style="margin:0 0 10px">
+					<div class="dash-head"><h2><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-palette"></use></svg> Marka &amp; Site Kimliği tek merkezde</h2></div>
+					<p class="hint" style="margin:0">
+						<b>Site Başlığı</b> ve <b>Slogan</b> artık
+						<a href="/admin/marka" style="text-decoration:underline">Marka Merkezi</a>'nde yönetilir
+						(logo, favicon ve paylaşım görselleriyle birlikte).
+					</p>
+				</div>
+				<div class="field"><label for="f_site_baslik">Site Başlığı (Marka Merkezi'nden)</label><input id="f_site_baslik" class="input" name="site_baslik" value={ v.SiteBaslik }/></div>
+				<div class="field"><label for="f_slogan">Slogan (Marka Merkezi'nden)</label><input id="f_slogan" class="input" name="slogan" value={ v.Slogan }/></div>
+				<div class="field">
+					<label for="f_dil">Varsayılan Dil</label>
+					<select id="f_dil" class="input" name="dil">
+						for _, o := range v.Locales {
+							<option value={ o.Value } if o.Selected { selected }>{ o.Label }</option>
+						}
+					</select>
+				</div>
+				<div class="field"><label><input type="checkbox" name="bakim" if v.BakimModu { checked }/> Bakım Modu</label></div>
+				<div class="field"><label for="f_bakim_mesaji">Bakım Mesajı</label><input id="f_bakim_mesaji" class="input" name="bakim_mesaji" value={ v.BakimMesaji }/></div>
+			</section>
+			<section class="card card-pad animate-in" data-sek="gorsel" style="display:none">
+				<h3 style="margin:0 0 4px;font-size:1rem">Site Renkleri &amp; Fontlar (ön yüz)</h3>
+				<p class="hint" style="margin-top:0">Boş bırakılan renkler mevcut tema varsayılanını kullanır. Renkler tüm ön yüz sayfalarına uygulanır.
+					<b>Yönetim panelinin</b> renk/fontları ise <a href="/admin/gorunum" style="text-decoration:underline">Görünüm</a> sayfasından yönetilir
+					(site markası/logo için <a href="/admin/marka" style="text-decoration:underline">Marka Merkezi</a>).</p>
+				<div class="grid-2">
+					for _, r := range v.Renkler {
+						<div class="field">
+							<label for={ "f_" + r.Name }>{ r.Label }</label>
+							if r.Number {
+								<input class="input" type="number" min="0" max="40" name={ r.Name } id={ "f_" + r.Name } value={ r.Value } placeholder="varsayılan" aria-label="varsayılan"/>
+							} else {
+								<input class="input" type="color" name={ r.Name } id={ "f_" + r.Name } value={ r.Value }/>
+							}
+						</div>
+					}
+				</div>
+				<h3 style="margin:18px 0 4px;font-size:1rem">Koyu Tema Renkleri</h3>
+				<div class="grid-2">
+					for _, r := range v.KoyuRenkler {
+						<div class="field">
+							<label for={ "f_" + r.Name }>{ r.Label }</label>
+							<input id={ "f_" + r.Name } class="input" type="color" name={ r.Name } value={ r.Value }/>
+						</div>
+					}
+				</div>
+				<h3 style="margin:18px 0 4px;font-size:1rem">Tipografi</h3>
+				<div class="grid-2">
+					for _, f := range v.Fonts {
+						<div class="field">
+							<label for={ "f_" + f.Name }>{ f.Label }</label>
+							<select id={ "f_" + f.Name } class="input" name={ f.Name }>
+								for _, o := range f.Options {
+									<option value={ o.Value } if o.Selected { selected }>{ o.Label }</option>
+								}
+							</select>
+						</div>
+					}
+				</div>
+				<div class="field"><label><input type="checkbox" name="theme_reset"/> Tema renklerini varsayılana dön</label></div>
+				<div class="hint">Dark/light tema ve 24 dil desteği korunur. Bu renkler açık tema temel alınarak uygulanır; karanlık tema kendi paletini kullanır.</div>
+			</section>
+			<section class="card card-pad animate-in" data-sek="moduller" style="display:none">
+				<div class="field"><label for="f_modul_sirasi">Anasayfa Modül Sırası (JSON liste)</label>
+					<textarea id="f_modul_sirasi" class="textarea" name="modul_sirasi" style="min-height:120px;font-family:monospace;font-size:.8rem">{ v.ModulSirasi }</textarea></div>
+			</section>
+			<section class="card card-pad animate-in" data-sek="izinler" style="display:none">
+				<p class="small muted">Tür × anahtar yetki matrisi. Boş = kapalı.</p>
+				<div style="overflow:auto">
+					<table class="table">
+						<thead>
+							<tr><th>Tür</th>
+								for _, k := range v.IzinKeys {
+									<th>{ k }</th>
+								}
+							</tr>
+						</thead>
+						<tbody>
+							for _, row := range v.IzinRows {
+								<tr>
+									<td><input type="hidden" name="izin_tip" value={ row.Key }/>{ row.Label }</td>
+									for i, on := range row.Cells {
+										<td style="text-align:center"><input type="checkbox" name={ "izin_" + row.Key } value={ v.IzinKeys[i] } if on { checked }/></td>
+									}
+								</tr>
+							}
+						</tbody>
+					</table>
+				</div>
+			</section>
+			<section class="card card-pad animate-in" data-sek="baglantilar" style="display:none">
+				<div class="field">
+					<label for="f_g_code">Google Analytics 4 ölçüm kimliği</label>
+					<input id="f_g_code" class="input" name="g_code" value={ v.GCode } placeholder="G-XXXXXXXXXX"/>
+					<span class="small muted">Google Arama Kodu (G-TAG). Aynı değer GA4 panelinde de görünür; çerez onayı verilmeden hiçbir izleme betiği yüklenmez.</span>
+				</div>
+				<div class="field">
+					<label for="f_g_verification">Google Site Doğrulama</label>
+					<input id="f_g_verification" class="input" name="g_verification" value={ v.GVerification } placeholder="abc123..."/>
+					<span class="small muted">Search Console → HTML etiketi yöntemindeki <code>content</code> değeri. Tüm sayfaların <code>&lt;head&gt;</code>'ine meta etiketi olarak basılır.</span>
+				</div>
+				<div class="field"><label for="f_adsense">AdSense (pub-id)</label><input id="f_adsense" class="input" name="adsense" value={ v.AdSense }/></div>
+				<div class="field"><label for="f_robots_html">Özel robots.html</label><textarea id="f_robots_html" class="textarea" name="robots_html" style="min-height:70px">{ v.RobotsHTML }</textarea></div>
+			</section>
+			<section class="card card-pad animate-in" data-sek="kunye" style="display:none">
+				<h3 style="margin:0 0 4px;font-size:1rem">Künye — BİK Tebliği md. 8/1-d</h3>
+				<p class="hint" style="margin-top:0">
+					On alan zorunlu. Blok <b>/kunye</b> sayfasında sabit kimliklerle
+					(<code>bik-kunye-…</code>) basılır; burada yalnız değerler düzenlenir.
+					Alan boş bırakılırsa canlıda iletişim ayarlarındaki karşılığı kullanılır
+					(telefon, e-posta, adres) — o yedek alanın altında yazar.
+				</p>
+				if len(v.KunyeEksik) > 0 {
+					<div class="flash error" style="margin-bottom:12px">
+						<b>{ itoaT(len(v.KunyeEksik)) } alan eksik:</b> { joinComma(v.KunyeEksik) }
+					</div>
+				} else {
+					<div class="flash info" style="margin-bottom:12px">Künye tam — on alanın hepsi dolu.</div>
+				}
+				<div class="grid-2">
+					for _, a := range v.Kunye {
+						<div class="field">
+							<label for={ "kunye_" + a.Key }>{ a.Label }</label>
+							<input class="input" id={ "kunye_" + a.Key } name={ "kunye_" + a.Key } value={ a.Value } placeholder={ yedekIpucu(a.Yedek) }/>
+							if a.Yedek != "" {
+								<p class="hint" style="margin:2px 0 0">Boş bırakılırsa iletişim ayarından: <b>{ a.Yedek }</b></p>
+							}
+						</div>
+					}
+				</div>
+				<p class="hint" style="margin-bottom:0">
+					Değerlerin doğruluğu yayıncı kuruluşa aittir; panel yalnız alanların
+					dolu olup olmadığını ölçer. Sayfa: <a href="/kunye" target="_blank" rel="noopener" style="text-decoration:underline">/kunye</a>
+				</p>
+			</section>
+			<section class="card card-pad animate-in" data-sek="yapay_zeka" style="display:none">
+				<div style="margin-bottom:10px">
+					Sağlayıcı:
+					<span class="badge" style="background:var(--ok-fill,var(--ok));color:#fff">
+						if v.AIEnabled {
+							Aktif
+						} else {
+							Mock (anahtar yok)
+						}
+					</span>
+					<span class="small muted">{ v.AIProvider }</span>
+				</div>
+				<div class="field">
+					<label for="f_ai_provider">Varsayılan Sağlayıcı</label>
+					<select id="f_ai_provider" class="input" name="ai_provider">
+						for _, o := range v.AIProviders {
+							<option value={ o.Value } if o.Selected { selected }>{ o.Label }</option>
+						}
+					</select>
+				</div>
+				<div class="field"><label for="f_ai_model">Model</label><input id="f_ai_model" class="input" name="ai_model" value={ v.AIModel } placeholder="auto"/></div>
+				<div class="field"><label for="f_ai_base_url">Özel Base URL</label><input id="f_ai_base_url" class="input" name="ai_base_url" value={ v.AIBaseURL } placeholder="https://…/v1 (özel uyumlu uç)"/></div>
+				<div class="hint">API anahtarı buradan değil; ortamdan (OMNIROUTE_API_KEY / panel→sır deposu) okunur — DB'ye düz yazılmaz.</div>
+			</section>
+			<section class="card card-pad animate-in" data-sek="loglar" style="display:none">
+				<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+					<strong class="small muted">Son işlemler (denetim)</strong>
+					<a class="btn danger small" href="#" data-confirm="/admin/ayarlar/loglar-temizle"
+						hx-post="/admin/ayarlar/loglar-temizle"
+						hx-target="#ayarlar-panel" hx-swap="outerHTML" hx-confirm="Denetim kayıtları temizlensin mi?"
+						hx-indicator="#ayarlar-yukleniyor">Temizle</a>
+				</div>
+				<table class="table">
+					<thead>
+						<tr><th>Zaman</th><th>Kullanıcı</th><th>İşlem</th><th>Detay</th></tr>
+					</thead>
+					<tbody>
+						if len(v.Logs) == 0 {
+							@TabloBos(4, "list", "Kayıt yok", "Bu bölümde henüz kayıt yok.", "", "")
+						}
+						for _, l := range v.Logs {
+							<tr>
+								<td class="small">{ l.Time }</td>
+								<td class="small">{ l.User }</td>
+								<td>{ l.Action }</td>
+								<td class="small muted">{ l.Detail }</td>
+							</tr>
+						}
+					</tbody>
+				</table>
+			</section>
+			<div style="margin-top:16px"><button class="btn" type="submit"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-device-floppy"></use></svg> Kaydet</button></div>
+		</form>
+	</div>
+}
+
+// ---- Siteler (yayın ağı) ----
+
+// SiteSatir site tablosu satırı.
+type SiteSatir struct {
+	ID       string
+	Name     string
+	Brand    string
+	Domain   string
+	Locale   string
+	Active   bool
+	Content  string
+	Default  bool
+}
+
+// SiteStatSatir site gelir tablosu satırı.
+type SiteStatSatir struct {
+	Name      string
+	Domain    string
+	Content   string
+	Published string
+	Hits      string
+	Revenue   string
+	AICost    string
+	Profit    string
+	Positive  bool
+}
+
+// SitelerView siteler paneli.
+type SitelerView struct {
+	FlashKind string
+	FlashText string
+	Items     []SiteSatir
+	RPM       string
+	Stats     []SiteStatSatir
+	Tot       SiteStatSatir
+	Locales   []IOpt
+}
+
+// SitelerPanel site yönetimi (HTMX hedefi: #siteler-panel).
+templ SitelerPanel(v SitelerView) {
+	<div id="siteler-panel">
+		if v.FlashText != "" {
+			<div class={ "flash", v.FlashKind }>{ v.FlashText }</div>
+		}
+		@Yukleniyor("siteler-yukleniyor", "İşleniyor…")
+		<div class="grid-2" style="grid-template-columns:1.3fr 1fr;align-items:start">
+			<div class="card card-pad">
+				<h2 style="margin:0 0 10px;font-size:1.1rem">Siteler (tenant izolasyonu)</h2>
+				<table class="table">
+					<thead>
+						<tr><th>Site</th><th>Alan Adı</th><th>Dil</th><th>Durum</th><th>İçerik</th><th>İşlem</th></tr>
+					</thead>
+					<tbody>
+						for _, s := range v.Items {
+							<tr>
+								<td><strong>{ s.Name }</strong>
+									if s.Brand != "" {
+										 <span class="muted small">({ s.Brand })</span>
+									}
+								</td>
+								<td class="small">{ s.Domain }</td>
+								<td class="small">{ s.Locale }</td>
+								<td>
+									if s.Active {
+										<span class="badge" style="background:var(--ok-fill,var(--ok));color:#fff">aktif</span>
+									} else {
+										<span class="badge" style="background:var(--warn-fill,var(--warn));color:#fff">pasif</span>
+									}
+								</td>
+								<td>{ s.Content }</td>
+								<td>
+									if s.Default {
+										<span class="muted small">varsayılan</span>
+									} else {
+										<a class="btn danger small" href="#" data-confirm={ "/admin/siteler/" + s.ID + "/sil" } hx-post={ "/admin/siteler/" + s.ID + "/sil" } hx-target="#siteler-panel" hx-swap="outerHTML" hx-confirm="Bu site silinsin mi?" hx-indicator="#siteler-yukleniyor">Sil</a>
+									}
+								</td>
+							</tr>
+						}
+					</tbody>
+				</table>
+			</div>
+			<form method="post" action="/admin/siteler/ekle" class="card card-pad" hx-post="/admin/siteler/ekle" hx-target="#siteler-panel" hx-swap="outerHTML" hx-indicator="#siteler-yukleniyor" hx-on::after-request="if (event.detail.successful) this.reset();">
+				<h2 style="margin:0 0 8px;font-size:1.1rem">Yeni Site</h2>
+				<div class="field"><label for="f_name">Site Adı</label><input id="f_name" class="input" name="name" required/></div>
+				<div class="field"><label for="f_domain">Alan Adı (domain)</label><input id="f_domain" class="input" name="domain" placeholder="ornek.com.tr" required/></div>
+				<div class="field"><label for="f_brand">Marka</label><input id="f_brand" class="input" name="brand"/></div>
+				<div class="field">
+					<label for="f_locale">Varsayılan Dil</label>
+					<select id="f_locale" class="input" name="locale">
+						for _, o := range v.Locales {
+							<option value={ o.Value } if o.Value == "tr" { selected }>{ o.Label }</option>
+						}
+					</select>
+				</div>
+				<button class="btn" type="submit">＋ Ekle</button>
+				<p class="hint" style="margin-top:8px">Site eklendikten sonra üst şeritten siteyi seçin; içerik/medya o siteye izole olur. Genel site her alan adından çözülür (varsayılan: theblock.com.tr).</p>
+			</form>
+		</div>
+		<div class="card card-pad" style="margin-top:16px">
+			<h2 style="margin:0 0 10px;font-size:1.1rem">3-Site Pilot Dashboard <span class="small muted">· RPM ₺{ v.RPM } (kural tabanlı)</span></h2>
+			<table class="table">
+				<thead>
+					<tr><th>Site</th><th>İçerik</th><th>Yayında</th><th>Okunma</th><th>Tahmini Gelir</th><th>AI Maliyet</th><th>Net</th></tr>
+				</thead>
+				<tbody>
+					if len(v.Stats) == 0 {
+						@TabloBosMetin(7, "Veri yok.")
+					}
+					for _, s := range v.Stats {
+						<tr>
+							<td><strong>{ s.Name }</strong> <span class="small muted">{ s.Domain }</span></td>
+							<td>{ s.Content }</td><td>{ s.Published }</td><td>{ s.Hits }</td>
+							<td>₺{ s.Revenue }</td>
+							<td>₺{ s.AICost }</td>
+							<td style={ profitStyle(s.Positive) }>₺{ s.Profit }</td>
+						</tr>
+					}
+					<tr style="font-weight:700">
+						<td>TOPLAM</td>
+						<td>{ v.Tot.Content }</td><td>{ v.Tot.Published }</td><td>{ v.Tot.Hits }</td>
+						<td>₺{ v.Tot.Revenue }</td>
+						<td>₺{ v.Tot.AICost }</td>
+						<td>₺{ v.Tot.Profit }</td>
+					</tr>
+				</tbody>
+			</table>
+			<p class="hint" style="margin-top:8px">Gelir = okunma/1000 × RPM (kural tabanlı; AdSense bağlanınca gerçek veriye döner). Net = gelir − AI maliyeti.</p>
+		</div>
+	</div>
+}
+
+func profitStyle(positive bool) string {
+	if positive {
+		return "color:#2f9e44"
+	}
+	return "color:#e5484d"
+}

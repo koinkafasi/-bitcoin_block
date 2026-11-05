@@ -1,0 +1,221 @@
+// Kategoriler paneli (templ) — html/template kategoriler_panel karşılığı.
+// HTMX hedefleri (#kategoriler-panel) ve data-confirm çengelleri korunur.
+package templkit
+
+// IOpt ortak seçim seçeneği.
+type IOpt struct {
+	Value    string
+	Label    string
+	Selected bool
+}
+
+// KategoriRow kategori kartı.
+type KategoriRow struct {
+	ID          string
+	Name        string
+	Slug        string
+	Sort        string
+	Child       bool
+	UstAd       string
+	Parents     []IOpt
+	Gorunumler  []IOpt
+	Sablonlar   []IOpt
+	OzelTasarim bool
+	DesignName  string
+	OzelVar     bool
+	ContentCount string
+	ChildCount  string
+	InHeader    bool
+	InMenu      bool
+	InFooter    bool
+	MinSkor     string
+	AnaSkor     string
+	Ikon        string
+	GorselServis string
+	AdEN        string
+	AdES        string
+	Etiket      string
+	// Katmanlar kategori varsayilan abonelik katmani secenekleri
+	// (0 = kilit yok, 1..5 = Filiz..Elmas).
+	Katmanlar []IOpt
+}
+
+// KategorilerView kategoriler paneli görünümü.
+type KategorilerView struct {
+	FlashKind  string
+	FlashText  string
+	NewParents []IOpt
+	Rows       []KategoriRow
+}
+
+// KategorilerPanel kategori yönetimi paneli (HTMX hedefi: #kategoriler-panel).
+templ KategorilerPanel(v KategorilerView) {
+	<div id="kategoriler-panel">
+		if v.FlashText != "" {
+			<div class={ "flash", v.FlashKind }>{ v.FlashText }</div>
+		}
+		@Yukleniyor("kategoriler-yukleniyor", "")
+		<div class="grid-2" style="grid-template-columns:1fr 1fr;align-items:start">
+			<form
+				method="post"
+				action="/admin/kategoriler"
+				class="card card-pad"
+				hx-post="/admin/kategoriler"
+				hx-target="#kategoriler-panel"
+				hx-swap="outerHTML"
+				hx-indicator="#kategoriler-yukleniyor"
+			>
+				<h2 style="margin-top:0;font-size:1.1rem">Yeni Kategori</h2>
+				<div class="field"><label for="f_ad">Ad</label><input id="f_ad" class="input" name="ad" required/></div>
+				<div class="field">
+					<label for="f_ust">Üst kategori</label>
+					<select id="f_ust" class="select" name="ust">
+						<option value="">— Üst kategori (ana menü) —</option>
+						for _, o := range v.NewParents {
+							<option value={ o.Value }>{ o.Label }</option>
+						}
+					</select>
+				</div>
+				<div class="field">
+					<label for="f_gorunum">Liste görünümü</label>
+					<select id="f_gorunum" class="select" name="gorunum">
+						<option value="">Genel ayar</option>
+						<option value="klasik">Klasik</option>
+						<option value="liste">Sade liste</option>
+						<option value="izgara">Izgara</option>
+						<option value="mozaik">Mozaik</option>
+					</select>
+				</div>
+				<div class="input-row">
+					<label class="tag" style="cursor:pointer"><input type="checkbox" name="header" checked/> Header</label>
+					<label class="tag" style="cursor:pointer"><input type="checkbox" name="menu" checked/> Menü</label>
+					<label class="tag" style="cursor:pointer"><input type="checkbox" name="footer"/> Footer</label>
+				</div>
+				<div class="input-row" style="margin-top:8px">
+					<input class="input" id="f_new_min_skor" name="min_skor" type="number" min="0" max="100" value="0" style="width:110px" title="Yayın AI alaka eşiği" aria-label="Yayın AI alaka eşiği"/>
+					<input class="input" id="f_new_ana_skor" name="ana_skor" type="number" min="0" max="100" value="0" style="width:110px" title="Anasayfa eşiği" aria-label="Anasayfa eşiği"/>
+					<input class="input" id="f_new_ikon" name="ikon" value="news" style="width:110px" title="İkon" aria-label="İkon"/>
+					<input class="input" id="f_new_gorsel_servis" name="gorsel_servis" placeholder="pexels" style="width:130px" title="Otomatik görsel servisi" aria-label="Otomatik görsel servisi"/>
+					<select class="select" id="f_new_katman" name="kategori_katman" style="width:170px" title="Yeni içerikler için varsayılan abonelik katmanı" aria-label="Yeni içerikler için varsayılan abonelik katmanı">
+						<option value="0">Katman kilidi yok</option>
+						<option value="1">Filiz (1) ve üzeri</option>
+						<option value="2">Bronz (2) ve üzeri</option>
+						<option value="3">Gümüş (3) ve üzeri</option>
+						<option value="4">Altın (4) ve üzeri</option>
+						<option value="5">Elmas (5)</option>
+					</select>
+				</div>
+				<div class="input-row" style="margin-top:6px">
+					<input class="input" id="f_new_ad_en" name="ad_en" placeholder="Ad (EN)" style="width:170px" aria-label="İngilizce adı"/>
+					<input class="input" id="f_new_ad_es" name="ad_es" placeholder="Ad (ES)" style="width:170px" aria-label="İspanyolca adı"/>
+					<input class="input" id="f_new_etiket" name="etiket" placeholder="Etiket (label)" style="width:150px" aria-label="Etiket"/>
+				</div>
+				<p class="hint"><b>Katman kilidi:</b> seçilirse bu kategoride açılan yeni içeriklerin tamamı o katmana ve üzerine kilitlenir (içerik formunda değiştirilebilir).</p>
+				<p class="hint">Yayın eşiği (min_skor): 0 = kapı yok. Eşiğin altındaki AI puanlı içerik yayınlanamaz, taslağa düşer.</p>
+				<button class="btn" type="submit">Ekle</button>
+			</form>
+			<div class="gap">
+				for _, r := range v.Rows {
+					@KategoriRowCard(r)
+				}
+			</div>
+		</div>
+	</div>
+}
+
+// KategoriRowCard tek kategori düzenleme kartı.
+templ KategoriRowCard(r KategoriRow) {
+	<form
+		method="post"
+		action={ templ.SafeURL("/admin/kategoriler/" + r.ID) }
+		class={ "card", "card-pad", templ.KV("cat-row-child", r.Child) }
+		hx-post={ "/admin/kategoriler/" + r.ID }
+		hx-target="#kategoriler-panel"
+		hx-swap="outerHTML"
+		hx-indicator="#kategoriler-yukleniyor"
+	>
+		<div style="display:flex;gap:8px;align-items:center">
+			<input class="input" name="ad" value={ r.Name } required aria-label="Kategori adı"/>
+			<input class="input" name="sira" type="number" value={ r.Sort } style="width:70px" title="Sıra" aria-label={ "Sıra — " + r.Name }/>
+			<a
+				class="btn danger small"
+				href="#"
+				data-confirm={ "/admin/kategoriler/" + r.ID + "/sil" }
+				hx-post={ "/admin/kategoriler/" + r.ID + "/sil" }
+				hx-target="#kategoriler-panel"
+				hx-swap="outerHTML"
+				hx-confirm="Kategori silinsin mi? İçerik bağlıysa silinmez."
+				hx-indicator="#kategoriler-yukleniyor"
+				hx-disabled-elt="this"
+			>Sil</a>
+		</div>
+		<div class="shape" style="margin-top:6px">
+			if r.Child {
+				<span class="tag"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-corner-down-right"></use></svg> { r.UstAd }</span>
+				 · 
+			}
+			/kategori/{ r.Slug } · { r.ContentCount } içerik
+			if r.ChildCount != "0" {
+				 · { r.ChildCount } alt kategori
+			}
+			if r.DesignName != "" {
+				 · Şablon: { r.DesignName }
+			} else if r.OzelVar {
+				 · Özel tasarım
+			}
+			<label class="tag" style="cursor:pointer"><input type="checkbox" name="header" if r.InHeader { checked } aria-label={ "Header menüsünde göster — " + r.Name }/> H</label>
+			<label class="tag" style="cursor:pointer"><input type="checkbox" name="menu" if r.InMenu { checked } aria-label={ "Ana menüde göster — " + r.Name }/> M</label>
+			<label class="tag" style="cursor:pointer"><input type="checkbox" name="footer" if r.InFooter { checked } aria-label={ "Footer menüsünde göster — " + r.Name }/> F</label>
+		</div>
+		<details class="kat-gelismis">
+			<summary>Gelişmiş <span class="small muted">üst kategori · görünüm · şablon · eşikler · diller</span></summary>
+		<div class="field" style="margin-top:6px">
+			<label for={ "f_ust_" + r.ID }>Üst kategori</label>
+			<select class="select" name="ust" id={ "f_ust_" + r.ID }>
+				<option value="">— Üst kategori (ana menü) —</option>
+				for _, o := range r.Parents {
+					<option value={ o.Value } if o.Selected { selected }>{ o.Label }</option>
+				}
+			</select>
+		</div>
+		<div class="input-row" style="margin-top:8px;align-items:flex-end;gap:8px;flex-wrap:wrap">
+			<div style="flex:1 1 150px;min-width:140px">
+				<div class="small muted" style="margin-bottom:3px">Liste görünümü</div>
+				<select class="select" name="gorunum" style="width:100%" aria-label={ "Liste görünümü — " + r.Name }>
+					for _, o := range r.Gorunumler {
+						<option value={ o.Value } if o.Selected { selected }>{ o.Label }</option>
+					}
+				</select>
+			</div>
+			<div style="flex:1 1 170px;min-width:150px">
+				<div class="small muted" style="margin-bottom:3px">Tasarım şablonu</div>
+				<select class="select" name="sablon" style="width:100%" aria-label={ "Tasarım şablonu — " + r.Name }>
+					<option value="" if r.OzelTasarim { selected }>— Özel tasarım —</option>
+					for _, o := range r.Sablonlar {
+						<option value={ o.Value } if o.Selected { selected }>{ o.Label }</option>
+					}
+				</select>
+			</div>
+			<button class="btn ghost small" type="submit" name="sablon_uygula" value="1" title="Seçili şablonu bu kategoriye uygula" style="flex:0 0 auto;margin-bottom:1px">Şablonu uygula</button>
+		</div>
+		<div class="input-row" style="margin-top:6px">
+			<input class="input" name="min_skor" type="number" min="0" max="100" value={ r.MinSkor } style="width:100px" title="Yayın eşiği" aria-label={ "Yayın eşiği — " + r.Name }/>
+			<input class="input" name="ana_skor" type="number" min="0" max="100" value={ r.AnaSkor } style="width:100px" title="Anasayfa eşiği" aria-label={ "Anasayfa eşiği — " + r.Name }/>
+			<input class="input" name="ikon" value={ r.Ikon } style="width:100px" title="İkon" aria-label={ "İkon — " + r.Name }/>
+			<input class="input" name="gorsel_servis" value={ r.GorselServis } placeholder="görsel servisi" style="width:130px" aria-label={ "Görsel servisi — " + r.Name }/>
+			<select class="select" name="kategori_katman" style="width:170px" title="Bu kategoride açılan yeni içerikler için varsayılan abonelik katmanı" aria-label={ "Varsayılan abonelik katmanı — " + r.Name }>
+				for _, o := range r.Katmanlar {
+					<option value={ o.Value } if o.Selected { selected }>{ o.Label }</option>
+				}
+			</select>
+		</div>
+		<div class="input-row" style="margin-top:6px">
+			<input class="input" name="ad_en" value={ r.AdEN } placeholder="EN adı" style="width:150px" aria-label={ "İngilizce adı — " + r.Name }/>
+			<input class="input" name="ad_es" value={ r.AdES } placeholder="ES adı" style="width:150px" aria-label={ "İspanyolca adı — " + r.Name }/>
+			<input class="input" name="etiket" value={ r.Etiket } placeholder="Etiket (label)" style="width:140px" aria-label={ "Etiket — " + r.Name }/>
+			<span class="small muted">yayın ≥{ r.MinSkor } · ana sayfa ≥{ r.AnaSkor }</span>
+		</div>
+		</details>
+		<button class="btn ghost small" type="submit" style="margin-top:6px">Kaydet</button>
+	</form>
+}

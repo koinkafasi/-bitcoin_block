@@ -1,0 +1,249 @@
+// Rapor & Anket panelleri (templ). Grafik/rapor scriptleri static/raporlar.js'te;
+// grafik verisi JSON gizli girdisiyle taşınır.
+package templkit
+
+// ---- Anketler ----
+
+// AnketSecenek anket seçeneği.
+type AnketSecenek struct {
+	ID    string
+	Text  string
+	Votes string
+}
+
+// AnketOge anket kartı.
+type AnketOge struct {
+	ID        string
+	Title     string
+	Status    string
+	Active    bool
+	Total     string
+	Options   []AnketSecenek
+}
+
+// AnketlerView anketler paneli.
+type AnketlerView struct {
+	FlashKind string
+	FlashText string
+	Items     []AnketOge
+}
+
+// AnketlerPanel anket yönetimi (HTMX hedefi: #anketler-panel).
+templ AnketlerPanel(v AnketlerView) {
+	<div id="anketler-panel">
+		if v.FlashText != "" {
+			<div class={ "flash", v.FlashKind }>{ v.FlashText }</div>
+		}
+		@Yukleniyor("anketler-yukleniyor", "")
+		<div class="card card-pad" style="display:flex;gap:14px;flex-wrap:wrap;align-items:center">
+			<div><div class="small muted">Anket sayısı</div><div class="big">{ itoaT(len(v.Items)) }</div></div>
+			<span class="hint" style="margin-left:auto">Oylar <code>contents_extra</code> içinde saklanır; elle oy sayısı düzenlenebilir. Genel sayfa: <a href="/anketler" target="_blank">/anketler</a></span>
+		</div>
+		<h2 style="font-size:1.05rem;margin-top:20px">Anketler</h2>
+		<div class="gap">
+			if len(v.Items) == 0 {
+				<p class="muted">Anket yok. Aşağıdan ekleyin.</p>
+			}
+			for _, a := range v.Items {
+				<div class="card card-pad" style={ eventBorderStyle(a.Active) }>
+					<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+						<strong>{ a.Title }</strong>
+						<span class="tag" style="margin-left:auto">{ a.Status }</span>
+						<span class="small muted">Toplam { a.Total } oy</span>
+					</div>
+					<form
+						method="post"
+						action={ templ.SafeURL("/admin/anketler/" + a.ID) }
+						style="margin-top:8px"
+						hx-post={ "/admin/anketler/" + a.ID }
+						hx-target="#anketler-panel"
+						hx-swap="outerHTML"
+						hx-indicator="#anketler-yukleniyor"
+					>
+						<div style="display:grid;grid-template-columns:2fr 1fr;gap:6px;max-width:560px">
+							<input class="input" name="baslik" value={ a.Title }/>
+							<select class="select" name="durum">
+								<option value="yayinda" if a.Status == "yayinda" { selected }>Yayında</option>
+								<option value="taslak" if a.Status == "taslak" { selected }>Taslak</option>
+								<option value="arsiv" if a.Status == "arsiv" { selected }>Arşiv</option>
+							</select>
+						</div>
+						<div class="small muted" style="margin:.5em 0 .2em">Seçenekler (metin + elle oy):</div>
+						for _, o := range a.Options {
+							<div style="display:flex;gap:6px;margin-bottom:4px">
+								<input type="hidden" name="oyun_id" value={ o.ID }/>
+								<input class="input" name="oyun_metin" value={ o.Text } style="flex:1"/>
+								<input class="input" name="oyun_sayi" value={ o.Votes } style="max-width:90px" title="Oy sayısı"/>
+							</div>
+						}
+						<button class="btn small" type="submit" style="margin-top:6px">Kaydet</button>
+					</form>
+					<form
+						method="post"
+						action={ templ.SafeURL("/admin/anketler/" + a.ID + "/sil") }
+						style="margin-top:6px"
+						hx-post={ "/admin/anketler/" + a.ID + "/sil" }
+						hx-target="#anketler-panel"
+						hx-swap="outerHTML"
+						hx-confirm="Anket silinsin mi?"
+						hx-indicator="#anketler-yukleniyor"
+					>
+						<button class="btn small danger" type="submit">Sil</button>
+					</form>
+				</div>
+			}
+		</div>
+		<h2 style="font-size:1.05rem;margin-top:22px">Yeni Anket</h2>
+		<form
+			method="post"
+			action="/admin/anketler/yeni"
+			class="card card-pad"
+			hx-post="/admin/anketler/yeni"
+			hx-target="#anketler-panel"
+			hx-swap="outerHTML"
+			hx-indicator="#anketler-yukleniyor"
+		>
+			<input class="input" name="baslik" required placeholder="Soru (örn. Bu yıl hangi konu daha önemli?)" style="max-width:520px" aria-label="Soru"/>
+			<input class="input" name="spot" placeholder="Kısa açıklama (ops)" style="margin-top:6px;max-width:520px" aria-label="Kısa açıklama"/>
+			<textarea class="input" name="secenekler" rows="4" style="margin-top:6px" aria-label="Anket seçenekleri (her satıra bir tane)" placeholder={"Her satıra bir seçenek. İsterseniz \"Metin | oy\" biçiminde başlangıç oyu verin."}>Evet
+Hayır</textarea>
+			<div style="margin-top:8px"><button class="btn" type="submit">Oluştur</button></div>
+		</form>
+	</div>
+}
+
+// ---- Raporlar ----
+
+// RapSatir ad/değer satırı.
+type RapSatir struct {
+	Label string
+	Value string
+}
+
+// RapIcerik içerik raporu satırı.
+type RapIcerik struct {
+	ID      string
+	Title   string
+	Hits    string
+	Revenue string
+	Cost    string
+	Profit  string
+	Positive bool
+}
+
+// RaporlarView raporlar paneli.
+type RaporlarView struct {
+	FlashKind    string
+	FlashText    string
+	MostRead     []RapIcerik
+	MostCommented []RapIcerik
+	AIUsage      []RapSatir
+	RPMDefault   string
+	Revenue      []RapIcerik
+	YorumPending string
+	YorumOnayli  string
+	YorumToplam  string
+	BotTrapTotal string
+	BotTrap24    string
+	BlockedIPs   string
+	ChartJSON    string
+}
+
+// RaporlarPanel raporlar (HTMX hedefi: #reports-panel).
+templ RaporlarPanel(v RaporlarView) {
+	<div id="reports-panel">
+		if v.FlashText != "" {
+			<div class={ "flash", v.FlashKind }>{ v.FlashText }</div>
+		}
+		<div style="display:flex;justify-content:flex-end;gap:8px;margin-bottom:12px">
+			@Yukleniyor("reports-yukleniyor", "Yenileniyor…")
+			<a class="btn small" hx-get="/admin/raporlar" hx-target="#reports-panel" hx-swap="outerHTML" hx-indicator="#reports-yukleniyor"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-refresh"></use></svg> Yenile</a>
+		</div>
+		<div class="grid-2">
+			<div class="card card-pad">
+				<h2 style="margin-top:0;font-size:1.1rem">En Çok Okunan</h2>
+				if len(v.MostRead) == 0 {
+					<p class="muted">Veri yok.</p>
+				}
+				for _, r := range v.MostRead {
+					<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px dashed var(--border)">
+						<a href={ templ.SafeURL("/admin/icerikler/" + r.ID) }>{ r.Title }</a><span class="badge">{ r.Hits }</span>
+					</div>
+				}
+			</div>
+			<div class="card card-pad">
+				<h2 style="margin-top:0;font-size:1.1rem">AI Kullanım Raporu</h2>
+				if len(v.AIUsage) == 0 {
+					<p class="muted">AI kaydı yok.</p>
+				}
+				for _, a := range v.AIUsage {
+					<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px dashed var(--border)">
+						<span>{ a.Label }</span><span class="badge">{ a.Value }</span>
+					</div>
+				}
+				<a class="btn ghost small" style="margin-top:10px" href="/admin/raporlar/ai-export">CSV Dışa Aktar</a>
+			</div>
+		</div>
+		<div class="grid-2" style="margin-top:14px;align-items:start">
+			<div class="card card-pad">
+				<h2 style="margin-top:0;font-size:1.1rem">Gelir Hesaplayıcı (PV×RPM)</h2>
+				<div class="field"><label for="rc-pv">Aylık Sayfa Görüntüleme / site</label><input class="input" id="rc-pv" type="number" value="100000" step="1000"/></div>
+				<div class="field"><label for="rc-rpm">Sayfa RPM ($)</label><input class="input" id="rc-rpm" type="number" value={ v.RPMDefault } step="0.5"/></div>
+				<div class="field"><label for="rc-sites">Site Sayısı</label><input class="input" id="rc-sites" type="number" value="3" min="1"/></div>
+				<div id="rc-out" style="font-size:1.15rem;font-weight:700">—</div>
+				<p class="hint">Tahmin: aylık + yıllık brüt reklam geliri (varsayımsal; garanti değil). <span class="badge" style="background:var(--warn-fill,var(--warn));color:#fff">demo</span></p>
+			</div>
+			<div class="card card-pad">
+				<h2 style="margin-top:0;font-size:1.1rem">İçerik Bazında Gelir (tahmini, RPM=${ v.RPMDefault })</h2>
+				if len(v.Revenue) == 0 {
+					<p class="muted">içerik/gelir yok.</p>
+				}
+				for _, r := range v.Revenue {
+					<div style="display:flex;justify-content:space-between;gap:8px;padding:5px 0;border-bottom:1px dashed var(--border)">
+						<a href={ templ.SafeURL("/admin/icerikler/" + r.ID) } style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{ r.Title }</a>
+						<span class="small muted">{ r.Hits } hit</span>
+						<span class="small">gelir ${ r.Revenue } · maliyet ${ r.Cost }</span>
+						<span class={ "badge", templ.KV("rap-ok", r.Positive) }>${ r.Profit }</span>
+					</div>
+				}
+				<p class="hint" style="margin-top:6px">Gelir tahmini = hit × RPM / 1000 − AI maliyeti. AdSense OAuth bağlanınca gerçek site+URL verisi yazar (demo rozeti, spec 05 kabul).</p>
+			</div>
+		</div>
+		<div class="grid-2" style="margin-top:14px;align-items:start">
+			<div class="card card-pad">
+				<h2 style="margin-top:0;font-size:1.1rem">En Çok Yorumlanan</h2>
+				if len(v.MostCommented) == 0 {
+					<p class="muted">Yorum yok.</p>
+				}
+				for _, r := range v.MostCommented {
+					<div style="display:flex;justify-content:space-between;gap:8px;padding:5px 0;border-bottom:1px dashed var(--border)">
+						<a href={ templ.SafeURL("/admin/icerikler/" + r.ID) } style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{ r.Title }</a>
+						<span class="badge">{ r.Hits }</span>
+					</div>
+				}
+			</div>
+			<div class="card card-pad">
+				<h2 style="margin-top:0;font-size:1.1rem">Yorum Durumu <a class="btn ghost small" style="margin-left:8px" href="/admin/yorumlar">Yönet</a></h2>
+				<div style="display:flex;gap:8px;flex-wrap:wrap">
+					<span class="badge" style="background:var(--warn-fill,var(--warn));color:#fff">Bekliyor: { v.YorumPending }</span>
+					<span class="badge" style="background:var(--ok-fill,var(--ok));color:#fff">Onaylı: { v.YorumOnayli }</span>
+					<span class="badge">Toplam: { v.YorumToplam }</span>
+				</div>
+				<p class="hint" style="margin:.6em 0 0">Onay bekleyen yorumlar moderasyonu bekler (toplu onay/sil için Yönet'e tıkla).</p>
+				<h2 style="margin-top:14px;font-size:1.1rem">Spam &amp; Bot Koruması <a class="btn ghost small" style="margin-left:8px" href="/admin/indexleme">Ayrıntı</a></h2>
+				<div style="display:flex;gap:8px;flex-wrap:wrap">
+					<span class="badge" style="background:var(--danger-fill,var(--danger));color:#fff">Tuzak isabet: { v.BotTrapTotal }</span>
+					<span class="badge" style="background:var(--danger-fill,var(--danger));color:#fff">24 sa: { v.BotTrap24 }</span>
+					<span class="badge">Engelli IP: { v.BlockedIPs }</span>
+				</div>
+				<p class="hint" style="margin:.6em 0 0">Yorum honeypot/hız-aşımı + bot tuzağı isabetleri; honeypot'a takılan IP kalıcı engellenmez (log yeterli).</p>
+			</div>
+		</div>
+		<div class="card card-pad" style="margin-top:14px">
+			<h2 style="margin-top:0;font-size:1.1rem">Okunma Grafiği (en çok okunan)</h2>
+			<script src="/static/vendor/chart.umd.min.js"></script>
+			<input type="hidden" id="reports-chart-data" value={ v.ChartJSON }/>
+			<canvas id="mostReadChart" height="130" style="width:100%"></canvas>
+		</div>
+	</div>
+}

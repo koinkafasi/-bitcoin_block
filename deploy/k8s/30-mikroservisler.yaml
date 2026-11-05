@@ -1,0 +1,183 @@
+# Rust mikroservisleri + Node ortak düzenleme servisi.
+#
+# İkisi de yerelde 127.0.0.1'e bağlanıyordu; kap içinde pod dışından
+# erişilebilmesi için IMAGE_SVC_BIND / SEARCH_BIND = 0.0.0.0 veriliyor.
+# Varsayılan hâlâ 127.0.0.1, yani systemd altındaki yerel kurulum değişmedi.
+#
+# ÖNEMLİ — imaj etiketi: `${IMAJ_ETIKETI}` bir YER TUTUCUDUR, k8s onu
+# çözmez. Bu dosya `kubectl apply -f` ile DOĞRUDAN uygulanmaz; sevk
+# betiği yer tutucuyu doldurur:
+#
+#     bash deploy/scripts/k8s-sevk.sh            # HEAD commit'inin etiketi
+#     bash deploy/scripts/k8s-sevk.sh sha-abc1234
+#
+# Neden `:latest` değil: `:latest` ile kümede hangi commit'in koştuğu
+# bilinemez, geri dönüş yapılamaz ve imaj taramasının anlamı kalmaz —
+# taradığınız imaj dağıtılan imaj olmayabilir.
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: theblock-image-svc
+  namespace: theblock
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: theblock-image-svc }
+  template:
+    metadata:
+      labels: { app: theblock-image-svc }
+    spec:
+      imagePullSecrets: [{ name: ghcr }]
+      securityContext:
+        # Imaj USER'i adlandirilmis ("imagesvc"); kubelet runAsNonRoot'u
+        # yalnizca SAYISAL uid ile dogrulayabilir, bu yuzden acikca veriliyor.
+        runAsUser: 10002
+        runAsNonRoot: true
+        seccompProfile: { type: RuntimeDefault }
+      containers:
+        - name: image-svc
+          image: ghcr.io/koinkafasi/theblock-image-svc:${IMAJ_ETIKETI}
+          securityContext:
+            allowPrivilegeEscalation: false
+            # Salt-okunur kök; yazılabilir tek yol /tmp (emptyDir).
+            readOnlyRootFilesystem: true
+            capabilities: { drop: ["ALL"] }
+          ports:
+            - { name: http, containerPort: 8170 }
+          volumeMounts:
+            - { name: tmp, mountPath: /tmp }
+          readinessProbe:
+            httpGet: { path: /healthz, port: 8170 }
+            initialDelaySeconds: 2
+            periodSeconds: 10
+          resources:
+            requests: { cpu: 25m, memory: 32Mi }
+            limits:   { cpu: "1",  memory: 256Mi }   # görsel dönüşümü CPU yoğun
+      volumes:
+        - name: tmp
+          emptyDir: {}
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: theblock-image-svc
+  namespace: theblock
+spec:
+  selector: { app: theblock-image-svc }
+  ports: [{ name: http, port: 8170, targetPort: 8170 }]
+
+---
+# Arama indeksi diskte; pod yeniden başlayınca kaybolmamalı.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: theblock-search-svc
+  namespace: theblock
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate          # RWO disk: iki pod aynı anda bağlayamaz
+  selector:
+    matchLabels: { app: theblock-search-svc }
+  template:
+    metadata:
+      labels: { app: theblock-search-svc }
+    spec:
+      imagePullSecrets: [{ name: ghcr }]
+      securityContext:
+        runAsUser: 10003
+        runAsNonRoot: true
+        fsGroup: 10003
+        seccompProfile: { type: RuntimeDefault }
+      containers:
+        - name: search-svc
+          image: ghcr.io/koinkafasi/theblock-search-svc:${IMAJ_ETIKETI}
+          securityContext:
+            allowPrivilegeEscalation: false
+            # Salt-okunur kök. Tantivy indeksi /data/search-index (PVC),
+            # birleştirme sırasındaki geçici dosyalar /tmp (emptyDir).
+            readOnlyRootFilesystem: true
+            capabilities: { drop: ["ALL"] }
+          ports:
+            - { name: http, containerPort: 8171 }
+          volumeMounts:
+            - { name: index, mountPath: /data/search-index }
+            - { name: tmp, mountPath: /tmp }
+          resources:
+            requests: { cpu: 50m, memory: 128Mi }
+            limits:   { cpu: "1",  memory: 512Mi }
+      volumes:
+        - name: index
+          persistentVolumeClaim: { claimName: theblock-search-index }
+        - name: tmp
+          emptyDir: {}
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: theblock-search-svc
+  namespace: theblock
+spec:
+  selector: { app: theblock-search-svc }
+  ports: [{ name: http, port: 8171, targetPort: 8171 }]
+
+---
+# Hocuspocus/Yjs — yönetim panelindeki ortak düzenleme.
+# Tarayıcı buraya doğrudan WebSocket açar (COLLAB_URL), bu yüzden
+# ingress'te /collab altında yayınlanır (bkz. 50-ingress.yaml).
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: theblock-collab
+  namespace: theblock
+spec:
+  replicas: 1          # Yjs belge durumu bellekte; ölçekleme için Redis eklentisi gerekir
+  selector:
+    matchLabels: { app: theblock-collab }
+  template:
+    metadata:
+      labels: { app: theblock-collab }
+    spec:
+      imagePullSecrets: [{ name: ghcr }]
+      securityContext:
+        runAsUser: 1000        # node imajinin hazir "node" kullanicisi
+        runAsNonRoot: true
+        seccompProfile: { type: RuntimeDefault }
+      containers:
+        - name: collab
+          image: ghcr.io/koinkafasi/theblock-collab:${IMAJ_ETIKETI}
+          securityContext:
+            allowPrivilegeEscalation: false
+            # Salt-okunur kök; Node'un yazdığı tek yol /tmp (emptyDir).
+            # İmajda npm/npx/corepack YOK (bkz. collab.Dockerfile) — ele
+            # geçirilen süreç paket indirip çalıştıramaz.
+            readOnlyRootFilesystem: true
+            capabilities: { drop: ["ALL"] }
+          env:
+            - name: GO_URL
+              value: http://theblock-site:8070
+            - name: COLLAB_SECRET
+              valueFrom: { secretKeyRef: { name: theblock-env, key: COLLAB_SECRET } }
+          ports:
+            - { name: ws, containerPort: 1234 }
+          volumeMounts:
+            - { name: tmp, mountPath: /tmp }
+          resources:
+            requests: { cpu: 25m, memory: 96Mi }
+            limits:   { cpu: 500m, memory: 384Mi }
+      volumes:
+        - name: tmp
+          emptyDir: {}
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: theblock-collab
+  namespace: theblock
+spec:
+  selector: { app: theblock-collab }
+  ports: [{ name: ws, port: 1234, targetPort: 1234 }]

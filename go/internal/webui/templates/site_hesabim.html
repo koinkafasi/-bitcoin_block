@@ -1,0 +1,374 @@
+{{define "hesap_nav"}}
+<aside class="hesap-nav" aria-label="Hesap menüsü">
+  <a class="hesap-nav-user" href="{{.LangBase}}/hesabim">
+    {{if .Hesap.AvatarURL}}<img class="hesap-nav-avatar" src="{{.Hesap.AvatarURL}}" alt="">{{else}}<span class="hesap-nav-avatar hesap-nav-initial">{{.MemberInitial}}</span>{{end}}
+    <span class="hesap-nav-id">
+      <strong>{{.Hesap.Member.Name}}</strong>
+      <small>{{.Hesap.Member.Email}}</small>
+    </span>
+  </a>
+  <span class="hesap-nav-group">Hesap</span>
+  <a href="{{.LangBase}}/hesabim" {{if eq .Hesap.Tab "hub"}}class="on" aria-current="page"{{end}}>🏠 Genel Bakış</a>
+  <a href="{{.LangBase}}/hesabim/profil" {{if eq .Hesap.Tab "profil"}}class="on" aria-current="page"{{end}}>👤 Profilim</a>
+  <a href="{{.LangBase}}/hesabim/abonelik" {{if eq .Hesap.Tab "abonelik"}}class="on" aria-current="page"{{end}}>💳 Aboneliğim</a>
+  <span class="hesap-nav-group">İçeriklerim</span>
+  <a href="{{.LangBase}}/hesabim/kaydedilenler" {{if eq .Hesap.Tab "kaydedilenler"}}class="on" aria-current="page"{{end}}>🔖 Kaydedilenler <span class="hesap-nav-count">{{.Hesap.Stats.Bookmarks}}</span></a>
+  <a href="{{.LangBase}}/hesabim/yorumlar" {{if eq .Hesap.Tab "yorumlar"}}class="on" aria-current="page"{{end}}>💬 Yorumlarım <span class="hesap-nav-count">{{.Hesap.Stats.Comments}}</span></a>
+  <a href="{{.LangBase}}/hesabim/takip" {{if eq .Hesap.Tab "takip"}}class="on" aria-current="page"{{end}}>➕ Takip ettiklerim <span class="hesap-nav-count">{{.Hesap.Stats.Follows}}</span></a>
+  <a href="{{.LangBase}}/hesabim/bildirimler" {{if eq .Hesap.Tab "bildirimler"}}class="on" aria-current="page"{{end}}>🔔 Bildirimler {{if .Hesap.Stats.Unread}}<span class="hesap-nav-count on">{{.Hesap.Stats.Unread}}</span>{{end}}</a>
+  <a href="{{.LangBase}}/hesabim/rozetler" {{if eq .Hesap.Tab "rozetler"}}class="on" aria-current="page"{{end}}>🏆 Başarımlar</a>
+  {{if .MemberStaff}}
+  <span class="hesap-nav-group">Yönetim</span>
+  <a href="/admin">🛠 Yönetim paneli</a>
+  <a href="/admin/icerikler">📝 İçerikler</a>
+  {{end}}
+  <form method="post" action="{{.LangBase}}/cikis" class="hesap-nav-cikis">
+    <button class="btn ghost small" type="submit">Çıkış yap</button>
+  </form>
+</aside>
+{{end}}
+
+{{define "hesap_feedback"}}
+{{if .Hesap.Error}}<div class="flash error" role="alert">{{.Hesap.Error}}</div>{{end}}
+{{if .Hesap.Info}}<div class="flash info">{{.Hesap.Info}}</div>{{end}}
+{{end}}
+
+{{define "hesap-plan_karti"}}
+{{$m := .Hesap.Member}}
+<div class="hesap-plan{{if eq $m.Membership "premium"}} on{{end}}">
+  <div class="hesap-plan-head">
+    <span class="hesap-plan-badge">{{if eq $m.Membership "premium"}}Premium Üye{{else}}Ücretsiz Üye{{end}}</span>
+    {{if $m.MembershipUntil}}<span class="small muted">Bitiş: {{$m.MembershipUntil.Format "02.01.2006"}}</span>{{end}}
+  </div>
+  <p class="hesap-plan-desc">{{if eq $m.Membership "premium"}}Tüm abonelere özel içeriklere erişiminiz var.{{else}}Abone olarak özel içeriklerin tamamına erişin.{{end}}</p>
+  <a class="btn small" href="{{.LangBase}}/hesabim/abonelik">Aboneliği yönet</a>
+</div>
+{{end}}
+
+{{define "hesap-hub"}}<!doctype html><html lang="{{.Lang}}" {{if .RTL}}dir="rtl"{{end}} data-theme="{{.Theme}}"><head>{{template "public_head" .}}</head>
+<body>
+{{template "site_header" .}}
+<main class="page" id="main"><div class="container">
+<div class="hesap-wrap">
+  {{template "hesap_nav" .}}
+  <section class="hesap-main">
+    {{template "hesap_feedback" .}}
+    <h1 class="hesap-title">Merhaba, {{.Hesap.Member.Name}}</h1>
+    <p class="hesap-sub">Hesabınızı, aboneliğinizi ve okuma listenizi buradan yönetin.</p>
+
+    {{if not .Hesap.Member.EmailVerifiedAt}}
+    <div class="hesap-uyari">
+      <strong>E-posta adresiniz doğrulanmadı.</strong>
+      <span class="small">Doğrulama bağlantısını yeniden gönderebilirsiniz.</span>
+      <form method="post" action="{{.LangBase}}/hesabim/e-posta-gonder"><button class="btn ghost small" type="submit">Bağlantı gönder</button></form>
+    </div>
+    {{end}}
+
+    {{template "hesap-plan_karti" .}}
+
+    <div class="hesap-stats">
+      <a class="hesap-stat" href="{{.LangBase}}/hesabim/kaydedilenler"><strong>{{.Hesap.Stats.Bookmarks}}</strong><span>Kaydedilen</span></a>
+      <a class="hesap-stat" href="{{.LangBase}}/hesabim/yorumlar"><strong>{{.Hesap.Stats.Comments}}</strong><span>Yorum</span></a>
+      <a class="hesap-stat" href="{{.LangBase}}/hesabim/rozetler"><strong>{{.Hesap.Stats.Points}}</strong><span>Okuma puanı</span></a>
+      <a class="hesap-stat" href="{{.LangBase}}/hesabim/rozetler"><strong>{{.Hesap.Stats.Streak}}</strong><span>Günlük seri</span></a>
+    </div>
+
+    <div class="hesap-kisa">
+      <a class="card card-pad" href="{{.LangBase}}/hesabim/profil"><strong>👤 Profilim</strong><span class="small muted">Ad, biyografi, sosyal medya ve fotoğraf</span></a>
+      <a class="card card-pad" href="{{.LangBase}}/hesabim/abonelik"><strong>💳 Aboneliğim</strong><span class="small muted">Plan, ödeme ve yenileme</span></a>
+      <a class="card card-pad" href="{{.LangBase}}/hesabim/bildirimler"><strong>🔔 Bildirimler</strong><span class="small muted">{{if .Hesap.Stats.Unread}}{{.Hesap.Stats.Unread}} okunmamış{{else}}Yeni bildirim yok{{end}}</span></a>
+      <a class="card card-pad" href="{{.LangBase}}/hesabim/rozetler"><strong>🏆 Başarımlar</strong><span class="small muted">Rozetler ve liderlik tablosu</span></a>
+      {{if .MemberStaff}}
+      <a class="card card-pad" href="/admin"><strong>🛠 Yönetim paneli</strong><span class="small muted">İçerik, medya, ayarlar ve raporlar</span></a>
+      {{end}}
+    </div>
+  </section>
+</div>
+</div></main>
+{{template "site_footer" .}}
+</body></html>{{end}}
+
+{{define "hesap-profil"}}<!doctype html><html lang="{{.Lang}}" {{if .RTL}}dir="rtl"{{end}} data-theme="{{.Theme}}"><head>{{template "public_head" .}}</head>
+<body>
+{{template "site_header" .}}
+<main class="page" id="main"><div class="container">
+<div class="hesap-wrap">
+  {{template "hesap_nav" .}}
+  <section class="hesap-main">
+    {{template "hesap_feedback" .}}
+    <h1 class="hesap-title">Profilim</h1>
+
+    <form method="post" action="{{.LangBase}}/hesabim/profil" class="card card-pad hesap-form">
+      <h2 class="hesap-h2">Genel bilgiler</h2>
+      <div class="hesap-grid2">
+        <label class="uye-field">Ad soyad<input class="input" name="name" maxlength="120" required value="{{.Hesap.Member.Name}}"></label>
+        <label class="uye-field">Kullanıcı adı (URL)<input class="input" name="slug" maxlength="60" value="{{.Hesap.Member.Slug}}" placeholder="ornek-kullanici"></label>
+      </div>
+      <label class="uye-field">Ünvan<input class="input" name="title" maxlength="80" value="{{.Hesap.Member.Title}}" placeholder="örn. Ekonomi yazarı"></label>
+      <label class="uye-field">Biyografi<textarea class="input" name="bio" rows="3" maxlength="600" placeholder="Kendinizi kısaca tanıtın">{{.Hesap.Member.Bio}}</textarea></label>
+      <p class="uye-hint">E-posta: <strong>{{.Hesap.Member.Email}}</strong>{{if .Hesap.Member.EmailVerifiedAt}} <span class="tag ok">doğrulandı</span>{{else}} <span class="tag">doğrulanmadı</span>{{end}}</p>
+
+      <h2 class="hesap-h2">Sosyal medya</h2>
+      <div class="hesap-grid2">
+        {{$s := .Hesap.Socials}}
+        <label class="uye-field">X (Twitter)<input class="input" name="s_x" value="{{index $s "x"}}" placeholder="https://x.com/kullanici"></label>
+        <label class="uye-field">Instagram<input class="input" name="s_instagram" value="{{index $s "instagram"}}" placeholder="https://instagram.com/kullanici"></label>
+        <label class="uye-field">Facebook<input class="input" name="s_facebook" value="{{index $s "facebook"}}" placeholder="https://facebook.com/kullanici"></label>
+        <label class="uye-field">YouTube<input class="input" name="s_youtube" value="{{index $s "youtube"}}" placeholder="https://youtube.com/@kanal"></label>
+        <label class="uye-field">LinkedIn<input class="input" name="s_linkedin" value="{{index $s "linkedin"}}" placeholder="https://linkedin.com/in/kullanici"></label>
+        <label class="uye-field">TikTok<input class="input" name="s_tiktok" value="{{index $s "tiktok"}}" placeholder="https://tiktok.com/@kullanici"></label>
+        <label class="uye-field">Telegram<input class="input" name="s_telegram" value="{{index $s "telegram"}}" placeholder="https://t.me/kullanici"></label>
+        <label class="uye-field">Web sitesi<input class="input" name="s_website" value="{{index $s "website"}}" placeholder="https://ornek.com"></label>
+      </div>
+      <button class="btn" type="submit">Profili kaydet</button>
+    </form>
+
+    <form method="post" action="{{.LangBase}}/hesabim/avatar" class="card card-pad hesap-form" id="avatar-form">
+      <h2 class="hesap-h2">Profil fotoğrafı</h2>
+      <div class="hesap-avatars">
+        {{range .Hesap.Avatars}}
+        <label class="hesap-avatar-sec">
+          <input type="radio" name="media_id" value="{{.ID}}" {{if eq $.Hesap.AvatarID .ID}}checked{{end}}>
+          <img src="{{.URL}}" alt="{{.Title}}" loading="lazy">
+        </label>
+        {{else}}<p class="small muted">Medya kütüphanesinde görsel yok.</p>{{end}}
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn small" type="submit">Fotoğrafı kaydet</button>
+        <button class="btn ghost small" type="submit" name="kaldir" value="1">Fotoğrafı kaldır</button>
+      </div>
+    </form>
+
+    <form method="post" action="{{.LangBase}}/hesabim/sifre" class="card card-pad hesap-form">
+      <h2 class="hesap-h2">Şifre değiştir</h2>
+      <label class="uye-field">Mevcut şifre<input class="input" type="password" name="current" autocomplete="current-password" required></label>
+      <div class="hesap-grid2">
+        <label class="uye-field">Yeni şifre<input class="input" type="password" name="password" minlength="8" autocomplete="new-password" required></label>
+        <label class="uye-field">Yeni şifre (tekrar)<input class="input" type="password" name="password2" minlength="8" autocomplete="new-password" required></label>
+      </div>
+      <button class="btn" type="submit">Şifremi güncelle</button>
+    </form>
+
+    <form method="post" action="{{.LangBase}}/hesabim/sil" class="card card-pad hesap-form hesap-danger" data-confirm="Hesabınız kalıcı olarak silinecek. Emin misiniz?" data-confirm-her-zaman>
+      <h2 class="hesap-h2">Hesabımı sil</h2>
+      <p class="small muted">Hesabınız ve kişisel verileriniz silinir; yorumlarınız adsız olarak kalır (KVKK).</p>
+      <label class="uye-field">Şifreniz<input class="input" type="password" name="password" autocomplete="current-password" required></label>
+      <label class="uye-check"><input type="checkbox" name="onay" value="1" required> <span>Hesabımı kalıcı olarak silmek istiyorum.</span></label>
+      <button class="btn danger" type="submit">Hesabımı sil</button>
+    </form>
+  </section>
+</div>
+</div></main>
+{{template "site_footer" .}}
+</body></html>{{end}}
+
+{{define "hesap-abonelik"}}<!doctype html><html lang="{{.Lang}}" {{if .RTL}}dir="rtl"{{end}} data-theme="{{.Theme}}"><head>{{template "public_head" .}}</head>
+<body>
+{{template "site_header" .}}
+<main class="page" id="main"><div class="container">
+<div class="hesap-wrap">
+  {{template "hesap_nav" .}}
+  <section class="hesap-main">
+    {{template "hesap_feedback" .}}
+    <h1 class="hesap-title">Aboneliğim</h1>
+    {{if .Hesap.TierName}}
+    <div class="hesap-plan on" style="border-color:{{.Hesap.TierColor}}">
+      <div class="hesap-plan-head">
+        <span class="hesap-plan-badge" style="background:{{.Hesap.TierColor}}">{{.Hesap.TierName}}</span>
+        <span class="small muted">{{if .Hesap.TierUntil}}Bitiş: {{.Hesap.TierUntil}}{{end}}</span>
+      </div>
+      <p class="hesap-plan-desc">{{if .Hesap.TierCycle}}Fatura dönemi: {{if eq .Hesap.TierCycle "annual"}}Yıllık{{else}}Aylık{{end}} · {{end}}Katmanınıza dahil tüm ayrıcalıklar aktif.</p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        <a class="btn small" href="{{.LangBase}}/abonelik">Paketleri gör / yükselt</a>
+        {{if .Hesap.CancelAt}}
+        <form method="post" action="{{.LangBase}}/hesabim/abonelik/iptal">
+          <input type="hidden" name="geri_al" value="1">
+          <button class="btn ghost small" type="submit">İptali geri al</button>
+        </form>
+        {{else}}
+        <form method="post" action="{{.LangBase}}/hesabim/abonelik/iptal" data-confirm="Aboneliğiniz dönem sonunda yenilenmeyecek. Devam edilsin mi?" data-confirm-her-zaman>
+          <button class="btn ghost small" type="submit">Aboneliği iptal et</button>
+        </form>
+        {{end}}
+      </div>
+      {{if .Hesap.CancelAt}}
+      <p class="small" style="margin:8px 0 0;color:#b45309"><b>İptal talebi:</b> {{.Hesap.CancelAt}} tarihinde alındı. {{if .Hesap.TierUntil}}{{.Hesap.TierUntil}} tarihine kadar erişiminiz sürecek.{{end}}</p>
+      {{end}}
+    </div>
+    {{else}}
+    {{template "hesap-plan_karti" .}}
+    <p style="margin-top:10px"><a class="btn" href="{{.LangBase}}/abonelik">Abonelik paketlerini gör</a></p>
+    {{end}}
+    {{$m := .Hesap.Member}}
+    <div class="card card-pad" style="margin-top:14px">
+      <h2 class="hesap-h2">Plan ayrıntıları</h2>
+      <dl class="hesap-dl">
+        <dt>Durum</dt><dd>{{if .Hesap.TierName}}Aktif abonelik{{else}}Ücretsiz üyelik{{end}}</dd>
+        <dt>Katman</dt><dd>{{if .Hesap.TierName}}{{.Hesap.TierName}}{{else}}—{{end}}</dd>
+        <dt>Bitiş tarihi</dt><dd>{{if .Hesap.TierUntil}}{{.Hesap.TierUntil}}{{else}}—{{end}}</dd>
+        <dt>Üyelik başlangıcı</dt><dd>{{$m.CreatedAt.Format "02.01.2006"}}</dd>
+        <dt>Fatura dönemi</dt><dd>{{if eq .Hesap.TierCycle "annual"}}Yıllık{{else if .Hesap.TierName}}Aylık{{else}}—{{end}}</dd>
+      </dl>
+      {{if .Hesap.StripeEnabled}}
+      {{if not .Hesap.TierName}}
+      <form method="post" action="{{.LangBase}}/uyelik/odeme">
+        <button class="btn" type="submit">Stripe ile abone ol{{if .Hesap.PriceLabel}} · {{.Hesap.PriceLabel}}{{end}}</button>
+      </form>
+      <p class="small muted" style="margin:.6em 0 0">Ödeme Stripe güvenli sayfasında alınır; kart bilgisi sitemize girilmez.</p>
+      {{end}}
+      {{end}}
+    </div>
+  </section>
+</div>
+</div></main>
+{{template "site_footer" .}}
+</body></html>{{end}}
+
+{{define "hesap-yorumlar"}}<!doctype html><html lang="{{.Lang}}" {{if .RTL}}dir="rtl"{{end}} data-theme="{{.Theme}}"><head>{{template "public_head" .}}</head>
+<body>
+{{template "site_header" .}}
+<main class="page" id="main"><div class="container">
+<div class="hesap-wrap">
+  {{template "hesap_nav" .}}
+  <section class="hesap-main">
+    {{template "hesap_feedback" .}}
+    <h1 class="hesap-title">Yorumlarım <span class="hesap-sayi">{{.Hesap.Stats.Comments}}</span></h1>
+    <div class="gap">
+      {{range .Hesap.Comments}}
+      <div class="card card-pad">
+        <div class="small muted">
+          <a href="{{$.LangBase}}/{{.ContentSlug}}-{{.ContentID}}">{{.ContentTitle}}</a>
+          · {{.CreatedAt.Format "02.01.2006 15:04"}}
+          {{if eq .Status "onay_bekliyor"}}<span class="tag">onay bekliyor</span>{{end}}
+          {{if .Likes}}<span class="tag">{{.Likes}} beğeni</span>{{end}}
+        </div>
+        <p style="margin:.5em 0 0">{{.Body}}</p>
+      </div>
+      {{else}}<p class="muted">Henüz yorum yapmadınız.</p>{{end}}
+    </div>
+  </section>
+</div>
+</div></main>
+{{template "site_footer" .}}
+</body></html>{{end}}
+
+{{define "hesap-takip"}}<!doctype html><html lang="{{.Lang}}" {{if .RTL}}dir="rtl"{{end}} data-theme="{{.Theme}}"><head>{{template "public_head" .}}</head>
+<body>
+{{template "site_header" .}}
+<main class="page" id="main"><div class="container">
+<div class="hesap-wrap">
+  {{template "hesap_nav" .}}
+  <section class="hesap-main">
+    {{template "hesap_feedback" .}}
+    <h1 class="hesap-title">Takip ettiklerim <span class="hesap-sayi">{{.Hesap.Stats.Follows}}</span></h1>
+    <div class="gap">
+      {{range .Hesap.Follows}}
+      <div class="card card-pad" style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+        <span>
+          <span class="tag">{{if eq .Type "kategori"}}Kategori{{else if eq .Type "etiket"}}Etiket{{else if eq .Type "yazar"}}Yazar{{else}}{{.Type}}{{end}}</span>
+          {{if eq .Type "kategori"}}<a href="{{$.LangBase}}/kategori/{{.Slug}}">{{.Slug}}</a>{{else if eq .Type "etiket"}}<a href="{{$.LangBase}}/arama?q={{.Slug}}">#{{.Slug}}</a>{{else}}{{.Slug}}{{end}}
+        </span>
+        <button class="btn ghost small" type="button" data-takip-birak="{{.Type}}" data-takip-slug="{{.Slug}}">Takibi bırak</button>
+      </div>
+      {{else}}<p class="muted">Henüz bir kategori, etiket veya yazar takip etmiyorsunuz.</p>{{end}}
+    </div>
+  </section>
+</div>
+</div></main>
+{{template "site_footer" .}}
+<script>
+document.addEventListener('click', function (e) {
+  var b = e.target.closest('[data-takip-birak]');
+  if (!b) return;
+  var type = b.getAttribute('data-takip-birak'), slug = b.getAttribute('data-takip-slug');
+  b.disabled = true;
+  fetch('/api/follow/' + encodeURIComponent(type) + '/' + encodeURIComponent(slug), { method: 'POST', credentials: 'same-origin' })
+    .then(function (r) { return r.json(); })
+    .then(function () { location.reload(); })
+    .catch(function () { b.disabled = false; });
+});
+</script>
+</body></html>{{end}}
+
+{{define "hesap-kaydedilenler"}}<!doctype html><html lang="{{.Lang}}" {{if .RTL}}dir="rtl"{{end}} data-theme="{{.Theme}}"><head>{{template "public_head" .}}</head>
+<body>
+{{template "site_header" .}}
+<main class="page" id="main"><div class="container">
+<div class="hesap-wrap">
+  {{template "hesap_nav" .}}
+  <section class="hesap-main">
+    {{template "hesap_feedback" .}}
+    <h1 class="hesap-title">Kaydedilenler <span class="hesap-sayi">{{.Hesap.Stats.Bookmarks}}</span></h1>
+    <div class="gap">
+      {{range .Hesap.Bookmarks}}
+      <a class="card card-pad" href="{{$.LangBase}}/{{.DisplaySlug}}-{{.ID}}">
+        <h3 style="margin:0">{{.Title}}</h3>
+        {{if .Spot}}<p class="muted small" style="margin:.4em 0 0">{{.Spot}}</p>{{end}}
+      </a>
+      {{else}}<p class="muted">Henüz kaydettiğiniz haber yok. Haber sayfasındaki "Kaydet" düğmesini kullanın.</p>{{end}}
+    </div>
+  </section>
+</div>
+</div></main>
+{{template "site_footer" .}}
+</body></html>{{end}}
+
+{{define "hesap-bildirimler"}}<!doctype html><html lang="{{.Lang}}" {{if .RTL}}dir="rtl"{{end}} data-theme="{{.Theme}}"><head>{{template "public_head" .}}</head>
+<body>
+{{template "site_header" .}}
+<main class="page" id="main"><div class="container">
+<div class="hesap-wrap">
+  {{template "hesap_nav" .}}
+  <section class="hesap-main">
+    {{template "hesap_feedback" .}}
+    <h1 class="hesap-title">Bildirimler</h1>
+    <div class="gap">
+      {{range .Hesap.Notifs}}
+      <div class="card card-pad">
+        <div class="small muted">{{.Kind}} · {{.CreatedAt.Format "02.01.2006 15:04"}}</div>
+        <h3 style="margin:.2em 0">{{.Title}}</h3>
+        {{if .Body}}<p class="muted small" style="margin:.3em 0 0">{{.Body}}</p>{{end}}
+        {{if .URL}}<p style="margin:.5em 0 0"><a class="btn ghost small" href="{{.URL}}">Görüntüle</a></p>{{end}}
+      </div>
+      {{else}}<p class="muted">Bildirim yok.</p>{{end}}
+    </div>
+  </section>
+</div>
+</div></main>
+{{template "site_footer" .}}
+</body></html>{{end}}
+
+{{define "hesap-rozetler"}}<!doctype html><html lang="{{.Lang}}" {{if .RTL}}dir="rtl"{{end}} data-theme="{{.Theme}}"><head>{{template "public_head" .}}</head>
+<body>
+{{template "site_header" .}}
+<main class="page" id="main"><div class="container">
+<div class="hesap-wrap">
+  {{template "hesap_nav" .}}
+  <section class="hesap-main">
+    {{template "hesap_feedback" .}}
+    <h1 class="hesap-title">Başarımlar</h1>
+    {{if .Hesap.Points}}<p class="small muted">Puan: <b>{{.Hesap.Points.Points}}</b> · seri: <b>{{.Hesap.Points.Streak}}</b> gün</p>{{end}}
+    <div class="hesap-rozetler">
+      {{$pts := .Hesap.Points}}
+      {{range .Hesap.Defs}}
+        {{$def := .}}{{$kazanildi := false}}
+        {{if $pts}}{{range $pts.Achievements}}{{if eq . $def.Key}}{{$kazanildi = true}}{{end}}{{end}}{{end}}
+        <div class="card card-pad{{if $kazanildi}} hesap-rozet-on{{end}}">
+          <h3 style="margin:0">{{.Ad}}{{if $kazanildi}} ✓{{end}}</h3>
+          <p class="small muted" style="margin:.3em 0 0">{{if .Min}}{{.Min}}+ puan{{else}}{{.Streak}}+ günlük seri{{end}}</p>
+        </div>
+      {{end}}
+    </div>
+    {{if .Hesap.Leader}}
+    <h2 class="hesap-h2" style="margin-top:22px">Liderlik tablosu</h2>
+    <div class="gap">
+      {{range .Hesap.Leader}}<div class="card card-pad" style="display:flex;justify-content:space-between">
+        <span>#{{.UserID}}</span><span>{{.Points}} puan · {{.Streak}} gün</span>
+      </div>{{end}}
+    </div>
+    {{end}}
+  </section>
+</div>
+</div></main>
+{{template "site_footer" .}}
+</body></html>{{end}}

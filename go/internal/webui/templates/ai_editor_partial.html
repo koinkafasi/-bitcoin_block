@@ -1,0 +1,216 @@
+{{define "content_revision_diff"}}<div class="revision-diff">{{range .RevisionDiff}}<div class="rev-line rev-{{.Kind}}">{{if eq .Kind "add"}}+ {{else if eq .Kind "del"}}− {{else}}  {{end}}{{.Text}}</div>{{end}}</div>{{end}}
+
+{{define "ai_editor_result"}}<div class="ai-result" data-content-id="{{.AI.ContentID}}" data-job-id="{{.AI.JobID}}">
+  {{if .AI.Error}}
+    <div class="ai-result-error">
+      <strong>İşlem tamamlanamadı.</strong>
+      <p>{{.AI.Error}}</p>
+      <p class="small muted">Mevcut haber içeriği değiştirilmedi. Sağlayıcı ayarlarını kontrol edip yeniden deneyin.</p>
+    </div>
+  {{else}}
+  <div class="ai-result-head">
+    <div>
+      <div class="ai-result-kicker">{{.AI.ActionLabel}}</div>
+      <div class="small muted">
+        {{if .AI.Result.Provider}}Sağlayıcı: <b>{{.AI.Result.Provider}}</b>{{end}}
+        {{if .AI.Result.Model}} · Model: <b>{{.AI.Result.Model}}</b>{{end}}
+      </div>
+    </div>
+    <button type="button" class="btn ghost small" data-ai-close aria-label="Kapat"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-x"></use></svg></button>
+  </div>
+
+  {{range .AI.Result.Warnings}}<div class="ai-warn"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-alert-triangle"></use></svg> {{.}}</div>{{end}}
+  {{if .AI.Result.QuoteSources}}
+  <div class="ai-quote-sources">
+    <div class="ai-sec-title">Alıntı kaynakları <span class="small muted">· saniyeye tıklayınca kayıt oradan çalar</span></div>
+    {{range .AI.Result.QuoteSources}}
+    <button type="button" class="ai-quote-src{{if not .Verified}} ai-quote-src-bad{{end}}"
+            data-quote-seek="{{.StartMS}}" data-quote-media="{{$.AI.Result.MediaID}}"
+            {{if not .Verified}}data-quote-bad="1"{{end}}
+            title="{{if .Verified}}Doğrulandı{{else}}Kaynakta bulunamadı{{end}}">
+      {{if .Verified}}
+      <span class="ai-quote-time">{{quoteTime .StartMS}}</span>
+      {{if .Speaker}}<span class="ai-quote-speaker">{{.Speaker}}</span>{{end}}
+      {{else}}
+      <span class="ai-quote-time">—</span>
+      <span class="ai-quote-speaker">kaynak yok</span>
+      {{end}}
+      <span class="ai-quote-text">“{{.Quote}}”</span>
+      <span class="ai-quote-flag">{{if .Verified}}✓{{else}}✕{{end}}</span>
+    </button>
+    {{end}}
+  </div>
+  {{end}}
+  {{if .AI.Result.UnverifiedQuotes}}
+  <div class="ai-warn ai-quote-warn">
+    <strong>Doğrulanamayan alıntılar</strong>
+    <p class="small">Bu cümleler kaynak transkriptte bulunamadı. Yayına almadan önce düzeltin veya kaldırın.</p>
+    <ul>{{range .AI.Result.UnverifiedQuotes}}<li>“{{.}}”</li>{{end}}</ul>
+  </div>
+  {{end}}
+  {{if .AI.Result.UnverifiedNumbers}}
+  <div class="ai-warn ai-quote-warn">
+    <strong>Doğrulanamayan sayılar</strong>
+    <p class="small">Bu rakamlar kaynak transkriptte bulunamadı. Uydurma sayı yayına gitmemeli — doğrulayın veya kaldırın.</p>
+    <ul>{{range .AI.Result.UnverifiedNumbers}}<li><b>{{.}}</b></li>{{end}}</ul>
+  </div>
+  {{end}}
+
+  {{if .AI.Result.Fields}}
+  <div class="ai-fields">
+    {{with index .AI.Result.Fields "title"}}<label class="field"><span>Başlık</span><input class="input" id="aiFieldTitle" value="{{.}}"></label>{{end}}
+    {{with index .AI.Result.Fields "spot"}}<label class="field"><span>Spot</span><textarea class="textarea" id="aiFieldSpot" style="min-height:70px">{{.}}</textarea></label>{{end}}
+    {{with index .AI.Result.Fields "intro"}}<label class="field"><span>Giriş paragrafı</span><textarea class="textarea" id="aiFieldIntro" style="min-height:90px">{{.}}</textarea></label>{{end}}
+    {{with index .AI.Result.Fields "body"}}<label class="field"><span>Ana metin</span><textarea class="textarea" id="aiFieldBody" style="min-height:240px">{{.}}</textarea></label>{{end}}
+    {{with index .AI.Result.Fields "seo_title"}}<label class="field"><span>SEO başlığı</span><input class="input" id="aiFieldSeoTitle" value="{{.}}"></label>{{end}}
+    {{with index .AI.Result.Fields "meta_description"}}<label class="field"><span>Meta açıklama</span><textarea class="textarea" id="aiFieldMeta" style="min-height:70px">{{.}}</textarea></label>{{end}}
+    {{with index .AI.Result.Fields "slug"}}<label class="field"><span>Slug önerisi</span><input class="input" id="aiFieldSlug" value="{{.}}"></label>{{end}}
+  </div>
+  {{end}}
+
+  {{if .AI.Result.Alternatives}}
+  <div class="ai-alt-list">
+    <div class="ai-sec-title">Alternatifler</div>
+    {{range .AI.Result.Alternatives}}
+    <div class="ai-alt">
+      <button type="button" class="btn ghost small" data-ai-headline="{{.Text}}" title="Başlık alanına uygula">Başlığa uygula</button>
+      <div><strong>{{.Text}}</strong>{{if .Note}}<div class="small muted">{{.Note}}</div>{{end}}</div>
+    </div>
+    {{end}}
+  </div>
+  {{end}}
+
+  {{if .AI.Result.Fields}}
+    {{range .AI.Result.Sections}}
+      {{if and (ne .Title "Spot") (ne .Title "Giriş") (ne .Title "Giriş paragrafı") (ne .Title "Gövde") (ne .Title "Yeni metin") (ne .Title "Özet")}}
+      <section class="ai-sec">
+        <div class="ai-sec-title">{{.Title}}</div>
+        <textarea class="textarea ai-sec-text" rows="4" readonly>{{.Body}}</textarea>
+      </section>
+      {{end}}
+    {{end}}
+  {{else}}
+    {{range .AI.Result.Sections}}
+    <section class="ai-sec">
+      <div class="ai-sec-title">{{.Title}}</div>
+      <textarea class="textarea ai-sec-text" rows="5" readonly>{{.Body}}</textarea>
+    </section>
+    {{end}}
+  {{end}}
+
+  {{if .AI.Result.Claims}}
+  <div class="ai-claims">
+    <div class="ai-sec-title">İddia doğrulama</div>
+    {{range .AI.Result.Claims}}
+    <div class="ai-claim">
+      <div class="ai-claim-top"><strong>{{.Text}}</strong><span class="badge ai-claim-{{.Status}}">{{.Status}}</span></div>
+      {{if .Excerpt}}<div class="small muted">Metin: {{.Excerpt}}</div>{{end}}
+      {{if .Evidence}}<div class="small"><b>Kanıt:</b> {{.Evidence}}</div>{{end}}
+      {{if .Explanation}}<div class="small"><b>Açıklama:</b> {{.Explanation}}</div>{{end}}
+      {{if .Action}}<div class="small"><b>Öneri:</b> {{.Action}}</div>{{end}}
+      {{if .Sources}}<div class="small muted">Kaynak: {{range .Sources}}{{.}} {{end}}</div>{{end}}
+    </div>
+    {{end}}
+  </div>
+  {{end}}
+
+  {{if .AI.Result.Sources}}
+  <div class="ai-sources">
+    <div class="ai-sec-title">Kaynaklar</div>
+    {{range .AI.Result.Sources}}
+    <div class="ai-source">
+      <span class="badge">[{{.Ref}}]</span>
+      <a href="{{.URL}}" target="_blank" rel="noopener nofollow">{{if .Title}}{{.Title}}{{else}}{{.URL}}{{end}}</a>
+      {{if .Publisher}}<span class="small muted">· {{.Publisher}}</span>{{end}}
+      {{if .Snippet}}<div class="small muted">{{.Snippet}}</div>{{end}}
+    </div>
+    {{end}}
+  </div>
+  {{end}}
+
+  <div class="ai-actions">
+    {{with index .AI.Result.Fields "title"}}<button type="button" class="btn small" data-ai-apply-source="#aiFieldTitle" data-ai-apply-target="#f_title">Başlığa uygula</button>{{end}}
+    {{with index .AI.Result.Fields "spot"}}<button type="button" class="btn small" data-ai-apply-source="#aiFieldSpot" data-ai-apply-target="#f_spot">Spota uygula</button>{{end}}
+    {{if index .AI.Result.Fields "body"}}
+      <button type="button" class="btn small" data-ai-apply-source="#aiFieldBody" data-ai-apply-target='textarea[name="detay"]' data-ai-apply-mode="replace-selection">Seçili metnin yerine koy</button>
+      <button type="button" class="btn small" data-ai-apply-source="#aiFieldBody" data-ai-apply-target='textarea[name="detay"]' data-ai-apply-mode="append">Habere ekle</button>
+      {{if not (index .AI.Result.Fields "spot")}}<button type="button" class="btn small" data-ai-apply-source="#aiFieldBody" data-ai-apply-target="#f_spot">Spota uygula</button>{{end}}
+    {{end}}
+    {{if index .AI.Result.Fields "intro"}}
+      <button type="button" class="btn small" data-ai-apply-source="#aiFieldIntro" data-ai-apply-target='textarea[name="detay"]' data-ai-apply-mode="append">Girişi habere ekle</button>
+    {{end}}
+    {{if index .AI.Result.Fields "seo_title"}}
+      <button type="button" class="btn small" data-ai-apply-source="#aiFieldSeoTitle" data-ai-apply-target='[name="seo_baslik"]'>SEO başlığına uygula</button>
+    {{end}}
+    {{if index .AI.Result.Fields "meta_description"}}
+      <button type="button" class="btn small" data-ai-apply-source="#aiFieldMeta" data-ai-apply-target='[name="seo_aciklama"]'>Meta açıklamaya uygula</button>
+    {{end}}
+    <button type="button" class="btn ghost small" data-ai-retry>Yeniden üret</button>
+    <button type="button" class="btn ghost small" data-ai-copy>Kopyala</button>
+    {{if or (index .AI.Result.Fields "body") (index .AI.Result.Fields "title")}}
+    <button type="button" class="btn ghost small" data-ai-new-draft data-job-id="{{.AI.JobID}}" data-content-id="{{.AI.ContentID}}">Yeni taslak olarak kaydet</button>
+    {{end}}
+    <button type="button" class="btn ghost small" data-ai-history data-content-id="{{.AI.ContentID}}">Geçmiş</button>
+    <span class="small muted">Sonuç, siz uygulamadan habere yazılmaz.</span>
+  </div>
+  {{end}}
+</div>{{end}}
+
+{{define "ai_editor_pending"}}<div class="ai-result ai-pending" data-ai-pending data-ai-poll-url="{{.AI.PollURL}}" data-job-id="{{.AI.JobID}}">
+  <div class="ai-result-head">
+    <div>
+      <div class="ai-result-kicker">{{.AI.ActionLabel}}</div>
+      <div class="small muted">İş No: {{.AI.JobID}} · Durum: <b>{{.AI.Status}}</b></div>
+    </div>
+    <button type="button" class="btn ghost small" data-ai-close aria-label="Kapat"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-x"></use></svg></button>
+  </div>
+  <div class="ai-pending-box" role="status" aria-live="polite">
+    <span class="spinner" aria-hidden="true"></span>
+    <div>
+      <strong>Araştırma arka planda çalışıyor.</strong>
+      <p class="small muted">Bu pencereyi kapatabilirsiniz; sonuç AI işlem geçmişinde saklanır. Sonuç geldiğinde bu panel otomatik güncellenir.</p>
+    </div>
+  </div>
+  <div class="ai-actions">
+    <button type="button" class="btn ghost small" data-ai-cancel data-ai-cancel-url="{{.AI.CancelURL}}">İşi iptal et</button>
+    <button type="button" class="btn ghost small" data-ai-close>Kapat</button>
+  </div>
+</div>{{end}}
+
+{{define "ai_editor_history"}}<div class="ai-result" data-content-id="{{.AI.ContentID}}">
+  <div class="ai-result-head">
+    <div><div class="ai-result-kicker">AI işlem geçmişi</div><div class="small muted">Son 30 iş ve son 20 içerik sürümü</div></div>
+    <button type="button" class="btn ghost small" data-ai-close aria-label="Kapat"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-x"></use></svg></button>
+  </div>
+
+  <div class="ai-sec-title">AI işlemleri</div>
+  {{range .AI.Jobs}}
+  <div class="ai-history-row">
+    <div>
+      <strong>{{.Label}}</strong>
+      <div class="small muted">{{.When}} · {{.Status}}{{if .Job.Provider}} · {{.Job.Provider}}{{end}}</div>
+      {{if .Job.Error}}<div class="small" style="color:var(--danger)">{{.Job.Error}}</div>{{end}}
+    </div>
+    {{if eq .Job.Status "completed"}}
+    <button type="button" class="btn ghost small" data-ai-job-url="/admin/icerikler/{{$.AI.ContentID}}/ai/is/{{.Job.ID}}">Sonucu aç</button>
+    {{end}}
+  </div>
+  {{else}}<p class="muted small">Henüz AI işlemi yok.</p>{{end}}
+
+  <div class="ai-sec-title" style="margin-top:14px">İçerik sürümleri</div>
+  <div class="small muted" style="margin-bottom:6px">Her kayıt öncesi anlık görüntü alınır; geri yükleme yeni bir sürüm oluşturur.</div>
+  {{range .AI.Revisions}}
+  <div class="ai-history-row">
+    <div>
+      <strong>v{{.Version}} — {{.Title}}</strong>
+      <div class="small muted">{{.CreatedAt.Format "02.01.2006 15:04"}} · {{.Source}}</div>
+    </div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap">
+      <button type="button" class="btn ghost small" hx-get="/admin/icerikler/{{$.AI.ContentID}}/ai/surum/{{.ID}}/fark" hx-target="#revisionDiff-{{.ID}}" hx-swap="innerHTML">Farkı göster</button>
+      <button type="button" class="btn ghost small" hx-post="/admin/icerikler/{{$.AI.ContentID}}/ai/geri-al/{{.ID}}" hx-confirm="v{{.Version}} sürümü geri yüklensin mi? Mevcut içerik önce arşivlenir." hx-target="#content-form-panel" hx-swap="outerHTML">Geri yükle</button>
+    </div>
+  </div>
+  <div id="revisionDiff-{{.ID}}"></div>
+  {{else}}<p class="muted small">Henüz kayıtlı sürüm yok.</p>{{end}}
+  <div class="ai-actions"><button type="button" class="btn ghost small" data-ai-close>Kapat</button></div>
+</div>{{end}}

@@ -1,0 +1,574 @@
+// Gazete yönetim paneli (templ): lisans, depolama, otomasyon, ekip,
+// şablonlar, sayılar ve aboneler. Bölümler yetkiye göre görünür.
+package templkit
+
+// GazeteSiteLisans site lisans satırı.
+type GazeteSiteLisans struct {
+	ID      string
+	Name    string
+	Domain  string
+	Enabled bool
+	AcikVal string // form için 0/1
+	BtnText string
+}
+
+// GazeteSablonSatir şablon satırı.
+type GazeteSablonSatir struct {
+	ID          string
+	Name        string
+	Description string
+	IsDefault   bool
+	SilURL      string
+	// Sayfa mini onizlemeleri. Galeri (SablonCard) ile AYNI bilesen
+	// kullanilir; sablonu secmeden once neye benzedigini gormek icin
+	// (Faz 184). Bos ise yalniz ad/aciklama basilir.
+	Pages       []PageDoc
+	SayfaSayisi int
+	// YeniSayiURL: bu sablonla otomatik doldurulmus sayi olusturur.
+	YeniSayiURL string
+}
+
+// GazeteEkipSatir ekip satırı.
+type GazeteEkipSatir struct {
+	UserID    string
+	UserName  string
+	UserEmail string
+	UserRole  string
+	Rol       string
+	SilURL    string
+}
+
+// GazeteSayiSatir sayı satırı.
+type GazeteSayiSatir struct {
+	ID         string
+	IssueDate  string
+	Period     string
+	Title      string
+	Status     string
+	PageCount  string
+	DuzenleURL string
+	PDFURL     string
+	DurumURL   string
+	DurumVal   string
+	DurumBtn   string
+	GonderURL  string
+	SilURL     string
+}
+
+// GazeteAboneSatir abone satırı.
+type GazeteAboneSatir struct {
+	ID        string
+	Email     string
+	Phone     string
+	Channel   string
+	Frequency string
+	Status    string
+	DurumURL  string
+	DurumVal  string
+	DurumBtn  string
+	SilURL    string
+}
+
+// GazeteKullanici ekip ataması için kullanıcı seçeneği.
+type GazeteKullanici struct {
+	ID   string
+	Name string
+	Role string
+}
+
+// GazeteView gazete paneli.
+type GazeteView struct {
+	FlashKind     string
+	FlashText     string
+	Licensed      bool
+	Role          string
+	IssueCount    string
+	TplCount      string
+	SubCount      string
+	PermLisans    bool
+	PermEkip      bool
+	PermDuzenle   bool
+	PermAbone     bool
+	Sites         []GazeteSiteLisans
+	Storage       GazeteStorageView
+	StorageSecret bool
+	AyarSaat      string
+	AyarHaftalik  string
+	AyarAylik     string
+	AyarOtoYayin  bool
+	WAPhone       string
+	WATokenSet    bool
+	SMSProvider   string
+	SMSFrom       string
+	SMSNetgsmUser string
+	SMSNetgsmPassSet  bool
+	SMSTwilioSID  string
+	SMSTwilioTokenSet bool
+	WAVersion     string
+	WATemplate    string
+	Users         []GazeteKullanici
+	Team          []GazeteEkipSatir
+	Templates     []GazeteSablonSatir
+	Issues        []GazeteSayiSatir
+	Subs          []GazeteAboneSatir
+}
+
+// GazeteStorageView depolama ayarları.
+type GazeteStorageView struct {
+	ProviderLocal bool
+	ProviderR2    bool
+	ProviderS3    bool
+	ProviderMinio bool
+	Endpoint      string
+	Bucket        string
+	Region        string
+	AccessKeyID   string
+	PublicBaseURL string
+	PathPrefix    string
+	Enabled       bool
+}
+
+// GazetePanel gazete yönetimi (HTMX hedefi: #gazete-panel).
+templ GazetePanel(v GazeteView) {
+<style>
+	/* ---- Gazete şablon galerisi (Faz 184) ----
+	 * Panelde "Şablonlar" düz tabloydu: yalnız ad/açıklama görünüyor,
+	 * şablonun neye benzediği ancak ayrı sayfaya gidince anlaşılıyordu.
+	 * Artık galeriyle AYNI mini sayfa önizlemeleri burada.
+	 *
+	 * SIĞMA: ızgara auto-fill + minmax(200px) — dar ekranda 2, geniş
+	 * ekranda 5-6 kart; küçük önizlemeler alt alta değil YAN YANA akıyor
+	 * (önceki tabloda 10 sayfa tek satırda taşıyordu).
+	 */
+	.gz-gal {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+		gap: 12px;
+		margin-top: 12px;
+	}
+	.gz-gal__kart {
+		display: flex;
+		flex-direction: column;
+		gap: 6px;
+		min-width: 0;
+		border: 1px solid var(--line);
+		border-radius: 12px;
+		background: var(--surface);
+		color: var(--text);
+		padding: 10px 12px 12px;
+	}
+	.gz-gal__ust { display: flex; align-items: center; gap: 6px; min-width: 0; }
+	.gz-gal__ad {
+		font-size: .86rem;
+		font-weight: 700;
+		min-width: 0;
+		/* Ad iki satira kadar sarsin: tek satirda "A4 - Klasik ..."
+		 * gibi kesiliyordu ve hangi sablon oldugu anlasilmiyordu. */
+		display: -webkit-box;
+		-webkit-line-clamp: 2;
+		-webkit-box-orient: vertical;
+		overflow: hidden;
+		line-height: 1.25;
+	}
+	.gz-gal__rozet {
+		flex: none;
+		display: inline-flex;
+		align-items: center;
+		gap: 3px;
+		font-size: .66rem;
+		font-weight: 700;
+		padding: 1px 6px;
+		border-radius: 999px;
+		color: #fff;
+		background: var(--ok-fill, #12873d);
+	}
+	.gz-gal__rozet .ti { width: 11px; height: 11px; }
+	.gz-gal__aciklama {
+		margin: 0;
+		font-size: .74rem;
+		line-height: 1.35;
+		color: var(--muted-fg);
+		/* İki satırdan fazlası kartları eşit yükseklikten çıkarıyor. */
+		display: -webkit-box;
+		-webkit-line-clamp: 2;
+		-webkit-box-orient: vertical;
+		overflow: hidden;
+	}
+	.gz-thumbs {
+		display: flex;
+		gap: 5px;
+		flex-wrap: wrap;
+		margin-top: 2px;
+	}
+	.gz-thumb {
+		width: 34px;
+		height: 47px;
+		flex: none;
+		color: var(--line);
+		border: 1px solid var(--line);
+		border-radius: 4px;
+		background: #fff;
+	}
+	.gz-gal__alt {
+		margin-top: auto;
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		flex-wrap: wrap;
+	}
+	/* Birincil eylem tam genislik: dar kartta "Bu Sablondan Sayi" alt
+	 * satira kayip karti gereksiz uzatiyordu. */
+	.gz-gal__alt .btn:not(.ghost) {
+		flex: 1 1 100%;
+		justify-content: center;
+		order: 2;
+		margin-left: 0;
+	}
+	.gz-gal__alt .small { order: 1; }
+	.gz-gal__alt form { order: 3; margin-left: auto; }
+</style>
+	<div id="gazete-panel">
+		if v.FlashText != "" {
+			<div class={ "flash", v.FlashKind }>{ v.FlashText }</div>
+		}
+		<nav class="gz-bolumler" id="gz-bolumler" aria-label="Gazete bölümleri">
+			<a href="#ozet">Özet</a>
+			if v.PermLisans {
+				<a href="#lisans">Lisans</a>
+				<a href="#depolama">Depolama</a>
+				<a href="#otomasyon">Otomasyon</a>
+			}
+			if v.PermEkip {
+				<a href="#ekip">Ekip</a>
+			}
+			<a href="#sablonlar">Şablonlar</a>
+			<a href="#sayilar">Sayılar</a>
+			if v.PermAbone {
+				<a href="#aboneler">Aboneler</a>
+			}
+			<a href="/admin/gazete/sablonlar"><svg class="ti ti-metin" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-books"></use></svg> Galeri</a>
+			<a href="/admin/gazeteler"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-news"></use></svg> Manşetler</a>
+		</nav>
+		<div class="card card-pad" id="ozet" style="display:flex;gap:16px;flex-wrap:wrap;align-items:center">
+			<div>
+				<div class="small muted">Lisans</div>
+				if v.Licensed {
+					<span class="badge" style="background:var(--ok-fill,var(--ok));color:#fff">Aktif</span>
+				} else {
+					<span class="badge" style="background:var(--warn-fill,var(--warn));color:#fff">Pasif</span>
+				}
+			</div>
+			<div><div class="small muted">Sayılar</div><div class="big">{ v.IssueCount }</div></div>
+			<div><div class="small muted">Şablonlar</div><div class="big">{ v.TplCount }</div></div>
+			<div><div class="small muted">Aboneler</div><div class="big">{ v.SubCount }</div></div>
+			<div><div class="small muted">Rolünüz</div><div class="big" style="font-size:1rem">{ v.Role }</div></div>
+			if v.PermDuzenle {
+				<form method="post" action="/admin/gazete/sayilar" style="margin-left:auto" hx-post="/admin/gazete/sayilar" hx-target="#gazete-panel" hx-swap="outerHTML" data-set-alan="doldur=1">
+					<input type="hidden" name="doldur" value="1"/>
+					<input class="input" type="date" name="tarih" value="" style="width:150px" aria-label="Sayı tarihi (boş = bugün)"/>
+					<select class="input" name="periyot" aria-label="Sayı periyodu">
+						<option value="gunluk">Günlük</option>
+						<option value="haftalik">Haftalık</option>
+						<option value="aylik">Aylık</option>
+					</select>
+					<button class="btn" type="submit"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-news"></use></svg> Yeni Sayı (otomatik doldur)</button>
+				</form>
+			}
+		</div>
+		if v.PermLisans {
+			<h2 style="font-size:1.05rem;margin-top:20px" id="lisans">Site Lisansları (Ticari Paket)</h2>
+			<div class="card card-pad">
+				<table class="table">
+					<thead>
+						<tr><th>Site</th><th>Domain</th><th>Durum</th><th style="width:120px"></th></tr>
+					</thead>
+					<tbody>
+						for _, s := range v.Sites {
+							<tr>
+								<td>{ s.Name }</td>
+								<td class="small muted">{ s.Domain }</td>
+								<td>
+									if s.Enabled {
+										<span class="badge" style="background:var(--ok-fill,var(--ok));color:#fff">Açık</span>
+									} else {
+										<span class="badge" style="background:#6b6b6b;color:#fff">Kapalı</span>
+									}
+								</td>
+								<td>
+									<form method="post" action="/admin/gazete/lisans">
+										<input type="hidden" name="site_id" value={ s.ID }/>
+										<input type="hidden" name="acik" value={ s.AcikVal }/>
+										<button class="btn small" type="submit">{ s.BtnText }</button>
+									</form>
+								</td>
+							</tr>
+						}
+					</tbody>
+				</table>
+				<p class="hint" style="margin-top:8px">Bu özellik yalnızca açık sitelerde görünür ve çalışır; kapalı sitelerde gazete modülü tamamen devre dışıdır.</p>
+			</div>
+			<h2 style="font-size:1.05rem;margin-top:20px" id="depolama">Depolama (Cloudflare R2 / S3 — site bazlı)</h2>
+			<form method="post" action="/admin/gazete/depolama" class="card card-pad">
+				<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:6px">
+					<select class="input" name="provider" aria-label="Depolama sağlayıcısı">
+						<option value="local" selected?={ v.Storage.ProviderLocal }>Yerel disk</option>
+						<option value="r2" selected?={ v.Storage.ProviderR2 }>Cloudflare R2</option>
+						<option value="s3" selected?={ v.Storage.ProviderS3 }>AWS S3</option>
+						<option value="minio" selected?={ v.Storage.ProviderMinio }>MinIO</option>
+					</select>
+					<input class="input" name="endpoint" aria-label="Depolama endpoint" value={ v.Storage.Endpoint } placeholder="Endpoint (https://<account>.r2.cloudflarestorage.com)"/>
+					<input class="input" name="bucket" value={ v.Storage.Bucket } placeholder="Bucket (site-2-medya)" aria-label="Depolama bucket"/>
+					<input class="input" name="region" value={ v.Storage.Region } placeholder="region (auto)" aria-label="Depolama bölgesi"/>
+					<input class="input" name="access_key" value={ v.Storage.AccessKeyID } placeholder="Access Key ID" aria-label="Depolama Access Key ID"/>
+					if v.StorageSecret {
+						<input class="input" type="password" name="secret" placeholder="Secret Key (kayıtlı — boş bırakılırsa korunur)" aria-label="Depolama Secret Key (boş bırakılırsa korunur)"/>
+					} else {
+						<input class="input" type="password" name="secret" placeholder="Secret Key" aria-label="Depolama Secret Key"/>
+					}
+					<input class="input" name="public_url" value={ v.Storage.PublicBaseURL } placeholder="Genel URL / CDN (https://cdn.site.com)" aria-label="Depolama genel URL / CDN"/>
+					<input class="input" name="prefix" value={ v.Storage.PathPrefix } placeholder="Yol eki (opsiyonel)" aria-label="Depolama yol eki"/>
+				</div>
+				<label class="small" style="display:block;margin-top:8px"><input type="checkbox" name="acik" value="1" checked?={ v.Storage.Enabled }/> R2/S3 depolamayı bu site için aktif et</label>
+				<div style="display:flex;gap:8px;margin-top:10px">
+					<button class="btn" type="submit">Kaydet</button>
+					<button class="btn small" type="submit" formaction="/admin/gazete/depolama/test">Bağlantıyı Test Et</button>
+				</div>
+				<p class="hint" style="margin:.5em 0">Her site kendi bucket'ında ve kendi anahtarıyla tutulur; siteler birbirinden tamamen izoledir. Gizli anahtar şifreli saklanır.</p>
+			</form>
+			<h2 style="font-size:1.05rem;margin-top:20px" id="otomasyon">Otomasyon &amp; Dağıtım (WhatsApp + SMS)</h2>
+			<form method="post" action="/admin/gazete/ayar" class="card card-pad">
+				<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:6px">
+					<label class="small">Günlük üretim saati<input class="input" name="saat" value={ v.AyarSaat } placeholder="07:00"/></label>
+					<label class="small">Haftalık gönderim günü (0=Pazar)<input class="input" name="haftalik_gun" type="number" min="0" max="6" value={ v.AyarHaftalik }/></label>
+					<label class="small">Aylık gönderim günü<input class="input" name="aylik_gun" type="number" min="1" max="28" value={ v.AyarAylik }/></label>
+					<label class="small">
+						Otomatik yayın
+						<select class="input" name="otomatik_yayin">
+							<option value="0" selected?={ !v.AyarOtoYayin }>Kapalı (taslak)</option>
+							<option value="1" selected?={ v.AyarOtoYayin }>Açık (doğrudan yayına)</option>
+						</select>
+					</label>
+					<label class="small">WhatsApp Phone Number ID<input class="input" name="wa_phone" value={ v.WAPhone }/></label>
+					if v.WATokenSet {
+						<label class="small">WhatsApp API Token<input class="input" type="password" name="wa_token" placeholder="(kayıtlı)"/></label>
+					} else {
+						<label class="small">WhatsApp API Token<input class="input" type="password" name="wa_token" placeholder="boş = kapalı"/></label>
+					}
+					<label class="small">API sürümü<input class="input" name="wa_version" value={ v.WAVersion }/></label>
+					<label class="small">Onaylı şablon adı<input class="input" name="wa_template" value={ v.WATemplate } placeholder="gazete_bulten"/></label>
+					<label class="small">SMS sağlayıcısı
+						<select class="input" name="sms_provider">
+							<option value="" selected?={ v.SMSProvider == "" }>Kapalı</option>
+							<option value="netgsm" selected?={ v.SMSProvider == "netgsm" }>Netgsm (Türkiye)</option>
+							<option value="twilio" selected?={ v.SMSProvider == "twilio" }>Twilio</option>
+						</select>
+					</label>
+					<label class="small">SMS başlığı / gönderen<input class="input" name="sms_from" value={ v.SMSFrom } placeholder="Netgsm msgheader veya +1…"/></label>
+					<label class="small">Netgsm kullanıcı<input class="input" name="sms_netgsm_user" value={ v.SMSNetgsmUser }/></label>
+					if v.SMSNetgsmPassSet {
+						<label class="small">Netgsm şifre<input class="input" type="password" name="sms_netgsm_password" placeholder="(kayıtlı)"/></label>
+					} else {
+						<label class="small">Netgsm şifre<input class="input" type="password" name="sms_netgsm_password"/></label>
+					}
+					<label class="small">Twilio Account SID<input class="input" name="sms_twilio_sid" value={ v.SMSTwilioSID }/></label>
+					if v.SMSTwilioTokenSet {
+						<label class="small">Twilio Auth Token<input class="input" type="password" name="sms_twilio_token" placeholder="(kayıtlı)"/></label>
+					} else {
+						<label class="small">Twilio Auth Token<input class="input" type="password" name="sms_twilio_token"/></label>
+					}
+				</div>
+				<button class="btn" type="submit" style="margin-top:10px">Kaydet</button>
+				<p class="hint" style="margin:.5em 0">Günlük iş belirtilen saatte bir kez çalışır: sayı üretir (otomatik doldurur), PDF oluşturur ve abonelere iletir. Kanal bazında: e-posta ekli PDF, WhatsApp onaylı şablon + PDF, SMS ise kısa metin + okuma bağlantısı gönderir. Sağlayıcı anahtarları yoksa o kanal kullanılmaz.</p>
+			</form>
+		}
+		if v.PermEkip {
+			<h2 style="font-size:1.05rem;margin-top:20px" id="ekip">Ekip &amp; Yetkiler</h2>
+			<div class="card card-pad">
+				<form method="post" action="/admin/gazete/ekip" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+					<select class="input" name="user_id" style="min-width:220px" aria-label="Ekibe eklenecek kullanıcı">
+						for _, u := range v.Users {
+							<option value={ u.ID }>{ u.Name } ({ u.Role })</option>
+						}
+					</select>
+					<select class="input" name="rol" aria-label="Gazete rolü">
+						<option value="sorumlu">Sorumlu (tam yetki)</option>
+						<option value="editor">Editör (düzenleme)</option>
+						<option value="izleyici">İzleyici (görüntüleme)</option>
+					</select>
+					<button class="btn small" type="submit">Ata</button>
+				</form>
+				<table class="table" style="margin-top:10px">
+					<thead>
+						<tr><th>Kullanıcı</th><th>E-posta</th><th>Sistem Rolü</th><th>Gazete Rolü</th><th style="width:90px"></th></tr>
+					</thead>
+					<tbody>
+						if len(v.Team) == 0 {
+							@TabloBos(5, "user-plus", "Henüz atama yok", "Gazete ekibine kullanıcı ekleyerek başlayın.", "", "")
+						}
+						for _, m := range v.Team {
+							<tr>
+								<td>{ m.UserName }</td>
+								<td class="small muted">{ m.UserEmail }</td>
+								<td class="small">{ m.UserRole }</td>
+								<td><span class="badge">{ m.Rol }</span></td>
+								<td>
+									<form method="post" action={ templ.SafeURL(m.SilURL) }><button class="btn small" type="submit">Kaldır</button></form>
+								</td>
+							</tr>
+						}
+					</tbody>
+				</table>
+				<p class="hint">Atanan kullanıcılar yalnızca bu sitenin gazetesini yönetir. Yöneticiler her zaman tam yetkilidir.</p>
+			</div>
+		}
+		<h2 style="font-size:1.05rem;margin-top:20px" id="sablonlar">
+			Şablonlar
+			<a class="btn ghost small" href="/admin/gazete/sablonlar" style="margin-left:8px"><svg class="ti ti-metin" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-books"></use></svg> Galeri</a>
+		</h2>
+		<div class="card card-pad">
+			if v.PermDuzenle {
+				<form method="post" action="/admin/gazete/sablonlar" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+					<input class="input" name="ad" placeholder="Şablon adı" style="min-width:200px" required aria-label="Şablon adı"/>
+					<input class="input" name="aciklama" placeholder="Açıklama (ops)" style="min-width:200px" aria-label="Şablon açıklaması"/>
+					<label class="small"><input type="checkbox" name="varsayilan" value="1"/> Varsayılan</label>
+					<button class="btn small" type="submit">Şablon Ekle</button>
+				</form>
+			}
+			{{/* Faz 184: düz tablo yerine GALERİ düzeni.
+			     Tablo yalnız ad/açıklama gösteriyordu; şablonun neye
+			     benzediğini görmek için ayrı sayfaya gitmek gerekiyordu.
+			     Artık galeriyle AYNI mini sayfa önizlemeleri burada,
+			     seçilebilir kartlar hâlinde ve sığacak biçimde. */}}
+			if len(v.Templates) == 0 {
+				@BosDurum("template", "Şablon yok", "Sayılar varsayılan 10 sayfalık düzen ile üretilir.", "Hazır Şablonları Yükle", "/admin/gazete/sablonlar")
+			} else {
+				<div class="gz-gal">
+					for _, t := range v.Templates {
+						<div class="gz-gal__kart">
+							<div class="gz-gal__ust">
+								<b class="gz-gal__ad" title={ t.Name }>{ t.Name }</b>
+								if t.IsDefault {
+									<span class="gz-gal__rozet" title="Yeni sayılar bu şablonla üretilir">
+										<svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-star"/></svg> varsayılan
+									</span>
+								}
+							</div>
+							if t.Description != "" {
+								<p class="gz-gal__aciklama" title={ t.Description }>{ t.Description }</p>
+							}
+							if len(t.Pages) > 0 {
+								<div class="gz-thumbs">
+									for _, p := range t.Pages {
+										@PageThumb(p)
+									}
+								</div>
+							}
+							<div class="gz-gal__alt">
+								<span class="small muted">{ itoaT(t.SayfaSayisi) } sayfa</span>
+								<a class="btn small" href={ templ.SafeURL(t.YeniSayiURL) }>
+									<svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-news"/></svg> Bu Şablondan Sayı
+								</a>
+								if v.PermDuzenle {
+									<form method="post" action={ templ.SafeURL(t.SilURL) } data-confirm="Şablon silinsin mi?">
+										<button class="btn ghost small" type="submit">Sil</button>
+									</form>
+								}
+							</div>
+						</div>
+					}
+				</div>
+			}
+			<p class="hint">Şablon sayfaları editörden "Şablon olarak kaydet" ile de doldurulabilir; şablon seçilen sayı, otomatik doldurmada bu düzeni kullanır.</p>
+		</div>
+		<h2 style="font-size:1.05rem;margin-top:20px" id="sayilar">Sayılar (Baskılar)</h2>
+		<div class="card card-pad">
+			<table class="table">
+				<thead>
+					<tr><th>Tarih</th><th>Periyot</th><th>Başlık</th><th>Durum</th><th>Sayfa</th><th style="width:340px">İşlemler</th></tr>
+				</thead>
+				<tbody>
+					if len(v.Issues) == 0 {
+						@TabloBos(6, "news", "Henüz sayı yok", "Yukarıdaki “Yeni Sayı” ile ilk e-baskıyı oluşturun.", "", "")
+					}
+					for _, i := range v.Issues {
+						<tr>
+							<td>{ i.IssueDate }</td>
+							<td class="small">{ i.Period }</td>
+							<td class="small">{ i.Title }</td>
+							<td><span class="badge">{ i.Status }</span></td>
+							<td class="small">{ i.PageCount }</td>
+							<td>
+								<a class="btn small" href={ templ.SafeURL(i.DuzenleURL) }>Düzenle</a>
+								if v.PermDuzenle {
+									<form method="post" action={ templ.SafeURL(i.PDFURL) } style="display:inline"><button class="btn small" type="submit">PDF</button></form>
+									<form method="post" action={ templ.SafeURL(i.DurumURL) } style="display:inline">
+										<input type="hidden" name="durum" value={ i.DurumVal }/>
+										<button class="btn small" type="submit">{ i.DurumBtn }</button>
+									</form>
+								}
+								if v.PermAbone {
+									<form method="post" action={ templ.SafeURL(i.GonderURL) } style="display:inline" data-confirm="Bu baskı abonelere gönderilsin mi?"><button class="btn small" type="submit">Dağıt</button></form>
+								}
+								if v.PermDuzenle {
+									<form method="post" action={ templ.SafeURL(i.SilURL) } style="display:inline" data-confirm="Sayı silinsin mi?"><button class="btn small" type="submit">Sil</button></form>
+								}
+							</td>
+						</tr>
+					}
+				</tbody>
+			</table>
+		</div>
+		<h2 style="font-size:1.05rem;margin-top:20px" id="aboneler">
+			Aboneler
+			<a class="btn ghost small" href="/admin/aboneler" style="margin-left:8px"><svg class="ti ti-metin" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-users"></use></svg> Tüm Aboneler</a>
+		</h2>
+		<div class="card card-pad">
+			if v.PermAbone {
+				<form method="post" action="/admin/gazete/aboneler" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+					<input class="input" name="email" placeholder="E-posta" style="min-width:220px" aria-label="Abone e-postası"/>
+					<input class="input" name="telefon" placeholder="Telefon (905… — WhatsApp/SMS için)" style="min-width:160px" aria-label="Abone telefonu"/>
+					<select class="input" name="kanal" aria-label="Abone kanalı">
+						<option value="email">E-posta</option>
+						<option value="whatsapp">WhatsApp</option>
+						<option value="sms">SMS</option>
+					</select>
+					<select class="input" name="siklik" aria-label="Abone gönderim sıklığı">
+						<option value="gunluk">Günlük</option>
+						<option value="haftalik">Haftalık</option>
+						<option value="aylik">Aylık</option>
+					</select>
+					<button class="btn small" type="submit">Abone Ekle</button>
+				</form>
+			}
+			<table class="table" style="margin-top:10px">
+				<thead>
+					<tr><th>E-posta</th><th>Telefon</th><th>Kanal</th><th>Sıklık</th><th>Durum</th><th style="width:150px"></th></tr>
+				</thead>
+				<tbody>
+					if len(v.Subs) == 0 {
+						@TabloBos(6, "users", "Abone yok", "E-baskıya abone olanlar burada listelenir.", "", "")
+					}
+					for _, s := range v.Subs {
+						<tr>
+							<td class="small">{ s.Email }</td>
+							<td class="small">{ s.Phone }</td>
+							<td class="small">{ s.Channel }</td>
+							<td class="small">{ s.Frequency }</td>
+							<td><span class="badge">{ s.Status }</span></td>
+							<td>
+								if v.PermAbone {
+									<form method="post" action={ templ.SafeURL(s.DurumURL) } style="display:inline">
+										<input type="hidden" name="durum" value={ s.DurumVal }/>
+										<button class="btn small" type="submit">{ s.DurumBtn }</button>
+									</form>
+									<form method="post" action={ templ.SafeURL(s.SilURL) } style="display:inline" data-confirm="Abone kaydı (KVKK) silinsin mi?"><button class="btn small" type="submit">Sil</button></form>
+								}
+							</td>
+						</tr>
+					}
+				</tbody>
+			</table>
+			<p class="hint">Aboneler <a href="/gazete">/gazete</a> sayfasından da kaydolabilir; her gönderimde tek tıkla çıkış bağlantısı bulunur (KVKK).</p>
+		</div>
+	</div>
+}

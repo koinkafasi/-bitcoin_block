@@ -1,0 +1,520 @@
+// İçerikler listesi (Panel v2 devamı) — html/template contents_panel'inin
+// templ karşılığı. Bütün HTMX hedefleri (#icerik-panel), app.js çengelleri
+// (#topluBar, #tumunuSec, .satirSec, data-toggle) birebir korunur.
+package templkit
+
+// ISekme durum sekmesi.
+type ISekme struct {
+	Href   string
+	Label  string
+	Count  string
+	Active bool
+}
+
+// IFiltre filtre seçeneği.
+type IFiltre struct {
+	Value    string
+	Label    string
+	Selected bool
+	Nested   bool // kategori listesinde "↳" öneki
+}
+
+// IGorunum kaydedilmiş filtre görünümü (Faz 48).
+type IGorunum struct {
+	Ad string
+	QS string
+}
+
+// ISayfa sayfalama öğesi.
+type ISayfa struct {
+	Href   string
+	Label  string
+	Active bool
+	Dots   bool
+}
+
+// IcerikRow tablo satırı.
+type IcerikRow struct {
+	ID          int64
+	Title       string
+	Meta        string
+	TypeKey     string
+	Status      string
+	BadgeAM     bool
+	BadgeSD     bool
+	BadgeDM     bool
+	Yayin       string
+	Hit         string
+	// Yayın önceliği eksenleri (spec 11 §5c). OncelikVar false ise rozet
+	// basılmaz — eksenleri hesaplanmamış içerikte "0" göstermek yanıltırdı.
+	OncelikVar bool
+	Oncelik    string
+	Trend      string
+	Tazelik    string
+	Guven      string
+	Tamlik     string
+	ShowYayinla bool
+	ShowTaslak  bool
+	ShowArsiv   bool
+	ShowSil     bool
+
+	// Faz 192 — Dil kolonu (Tip'ten ÖNCE).
+	//
+	// Neden: aynı makalenin her dili ayrı satır olarak listeleniyordu. Ölçüm:
+	// "Yayında" sekmesinin ilk 40 satırının 39'u EN çeviriydi; TR asılları
+	// sonraki sayfalara düşüyordu. Artık tek satır + dil etiketleri.
+	Diller []IcerikDil
+}
+
+// IcerikDil listenin dil etiketidir.
+//
+// Var=false ise o dilde sürüm yok: etiket "+" olarak basılır ve tıklanınca
+// çeviri üretimi başlar (Faz 190 kuyruğu). Var=true ise etiket düz bağlantıdır
+// ve doğrudan o dilin editörünü açar.
+type IcerikDil struct {
+	Kod    string // tr, en, de…
+	ID     int64  // sürüm kimliği (Var iken)
+	Durum  string // yayinda | taslak | arsiv
+	Var    bool
+	Aktif  bool   // satırın kendisi bu dilde (kök dil)
+	Kaynak string // çeviri yoksa: AI isteğinin gideceği kaynak kimliği
+}
+
+// IceriklerView içerik listesi panelinin tamamı.
+type IceriklerView struct {
+	FlashKind string
+	FlashText string
+	Statuses  []ISekme
+	TumuHref  string
+	TumuOn    bool
+	Status    string
+	Types     []IFiltre
+	Cats      []IFiltre
+	Gunler    []IFiltre
+	Tip       string
+	Kategori  string
+	Baslangic string
+	Bitis     string
+	// SesFiltre içerik listesindeki ses/röportaj filtresi (var|bekliyor|basarisiz).
+	SesFiltre string
+	// Triyaj (U1): sıralama anahtarı ve tamlık eşiği (form durumu).
+	// "oncelik" dört eksenin birleşimidir (internal/scoring); "skor"
+	// yalnız tamlığa bakar ve yayın kapısının okuduğu alandır.
+	Sirala    string
+	MinSkor   string
+	Q         string
+	FiltreVar bool
+	FiltreOzet string
+	TemizHref  string
+	Views     []IGorunum
+	CurrentQS string
+	Sayfa     int
+	ToplamSayfa int
+	SayfaBilgi  string
+	Rows      []IcerikRow
+	Pages     []ISayfa
+	PrevHref  string
+	NextHref  string
+	PrevVar   bool
+	NextVar   bool
+	Total     int
+}
+
+// IceriklerPanel liste paneli (HTMX hedefi: #icerik-panel).
+templ IceriklerPanel(v IceriklerView) {
+	<div id="icerik-panel">
+		if v.FlashText != "" {
+			<div class={ "flash", v.FlashKind }>{ v.FlashText }</div>
+		}
+		@Yukleniyor("icerik-yukleniyor", "")
+		<div class="tabs">
+			for _, t := range v.Statuses {
+				<a
+					href={ templ.SafeURL(t.Href) }
+					hx-get={ t.Href }
+					hx-target="#icerik-panel"
+					hx-swap="outerHTML"
+					hx-push-url="true"
+					hx-indicator="#icerik-yukleniyor"
+					if t.Active {
+						class="active"
+					}
+				>{ t.Label }<span class="count-badge">{ t.Count }</span></a>
+			}
+			<a
+				href={ templ.SafeURL(v.TumuHref) }
+				hx-get={ v.TumuHref }
+				hx-target="#icerik-panel"
+				hx-swap="outerHTML"
+				hx-push-url="true"
+				hx-indicator="#icerik-yukleniyor"
+				if v.TumuOn {
+					class="active"
+				}
+			>Tümü</a>
+		</div>
+		<form
+			class="filtre-grid"
+			method="get"
+			action="/admin/icerikler"
+			hx-get="/admin/icerikler"
+			hx-target="#icerik-panel"
+			hx-swap="outerHTML"
+			hx-push-url="true"
+			hx-indicator="#icerik-yukleniyor"
+		>
+			<input type="hidden" name="durum" value={ v.Status }/>
+			<select class="input" name="tip" aria-label="Tipe göre filtrele">
+				<option value="">Tüm tipler</option>
+				for _, o := range v.Types {
+					<option value={ o.Value } if o.Selected { selected }>{ o.Label }</option>
+				}
+			</select>
+			<select class="input" name="kategori" aria-label="Kategoriye göre filtrele">
+				<option value="">Tüm kategoriler</option>
+				for _, o := range v.Cats {
+					<option value={ o.Value } if o.Selected { selected }>
+						if o.Nested {
+							↳
+						}
+						{ o.Label }
+					</option>
+				}
+			</select>
+			<select class="input" name="gun" aria-label="Tarih aralığı">
+				for _, o := range v.Gunler {
+					<option value={ o.Value } if o.Selected { selected }>{ o.Label }</option>
+				}
+			</select>
+			<input class="input" type="date" name="baslangic" value={ v.Baslangic } aria-label="Başlangıç tarihi"/>
+			<input class="input" type="date" name="bitis" value={ v.Bitis } aria-label="Bitiş tarihi"/>
+			<select class="input" name="ses" aria-label="Ses / röportaj kaydına göre filtrele">
+				<option value="">Tüm içerikler</option>
+				<option value="var" selected?={ v.SesFiltre == "var" }>Röportajı olan</option>
+				<option value="bekliyor" selected?={ v.SesFiltre == "bekliyor" }>Transkript sürüyor</option>
+				<option value="basarisiz" selected?={ v.SesFiltre == "basarisiz" }>Transkript başarısız</option>
+			</select>
+			<select class="input fq-2" name="sirala" aria-label="Sıralama">
+				<option value="oncelik" selected?={ v.Sirala == "oncelik" }>Yayın önceliği (trend + tazelik + güven)</option>
+				<option value="">Son güncellenen</option>
+				<option value="skor" selected?={ v.Sirala == "skor" }>Tamlık (eksiksizlik)</option>
+				<option value="eski" selected?={ v.Sirala == "eski" }>En eski</option>
+				<option value="baslik" selected?={ v.Sirala == "baslik" }>Başlık (A→Z)</option>
+			</select>
+			<input class="input" type="number" name="minskor" value={ v.MinSkor } min="0" max="100" placeholder="min tamlık" aria-label="En düşük tamlık puanı"/>
+			<input class="input fq-2" type="search" name="q" value={ v.Q } placeholder="Başlık / spot ara…" aria-label="İçerik ara (başlık veya spot)"/>
+			<button class="btn fq-gonder" type="submit">Filtrele</button>
+		</form>
+		if v.FiltreVar {
+			<p class="hint" style="margin:2px 0 10px">
+				{ v.FiltreOzet }
+				<a
+					href={ templ.SafeURL(v.TemizHref) }
+					hx-get={ v.TemizHref }
+					hx-target="#icerik-panel"
+					hx-swap="outerHTML"
+					hx-push-url="true"
+					hx-indicator="#icerik-yukleniyor"
+					style="text-decoration:underline"
+				>temizle</a>
+			</p>
+		}
+		if len(v.Views) > 0 {
+			<div class="gorunumler" style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:0 0 10px">
+				for _, g := range v.Views {
+					<span class="chip-view">
+						<a
+							href={ templ.SafeURL("/admin/icerikler?" + g.QS) }
+							hx-get={ "/admin/icerikler?" + g.QS }
+							hx-target="#icerik-panel"
+							hx-swap="outerHTML"
+							hx-push-url="true"
+							hx-indicator="#icerik-yukleniyor"
+						>{ g.Ad }</a>
+						<form method="post" action="/admin/icerikler/gorunum-sil" style="display:inline">
+							<input type="hidden" name="ad" value={ g.Ad }/>
+							<button class="chip-x" type="submit" title="Bu görünümü sil">×</button>
+						</form>
+					</span>
+				}
+			</div>
+		}
+		<div style="display:flex;gap:8px;margin:0 0 10px;align-items:center;flex-wrap:wrap">
+			<form method="post" action="/admin/icerikler/gorunum-kaydet" style="display:flex;gap:6px;align-items:center">
+				<input class="input" name="ad" placeholder="Görünümü kaydet (ad)" style="max-width:200px" aria-label="Görünüm adı"/>
+				<input type="hidden" name="qs" value={ v.CurrentQS }/>
+				<button
+					class="btn ghost small"
+					type="submit"
+					if v.CurrentQS == "" {
+						disabled
+						title="Önce bir filtre kombinasyonu uygula"
+					}
+				>＋ Kaydet</button>
+			</form>
+			<span class="small muted">
+				if v.CurrentQS != "" {
+					Mevcut filtre kombinasyonu salt olarak kaydedilebilir.
+				} else {
+					Görünüm kaydetmek için önce filtre uygula (tip/kategori/tarih…).
+				}
+				 · Sayfa: { itoaT(v.Sayfa) }/{ itoaT(v.ToplamSayfa) }
+			</span>
+		</div>
+		<form
+			method="post"
+			action="/admin/icerikler/toplu"
+			id="topluForm"
+			hx-post="/admin/icerikler/toplu"
+			hx-target="#icerik-panel"
+			hx-swap="outerHTML"
+			hx-indicator="#icerik-yukleniyor"
+		>
+			<div class="toplu-bar" id="topluBar" hidden>
+				<span class="small" id="topluSayi">0 içerik seçili</span>
+				<button class="btn small" type="submit" name="islem" value="yayinla">Yayınla</button>
+				<button class="btn ghost small" type="submit" name="islem" value="arsiv">Arşivle</button>
+				<input class="input" type="datetime-local" name="yayin_tarihi" aria-label="Planlanan yayın tarihi" style="max-width:190px"/>
+				<button class="btn ghost small" type="submit" name="islem" value="planla">Planla</button>
+				<select class="input" name="rozet" aria-label="Rozet" style="max-width:150px">
+					<option value="">Rozet seç…</option>
+					<option value="AM">Anamanşet</option>
+					<option value="SD">Son Dakika</option>
+					<option value="DM">Devmanşet</option>
+					<option value="UM">Üst Manşet</option>
+					<option value="FH">Flash Haber</option>
+					<option value="HK">Haber Kutusu</option>
+				</select>
+				<select class="input" name="rozet_durum" aria-label="Rozet işlemi" style="max-width:110px">
+					<option value="ac">Aç</option>
+					<option value="kapat">Kapat</option>
+				</select>
+				<button class="btn ghost small" type="submit" name="islem" value="rozet">Rozet Uygula</button>
+				<select class="input" name="kategori" style="max-width:190px" aria-label="Kategori taşı">
+					<option value="">Kategori seç…</option>
+					<option value="0">— Kategorisiz —</option>
+					for _, o := range v.Cats {
+						<option value={ o.Value }>{ o.Label }</option>
+					}
+				</select>
+				<button class="btn ghost small" type="submit" name="islem" value="kategori">Kategori taşı</button>
+				<button class="btn danger small" type="submit" name="islem" value="sil" data-toplu-sil>Sil</button>
+				<span class="small muted">Yayınlama, tekil yayınlamadaki kapıya (YMYL / alaka puanı) tabidir.</span>
+			</div>
+			// Faz 164: uzun listede başlık yapışkan kalsın. Tablo kendi
+			// içinde kaydırılıyor; sayfa değil.
+			<div class="table-scroll">
+			<table class="table">
+				<thead>
+					<tr>
+						<th style="width:28px"><input type="checkbox" id="tumunuSec" aria-label="Tümünü seç"/></th>
+						<th>İçerik</th><th class="dil-kolon">Dil</th><th>Tip</th><th>Durum</th><th>Rozet</th><th>Yayın</th><th title="Yayın önceliği: trend + tazelik + güven + tamlık">Öncelik</th><th>Okunma</th><th>İşlem</th>
+					</tr>
+				</thead>
+				<tbody>
+					if len(v.Rows) == 0 {
+						@TabloBos(10, "file-text", "Bu görünümde içerik yok", "Filtreyi gevşetmeyi ya da yeni bir içerik oluşturmayı deneyin.", "Yeni içerik", "/admin/icerikler/yeni")
+					}
+					for _, r := range v.Rows {
+						@IceriklerRow(r)
+					}
+				</tbody>
+			</table>
+			</div>
+		</form>
+		if v.ToplamSayfa > 1 {
+			<div class="sayfalama" style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:10px">
+				if v.PrevVar {
+					<a
+						class="btn ghost small"
+						href={ templ.SafeURL(v.PrevHref) }
+						hx-get={ v.PrevHref }
+						hx-target="#icerik-panel"
+						hx-swap="outerHTML"
+						hx-push-url="true"
+						hx-indicator="#icerik-yukleniyor"
+					>« Önceki</a>
+				}
+				for _, p := range v.Pages {
+					if p.Dots {
+						<span class="small muted">…</span>
+					} else {
+						<a
+							class={ "btn", "small", templ.KV("active", p.Active) }
+							href={ templ.SafeURL(p.Href) }
+							hx-get={ p.Href }
+							hx-target="#icerik-panel"
+							hx-swap="outerHTML"
+							hx-push-url="true"
+							hx-indicator="#icerik-yukleniyor"
+						>{ p.Label }</a>
+					}
+				}
+				if v.NextVar {
+					<a
+						class="btn ghost small"
+						href={ templ.SafeURL(v.NextHref) }
+						hx-get={ v.NextHref }
+						hx-target="#icerik-panel"
+						hx-swap="outerHTML"
+						hx-push-url="true"
+						hx-indicator="#icerik-yukleniyor"
+					>Sonraki »</a>
+				}
+				<span class="small muted" style="margin-left:6px">Toplam: { itoaT(v.Total) } · Sayfa { itoaT(v.Sayfa) }/{ itoaT(v.ToplamSayfa) }</span>
+			</div>
+		} else {
+			<div class="small muted" style="margin-top:8px">Toplam: { itoaT(v.Total) }</div>
+		}
+	</div>
+}
+
+// IceriklerRow tek içerik satırı.
+templ IceriklerRow(r IcerikRow) {
+	<tr id={ "icerik-satir-" + itoaT64(r.ID) }>
+		<td><input type="checkbox" name="id" value={ itoaT64(r.ID) } class="satirSec" aria-label="Seç"/></td>
+		<td>
+			<a href={ templ.SafeURL("/admin/icerikler/" + itoaT64(r.ID)) }>{ r.Title }</a>
+			<div class="small muted">{ r.Meta }</div>
+		</td>
+		<td class="dil-hucre">
+			for _, l := range r.Diller {
+				if l.Aktif {
+					<span class="dil-pill is-aktif" title={ l.Kod + " · bu satırın dili" }>{ dilKisa(l.Kod) }</span>
+				} else if l.Var {
+					<a class="dil-pill is-var" href={ templ.SafeURL("/admin/icerikler/" + itoaT64(l.ID)) } title={ dilBaslik(l.Kod, l.Durum) }>{ dilKisa(l.Kod) }</a>
+				} else if l.Kaynak != "" {
+					<button
+						type="button"
+						class="dil-pill is-yok"
+						hx-post={ "/admin/icerikler/" + l.Kaynak + "/cevir/" + l.Kod }
+						hx-vals={ `{"ai":"1"}` }
+						title={ dilBaslik(l.Kod, "yok") }
+					>{ dilKisa(l.Kod) }</button>
+				}
+			}
+		</td>
+		<td class="small">{ r.TypeKey }</td>
+		<td><span class={ "status-pill", "st-" + r.Status }>{ r.Status }</span></td>
+		<td style="white-space:nowrap">
+			<a href="#" data-toggle={ "/admin/icerikler/" + itoaT64(r.ID) + "/rozet/AM" } title="Anamanşet">
+				<span class={ "badge", "b-am", templ.KV("rozet-kapali", !r.BadgeAM) }>AM</span>
+			</a>
+			<a href="#" data-toggle={ "/admin/icerikler/" + itoaT64(r.ID) + "/rozet/SD" } title="Son Dakika">
+				<span class={ "badge", "b-sd", templ.KV("rozet-kapali", !r.BadgeSD) }>SD</span>
+			</a>
+			<a href="#" data-toggle={ "/admin/icerikler/" + itoaT64(r.ID) + "/rozet/DM" } title="Devmanşet">
+				<span class={ "badge", "b-dm", templ.KV("rozet-kapali", !r.BadgeDM) }>DM</span>
+			</a>
+		</td>
+		<td class="small muted">{ r.Yayin }</td>
+		<td class="small">
+			if r.OncelikVar {
+				<span class="onc-rozet" title={ "trend " + r.Trend + " · tazelik " + r.Tazelik + " · güven " + r.Guven + " · tamlık " + r.Tamlik }>
+					<b>{ r.Oncelik }</b>
+					<i class="onc-trend">T{ r.Trend }</i>
+					<i class="onc-taze">Z{ r.Tazelik }</i>
+				</span>
+			} else {
+				<span class="muted">—</span>
+			}
+		</td>
+		<td class="small">{ r.Hit }</td>
+		<td style="white-space:nowrap">
+			<a class="btn ghost small" href={ templ.SafeURL("/admin/icerikler/" + itoaT64(r.ID)) }>Düzenle</a>
+			if r.ShowYayinla {
+				<a
+					class="btn small"
+					href="#"
+					data-toggle={ "/admin/icerikler/" + itoaT64(r.ID) + "/yayinla" }
+					hx-post={ "/admin/icerikler/" + itoaT64(r.ID) + "/yayinla" }
+					hx-target="#icerik-panel"
+					hx-swap="outerHTML"
+					hx-confirm="Bu içerik yayınlansın mı?"
+					hx-indicator="#icerik-yukleniyor"
+					hx-disabled-elt="this"
+				>Yayınla</a>
+			}
+			if r.ShowTaslak {
+				<a
+					class="btn ghost small"
+					href="#"
+					data-toggle={ "/admin/icerikler/" + itoaT64(r.ID) + "/taslak" }
+					hx-post={ "/admin/icerikler/" + itoaT64(r.ID) + "/taslak" }
+					hx-target="#icerik-panel"
+					hx-swap="outerHTML"
+					hx-confirm="Bu içerik taslağa alınsın mı?"
+					hx-indicator="#icerik-yukleniyor"
+					hx-disabled-elt="this"
+				>Taslağa Al</a>
+			}
+			if r.ShowArsiv {
+				<a
+					class="btn ghost small"
+					href="#"
+					data-toggle={ "/admin/icerikler/" + itoaT64(r.ID) + "/arsiv" }
+					hx-post={ "/admin/icerikler/" + itoaT64(r.ID) + "/arsiv" }
+					hx-target="#icerik-panel"
+					hx-swap="outerHTML"
+					hx-confirm="Bu içerik arşivlensin mi?"
+					hx-indicator="#icerik-yukleniyor"
+					hx-disabled-elt="this"
+				>Arşiv</a>
+			}
+			if r.ShowSil {
+				<a
+					class="btn danger small"
+					href="#"
+					data-confirm={ "/admin/icerikler/" + itoaT64(r.ID) + "/sil" }
+					hx-post={ "/admin/icerikler/" + itoaT64(r.ID) + "/sil" }
+					hx-target="#icerik-panel"
+					hx-swap="outerHTML"
+					hx-confirm="Bu içerik kalıcı olarak silinsin mi? Bu işlem geri alınamaz."
+					hx-indicator="#icerik-yukleniyor"
+					hx-disabled-elt="this"
+				>Sil</a>
+			}
+		</td>
+	</tr>
+}
+
+// dilKisa dil kodunun listede görünen kısa etiketi.
+//
+// Neden büyük harf 2 harf: satır yüksekliği sabit kalsın. Bilinmeyen/uzun
+// kodlar (pt-BR gibi) kırpılır.
+func dilKisa(kod string) string {
+	switch kod {
+	case "tr":
+		return "TR"
+	case "en":
+		return "EN"
+	case "de":
+		return "DE"
+	case "fr":
+		return "FR"
+	case "es":
+		return "ES"
+	case "ar":
+		return "AR"
+	case "ru":
+		return "RU"
+	}
+	if len(kod) > 2 {
+		return kod[:2]
+	}
+	return kod
+}
+
+// dilBaslik etiketin ipucu metni (tarayıcı title'ı + erişilebilirlik).
+func dilBaslik(kod, durum string) string {
+	ad := dilKisa(kod)
+	switch durum {
+	case "yayinda":
+		return ad + " · yayında — düzenlemek için tıkla"
+	case "taslak":
+		return ad + " · taslak — düzenlemek için tıkla"
+	case "arsiv":
+		return ad + " · arşiv — düzenlemek için tıkla"
+	}
+	return ad + " · çeviri yok — AI ile çevir"
+}

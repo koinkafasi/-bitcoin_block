@@ -1,0 +1,483 @@
+{{define "uye-giris"}}<!doctype html><html lang="{{.Lang}}" {{if .RTL}}dir="rtl"{{end}} data-theme="{{.Theme}}"><head>{{template "public_head" .}}
+<link rel="stylesheet" href="{{asset "uye-giris.css"}}">
+<script>document.documentElement.classList.add('js');</script>
+</head>
+<body class="auth-page">
+{{template "uye-auth-kabuk" .}}
+<script src="{{asset "uye-giris.js"}}" defer></script>
+</body></html>{{end}}
+
+{{define "uye-kayit"}}<!doctype html><html lang="{{.Lang}}" {{if .RTL}}dir="rtl"{{end}} data-theme="{{.Theme}}"><head>{{template "public_head" .}}
+<link rel="stylesheet" href="{{asset "uye-giris.css"}}">
+<script>document.documentElement.classList.add('js');</script>
+</head>
+<body class="auth-page">
+{{template "uye-auth-kabuk" .}}
+<script src="{{asset "uye-giris.js"}}" defer></script>
+</body></html>{{end}}
+
+{{/* =====================================================================
+     Ortak kabuk: üst şerit + iki sütunlu kart (solda karakterler, sağda
+     form). Faz 198 — istek: demo.codeandchill.store/huddle/ düzeninin
+     aynısı; fareyi izleyen ve form durumuna tepki veren illüstrasyon.
+
+     Karakterler tamamen dekoratiftir: söyledikleri her şey formun kendi
+     erişilebilir durumunda da vardır (aria-pressed, caps notu, canlı
+     bölge). Bu yüzden `aria-hidden` taşırlar.
+     ===================================================================== */}}
+{{define "uye-auth-kabuk"}}
+<a class="auth-skip" href="#auth-form">İçeriğe geç</a>
+<div class="auth-room" aria-hidden="true"></div>
+
+<main class="auth-stage" id="main">
+  <div class="auth-top">
+    {{$b := .Brand}}<a class="auth-brand" href="{{.HomeURL}}">{{if and $b (eq $b.Mode "image") $b.ImageID}}<img src="{{mediaURL $b.ImageID}}" alt="{{.SiteName}}">{{else}}{{if and $b $b.Text}}{{$b.Text}}{{else}}the<b>block</b>{{end}}{{end}}</a>
+    <div class="auth-top-links">
+      <span>{{if eq .UyeMode "kayit"}}Üye kaydı{{else if eq .UyeMode "kayit-kapali"}}Üye kaydı{{else if eq .UyeMode "sifremi-unuttum"}}Şifre sıfırlama{{else if eq .UyeMode "sifre-sifirla"}}Şifre sıfırlama{{else if eq .UyeMode "sifre-tamam"}}Şifre sıfırlama{{else if eq .UyeMode "onay"}}E-posta doğrulama{{else}}Üye girişi{{end}}</span>
+      <a href="{{.HomeURL}}">Ana sayfa</a>
+    </div>
+  </div>
+
+  <section class="auth" data-mood="{{if .UyeError}}wrong{{else}}idle{{end}}" data-auth>
+    <div class="auth__art">
+      <div class="huddle" data-huddle aria-hidden="true">
+
+        {{/* Kırmızı: uzun gazete. Belinden kırılır — bu yüzden baş ayrı bir
+             gruptur ve gövdenin içinde kalan bir noktadan döner. */}}
+        <div class="mate mate--red" data-mate="red">
+          <div class="mate__breath">
+            <svg viewBox="0 0 150 290" focusable="false">
+              <rect class="ink-red" x="0" y="120" width="150" height="170" rx="18"/>
+              <g class="red-head">
+                <rect class="ink-red" x="0" y="10" width="150" height="162" rx="18"/>
+                <rect class="ink-cream" x="18" y="26" width="114" height="9" rx="4.5"/>
+                <g class="face">
+                  <g class="face__eyes is-open">
+                    <g class="face__pupils">
+                      <rect class="face-ink" x="45" y="66" width="11" height="17" rx="5.5"/>
+                      <rect class="face-ink" x="94" y="66" width="11" height="17" rx="5.5"/>
+                    </g>
+                  </g>
+                  <g class="face__eyes is-shut">
+                    <path class="face-line" d="M41 77 Q50.5 68 60 77"/>
+                    <path class="face-line" d="M90 77 Q99.5 68 109 77"/>
+                  </g>
+                  <g class="face__eyes is-glad">
+                    <path class="face-line" d="M41 78 Q50.5 66 60 78"/>
+                    <path class="face-line" d="M90 78 Q99.5 66 109 78"/>
+                  </g>
+                  <g class="face__mouth is-calm"><rect class="face-ink" x="71" y="106" width="8" height="12" rx="4"/></g>
+                  <g class="face__mouth is-o"><ellipse class="face-ink" cx="75" cy="114" rx="7" ry="9"/></g>
+                  <g class="face__mouth is-dots">
+                    <circle class="face-ink" cx="64" cy="114" r="4"/>
+                    <circle class="face-ink" cx="75" cy="114" r="4"/>
+                    <circle class="face-ink" cx="86" cy="114" r="4"/>
+                  </g>
+                  <g class="face__mouth is-wave"><path class="face-line" d="M60 114 q7 -7 14 0 t14 0"/></g>
+                  <g class="face__mouth is-frown"><path class="face-line" d="M62 120 Q75 109 88 120"/></g>
+                  <g class="face__mouth is-grin"><path class="face-ink" d="M59 110 Q75 132 91 110 Z"/></g>
+                </g>
+              </g>
+            </svg>
+          </div>
+        </div>
+
+        {{/* Mürekkep: dar, utangaçken dayanamayıp bakan karakter. Sırtı
+             dönünce yüzü yoktur; yalnız dikişi kalır. */}}
+        <div class="mate mate--ink" data-mate="ink">
+          <div class="mate__breath">
+            <svg viewBox="0 0 100 215" focusable="false">
+              <rect class="ink-ink" width="100" height="215" rx="16"/>
+              <path class="ink-back" d="M50 20 V195" fill="none" stroke="rgba(255,255,255,.32)" stroke-width="3" stroke-linecap="round"/>
+              <g class="face">
+                <g class="face__eyes is-open">
+                  <circle class="ink-white" cx="31" cy="55" r="13"/>
+                  <circle class="ink-white" cx="69" cy="55" r="13"/>
+                  <g class="face__pupils">
+                    <circle class="face-ink" cx="31" cy="55" r="6"/>
+                    <circle class="face-ink" cx="69" cy="55" r="6"/>
+                  </g>
+                </g>
+                <g class="face__eyes is-shut">
+                  <path class="face-line face-line--light" d="M18 53 Q31 63 44 53"/>
+                  <path class="face-line face-line--light" d="M56 53 Q69 63 82 53"/>
+                </g>
+                <g class="face__eyes is-peek">
+                  <path class="face-line face-line--light" d="M18 53 Q31 63 44 53"/>
+                  <ellipse class="ink-white" cx="69" cy="54" rx="13" ry="8"/>
+                  <circle class="face-ink" cx="73" cy="55" r="5"/>
+                </g>
+                <g class="face__eyes is-glad">
+                  <path class="face-line face-line--light" d="M18 55 Q31 43 44 55"/>
+                  <path class="face-line face-line--light" d="M56 55 Q69 43 82 55"/>
+                </g>
+                <g class="face__mouth is-calm"><path class="face-line face-line--light" d="M40 100 H60"/></g>
+                <g class="face__mouth is-o"><ellipse class="ink-white" cx="50" cy="102" rx="7" ry="9"/></g>
+                <g class="face__mouth is-frown"><path class="face-line face-line--light" d="M38 108 Q50 96 62 108"/></g>
+                <g class="face__mouth is-grin"><path class="ink-white" d="M36 98 Q50 120 64 98 Z"/></g>
+              </g>
+            </svg>
+          </div>
+        </div>
+
+        {{/* Amber: profilden çizilmiş yuvarlak; yüz çevirmek tek scaleX. */}}
+        <div class="mate mate--amber" data-mate="amber">
+          <div class="mate__breath">
+            <svg viewBox="0 0 120 160" focusable="false">
+              <path class="ink-amber" d="M0 160 V72 A60 60 0 0 1 120 72 V160 Z"/>
+              <g class="amber-face">
+                <g class="face__eyes is-open">
+                  <g class="face__pupils"><circle class="face-ink" cx="84" cy="58" r="6"/></g>
+                </g>
+                <g class="face__eyes is-shut"><path class="face-line" d="M75 60 Q84 50 93 60"/></g>
+                <g class="face__eyes is-glad"><path class="face-line" d="M75 62 Q84 50 93 62"/></g>
+                <g class="face__mouth is-calm"><path class="face-line face-line--lip" d="M64 104 H102"/></g>
+                <g class="face__mouth is-o"><ellipse class="face-ink" cx="86" cy="102" rx="6" ry="8"/></g>
+                <g class="face__mouth is-dots">
+                  <circle class="face-ink" cx="72" cy="104" r="3.5"/>
+                  <circle class="face-ink" cx="86" cy="104" r="3.5"/>
+                  <circle class="face-ink" cx="100" cy="104" r="3.5"/>
+                </g>
+                <g class="face__mouth is-wave"><path class="face-line face-line--lip" d="M58 104 q8 -7 16 0 t16 0 t16 0"/></g>
+                <g class="face__mouth is-frown"><path class="face-line face-line--lip" d="M64 110 q16 -12 32 -14"/></g>
+                <g class="face__mouth is-grin"><path class="face-line face-line--lip" d="M62 108 q20 -14 40 -20"/></g>
+              </g>
+            </svg>
+          </div>
+        </div>
+
+        {{/* Mercan: öndeki geniş kemer; grubun arkasına saklandığı kişi. */}}
+        <div class="mate mate--coral" data-mate="coral">
+          <div class="mate__breath">
+            <svg viewBox="0 0 280 140" focusable="false">
+              <path class="ink-coral" d="M0 140 A140 140 0 0 1 280 140 Z"/>
+              <g class="face">
+                <g class="face__eyes is-open">
+                  <g class="face__pupils">
+                    <circle class="face-ink" cx="106" cy="80" r="8"/>
+                    <circle class="face-ink" cx="174" cy="80" r="8"/>
+                  </g>
+                </g>
+                <g class="face__eyes is-shut">
+                  <path class="face-line" d="M96 84 Q106 72 116 84"/>
+                  <path class="face-line" d="M164 84 Q174 72 184 84"/>
+                </g>
+                <g class="face__eyes is-glad">
+                  <path class="face-line" d="M96 86 Q106 72 116 86"/>
+                  <path class="face-line" d="M164 86 Q174 72 184 86"/>
+                </g>
+                <g class="face__mouth is-calm"><path class="face-ink" d="M118 98 Q140 118 162 98 Z"/></g>
+                <g class="face__mouth is-o"><ellipse class="face-ink" cx="140" cy="108" rx="8" ry="10"/></g>
+                <g class="face__mouth is-dots">
+                  <circle class="face-ink" cx="118" cy="108" r="4.5"/>
+                  <circle class="face-ink" cx="140" cy="108" r="4.5"/>
+                  <circle class="face-ink" cx="162" cy="108" r="4.5"/>
+                </g>
+                <g class="face__mouth is-wave"><path class="face-line" d="M112 108 q8 -7 16 0 t16 0 t16 0"/></g>
+                <g class="face__mouth is-frown"><path class="face-line" d="M118 114 Q140 94 162 114"/></g>
+                <g class="face__mouth is-grin"><path class="face-ink" d="M108 92 Q140 132 172 92 Z"/></g>
+              </g>
+            </svg>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="auth__panel">
+      <div class="panel__inner" data-shake>
+        <svg class="panel__mark" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <rect x="2.5" y="5.5" width="12" height="15" rx="2.5" fill="currentColor" opacity=".22"/>
+          <rect x="9.5" y="3" width="12" height="15" rx="2.5" fill="currentColor"/>
+          <path d="M12.2 7.2h6.6M12.2 10.2h6.6M12.2 13.2h3.6" stroke="#fff" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+        </svg>
+
+        {{if or (eq .UyeMode "kayit") (eq .UyeMode "kayit-kapali")}}{{template "uye-auth-kayit" .}}
+        {{else if eq .UyeMode "sifremi-unuttum"}}{{template "uye-auth-sifremi-unuttum" .}}
+        {{else if eq .UyeMode "sifre-sifirla"}}{{template "uye-auth-sifre-sifirla" .}}
+        {{else if eq .UyeMode "sifre-tamam"}}{{template "uye-auth-sifre-tamam" .}}
+        {{else if eq .UyeMode "onay"}}{{template "uye-auth-onay" .}}
+        {{else}}{{template "uye-auth-giris" .}}{{end}}
+      </div>
+    </div>
+  </section>
+
+  <p class="auth-hint">
+    {{if or (eq .UyeMode "giris") (eq .UyeMode "kayit") (eq .UyeMode "kayit-kapali") (eq .UyeMode "sifre-sifirla")}}
+    <span class="auth-hint__say">Şifre alanına gelin — bakışlarını kaçırırlar.</span>
+    <span class="auth-hint__note">Göz simgesiyle şifreyi açarsanız sırtlarını dönerler.</span>
+    {{else}}
+    <span class="auth-hint__say">Buradalar — siz yazarken izliyorlar.</span>
+    <span class="auth-hint__note">Fareyi gezdirin, gözleri sizi takip eder.</span>
+    {{end}}
+  </p>
+</main>
+
+<p class="sr-only" role="status" aria-live="polite" data-live></p>
+{{end}}
+
+{{define "uye-auth-giris"}}
+<h1 class="panel__title">Tekrar hoş geldiniz</h1>
+<p class="panel__sub">Hesabınıza giriş yaparak okuma listenize, bildirimlerinize ve aboneliğinize erişin.</p>
+{{if .UyeError}}<div class="auth-alert" role="alert">
+  <svg width="15" height="15" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="8" cy="8" r="6.6"/><path d="M8 4.8v3.7"/><circle cx="8" cy="11.2" r=".95" fill="currentColor" stroke="none"/></svg>
+  <span>{{.UyeError}}</span>
+</div>{{end}}
+{{if .UyeInfo}}<div class="auth-alert auth-alert--info" role="status"><span>{{.UyeInfo}}</span></div>{{end}}
+<form method="post" action="{{.LangBase}}/giris" class="auth-form" id="auth-form" data-form="giris" novalidate>
+  <input type="hidden" name="redirect" value="{{.UyeRedirect}}">
+  <input type="hidden" name="form_ts" value="{{.UyeFormTS}}">
+  <div class="uye-hp" aria-hidden="true"><label>Web sitesi<input type="text" name="website" tabindex="-1" autocomplete="off"></label></div>
+
+  <div class="afield" data-field="login">
+    <label class="afield__label" for="login">E-posta veya kullanıcı adı</label>
+    <input class="afield__input" id="login" name="login" type="text" value="{{.UyeName}}" autocomplete="username" spellcheck="false" enterkeyhint="next" placeholder="ornek@eposta.com" aria-describedby="err-login" required autofocus>
+    <span class="afield__rule" aria-hidden="true"></span>
+    <p class="afield__err" id="err-login" data-err="login">
+      <svg class="afield__err-icon" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><circle cx="8" cy="8" r="6.6"/><path d="M8 4.9v3.6"/><circle cx="8" cy="11.1" r=".95" fill="currentColor" stroke="none"/></svg>
+      <span data-err-text="login"></span>
+    </p>
+  </div>
+
+  <div class="afield" data-field="password">
+    <label class="afield__label" for="password">Şifre</label>
+    <input class="afield__input" id="password" name="password" type="password" autocomplete="current-password" enterkeyhint="go" placeholder="••••••••" aria-describedby="err-password caps" required>
+    <button class="apeek" type="button" data-peek aria-pressed="false" aria-controls="password">
+      <span class="sr-only" data-peek-label>Şifreyi göster</span>
+      <svg class="apeek__on" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M2.6 12S6.4 5.8 12 5.8 21.4 12 21.4 12 17.6 18.2 12 18.2 2.6 12 2.6 12Z"/><circle cx="12" cy="12" r="3.1"/></svg>
+      <svg class="apeek__off" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M2.6 12S6.4 5.8 12 5.8c1.4 0 2.7.4 3.8 1M21.4 12s-3.8 6.2-9.4 6.2c-1.5 0-2.8-.4-4-1.1"/><path d="M9.9 9.9a3.1 3.1 0 0 0 4.3 4.3"/><path d="M4 4l16 16"/></svg>
+    </button>
+    <span class="afield__rule" aria-hidden="true"></span>
+    <p class="afield__err" id="err-password" data-err="password">
+      <svg class="afield__err-icon" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><circle cx="8" cy="8" r="6.6"/><path d="M8 4.9v3.6"/><circle cx="8" cy="11.1" r=".95" fill="currentColor" stroke="none"/></svg>
+      <span data-err-text="password"></span>
+    </p>
+    <p class="acaps" id="caps" data-caps hidden>Caps Lock açık.</p>
+  </div>
+
+  <div class="arow">
+    <label class="acheck">
+      <input type="checkbox" name="remember" value="1">
+      <span class="acheck__box" aria-hidden="true"><svg viewBox="0 0 16 16" focusable="false"><path d="M3.5 8.4 6.6 11.5 12.5 5" pathLength="1"/></svg></span>
+      <span class="acheck__text">Beni hatırla</span>
+    </label>
+    <a class="alink" href="{{.LangBase}}/sifremi-unuttum">Şifremi unuttum</a>
+  </div>
+
+  <button class="acta" type="submit" data-cta>
+    <span class="acta__label">Giriş Yap</span>
+    <span class="acta__spin" aria-hidden="true"></span>
+  </button>
+</form>
+
+{{if .GoogleEnabled}}
+<div class="asep"><span>veya</span></div>
+<a class="aghost" href="{{.LangBase}}/giris/google?redirect={{.UyeRedirect}}">
+  <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="#4285F4" d="M21.6 12.2c0-.7-.1-1.4-.2-2H12v3.9h5.4a4.6 4.6 0 0 1-2 3v2.5h3.2c1.9-1.7 3-4.3 3-7.4Z"/><path fill="#34A853" d="M12 22c2.7 0 5-.9 6.6-2.4l-3.2-2.5c-.9.6-2 1-3.4 1a5.9 5.9 0 0 1-5.6-4.1H3.1v2.6A10 10 0 0 0 12 22Z"/><path fill="#FBBC05" d="M6.4 14a5.9 5.9 0 0 1 0-3.8V7.6H3.1a10 10 0 0 0 0 8.9L6.4 14Z"/><path fill="#EA4335" d="M12 5.9c1.5 0 2.8.5 3.8 1.5l2.8-2.8A10 10 0 0 0 3.1 7.6l3.3 2.6A5.9 5.9 0 0 1 12 5.9Z"/></svg>
+  Google ile devam et
+</a>
+{{end}}
+
+{{if .UyeKayitAcik}}<p class="panel__foot">Hesabınız yok mu? <a class="alink alink--strong" href="{{.LangBase}}/kayit?redirect={{.UyeRedirect}}">Hemen kayıt olun</a></p>{{end}}
+{{end}}
+
+{{define "uye-auth-kayit"}}
+{{if eq .UyeMode "kayit-kapali"}}
+<h1 class="panel__title">Kayıtlar kapalı</h1>
+<p class="panel__sub">Yeni üye kayıtları şu anda kapalı. Mevcut hesabınızla giriş yapabilirsiniz.</p>
+<a class="acta" href="{{.LangBase}}/giris" style="display:grid;text-decoration:none"><span class="acta__label">Giriş Yap</span></a>
+<p class="panel__foot"><a class="alink" href="{{.HomeURL}}">Ana sayfaya dön</a></p>
+{{else}}
+<h1 class="panel__title">Hesap oluşturun</h1>
+<p class="panel__sub">Ücretsiz hesap: okuma listeniz, bildirimleriniz ve yorumlarınız sizinle kalsın.</p>
+{{if .UyeError}}<div class="auth-alert" role="alert">
+  <svg width="15" height="15" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="8" cy="8" r="6.6"/><path d="M8 4.8v3.7"/><circle cx="8" cy="11.2" r=".95" fill="currentColor" stroke="none"/></svg>
+  <span>{{.UyeError}}</span>
+</div>{{end}}
+<form method="post" action="{{.LangBase}}/kayit" class="auth-form" id="auth-form" data-form="kayit">
+  <input type="hidden" name="redirect" value="{{.UyeRedirect}}">
+  <input type="hidden" name="form_ts" value="{{.UyeFormTS}}">
+  <div class="uye-hp" aria-hidden="true"><label>Web sitesi<input type="text" name="website" tabindex="-1" autocomplete="off"></label></div>
+
+  <div class="afield">
+    <label class="afield__label" for="ad">Ad soyad</label>
+    <input class="afield__input" id="ad" name="name" type="text" value="{{.UyeName}}" autocomplete="name" maxlength="120" placeholder="Adınız Soyadınız" required autofocus>
+    <span class="afield__rule" aria-hidden="true"></span>
+  </div>
+
+  <div class="afield">
+    <label class="afield__label" for="eposta">E-posta</label>
+    <input class="afield__input" id="eposta" name="email" type="email" autocomplete="email" inputmode="email" spellcheck="false" placeholder="ornek@eposta.com" required>
+    <span class="afield__rule" aria-hidden="true"></span>
+  </div>
+
+  <div class="afield">
+    <label class="afield__label" for="password">Şifre</label>
+    <input class="afield__input" id="password" name="password" type="password" autocomplete="new-password" minlength="8" placeholder="En az 8 karakter" aria-describedby="kayit-hint" required>
+    <button class="apeek" type="button" data-peek aria-pressed="false" aria-controls="password">
+      <span class="sr-only" data-peek-label>Şifreyi göster</span>
+      <svg class="apeek__on" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M2.6 12S6.4 5.8 12 5.8 21.4 12 21.4 12 17.6 18.2 12 18.2 2.6 12 2.6 12Z"/><circle cx="12" cy="12" r="3.1"/></svg>
+      <svg class="apeek__off" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M2.6 12S6.4 5.8 12 5.8c1.4 0 2.7.4 3.8 1M21.4 12s-3.8 6.2-9.4 6.2c-1.5 0-2.8-.4-4-1.1"/><path d="M9.9 9.9a3.1 3.1 0 0 0 4.3 4.3"/><path d="M4 4l16 16"/></svg>
+    </button>
+    <span class="afield__rule" aria-hidden="true"></span>
+    <p class="acaps" id="caps" data-caps hidden>Caps Lock açık.</p>
+    <p class="sr-only" id="kayit-hint">En az 8 karakter.</p>
+  </div>
+
+  <div class="afield">
+    <label class="afield__label" for="password2">Şifre (tekrar)</label>
+    <input class="afield__input" id="password2" name="password2" type="password" autocomplete="new-password" minlength="8" placeholder="Şifreyi yineleyin" required>
+    <span class="afield__rule" aria-hidden="true"></span>
+  </div>
+
+  <label class="acheck" style="display:flex;margin:2px 0 20px;align-items:flex-start">
+    <input type="checkbox" name="terms" value="1" required>
+    <span class="acheck__box" aria-hidden="true" style="margin-top:2px"><svg viewBox="0 0 16 16" focusable="false"><path d="M3.5 8.4 6.6 11.5 12.5 5" pathLength="1"/></svg></span>
+    <span class="acheck__text" style="font-size:.74rem;line-height:1.45"><a class="alink alink--strong" href="{{.LangBase}}/kullanim-kosullari" target="_blank" rel="noopener">Kullanım Koşulları</a> ve <a class="alink alink--strong" href="{{.LangBase}}/gizlilik-politikasi" target="_blank" rel="noopener">KVKK Aydınlatma Metni</a>'ni okudum, onaylıyorum.</span>
+  </label>
+
+  <button class="acta" type="submit" data-cta>
+    <span class="acta__label">Hesap Oluştur</span>
+    <span class="acta__spin" aria-hidden="true"></span>
+  </button>
+</form>
+
+<p class="panel__foot">Zaten hesabınız var mı? <a class="alink alink--strong" href="{{.LangBase}}/giris?redirect={{.UyeRedirect}}">Giriş yapın</a></p>
+{{end}}
+{{end}}
+
+{{define "uye-sifremi-unuttum"}}<!doctype html><html lang="{{.Lang}}" {{if .RTL}}dir="rtl"{{end}} data-theme="{{.Theme}}"><head>{{template "public_head" .}}
+<link rel="stylesheet" href="{{asset "uye-giris.css"}}">
+<script>document.documentElement.classList.add('js');</script>
+</head>
+<body class="auth-page">
+{{template "uye-auth-kabuk" .}}
+<script src="{{asset "uye-giris.js"}}" defer></script>
+</body></html>{{end}}
+
+{{define "uye-sifre-sifirla"}}<!doctype html><html lang="{{.Lang}}" {{if .RTL}}dir="rtl"{{end}} data-theme="{{.Theme}}"><head>{{template "public_head" .}}
+<link rel="stylesheet" href="{{asset "uye-giris.css"}}">
+<script>document.documentElement.classList.add('js');</script>
+</head>
+<body class="auth-page">
+{{template "uye-auth-kabuk" .}}
+<script src="{{asset "uye-giris.js"}}" defer></script>
+</body></html>{{end}}
+
+{{define "uye-sifre-tamam"}}<!doctype html><html lang="{{.Lang}}" {{if .RTL}}dir="rtl"{{end}} data-theme="{{.Theme}}"><head>{{template "public_head" .}}
+<link rel="stylesheet" href="{{asset "uye-giris.css"}}">
+<script>document.documentElement.classList.add('js');</script>
+</head>
+<body class="auth-page">
+{{template "uye-auth-kabuk" .}}
+<script src="{{asset "uye-giris.js"}}" defer></script>
+</body></html>{{end}}
+
+{{define "uye-onay"}}<!doctype html><html lang="{{.Lang}}" {{if .RTL}}dir="rtl"{{end}} data-theme="{{.Theme}}"><head>{{template "public_head" .}}
+<link rel="stylesheet" href="{{asset "uye-giris.css"}}">
+<script>document.documentElement.classList.add('js');</script>
+</head>
+<body class="auth-page">
+{{template "uye-auth-kabuk" .}}
+<script src="{{asset "uye-giris.js"}}" defer></script>
+</body></html>{{end}}
+
+{{/* Şifre akışı panelleri — giriş/kayıtla aynı kabuk, aynı karakterler. */}}
+{{define "uye-auth-sifremi-unuttum"}}
+<h1 class="panel__title">Şifremi unuttum</h1>
+<p class="panel__sub">Kayıtlı e-posta adresinizi yazın; 30 dakika geçerli bir sıfırlama bağlantısı gönderelim.</p>
+{{if .UyeError}}<div class="auth-alert" role="alert"><span>{{.UyeError}}</span></div>{{end}}
+{{if .UyeInfo}}<div class="auth-alert auth-alert--info" role="status"><span>{{.UyeInfo}}</span></div>{{end}}
+<form method="post" action="{{.LangBase}}/sifremi-unuttum" class="auth-form" id="auth-form" data-form="sifre">
+  <input type="hidden" name="form_ts" value="{{.UyeFormTS}}">
+  <div class="uye-hp" aria-hidden="true"><label>Web sitesi<input type="text" name="website" tabindex="-1" autocomplete="off"></label></div>
+
+  <div class="afield" data-field="email">
+    <label class="afield__label" for="email">E-posta</label>
+    <input class="afield__input" id="email" name="email" type="email" autocomplete="email" inputmode="email" spellcheck="false" placeholder="ornek@eposta.com" aria-describedby="err-email" required autofocus>
+    <span class="afield__rule" aria-hidden="true"></span>
+    <p class="afield__err" id="err-email" data-err="email">
+      <svg class="afield__err-icon" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><circle cx="8" cy="8" r="6.6"/><path d="M8 4.9v3.6"/><circle cx="8" cy="11.1" r=".95" fill="currentColor" stroke="none"/></svg>
+      <span data-err-text="email"></span>
+    </p>
+  </div>
+
+  <button class="acta" type="submit" data-cta style="margin-top:6px">
+    <span class="acta__label">Sıfırlama bağlantısı gönder</span>
+    <span class="acta__spin" aria-hidden="true"></span>
+  </button>
+</form>
+<p class="panel__foot"><a class="alink alink--strong" href="{{.LangBase}}/giris">Giriş sayfasına dön</a></p>
+{{end}}
+
+{{define "uye-auth-sifre-sifirla"}}
+<h1 class="panel__title">Yeni şifre belirle</h1>
+<p class="panel__sub">En az 8 karakter. Kaydettiğinizde eski şifre geçersiz olur.</p>
+{{if .UyeError}}<div class="auth-alert" role="alert"><span>{{.UyeError}}</span></div>{{end}}
+<form method="post" action="{{.LangBase}}/sifre-sifirla" class="auth-form" id="auth-form" data-form="sifre">
+  <input type="hidden" name="token" value="{{.UyeToken}}">
+
+  <div class="afield" data-field="password">
+    <label class="afield__label" for="password">Yeni şifre</label>
+    <input class="afield__input" id="password" name="password" type="password" autocomplete="new-password" minlength="8" placeholder="En az 8 karakter" aria-describedby="err-password caps" required autofocus>
+    <button class="apeek" type="button" data-peek aria-pressed="false" aria-controls="password">
+      <span class="sr-only" data-peek-label>Şifreyi göster</span>
+      <svg class="apeek__on" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M2.6 12S6.4 5.8 12 5.8 21.4 12 21.4 12 17.6 18.2 12 18.2 2.6 12 2.6 12Z"/><circle cx="12" cy="12" r="3.1"/></svg>
+      <svg class="apeek__off" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M2.6 12S6.4 5.8 12 5.8c1.4 0 2.7.4 3.8 1M21.4 12s-3.8 6.2-9.4 6.2c-1.5 0-2.8-.4-4-1.1"/><path d="M9.9 9.9a3.1 3.1 0 0 0 4.3 4.3"/><path d="M4 4l16 16"/></svg>
+    </button>
+    <span class="afield__rule" aria-hidden="true"></span>
+    <p class="afield__err" id="err-password" data-err="password">
+      <svg class="afield__err-icon" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><circle cx="8" cy="8" r="6.6"/><path d="M8 4.9v3.6"/><circle cx="8" cy="11.1" r=".95" fill="currentColor" stroke="none"/></svg>
+      <span data-err-text="password"></span>
+    </p>
+    <p class="acaps" id="caps" data-caps hidden>Caps Lock açık.</p>
+  </div>
+
+  <div class="afield" data-field="password2">
+    <label class="afield__label" for="password2">Yeni şifre (tekrar)</label>
+    <input class="afield__input" id="password2" name="password2" type="password" autocomplete="new-password" minlength="8" placeholder="Şifreyi yineleyin" required>
+    <span class="afield__rule" aria-hidden="true"></span>
+    <p class="afield__err" id="err-password2" data-err="password2">
+      <svg class="afield__err-icon" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><circle cx="8" cy="8" r="6.6"/><path d="M8 4.9v3.6"/><circle cx="8" cy="11.1" r=".95" fill="currentColor" stroke="none"/></svg>
+      <span data-err-text="password2"></span>
+    </p>
+  </div>
+
+  <button class="acta" type="submit" data-cta style="margin-top:6px">
+    <span class="acta__label">Şifremi güncelle</span>
+    <span class="acta__spin" aria-hidden="true"></span>
+  </button>
+</form>
+<p class="panel__foot"><a class="alink alink--strong" href="{{.LangBase}}/giris">Giriş sayfasına dön</a></p>
+{{end}}
+
+{{define "uye-auth-sifre-tamam"}}
+<div class="panel__ok" aria-hidden="true">
+  <svg viewBox="0 0 24 24" focusable="false"><path d="M5 12.6 10 17.6 19 7.4"/></svg>
+</div>
+<h1 class="panel__title">Şifreniz güncellendi</h1>
+<p class="panel__sub">Yeni şifrenizle giriş yapabilirsiniz.</p>
+<a class="acta" href="{{.LangBase}}/giris" style="display:grid;text-decoration:none;margin-top:6px"><span class="acta__label">Giriş yap</span></a>
+<p class="panel__foot"><a class="alink" href="{{.HomeURL}}">Ana sayfaya dön</a></p>
+{{end}}
+
+{{define "uye-auth-onay"}}
+{{if .UyeOK}}
+<div class="panel__ok" aria-hidden="true">
+  <svg viewBox="0 0 24 24" focusable="false"><path d="M5 12.6 10 17.6 19 7.4"/></svg>
+</div>
+<h1 class="panel__title">E-posta doğrulandı</h1>
+<p class="panel__sub">{{if .UyeInfo}}{{.UyeInfo}}{{else}}E-posta adresiniz doğrulandı.{{end}}</p>
+<a class="acta" href="{{.LangBase}}/hesabim" style="display:grid;text-decoration:none;margin-top:6px"><span class="acta__label">Hesabıma git</span></a>
+{{else}}
+{{/* Bağlantı geçersizse yeşil tik gösterilmiyordu — eskiden her durumda
+     tik çiziliyor, "Bağlantı geçersiz" yazısıyla çelişiyordu. */}}
+<div class="panel__ok panel__ok--hata" aria-hidden="true">
+  <svg viewBox="0 0 24 24" focusable="false"><circle cx="12" cy="12" r="9"/><path d="M12 7.6v5.2"/><circle cx="12" cy="16.2" r="1.15" fill="currentColor" stroke="none"/></svg>
+</div>
+<h1 class="panel__title">E-posta doğrulanamadı</h1>
+<p class="panel__sub">{{if .UyeInfo}}{{.UyeInfo}}{{else}}Bağlantı geçersiz veya süresi dolmuş.{{end}}</p>
+<a class="acta" href="{{.LangBase}}/giris" style="display:grid;text-decoration:none;margin-top:6px"><span class="acta__label">Giriş yap</span></a>
+{{end}}
+<p class="panel__foot"><a class="alink" href="{{.HomeURL}}">Ana sayfaya dön</a></p>
+{{end}}

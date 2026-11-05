@@ -1,0 +1,850 @@
+// Topluluk panelleri (templ): Yorumlar, Geri Bildirim & Asistan, Üyelikler,
+// Mahreçler. html/template karşılıklarının birebir taşınması; HTMX hedefleri
+// ve app.js çengelleri (data-toggle, data-confirm, toplu seçim) korunur.
+package templkit
+
+// ---- Yorumlar ----
+
+// YorumRow yorum kartı.
+type YorumRow struct {
+	ID           int64
+	ContentID    int64
+	AuthorName   string
+	ContentTitle string
+	Time         string
+	Onayli       bool
+	Body         string
+}
+
+// YorumlarView yorumlar paneli.
+type YorumlarView struct {
+	FlashKind string
+	FlashText string
+	Tab       string
+	Pending   int
+	Ara       string
+	Items     []YorumRow
+}
+
+// YorumlarPanel yorum yönetimi (HTMX hedefi: #yorum-panel).
+templ YorumlarPanel(v YorumlarView) {
+	<div id="yorum-panel">
+		if v.FlashText != "" {
+			<div class={ "flash", v.FlashKind }>{ v.FlashText }</div>
+		}
+		@Yukleniyor("yorum-yukleniyor", "")
+		<div class="tabs">
+			<a
+				href="/admin/yorumlar?durum=onay_bekliyor"
+				hx-get="/admin/yorumlar?durum=onay_bekliyor"
+				hx-target="#yorum-panel"
+				hx-swap="outerHTML"
+				hx-push-url="true"
+				hx-indicator="#yorum-yukleniyor"
+				if v.Tab == "onay_bekliyor" {
+					class="active"
+				}
+			>Onay Bekliyor<span class="count-badge">{ itoaT(v.Pending) }</span></a>
+			<a
+				href="/admin/yorumlar?durum=onayli"
+				hx-get="/admin/yorumlar?durum=onayli"
+				hx-target="#yorum-panel"
+				hx-swap="outerHTML"
+				hx-push-url="true"
+				hx-indicator="#yorum-yukleniyor"
+				if v.Tab == "onayli" {
+					class="active"
+				}
+			>Onaylı</a>
+		</div>
+		{{/* Faz 168: yorumlarda metin araması. Önce yalnız DURUM süzgeci
+		     vardı; "şu kişinin yorumu" için 200 satır gözle taranıyordu.
+		     Medya kütüphanesinde arama varken burada olmaması tutarsızdı. */}}
+		<form
+			class="filtre-grid"
+			method="get"
+			action="/admin/yorumlar"
+			hx-get="/admin/yorumlar"
+			hx-target="#yorum-panel"
+			hx-swap="outerHTML"
+			hx-push-url="true"
+			hx-indicator="#yorum-yukleniyor"
+			style="margin-bottom:8px"
+		>
+			<input type="hidden" name="durum" value={ v.Tab }/>
+			<input
+				class="input fq-4"
+				type="search"
+				name="q"
+				value={ v.Ara }
+				placeholder="Yazan, yorum metni ya da içerik başlığı ara…"
+				aria-label="Yorumlarda ara"
+			/>
+			<button class="btn fq-2" type="submit">Ara</button>
+			if v.Ara != "" {
+				<a class="btn ghost fq-2" href={ templ.SafeURL("/admin/yorumlar?durum=" + v.Tab) }>Temizle</a>
+			}
+		</form>
+		<form
+			method="post"
+			action="/admin/yorumlar/toplu"
+			id="yorumTopluForm"
+			hx-post="/admin/yorumlar/toplu"
+			hx-target="#yorum-panel"
+			hx-swap="outerHTML"
+			hx-indicator="#yorum-yukleniyor"
+		>
+			<input type="hidden" name="durum" value={ v.Tab }/>
+			<div class="toplu-bar" id="yorumBar" hidden>
+				<label style="display:inline-flex;align-items:center;gap:6px"><input type="checkbox" id="yorumTumunuSec" aria-label="Tümünü seç"/><span class="small">Tümü</span></label>
+				<span class="small" id="yorumSayi">0 yorum seçili</span>
+				<button class="btn small" type="submit" name="islem" value="onayla">Onayla</button>
+				<button class="btn danger small" type="submit" name="islem" value="sil" data-toplu-yorum-sil>Sil</button>
+			</div>
+			<div class="gap">
+				if len(v.Items) == 0 {
+					if v.Ara != "" {
+						@BosDurum("search-off", "Sonuç yok", "“"+v.Ara+"” için yorum bulunamadı.", "", "")
+					} else {
+						@BosDurum("message-circle", "Yorum yok", "Bu sekmede onay bekleyen ya da yayınlanmış yorum bulunmuyor.", "", "")
+					}
+				}
+				for _, y := range v.Items {
+					<div class="card card-pad">
+						<div class="shape">
+							<label class="mi-sec" style="position:static;display:inline-flex;margin-right:8px" title="Seç"><input type="checkbox" name="id" value={ itoaT64(y.ID) } class="yorumSec" aria-label="Seç"/></label>
+							<strong>{ y.AuthorName }</strong>
+							 · <a href={ templ.SafeURL("/admin/icerikler/" + itoaT64(y.ContentID)) }>{ y.ContentTitle }</a>
+							 · { y.Time }
+							 · 
+							<span class={ "status-pill", pillClass(y.Onayli) }>
+								if y.Onayli {
+									Onaylı
+								} else {
+									Bekliyor
+								}
+							</span>
+						</div>
+						<p style="margin:.4em 0">{ y.Body }</p>
+						<div style="display:flex;gap:8px">
+							if !y.Onayli {
+								<a
+									class="btn small"
+									href="#"
+									data-toggle={ "/admin/yorumlar/" + itoaT64(y.ID) + "/onayla" }
+									hx-post={ "/admin/yorumlar/" + itoaT64(y.ID) + "/onayla" }
+									hx-target="#yorum-panel"
+									hx-swap="outerHTML"
+									hx-indicator="#yorum-yukleniyor"
+									hx-disabled-elt="this"
+								>Onayla</a>
+							}
+							<a
+								class="btn danger small"
+								href="#"
+								data-confirm={ "/admin/yorumlar/" + itoaT64(y.ID) + "/sil" }
+								hx-post={ "/admin/yorumlar/" + itoaT64(y.ID) + "/sil" }
+								hx-target="#yorum-panel"
+								hx-swap="outerHTML"
+								hx-confirm="Bu yorum silinsin mi? Bu işlem geri alınamaz."
+								hx-indicator="#yorum-yukleniyor"
+								hx-disabled-elt="this"
+							>Sil</a>
+						</div>
+					</div>
+				}
+			</div>
+		</form>
+	</div>
+}
+
+// ---- Geri Bildirim & Asistan ----
+
+// GBR geri bildirim kartı.
+type GBR struct {
+	ID         int64
+	ContentID  int64
+	Kind       string
+	Title      string
+	Status     string
+	Time       string
+	Detail     string
+	Reporter   string
+	Resolution string
+}
+
+// AsistLog asistan sorgusu kaydı.
+type AsistLog struct {
+	Time     string
+	Provider string
+	Question string
+	Answer   string
+}
+
+// GeriBildirimView geri bildirim paneli.
+type GeriBildirimView struct {
+	FlashKind string
+	FlashText string
+	Bekliyor  string
+	Cozuldu   string
+	AsstCnt   string
+	Items     []GBR
+	Logs      []AsistLog
+}
+
+// GeriBildirimPanel geri bildirim & asistan paneli (HTMX hedefi: #geri-bildirim-panel).
+templ GeriBildirimPanel(v GeriBildirimView) {
+	<div id="geri-bildirim-panel">
+		if v.FlashText != "" {
+			<div class={ "flash", v.FlashKind }>{ v.FlashText }</div>
+		}
+		@Yukleniyor("geri-bildirim-yukleniyor", "")
+		<div class="card card-pad" style="display:flex;gap:14px;align-items:center;flex-wrap:wrap">
+			<strong>Geri Bildirim &amp; Asistan</strong>
+			<a class="tag" href="/admin/geri-bildirim?durum=bekliyor" hx-get="/admin/geri-bildirim?durum=bekliyor" hx-target="#geri-bildirim-panel" hx-swap="outerHTML" hx-push-url="true" hx-indicator="#geri-bildirim-yukleniyor">Bekleyen: { v.Bekliyor }</a>
+			<a class="tag" href="/admin/geri-bildirim?durum=cozuldu" hx-get="/admin/geri-bildirim?durum=cozuldu" hx-target="#geri-bildirim-panel" hx-swap="outerHTML" hx-push-url="true" hx-indicator="#geri-bildirim-yukleniyor">Çözülen: { v.Cozuldu }</a>
+			<a class="tag" href="/admin/geri-bildirim?durum=tumu" hx-get="/admin/geri-bildirim?durum=tumu" hx-target="#geri-bildirim-panel" hx-swap="outerHTML" hx-push-url="true" hx-indicator="#geri-bildirim-yukleniyor">Tümü</a>
+			<span class="muted small" style="margin-left:auto">Asistan sorgusu: { v.AsstCnt }</span>
+		</div>
+		<div class="gap" style="margin-top:14px">
+			if len(v.Items) == 0 {
+				<p class="muted">Bu filtrede bildirim yok.</p>
+			}
+			for _, f := range v.Items {
+				<div class="card card-pad">
+					<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+						<span class="tag">{ f.Kind }</span>
+						<strong><a href={ templ.SafeURL("/admin/icerikler/" + itoaT64(f.ContentID)) }>{ f.Title }</a></strong>
+						<span class="muted small">{ f.Time }</span>
+						<span class="tag" style="margin-left:auto">{ f.Status }</span>
+					</div>
+					if f.Detail != "" {
+						<p class="muted small" style="margin:.4em 0 0">{ f.Detail }</p>
+					}
+					if f.Reporter != "" {
+						<p class="small muted" style="margin:.2em 0 0">Bildiren: { f.Reporter }</p>
+					}
+					if f.Resolution != "" {
+						<p class="small" style="margin:.4em 0 0">Çözüm: { f.Resolution }</p>
+					}
+					<form
+						method="post"
+						action={ templ.SafeURL("/admin/geri-bildirim/" + itoaT64(f.ID)) }
+						style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap"
+						hx-post={ "/admin/geri-bildirim/" + itoaT64(f.ID) }
+						hx-target="#geri-bildirim-panel"
+						hx-swap="outerHTML"
+						hx-indicator="#geri-bildirim-yukleniyor"
+					>
+						<input class="input" name="cozum" placeholder="Çözüm notu" style="flex:1;min-width:180px" value={ f.Resolution } aria-label="Çözüm notu"/>
+						<select class="select" name="durum">
+							<option value="incelendi">İncelendi</option>
+							<option value="cozuldu">Çözüldü</option>
+							<option value="reddedildi">Reddedildi</option>
+						</select>
+						<button class="btn small" type="submit">Kaydet</button>
+					</form>
+				</div>
+			}
+		</div>
+		<h2 style="font-size:1.05rem;margin-top:24px">Son Asistan Sorguları</h2>
+		<div class="gap">
+			if len(v.Logs) == 0 {
+				<p class="muted">Henüz asistan sorgusu yok.</p>
+			}
+			for _, l := range v.Logs {
+				<div class="card card-pad">
+					<div class="small muted">{ l.Time } · { l.Provider }</div>
+					<p style="margin:.3em 0"><strong>S:</strong> { l.Question }</p>
+					if l.Answer != "" {
+						<p class="muted small" style="margin:0"><strong>A:</strong> { l.Answer }</p>
+					}
+				</div>
+			}
+		</div>
+	</div>
+}
+
+// ---- Üyelikler ----
+
+// UyeRow üyelik tablosu satırı.
+type UyeRow struct {
+	ID         int64
+	Name       string
+	Email      string
+	Role       string
+	Membership string
+	Premium    bool
+	// Katman (abonelik) bilgileri.
+	TierName  string
+	TierColor string
+	Until     string
+	Cycle     string
+}
+
+// UyeTier katman düzenleme satırı.
+type UyeTier struct {
+	ID          int64
+	Slug        string
+	Name        string
+	Description string
+	ColorHex    string
+	Weight      int
+	Monthly     string
+	Annual      string
+	Perks       string
+	Active      bool
+}
+
+// UyePayment ödeme panosu satırı.
+type UyePayment struct {
+	ID       int64
+	UserName string
+	TierName string
+	Provider string
+	Status   string
+	Amount   string
+	Cycle    string
+	Created  string
+}
+
+// UyeTierCount kademe dağılımı.
+type UyeTierCount struct {
+	Name  string
+	Count int
+}
+
+// UyePromo indirim kodu satırı.
+type UyePromo struct {
+	ID        int64
+	Code      string
+	Percent   int
+	TierSlug  string
+	Uses      string
+	Expires   string
+	Active    bool
+}
+
+// UyeTrend aylık gelir grafiği çubuğu.
+type UyeTrend struct {
+	Short  string
+	Label  string
+	Amount string
+	Count  int
+	Pct    int // 0..100 (en yüksek aya göre)
+}
+
+// UyelerView üyelikler paneli.
+type UyelerView struct {
+	FlashKind string
+	FlashText string
+	// Ara üye listesindeki metin araması (Faz 168, N-11).
+	Ara   string
+	Items []UyeRow
+	// Stripe ödeme ayarları (settings section='stripe').
+	StripeSecret     string
+	StripeSecretSet  bool
+	StripeWebhook    string
+	StripeWebhookSet bool
+	StripePrice      string
+	StripeAktif      bool
+	// Google ile giriş (settings section='google').
+	GoogleClientID     string
+	GoogleClientSecret string
+	GoogleSecretSet    bool
+	// Üye kaydı anahtarı (settings section='uyelik', key='kayit_acik').
+	KayitAcik bool
+	// iyzico (settings section='iyzico').
+	IyzicoKey       string
+	IyzicoSecretSet bool
+	IyzicoMode      string
+	IyzicoAktif     bool
+	// Katmanlar + ödeme panosu.
+	Tiers      []UyeTier
+	TierEdit   *UyeTier
+	Payments   []UyePayment
+	StatActive int
+	StatRev30  string
+	StatRevY   string
+	StatFailed int
+	TierCounts []UyeTierCount
+	// Ekonomi (Faz 5): MRR/ARR/churn/LTV + kuponlar.
+	EconMRR     string
+	EconARR     string
+	EconARPU    string
+	EconChurn   string
+	EconLTV     string
+	EconRenewal string
+	EconRefund  string
+	EconNew     int
+	EconCancel  int
+	Promos      []UyePromo
+	// Aylık gelir trendi (son 12 ay).
+	Trend         []UyeTrend
+	TrendHasData  bool
+}
+
+// UyelerPanel üyelik yönetimi (HTMX hedefi: #members-panel).
+templ UyelerPanel(v UyelerView) {
+	<div id="members-panel">
+		if v.FlashText != "" {
+			<div class={ "flash", v.FlashKind }>{ v.FlashText }</div>
+		}
+		@Yukleniyor("members-yukleniyor", "İşleniyor…")
+		<div style="display:flex;gap:8px;align-items:center;margin-bottom:12px;flex-wrap:wrap">
+			<span class="badge" style="background:var(--ok-fill,var(--ok));color:#fff">Paywall aktif</span>
+			<span class="small muted">"Abonelere özel" içerikler üye olmayana ilk N paragraf gösterir (N = Ayarlar→paywall/limit).</span>
+		</div>
+		<div class="card card-pad" style="margin-bottom:14px" id="uye-panel">
+			<h2 style="margin:0 0 8px;font-size:1.05rem"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-user"></use></svg> Üye Girişi ve Kayıt</h2>
+			<p class="hint" style="margin:0 0 8px">Okuyucular <code>/giris</code> ve <code>/kayit</code> adreslerini kullanır.
+				Header'daki üye simgesi <b>Header Yönetimi</b> panelinden açılıp kapatılır.</p>
+			<form method="post" action="/admin/members/uye" hx-post="/admin/members/uye" hx-target="#members-panel" hx-swap="outerHTML" hx-indicator="#members-yukleniyor">
+				<label class="small" style="display:block"><input type="checkbox" name="kayit_acik" value="1" checked?={ v.KayitAcik }/> Yeni üye kaydı açık</label>
+				<p class="hint" style="margin:6px 0 0">Kapatıldığında <code>/kayit</code> sayfası "kayıtlar kapalı" mesajı gösterir; mevcut üyeler giriş yapmaya devam eder.</p>
+				<button class="btn" type="submit" style="margin-top:8px">Kaydet</button>
+			</form>
+		</div>
+		<div class="card card-pad" style="margin-bottom:14px" id="abonelik-panel">
+			<h2 style="margin:0 0 8px;font-size:1.05rem"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-award"></use></svg> Abonelik Kademeleri ve Gelir</h2>
+			<div style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:10px">
+				<span class="badge" style="background:var(--ok-fill,var(--ok));color:#fff">Aktif abone: { itoaT(v.StatActive) }</span>
+				<span class="small muted">Son 30 gün gelir: <b>{ v.StatRev30 } ₺</b></span>
+				<span class="small muted">Son 1 yıl: <b>{ v.StatRevY } ₺</b></span>
+				<span class="small muted">Başarısız ödeme (30g): <b>{ itoaT(v.StatFailed) }</b></span>
+			</div>
+			<p class="small" style="margin:0 0 10px;display:flex;gap:12px;flex-wrap:wrap">
+				<span>MRR: <b>{ v.EconMRR } ₺</b></span>
+				<span>ARR: <b>{ v.EconARR } ₺</b></span>
+				<span>ARPU: <b>{ v.EconARPU } ₺</b></span>
+				<span>Churn (30g): <b>{ v.EconChurn }</b></span>
+				<span>LTV: <b>{ v.EconLTV } ₺</b></span>
+				<span>Yenileme (30g): <b>{ v.EconRenewal }</b></span>
+				<span>Yeni (30g): <b>{ itoaT(v.EconNew) }</b></span>
+				<span>İptal (30g): <b>{ itoaT(v.EconCancel) }</b></span>
+				<span>İade (30g): <b>{ v.EconRefund } ₺</b></span>
+			</p>
+			if len(v.TierCounts) > 0 {
+				<p class="small" style="margin:0 0 10px">
+					for _, tc := range v.TierCounts {
+						<span class="tag">{ tc.Name }: { itoaT(tc.Count) }</span>
+					}
+				</p>
+			}
+			if len(v.Trend) > 0 {
+				if !v.TrendHasData {
+					<p class="small muted" style="margin:0 0 14px">Son 12 ayda abonelik ödemesi yok. İlk ödeme alındığında aylık gelir grafiği burada görünür.</p>
+				} else {
+				<div class="abon-trend">
+					<div class="abon-trend-head">
+						<span class="small muted">Aylık gelir (son 12 ay)</span>
+						<span class="small muted">En yüksek ay = %100</span>
+					</div>
+					<div class="abon-trend-bars" aria-hidden="true">
+						for _, b := range v.Trend {
+							<div class="abon-trend-col" title={ b.Label + " · " + b.Amount + " ₺ · " + itoaT(b.Count) + " ödeme" }>
+								<div class="abon-trend-bar" style={ "height:" + itoaT(b.Pct) + "%" }></div>
+								<span class="abon-trend-x">{ b.Short }</span>
+							</div>
+						}
+					</div>
+					<table class="sr-only">
+						<caption>Aylık abonelik geliri (son 12 ay)</caption>
+						<thead><tr><th>Ay</th><th>Gelir (₺)</th><th>Ödeme sayısı</th></tr></thead>
+						<tbody>
+							for _, b := range v.Trend {
+								<tr><td>{ b.Label }</td><td>{ b.Amount }</td><td>{ itoaT(b.Count) }</td></tr>
+							}
+						</tbody>
+					</table>
+				</div>
+				}
+			}
+			<table class="table" style="margin-bottom:12px">
+				<thead><tr><th>Kademe</th><th>Ağırlık</th><th>Aylık</th><th>Yıllık</th><th>Durum</th><th></th></tr></thead>
+				<tbody>
+					for _, t := range v.Tiers {
+						<tr>
+							<td>
+								<span style={ "display:inline-block;width:10px;height:10px;border-radius:50%;background:" + t.ColorHex + ";margin-right:6px" }></span>
+								<strong>{ t.Name }</strong> <span class="small muted">/{ t.Slug }</span>
+							</td>
+							<td class="small">{ itoaT(t.Weight) }</td>
+							<td class="small">{ t.Monthly } ₺</td>
+							<td class="small">{ t.Annual } ₺</td>
+							<td class="small">
+								if t.Active {
+									Satışta
+								} else {
+									Kapalı
+								}
+							</td>
+							<td>
+								<form method="post" action={ "/admin/members/kademe/" + itoaT64(t.ID) + "/sil" } hx-post={ "/admin/members/kademe/" + itoaT64(t.ID) + "/sil" } hx-target="#members-panel" hx-swap="outerHTML" hx-confirm="Kademe silinsin mi? Aboneler ücretsize düşer." style="display:inline">
+									<button class="btn danger small" type="submit">Sil</button>
+								</form>
+							</td>
+						</tr>
+						<tr>
+							<td colspan="6" style="padding-top:0">
+								<details>
+									<summary class="small" style="cursor:pointer">Düzenle</summary>
+									<form method="post" action="/admin/members/kademe" hx-post="/admin/members/kademe" hx-target="#members-panel" hx-swap="outerHTML" style="display:grid;gap:6px;margin-top:8px">
+										<input type="hidden" name="id" value={ itoaT64(t.ID) }/>
+										<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:6px">
+											<label class="small">Ad<input class="input" name="name" value={ t.Name } required/></label>
+											<label class="small">Slug<input class="input" name="slug" value={ t.Slug } required/></label>
+											<label class="small">Ağırlık<input class="input" type="number" min="1" max="20" name="weight" value={ itoaT(t.Weight) }/></label>
+											<label class="small">Renk<input class="input" name="color_hex" value={ t.ColorHex }/></label>
+											<label class="small">Aylık ₺<input class="input" name="monthly_price" value={ t.Monthly }/></label>
+											<label class="small">Yıllık ₺<input class="input" name="annual_price" value={ t.Annual }/></label>
+										</div>
+										<label class="small">Açıklama<input class="input" name="description" value={ t.Description }/></label>
+										<label class="small">Avantajlar (her satır bir madde)<textarea class="input" name="perks" rows="3">{ t.Perks }</textarea></label>
+										<label class="small"><input type="checkbox" name="is_active" value="1" checked?={ t.Active }/> Satışta</label>
+										<button class="btn small" type="submit" style="justify-self:start">Kaydet</button>
+									</form>
+								</details>
+							</td>
+						</tr>
+					}
+				</tbody>
+			</table>
+			<details>
+				<summary class="small" style="cursor:pointer"><b>+ Yeni kademe ekle</b></summary>
+				<form method="post" action="/admin/members/kademe" hx-post="/admin/members/kademe" hx-target="#members-panel" hx-swap="outerHTML" style="display:grid;gap:6px;margin-top:8px">
+					<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:6px">
+						<label class="small">Ad<input class="input" name="name" required placeholder="örn. Platin"/></label>
+						<label class="small">Slug<input class="input" name="slug" required placeholder="platin"/></label>
+						<label class="small">Ağırlık<input class="input" type="number" min="1" max="20" name="weight" value="1"/></label>
+						<label class="small">Renk<input class="input" name="color_hex" value="#71717a"/></label>
+						<label class="small">Aylık ₺<input class="input" name="monthly_price" value="0"/></label>
+						<label class="small">Yıllık ₺<input class="input" name="annual_price" value="0"/></label>
+					</div>
+					<label class="small">Açıklama<input class="input" name="description"/></label>
+					<label class="small">Avantajlar (her satır bir madde)<textarea class="input" name="perks" rows="3"></textarea></label>
+					<label class="small"><input type="checkbox" name="is_active" value="1" checked/> Satışta</label>
+					<button class="btn small" type="submit" style="justify-self:start">Kademe ekle</button>
+				</form>
+			</details>
+			<h3 style="margin:16px 0 6px;font-size:.95rem"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-receipt"></use></svg> Son ödemeler</h3>
+			<table class="table">
+				<thead><tr><th>Üye</th><th>Kademe</th><th>Sağlayıcı</th><th>Dönem</th><th>Tutar</th><th>Durum</th><th>Tarih</th><th></th></tr></thead>
+				<tbody>
+					if len(v.Payments) == 0 {
+						@TabloBos(8, "credit-card", "Henüz ödeme yok", "Üyeler ödeme yaptıkça kayıtlar burada görünür.", "", "")
+					}
+					for _, p := range v.Payments {
+						<tr>
+							<td class="small">{ p.UserName }</td>
+							<td class="small">{ p.TierName }</td>
+							<td class="small">{ p.Provider }</td>
+							<td class="small">{ p.Cycle }</td>
+							<td class="small">{ p.Amount } ₺</td>
+							<td class="small">{ p.Status }</td>
+							<td class="small">{ p.Created }</td>
+							<td>
+								if p.Status == "success" {
+									<form method="post" action={ "/admin/members/odeme/" + itoaT64(p.ID) + "/iade" } hx-post={ "/admin/members/odeme/" + itoaT64(p.ID) + "/iade" } hx-target="#members-panel" hx-swap="outerHTML" hx-confirm="Ödeme iade edilsin mi?" style="display:inline">
+										<button class="btn ghost small" type="submit">İade</button>
+									</form>
+								}
+							</td>
+						</tr>
+					}
+				</tbody>
+			</table>
+		</div>
+		<div class="card card-pad" style="margin-bottom:14px" id="iyzico-panel">
+			<h2 style="margin:0 0 8px;font-size:1.05rem">iyzico Ödeme (TRY / TCKN)</h2>
+			<p class="hint" style="margin:0 0 8px">Fiyat sayfası: <code>/abonelik</code> · Geri dönüş adresi: <code>/abonelik/geri-donus</code>.
+				Kart bilgisi sitemize girmez; iyzico hosted checkout kullanılır.</p>
+			<form method="post" action="/admin/members/iyzico" hx-post="/admin/members/iyzico" hx-target="#members-panel" hx-swap="outerHTML" hx-indicator="#members-yukleniyor">
+				<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px">
+					<label class="small">API anahtarı<input class="input" name="api_key" value={ v.IyzicoKey }/></label>
+					<label class="small">Gizli anahtar
+						if v.IyzicoSecretSet {
+							<input class="input" type="password" name="secret_key" placeholder="(kayıtlı)"/>
+						} else {
+							<input class="input" type="password" name="secret_key"/>
+						}
+					</label>
+					<label class="small">Ortam
+						<select class="input" name="mode">
+							<option value="sandbox" selected?={ v.IyzicoMode != "production" }>Sandbox (test)</option>
+							<option value="production" selected?={ v.IyzicoMode == "production" }>Production (canlı)</option>
+						</select>
+					</label>
+				</div>
+				<label class="small" style="display:block;margin-top:8px"><input type="checkbox" name="aktif" value="1" checked?={ v.IyzicoAktif }/> iyzico ile ödeme al</label>
+				<button class="btn" type="submit" style="margin-top:8px">Kaydet</button>
+			</form>
+		</div>
+		<div class="card card-pad" style="margin-bottom:14px" id="kupon-panel">
+			<h2 style="margin:0 0 8px;font-size:1.05rem"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-ticket"></use></svg> İndirim Kodları</h2>
+			<p class="hint" style="margin:0 0 8px">Kod, fiyat sayfasındaki ödeme formunda girilir; yüzde indirim uygulanır.</p>
+			<table class="table" style="margin-bottom:10px">
+				<thead><tr><th>Kod</th><th>İndirim</th><th>Kademe</th><th>Kullanım</th><th>Bitiş</th><th>Durum</th><th></th></tr></thead>
+				<tbody>
+					if len(v.Promos) == 0 {
+						@TabloBos(7, "discount", "Henüz indirim kodu yok", "Yukarıdaki formdan ilk kuponu oluşturun.", "", "")
+					}
+					for _, p := range v.Promos {
+						<tr>
+							<td class="small"><b>{ p.Code }</b></td>
+							<td class="small">{ p.Percent }</td>
+							<td class="small">{ p.TierSlug }</td>
+							<td class="small">{ p.Uses }</td>
+							<td class="small">{ p.Expires }</td>
+							<td class="small">
+								if p.Active {
+									Aktif
+								} else {
+									Kapalı
+								}
+							</td>
+							<td>
+								<form method="post" action={ "/admin/members/kupon/" + itoaT64(p.ID) + "/sil" } hx-post={ "/admin/members/kupon/" + itoaT64(p.ID) + "/sil" } hx-target="#members-panel" hx-swap="outerHTML" hx-confirm="Kupon silinsin mi?" style="display:inline">
+									<button class="btn danger small" type="submit">Sil</button>
+								</form>
+							</td>
+						</tr>
+					}
+				</tbody>
+			</table>
+			<details>
+				<summary class="small" style="cursor:pointer"><b>+ Yeni kupon</b></summary>
+				<form method="post" action="/admin/members/kupon" hx-post="/admin/members/kupon" hx-target="#members-panel" hx-swap="outerHTML" style="display:grid;gap:6px;margin-top:8px">
+					<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:6px">
+						<label class="small">Kod<input class="input" name="code" required placeholder="YAZ2026"/></label>
+						<label class="small">İndirim %<input class="input" type="number" min="1" max="100" name="percent" value="10"/></label>
+						<label class="small">Kademe (boş = tümü)<input class="input" name="tier_slug" placeholder="gumus"/></label>
+						<label class="small">Maks. kullanım (0 = sınırsız)<input class="input" type="number" min="0" name="max_uses" value="0"/></label>
+						<label class="small">Son tarih<input class="input" type="date" name="expires_at"/></label>
+					</div>
+					<label class="small">Açıklama<input class="input" name="description"/></label>
+					<label class="small"><input type="checkbox" name="is_active" value="1" checked/> Aktif</label>
+					<button class="btn small" type="submit" style="justify-self:start">Kupon ekle</button>
+				</form>
+			</details>
+		</div>
+		<div class="card card-pad" style="margin-bottom:14px" id="stripe-panel">
+			<h2 style="margin:0 0 8px;font-size:1.05rem"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-credit-card"></use></svg> Stripe Ödeme (abonelik)</h2>
+			<p class="hint" style="margin:0 0 8px">Okuyucu "Üye ol" dediğinde Stripe Checkout açılır; webhook üyeliği otomatik açar/kapatır.
+				Webhook adresi: <code>/webhooks/stripe</code> (olaylar: <code>checkout.session.completed</code>,
+				<code>customer.subscription.updated</code>, <code>customer.subscription.deleted</code>).</p>
+			<form method="post" action="/admin/members/stripe" hx-post="/admin/members/stripe" hx-target="#members-panel" hx-swap="outerHTML" hx-indicator="#members-yukleniyor">
+				<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px">
+					<label class="small">Gizli anahtar (sk_…)
+						if v.StripeSecretSet {
+							<input class="input" type="password" name="secret_key" placeholder="(kayıtlı)"/>
+						} else {
+							<input class="input" type="password" name="secret_key" value={ v.StripeSecret }/>
+						}
+					</label>
+					<label class="small">Webhook sırrı (whsec_…)
+						if v.StripeWebhookSet {
+							<input class="input" type="password" name="webhook_secret" placeholder="(kayıtlı)"/>
+						} else {
+							<input class="input" type="password" name="webhook_secret" value={ v.StripeWebhook }/>
+						}
+					</label>
+					<label class="small">Fiyat kimliği (price_…)<input class="input" name="price_id" value={ v.StripePrice }/></label>
+				</div>
+				<label class="small" style="display:block;margin-top:8px"><input type="checkbox" name="aktif" value="1" checked?={ v.StripeAktif }/> Stripe ile ödeme al</label>
+				<button class="btn" type="submit" style="margin-top:8px">Kaydet</button>
+			</form>
+		</div>
+		<div class="card card-pad" style="margin-bottom:14px" id="google-panel">
+			<h2 style="margin:0 0 8px;font-size:1.05rem"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-brand-google"></use></svg> Google ile Giriş (okuyucu)</h2>
+			<p class="hint" style="margin:0 0 8px">Okuyucular "Google ile devam et" ile giriş yapar; yeni hesaplar <b>Üye</b> rolüyle açılır.
+				Editoryal roller parola + 2FA'ya bağlı kalır.
+				Google Cloud Console geri çağırma adresi: <code>/giris/google/callback</code></p>
+			<form method="post" action="/admin/members/google" hx-post="/admin/members/google" hx-target="#members-panel" hx-swap="outerHTML" hx-indicator="#members-yukleniyor">
+				<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px">
+					<label class="small">Client ID<input class="input" name="client_id" value={ v.GoogleClientID }/></label>
+					<label class="small">Client Secret
+						if v.GoogleSecretSet {
+							<input class="input" type="password" name="client_secret" placeholder="(kayıtlı)"/>
+						} else {
+							<input class="input" type="password" name="client_secret" value={ v.GoogleClientSecret }/>
+						}
+					</label>
+				</div>
+				<button class="btn" type="submit" style="margin-top:8px">Kaydet</button>
+			</form>
+		</div>
+		{{/* Faz 168: üye araması (N-11). Önce tüm liste gözle taranıyordu. */}}
+		<form
+			class="filtre-grid"
+			method="get"
+			action="/admin/members"
+			hx-get="/admin/members"
+			hx-target="#members-panel"
+			hx-swap="outerHTML"
+			hx-push-url="true"
+			hx-indicator="#members-yukleniyor"
+			style="margin:14px 0 8px"
+		>
+			<input
+				class="input fq-4"
+				type="search"
+				name="q"
+				value={ v.Ara }
+				placeholder="Ad, e-posta veya rol ara…"
+				aria-label="Üyelerde ara"
+			/>
+			<button class="btn fq-2" type="submit">Ara</button>
+			if v.Ara != "" {
+				<a class="btn ghost fq-2" href="/admin/members">Temizle</a>
+			}
+		</form>
+		<table class="table">
+			<thead>
+				<tr><th>Kullanıcı</th><th>E-posta</th><th>Rol</th><th>Üyelik</th><th>Abonelik ata</th><th>İşlem</th></tr>
+			</thead>
+			<tbody>
+				if len(v.Items) == 0 {
+					if v.Ara != "" {
+						@TabloBos(6, "search-off", "Sonuç yok", "“"+v.Ara+"” için üye bulunamadı.", "", "")
+					} else {
+						@TabloBos(6, "users", "Kullanıcı yok", "Bu sitede kayıtlı yönetici ya da üye bulunmuyor.", "", "")
+					}
+				}
+				for _, u := range v.Items {
+					<tr>
+						<td>{ u.Name }</td>
+						<td class="small">{ u.Email }</td>
+						<td class="small">{ u.Role }</td>
+						<td>
+							if u.TierName != "" {
+								<span class="badge" data-premium="1" style={ "background:" + u.TierColor + ";color:#fff" }>{ u.TierName }</span>
+								if u.Until != "" {
+									<div class="small muted">{ u.Until }</div>
+								}
+							} else if u.Premium {
+								<span class="badge" style="background:var(--ok-fill,var(--ok));color:#fff">premium</span>
+							} else {
+								<span class="badge" style="background:var(--surface-2);color:var(--text-2)">yok</span>
+							}
+						</td>
+						<td>
+							<form method="post" action="/admin/members/abonelik" hx-post="/admin/members/abonelik" hx-target="#members-panel" hx-swap="outerHTML" style="display:flex;gap:4px;flex-wrap:wrap;align-items:center">
+								<input type="hidden" name="user_id" value={ itoaT64(u.ID) }/>
+								<select class="input" name="tier_id" style="max-width:130px" aria-label="Abonelik katmanı">
+									<option value="0">— ücretsiz —</option>
+									for _, t := range v.Tiers {
+										<option value={ itoaT64(t.ID) } selected?={ t.Name == u.TierName }>{ t.Name }</option>
+									}
+								</select>
+								<select class="input" name="cycle" style="max-width:95px" aria-label="Faturalama döngüsü">
+									<option value="monthly">Aylık</option>
+									<option value="annual">Yıllık</option>
+								</select>
+								<input class="input" name="days" type="number" min="0" max="365" placeholder="+gün" style="max-width:80px" aria-label="Ek gün sayısı"/>
+								<button class="btn small" type="submit">Ata</button>
+							</form>
+						</td>
+						<td style="white-space:nowrap">
+							if u.Premium {
+								<a
+									class="btn ghost small"
+									href="#"
+									data-toggle={ "/admin/members/" + itoaT64(u.ID) + "/yok" }
+									hx-post={ "/admin/members/" + itoaT64(u.ID) + "/yok" }
+									hx-target="#members-panel"
+									hx-swap="outerHTML"
+									hx-indicator="#members-yukleniyor"
+								>Üyeliği Kaldır</a>
+							} else {
+								<a
+									class="btn small"
+									href="#"
+									data-toggle={ "/admin/members/" + itoaT64(u.ID) + "/premium" }
+									hx-post={ "/admin/members/" + itoaT64(u.ID) + "/premium" }
+									hx-target="#members-panel"
+									hx-swap="outerHTML"
+									hx-indicator="#members-yukleniyor"
+								>Premium Yap</a>
+							}
+						
+								<a
+									class="btn danger small"
+									href="#"
+									data-toggle={ "/admin/members/" + itoaT64(u.ID) + "/sil" }
+									hx-post={ "/admin/members/" + itoaT64(u.ID) + "/sil" }
+									hx-target="#members-panel"
+									hx-swap="outerHTML"
+									hx-confirm="Kullanıcı silinsin mi? (KVKK)"
+									hx-indicator="#members-yukleniyor"
+								>Sil</a>
+							</td>
+					</tr>
+				}
+			</tbody>
+		</table>
+	</div>
+}
+
+// ---- Mahreçler ----
+
+// MahrecRow mahreç satırı.
+type MahrecRow struct {
+	ID   int64
+	Name string
+}
+
+// MahreclerView mahreçler paneli.
+type MahreclerView struct {
+	FlashKind string
+	FlashText string
+	Items     []MahrecRow
+}
+
+// MahreclerPanel mahreç yönetimi (HTMX hedefi: #mahrets-panel).
+templ MahreclerPanel(v MahreclerView) {
+	<div id="mahrets-panel">
+		if v.FlashText != "" {
+			<div class={ "flash", v.FlashKind }>{ v.FlashText }</div>
+		}
+		@Yukleniyor("mahrets-yukleniyor", "")
+		<form
+			method="post"
+			action="/admin/mahrecler"
+			class="card card-pad"
+			style="display:flex;gap:8px;max-width:480px"
+			hx-post="/admin/mahrecler"
+			hx-target="#mahrets-panel"
+			hx-swap="outerHTML"
+			hx-indicator="#mahrets-yukleniyor"
+		>
+			<input class="input" name="ad" placeholder="Mahreç adı (örn: AA, DHA…)" required aria-label="Mahreç adı"/>
+			<button class="btn" type="submit">Ekle</button>
+		</form>
+		<div class="gap" style="margin-top:14px;max-width:480px">
+			for _, m := range v.Items {
+				<div class="card card-pad" style="display:flex;gap:8px;align-items:center;justify-content:space-between">
+					<strong>{ m.Name }</strong>
+					<a
+						class="btn danger small"
+						href="#"
+						data-confirm={ "/admin/mahrecler/" + itoaT64(m.ID) + "/sil" }
+						hx-post={ "/admin/mahrecler/" + itoaT64(m.ID) + "/sil" }
+						hx-target="#mahrets-panel"
+						hx-swap="outerHTML"
+						hx-confirm="Mahreç silinsin mi?"
+						hx-indicator="#mahrets-yukleniyor"
+						hx-disabled-elt="this"
+					>Sil</a>
+				</div>
+			}
+		</div>
+	</div>
+}
+
+func pillClass(onayli bool) string {
+	if onayli {
+		return "st-yayinda"
+	}
+	return "st-taslak"
+}

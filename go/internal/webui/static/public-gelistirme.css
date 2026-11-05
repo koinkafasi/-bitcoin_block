@@ -1,0 +1,128 @@
+/* ===========================================================================
+   Public yüzey görsel düzeltmeleri — tasarım denetimi (Faz: tasarim/public-denetim)
+   public.css'ten SONRA yüklenir; oradaki kuralları bilinçli olarak geçersiz kılar.
+   Kapsam: görsel hiyerarşi, yatay şeridin keşfedilebilirliği, dokunma hedefleri.
+   =========================================================================== */
+
+/* ---- 1) Hero başlığı: sayfanın odak noktası --------------------------------
+   Denetimde ana sayfadaki en büyük 5 metin de 21.6px çıktı; hero ile yan
+   sütundaki haberler eşit ağırlıktaydı ve göz tutunacak yer bulamıyordu.
+   Ölçek viewport'a bağlı: 390px'te ~28px, 1440px'te ~52px. */
+.m6-title-ana {
+  font-size: clamp(1.75rem, 1.05rem + 2.7vw, 3.25rem);
+  line-height: 1.1;
+  letter-spacing: -0.015em;
+  text-wrap: balance;
+}
+
+/* Hero dışındaki manşet başlıkları bir kademe geride durur. */
+.m6-slide:not(:first-child) .m6-title {
+  font-size: clamp(1.1rem, 0.9rem + 0.8vw, 1.5rem);
+  line-height: 1.25;
+}
+
+/* ---- 2) Üst manşet şeridi: gizli içeriği görünür kıl ----------------------
+   Şerit overflow-x:auto + scroll-snap ile kaydırılıyor ama ::-webkit-scrollbar
+   gizli ve hiçbir göstergesi yoktu: 8 karttan masaüstünde 3'ü, mobilde 1'i
+   görünüyordu (1.282px / 1.882px içerik ekran dışındaydı). */
+.um-sarmal { position: relative; }
+
+.um-ok {
+  position: absolute;
+  top: 0;
+  /* Kart görseli 16/9; ok, görselin dikey ortasına hizalanır (başlık hariç). */
+  margin-top: calc((300px / 16 * 9) / 2 - 22px);
+  width: 44px;               /* WCAG 2.5.8 / Apple HIG dokunma hedefi */
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--hp-border, #e4e4e7);
+  border-radius: 999px;
+  background: var(--hp-surface, #fff);
+  color: var(--hp-text, #18181b);
+  box-shadow: 0 2px 10px rgb(0 0 0 / 0.14);
+  cursor: pointer;
+  z-index: 3;
+  transition: opacity .18s ease, transform .18s ease, background-color .18s ease;
+}
+.um-ok[hidden] { display: none; }
+.um-ok svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.um-ok-onceki { left: -10px; }
+.um-ok-sonraki { right: -10px; }
+.um-ok:hover { background: var(--hp-text, #18181b); color: var(--hp-surface, #fff); }
+.um-ok:focus-visible { outline: 2px solid var(--hp-tema, #d10015); outline-offset: 2px; }
+
+/* Dar ekranda oklar kenara yapışır; parmakla kaydırma zaten mümkün olduğu
+   için ok yerine ilerleme çubuğu asıl göstergedir. */
+@media (max-width: 47.99rem) {
+  .um-ok { display: none; }
+}
+
+/* İlerleme çubuğu: kaç kartın görüldüğünü ve daha olduğunu anlatır. */
+.um-ilerleme {
+  margin: 10px auto 0;
+  width: min(160px, 40%);
+  height: 3px;
+  border-radius: 999px;
+  background: var(--hp-border, #e4e4e7);
+  overflow: hidden;
+}
+.um-ilerleme-dolgu {
+  display: block;
+  height: 100%;
+  width: 30%;
+  border-radius: inherit;
+  background: var(--hp-tema, #d10015);
+  transform-origin: left center;
+  transition: width .15s linear, transform .15s linear;
+}
+/* Kaydırılacak yer yoksa çubuk anlamsızdır; JS bu sınıfı ekler. */
+.um-sarmal.um-tam .um-ilerleme { display: none; }
+
+/* ---- 2b) Hikâye şeridi için yer ayır -------------------------------------
+   #stories sunucudan boş gelir ve zuck.js sonradan doldurur: yükseklik
+   0'dan 124px'e sıçrayıp altındaki her şeyi aşağı itiyordu. Ölçüm: sayfadaki
+   TEK düzen kayması buydu ve tek başına CLS'i 0.0694 yapıyordu (zuck
+   engellenince 0.0000). Blok yalnızca hikâye varken basıldığı için ayrılan
+   yer hep dolar; :empty ile de yalnız doldurulmadan önce geçerlidir.
+   Yükseklikler ölçümle: 1440/768px'te 124, 390px'te 104. */
+#stories:empty { min-height: 124px; }
+@media (max-width: 768px) {
+  #stories:empty { min-height: 104px; }
+}
+
+/* ---- 3) Dokunma hedefleri -------------------------------------------------
+   Denetimde 9x9px ve 22x9px butonlar, 23px yükseklikte nav bağlantıları çıktı.
+   Görsel boyutu büyütmeden tıklama alanını büyütürüz (::after yakalayıcı). */
+@media (pointer: coarse) {
+  .site-nav a,
+  .galeri-head > a,
+  .um-ok,
+  .m6-num {
+    position: relative;
+  }
+  .site-nav a::after,
+  .galeri-head > a::after,
+  .m6-num::after {
+    content: "";
+    position: absolute;
+    inset: 50% auto auto 50%;
+    width: max(100%, 44px);
+    height: max(100%, 44px);
+    transform: translate(-50%, -50%);
+  }
+}
+
+/* ---- 4) Hareket katmanı başlangıç durumu ----------------------------------
+   GSAP yoksa veya JS çalışmazsa içerik görünür kalmalı: bu yüzden gizleme
+   yalnızca .hareket-hazir işaretlendikten sonra geçerlidir (FOUC/boş sayfa
+   riski olmadan). */
+html.hareket-hazir .hrkt-gir {
+  opacity: 0;
+  will-change: transform, opacity;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html.hareket-hazir .hrkt-gir { opacity: 1; }
+  .um-ok, .um-ilerleme-dolgu { transition: none; }
+}

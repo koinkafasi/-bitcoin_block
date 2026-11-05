@@ -1,0 +1,443 @@
+// Medya kütüphanesi paneli (templ) — html/template media_panel karşılığı.
+// Düzenleme modalı + veri özellikleri korunur; etkileşimler static/media.js'te.
+package templkit
+
+// MedyaOge medya kartı (data-* alanları önceden hesaplanmış).
+type MedyaOge struct {
+	ID           int64
+	Filename     string
+	Title        string
+	Alt          string
+	Caption      string
+	Description  string
+	SEOTitle     string
+	SEODesc      string
+	Category     string
+	URL          string
+	Thumb        string
+	Created      string
+	CreatedShort string
+	Size         string
+	Dims         string
+	KindLabel    string
+}
+
+// MedyaGrup yıl/ay klasörü.
+type MedyaGrup struct {
+	Label string
+	Items []MedyaOge
+}
+
+// MedyaFacet kategori filtresi seçeneği (chip).
+//
+// Count, aktif arama/tarih filtresiyle hesaplanmış sonuç sayısıdır; chip'te
+// yazan sayı ile chip'e tıklanınca gelecek sonuç aynıdır. URL hazır gelir
+// (q/yıl/ay korunur, kategori değişir).
+type MedyaFacet struct {
+	Value    string
+	Label    string
+	Count    int
+	URL      string
+	Selected bool
+	// Aria, `aria-current` değeri: seçiliyse "page", değilse "false"
+	// (aria-current "false" geçerli bir değerdir). templ.KV bu öznitelikte
+	// kullanılamıyor, bu yüzden hazır metin taşınıyor.
+	Aria string
+}
+
+// MedyaAy ay filtresi seçeneği.
+type MedyaAy struct {
+	Value    string
+	Label    string
+	Selected bool
+}
+
+// MedyaView medya paneli görünümü.
+type MedyaView struct {
+	FlashKind string
+	FlashText string
+	Query     string
+	Category  string
+	Year      string
+	Month     string
+	Years     []int
+	Months    []MedyaAy
+	Cats      []MedyaFacet
+	Total     int
+	// FacetTotal "Tümü" chip'inin sayısı (kategori filtresi hariç toplam).
+	FacetTotal int
+	Storage    string
+	Groups     []MedyaGrup
+	Page       int
+	Pages      int
+	HasPrev    bool
+	HasNext    bool
+	PrevURL    string
+	NextURL    string
+	// ParcaURL sonraki dilimin (yalnız gruplar) adresi. Sonsuz kaydırma
+	// gözcüsü bunu çağırır.
+	ParcaURL string
+	// TumuURL filtreleri temizleyen adres.
+	TumuURL string
+	// TumuAria "Tümü" chip'inin aria-current değeri.
+	TumuAria string
+}
+
+// MedyaPanel medya yöneticisi (HTMX hedefi: #medya-panel).
+//
+// Faz 187: sayfalama kaldırıldı, yerine sonsuz kaydırma geldi. Üstteki
+// "Medya Yükle" kartı da kaldırıldı: dosya seçme düğmesi (tarayıcının
+// "Dosya Seç"i) ve başlık/alt metin/fotoğraf altı/açıklama alanları
+// galerideki sürükleme alanıyla ve resim detayındaki (modal) alanlarla
+// birebir tekrar ediyordu. Yükleme artık yalnız sürükle-bırak / gözat.
+templ MedyaPanel(v MedyaView) {
+	<div id="medya-panel" class="media-panel">
+		if v.FlashText != "" {
+			<div class={ "flash", v.FlashKind }>{ v.FlashText }</div>
+		}
+		@Yukleniyor("medya-yukleniyor", "")
+
+		<div class="media-arac">
+			<form
+				method="get"
+				action="/admin/dosyalar"
+				class="media-arac__ust"
+				role="search"
+				hx-get="/admin/dosyalar"
+				hx-target="#medya-panel"
+				hx-swap="outerHTML"
+				hx-push-url="true"
+				hx-indicator="#medya-yukleniyor"
+			>
+				<!-- Kategori seçimi chip'lerle yapılıyor; arama formu kategoriyi
+				     taşımazsa arama yapınca filtre kaybolurdu. -->
+				<input type="hidden" name="kategori" value={ v.Category }/>
+				<div class="media-ara">
+					<svg class="ti media-ara__ikon" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-search"></use></svg>
+					<input
+						class="input"
+						type="search"
+						id="medyaAra"
+						name="q"
+						value={ v.Query }
+						placeholder="Dosya adı, başlık, alt metin…"
+						aria-label="Medyada ara"
+						hx-get="/admin/dosyalar"
+						hx-trigger="input changed delay:350ms, search"
+						hx-target="#medya-panel"
+						hx-swap="outerHTML"
+						hx-include="closest form"
+						hx-push-url="true"
+						hx-preserve="true"
+						hx-indicator="#medya-yukleniyor"
+					/>
+					if v.Query != "" {
+						<a
+							class="media-ara__sil"
+							href={ templ.SafeURL(v.TumuURL) }
+							hx-get={ v.TumuURL }
+							hx-target="#medya-panel"
+							hx-swap="outerHTML"
+							hx-push-url="true"
+							aria-label="Aramayı temizle"
+						><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-x"></use></svg></a>
+					}
+				</div>
+				<div class="media-arac__tarih">
+					<label class="media-sec">
+						<span>Yıl</span>
+						<select class="input" name="yil" data-otomatik>
+							<option value="">Tümü</option>
+							for _, y := range v.Years {
+								<option value={ itoaT(y) } if itoaT(y) == v.Year { selected }>{ itoaT(y) }</option>
+							}
+						</select>
+					</label>
+					<label class="media-sec">
+						<span>Ay</span>
+						<select class="input" name="ay" data-otomatik>
+							<option value="">Tümü</option>
+							for _, m := range v.Months {
+								<option value={ m.Value } if m.Selected { selected }>{ m.Label }</option>
+							}
+						</select>
+					</label>
+				</div>
+				<div class="media-arac__eylem">
+					<button class="btn small" type="submit">
+						<svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-filter"></use></svg>
+						Ara
+					</button>
+					if v.Query != "" || v.Category != "" || v.Year != "" || v.Month != "" {
+						<a class="btn ghost small" href="/admin/dosyalar">Temizle</a>
+					}
+					<a class="btn ghost small" href="/admin/dosyalar/disa-aktar.csv" title="Tüm medya listesini CSV olarak indir">
+						<svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-download"></use></svg>
+						CSV
+					</a>
+				</div>
+			</form>
+
+			<nav class="media-cipler" aria-label="Kategoriye göre filtrele">
+				<span class="media-cipler__baslik">Kategori</span>
+				<a
+					class={ "media-cip", templ.KV("is-on", v.Category == "") }
+					href={ templ.SafeURL(v.TumuURL) }
+					hx-get={ v.TumuURL }
+					hx-target="#medya-panel"
+					hx-swap="outerHTML"
+					hx-push-url="true"
+					aria-current={ v.TumuAria }
+				>Tümü <b>{ itoaT(v.FacetTotal) }</b></a>
+				for _, c := range v.Cats {
+					<a
+						class={ "media-cip", templ.KV("is-on", c.Selected) }
+						href={ templ.SafeURL(c.URL) }
+						hx-get={ c.URL }
+						hx-target="#medya-panel"
+						hx-swap="outerHTML"
+						hx-push-url="true"
+						aria-current={ c.Aria }
+					>{ c.Label } <b>{ itoaT(c.Count) }</b></a>
+				}
+			</nav>
+
+			<details class="media-url-dd">
+				<summary class="btn ghost small">
+					<svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-link"></use></svg>
+					URL'den ekle
+				</summary>
+				<form
+					method="post"
+					action="/admin/dosyalar/url"
+					class="media-url-dd__govde"
+					hx-post="/admin/dosyalar/url"
+					hx-target="#medya-panel"
+					hx-swap="outerHTML"
+					hx-indicator="#medya-yukleniyor"
+					hx-disabled-elt="find button[type='submit']"
+				>
+					<input class="input" type="url" name="url" placeholder="https://…/gorsel.jpg" aria-label="Görsel adresi" required/>
+					<button class="btn ghost small" type="submit">Al</button>
+					<span class="hint">Herkese açık http(s) görseller; SSRF koruması etkin.</span>
+				</form>
+			</details>
+		</div>
+
+		<div class="media-summary">
+			<strong>{ itoaT(v.Total) }</strong> medya
+			if v.Storage != "" {
+				 · { v.Storage } depolama
+			}
+			if v.Query != "" {
+				 · “{ v.Query }” araması
+			}
+			<span class="small muted">Shift ile aralık, Ctrl/Cmd ile tek tek seçim · Klasörler yükleme tarihine göre yıl/ay olarak gruplanır.</span>
+			<div class="media-view-toggle" role="group" aria-label="Görünüm">
+				<button type="button" data-media-view="grid" class="is-active" title="Izgara" aria-label="Izgara görünüm"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-layout-grid"></use></svg></button>
+				<button type="button" data-media-view="list" title="Liste" aria-label="Liste görünümü"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-list"></use></svg></button>
+			</div>
+		</div>
+
+		<form method="post" action="/admin/dosyalar/toplu" id="medyaTopluForm">
+			<div class="toplu-bar" id="medyaBar" hidden>
+				<label style="display:inline-flex;align-items:center;gap:6px"><input type="checkbox" id="medyaTumunuSec" aria-label="Tümünü seç"/><span class="small">Tümü</span></label>
+				<span class="small" id="medyaSayi">0 medya seçili</span>
+				<button type="button" class="btn ghost small" id="medyaSecimTemizle">Seçimi temizle</button>
+				<button class="btn ghost small" type="submit" name="islem" value="yeniden-adlandir">Yeniden adlandır</button>
+				<input class="input" name="yeni_ad" placeholder="yeni ad (ad, ad-1, ad-2…)" aria-label="yeni ad (ad, ad-1, ad-2…)"/>
+				<input class="input" name="yeni_kategori" placeholder="yeni kategori" aria-label="yeni kategori"/>
+				<button class="btn ghost small" type="submit" name="islem" value="kategori">Kategoriye taşı</button>
+				<button class="btn danger small" type="submit" name="islem" value="sil" data-toplu-sil>Sil</button>
+				<span class="small muted">Kullanımdaki görseller atlanır.</span>
+			</div>
+
+			<div class="media-liste" id="medyaListe">
+				@medyaGruplar(v, true)
+			</div>
+		</form>
+
+		<div id="mediaEditModal" class="media-modal" hidden>
+			<div class="media-modal-card" role="dialog" aria-modal="true" aria-labelledby="mediaEditTitle">
+				<header>
+					<strong id="mediaEditTitle">Medya bilgileri</strong>
+					<button type="button" class="btn ghost small" id="mediaEditClose" aria-label="Kapat"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-x"></use></svg></button>
+				</header>
+				<div class="media-modal-body">
+					<div class="media-edit-preview">
+						<img id="mediaEditPreview" alt=""/>
+						<div class="small muted" id="mediaEditFacts"></div>
+						<div class="media-transform-actions">
+							<button type="button" class="btn ghost small" data-media-transform="rotate-left" title="Saat yönünün tersine 90°"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-arrow-back-up"></use></svg> 90°</button>
+							<button type="button" class="btn ghost small" data-media-transform="rotate-right" title="Saat yönünde 90°"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-arrow-forward-up"></use></svg> 90°</button>
+							<button type="button" class="btn ghost small" data-media-transform="flip-h" title="Yatay çevir"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-flip-horizontal"></use></svg></button>
+							<button type="button" class="btn ghost small" data-media-transform="flip-v" title="Dikey çevir"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-flip-vertical"></use></svg></button>
+						</div>
+					</div>
+					<form id="mediaEditForm" method="post" action="">
+						<label class="small muted">Dosya adı<input class="input" name="filename" id="mediaEditFilename" autocomplete="off"/></label>
+						<label class="small muted">Başlık<input class="input" name="title" id="mediaEditName" autocomplete="off"/></label>
+						<label class="small muted">Kategori<input class="input" name="category" id="mediaEditCategory" list="mediaCategoryList" autocomplete="off"/></label>
+						<label class="small muted">Alt metin<input class="input" name="alt" id="mediaEditAlt" autocomplete="off"/></label>
+						<label class="small muted">Fotoğraf altı<input class="input" name="caption" id="mediaEditCaption" autocomplete="off"/></label>
+						<label class="small muted">Açıklama<textarea class="input" name="description" id="mediaEditDescription" rows="2"></textarea></label>
+						<label class="small muted">SEO başlığı<input class="input" name="seo_title" id="mediaEditSEOTitle" autocomplete="off"/></label>
+						<label class="small muted">SEO açıklaması<textarea class="input" name="seo_description" id="mediaEditSEODesc" rows="2"></textarea></label>
+						<div class="media-modal-actions">
+							<button type="button" class="btn ghost small" id="mediaEditCancel">Vazgeç</button>
+							<button type="submit" class="btn small">Kaydet</button>
+						</div>
+					</form>
+				</div>
+			</div>
+		</div>
+		<datalist id="mediaCategoryList">
+			for _, c := range v.Cats {
+				<option value={ c.Value }></option>
+			}
+		</datalist>
+	</div>
+}
+
+// MedyaGruplar sınırdan erişilebilen sarmalayıcı: sonsuz kaydırma
+// dilimini (yalnız gruplar + gözcü) tek başına render etmek için.
+templ MedyaGruplar(v MedyaView, ilk bool) {
+	@medyaGruplar(v, ilk)
+}
+
+// medyaGruplar grup bölümlerini (ve varsa sonsuz kaydırma gözcüsünü) basar.
+//
+// Hem ilk sayfada hem sonraki dilimde kullanılır; `ilk` yalnız ilk sayfada
+// doğrudur ve sürükleme kutusunu o zaman ekler (her sayfada tekrar etmemeli).
+templ medyaGruplar(v MedyaView, ilk bool) {
+	if len(v.Groups) == 0 {
+		if ilk {
+			<div class="media-grid">
+				@medyaDropKutu()
+			</div>
+			<p class="muted" style="margin-top:6px">Bu filtreye uygun medya yok. Yukarıdaki alana fotoğraf bırakabilirsiniz.</p>
+		}
+	} else {
+		for i, g := range v.Groups {
+			<section class="media-group" data-grup={ g.Label }>
+				<h3>{ g.Label } <span>{ itoaT(len(g.Items)) }</span></h3>
+				<div class="media-grid">
+					if ilk && i == 0 {
+						@medyaDropKutu()
+					}
+					for _, it := range g.Items {
+						@medyaKart(it)
+					}
+				</div>
+			</section>
+		}
+	}
+	@medyaSon(v)
+}
+
+// medyaSon sonsuz kaydırma gözcüsü / liste sonu.
+//
+// Gözcü görünür olduğunda (`revealed`) sonraki dilim istenir; gelen HTML
+// gözcünün YERİNE geçer (outerHTML), yani yeni öğeler listenin sonuna
+// eklenir ve yeni bir gözcü gelir. Böylece sayfalama düğmesi gerekmez.
+templ medyaSon(v MedyaView) {
+	if v.HasNext {
+		<div
+			id="medyaSon"
+			class="media-son"
+			hx-get={ v.ParcaURL }
+			hx-trigger="revealed"
+			hx-swap="outerHTML"
+			aria-live="polite"
+		>
+			<span class="media-son__iskelet" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
+			<span class="small muted">Daha fazla medya yükleniyor…</span>
+		</div>
+	} else if v.Total > 0 {
+		<p class="media-son-bitti small muted">Tümü gösterildi · { itoaT(v.Total) } medya</p>
+	}
+}
+
+// medyaKart tek medya kartı.
+templ medyaKart(it MedyaOge) {
+	<div
+		class="media-item"
+		data-media-id={ itoaT64(it.ID) }
+		data-filename={ it.Filename }
+		data-title={ it.Title }
+		data-alt={ it.Alt }
+		data-caption={ it.Caption }
+		data-description={ it.Description }
+		data-seo-title={ it.SEOTitle }
+		data-seo-description={ it.SEODesc }
+		data-category={ it.Category }
+		data-url={ it.URL }
+		data-thumb={ it.Thumb }
+		data-created={ it.Created }
+		data-size={ it.Size }
+		data-dimensions={ it.Dims }
+	>
+		<label class="mi-sec" title="Seç"><input type="checkbox" name="id" value={ itoaT64(it.ID) } class="medyaSec" aria-label="Seç"/></label>
+		<button type="button" class="media-open" data-media-open aria-label={ it.Title }>
+			<img src={ it.Thumb } alt={ it.Alt } loading="lazy"/>
+		</button>
+		<div class="mi-cap">
+			<b title={ it.Title }>{ it.Title }</b>
+			<small>{ it.Category } · { it.CreatedShort }</small>
+		</div>
+		<span class="mi-kind">{ it.KindLabel }</span>
+		<div class="mi-body">
+			<strong title={ it.Title }>{ it.Title }</strong>
+			<span>{ it.Category } · { it.CreatedShort }</span>
+			<span class="mi-kind">{ it.KindLabel }</span>
+		</div>
+		<div class="mi-actions">
+			<button type="button" class="btn ghost small" data-media-open aria-label="Düzenle"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-pencil"></use></svg></button>
+			<button type="button" class="btn ghost small" data-copy-url={ it.URL } title="Görsel URL'sini kopyala" aria-label="Görsel URL'sini kopyala"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-link"></use></svg></button>
+			<a class="btn ghost small" href={ templ.SafeURL(it.URL) } target="_blank" rel="noopener" title="Yeni sekmede aç" aria-label="Yeni sekmede aç"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-arrow-up-right"></use></svg></a>
+			<a class="btn ghost small" href={ templ.SafeURL(it.URL) } download={ it.Filename } title="İndir" aria-label="İndir"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-arrow-down"></use></svg></a>
+			<a
+				class="btn danger small"
+				href="#"
+				data-confirm={ "/admin/dosyalar/" + itoaT64(it.ID) + "/sil" }
+				hx-post={ "/admin/dosyalar/" + itoaT64(it.ID) + "/sil" }
+				hx-target="#medya-panel"
+				hx-swap="outerHTML"
+				hx-confirm="Bu medya silinsin mi? Kullanımdaysa silinmez."
+				hx-indicator="#medya-yukleniyor"
+				hx-disabled-elt="this"
+				aria-label="Sil"
+			><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-x"></use></svg></a>
+		</div>
+	</div>
+}
+
+// medyaDropKutu galerinin ilk kutusu: sürükle-bırak / gözat.
+//
+// Referansta (Murmura /library/media) sürükleme alanı sayfanın üstünde ayrı
+// bir kart değil, GALERİNİN İLK KUTUSUDUR. Ölçülen değerler: 1.5px kesikli
+// kenar, 20px yarıçap, 52px yuvarlak ikon, .2s geçiş.
+//
+// Dosya girdisi görsel olarak gizli ama erişilebilir. Yükleme anında
+// gider; başlık/alt metin/kategori gibi alanlar BURADA SORULMAZ — aynı
+// alanlar resim detayında (modal) zaten var, iki kez istemek gereksizdi.
+templ medyaDropKutu() {
+	<div class="mgal-drop" data-drop>
+		<input
+			type="file"
+			class="mgal-sr"
+			data-mg-file
+			accept="image/jpeg,image/png,image/webp,image/avif,image/gif,audio/*,video/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv"
+			multiple
+			tabindex="-1"
+			aria-hidden="true"
+		/>
+		<button type="button" class="mgal-drop__btn" data-mg-browse>
+			<span class="mgal-drop__ico">
+				<svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-cloud-upload"></use></svg>
+			</span>
+			<b>Fotoğrafları buraya bırakın</b>
+			<small>veya <u>gözat</u> · JPG, PNG, WebP</small>
+		</button>
+	</div>
+}

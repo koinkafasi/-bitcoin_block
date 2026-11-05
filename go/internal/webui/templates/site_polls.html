@@ -1,0 +1,40 @@
+{{define "anketler"}}<!doctype html><html lang="{{.Lang}}" {{if .RTL}}dir="rtl"{{end}} data-theme="{{.Theme}}"><head>{{template "public_head" .}}</head>
+<body>
+{{template "site_header" .}}
+<main class="page"><div class="container">
+  <h1 class="page-title"><svg class="ti ti-metin" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-list-check"></use></svg> Anketler</h1>
+  <div class="gap">
+  {{range .Anketler}}
+    <div class="card card-pad" style="max-width:560px">
+      <h3 style="margin:0 0 6px">{{.Title}}</h3>
+      {{if .Spot}}<div class="small muted" style="margin-bottom:8px">{{.Spot}}</div>{{end}}
+      {{if .Voted}}
+        {{range .Options}}
+          <div style="margin:6px 0">
+            <div style="display:flex;justify-content:space-between;gap:8px">
+              <span>{{if .Mine}}<svg class="ti ti-metin" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-check"></use></svg> {{end}}{{.Text}}</span>
+              <span class="small muted">{{.Votes}} oy · %{{.Pct}}</span>
+            </div>
+            <div class="bar"><i style="width:{{.Pct}}%"></i></div>
+          </div>
+        {{end}}
+        <div class="small muted" style="margin-top:8px">Toplam {{.Total}} oy — oyunuz kaydedildi.</div>
+      {{else}}
+        <form method="post" action="/api/anket/{{.ID}}/oy">
+          {{range .Options}}<label style="display:block;margin:5px 0"><input type="radio" name="secenek" value="{{.ID}}" required> {{.Text}}</label>{{end}}
+          <button class="btn" type="submit" style="margin-top:8px">Oy Ver</button>
+        </form>
+      {{end}}
+    </div>
+  {{else}}<p class="muted">Aktif anket yok.</p>{{end}}
+  </div>
+</div></main>
+{{template "site_footer" .}}
+</body></html>{{end}}
+
+{{define "admin_anketler"}}<!doctype html><html lang="tr" data-theme="{{.Theme}}"><head>{{template "admin_head" .}}</head>
+<body><div class="admin-wrap">{{template "admin_side" .}}<main class="admin-main">
+{{template "admin_top" .}}
+<div class="admin-body">
+{{template "anketler_panel" .}}
+</div></main></div></body></html>{{end}}

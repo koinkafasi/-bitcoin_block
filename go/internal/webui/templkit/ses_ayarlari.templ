@@ -1,0 +1,204 @@
+package templkit
+
+// SesAyarlariView konuşma tanıma (ASR) ayar sayfasının veri modelidir.
+type SesAyarlariView struct {
+	FlashKind string
+	FlashText string
+
+	// Provider etkin sağlayıcı: assemblyai | deepgram
+	Provider string
+	// Model sağlayıcıya özgü model adı (ör. "best", "nova-3").
+	Model string
+	// BaseURL boşsa sağlayıcı varsayılanı kullanılır.
+	BaseURL string
+	// KeySet panelde kayıtlı anahtar var mı?
+	KeySet bool
+	// KeyHint panelde kayıtlı anahtarın maskeli ipucu (ör. "bdaf86…").
+	KeyHint string
+	// EnvKeySet .env'de anahtar var mı (panel boşsa bu kullanılır).
+	EnvKeySet bool
+	// EnvProvider .env'deki varsayılan sağlayıcı.
+	EnvProvider string
+	// EffectiveProvider işlerin gerçekte kullanacağı sağlayıcı.
+	EffectiveProvider string
+	// EffectiveModel işlerin gerçekte kullanacağı model.
+	EffectiveModel string
+	// Ready anahtar mevcut mu (iş alınabilir mi).
+	Ready bool
+	// WorkerNote kullanıcıya durum açıklaması.
+	WorkerNote string
+	// HUNSPELL bilgisi (imla denetimi) — bilgilendirme amaçlı.
+	SpellEnabled bool
+	SpellBin     string
+	SpellDict    string
+	// Son işler tanılama için.
+	Jobs []SesAyarJob
+	// TestURL sağlayıcı bağlantısını sınamak için.
+	TestURL string
+	// Stats özet sayaçlar.
+	TotalJobs     string
+	CompletedJobs string
+	FailedJobs    string
+	TotalAudio    string
+}
+
+// SesAyarJob son transkripsiyon işlerinin özeti.
+type SesAyarJob struct {
+	ID       string
+	Media    string
+	Status   string
+	StatusTR string
+	Provider string
+	When     string
+	Error    string
+}
+
+// SesAyarlariPanel ASR sağlayıcı ayarları sayfası.
+templ SesAyarlariPanel(v SesAyarlariView) {
+	<div id="ses-ayarlari-panel" class="card card-pad">
+		<div class="sa-head">
+			<div>
+				<h2 class="sa-title"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-microphone"></use></svg> Konuşma Tanıma (ASR) Ayarları</h2>
+				<p class="small muted sa-help">Röportaj kayıtlarını metne çeviren sağlayıcı. Anahtarı buradan değiştirebilirsiniz; <b>sunucuyu yeniden başlatmanız gerekmez</b>.</p>
+			</div>
+			if v.Ready {
+				<span class="badge sa-badge-ok"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-check"></use></svg> Hazır · { v.EffectiveProvider }</span>
+			} else {
+				<span class="badge sa-badge-off">Anahtar yok</span>
+			}
+		</div>
+
+		if v.FlashText != "" {
+			<div class={ "flash", v.FlashKind } role="status">{ v.FlashText }</div>
+		}
+
+		<div class="sa-grid">
+			<div class="sa-stat"><span class="sa-stat-num">{ v.TotalJobs }</span><span class="small muted">iş</span></div>
+			<div class="sa-stat"><span class="sa-stat-num">{ v.CompletedJobs }</span><span class="small muted">tamamlandı</span></div>
+			<div class="sa-stat"><span class="sa-stat-num">{ v.FailedJobs }</span><span class="small muted">başarısız</span></div>
+			<div class="sa-stat"><span class="sa-stat-num">{ v.TotalAudio }</span><span class="small muted">toplam ses</span></div>
+		</div>
+
+		<form method="post" action="/admin/ses-ayarlari" hx-post="/admin/ses-ayarlari" hx-target="#ses-ayarlari-panel" hx-swap="outerHTML" hx-indicator="#saKaydetIndicator" class="sa-form">
+			<div class="field">
+				<label for="saProvider">Sağlayıcı</label>
+				<select class="input" id="saProvider" name="provider">
+					<option value="assemblyai" selected?={ v.Provider == "assemblyai" }>AssemblyAI (önerilen)</option>
+					<option value="deepgram" selected?={ v.Provider == "deepgram" }>Deepgram (Nova)</option>
+				</select>
+				<p class="hint">AssemblyAI: en iyi Türkçe doğruluk ve konuşmacı ayrımı. Deepgram: hızlı ve genellikle daha ucuz.</p>
+			</div>
+
+			<div class="field">
+				<label for="saKey">API Anahtarı</label>
+				<input class="input" id="saKey" name="api_key" type="password" autocomplete="new-password"
+					placeholder={ keyPlaceholder(v) }/>
+				<p class="hint">
+					if v.KeySet {
+						Panelde kayıtlı: <b>{ v.KeyHint }</b> — değiştirmek için yeni anahtarı yazın, boş bırakırsanız korunur.
+					} else if v.EnvKeySet {
+						Panelde kayıt yok; <code>.env</code> değeri kullanılıyor. Buraya yazarsanız panel değeri öncelikli olur.
+					} else {
+						Anahtar yok. Sağlayıcı panelinden bir anahtar alıp buraya yazın.
+					}
+				</p>
+			</div>
+
+			<div class="field">
+				<label for="saModel">Model</label>
+				<input class="input" id="saModel" name="model" value={ v.Model } placeholder={ modelPlaceholder(v.Provider) }/>
+				<p class="hint">
+					if v.Provider == "deepgram" {
+						Deepgram: <code>nova-3</code> (önerilen), <code>nova-2</code>.
+					} else {
+						AssemblyAI: <code>best</code> (önerilen), <code>nano</code>, <code>universal-3-5-pro</code>, <code>universal-3-pro</code>.
+					}
+					Boş bırakılırsa sağlayıcı varsayılanı kullanılır.
+				</p>
+			</div>
+
+			<div class="field">
+				<label for="saBase">API Adresi (opsiyonel)</label>
+				<input class="input" id="saBase" name="base_url" value={ v.BaseURL } placeholder={ basePlaceholder(v.Provider) }/>
+				<p class="hint">Yalnızca vekil (proxy) veya test sunucusu kullanıyorsanız doldurun.</p>
+			</div>
+
+			<div class="sa-actions">
+				<button class="btn" type="submit">Kaydet</button>
+				@Yukleniyor("saKaydetIndicator", "Kaydediliyor…")
+				if v.KeySet {
+					<button class="btn ghost" type="submit" name="clear_key" value="1" hx-confirm="Panelde kayıtlı API anahtarı silinsin mi? .env değeri varsa o kullanılır.">Anahtarı temizle</button>
+				}
+				<button class="btn ghost" type="submit" name="test" value="1">Bağlantıyı sına</button>
+				if v.TestURL != "" {
+					<a class="small" href={ templ.SafeURL(v.TestURL) } target="_blank">Sağlayıcı paneli <svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-external-link"></use></svg></a>
+				}
+			</div>
+		</form>
+
+		<div class="sa-note">
+			<strong>Etkin yapılandırma:</strong> { v.EffectiveProvider } · model <code>{ v.EffectiveModel }</code>
+			<span class="small muted">— { v.WorkerNote }</span>
+		</div>
+
+		if v.SpellEnabled {
+			<div class="sa-note sa-note-soft">
+				<strong>İmla denetimi açık</strong>
+				<span class="small muted">({ v.SpellBin } · { v.SpellDict }) — Metin Kalitesi panelinde sözlük denetimi çalışıyor.</span>
+			</div>
+		} else {
+			<div class="sa-note sa-note-soft">
+				<strong>İmla denetimi kapalı</strong>
+				<span class="small muted">Sözlük tabanlı denetim için <code>hunspell</code> + <code>hunspell-tr</code> kurup <code>HUNSPELL_BIN=hunspell</code> ayarlayın. Kural tabanlı denetim her durumda çalışır.</span>
+			</div>
+		}
+
+		if len(v.Jobs) > 0 {
+			<h3 class="sa-sub">Son işler</h3>
+			<div class="sa-table">
+				<table class="table">
+					<thead><tr><th>#</th><th>Medya</th><th>Durum</th><th>Sağlayıcı</th><th>Tarih</th><th>Hata</th></tr></thead>
+					<tbody>
+						for _, j := range v.Jobs {
+							<tr>
+								<td>{ j.ID }</td>
+								<td>{ j.Media }</td>
+								<td><span class={ "badge", sesStatusClass(j.Status) }>{ j.StatusTR }</span></td>
+								<td>{ j.Provider }</td>
+								<td class="small muted">{ j.When }</td>
+								<td class="small">{ j.Error }</td>
+							</tr>
+						}
+					</tbody>
+				</table>
+			</div>
+		}
+	</div>
+}
+
+// keyPlaceholder anahtar alanının yer tutucusu.
+func keyPlaceholder(v SesAyarlariView) string {
+	if v.KeySet {
+		return "Değiştirmek için yeni anahtar (boş = koru)"
+	}
+	if v.EnvKeySet {
+		return ".env değeri kullanılıyor (üzerine yazmak için girin)"
+	}
+	return "API anahtarını yapıştırın"
+}
+
+// modelPlaceholder sağlayıcıya göre model ipucu.
+func modelPlaceholder(provider string) string {
+	if provider == "deepgram" {
+		return "nova-3"
+	}
+	return "best"
+}
+
+// basePlaceholder sağlayıcıya göre adres ipucu.
+func basePlaceholder(provider string) string {
+	if provider == "deepgram" {
+		return "https://api.deepgram.com"
+	}
+	return "https://api.assemblyai.com"
+}

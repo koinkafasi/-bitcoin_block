@@ -1,0 +1,12 @@
+{{define "2falogin"}}<!doctype html><html lang="{{.Lang}}" data-theme="{{.Theme}}"><head>{{template "admin_head" .}}</head>
+<body style="display:grid;place-items:center;min-height:100vh">
+<main class="auth-card card animate-in">
+  <form method="post" action="/admin/giris/2fa" class="card-pad">
+    <h1 style="margin-top:0">the<b>block</b> · 2FA</h1>
+    {{if .Flash}}<div class="flash {{.Flash.Kind}}">{{.Flash.Text}}</div>{{end}}
+    <p class="small muted">Şifre doğrulandı. Authenticator kodunuzu girin.</p>
+    <div class="field"><label for="f_kod">TOTP Kodu</label><input id="f_kod" class="input" name="kod" autocomplete="one-time-code" maxlength="6" required autofocus></div>
+    <button class="btn" style="width:100%" type="submit">Doğrula</button>
+  </form>
+</main>
+</body></html>{{end}}

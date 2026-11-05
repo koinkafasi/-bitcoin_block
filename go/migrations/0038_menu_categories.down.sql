@@ -1,0 +1,2 @@
+-- 0038_menu_categories (down) — menu bayraklarını kaldır (kayıtları silme; içerik bağlı olabilir)
+UPDATE categories SET in_header=false, in_menu=false WHERE slug IN ('teknoloji','oyun','bilim','otomobil');

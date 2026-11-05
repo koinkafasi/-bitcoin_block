@@ -1,0 +1,329 @@
+// Dağıtım panelleri (templ): İç Link Ağı (backlink), Sosyal Paylaşım,
+// Bildirimler (web push). html/template karşılıklarının birebir taşınması.
+package templkit
+
+// ---- İç Link Ağı (backlink) ----
+
+// BacklinkStat özet sayaçları.
+type BacklinkStat struct {
+	Published   string
+	WithCluster string
+	Orphan      string
+	OrphanBad   bool
+}
+
+// BacklinkKume link göbeği (küme) satırı.
+type BacklinkKume struct {
+	ID     string
+	Name   string
+	Intent string
+	Count  string
+}
+
+// BacklinkOrphan öksüz içerik satırı.
+type BacklinkOrphan struct {
+	ID       string
+	Title    string
+	Category string
+	Updated  string
+}
+
+// BacklinkView iç link ağı paneli.
+type BacklinkView struct {
+	FlashKind string
+	FlashText string
+	Stats     BacklinkStat
+	Clusters  []BacklinkKume
+	Orphans   []BacklinkOrphan
+}
+
+// BacklinkPanel iç link ağı (HTMX hedefi: #backlink-panel).
+templ BacklinkPanel(v BacklinkView) {
+	<div id="backlink-panel">
+		if v.FlashText != "" {
+			<div class={ "flash", v.FlashKind }>{ v.FlashText }</div>
+		}
+		@Yukleniyor("backlink-yukleniyor", "")
+		<div class="card card-pad" style="display:flex;gap:18px;flex-wrap:wrap;align-items:center">
+			<div><div class="small muted">Yayındaki içerik</div><div class="big">{ v.Stats.Published }</div></div>
+			<div><div class="small muted">Kümeye bağlı</div><div class="big">{ v.Stats.WithCluster }</div></div>
+			<div>
+				<div class="small muted">Öksüz (linksiz)</div>
+				<div class="big" style={ orphanStyle(v.Stats.OrphanBad) }>{ v.Stats.Orphan }</div>
+			</div>
+			<button class="btn small" style="margin-left:auto" type="button"
+				hx-get="/admin/backlink" hx-target="#backlink-panel" hx-swap="outerHTML" hx-indicator="#backlink-yukleniyor"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-refresh"></use></svg> Yenile</button>
+			<a class="btn small" href="/admin/seo">İç Link Önerisi <svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-arrow-right"></use></svg></a>
+		</div>
+		<p class="hint" style="margin-top:10px">Makale sayfalarında <b>İlgili içerikler</b> bloğu otomatik üretilir (aynı küme + ortak etiket + kategori + başlık benzerliği). Bu, site genelinde iç link (backlink) ağı oluşturur ve SEO'yu güçlendirir. Öksüz içerikler ağa girmez — küme/etiket/kategori ekleyin.</p>
+		<h2 style="font-size:1.05rem;margin-top:20px">Konu Kümeleri (link göbekleri)</h2>
+		<table class="table">
+			<thead>
+				<tr><th>Küme</th><th>Niyet</th><th>İçerik</th></tr>
+			</thead>
+			<tbody>
+				if len(v.Clusters) == 0 {
+					@TabloBos(3, "stack", "Küme yok", "Konu kümeleri içerikleri konuya göre gruplar.", "Konu Kümeleri", "/admin/kumeler")
+				}
+				for _, c := range v.Clusters {
+					<tr>
+						<td><a href={ templ.SafeURL("/admin/kumeler?kus=" + c.ID) }>{ c.Name }</a></td>
+						<td class="small muted">{ c.Intent }</td>
+						<td><span class="tag">{ c.Count }</span></td>
+					</tr>
+				}
+			</tbody>
+		</table>
+		<h2 style="font-size:1.05rem;margin-top:22px">Öksüz İçerikler (iç link ağına girmeyen)</h2>
+		<table class="table">
+			<thead>
+				<tr><th>Başlık</th><th>Kategori</th><th>Güncelleme</th><th></th></tr>
+			</thead>
+			<tbody>
+				if len(v.Orphans) == 0 {
+					@TabloBos(4, "circle-check", "Öksüz içerik yok", "Tüm içerikler bir kategori, etiket ya da kümeye bağlı.", "", "")
+				}
+				for _, o := range v.Orphans {
+					<tr>
+						<td>{ o.Title }</td>
+						<td class="small muted">{ o.Category }</td>
+						<td class="small muted">{ o.Updated }</td>
+						<td><a class="btn small" href={ templ.SafeURL("/admin/icerikler/" + o.ID) }>Düzenle</a></td>
+					</tr>
+				}
+			</tbody>
+		</table>
+	</div>
+}
+
+func orphanStyle(bad bool) string {
+	if bad {
+		return "color:#e5484d"
+	}
+	return "color:var(--ok)"
+}
+
+// ---- Sosyal Paylaşım ----
+
+// PaylasimAlan kanal giriş alanı.
+type PaylasimAlan struct {
+	Name        string
+	Value       string
+	Placeholder string
+	Password    bool
+}
+
+// PaylasimKanal paylaşım kanalı kartı.
+type PaylasimKanal struct {
+	Key     string
+	Name    string
+	Hint    string
+	Enabled bool
+	Fields  []PaylasimAlan
+}
+
+// PaylasimShare son paylaşım kaydı.
+type PaylasimShare struct {
+	Platform string
+	OK       bool
+	Detail   string
+	Time     string
+}
+
+// PaylasimIcerik paylaşılabilir içerik seçeneği.
+type PaylasimIcerik struct {
+	ID    string
+	Title string
+}
+
+// PaylasimView sosyal paylaşım paneli.
+type PaylasimView struct {
+	FlashKind    string
+	FlashText    string
+	EnabledCount string
+	Auto         bool
+	Kanallar     []PaylasimKanal
+	WebhookURL   string
+	Contents     []PaylasimIcerik
+	Shares       []PaylasimShare
+}
+
+// PaylasimPanel sosyal paylaşım (HTMX hedefi: #paylasim-panel).
+templ PaylasimPanel(v PaylasimView) {
+	<div id="paylasim-panel">
+		if v.FlashText != "" {
+			<div class={ "flash", v.FlashKind }>{ v.FlashText }</div>
+		}
+		@Yukleniyor("paylasim-yukleniyor", "İşleniyor…")
+		<div class="card card-pad" style="display:flex;gap:16px;flex-wrap:wrap;align-items:center">
+			<div><div class="small muted">Etkin kanal</div><div class="big">{ v.EnabledCount } / 8</div></div>
+			<div>
+				<div class="small muted">Otomatik paylaşım</div>
+				<div class="big">
+					if v.Auto {
+						<span style="color:var(--ok)">Açık</span>
+					} else {
+						<span class="muted">Kapalı</span>
+					}
+				</div>
+			</div>
+			<div class="hint" style="max-width:340px">Her kanalı etkinleştir, kimlik bilgilerini doldur, "Test" ile doğrula. Yayında otomatik paylaşım açıkken tüm etkin kanallara gider. Sonuçlar "Son Paylaşımlar" tablosunda.</div>
+		</div>
+		<h2 style="font-size:1.05rem;margin-top:20px">Kanallar</h2>
+		<form method="post" action="/admin/paylasim/ayar" hx-post="/admin/paylasim/ayar" hx-target="#paylasim-panel" hx-swap="outerHTML" hx-indicator="#paylasim-yukleniyor">
+			<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:10px">
+				for _, k := range v.Kanallar {
+					<div class="card card-pad">
+						<label style="display:flex;align-items:center;gap:8px">
+							<input type="checkbox" name={ "cn_" + k.Key } value="1" if k.Enabled { checked }/>
+							<strong>{ k.Name }</strong>
+						</label>
+						<p class="hint" style="margin:.3em 0 8px">{ k.Hint }</p>
+						for i, f := range k.Fields {
+							<input
+								class="input"
+								name={ f.Name }
+								value={ f.Value }
+								placeholder={ f.Placeholder }
+								aria-label={ f.Placeholder }
+								if f.Password {
+									type="password"
+								}
+								if i > 0 {
+									style="margin-top:6px"
+								}
+							/>
+						}
+						<div style="margin-top:8px">
+							<a
+								class="btn ghost small"
+								href="#"
+								data-test-post="/admin/paylasim/test"
+								data-kanal={ k.Key }
+								hx-post="/admin/paylasim/test"
+								hx-vals={ `{"kanal":"` + k.Key + `"}` }
+								hx-target="#paylasim-panel"
+								hx-swap="outerHTML"
+								hx-indicator="#paylasim-yukleniyor"
+							><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-flask"></use></svg> Test gönder</a>
+						</div>
+					</div>
+				}
+			</div>
+			<div class="card card-pad" style="margin-top:12px">
+				<div class="small muted" style="margin-bottom:6px">Nötr Webhook (JSON — test/otomasyon kolaylığı)</div>
+				<input class="input" name="webhook_url" value={ v.WebhookURL } placeholder="https://örnek/hook" aria-label="Webhook URL"/>
+				<label class="small" style="display:block;margin-top:8px"><input type="checkbox" name="auto" value="1" if v.Auto { checked }/> İçerik yayınlanınca etkin kanallara otomatik paylaş (auto_share)</label>
+				<button class="btn" type="submit" style="margin-top:8px">Ayarları Kaydet</button>
+			</div>
+		</form>
+		<h2 style="font-size:1.05rem;margin-top:20px">Hemen Paylaş</h2>
+		<form method="post" action="/admin/paylasim/gonder" class="card card-pad" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"
+			hx-post="/admin/paylasim/gonder" hx-target="#paylasim-panel" hx-swap="outerHTML" hx-indicator="#paylasim-yukleniyor">
+			<select class="select" name="icerik" style="flex:1;min-width:280px">
+				for _, c := range v.Contents {
+					<option value={ c.ID }>{ c.Title }</option>
+				}
+			</select>
+			<button class="btn small" type="submit">Paylaş</button>
+		</form>
+		<h2 style="font-size:1.05rem;margin-top:20px">Son Paylaşımlar</h2>
+		<table class="table">
+			<thead>
+				<tr><th>Platform</th><th>Durum</th><th>Ayrıntı</th><th>Tarih</th></tr>
+			</thead>
+			<tbody>
+				if len(v.Shares) == 0 {
+					@TabloBos(4, "folder", "Kayıt yok", "Bu bölümde henüz bir kayıt bulunmuyor.", "", "")
+				}
+				for _, s := range v.Shares {
+					<tr>
+						<td>{ s.Platform }</td>
+						<td>
+							if s.OK {
+								<span style="color:var(--ok)">gönderildi</span>
+							} else {
+								<span style="color:#e5484d">hata</span>
+							}
+						</td>
+						<td class="small muted">{ s.Detail }</td>
+						<td class="small muted">{ s.Time }</td>
+					</tr>
+				}
+			</tbody>
+		</table>
+	</div>
+}
+
+// ---- Bildirimler (web push) ----
+
+// PushAbone push abonesi satırı.
+type PushAbone struct {
+	Endpoint       string
+	EndpointShort  string
+	UserAgent      string
+	LastSeen       string
+}
+
+// PushView web push paneli.
+type PushView struct {
+	FlashKind string
+	FlashText string
+	Count     string
+	Subject   string
+	LastSent  string
+	PublicKey string
+	Subs      []PushAbone
+}
+
+// PushPanel web push bildirimleri (HTMX hedefi: #bildirim-panel).
+templ PushPanel(v PushView) {
+	<div id="bildirim-panel">
+		if v.FlashText != "" {
+			<div class={ "flash", v.FlashKind }>{ v.FlashText }</div>
+		}
+		@Yukleniyor("bildirim-yukleniyor", "İşleniyor…")
+		<div class="card card-pad" style="display:flex;gap:16px;flex-wrap:wrap;align-items:center">
+			<div><div class="small muted">Kayıtlı abone</div><div class="big">{ v.Count }</div></div>
+			<div><div class="small muted">Gönderen (VAPID subject)</div><div class="big">{ v.Subject }</div></div>
+			if v.LastSent != "" {
+				<div><div class="small muted">Son gönderim</div><div class="big">{ v.LastSent }</div></div>
+			}
+		</div>
+		<h2 style="font-size:1.05rem;margin-top:20px">Bildirim Gönder</h2>
+		<form method="post" action="/admin/bildirim/gonder" class="card card-pad"
+			hx-post="/admin/bildirim/gonder" hx-target="#bildirim-panel" hx-swap="outerHTML" hx-indicator="#bildirim-yukleniyor">
+			<input class="input" name="baslik" placeholder="Başlık (boş = site adı)" aria-label="Başlık (boş = site adı)"/>
+			<input class="input" name="metin" placeholder="Mesaj (boş = 'Yeni içerik yayında!')" style="margin-top:6px" aria-label="Mesaj (boş = 'Yeni içerik yayında!')"/>
+			<button class="btn" type="submit" style="margin-top:8px" if v.Count == "0" { disabled }>Gönder</button>
+			<p class="hint" style="margin:.5em 0">Abonelik, ziyaretçi tarayıcı bildirim iznini verdiğinde oluşur. 404/410 dönen abonelikler otomatik temizlenir.</p>
+		</form>
+		<p class="hint" style="margin-top:14px">VAPID açık anahtarı (tarayıcı aboneliği için):<br/><code>{ v.PublicKey }</code></p>
+		<h2 style="font-size:1.05rem;margin-top:22px">Aboneler <span class="tag">{ v.Count }</span></h2>
+		<table class="table">
+			<thead>
+				<tr><th>Endpoint</th><th>Tarayıcı</th><th>Son görülme</th><th></th></tr>
+			</thead>
+			<tbody>
+				if len(v.Subs) == 0 {
+					@TabloBos(4, "users", "Abone yok", "Bülten ve gazete abonelikleri geldikçe burada listelenir.", "", "")
+				}
+				for _, s := range v.Subs {
+					<tr>
+						<td class="small" style="max-width:340px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title={ s.EndpointShort }>{ s.EndpointShort }</td>
+						<td class="small" style="max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{ s.UserAgent }</td>
+						<td class="small muted">{ s.LastSeen }</td>
+						<td>
+							<form method="post" action="/admin/bildirim/sub-sil" style="display:inline"
+								hx-post="/admin/bildirim/sub-sil" hx-target="#bildirim-panel" hx-swap="outerHTML"
+								hx-confirm="Bu abonelik silinsin mi?" hx-indicator="#bildirim-yukleniyor">
+								<input type="hidden" name="endpoint" value={ s.Endpoint }/>
+								<button class="btn danger small" type="submit">Sil</button>
+							</form>
+						</td>
+					</tr>
+				}
+			</tbody>
+		</table>
+	</div>
+}

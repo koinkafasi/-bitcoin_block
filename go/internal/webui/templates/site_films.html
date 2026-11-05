@@ -1,0 +1,35 @@
+{{define "sinemalar"}}<!doctype html><html lang="{{.Lang}}" {{if .RTL}}dir="rtl"{{end}} data-theme="{{.Theme}}"><head>{{template "public_head" .}}</head>
+<body>
+{{template "site_header" .}}
+<main class="page"><div class="container">
+  <h1 class="page-title"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-movie"></use></svg> Sinemalar{{if .FilmHafta}} — {{.FilmHafta}} haftası{{end}}</h1>
+  {{if .FilmHaftalar}}
+  <form method="get" action="{{.LangBase}}/sinemalar" style="margin-bottom:16px">
+    <select class="input" name="hafta" style="max-width:240px" data-autosubmit>
+      {{$cur := .FilmHafta}}{{range .FilmHaftalar}}<option value="{{.}}" {{if eq . $cur}}selected{{end}}>{{.}}</option>{{end}}
+    </select>
+  </form>
+  {{end}}
+  <div class="grid-2">
+  {{range .Filmler}}
+    <div class="card" style="display:flex;gap:12px;overflow:hidden">
+      {{if .PosterURL}}<img src="{{.PosterURL}}" alt="{{.Title}}" loading="lazy" style="width:96px;height:140px;object-fit:cover;flex:0 0 auto">{{end}}
+      <div class="card-pad" style="flex:1">
+        <h3 style="margin:0 0 4px">{{.Title}}</h3>
+        <div class="small muted">{{if .Genre}}{{.Genre}}{{end}}{{if .DurationMin}} · {{.DurationMin}} dk{{end}} · {{.Cinema}}</div>
+        {{if .Synopsis}}<p class="small" style="margin:.4em 0">{{.Synopsis}}</p>{{end}}
+        {{if .TrailerURL}}<a class="btn small" href="{{.TrailerURL}}" target="_blank" rel="noopener"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-player-play"></use></svg> Fragman</a>{{end}}
+      </div>
+    </div>
+  {{else}}<p class="muted">Bu hafta için film yok.</p>{{end}}
+  </div>
+</div></main>
+{{template "site_footer" .}}
+</body></html>{{end}}
+
+{{define "admin_sinemalar"}}<!doctype html><html lang="tr" data-theme="{{.Theme}}"><head>{{template "admin_head" .}}</head>
+<body><div class="admin-wrap">{{template "admin_side" .}}<main class="admin-main">
+{{template "admin_top" .}}
+<div class="admin-body">
+{{template "sinemalar_panel" .}}
+</div></main></div></body></html>{{end}}

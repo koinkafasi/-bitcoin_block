@@ -1,0 +1,46 @@
+{{define "asistan"}}<!doctype html><html lang="{{.Lang}}" {{if .RTL}}dir="rtl"{{end}} data-theme="{{.Theme}}"><head>{{template "public_head" .}}</head>
+<body>
+{{template "site_header" .}}
+<main class="page"><div class="container narrow">
+  <h1 class="page-title"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-robot"></use></svg> AI Asistan</h1>
+  <p class="muted">Haberler hakkında soru sorun, özet isteyin. Yanıtlar yapay zekâ üretir — kritik bilgileri kaynaktan doğrulayın.</p>
+  {{if .Assistant.ContextTitle}}
+  <div class="card card-pad" style="margin:14px 0;border-left:3px solid var(--accent)">
+    <div class="small muted">Bağlam</div>
+    <strong>{{.Assistant.ContextTitle}}</strong>
+    {{if .Assistant.ContextBody}}<p class="muted small" style="margin:.3em 0 0">{{.Assistant.ContextBody}}</p>{{end}}
+  </div>
+  {{end}}
+  <form id="asForm" class="card card-pad" style="margin-top:14px">
+    <div class="field"><label for="f_soru">Sorunuz</label>
+      <textarea id="f_soru" class="input" name="soru" rows="3" required placeholder="Örn: Bu haber ne anlama geliyor?"></textarea></div>
+    <input type="hidden" name="baglam_baslik" value="{{.Assistant.ContextTitle}}">
+    <input type="hidden" name="baglam_spot" value="{{.Assistant.ContextBody}}">
+    {{if .Assistant.ContextTitle}}<input type="hidden" name="haber" value="{{.Assistant.ContextTitle}}">{{end}}
+    <button class="btn" type="submit">Sor</button>
+    <span class="small muted" id="asState"></span>
+  </form>
+  <div id="asAnswer" class="card card-pad" style="margin-top:12px;display:none"></div>
+  <p class="hint" style="margin-top:12px">Sağlayıcı: {{if .Assistant.Enabled}}AI bağlantısı etkin{{else}}yerel kural tabanlı (AI anahtarı yok){{end}}</p>
+  <script>
+  (function(){
+    var f=document.getElementById('asForm'), box=document.getElementById('asAnswer'), st=document.getElementById('asState');
+    f.addEventListener('submit',function(e){
+      e.preventDefault(); st.textContent='Düşünüyor…';
+      fetch('/asistan',{method:'POST',body:new FormData(f),credentials:'same-origin'})
+        .then(function(r){return r.json()})
+        .then(function(j){ st.textContent=''; box.style.display='block'; box.textContent = j.yanit || j.hata || 'Yanıt alınamadı.'; })
+        .catch(function(){ st.textContent=''; box.style.display='block'; box.textContent='Bağlantı hatası.'; });
+    });
+  })();
+  </script>
+</div></main>
+{{template "site_footer" .}}
+</body></html>{{end}}
+
+{{define "geri-bildirim"}}<!doctype html><html lang="tr" data-theme="{{.Theme}}"><head>{{template "admin_head" .}}</head>
+<body><div class="admin-wrap">{{template "admin_side" .}}<main class="admin-main">
+{{template "admin_top" .}}
+<div class="admin-body">
+{{template "geri_bildirim_panel" .}}
+</div></main></div></body></html>{{end}}

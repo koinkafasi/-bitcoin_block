@@ -1,0 +1,433 @@
+// SEO panelleri (templ): İndeksleme (IndexNow/Google/Bot tuzağı/Blok) ve
+// Taşıma & 301 (yönlendirme + CSV geçişi).
+package templkit
+
+// ---- İndeksleme ----
+
+// IdnIcerik bildirilebilir içerik seçeneği.
+type IdnIcerik struct {
+	ID    string
+	Title string
+}
+
+// IdnLog son bildirim kaydı.
+type IdnLog struct {
+	Engine  string
+	URL     string
+	OK      bool
+	Detail  string
+	Time    string
+}
+
+// IdnTuzak bot tuzağı isabeti.
+type IdnTuzak struct {
+	IP        string
+	UserAgent string
+	Path      string
+	Time      string
+}
+
+// IdnBlok bloklu IP satırı.
+type IdnBlok struct {
+	IP     string
+	Reason string
+	Hits   string
+	Time   string
+}
+
+// IdnNewsRapor news sitemap kontrol raporu.
+type IdnNewsRapor struct {
+	Durum     string // ok | hata | uyari
+	Mesaj     string
+	ToplamURL string
+	EnEski    string
+	EnYeni    string
+	EksikAlan string
+}
+
+// IndexlemeView indeksleme paneli.
+type IndexlemeView struct {
+	FlashKind      string
+	FlashText      string
+	IndexNowReady  bool
+	SAConfigured   bool
+	Auto           bool
+	BlockedCount   string
+	KeyURL         string
+	Endpoint       string
+	Allowlist      string
+	NewsURL        string
+	NewsReport     *IdnNewsRapor
+	Contents       []IdnIcerik
+	Logs           []IdnLog
+	TrapCount      string
+	TrapHits       []IdnTuzak
+	Blocked        []IdnBlok
+}
+
+// IndexlemePanel indeksleme & bot koruması (HTMX hedefi: #indexleme-panel).
+templ IndexlemePanel(v IndexlemeView) {
+	<div id="indexleme-panel">
+		if v.FlashText != "" {
+			<div class={ "flash", v.FlashKind }>{ v.FlashText }</div>
+		}
+		@Yukleniyor("indexleme-yukleniyor", "İşleniyor…")
+		<div class="card card-pad" style="display:flex;gap:16px;flex-wrap:wrap;align-items:center">
+			<div>
+				<div class="small muted">IndexNow</div>
+				<div class="big">
+					if v.IndexNowReady {
+						<span style="color:var(--ok)">Hazır</span>
+					} else {
+						—
+					}
+				</div>
+			</div>
+			<div>
+				<div class="small muted">Google servis hesabı</div>
+				<div class="big">
+					if v.SAConfigured {
+						<span style="color:var(--ok)">Bağlı</span>
+					} else {
+						<span class="muted">Yok</span>
+					}
+				</div>
+			</div>
+			<div>
+				<div class="small muted">Yayında otomatik</div>
+				<div class="big">
+					if v.Auto {
+						Açık
+					} else {
+						Kapalı
+					}
+				</div>
+			</div>
+			<div><div class="small muted">Bloklu IP</div><div class="big">{ v.BlockedCount }</div></div>
+		</div>
+		<h2 style="font-size:1.05rem;margin-top:20px">IndexNow (Bing/Yandex)</h2>
+		<div class="card card-pad">
+			<p class="hint" style="margin:0 0 8px">Anahtar dosyası sunuluyor (dizinlenebilir): <code>{ v.KeyURL }</code> — erişilebilir olmalı.</p>
+			<form method="post" action="/admin/indexleme/indexnow" hx-post="/admin/indexleme/indexnow" hx-target="#indexleme-panel" hx-swap="outerHTML" hx-indicator="#indexleme-yukleniyor" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+				<select class="select" name="icerik" style="flex:1;min-width:260px" aria-label="Hedef içerik">
+					<option value="">— içerik seç —</option>
+					for _, c := range v.Contents {
+						<option value={ c.ID }>{ c.Title }</option>
+					}
+				</select>
+				<input class="input" name="url" placeholder="veya tam URL" style="min-width:240px" aria-label="veya tam URL"/>
+				<button class="btn small" type="submit">IndexNow'a Bildir</button>
+			</form>
+		</div>
+		<h2 style="font-size:1.05rem;margin-top:20px">Google Indexing API</h2>
+		<form method="post" action="/admin/indexleme/ayar" hx-post="/admin/indexleme/ayar" hx-target="#indexleme-panel" hx-swap="outerHTML" hx-indicator="#indexleme-yukleniyor" class="card card-pad">
+			<input class="input" name="endpoint" value={ v.Endpoint } placeholder="IndexNow endpoint (boş = api.indexnow.org)" style="max-width:420px" aria-label="IndexNow endpoint (boş = api.indexnow.org)"/>
+			<div class="small muted" style="margin:.6em 0 .2em">Servis hesabı JSON (Google Cloud → Indexing API):</div>
+			<textarea class="input" name="service_account" rows="3" aria-label="Servis hesabı JSON anahtarı" placeholder={"{\"client_email\":\"...\",\"private_key\":\"...\"}"}></textarea>
+			<label class="small" style="display:block;margin-top:8px"><input type="checkbox" name="auto" value="1" if v.Auto { checked }/> Yayında otomatik IndexNow bildirimi</label>
+			<div class="small muted" style="margin-top:8px">Blok izin listesi (asla bloklanmayacak IP'ler, virgülle):</div>
+			<input class="input" name="blok_izinli" value={ v.Allowlist } placeholder="örn. 88.11.22.33, 5.6.7.8" style="max-width:420px" aria-label="örn. 88.11.22.33, 5.6.7.8"/>
+			<button class="btn" type="submit" style="margin-top:6px">Kaydet</button>
+		</form>
+		if v.SAConfigured {
+			<form method="post" action="/admin/indexleme/google" hx-post="/admin/indexleme/google" hx-target="#indexleme-panel" hx-swap="outerHTML" hx-indicator="#indexleme-yukleniyor" class="card card-pad" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px">
+				<select class="select" name="icerik" style="flex:1;min-width:260px" aria-label="Hedef içerik">
+					for _, c := range v.Contents {
+						<option value={ c.ID }>{ c.Title }</option>
+					}
+				</select>
+				<button class="btn small" type="submit">Google'a Bildir</button>
+			</form>
+		}
+		<h2 style="font-size:1.05rem;margin-top:20px">Google News Sitemap</h2>
+		<div class="card card-pad">
+			<div class="small muted" style="margin-bottom:.4em">Search Console → Sitemaps bölümüne eklenecek adres:</div>
+			<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+				<code class="small" style="flex:1;min-width:240px;word-break:break-all">{ v.NewsURL }</code>
+				<a class="btn ghost small" href="https://search.google.com/search-console/sitemaps" target="_blank" rel="noopener">Search Console <svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-external-link"></use></svg></a>
+				<form method="post" action="/admin/indexleme/news-sitemap" style="display:inline"
+					hx-post="/admin/indexleme/news-sitemap" hx-target="#indexleme-panel" hx-swap="outerHTML" hx-indicator="#indexleme-yukleniyor"><button class="btn small" type="submit">Şimdi doğrula</button></form>
+			</div>
+			<div class="hint" style="margin-top:.6em">Sitemap son 48 saatte yayınlanan haberleri içerir (Google News kuralı). Bozuk gönderimde Google sessizce yok sayar — önce doğrula.</div>
+			if v.NewsReport != nil {
+				<div style="margin-top:.7em;padding:.6em .8em;border-radius:8px;border:1px solid var(--line);background:var(--surface-2)">
+					<div class="small">
+						<b>Son kontrol:</b>
+						<span class={ "badge", newsBadge(v.NewsReport.Durum) }>{ newsLabel(v.NewsReport.Durum) }</span>
+						{ v.NewsReport.Mesaj }
+					</div>
+					<div class="small muted" style="margin-top:.3em">
+						Kayıt: <b>{ v.NewsReport.ToplamURL }</b> · Yayın aralığı: { v.NewsReport.EnEski } — { v.NewsReport.EnYeni }
+						if v.NewsReport.EksikAlan != "" {
+							<br/>Eksik alan: { v.NewsReport.EksikAlan }
+						}
+					</div>
+				</div>
+			} else {
+				<div class="hint" style="margin-top:.6em">Henüz kontrol edilmedi.</div>
+			}
+		</div>
+		<h2 style="font-size:1.05rem;margin-top:20px">Son Bildirimler</h2>
+		<table class="table">
+			<thead>
+				<tr><th>Motor</th><th>URL</th><th>Durum</th><th>Ayrıntı</th><th>Tarih</th></tr>
+			</thead>
+			<tbody>
+				if len(v.Logs) == 0 {
+					@TabloBos(5, "link", "Kayıt yok", "Henüz iç link ya da yönlendirme yok.", "", "")
+				}
+				for _, l := range v.Logs {
+					<tr>
+						<td class="small">{ l.Engine }</td>
+						<td class="small" style="max-width:320px;overflow:hidden;text-overflow:ellipsis">{ l.URL }</td>
+						<td>
+							if l.OK {
+								<span style="color:var(--ok)">ok</span>
+							} else {
+								<span style="color:#e5484d">hata</span>
+							}
+						</td>
+						<td class="small muted">{ l.Detail }</td>
+						<td class="small muted">{ l.Time }</td>
+					</tr>
+				}
+			</tbody>
+		</table>
+		<h2 style="font-size:1.05rem;margin-top:22px"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-bug"></use></svg> Bot Tuzağı (honeypot) <span class="tag">{ v.TrapCount } isabet</span></h2>
+		<p class="hint" style="margin:.3em 0">Footer'da gizli + <code>robots.txt</code>'te yasaklı linkler (<code>/arsiv/dizin</code>, <code>/gizli-dizin</code>). İyi davranmayan botlar bunları takip eder → kayıt + 410 Gone, <code>X-Robots-Tag: noindex</code>.</p>
+		<table class="table">
+			<thead>
+				<tr><th>IP</th><th>User-Agent</th><th>Yol</th><th>Tarih</th></tr>
+			</thead>
+			<tbody>
+				if len(v.TrapHits) == 0 {
+					@TabloBos(4, "search", "Henüz isabet yok", "Arama performansı biriktikçe içerik burada listelenir.", "", "")
+				}
+				for _, t := range v.TrapHits {
+					<tr>
+						<td class="small">{ t.IP }</td>
+						<td class="small" style="max-width:340px;overflow:hidden;text-overflow:ellipsis">{ t.UserAgent }</td>
+						<td class="small">{ t.Path }</td>
+						<td class="small muted">{ t.Time }</td>
+					</tr>
+				}
+			</tbody>
+		</table>
+		<h2 style="font-size:1.05rem;margin-top:22px"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-ban"></use></svg> Bloklu IP'ler <span class="tag">{ v.BlockedCount }</span></h2>
+		<p class="hint" style="margin:.3em 0">Tuzak isabeti olan <b>public IP'ler otomatik bloklanır</b> ve tüm istekleri <b>403</b> döner. Private/loopback ve izin listesi hariçtir.</p>
+		<table class="table">
+			<thead>
+				<tr><th>IP</th><th>Sebep</th><th>İsabet</th><th>Tarih</th><th></th></tr>
+			</thead>
+			<tbody>
+				if len(v.Blocked) == 0 {
+					@TabloBos(5, "ban", "Bloklu IP yok", "Engellenen adresler burada listelenir.", "", "")
+				}
+				for _, b := range v.Blocked {
+					<tr>
+						<td class="small"><code>{ b.IP }</code></td>
+						<td class="small muted">{ b.Reason }</td>
+						<td class="small">{ b.Hits }</td>
+						<td class="small muted">{ b.Time }</td>
+						<td>
+							<form method="post" action="/admin/indexleme/blok-kaldir" hx-post="/admin/indexleme/blok-kaldir" hx-target="#indexleme-panel" hx-swap="outerHTML" hx-indicator="#indexleme-yukleniyor" hx-confirm="Bu IP bloğu kaldırılsın mı?" style="display:inline">
+								<input type="hidden" name="ip" value={ b.IP }/>
+								<button class="btn small" type="submit">Çöz</button>
+							</form>
+						</td>
+					</tr>
+				}
+			</tbody>
+		</table>
+	</div>
+}
+
+func newsBadge(durum string) string {
+	switch durum {
+	case "ok":
+		return "news-ok"
+	case "hata":
+		return "news-hata"
+	default:
+		return "news-uyari"
+	}
+}
+
+func newsLabel(durum string) string {
+	switch durum {
+	case "ok":
+		return "sorun yok"
+	case "hata":
+		return "hata"
+	default:
+		return "uyarı"
+	}
+}
+
+// ---- Taşıma & 301 ----
+
+// TasimaYonlendirme yönlendirme satırı.
+type TasimaYonlendirme struct {
+	SourcePath string
+	TargetURL  string
+	StatusCode string
+	Hits       string
+	Note       string
+}
+
+// TasimaOnizleme CSV içerik içe aktarım önizlemesi.
+type TasimaOnizleme struct {
+	Line     string
+	Title    string
+	Category string
+	Status   string
+	Tags     string
+	OK       bool
+	Err      string
+}
+
+// TasimaView taşıma & 301 paneli.
+type TasimaView struct {
+	FlashKind   string
+	FlashText   string
+	Count       string
+	Query       string
+	Redirects   []TasimaYonlendirme
+	Preview     []TasimaOnizleme
+	Apply       bool
+	Imported    string
+	ImportErrs  []string
+	RawCSV      string
+	Categories  []string
+}
+
+// TasimaPanel taşıma & 301 (HTMX hedefi: #tasima-panel).
+templ TasimaPanel(v TasimaView) {
+	<div id="tasima-panel">
+		if v.FlashText != "" {
+			<div class={ "flash", v.FlashKind }>{ v.FlashText }</div>
+		}
+		@Yukleniyor("tasima-yukleniyor", "İşleniyor…")
+		<div class="card card-pad" style="display:flex;gap:16px;flex-wrap:wrap;align-items:center">
+			<div><div class="small muted">Toplam Yönlendirme</div><div class="big">{ v.Count }</div></div>
+			<div><div class="small muted">Aktif Kural Motoru</div><div class="big">301/302</div></div>
+			<a class="btn small" style="margin-left:auto" href="/admin/tasima/ornek-csv?tur=yonlendirme"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-arrow-down"></use></svg> Örnek CSV (yönlendirme)</a>
+			<a class="btn small" href="/admin/tasima/ornek-csv?tur=icerik"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-arrow-down"></use></svg> Örnek CSV (içerik)</a>
+		</div>
+		<h2 style="font-size:1.05rem;margin-top:22px">301 Yönlendirmeler</h2>
+		<form method="get" action="/admin/tasima" class="card card-pad" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"
+			hx-get="/admin/tasima" hx-target="#tasima-panel" hx-swap="outerHTML" hx-push-url="true" hx-indicator="#tasima-yukleniyor">
+			<input class="input" name="q" value={ v.Query } placeholder="Ara: kaynak veya hedef" style="max-width:320px" aria-label="Ara: kaynak veya hedef"/>
+			<button class="btn small" type="submit">Ara</button>
+			if v.Query != "" {
+				<a class="btn small" href="/admin/tasima">Temizle</a>
+			}
+		</form>
+		<table class="table" style="margin-top:10px">
+			<thead>
+				<tr><th>Kaynak Yol</th><th>Hedef</th><th>Kod</th><th>Hit</th><th>Not</th><th></th></tr>
+			</thead>
+			<tbody>
+				if len(v.Redirects) == 0 {
+					@TabloBos(6, "link", "Kayıt yok", "Aşağıdan ekleyin veya CSV ile toplu içe aktarın.", "", "")
+				}
+				for _, r := range v.Redirects {
+					<tr>
+						<td><code>{ r.SourcePath }</code></td>
+						<td style="max-width:360px;word-break:break-all"><a href={ templ.SafeURL(r.TargetURL) } target="_blank" rel="noopener">{ r.TargetURL }</a></td>
+						<td>{ r.StatusCode }</td>
+						<td>{ r.Hits }</td>
+						<td class="muted small">{ r.Note }</td>
+						<td>
+							<form method="post" action="/admin/tasima/yonlendirme-sil"
+								hx-post="/admin/tasima/yonlendirme-sil" hx-target="#tasima-panel" hx-swap="outerHTML"
+								hx-confirm="Yönlendirme silinsin mi?" hx-indicator="#tasima-yukleniyor">
+								<input type="hidden" name="kaynak" value={ r.SourcePath }/>
+								<button class="btn small danger" type="submit">Sil</button>
+							</form>
+						</td>
+					</tr>
+				}
+			</tbody>
+		</table>
+		<h2 style="font-size:1rem;margin-top:18px">Yeni / Güncelle Yönlendirme</h2>
+		<form method="post" action="/admin/tasima/yonlendirme" class="card card-pad"
+			hx-post="/admin/tasima/yonlendirme" hx-target="#tasima-panel" hx-swap="outerHTML" hx-indicator="#tasima-yukleniyor">
+			<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:6px">
+				<input class="input" name="kaynak" required placeholder="Eski yol (örn. /2019/05/haber)" aria-label="Eski yol"/>
+				<input class="input" name="hedef" required placeholder="Yeni URL (örn. https://theblock.com.tr/…)" aria-label="Yeni URL"/>
+				<select class="select" name="kod"><option value="301">301 Kalıcı</option><option value="302">302 Geçici</option></select>
+				<input class="input" name="not" placeholder="Not (ops)" aria-label="Not"/>
+			</div>
+			<div style="margin-top:8px"><button class="btn" type="submit">Kaydet</button>
+				<span class="hint">Kaynak yol baştaki <code>/</code> otomatik eklenir. Aynı kaynak yol tekrar girilirse hedef güncellenir.</span></div>
+		</form>
+		<h2 style="font-size:1rem;margin-top:18px">CSV ile Toplu Yönlendirme İçe Aktarım</h2>
+		<form method="post" action="/admin/tasima/yonlendirme-ice-aktar" enctype="multipart/form-data" class="card card-pad">
+			<p class="hint" style="margin:0 0 8px">Sütunlar: <code>kaynak</code> (eski yol), <code>hedef</code> (yeni URL), ops. <code>kod</code> (301/302), <code>not</code>. Başlık satırı zorunlu; Excel Türkçe uyumludur (BOM/; otomatik algılanır).</p>
+			<input class="input" type="file" name="dosya" accept=".csv,text/csv" style="margin-bottom:6px"/>
+			<textarea class="input" name="csv" rows="4" aria-label="CSV içeriği" placeholder={"kaynak,hedef,kod\n/eski-haber,https://theblock.com.tr/yeni-haber,301"}></textarea>
+			<div style="margin-top:8px"><button class="btn" type="submit">İçe Aktar</button></div>
+		</form>
+		<h2 style="font-size:1.05rem;margin-top:26px">CSV İçerik Toplu İçe Aktarım (Geçiş / Taşıma)</h2>
+		if len(v.Preview) > 0 {
+			<div class="card card-pad" style="border-left:3px solid var(--accent)">
+				<strong>Önizleme — { itoaT(len(v.Preview)) } satır çözümlendi
+					if v.Apply {
+						 , { v.Imported } kayıt oluşturuldu
+					}
+				</strong>
+				if len(v.ImportErrs) > 0 {
+					<div class="small" style="color:#e5484d;margin-top:6px">
+						for _, e := range v.ImportErrs {
+							 • { e }<br/>
+						}
+					</div>
+				}
+				<table class="table" style="margin-top:8px">
+					<thead>
+						<tr><th>#</th><th>Başlık</th><th>Kategori</th><th>Durum</th><th>Etiketler</th><th>Durum</th></tr>
+					</thead>
+					<tbody>
+						for _, p := range v.Preview {
+							<tr>
+								<td class="muted">{ p.Line }</td>
+								<td>{ p.Title }</td>
+								<td>{ p.Category }</td>
+								<td>{ p.Status }</td>
+								<td class="muted small">{ p.Tags }</td>
+								<td>
+									if p.OK {
+										<span class="tag">hazır</span>
+									} else {
+										<span class="tag" style="color:#e5484d">{ p.Err }</span>
+									}
+								</td>
+							</tr>
+						}
+					</tbody>
+				</table>
+				if !v.Apply {
+					<form method="post" action="/admin/tasima/icerik-ice-aktar" style="margin-top:10px">
+						<input type="hidden" name="uygula" value="1"/>
+						<textarea name="csv" hidden>{ v.RawCSV }</textarea>
+						<button class="btn" type="submit">Onayla ve İçe Aktar ({ itoaT(len(v.Preview)) } satır)</button>
+						<a class="btn small" href="/admin/tasima" style="margin-left:6px">İptal</a>
+					</form>
+				}
+			</div>
+		}
+		<form method="post" action="/admin/tasima/icerik-ice-aktar" enctype="multipart/form-data" class="card card-pad" style="margin-top:12px">
+			<p class="hint" style="margin:0 0 8px">
+				Sütunlar: <code>baslik</code> (zorunlu), <code>spot</code>, <code>detay</code> (gövde; satır = paragraf),
+				<code>kategori</code> (ad veya slug), <code>etiketler</code> (virgül/| ile), <code>durum</code> (taslak/yayinda/arsiv),
+				<code>slug</code>, <code>seo_baslik</code>, <code>seo_aciklama</code>, <code>kaynak_url</code>.
+				Önce <b>önizleme</b> gösterilir; onaylayınca kaydedilir.
+			</p>
+			<p class="hint" style="margin:0 0 8px">Mevcut kategoriler: { joinComma(v.Categories) }</p>
+			<input class="input" type="file" name="dosya" accept=".csv,text/csv" style="margin-bottom:6px"/>
+			<textarea class="input" name="csv" rows="4" aria-label="CSV içeriği" placeholder={"baslik,spot,detay,kategori,etiketler,durum\nÖrnek Başlık,Kısa özet,Gövde paragrafı.,Ekonomi,\"ekonomi,piyasa\",taslak"}></textarea>
+			<div style="margin-top:8px"><button class="btn" type="submit">Önizle</button></div>
+		</form>
+	</div>
+}

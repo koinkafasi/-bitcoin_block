@@ -1,0 +1,1881 @@
+// İçerik düzenleme formu (templ). Editör motoru static/editor.js'te kalır;
+// bu dosya form kabuğunu ve yardımcı panelleri basar.
+package templkit
+
+// IcerikVideo video seçici seçeneği.
+type IcerikVideo struct {
+	ID       string
+	Title    string
+	Cover    string
+	Slug     string
+	Spot     string
+	Sure     string
+	Cat      string
+	Selected bool
+}
+
+// IcerikKisi yazar/editör seçeneği.
+type IcerikKisi struct {
+	ID    string
+	Label string
+}
+
+// IcerikRozet rozet onay kutusu.
+type IcerikRozet struct {
+	Code string
+	On   bool
+}
+
+// IcerikLang içerik dili satırı (Faz 190).
+//
+// Önceki model yalnız {URL, Label, Active} taşıyordu: 24 dilin 23'ü "+"
+// bağlantısıydı ve hepsi GET ile açılıyordu. Rota POST olduğu için her
+// tıklama 404 dönüyordu (canlı ölçüm: 23 "+", 0 düzenlenebilir bağlantı).
+//
+// Artık durum ve eylem ayrı taşınıyor:
+//
+//	State "yok"      → AI ile çevir / boş taslak aç
+//	State "taslak"   → Düzenle
+//	State "yayinda"  → Düzenle · Görüntüle
+type IcerikLang struct {
+	URL    string
+	Label  string
+	Active bool
+
+	Code      string // dil kodu (en, de…)
+	Native    string // yerel ad (English)
+	State     string // yok | taslak | yayinda | arsiv
+	StateTR   string // görünen durum etiketi
+	ContentID int64  // çeviri kaydı (0 = henüz yok)
+	SourceID  int64  // çeviri kökü (AI çağrısı bunu kullanır)
+	Once      bool   // mevcut çeviriler listenin başında
+}
+
+// IcerikMediaOption medya slotu seçeneği.
+type IcerikMediaOption struct {
+	ID       string
+	Filename string
+	Thumb    string
+	Selected bool
+}
+
+// IcerikMediaSlot medya slotu (içerik/manşet/sosyal).
+type IcerikMediaSlot struct {
+	Name    string
+	Help    string
+	Options []IcerikMediaOption
+}
+
+// IcerikMedia gömülü editör medya listesi satırı.
+type IcerikMedia struct {
+	ID             string
+	URL            string
+	Thumb          string
+	Alt            string
+	Caption        string
+	Title          string
+	Description    string
+	SeoTitle       string
+	SeoDescription string
+	Category       string
+}
+
+// IcerikTrend etikete eklenebilir trend terimi.
+type IcerikTrend struct {
+	Term    string
+	Score   string
+	Coverage string
+}
+
+// IcerikAIAction seçili metin AI eylemi.
+type IcerikAIAction struct {
+	ID          string
+	Label       string
+	Description string
+	Icon        string
+	Research    bool
+}
+
+// IcerikAudioWord transkript segmentindeki tek kelimenin zaman damgasıdır.
+// Karaoke vurgu (oynarken geçerli kelimeyi işaretleme) ve kelimeye tıklayıp
+// o saniyeye sarma bu veriye dayanır.
+type IcerikAudioWord struct {
+	StartMS int64
+	EndMS   int64
+	Text    string
+}
+
+// IcerikAudioSegment transkriptin tıklanabilir zaman aralığı.
+type IcerikAudioSegment struct {
+	StartMS    int64
+	StartLabel string
+	Speaker    string
+	Text       string
+	// Words kelime kelime zaman damgaları. Sağlayıcı kelime döndürmediyse
+	// boştur ve segment düz metin olarak basılır (eski davranış).
+	Words []IcerikAudioWord
+}
+
+// IcerikAudio içerik formundaki özel röportaj ses kaydı.
+type IcerikAudio struct {
+	MediaID        string
+	Filename       string
+	StreamURL      string
+	Status         string
+	StatusLabel    string
+	Progress       int
+	Duration       string
+	Size           string
+	CreatedAt      string
+	Error          string
+	Speakers       string
+	Segments       []IcerikAudioSegment
+	TranscriptText string
+	DraftURL       string
+	RetryURL       string
+	DeleteURL      string
+	// SrtURL / VttURL transkripti altyazı dosyası olarak indirir. Transkript
+	// yoksa boş kalır ve düğmeler basılmaz.
+	SrtURL         string
+	VttURL         string
+	CanDraft       bool
+	CanRetry       bool
+	IsActive       bool
+	// Waveform dalga formu tepe noktaları (0..1). Boşsa düz ilerleme çubuğu.
+	Waveform []float64
+	// WaveformJSON template'e gömülecek JSON dizisi (data-waveform).
+	WaveformJSON string
+}
+
+// IcerikSource kanıt/kaynak satırı.
+type IcerikSource struct {
+	ID         string
+	URL        string
+	Accessible bool
+}
+
+// IcerikSeoPart SEO kriter satırı.
+type IcerikSeoPart struct {
+	Name   string
+	Weight int
+}
+
+// IcerikFormView içerik formu paneli.
+type IcerikFormView struct {
+	FlashKind string
+	FlashText string
+
+	IsNew      bool
+	NumID      int64
+	HasContent bool
+	ContentID  string
+	Version    string
+	Lang       string
+	UserID     string
+	UserName   string
+
+	ActionURL       string
+	AutosaveURL     string
+	PreviewURL      string
+	DeleteURL       string
+	AudioActionURL  string
+	AISkorURL       string
+	KaynakKontrol   string
+	KaynakEkle      string
+
+	Title      string
+	Spot       string
+	DetailJSON string
+	TitleLen   int
+	SiteName   string
+
+	TypeKey         string
+	Types           []IOpt
+	TagsText        string
+	VideoSure       string
+	HesaplayiciSema string
+	PublishAtValue  string
+
+	YMYL      bool
+	YMYLDurumu string
+	YMYLUzman  string
+	OrigIndex  int
+
+	AiScore       string
+	CommentAcik   bool
+	IsExclusive   bool
+	MinTierWeight int
+	SourceURL     string
+	SourceName    string
+
+	SeoTitle  string
+	SeoDesc   string
+	SeoScore  int
+	SeoText   string
+	SeoParts  []IcerikSeoPart
+
+	ImageCredit    string
+	SocialSummary  string
+	AISummary      string
+	FieldAudioURL  string
+	FieldAudioStatus string
+	FieldAudioSeconds string
+	FieldScrollCount  string
+
+	AudioURL     string
+	AudioSeconds string
+	AudioStatus  string
+
+	VideoCats     []IOpt
+	Videos        []IcerikVideo
+	RelatedVideoID string
+
+	Categories     []IOpt
+	Mahrets        []IOpt
+	Authors        []IOpt
+	Editors        []IOpt
+	Clusters       []IOpt
+	Rozets         []IcerikRozet
+	Langs          []IcerikLang
+
+	// Faz 190 — çeviri düzenleme bağlamı.
+	//
+	// Bir çeviri düzenlenirken editör "bu hangi dilin çevirisi?" sorusunu
+	// cevaplayabilmeli: kaynak başlığı, kaynak kimliği ve dilin yerel adı.
+	IcerikLocale     string // bu içeriğin dili (tr, en…)
+	IcerikLocaleAd   string // yerel ad (Türkçe, English…)
+	CeviriMi         bool   // bu içerik bir çeviri mi?
+	KaynakID         string // çeviri kökü (kaynak içerik)
+	KaynakBaslik     string
+	KaynakSpot       string
+	KaynakGovdeHTML  string // salt-okunur kaynak gövde (çevirmen için)
+	KaynakDurum      string
+	// CeviriSayisi mevcut çeviri sayısı (kaynak dahil değil).
+	CeviriSayisi int
+
+	// Faz 192 — "Gelişmiş / türe özel alanlar" paneli.
+	//
+	// Ölçüm: 13.486 içeriğin 13.470'i `haber`. Panelin gövdesi `haber` için
+	// yalnız GİZLİ bir alan taşıyordu (424 bayt, görünen alan 0) → kullanıcı
+	// açtığında boş kutu görüyor ve "açılmıyor" diyordu. Panel artık türe
+	// göre veri odaklı: alan yoksa HİÇ render edilmez.
+	GelismisVar   bool
+	GelismisIpucu string
+	MediaSlots     []IcerikMediaSlot
+	Media          []IcerikMedia
+	Trends         []IcerikTrend
+	AIActions      []IcerikAIAction
+	Sources        []IcerikSource
+
+	TitleActionVals string
+	SpotActionVals  string
+	SeoTitleVals    string
+	SeoDescVals     string
+
+	// Ses / röportaj paneli. Kayıtlar private depolamada tutulur ve yalnızca
+	// yetkili editör akışında görünür.
+	SesUploadURL string
+	SesPollURL   string
+	SesFlashKind string
+	SesFlashText string
+	Audios       []IcerikAudio
+
+	// Kalite ölçümü (Faz 115): AI dedektörü değil, deterministik editoryal
+	// metrikler. Bloklayıcı bulgular yayın öncesi çözülmelidir.
+	Kalite IcerikKalite
+}
+
+// IcerikKaliteBulgu tek kalite bulgusu.
+type IcerikKaliteBulgu struct {
+	Title  string
+	Detail string
+}
+
+// IcerikSesArama transkript aramasında bulunan tek kayıttır.
+type IcerikSesArama struct {
+	URL          string
+	ContentTitle string
+	Snippet      string
+	Duration     string
+}
+
+// IcerikKalite panelde gösterilen kalite raporu.
+type IcerikKalite struct {
+	Checked  bool
+	Score    int
+	Grade    string
+	Words    string
+	Sentences string
+	AvgSentence string
+	StdDev   string
+	MATTR    string
+	Cliches  string
+	Repeats  string
+	Blockers []IcerikKaliteBulgu
+	Warnings []IcerikKaliteBulgu
+	Imla     []IcerikKaliteBulgu
+	// Benzerlik yayındaki son içeriklerle yakın-kopya ölçümüdür.
+	BenzerlikVar   bool
+	BenzerlikOran  string
+	BenzerlikHits  []IcerikKaliteBulgu
+	RefreshURL string
+}
+
+// IcerikFormPanel içerik formu (HTMX hedefi: #content-form-panel).
+templ IcerikFormPanel(v IcerikFormView) {
+	<div id="content-form-panel">
+		  <style>
+  .be-toolbar{display:flex;flex-wrap:wrap;gap:4px;align-items:center;border:1px solid var(--line);border-bottom:0;border-radius:10px 10px 0 0;padding:6px;background:var(--surface-2,var(--bg2,#f7f7f6))}
+  .be-btn{min-width:30px;height:30px;padding:0 7px;border:1px solid transparent;border-radius:6px;background:transparent;color:var(--text);cursor:pointer;font:inherit;font-size:.82rem;display:inline-flex;align-items:center;justify-content:center}
+  .be-btn:hover{background:var(--line)}
+  /* Araç çubuğu simgeleri yerel sprite'tan (Faz 161). Düğme 30px
+     yüksekliğinde; 17px simge dikeyde dengeli kalıyor. */
+  .be-btn .ti{width:17px;height:17px;flex:none}
+  .be-more-item .ti{width:16px;height:16px}
+  .be-btn.is-active{background:var(--accent);color:#fff}
+  .be-bold{font-weight:800}.be-italic{font-style:italic}.be-underline{text-decoration:underline}
+  .be-sep{width:1px;height:20px;background:var(--line);margin:0 3px}
+  .be-toolbar-group{display:flex;gap:4px;align-items:center}
+  .be-more-toggle{display:none}
+  .be-more-menu{position:fixed;z-index:130;display:grid;gap:2px;min-width:230px;max-height:70vh;overflow:auto;padding:6px;background:var(--bg,#fff);border:1px solid var(--line);border-radius:10px;box-shadow:0 16px 36px rgba(0,0,0,.18)}
+  .be-more-menu[hidden]{display:none}
+  .be-more-item{display:grid;grid-template-columns:24px 1fr;gap:8px;align-items:center;width:100%;padding:7px 8px;border:0;border-radius:6px;background:transparent;color:var(--text);font:inherit;font-size:.84rem;text-align:left;cursor:pointer}
+  .be-more-item:hover,.be-more-item.is-active{background:var(--bg2,#f2f2f2)}
+  .be-more-item span:first-child{text-align:center;font-size:.9rem}
+  .block-editor{border:1px solid var(--line);border-radius:0 0 10px 10px;background:var(--bg,#fff)}
+  .block-editor .ProseMirror{min-height:340px;padding:18px 20px;outline:none;font-size:1rem;line-height:1.7}
+  .block-editor .ProseMirror p{margin:0 0 .85em}
+  .block-editor .ProseMirror h2{font-size:1.45rem;line-height:1.3;margin:1.1em 0 .5em}
+  .block-editor .ProseMirror h3{font-size:1.18rem;line-height:1.35;margin:1em 0 .45em}
+  .block-editor .ProseMirror ul,.block-editor .ProseMirror ol{padding-left:1.4em;margin:.4em 0 .9em}
+  .block-editor .ProseMirror blockquote{border-left:3px solid var(--accent);margin:.7em 0;padding:.2em 0 .2em 14px;color:var(--muted-fg)}
+  .block-editor .ProseMirror pre{background:#1d232b;color:#f1f5f9;border-radius:8px;padding:12px 14px;overflow:auto;font-size:.9rem}
+  .block-editor .ProseMirror hr{border:0;border-top:1px solid var(--line);margin:1.2em 0}
+  .block-editor .ProseMirror a{color:var(--accent);text-decoration:underline}
+  .block-editor .ProseMirror .is-empty::before{content:attr(data-placeholder);float:left;height:0;pointer-events:none;color:var(--muted-fg);opacity:.7}
+  .be-image{position:relative;margin:12px auto;text-align:center}
+  .media-slot-preview{display:block;width:100%;max-height:110px;object-fit:cover;border:1px solid var(--line);border-radius:7px;margin-top:5px}
+  .media-slot-preview[hidden]{display:none}
+  .be-image-frame{position:relative;display:block}
+  .be-image-frame img{display:block;width:100%;height:auto;border-radius:8px}
+  .be-image-overlay{position:absolute;left:0;right:0;bottom:0;padding:18px 16px 14px;background:linear-gradient(180deg,transparent,rgba(0,0,0,.72));color:#fff;font-weight:700;font-size:1.05rem;line-height:1.3;text-align:left;pointer-events:none;border-radius:0 0 8px 8px}
+  .be-image-overlay[hidden]{display:none}
+  .be-crop-custom{display:flex;gap:10px}
+  .be-crop-custom[hidden]{display:none}
+  .be-image img{max-width:100%;height:auto;border-radius:8px}
+  .be-image figcaption{font-size:.82rem;color:var(--muted-fg);margin-top:5px}
+  .be-image figcaption .editor-image-credit{font-size:.75rem;opacity:.8}
+  .be-image-resize{position:absolute;right:-7px;bottom:-7px;width:16px;height:16px;border-radius:4px;background:var(--accent,#2563eb);border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.25);cursor:nwse-resize;touch-action:none}
+  .be-image-resize[hidden]{display:none}
+  .be-image[data-layout="wide"]{width:min(980px,calc(100% + 80px));margin-left:50%;transform:translateX(-50%)}
+  .be-image[data-layout="full"]{width:calc(100% + 120px);margin-left:50%;transform:translateX(-50%)}
+  .be-status{font-size:.78rem;color:var(--muted-fg);margin:5px 0 8px;text-align:right}
+  .be-suggestion-bar{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;border:1px solid #d9a441;background:#fff8e8;border-radius:8px;padding:7px 10px;margin:4px 0 8px;font-size:.78rem}
+  .be-suggestion-bar[hidden]{display:none}
+  .be-suggestion-bar small{color:var(--muted-fg);margin-left:6px}
+  .be-suggestion-actions{display:flex;gap:5px;flex-wrap:wrap}
+  .be-suggestion-bar .btn[disabled]{opacity:.45;cursor:not-allowed}
+  .be-suggestion-list{display:grid;gap:8px;max-height:60vh;overflow:auto;margin:8px 0}
+  .be-suggestion-row{border:1px solid var(--line);border-radius:8px;padding:9px 10px;background:var(--bg2,#fafafa)}
+  .be-suggestion-head{display:flex;gap:8px;align-items:center;font-size:.76rem;color:var(--muted-fg);flex-wrap:wrap}
+  .be-suggestion-kind{font-weight:700;color:var(--text)}
+  .be-suggestion-excerpt{margin:6px 0;font-size:.84rem;line-height:1.45;overflow-wrap:anywhere}
+  .be-suggestion-row-actions{display:flex;gap:5px;justify-content:flex-end;flex-wrap:wrap}
+  .be-suggestion-empty{font-size:.82rem;color:var(--muted-fg);padding:8px 0}
+  .suggestion-insert{background:#dcfce7;border-bottom:2px solid #15803d;border-radius:2px}
+  .suggestion-delete{background:#fee2e2;color:#991b1b;text-decoration:line-through;text-decoration-thickness:2px}
+  .ProseMirror-selectednoderange{background:rgba(37,99,235,.08);outline:2px solid rgba(37,99,235,.35);outline-offset:-2px;border-radius:4px}
+  .be-dialog{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:10050;display:flex;align-items:center;justify-content:center;padding:16px}
+  .be-dialog[hidden]{display:none}
+  .be-dialog-card{background:var(--bg,#fff);border:1px solid var(--line);border-radius:12px;padding:16px;width:min(440px,100%);max-height:calc(100vh - 32px);overflow:auto;display:grid;gap:10px}
+  .be-dialog-card label{display:grid;gap:4px}
+  .be-media-picker{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;max-height:280px;overflow:auto;padding:2px;margin:6px 0}
+  .be-media-choice{padding:0;border:2px solid transparent;border-radius:8px;overflow:hidden;background:var(--bg2,#fafafa);cursor:pointer;position:relative;text-align:left}
+  .be-media-choice img{display:block;width:100%;aspect-ratio:4/3;object-fit:cover}
+  .be-media-choice span{display:block;padding:4px 5px;font-size:.66rem;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--muted-fg)}
+  .be-media-choice.is-selected{border-color:var(--accent,#2563eb);box-shadow:0 0 0 2px color-mix(in srgb,var(--accent,#2563eb) 22%,transparent)}
+  .be-media-choice.is-selected::after{content:'✓';position:absolute;top:4px;right:5px;background:var(--accent,#2563eb);color:#fff;border-radius:50%;width:17px;height:17px;font-size:.7rem;display:flex;align-items:center;justify-content:center}
+  .be-media-preview{display:block;width:100%;max-height:220px;object-fit:contain;border:1px solid var(--line);border-radius:8px;background:var(--bg2,#fafafa);margin:6px 0}
+  .be-media-preview[hidden]{display:none}
+  .block-editor .ProseMirror table{border-collapse:collapse;width:100%;margin:12px 0}
+  .block-editor .ProseMirror th,.block-editor .ProseMirror td{border:1px solid var(--line);padding:8px 10px;vertical-align:top;min-width:80px}
+  .block-editor .ProseMirror th{background:var(--bg2,#f7f7f6);text-align:left}
+  .be-callout{border-left:4px solid var(--accent);background:var(--bg2,#f7f7f6);border-radius:8px;padding:12px 14px;margin:12px 0}
+  .be-callout-title{font-weight:800;font-size:.8rem;text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px}
+  .be-callout-warning{border-left-color:#d97706}.be-callout-success{border-left-color:#16a34a}.be-callout-danger{border-left-color:#dc2626}
+  .be-embed{margin:12px 0;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--bg2,#f7f7f6)}
+  .be-embed iframe{display:block;width:100%;aspect-ratio:16/9;border:0}
+  .be-embed-link{margin:0;padding:14px}
+  .be-gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;margin:12px 0}
+  .be-gallery figure{margin:0}.be-gallery img{width:100%;height:110px;object-fit:cover;border-radius:8px}
+  .be-gallery figcaption{font-size:.75rem;color:var(--muted-fg);margin-top:3px}
+  .be-toggle{border:1px solid var(--line);border-radius:8px;padding:9px 12px;margin:12px 0;background:var(--bg2,#f7f7f6)}
+  .be-toggle summary{cursor:pointer;list-style:revert}
+  .be-toggle-title{border:0;background:transparent;font:inherit;font-weight:700;width:calc(100% - 20px);margin-left:4px;outline:none;color:var(--text)}
+  .be-toggle-body{padding-top:8px}
+  .ProseMirror-yjs-cursor{position:relative;border-left:2px solid;margin-left:-1px;margin-right:-1px;pointer-events:none;word-break:normal}
+  .ProseMirror-yjs-cursor > div{position:absolute;top:-1.45em;left:-1px;font-size:.68rem;font-weight:600;line-height:1.2;color:#fff;padding:2px 5px;border-radius:4px 4px 4px 0;white-space:nowrap;user-select:none}
+  .ProseMirror-yjs-selection{border-radius:2px}
+  .editor-bookmark{display:flex;gap:12px;border:1px solid var(--line);border-radius:10px;padding:10px;text-decoration:none;color:inherit;background:var(--bg2,#fafafa);margin:12px 0}
+  .editor-bookmark img{width:120px;height:82px;object-fit:cover;border-radius:7px;flex:none}
+  .editor-bookmark-body{min-width:0;display:grid;align-content:center;gap:3px}
+  .editor-bookmark-body strong{font-size:.9rem;line-height:1.3}
+  .editor-bookmark-body p{margin:0;font-size:.78rem;color:var(--muted-fg);line-height:1.35}
+  .editor-bookmark-body span{font-size:.72rem;color:var(--muted-fg);text-transform:uppercase;letter-spacing:.03em}
+  .be-media-card{border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:var(--bg2,#fafafa);margin:12px 0}
+  .be-media-card > strong{display:block;font-size:.9rem;line-height:1.3;margin-bottom:8px}
+  .be-media-card audio,.be-media-card video{display:block;width:100%;max-height:420px;border-radius:7px;background:#000}
+  .be-media-file-link{display:flex;gap:10px;align-items:center;text-decoration:none;color:inherit;min-width:0}
+  .be-media-file-icon{font-size:1.5rem;line-height:1;flex:none}
+  .be-media-file-body{display:grid;gap:2px;min-width:0}
+  .be-media-file-body strong{font-size:.9rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .be-media-file-body small{font-size:.75rem;color:var(--muted-fg);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .be-upload-card{display:flex;gap:12px;align-items:center;border:1px dashed var(--line);border-radius:10px;padding:12px;background:var(--bg2,#fafafa);margin:12px 0}
+  .be-upload-card.is-error{border-color:#d9534f;background:#fff5f5}
+  .be-upload-icon{font-size:1.35rem;line-height:1;flex:none}
+  .be-upload-body{display:grid;gap:3px;min-width:0;flex:1}
+  .be-upload-body strong{font-size:.9rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .be-upload-body small{font-size:.75rem;color:var(--muted-fg)}
+  .be-upload-card:not(.is-error) .be-upload-icon{animation:be-upload-pulse 1.2s ease-in-out infinite}
+  @keyframes be-upload-pulse{50%{opacity:.35}}
+  .be-unsplash-search{display:flex;gap:6px;align-items:center}
+  .be-unsplash-results{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;max-height:220px;overflow:auto}
+  .be-unsplash-results:empty{display:none}
+  .be-unsplash-item{padding:0;border:1px solid var(--line);border-radius:7px;background:var(--bg2,#fafafa);overflow:hidden;cursor:pointer;text-align:left}
+  .be-unsplash-item img{display:block;width:100%;aspect-ratio:4/3;object-fit:cover}
+  .be-unsplash-item small{display:block;padding:4px 5px;font-size:.65rem;color:var(--muted-fg);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  /* Blok sürükleme tutamacı (Faz 160).
+   *
+   * Tiptap'ın drag-handle eklentisi tutamacı yalnız fare bir bloğun üzerine
+   * gelince konumlandırıyor; dinlenirken `top:0; left:0` kalıyor. `.block-editor`
+   * konumlanmış olmadığı için de tutamaç sayfanın daha yukarısındaki bir
+   * kapsayıcıya göre yerleşiyordu: içerik formunda "İçerik Türü" etiketinin
+   * ÜSTÜNE biniyordu (ölçüm: 280,127 — etiketin tam üstü).
+   *
+   * İki satırlık düzeltme: kapsayıcıyı konumlandır (kaçmasın) ve tutamacı
+   * editörün üzerine gelinene kadar gizle (boşta gezen beyaz kutu olmasın). */
+  .block-editor{position:relative}
+  .be-drag{width:22px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;cursor:grab;color:var(--muted-fg);background:var(--bg,#fff);border:1px solid var(--line);font-size:1rem;z-index:50;opacity:0;transition:opacity .12s ease}
+  .block-editor:hover .be-drag,.block-editor:focus-within .be-drag{opacity:1}
+  @media (prefers-reduced-motion: reduce){.be-drag{transition:none}}
+  /* Seçim balonu (Faz 185).
+   *
+   * HATA: bu kuralda `position` yoktu ve varsayılan gizli değildi. Öğe JS ile
+   * <body> sonuna ekleniyor; akışta kaldığı için içerik formunun EN ALTINDA,
+   * tam genişlikte (1440x40) duruyordu. Ölçüm: konum static, display flex,
+   * inline stil yok, data-show yok, y=2249 (sayfa sonu).
+   *
+   * DOĞRUSU: konumlandırılmış ve varsayılan GİZLİ olmalı. TipTap balonu
+   * gösterirken kendi satır içi `visibility: visible` + `left/top` değerlerini
+   * yazıyor; bu yüzden CSS'te `visibility: hidden` güvenli bir varsayılan
+   * (satır içi stil onu ezer). `display:none` KULLANILMAZ: o durumda TipTap
+   * görünür yapamaz, balon hiç çıkmaz. */
+  .be-bubble{
+    position:absolute; top:0; left:0;
+    display:flex; gap:2px; padding:4px;
+    width:max-content; max-width:min(92vw, 420px);
+    border:1px solid var(--line); border-radius:8px;
+    background:var(--surface); color:var(--text);
+    box-shadow:0 8px 24px rgba(0,0,0,.14);
+    z-index:10040;
+    visibility:hidden;
+  }
+  .be-bubble[data-show="false"]{visibility:hidden}
+  .be-slash{position:fixed;z-index:10060;width:min(300px,90vw);max-height:300px;overflow:auto;background:var(--bg,#fff);border:1px solid var(--line);border-radius:10px;box-shadow:0 12px 32px rgba(0,0,0,.18);padding:5px}
+  .be-slash[hidden]{display:none}
+  .be-slash-item{display:grid;gap:1px;width:100%;text-align:left;border:0;background:transparent;padding:7px 9px;border-radius:7px;cursor:pointer;color:var(--text)}
+  .be-slash-item strong{font-size:.85rem}.be-slash-item span{font-size:.72rem;color:var(--muted-fg)}
+  .be-slash-item:hover,.be-slash-item.is-active{background:var(--bg2,#f2f2f2)}
+  .social-preview{margin-top:12px;border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:var(--bg2,#f7f7f6)}
+  .sp-kicker{font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted-fg);margin-bottom:7px}
+  .sp-site{font-size:.72rem;text-transform:uppercase;color:var(--muted-fg)}
+  .sp-title{font-weight:700;line-height:1.35;margin:3px 0}
+  .sp-desc{font-size:.82rem;color:var(--muted-fg);line-height:1.45}
+  .revision-diff{margin-top:8px;border:1px solid var(--line);border-radius:8px;max-height:260px;overflow:auto;font-family:ui-monospace,monospace;font-size:.74rem;line-height:1.45}
+  .rev-line{padding:2px 8px;white-space:pre-wrap}
+  .rev-add{background:#e9f8ef;color:#166534}.rev-del{background:#fdecec;color:#991b1b}.rev-same{color:var(--muted-fg)}
+  .be-link-results{max-height:230px;overflow:auto;display:grid;gap:4px}
+  .be-link-result{text-align:left;border:1px solid var(--line);background:var(--bg2,#f7f7f6);border-radius:7px;padding:7px 9px;cursor:pointer;color:var(--text);font:inherit;font-size:.84rem}
+  .be-link-result:hover{border-color:var(--accent)}
+  .be-comments{position:fixed;right:0;top:0;bottom:0;width:min(380px,94vw);background:var(--bg,#fff);border-left:1px solid var(--line);z-index:10070;display:flex;flex-direction:column;box-shadow:-12px 0 32px rgba(0,0,0,.14)}
+  .be-comments[hidden]{display:none}
+  .be-comments-head{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;border-bottom:1px solid var(--line)}
+  .be-comments-list{flex:1;overflow:auto;padding:10px 12px;display:grid;gap:8px}
+  .be-note{border:1px solid var(--line);border-radius:8px;padding:9px;background:var(--bg2,#f7f7f6)}
+  .be-note.resolved{opacity:.65}
+  .be-note-quote{font-size:.75rem;color:var(--muted-fg);border-left:2px solid var(--accent);padding-left:7px;margin-bottom:5px}
+  .be-note-body{font-size:.86rem;white-space:pre-wrap}.be-note-meta{font-size:.72rem;color:var(--muted-fg);margin-top:5px}
+  .be-note-actions{display:flex;gap:5px;margin-top:6px}.be-comments-new{border-top:1px solid var(--line);padding:10px;display:grid;gap:6px}
+  .be-remote-save{position:fixed;top:12px;left:50%;transform:translateX(-50%);z-index:10080;display:flex;gap:10px;align-items:center;background:#18181b;color:#fff;border-radius:9px;padding:9px 12px;font-size:.82rem;box-shadow:0 10px 28px rgba(0,0,0,.25)}
+  .be-remote-save[hidden]{display:none}
+  .be-presence{position:fixed;right:14px;top:14px;z-index:10070;background:#fff;border:1px solid var(--line);border-radius:999px;padding:6px 10px;font-size:.75rem;color:var(--muted-fg);box-shadow:0 6px 18px rgba(0,0,0,.12)}
+  .be-presence[hidden]{display:none}
+  .be-block-menu{position:fixed;z-index:10090;background:var(--bg,#fff);border:1px solid var(--line);border-radius:8px;box-shadow:0 10px 26px rgba(0,0,0,.18);padding:4px;display:grid;min-width:150px}
+  .be-block-menu[hidden]{display:none}
+  .be-block-menu button{border:0;background:transparent;text-align:left;padding:7px 9px;border-radius:6px;cursor:pointer;color:var(--text);font:inherit;font-size:.83rem}
+  .be-block-menu button:hover{background:var(--bg2,#f2f2f2)}
+  .be-shortcuts{display:grid;gap:6px;margin:6px 0 12px}
+  .be-shortcuts > div{display:flex;justify-content:space-between;gap:14px;font-size:.82rem}
+  .be-shortcuts kbd{background:var(--bg2,#f2f2f2);border:1px solid var(--line);border-radius:5px;padding:2px 6px;font-size:.75rem}
+  body.be-focus .admin-side, body.be-focus .admin-top{display:none!important}
+  body.be-focus .admin-main{width:100%;max-width:none}
+  body.be-focus #content-form-panel{max-width:1040px;margin:0 auto}
+  body.be-focus .be-toolbar{position:sticky;top:0;z-index:80}
+  @media (max-width:720px){
+    .be-toolbar{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:thin;padding:5px;gap:3px}
+    .be-toolbar button,.be-toolbar .be-sep{flex:none}
+    .be-secondary-group{display:none}
+    .be-more-toggle{display:inline-flex;position:sticky;right:0;background:var(--bg2,#f7f7f6);border-left:1px solid var(--line);z-index:2}
+    .be-dialog-card{max-width:calc(100vw - 28px);max-height:86vh;overflow:auto}
+  }
+  @media (min-width:721px){
+    .be-more-toggle,.be-more-menu{display:none!important}
+  }
+  </style>
+		if v.FlashText != "" {
+			<div class={ "flash", v.FlashKind }>{ v.FlashText }</div>
+		}
+		@Yukleniyor("icerik-yukleniyor", "Kaydediliyor…")
+		<form method="post" action={ templ.SafeURL(v.ActionURL) } enctype="multipart/form-data" hx-post={ v.ActionURL } hx-target="#content-form-panel" hx-swap="outerHTML" hx-indicator="#icerik-yukleniyor" hx-disabled-elt="button[type=submit]">
+			<input type="hidden" name="version" id="f_version" value={ v.Version }/>
+			if !v.IsNew && len(v.Langs) > 0 {
+				<div class="icerik-dil-seridi">
+					<span class="icerik-dil-seridi__etiket">Diller:</span>
+					for _, l := range v.Langs {
+						if l.Active {
+							<span class="dil-pill is-aktif" title={ l.Native + " · bu sayfa" }>{ dilKisa(l.Code) }</span>
+						} else if l.ContentID > 0 {
+							<a class="dil-pill is-var" href={ templ.SafeURL("/admin/icerikler/" + itoaT64(l.ContentID)) } title={ l.Native + " · düzenle" }>{ dilKisa(l.Code) }</a>
+						} else if v.KaynakID != "" {
+							<button
+								type="button"
+								class="dil-pill is-yok"
+								hx-post={ "/admin/icerikler/" + v.KaynakID + "/cevir/" + l.Code }
+								hx-vals={ `{"ai":"1"}` }
+								title={ l.Native + " · çeviri yok — AI ile çevir" }
+							>{ dilKisa(l.Code) }</button>
+						}
+					}
+				</div>
+			}
+			<div class="grid-2" style="grid-template-columns:2fr 1fr">
+				<div class="gap">
+					<div class="field">
+						<label for="f_tip">İçerik Türü</label>
+						<select id="f_tip" class="input" name="tip">
+							for _, t := range v.Types {
+								<option value={ t.Value } selected?={ t.Selected }>{ t.Label }</option>
+							}
+						</select>
+					</div>
+					<div class="field">
+						<label for="f_title">Başlık</label>
+						<div style="display:flex;gap:6px">
+							<input class="input" name="baslik" id="f_title" value={ v.Title } data-src="title" data-ai-ctx required maxlength="200"/>
+							<button type="button" class="btn ghost small" data-ai="title" data-from="#f_title" data-target="#f_title" data-id={ v.ContentID } hx-vals={ v.TitleActionVals } hx-include="#f_title" hx-swap="none" hx-indicator="#ai-durum" aria-label="AI ile Başlık öner" title="AI ile öner"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-sparkles"></use></svg></button>
+							<button type="button" class="btn ghost small" data-voice data-target="#f_title" data-lang={ v.Lang } aria-label="Sesle yaz" title="Sesle yaz"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-microphone"></use></svg></button>
+						</div>
+						<div class="hint">40–70 karakter SEO için idealdir ({ itoaT(v.TitleLen) } karakter)</div>
+					</div>
+					<div class="as-durum" id="asDurum" data-content-id={ v.ContentID } data-autosave-url={ v.AutosaveURL }>
+						<span id="asDurumMetin">
+							if v.IsNew {
+								Kaydedilmemiş yeni içerik
+							} else {
+								Henüz otomatik kaydedilmedi
+							}
+						</span>
+					</div>
+					if !v.IsNew {
+						<script>
+						(function(){
+						  // DIKKAT: bu betik govde alanindan (detay) ONCE gelir.
+						  function basla(){
+						  var kutu=document.getElementById('asDurum'), metin=document.getElementById('asDurumMetin');
+						  if(!kutu) return;
+						  var url=kutu.getAttribute('data-autosave-url'); if(!url) return;
+						  var baslik=document.getElementById('f_title'),
+						      spot=document.getElementById('f_spot'),
+						      detay=document.querySelector('[name="detay"]'),
+						      surum=document.getElementById('f_version');
+						  if(!baslik || !detay) return;
+						  function acikMi(){ try{ return localStorage.getItem('tb_autosave')!=='0'; }catch(e){ return true; } }
+						  // Icerik karsilastirmasi KANONIK JSON uzerinden yapilir:
+						  // editor acilista textarea'yi ayni belgeyi farkli
+						  // serilestirmeyle (bosluk/anahtar sirasi) yeniden yazar;
+						  // bu yuzden ham metin karsilastirmasi yanlislikla
+						  // "kirli" sayardi.
+						  function canon(v){
+						    try {
+						      var o = JSON.parse(v);
+						      return JSON.stringify(o, function (k, val) {
+						        if (val && typeof val === 'object' && !Array.isArray(val)) {
+						          return Object.keys(val).sort().reduce(function (acc, key) { acc[key] = val[key]; return acc; }, {});
+						        }
+						        return val;
+						      });
+						    } catch (e) { return String(v); }
+						  }
+						  var sonGonderilen='', zamanlayici=null, kirlidir=false;
+						  function parmak(){
+						    var b=baslik.value.trim(), s=(spot?spot.value:''), d=canon(detay.value);
+						    if(!b) return b+'|'+s.length+'|'+d.length;
+						    return b.length+'|'+b+'|'+s.length+'|'+s+'|'+d.length+'|'+d;
+						  }
+						  // Editor (tiptap) acilista ve her senkronda textarea'ya
+						  // yazip programatik 'input' olayi firlatir. Icerik
+						  // GERCEKTEN degismedikce kirli sayilmaz; aksi halde
+						  // sayfa acilir acilmaz "degisiklik var" + beforeunload
+						  // uyarisina yol acardi.
+						  //
+						  // Faz 191: parmak izi tek basina yetmiyor. Ortak
+						  // calisma (Yjs) odasi, sayfaya basilandan FARKLI bir
+						  // belge dondurebilir (oda daha yeni, ya da eski bir
+						  // kopya iceriyor). O anda textarea degisir, parmak
+						  // izi tutmaz ve sayfa "degisiklik var" der; sonucu
+						  // yalniz uyari degil: beforeunload diyalogu tum
+						  // JS yonlendirmelerini (HX-Redirect dahil) kilitler.
+						  //
+						  // Kural: KULLANICI dokunmadan kirli sayilmaz.
+						  // Editorun acilistaki ve senkron sonrasi yazimlari
+						  // yalnizca taban cizgiyi gunceller.
+						  var sonParmak = parmak();
+						  var dokundu = false;
+						  function dokun(){ dokundu = true; }
+						  // Metin girisinin YANINDA araç çubuğu düğmeleri de
+						  // programatik input firlatir; isaretci ile basildigi
+						  // icin pointerdown bunlari da kapsar.
+						  ['pointerdown','keydown','paste','cut','drop'].forEach(function(ev){
+						    document.addEventListener(ev, dokun, true);
+						  });
+						  function onInput(){
+						    var p = parmak();
+						    if (p === sonParmak) return;
+						    sonParmak = p;
+						    // Kullanici henuz dokunmadi: bu yazim editorun ya
+						    // da ortak calisma odasinin kendi senkronu. Kirli
+						    // sayma, taban cizgiyi kaydir.
+						    if (!dokundu) return;
+						    arm();
+						  }
+						  // Oda senkronu acilistan SONRA da belgeyi degistirebilir;
+						  // hazir olunca taban cizgiyi bir kez daha tazele.
+						  var hazirBekle = setInterval(function(){
+						    var be = document.getElementById('blockEditor');
+						    if (be && be.dataset.ready === '1') {
+						      clearInterval(hazirBekle);
+						      if (!dokundu) sonParmak = parmak();
+						    }
+						  }, 400);
+						  function yolla(){
+						    zamanlayici=null;
+						    if(window.__collabActive) return;
+						    if(!acikMi()) return;
+						    var p=parmak();
+						    if(p===sonGonderilen) return;
+						    var fd=new FormData();
+						    fd.append('baslik', baslik.value.trim());
+						    if(spot) fd.append('spot', spot.value);
+						    fd.append('detay', detay.value);
+						    if(surum) fd.append('version', surum.value);
+						    metin.textContent='kaydediliyor…';
+						    fetch(url,{method:'POST',credentials:'same-origin',body:fd})
+						      .then(function(r){ return r.json().then(function(j){ return {ok:r.ok, j:j}; }); })
+						      .then(function(c){
+						        if(c.ok && c.j.ok){
+						          sonGonderilen=parmak(); kirlidir=false;
+						          if(c.j.surum && surum) surum.value=c.j.surum;
+						          metin.textContent='otomatik kaydedildi '+(c.j.zaman||'');
+						          kutu.classList.add('ok');
+						        } else if(c.j && c.j.cakisma){
+						          metin.textContent='başka biri değiştirdi — sayfayı yenileyin';
+						          kutu.classList.add('hata');
+						        } else {
+						          metin.textContent='kaydedilemedi';
+						          kutu.classList.add('hata');
+						        }
+						      })
+						      .catch(function(){ metin.textContent='bağlantı hatası'; kutu.classList.add('hata'); });
+						  }
+						  function arm(){
+						    kirlidir=true;
+						    metin.textContent='değişiklik var…';
+						    kutu.classList.remove('ok','hata');
+						    clearTimeout(zamanlayici);
+						    zamanlayici=setTimeout(yolla,30000);
+						  }
+						  [baslik,spot,detay].forEach(function(el){ if(el) el.addEventListener('input',onInput); });
+						  window.addEventListener('beforeunload',function(e){
+						    if(kirlidir){ e.preventDefault(); e.returnValue=''; }
+						  });
+						  }
+						  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',basla); else basla();
+						})();
+						</script>
+					}
+					<div class="field">
+						<label for="f_spot">Spot (özet)</label>
+						<div style="display:flex;gap:6px">
+							<textarea class="textarea" name="spot" id="f_spot" data-src="spot" data-ai-ctx style="min-height:70px" maxlength="400">{ v.Spot }</textarea>
+							<button type="button" class="btn ghost small" data-ai="spot" data-from="#f_spot" data-target="#f_spot" data-id={ v.ContentID } hx-vals={ v.SpotActionVals } hx-include="#f_spot" hx-swap="none" hx-indicator="#ai-durum" aria-label="AI ile Spot öner" title="AI ile öner"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-sparkles"></use></svg></button>
+						</div>
+						<div class="hint">120–160 karakter önerilir</div>
+					</div>
+					<div class="field">
+						<label>Detay</label>
+						<textarea name="detay" id="f_detail" hidden>{ v.DetailJSON }</textarea>
+						<div id="blockEditor" class="block-editor" data-ai-ctx data-content-id={ v.ContentID } data-user-id={ v.UserID } data-user-name={ v.UserName }></div>
+						<div class="be-status" id="editorStatus"></div>
+						<div id="suggestionBar" class="be-suggestion-bar" hidden>
+							<span>Öneri modu · <b id="suggestionCount">0 ekleme · 0 silme</b> <small>Değişiklikler siz kabul edene kadar yayına yansımaz.</small></span>
+							<div class="be-suggestion-actions">
+								<button type="button" class="btn ghost small" id="suggestionList">Liste</button>
+								<button type="button" class="btn ghost small" id="suggestionAccept" disabled>Kabul</button>
+								<button type="button" class="btn ghost small" id="suggestionReject" disabled>Reddet</button>
+								<button type="button" class="btn ghost small" id="suggestionAcceptAll">Tümünü kabul</button>
+								<button type="button" class="btn ghost small" id="suggestionRejectAll">Tümünü reddet</button>
+							</div>
+						</div>
+						<div id="editorSuggestionDialog" class="be-dialog" hidden>
+							<div class="be-dialog-card" style="max-width:640px">
+								<strong>Bekleyen öneriler</strong>
+								<div id="editorSuggestionList" class="be-suggestion-list"></div>
+								<div style="display:flex;gap:8px;justify-content:flex-end">
+									<button type="button" class="btn ghost small" id="editorSuggestionClose">Kapat</button>
+								</div>
+							</div>
+						</div>
+						<select id="editorMediaSelect" hidden>
+							for _, m := range v.Media {
+								<option value={ m.ID } data-url={ m.URL } data-thumb={ m.Thumb } data-alt={ m.Alt } data-caption={ m.Caption } data-title={ m.Title } data-description={ m.Description } data-seo-title={ m.SeoTitle } data-seo-description={ m.SeoDescription } data-category={ m.Category }>{ m.Title }</option>
+							}
+						</select>
+						<div id="editorImageDialog" class="be-dialog" hidden>
+							<div class="be-dialog-card">
+								<strong>Görsel ekle</strong>
+								<div id="editorImageGrid" class="be-media-picker" aria-label="Medya kütüphanesi"></div>
+								<div class="small muted"><a href="/admin/dosyalar" target="_blank" rel="noopener">Medya kütüphanesini yönet</a></div>
+								<img id="editorImagePreview" class="be-media-preview" alt="" hidden/>
+								<select id="editorImageSelect" class="input" hidden></select>
+								<label class="small muted">Alt metin<input id="editorImageAlt" class="input" placeholder="Görsel açıklaması"/></label>
+								<label class="small muted">Fotoğraf altı<input id="editorImageCaption" class="input" placeholder="İsteğe bağlı"/></label>
+								<label class="small muted">Kaynak kredisi<input id="editorImageCredit" class="input" placeholder="Fotoğraf: …"/></label>
+								<label class="small muted">Görsel üstü metin<input id="editorImageOverlay" class="input" placeholder="İsteğe bağlı"/></label>
+								<label class="small muted">Yerleşim
+									<select id="editorImageLayout" class="input">
+										<option value="normal">Normal</option>
+										<option value="wide">Geniş</option>
+										<option value="full">Tam genişlik</option>
+									</select>
+								</label>
+								<label class="small muted">Genişlik (%)<input id="editorImageWidth" class="input" type="number" min="25" max="100" step="5" value="100"/></label>
+								<label class="small muted">Kırpma
+									<select id="editorImageCrop" class="input">
+										<option value="">Orijinal</option>
+										<option value="16/9">16:9</option>
+										<option value="4/3">4:3</option>
+										<option value="1/1">1:1</option>
+										<option value="custom">Serbest…</option>
+									</select>
+								</label>
+								<div id="editorImageCropCustom" class="be-crop-custom" hidden>
+									<label class="small muted" style="flex:1">Oran genişliği<input id="editorImageCropW" class="input" type="number" min="1" max="100" step="1" value="3"/></label>
+									<label class="small muted" style="flex:1">Oran yüksekliği<input id="editorImageCropH" class="input" type="number" min="1" max="100" step="1" value="2"/></label>
+								</div>
+								<div style="display:flex;gap:10px">
+									<label class="small muted" style="flex:1">Odak X<input id="editorImageFocalX" class="input" type="range" min="0" max="100" step="5" value="50"/></label>
+									<label class="small muted" style="flex:1">Odak Y<input id="editorImageFocalY" class="input" type="range" min="0" max="100" step="5" value="50"/></label>
+								</div>
+								<div style="display:flex;gap:8px;justify-content:flex-end">
+									<button type="button" class="btn ghost small" id="editorImageCancel">Vazgeç</button>
+									<button type="button" class="btn small" id="editorImageConfirm">Ekle</button>
+								</div>
+							</div>
+						</div>
+						<div id="editorRemoteImageDialog" class="be-dialog" hidden>
+							<div class="be-dialog-card">
+								<strong>Uzak görsel</strong>
+								<label class="small muted">Görsel URL<input id="editorRemoteImageUrl" class="input" placeholder="https://… veya /media/…"/></label>
+								<label class="small muted">Alt metin<input id="editorRemoteImageAlt" class="input" placeholder="Görsel açıklaması"/></label>
+								<label class="small muted">Fotoğraf altı<input id="editorRemoteImageCaption" class="input" placeholder="İsteğe bağlı"/></label>
+								<label class="small muted">Kaynak kredisi<input id="editorRemoteImageCredit" class="input" placeholder="Fotoğraf: …"/></label>
+								<label class="small muted">Görsel üstü metin<input id="editorRemoteImageOverlay" class="input" placeholder="İsteğe bağlı"/></label>
+								<input id="editorRemoteImageCreditUrl" type="hidden"/>
+								<div class="be-unsplash-search">
+									<input id="editorUnsplashQuery" class="input" placeholder="Unsplash’ta ara…" aria-label="Unsplash görsel ara" style="flex:1"/>
+									<button type="button" class="btn ghost small" id="editorUnsplashSearch">Ara</button>
+								</div>
+								<p id="editorUnsplashStatus" class="small muted"></p>
+								<div id="editorUnsplashResults" class="be-unsplash-results"></div>
+								<div style="display:flex;gap:8px;justify-content:flex-end">
+									<button type="button" class="btn ghost small" id="editorRemoteImageCancel">Vazgeç</button>
+									<button type="button" class="btn small" id="editorRemoteImageConfirm">Ekle</button>
+								</div>
+							</div>
+						</div>
+						<div id="editorGalleryDialog" class="be-dialog" hidden>
+							<div class="be-dialog-card">
+								<strong>Galeri ekle</strong>
+								<div id="editorGalleryGrid" class="be-media-picker" aria-label="Galeri görselleri"></div>
+								<select id="editorGallerySelect" class="input" multiple size="8" hidden></select>
+								<div class="hint small muted">Birden fazla görsel seçebilirsiniz.</div>
+								<div style="display:flex;gap:8px;justify-content:flex-end">
+									<button type="button" class="btn ghost small" id="editorGalleryCancel">Vazgeç</button>
+									<button type="button" class="btn small" id="editorGalleryConfirm">Ekle</button>
+								</div>
+							</div>
+						</div>
+						<div id="editorBookmarkDialog" class="be-dialog" hidden>
+							<div class="be-dialog-card">
+								<strong>Yer imi kartı</strong>
+								<label class="small muted">Adres
+									<div style="display:flex;gap:6px">
+										<input id="editorBookmarkUrl" class="input" placeholder="https://…" style="flex:1"/>
+										<button type="button" class="btn ghost small" id="editorBookmarkFetch">Getir</button>
+									</div>
+								</label>
+								<label class="small muted">Başlık<input id="editorBookmarkTitle" class="input"/></label>
+								<label class="small muted">Açıklama<textarea id="editorBookmarkDescription" class="input" rows="2"></textarea></label>
+								<label class="small muted">Site<input id="editorBookmarkSite" class="input"/></label>
+								<label class="small muted">Görsel URL<input id="editorBookmarkImage" class="input" placeholder="İsteğe bağlı"/></label>
+								<p id="editorBookmarkStatus" class="small muted"></p>
+								<div style="display:flex;gap:8px;justify-content:flex-end">
+									<button type="button" class="btn ghost small" id="editorBookmarkCancel">Vazgeç</button>
+									<button type="button" class="btn small" id="editorBookmarkConfirm">Ekle</button>
+								</div>
+							</div>
+						</div>
+						<div id="editorMediaCardDialog" class="be-dialog" hidden>
+							<div class="be-dialog-card">
+								<strong>Medya kartı</strong>
+								<label class="small muted">Tür
+									<select id="editorMediaCardKind" class="input">
+										<option value="file">Dosya</option>
+										<option value="audio">Ses</option>
+										<option value="video">Video</option>
+									</select>
+								</label>
+								<label class="small muted">Adres<input id="editorMediaCardUrl" class="input" placeholder="https://… veya /media/…"/></label>
+								<label class="small muted">Başlık<input id="editorMediaCardTitle" class="input" placeholder="İsteğe bağlı"/></label>
+								<label class="small muted">Dosya adı<input id="editorMediaCardFilename" class="input" placeholder="İsteğe bağlı"/></label>
+								<p id="editorMediaCardStatus" class="small muted"></p>
+								<div style="display:flex;gap:8px;justify-content:flex-end">
+									<button type="button" class="btn ghost small" id="editorMediaCardCancel">Vazgeç</button>
+									<button type="button" class="btn small" id="editorMediaCardConfirm">Ekle</button>
+								</div>
+							</div>
+						</div>
+						<div id="editorLinkDialog" class="be-dialog" hidden>
+							<div class="be-dialog-card">
+								<strong>İç bağlantı ekle</strong>
+								<label class="small muted">Haber ara<input id="editorLinkSearch" class="input" placeholder="En az 2 karakter"/></label>
+								<div id="editorLinkResults" class="be-link-results"><p class="small muted">Haber başlığı yazın…</p></div>
+								<div style="display:flex;gap:8px;justify-content:flex-end">
+									<button type="button" class="btn ghost small" id="editorLinkCancel">Vazgeç</button>
+								</div>
+							</div>
+						</div>
+						<div id="editorLinkEditDialog" class="be-dialog" hidden>
+							<div class="be-dialog-card">
+								<strong>Bağlantı</strong>
+								<label class="small muted">Adres<input id="editorLinkHref" class="input" placeholder="https://…"/></label>
+								<label class="small muted" id="editorLinkTextWrap">Bağlantı metni<input id="editorLinkText" class="input" placeholder="Metin"/></label>
+								<div style="display:flex;gap:8px;justify-content:space-between;flex-wrap:wrap">
+									<button type="button" class="btn ghost small" id="editorLinkOpen">Aç</button>
+									<div style="display:flex;gap:8px">
+										<button type="button" class="btn ghost small" id="editorLinkRemove">Kaldır</button>
+										<button type="button" class="btn ghost small" id="editorLinkEditCancel">Vazgeç</button>
+										<button type="button" class="btn small" id="editorLinkSave">Kaydet</button>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div id="editorShortcuts" class="be-dialog" hidden>
+							<div class="be-dialog-card">
+								<strong>Klavye kısayolları</strong>
+								<div class="be-shortcuts">
+									<div><kbd>Ctrl/Cmd + B</kbd><span>Kalın</span></div>
+									<div><kbd>Ctrl/Cmd + I</kbd><span>İtalik</span></div>
+									<div><kbd>Ctrl/Cmd + U</kbd><span>Altı çizili</span></div>
+									<div><kbd>Ctrl/Cmd + K</kbd><span>Bağlantı</span></div>
+									<div><kbd>/</kbd><span>Blok menüsü</span></div>
+									<div><kbd>Ctrl/Cmd + Z</kbd><span>Geri al</span></div>
+									<div><kbd>Ctrl/Cmd + Shift + Z</kbd><span>İleri al</span></div>
+									<div><kbd>Esc</kbd><span>Odak/menü kapat</span></div>
+									<div><kbd>Sağ tık</kbd><span>Blok çoğalt/sil</span></div>
+									<div><kbd><svg class="ti ti-metin" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-pencil"></use></svg></kbd><span>Öneri modu aç/kapat</span></div>
+									<div><kbd><svg class="ti ti-metin" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-box-multiple"></use></svg></kbd><span>Blok aralığı seç</span></div>
+								</div>
+								<div style="display:flex;justify-content:flex-end"><button type="button" class="btn small" id="editorShortcutsClose">Kapat</button></div>
+							</div>
+						</div>
+						<div id="editorBlockMenu" class="be-block-menu" hidden>
+							<button type="button" data-block-action="duplicate">Bloğu çoğalt</button>
+							<button type="button" data-block-action="delete">Bloğu sil</button>
+						</div>
+						<div id="editorComments" class="be-comments" hidden>
+							<header class="be-comments-head">
+								<strong>Editör notları</strong>
+								<button type="button" class="btn ghost small" id="editorCommentsClose" aria-label="Kapat"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-x"></use></svg></button>
+							</header>
+							<div id="editorCommentsList" class="be-comments-list">@IskeletKart(2)</div>
+							<div class="be-comments-new">
+								<textarea id="editorNoteBody" class="textarea" placeholder="Not yazın…" aria-label="Editör notu" style="min-height:70px"></textarea>
+								<div class="small muted" id="editorNoteQuote"></div>
+								<button type="button" class="btn small" id="editorNoteAdd">Not ekle</button>
+							</div>
+						</div>
+						<div class="hint">Başlık, liste, bağlantı ve görselleri araç çubuğundan ekleyin. İçerik otomatik kaydedilir.</div>
+					</div>
+					@Yukleniyor("ai-durum", "AI çalışıyor…")
+					<div class="field">
+						<label for="f_kategori">Kategori</label>
+						<select id="f_kategori" class="input" name="kategori">
+							<option value="">—</option>
+							for _, c := range v.Categories {
+								<option value={ c.Value } selected?={ c.Selected }>{ c.Label }</option>
+							}
+						</select>
+					</div>
+					<details class="form-grup">
+						<summary data-grup="kunye">Künye <span class="form-grup-ipucu">mahreç · yazar · editör · konu kümesi</span></summary>
+						<div class="field">
+							<label for="f_mahrec">Mahreç</label>
+							<select id="f_mahrec" class="input" name="mahrec">
+								<option value="">—</option>
+								for _, m := range v.Mahrets {
+									<option value={ m.Value } selected?={ m.Selected }>{ m.Label }</option>
+								}
+							</select>
+						</div>
+					<div class="input-row">
+						<div class="field">
+							<label for="f_author_id">Yazar</label>
+							<select id="f_author_id" class="input" name="author_id">
+								for _, p := range v.Authors {
+									<option value={ p.Value } selected?={ p.Selected }>{ p.Label }</option>
+								}
+							</select>
+						</div>
+						<div class="field">
+							<label for="f_editor_id">Editör</label>
+							<select id="f_editor_id" class="input" name="editor_id">
+								<option value="">—</option>
+								for _, p := range v.Editors {
+									<option value={ p.Value } selected?={ p.Selected }>{ p.Label }</option>
+								}
+							</select>
+						</div>
+					</div>
+					<div class="field">
+						<label for="f_kume">Konu Kümesi (SEO pillar/cluster)</label>
+						<select id="f_kume" class="input" name="kume">
+							<option value="">—</option>
+							for _, c := range v.Clusters {
+								<option value={ c.Value } selected?={ c.Selected }>{ c.Label }</option>
+							}
+						</select>
+						<div class="hint">Kümeleri <a href="/admin/kumeler">Konu Kümeleri</a>'nden yönet; çakışma (cannibalization) uyarıları orada görünür.</div>
+					</div>
+					</details>
+					<div class="field"><label for="f_etiketler">Etiketler (virgülle)</label><input id="f_etiketler" class="input" name="etiketler" value={ v.TagsText } placeholder="spor, siyaset, ekonomi"/></div>
+					<details class="form-grup">
+						<summary data-grup="medya-ses">Medya ve ses <span class="form-grup-ipucu">önerilen video · sesli haber</span></summary>
+					<div class="field">
+						<label>Önerilen Video <span class="muted">(yazı sonunda görünür — boşsa kategori/en son video)</span></label>
+						<div class="vid-pick">
+							<div class="vid-search">
+								<input class="input" type="search" id="relVideoSearch" placeholder="Video ara (başlık veya özet)…" autocomplete="off" aria-label="İlgili video ara (başlık veya özet)"/>
+								<span class="vid-count" id="relVideoCount"></span>
+							</div>
+							if len(v.VideoCats) > 0 {
+								<div class="vid-filter">
+									<label class="muted small" for="relVideoCat">Kategori</label>
+									<select class="input" id="relVideoCat">
+										<option value="">— Tümü —</option>
+										for _, c := range v.VideoCats {
+											<option value={ c.Value }>{ c.Label }</option>
+										}
+									</select>
+								</div>
+							}
+							<select class="input" name="related_video" id="relVideoSel" size="1" aria-label="İlgili video">
+								<option value="">— Video öner / otomatik seç —</option>
+								for _, vid := range v.Videos {
+									<option value={ vid.ID } data-cover={ vid.Cover } data-slug={ vid.Slug } data-spot={ vid.Spot } data-sure={ vid.Sure } data-cat={ vid.Cat } selected?={ vid.Selected }>{ vid.Title }</option>
+								}
+							</select>
+							<div class="vid-prev" id="relVideoPrev" hidden>
+								<a class="vid-prev-thumb" id="relVideoThumb" href="#" target="_blank" rel="noopener"><img id="relVideoImg" src="" alt="" loading="lazy"/><span class="vid-prev-play" aria-hidden="true"></span></a>
+								<div class="vid-prev-meta">
+									<strong id="relVideoTitle"></strong>
+									<span class="vid-prev-row">
+										<span class="vid-prev-spot" id="relVideoSpot" hidden></span>
+										<span class="vid-prev-sure" id="relVideoSure" hidden></span>
+									</span>
+									<span class="vid-prev-note">Yazının sonunda bu kart görünecek.</span>
+								</div>
+							</div>
+						</div>
+						<div class="hint">Video tipindeki içerikler listelenir.</div>
+						<script>
+						(function(){
+						  var sel=document.getElementById('relVideoSel'); if(!sel) return;
+						  var box=document.getElementById('relVideoPrev'),
+						      img=document.getElementById('relVideoImg'),
+						      th=document.getElementById('relVideoThumb'),
+						      ti=document.getElementById('relVideoTitle'),
+						      sp=document.getElementById('relVideoSpot'),
+						      du=document.getElementById('relVideoSure'),
+						      search=document.getElementById('relVideoSearch'),
+						      catSel=document.getElementById('relVideoCat'),
+						      cnt=document.getElementById('relVideoCount');
+						  function render(){
+						    var o=sel.options[sel.selectedIndex];
+						    if(!o || !o.value){ box.hidden=true; return; }
+						    var cover=o.getAttribute('data-cover')||'',
+						        slug=o.getAttribute('data-slug')||'',
+						        spot=o.getAttribute('data-spot')||'',
+						        sure=o.getAttribute('data-sure')||'';
+						    if(cover){ img.src=cover; img.hidden=false; } else { img.hidden=true; }
+						    if(slug){ th.href='/'+slug; th.hidden=false; } else { th.hidden=true; }
+						    ti.textContent=o.textContent;
+						    sp.textContent=spot;
+						    sp.hidden=!spot;
+						    du.innerHTML='<svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-player-play"></use></svg>';
+						    if(sure) du.appendChild(document.createTextNode(sure));
+						    du.hidden=!sure;
+						    box.hidden=false;
+						  }
+						  sel.addEventListener('change',render);
+						  var all=[].map.call(sel.options,function(o){
+						    return {v:o.value, t:o.textContent, c:o.getAttribute('data-cover')||'',
+						            s:o.getAttribute('data-slug')||'', sp:o.getAttribute('data-spot')||'',
+						            du:o.getAttribute('data-sure')||'', kat:o.getAttribute('data-cat')||''};
+						  });
+						  var blank=all.filter(function(o){return !o.v;})[0] || {v:'', t:'—'};
+						  function fill(){
+						    var keep=sel.value;
+						    var qn=(search?search.value:'').trim().toLocaleLowerCase('tr');
+						    var kn=catSel?catSel.value:'';
+						    sel.textContent='';
+						    var b=document.createElement('option');
+						    b.value=''; b.textContent=blank.t;
+						    sel.appendChild(b);
+						    var n=0;
+						    all.forEach(function(o){
+						      if(!o.v) return;
+						      if(kn && o.kat!==kn) return;
+						      if(qn && o.t.toLocaleLowerCase('tr').indexOf(qn)===-1 &&
+						           o.sp.toLocaleLowerCase('tr').indexOf(qn)===-1) return;
+						      var op=document.createElement('option');
+						      op.value=o.v; op.textContent=o.t;
+						      op.setAttribute('data-cover',o.c);
+						      op.setAttribute('data-slug',o.s);
+						      op.setAttribute('data-spot',o.sp);
+						      op.setAttribute('data-sure',o.du);
+						      op.setAttribute('data-cat',o.kat);
+						      sel.appendChild(op);
+						      n++;
+						    });
+						    sel.value='';
+						    for(var i=0;i<sel.options.length;i++){
+						      if(sel.options[i].value===keep){ sel.value=keep; break; }
+						    }
+						    if(cnt) cnt.textContent = (qn||kn) ? (n + ' video eşleşti') : ('Toplam ' + n + ' video');
+						    render();
+						  }
+						  if(search){
+						    search.addEventListener('input',fill);
+						    search.addEventListener('search',fill);
+						  }
+						  if(catSel) catSel.addEventListener('change',fill);
+						  if(cnt) cnt.textContent='Toplam ' + (all.filter(function(o){return o.v;}).length) + ' video';
+						  render();
+						})();
+						</script>
+					</div>
+					if !v.IsNew {
+						<div class="field">
+							<label>Sesli haber (TTS)</label>
+							<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+								<button type="button" class="btn ghost small" hx-post={ v.AudioActionURL } hx-target="#content-form-panel" hx-swap="outerHTML" hx-indicator="#icerik-yukleniyor"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-headphones"></use></svg> Sesli haber oluştur</button>
+								if v.AudioURL != "" {
+									<a class="small" href={ templ.SafeURL(v.AudioURL) } target="_blank" rel="noopener">Mevcut sesi aç</a>
+									<span class="small muted">{ v.AudioSeconds } sn · { v.AudioStatus }</span>
+								}
+							</div>
+							<div class="hint">OpenAI TTS ile MP3 üretilir ve yazı sayfasında oynatıcı olarak görünür. Metni değiştirdiyseniz yeniden oluşturun.</div>
+						</div>
+					}
+					</details>
+					if len(v.Trends) > 0 {
+						<div style="margin:-4px 0 10px">
+							<div class="hint" style="margin-bottom:4px">Gündem önerileri — tıkla, etikete ekle:</div>
+							<div style="display:flex;gap:6px;flex-wrap:wrap">
+								for _, t := range v.Trends {
+									<button type="button" class="btn ghost small" data-trend-tag={ t.Term } title={ trendTitle(t) }>{ t.Term } ＋</button>
+								}
+							</div>
+						</div>
+					}
+					if v.GelismisVar {
+					<details class="form-grup">
+						<summary data-grup="gelismis">Gelişmiş <span class="form-grup-ipucu">{ v.GelismisIpucu }</span></summary>
+					<div class="field" id="vidSureField" hidden?={ v.TypeKey != "video" }>
+						<label>Video Süresi</label>
+						<input class="input" name="video_sure" value={ v.VideoSure } placeholder="örn. 3:42 veya 222 (saniye)" inputmode="numeric" maxlength="12" style="max-width:180px" aria-label="örn. 3:42 veya 222 (saniye)"/>
+						<div class="hint">Biçim: <code>dk:ss</code> veya <code>sa:dk:ss</code>; düz sayı saniye olarak alınır. Boş = bilinmiyor (kartta süre rozeti basılmaz).</div>
+					</div>
+					if v.TypeKey == "hesaplayici" {
+						<div class="field">
+							<label for="f_hesap_sema">Hesaplayıcı Şeması (JSON: fields[] + outputs[])</label>
+							<textarea id="f_hesap_sema" class="textarea" name="hesap_sema" style="min-height:190px;font-family:monospace;font-size:.78rem">{ v.HesaplayiciSema }</textarea>
+							<div class="hint">Alan: <code>&#123;"id":"ana","label":"…","type":"number","default":100&#125;</code> · Çıktı: <code>&#123;"label":"…","expr":"[ana]*[orani]/100"&#125;</code>. Genel makalede canlı araç olarak render edilir.</div>
+						</div>
+					}
+					</details>
+					}
+					<div class="field">
+						<label>Görseller (İçerik / Manşet / Sosyal)</label>
+						<div class="grid-2" style="grid-template-columns:repeat(3,1fr)">
+							for _, slot := range v.MediaSlots {
+								<div>
+									<select class="input media-slot-select" name={ slot.Name } aria-label={ slot.Help }>
+										<option value="">— seç —</option>
+										for _, o := range slot.Options {
+											<option value={ o.ID } data-thumb={ o.Thumb } selected?={ o.Selected }>{ o.Filename }</option>
+										}
+									</select>
+									<img class="media-slot-preview" alt="" hidden/>
+									<div class="hint">{ slot.Help }</div>
+								</div>
+							}
+						</div>
+						<div class="hint">Önce <a href="/admin/dosyalar">Medya Yöneticisi</a>'nden yükleyin.</div>
+					</div>
+					<details class="form-grup">
+						<summary data-grup="yayin">Yayın ve görünürlük <span class="form-grup-ipucu">tarih · yorum · rozet · abonelik kilidi · kaynak</span></summary>
+					<div class="input-row">
+						<div class="field"><label for="f_yayin_tarihi">Yayın tarihi (planlama)</label><input class="input" type="datetime-local" name="yayin_tarihi" id="f_yayin_tarihi" value={ v.PublishAtValue }/></div>
+						<div class="field">
+							<label for="f_yorum_durumu">Yorumlar</label>
+							<select id="f_yorum_durumu" class="input" name="yorum_durumu">
+								<option value="acik" selected?={ v.CommentAcik }>Açık</option>
+								<option value="kapali" selected?={ !v.CommentAcik }>Kapalı</option>
+							</select>
+						</div>
+					</div>
+					<div class="field">
+						<span class="small" style="font-weight:600" role="group" aria-label="Rozetler">Rozetler</span>
+						<div style="display:flex;gap:8px;flex-wrap:wrap">
+							for _, r := range v.Rozets {
+								<label class="tag" style="cursor:pointer"><input type="checkbox" name="rozet" value={ r.Code } checked?={ r.On }/> { r.Code }</label>
+							}
+						</div>
+					</div>
+					<div class="field">
+						<label>Abonelik kilidi</label>
+						<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+							<label class="tag" style="cursor:pointer"><input type="checkbox" name="is_exclusive" checked?={ v.IsExclusive }/> <svg class="ti ti-metin" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-lock"></use></svg> Abonelere özel</label>
+							<label class="small">Asgari katman
+								<select class="input" name="min_tier_weight" style="max-width:220px">
+									<option value="1" selected?={ v.MinTierWeight == 1 }>Filiz (1) ve üzeri</option>
+									<option value="2" selected?={ v.MinTierWeight == 2 }>Bronz (2) ve üzeri</option>
+									<option value="3" selected?={ v.MinTierWeight == 3 }>Gümüş (3) ve üzeri</option>
+									<option value="4" selected?={ v.MinTierWeight == 4 }>Altın (4) ve üzeri</option>
+									<option value="5" selected?={ v.MinTierWeight == 5 }>Elmas (5)</option>
+								</select>
+							</label>
+						</div>
+						<p class="hint" style="margin:4px 0 0">İşaretlenmezse içerik herkese açıktır; katman yalnız kilitliyken uygulanır.</p>
+					</div>
+					<div class="field">
+						<label>Kaynak</label>
+						<div class="input-row">
+							<input class="input" name="kaynak_url" aria-label="Kaynak URL" value={ v.SourceURL } placeholder="Kaynak URL"/>
+							<input class="input" name="kaynak_ad" aria-label="Kaynak adı" value={ v.SourceName } placeholder="Kaynak adı"/>
+						</div>
+					</div>
+					</details>
+					<div class="field">
+						<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+							<button class="btn ghost" name="kaydet" value="arsiv" type="submit">Arşive Kaydet</button>
+							<button class="btn ok" name="kaydet" value="taslak" type="submit">Taslak</button>
+							<button class="btn" name="kaydet" value="yayinla" type="submit">Yayınla</button>
+							if !v.IsNew {
+								<a class="btn ghost" href={ templ.SafeURL(v.PreviewURL) } target="_blank" rel="noopener" title="Yayında görünüşüyle önizle"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-eye"></use></svg> Önizle</a>
+							}
+						</div>
+					</div>
+				</div>
+				<div class="gap">
+					<details class="card card-pad form-grup yan-grup" open>
+						<summary data-grup="dil-ceviriler">Dil / Çeviriler <span class="form-grup-ipucu">{ itoaT(v.CeviriSayisi) } çeviri · AI ile üret</span></summary>
+
+						if v.CeviriMi {
+							<div class="ceviri-bant" role="status">
+								<svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-language"></use></svg>
+								<div>
+									<b>{ v.IcerikLocaleAd } çevirisi</b>
+									if v.KaynakID != "" {
+										<span class="small muted">· kaynak: <a href={ templ.SafeURL("/admin/icerikler/" + v.KaynakID) }>{ v.KaynakBaslik }</a></span>
+									}
+								</div>
+							</div>
+							if v.KaynakGovdeHTML != "" {
+								<details class="ceviri-kaynak">
+									<summary>Kaynak metni göster</summary>
+									<div class="ceviri-kaynak__ic">
+										<p><b>{ v.KaynakBaslik }</b></p>
+										if v.KaynakSpot != "" {
+											<p class="small muted">{ v.KaynakSpot }</p>
+										}
+										<div class="ceviri-kaynak__govde">@templ.Raw(v.KaynakGovdeHTML)</div>
+									</div>
+								</details>
+							}
+						}
+
+						<p class="hint" style="margin:8px 0">Bir dilde çeviri yoksa <b>AI ile çevir</b> kaynak metni o dile çevirip taslak açar. Var olan çeviri <b>Düzenle</b> ile açılır.</p>
+
+						<div class="ceviri-liste" role="list">
+							for _, l := range v.Langs {
+								<div class={ "ceviri-satir", templ.KV("is-aktif", l.Active), templ.KV("var", l.State != "yok") } role="listitem">
+									<div class="ceviri-satir__dil">
+										<b>{ l.Native }</b>
+										<span class="ceviri-kod">{ l.Code }</span>
+									</div>
+									<div class="ceviri-satir__durum">
+										if l.Active {
+											<span class="ceviri-rozet is-bu">bu sayfa</span>
+										} else if l.State == "yok" {
+											<span class="ceviri-rozet">çeviri yok</span>
+										} else {
+											<span class={ "ceviri-rozet", templ.KV("is-yayinda", l.State == "yayinda"), templ.KV("is-taslak", l.State == "taslak") }>{ l.StateTR }</span>
+										}
+									</div>
+									<div class="ceviri-satir__eylem">
+										if l.Active {
+											<span class="small muted">—</span>
+										} else if l.ContentID > 0 {
+											<a class="btn ghost small" href={ templ.SafeURL("/admin/icerikler/" + itoaT64(l.ContentID)) }>
+												<svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-pencil"></use></svg>
+												Düzenle
+											</a>
+											if l.State == "yayinda" {
+												<a class="btn ghost small" href={ templ.SafeURL(l.URL) } target="_blank" rel="noopener" title="Sitede aç">
+													<svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-external-link"></use></svg>
+												</a>
+											}
+										} else if v.KaynakID != "" {
+											<button
+												type="button"
+												class="btn small"
+												hx-post={ "/admin/icerikler/" + v.KaynakID + "/cevir/" + l.Code }
+												hx-vals={ `{"ai":"1"}` }
+												hx-target="closest .ceviri-satir__eylem"
+												hx-swap="outerHTML"
+												hx-disabled-elt="this"
+												hx-indicator={ "#ceviri-" + l.Code }
+												title={ "Kaynak metni " + l.Native + " diline AI ile çevirir" }
+											>
+												<svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-sparkles"></use></svg>
+												AI ile çevir
+											</button>
+											<button
+												type="button"
+												class="btn ghost small"
+												hx-post={ "/admin/icerikler/" + v.KaynakID + "/cevir/" + l.Code }
+												hx-vals={ `{"kopya":"1"}` }
+												hx-disabled-elt="this"
+												title="Çeviri yapmadan, aynı metinle boş taslak açar"
+											>Boş taslak</button>
+											<span class="ceviri-durum small muted" id={ "ceviri-" + l.Code }></span>
+										} else {
+											<span class="small muted">önce kaydet</span>
+										}
+									</div>
+								</div>
+							}
+						</div>
+					</details>
+					if v.HasContent {
+												<details class="card card-pad form-grup yan-grup">
+							<summary>SEO Puanı <span class="form-grup-ipucu">başlık · meta açıklama · SERP önizleme</span></summary>
+
+							<div data-seo-preview>
+							<div class="seo-gauge" style="margin:10px 0">
+								<div class="gauge" data-score={ itoaT(v.SeoScore) } style={ gaugeStyle(v.SeoScore) }>{ itoaT(v.SeoScore) }</div>
+								<div class="small muted">{ v.SeoText }</div>
+							</div>
+
+							<div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap">
+								<button
+									type="button"
+									class="btn small"
+									hx-post={ "/admin/icerikler/" + v.ContentID + "/ai/seo-doldur" }
+									hx-target="#seoOneri"
+									hx-swap="outerHTML"
+									hx-indicator="#seoOneri"
+									title="Başlık, spot ve gövdeye göre SEO başlığı ile meta açıklamayı üretir"
+								>
+									<svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-sparkles"></use></svg>
+									AI ile iki alanı doldur
+								</button>
+								<span class="small muted" style="align-self:center">Başlık + spot + gövde kullanılır</span>
+							</div>
+							@SeoOneriPanel(SeoOneriView{ContentID: parseT64(v.ContentID)})
+							<div class="field">
+								<label for="f_seo_baslik">SEO Başlığı</label>
+								<div style="display:flex;gap:6px">
+									<input id="f_seo_baslik" class="input" name="seo_baslik" value={ v.SeoTitle } data-src="seo_title"/>
+									<button type="button" class="btn ghost small" data-ai="seo_title" data-from="#f_title" data-target="[name=seo_baslik]" data-id={ v.ContentID } hx-vals={ v.SeoTitleVals } hx-include="#f_title" hx-swap="none" hx-indicator="#ai-durum" aria-label="AI ile SEO başlığı öner" title="AI ile öner"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-sparkles"></use></svg></button>
+								</div>
+							</div>
+							<div class="field">
+								<label for="f_seo_aciklama">Meta Açıklama</label>
+								<div style="display:flex;gap:6px">
+									<textarea id="f_seo_aciklama" class="textarea" name="seo_aciklama" style="min-height:60px" data-src="seo_desc">{ v.SeoDesc }</textarea>
+									<button type="button" class="btn ghost small" data-ai="seo_description" data-from="#f_spot" data-target="[name=seo_aciklama]" data-id={ v.ContentID } hx-vals={ v.SeoDescVals } hx-include="#f_spot" hx-swap="none" hx-indicator="#ai-durum" aria-label="AI ile SEO açıklaması öner" title="AI ile öner"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-sparkles"></use></svg></button>
+								</div>
+							</div>
+							<div class="serp">
+								<div class="u" data-bind="url">{ v.SiteLabel() }</div>
+								<a class="t" data-bind="title">{ v.SerpTitle() }</a>
+								<div class="d" data-bind="desc">{ v.SerpDesc() }</div>
+							</div>
+							<div class="social-preview" data-social-preview>
+								<div class="sp-kicker">Sosyal kart önizlemesi</div>
+								<div class="sp-site">{ v.SiteLabel() }</div>
+								<div class="sp-title" data-bind="social-title">{ v.SerpTitle() }</div>
+								<div class="sp-desc" data-bind="social-desc">{ v.SerpDesc() }</div>
+							</div>
+							</div>
+						</details>
+												<details class="card card-pad form-grup yan-grup">
+							<summary>Görsel &amp; Sosyal <span class="form-grup-ipucu">görsel kredisi · sosyal özet · AI özet</span></summary>
+
+							<div class="field"><label for="f_gorsel_kredi">Görsel Kredisi (image credit)</label><input id="f_gorsel_kredi" class="input" name="gorsel_kredi" value={ v.ImageCredit } placeholder="örn. Dan DeLong for Microsoft / Unsplash"/></div>
+							<div class="field"><label for="f_sosyal_ozet">Sosyal Özet (paylaşım metni)</label><textarea id="f_sosyal_ozet" class="textarea" name="sosyal_ozet" style="min-height:60px" placeholder="Sosyal medya/paylaşım için kısa özet">{ v.SocialSummary }</textarea></div>
+							<div class="field"><label for="f_ai_ozet">AI Özet (okuyucuya gösterilen özet)</label><textarea id="f_ai_ozet" class="textarea" name="ai_ozet" style="min-height:60px" placeholder="Makale başında gösterilir">{ v.AISummary }</textarea></div>
+							if v.FieldAudioURL != "" {
+								<div class="hint"><svg class="ti ti-metin" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-headphones"></use></svg> Ses: { v.FieldAudioURL } ({ v.FieldAudioSeconds } sn · { v.FieldAudioStatus })</div>
+							}
+							if v.FieldScrollCount != "" {
+								<div class="hint"><svg class="ti ti-metin" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-mouse"></use></svg> Kaydırma derinliği: { v.FieldScrollCount }</div>
+							}
+						
+						</details>
+						<details class="card card-pad form-grup yan-grup">
+							<summary>10 Kriter <span class="form-grup-ipucu">SEO ölçütleri</span></summary>
+
+							for _, p := range v.SeoParts {
+								<div class="seo-row" style="margin-top:6px">
+									<span>{ p.Name }</span>
+									<span class="muted">{ itoaT(p.Weight) }/{ itoaT(p.Weight) }</span>
+									<div class="bar"><i style={ barStyle(p.Weight) }></i></div>
+								</div>
+							}
+						
+						</details>
+												<details class="card card-pad form-grup yan-grup">
+							<summary>YMYL (finans/sağlık) <span class="form-grup-ipucu">denetim durumu · uzman</span></summary>
+
+							<label class="tag" style="cursor:pointer;display:inline-block;margin:6px 0"><input type="checkbox" name="is_ymyl" checked?={ v.YMYL }/> YMYL içeriği</label>
+							<div class="field">
+								<label for="f_ymyl_durumu">Denetim Durumu</label>
+								<select id="f_ymyl_durumu" class="input" name="ymyl_durumu">
+									<option value="dogrulanmadi" selected?={ v.YMYLDurumu == "dogrulanmadi" }>Doğrulanmadı</option>
+									<option value="uzman" selected?={ v.YMYLDurumu == "uzman" }>Uzman denetimli</option>
+									<option value="kaynakli" selected?={ v.YMYLDurumu == "kaynakli" }>Kaynaklı</option>
+								</select>
+							</div>
+							<div class="field"><label for="f_ymyl_uzman">Uzman / Veri Kaynağı</label><input id="f_ymyl_uzman" class="input" name="ymyl_uzman" value={ v.YMYLUzman }/></div>
+							<p class="hint">YMYL ve durum "uzman" değilse yayın engellenir (taslâğa düşer) — editör onayı şart.</p>
+						
+						</details>
+						<details class="card card-pad form-grup" style="margin-top:14px">
+							<summary>Yayına Uygunluk <span class="form-grup-ipucu">yayın kapısı ve puan gerekçesi</span></summary>
+							<div class="field"><label for="aiSkor">Uygunluk Puanı (0–100)</label><input class="input" type="number" min="0" max="100" name="ai_skor" value={ v.AiScore } id="aiSkor"/></div>
+							<button type="button" class="btn btn-ghost" id="aiSkorBtn" data-ai-skor hx-post={ v.AISkorURL } hx-swap="none" hx-indicator="#ai-durum" disabled?={ v.IsNew }>Uygunluğu hesapla</button>
+							<p class="hint" id="aiSkorNote">Puan, kategorinin yayın eşiğinin (min_skor) altındaysa yayın engellenir ve içerik taslağa alınır. Kategorisiz içeriklerde kapı uygulanmaz.</p>
+							<ul class="skor-gerekce" id="aiSkorGerekce"></ul>
+							<p class="hint skor-aciklama">Bu puan bir AI yargısı değildir: başlık ve spot uzunluğu, etiket sayısı, kapak görseli ve kaynak bağlantısının <strong>varlığına</strong> bakan yerel bir sezgiseldir. Konuyla, güncellikle veya trend uyumuyla ilgili sinyal içermez — hesapladıktan sonra yukarıdaki dökümde hangi kalemin kaç puan getirdiğini görebilirsiniz.</p>
+							<script>
+							(function(){
+							  var b=document.getElementById('aiSkorBtn'); if(!b) return;
+							  if (window.htmx) return;
+							  b.addEventListener('click',function(){
+							    var id=Number({{ v.NumID }});
+							    if(!id) return;
+							    b.disabled=true; b.textContent='Hesaplanıyor…';
+							    fetch('/admin/icerikler/'+id+'/ai-skor',{method:'POST',credentials:'same-origin'})
+							      .then(function(r){return r.json()})
+							      .then(function(j){
+							        if (window.tbSkorSonuc) { window.tbSkorSonuc(j); return; }
+							        document.getElementById('aiSkor').value=j.skor;
+							        document.getElementById('aiSkorNote').textContent =
+							          'Puan: '+j.skor+' — kapı: '+(j.kapi_gecer?'geçti':'ENGELLENDİ ('+j.kapi_nedeni+')');
+							      })
+							      .catch(function(){document.getElementById('aiSkorNote').textContent='Hata: puan hesaplanamadı.'})
+							      .finally(function(){b.disabled=false; b.textContent='Uygunluğu hesapla'});
+							  });
+							})();
+							</script>
+						</details>
+						<div class="danger-zone">
+							if !v.IsNew {
+								<a class="btn danger" href="#" data-confirm={ v.DeleteURL }>Kalıcı Sil</a>
+							}
+						</div>
+					}
+				</div>
+			</div>
+		</form>
+		if v.HasContent {
+			@SesPanel(v)
+		} else {
+			<div class="card card-pad" style="margin-top:14px">
+				<h2 style="margin:0 0 6px;font-size:1.05rem"><svg class="ti ti-metin" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-microphone"></use></svg> Ses / Röportaj</h2>
+				<p class="muted small" style="margin:0">Ses kaydı yüklemek ve metne çevirmek için önce haberi kaydedin.</p>
+			</div>
+		}
+		if v.HasContent {
+			@KalitePanel(v.Kalite)
+		}
+		if len(v.AIActions) > 0 {
+			<div id="aiSelectMenu" class="ai-select-menu" hidden role="menu" aria-label="Seçili metin AI işlemleri">
+				<div class="ai-select-head"><svg class="ti ti-metin" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-sparkles"></use></svg> Seçili metin · <span id="aiSelCount">0</span> karakter</div>
+				for _, a := range v.AIActions {
+					<button type="button" class="ai-select-item" data-ai-open={ a.ID } data-ai-research={ researchFlag(a.Research) } role="menuitem">
+						<span class="ai-select-icon" aria-hidden="true">{ a.Icon }</span>
+						<span><b>{ a.Label }</b><small>{ a.Description }</small></span>
+						if a.Research {
+							<span class="badge ai-research-badge">Araştırma</span>
+						}
+					</button>
+				}
+				<div class="ai-select-foot">Metin seçmeden de tüm haber üzerinde çalışabilirsiniz.</div>
+			</div>
+			<div id="aiEditor" class="ai-drawer" hidden aria-hidden="true" data-content-id={ v.ContentID }>
+				<div class="ai-drawer-bg" data-ai-close></div>
+				<aside class="ai-drawer-panel" role="dialog" aria-modal="true" aria-labelledby="aiEditorTitle">
+					<header class="ai-drawer-head">
+						<div>
+							<div class="ai-drawer-kicker">AI Editör</div>
+							<h2 id="aiEditorTitle">Seçili metin işlemi</h2>
+						</div>
+						<div style="display:flex;gap:6px">
+							<button type="button" class="btn ghost small" data-ai-history data-content-id={ v.ContentID }>Sürümler</button>
+							<button type="button" class="btn ghost small" data-ai-close aria-label="Kapat"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-x"></use></svg></button>
+						</div>
+					</header>
+					<div class="ai-drawer-context" id="aiEditorContext"></div>
+					<div class="ai-drawer-tools">
+						<label class="small muted" for="aiInstruction">Ek talimat (isteğe bağlı)</label>
+						<input class="input" id="aiInstruction" maxlength="1000" placeholder="Ör. daha kısa yaz, kaynakları öne çıkar…"/>
+						<label class="small muted" for="aiAngle">Açı (Farklı Açıdan Yaz için)</label>
+						<input class="input" id="aiAngle" maxlength="200" placeholder="Ör. ekonomik etkiler, hukuki çerçeve…"/>
+					</div>
+					<div id="aiEditorLoading" class="ai-drawer-loading" hidden><span class="spinner" aria-hidden="true"></span> AI çalışıyor… Araştırma işlemleri biraz sürebilir.</div>
+					<div id="aiEditorBody" class="ai-drawer-body">
+						<p class="muted small">Metin seçip menüden bir işlem seçin. Sonuç önce burada gösterilir; siz uygulamadan habere yazılmaz.</p>
+					</div>
+				</aside>
+			</div>
+		}
+		if v.HasContent {
+			<details class="card card-pad form-grup" style="margin-top:14px">
+				<summary>Kanıt / Kaynaklar <span class="form-grup-ipucu">özgünlük indeksi: { itoaT(v.OrigIndex) }/100</span></summary>
+				<div style="display:flex;justify-content:flex-end">
+					<a class="btn ghost small" href="#" data-toggle={ v.KaynakKontrol }><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-refresh"></use></svg> Kontrol Et</a>
+				</div>
+				<form method="post" action={ templ.SafeURL(v.KaynakEkle) } style="display:flex;gap:8px;margin:8px 0">
+					<input class="input" name="kaynak_url" aria-label="Yeni kaynak URL" placeholder="https://…/kaynak-1" style="flex:1" required/>
+					<button class="btn small" type="submit">＋ Kaynak Ekle</button>
+				</form>
+				if len(v.Sources) == 0 {
+					<p class="muted small">Kaynak yok — ekleyin; erişim + snippet otomatik yoklanır.</p>
+				}
+				for _, s := range v.Sources {
+					<div style="display:flex;gap:8px;align-items:center;padding:6px 0;border-bottom:1px dashed var(--border)">
+						<span class="badge" style={ sourceBadgeStyle(s.Accessible) }>
+							if s.Accessible {
+								<svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-check"></use></svg>
+							} else {
+								<svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-x"></use></svg>
+							}
+						</span>
+						<a href={ templ.SafeURL(s.URL) } target="_blank" rel="nofollow" style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{ s.URL }</a>
+						<a class="btn danger small" href="#" data-confirm={ "/admin/icerikler/kaynaklar/sil/" + s.ID } aria-label="Kaynağı sil" title="Kaynağı sil"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-trash"></use></svg></a>
+					</div>
+				}
+			</details>
+		}
+		<script>
+		(function () {
+		  document.querySelectorAll('.media-slot-select').forEach(function (select) {
+		    if (select.dataset.previewBound === '1') return;
+		    select.dataset.previewBound = '1';
+		    const preview = select.parentElement.querySelector('.media-slot-preview');
+		    if (!preview) return;
+		    const sync = function () {
+		      const opt = select.selectedOptions && select.selectedOptions[0];
+		      const src = opt && opt.value ? (opt.dataset.thumb || '') : '';
+		      preview.src = src;
+		      preview.hidden = !src;
+		    };
+		    select.addEventListener('change', sync);
+		    sync();
+		  });
+		})();
+		</script>
+	</div>
+}
+
+// KalitePanel içerik kalite ölçümü. AI dedektörü skoru değil; ölçülebilir
+// editoryal metrikler (ritim, çeşitlilik, klişe, tekrar) gösterilir.
+templ KalitePanel(v IcerikKalite) {
+	<div id="kalitePanel" class="card card-pad kalite-panel" style="margin-top:14px">
+		<div class="kalite-head">
+			<div>
+				<h2 class="kalite-title"><svg class="ti ti-metin" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-ruler-measure"></use></svg> Metin Kalitesi</h2>
+				<p class="small muted kalite-help">Okunabilirlik, sözcük çeşitliliği, klişe ve tekrar ölçümü. Bu bir AI dedektörü değildir; yayın kararını editör verir.</p>
+			</div>
+			<div class="kalite-score-wrap">
+				if v.Checked {
+					<span class={ "kalite-grade", kaliteGradeClass(v.Grade) }>{ v.Grade }</span>
+					<span class="kalite-score">{ itoaT(v.Score) }/100</span>
+				} else {
+					<span class="small muted">ölçülmedi</span>
+				}
+			</div>
+		</div>
+		if v.Checked {
+			<div class="kalite-metrics">
+				<span><b>{ v.Words }</b> sözcük</span>
+				<span><b>{ v.Sentences }</b> cümle</span>
+				<span>ort. <b>{ v.AvgSentence }</b> sözcük</span>
+				<span>sapma <b>{ v.StdDev }</b></span>
+				<span>çeşitlilik <b>{ v.MATTR }</b></span>
+				if v.Cliches != "0" {
+					<span>klişe <b>{ v.Cliches }</b></span>
+				}
+				if v.Repeats != "0" {
+					<span>tekrar <b>{ v.Repeats }</b></span>
+				}
+			</div>
+			for _, b := range v.Blockers {
+				<div class="kalite-item kalite-block" role="alert">
+					<strong><svg class="ti ti-metin" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-ban"></use></svg> { b.Title }</strong>
+					<span>{ b.Detail }</span>
+				</div>
+			}
+			for _, w := range v.Warnings {
+				<div class="kalite-item kalite-warn">
+					<strong><svg class="ti ti-metin" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-alert-triangle"></use></svg> { w.Title }</strong>
+					<span>{ w.Detail }</span>
+				</div>
+			}
+			if len(v.Imla) > 0 {
+				<div class="kalite-item kalite-warn">
+					<strong><svg class="ti ti-metin" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-writing"></use></svg> İmla ve biçim</strong>
+					for _, f := range v.Imla {
+						<span>· { f.Detail }</span>
+					}
+				</div>
+			}
+			if v.BenzerlikVar {
+				<div class="kalite-item kalite-warn">
+					<strong>⧉ Benzer içerik (yakın kopya)</strong>
+					<span>Yayındaki içeriklerle en yüksek benzerlik: <b>{ v.BenzerlikOran }</b></span>
+					for _, b := range v.BenzerlikHits {
+						<span>· { b.Detail }</span>
+					}
+				</div>
+			}
+			if len(v.Blockers) == 0 && len(v.Warnings) == 0 && len(v.Imla) == 0 && !v.BenzerlikVar {
+				<div class="kalite-item kalite-ok"><strong><svg class="ti ti-metin" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-circle-check"></use></svg> Ölçülen kalite kapılarında sorun yok.</strong></div>
+			}
+		}
+		if v.RefreshURL != "" {
+			<button type="button" class="btn ghost small" hx-post={ v.RefreshURL } hx-target="#kalitePanel" hx-swap="outerHTML"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-refresh"></use></svg> Yeniden ölç</button>
+		}
+	</div>
+}
+
+// kaliteGradeClass not rozeti rengi.
+func kaliteGradeClass(grade string) string {
+	switch grade {
+	case "A":
+		return "kalite-grade-a"
+	case "B":
+		return "kalite-grade-b"
+	case "C":
+		return "kalite-grade-c"
+	case "D":
+		return "kalite-grade-d"
+	}
+	return "kalite-grade-e"
+}
+
+// SesPanel özel röportaj sesleri paneli. Kayıtlar public /media/ altında
+// servis edilmez; panel yalnızca içerik kaydedildikten sonra görünür.
+templ SesPanel(v IcerikFormView) {
+	<details id="sesPanel" class="card card-pad form-grup ses-panel" style="margin-top:14px" data-content-id={ v.ContentID }>
+		<summary class="ses-head">
+			<span class="ses-title"><svg class="ti ti-metin" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-microphone"></use></svg> Ses / Röportaj</span>
+			<span class="badge ses-private">Özel</span>
+		</summary>
+		<p class="small muted ses-help">Kayıtlar yalnızca yetkili editörlere açıktır; /media/ altında yayınlanmaz. Transkript hiçbir zaman otomatik olarak habere yazılmaz.</p>
+		<p class="small muted ses-ayar-link"><a href="/admin/ses-ayarlari"><svg class="ti ti-metin" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-settings"></use></svg> Sağlayıcı ve API anahtarı ayarları</a></p>
+		<form class="ses-arama" method="get" action="/admin/ses/ara" hx-get="/admin/ses/ara" hx-target="#sesAramaSonuc" hx-swap="innerHTML" role="search">
+			<label class="ses-arama-label">
+				<span class="sr-only">Transkriptlerde ara</span>
+				<input class="input" type="search" name="q" placeholder="Tüm transkriptlerde ara…" minlength="2" autocomplete="off"/>
+			</label>
+			<button class="btn ghost small" type="submit">Ara</button>
+			<span class="small muted">Sözcük eşleşmesi; Türkçe ekler korunur.</span>
+		</form>
+		<div id="sesAramaSonuc"></div>
+		<div id="sesPanelBody">
+			@SesPanelBody(v)
+		</div>
+	</details>
+}
+
+// SesAramaSonuclari transkript aramasının HTMX sonucudur.
+templ SesAramaSonuclari(sonuclar []IcerikSesArama, sorgu string) {
+	if sorgu == "" {
+		<div class="small muted">Aramak için en az 2 karakter yazın.</div>
+	} else if len(sonuclar) == 0 {
+		<div class="ses-arama-bos small muted">“{ sorgu }” için transkriptte sonuç bulunamadı.</div>
+	} else {
+		<div class="ses-arama-liste">
+			<div class="small muted ses-arama-baslik">{ itoaT(len(sonuclar)) } sonuç · “{ sorgu }”</div>
+			for _, s := range sonuclar {
+				<a class="ses-arama-item" href={ templ.SafeURL(s.URL) }>
+					<span class="ses-arama-kaynak">{ s.ContentTitle }</span>
+					<span class="ses-arama-parca">{ s.Snippet }</span>
+					<span class="small muted ses-arama-meta">{ s.Duration }</span>
+				</a>
+			}
+		</div>
+	}
+}
+
+// SesPanelBody yükleme formu ve kayıt listesi. HTMX hedefi #sesPanelBody.
+templ SesPanelBody(v IcerikFormView) {
+	if v.SesFlashText != "" {
+		<div class={ "flash", v.SesFlashKind } role="status">{ v.SesFlashText }</div>
+	}
+	<form class="ses-upload" method="post" action={ templ.SafeURL(v.SesUploadURL) } enctype="multipart/form-data" hx-post={ v.SesUploadURL } hx-encoding="multipart/form-data" hx-target="#sesPanelBody" hx-swap="innerHTML" hx-indicator="#sesUploadIndicator">
+		<div class="ses-upload-grid">
+			<label class="ses-file">
+				<span class="small muted">Ses veya video dosyası</span>
+				<input type="file" name="ses" accept="audio/*,video/mp4,video/webm,.mp3,.m4a,.aac,.wav,.ogg,.oga,.opus,.weba,.flac,.webm,.mp4,.mov" required/>
+			</label>
+			<label>
+				<span class="small muted">Konuşmacı sayısı</span>
+				<input class="input" type="number" name="konusmaci" min="0" max="10" value="2"/>
+			</label>
+			<label>
+				<span class="small muted">Dil</span>
+				<select class="input" name="dil">
+					<option value="tr" selected>Türkçe</option>
+					<option value="en">İngilizce</option>
+				</select>
+			</label>
+		</div>
+		<label class="ses-consent">
+			<input type="checkbox" name="onay" value="1" required/>
+			<span>Kayıttaki kişilerin bu görüşmenin metne çevrilmesi ve haber için kullanılması konusunda onayı olduğunu teyit ediyorum.</span>
+		</label>
+		<div class="ses-upload-actions">
+			<button class="btn" type="submit">Yükle ve metne çevir</button>
+			@Yukleniyor("sesUploadIndicator", "")
+			<span class="small muted">En fazla 500 MB · mp3, m4a, wav, ogg, opus, webm, mp4</span>
+		</div>
+	</form>
+	if len(v.Audios) == 0 {
+		<p class="muted small ses-empty">Henüz ses kaydı yok. Bir röportaj yüklediğinizde transkript burada görünür.</p>
+	}
+	for _, a := range v.Audios {
+		<article class="ses-item" data-media-id={ a.MediaID }>
+			<header class="ses-item-head">
+				<div class="ses-item-title">
+					<strong>{ a.Filename }</strong>
+					<span class={ "badge", sesStatusClass(a.Status) }>{ a.StatusLabel }</span>
+					if a.IsActive {
+						<span class="small muted">{ itoaT(a.Progress) }%</span>
+					}
+				</div>
+				<div class="small muted ses-item-meta">
+					if a.Duration != "" {
+						<span>{ a.Duration }</span>
+					}
+					if a.Size != "" {
+						<span>· { a.Size }</span>
+					}
+					if a.CreatedAt != "" {
+						<span>· { a.CreatedAt }</span>
+					}
+				</div>
+			</header>
+			if a.IsActive {
+				<div class="ses-progress" role="progressbar" aria-valuenow={ itoaT(a.Progress) } aria-valuemin="0" aria-valuemax="100" aria-label="Transkripsiyon ilerlemesi">
+					<span style={ "width:" + itoaT(a.Progress) + "%" }></span>
+				</div>
+			}
+			if a.Error != "" {
+				<div class="ses-error" role="alert"><strong>İşlem tamamlanamadı.</strong> { a.Error }</div>
+			}
+			<div class="ses-player" data-ses-player data-media-id={ a.MediaID } data-title={ a.Filename } data-waveform={ a.WaveformJSON } data-duration={ a.Duration }>
+				<audio class="ses-audio-native" preload="metadata" src={ templ.SafeURL(a.StreamURL) } data-audio-player={ a.MediaID }>
+					Tarayıcınız ses oynatmayı desteklemiyor.
+				</audio>
+				<button type="button" class="ses-play" data-ses-play aria-label="Oynat / duraklat">
+					<svg class="ses-play-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
+					<svg class="ses-pause-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>
+				</button>
+				<div class="ses-wave-wrap">
+					<div class="ses-wave" data-ses-wave role="slider" tabindex="0"
+						aria-label="Ses konumu" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+						<div class="ses-wave-played" data-ses-played></div>
+						<div class="ses-wave-head" data-ses-head></div>
+						<div class="ses-wave-bars" data-ses-bars aria-hidden="true"></div>
+					</div>
+					<div class="ses-wave-times">
+						<span data-ses-current>0:00</span>
+						<span data-ses-total>{ a.Duration }</span>
+					</div>
+				</div>
+				<div class="ses-player-rate">
+					<label class="small muted" for={ "sesRate-" + a.MediaID }>Hız</label>
+					<select class="input ses-rate-select" id={ "sesRate-" + a.MediaID } data-ses-rate>
+						<option value="0.75">0,75×</option>
+						<option value="1" selected>1×</option>
+						<option value="1.25">1,25×</option>
+						<option value="1.5">1,5×</option>
+						<option value="2">2×</option>
+					</select>
+				</div>
+			</div>
+			<div class="ses-actions">
+				if a.CanDraft {
+					<button type="button" class="btn small" data-audio-draft={ a.DraftURL }><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-sparkles"></use></svg> Transkriptten taslak oluştur</button>
+				}
+				if a.SrtURL != "" {
+					<a class="btn ghost small" href={ templ.SafeURL(a.SrtURL) } download><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-download"></use></svg> SRT altyazı</a>
+					<a class="btn ghost small" href={ templ.SafeURL(a.VttURL) } download><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-download"></use></svg> WebVTT</a>
+				}
+				if a.CanRetry {
+					<button type="button" class="btn ghost small" hx-post={ a.RetryURL } hx-target="#sesPanelBody" hx-swap="innerHTML"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-refresh"></use></svg> Yeniden dene</button>
+				}
+				<button type="button" class="btn danger small" hx-post={ a.DeleteURL } hx-target="#sesPanelBody" hx-swap="innerHTML" hx-confirm="Bu ses kaydını ve transkriptini silmek istediğinize emin misiniz?"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-trash"></use></svg> Sil</button>
+			</div>
+			if a.Speakers != "" {
+				<div class="small muted ses-speakers">Konuşmacılar: { a.Speakers }</div>
+			}
+			if len(a.Segments) > 0 {
+				<div class="ses-transcript" data-transcript>
+					<div class="small muted ses-transcript-head">Transkript · satıra tıklayınca kayıt o saniyeye atlar, kelimeye tıklayınca tam o kelimeye</div>
+					for _, seg := range a.Segments {
+						<button type="button" class="ses-seg" data-audio-seek={ a.MediaID } data-start-ms={ itoaT64(seg.StartMS) }>
+							<span class="ses-seg-time">{ seg.StartLabel }</span>
+							if seg.Speaker != "" {
+								<span class="ses-seg-speaker">{ seg.Speaker }</span>
+							}
+							if len(seg.Words) > 0 {
+								<span class="ses-seg-text">
+									for _, w := range seg.Words {
+										<span class="ses-w" data-ses-word data-ms={ itoaT64(w.StartMS) } data-end-ms={ itoaT64(w.EndMS) }>{ w.Text }</span>{ " " }
+									}
+								</span>
+							} else {
+								<span class="ses-seg-text">{ seg.Text }</span>
+							}
+						</button>
+					}
+				</div>
+			} else if a.TranscriptText != "" {
+				<div class="ses-transcript">
+					<div class="small muted ses-transcript-head">Transkript</div>
+					<div class="ses-transcript-text">{ a.TranscriptText }</div>
+				</div>
+			}
+		</article>
+	}
+	if v.SesPollURL != "" && hasActiveAudio(v.Audios) {
+		<div data-audio-poll-url={ v.SesPollURL } hidden></div>
+	}
+}
+
+// sesStatusClass durum rozeti rengi.
+func sesStatusClass(status string) string {
+	switch status {
+	case "completed":
+		return "ses-status-done"
+	case "failed":
+		return "ses-status-failed"
+	case "cancelled":
+		return "ses-status-cancelled"
+	case "running":
+		return "ses-status-running"
+	default:
+		return "ses-status-queued"
+	}
+}
+
+// hasActiveAudio panelde yoklanacak iş var mı.
+func hasActiveAudio(audios []IcerikAudio) bool {
+	for _, a := range audios {
+		if a.IsActive {
+			return true
+		}
+	}
+	return false
+}
+
+// gaugeStyle SEO göstergesi için --v değişkeni.
+func gaugeStyle(score int) string { return "--v:" + itoaT(score) }
+
+// barStyle kriter çubuğu genişliği.
+func barStyle(weight int) string { return "width:" + itoaT(weight) + "%" }
+
+// researchFlag araştırma eylemi bayrağı (1/0).
+func researchFlag(b bool) string {
+	if b {
+		return "1"
+	}
+	return "0"
+}
+
+// sourceBadgeStyle kaynak erişim rozeti rengi.
+func sourceBadgeStyle(ok bool) string {
+	if ok {
+		return "background:var(--ok-fill,var(--ok));color:#fff"
+	}
+	return "background:var(--danger-fill,var(--danger));color:#fff"
+}
+
+// trendTitle trend düğmesi ipucu.
+func trendTitle(t IcerikTrend) string {
+	return "Trend skoru " + t.Score + " · kapsama " + t.Coverage
+}
+
+// SiteLabel / SerpTitle / SerpDesc sunucu tarafında önceden hesaplanır.
+func (v IcerikFormView) SiteLabel() string { return v.SiteName }
+func (v IcerikFormView) SerpTitle() string {
+	if v.SeoTitle != "" {
+		return v.SeoTitle
+	}
+	return v.Title
+}
+func (v IcerikFormView) SerpDesc() string {
+	if v.SeoDesc != "" {
+		return v.SeoDesc
+	}
+	return v.Spot
+}

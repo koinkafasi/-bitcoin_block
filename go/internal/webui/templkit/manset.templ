@@ -1,0 +1,253 @@
+// Manşet Editörü paneli (templ): canvas tabanlı tasarım editörünün kabuğu.
+// Motor static/manset.js içindedir; bu dosya yalnızca kontrolleri basar.
+package templkit
+
+// MansetMedya arka plan görseli seçeneği.
+type MansetMedya struct {
+	ID       string
+	Filename string
+	Thumb    string
+}
+
+// MansetSablon kayıtlı tasarım satırı.
+type MansetSablon struct {
+	ID        string
+	Name      string
+	IsDefault bool
+	DeleteVals string
+}
+
+// MansetView manşet editörü paneli.
+type MansetView struct {
+	FlashKind string
+	FlashText string
+	Design    string // JSON
+	Presets   string // JSON
+	BgURL     string
+	BgQuoted  string
+	Media     []MansetMedya
+	Designs   []MansetSablon
+}
+
+// MansetPanel manşet editörü (HTMX hedefi: #manset-panel).
+templ MansetPanel(v MansetView) {
+	<style>
+		/* Manşet editörü tuvali (Faz 178).
+		 *
+		 * NEDEN BURADA: sayfada `.me-*` sınıfları için HİÇ kural yoktu
+		 * (tarayıcıda ölçüldü: 0 kural). Sonuçlar:
+		 *   - `.me-canvaswrap` position:static → ızgara kaplaması
+		 *     (position:absolute) yanlış referansa göre konumlanır,
+		 *   - `#me-grid-overlay` yükseklik 0 + arka plansız → "Izgara"
+		 *     düğmesi hiçbir şey çizmiyordu.
+		 * JS zaten `backgroundSize` yazıyor ve `.on` sınıfını çeviriyor;
+		 * eksik olan yalnızca kuraldı. Sayfaya özel olduğu için global
+		 * CSS'e değil buraya kondu (tek sayfa, ek istek yok).
+		 */
+		.me-stage {
+			position: relative;
+			display: block;
+			padding: 20px;
+			overflow: auto;
+			background: var(--surface-2, #f4f4f5);
+			border: 1px solid var(--line, #e4e4e7);
+			border-radius: 10px;
+		}
+		.me-canvaswrap {
+			position: relative;
+			display: block;
+			line-height: 0;
+			margin: 0 auto;
+			box-shadow: 0 2px 12px rgba(0, 0, 0, .16);
+		}
+		#me-canvas {
+			display: block;
+			background: #fff;
+		}
+		.me-grid {
+			position: absolute;
+			inset: 0;
+			pointer-events: none;
+			opacity: 0;
+			transition: opacity .12s ease;
+			/* background-size JS'ten gelir (60px × yakınlaştırma);
+			 * buradaki değer yalnızca JS çalışmazsa makul bir varsayılan. */
+			background-size: 60px 60px;
+			background-image:
+				linear-gradient(to right, rgba(0, 0, 0, .16) 1px, transparent 1px),
+				linear-gradient(to bottom, rgba(0, 0, 0, .16) 1px, transparent 1px);
+		}
+		.me-grid.on { opacity: 1; }
+		@media (prefers-reduced-motion: reduce) {
+			.me-grid { transition: none; }
+		}
+	</style>
+	<div id="manset-panel">
+		if v.FlashText != "" {
+			<div class={ "flash", v.FlashKind }>{ v.FlashText }</div>
+		}
+		@Yukleniyor("manset-yukleniyor", "Kaydediliyor…")
+		<form id="mansetHtmxForm" method="post" action="/admin/manset-editor/kaydet" hx-post="/admin/manset-editor/kaydet" hx-target="#manset-panel" hx-swap="outerHTML" hx-indicator="#manset-yukleniyor">
+			<input type="hidden" name="id"/>
+			<input type="hidden" name="name"/>
+			<input type="hidden" name="is_default"/>
+			<input type="hidden" name="design"/>
+		</form>
+		<script>
+			window.INIT_DESIGN = JSON.parse({{ v.Design }});
+			window.MANSET_PRESETS = JSON.parse({{ v.Presets }});
+			window.BGURL = {{ v.BgURL }};
+		</script>
+		<div class="me-wrap">
+			<div class="card card-pad">
+				<div class="me-tabs">
+					<button data-tab="bg" class="on">Arka Plan</button>
+					<button data-tab="badge">Rozet</button>
+					<button data-tab="layers">Katmanlar</button>
+					<button data-tab="tpl">Şablon</button>
+					<button data-tab="ai">AI</button>
+				</div>
+				<div class="me-pane on" data-pane="bg">
+					<div class="field">
+						<label for="me-bg-media">Görsel</label>
+						<select class="input media-slot-select" id="me-bg-media">
+							<option value="">— boş (renk) —</option>
+							for _, m := range v.Media {
+								<option value={ m.ID } data-thumb={ m.Thumb }>{ m.Filename }</option>
+							}
+						</select>
+						<img class="media-slot-preview" alt="" hidden/>
+					</div>
+					<div class="input-row" style="grid-template-columns:1fr 1fr 1fr">
+						<div class="field"><label for="me-bg-color">Zemin rengi</label><input class="input" type="color" id="me-bg-color" value="#0b0e14"/></div>
+						<div class="field"><label for="me-overlay-color">Karartma rengi</label><input class="input" type="color" id="me-overlay-color" value="#000000"/></div>
+						<div class="field">
+							<label for="me-overlay-mode">Karartma modu</label>
+							<select class="input" id="me-overlay-mode">
+								<option value="gradient">Gradyan</option>
+								<option value="solid">Düz</option>
+								<option value="vignette">Vinyet</option>
+							</select>
+						</div>
+					</div>
+					<label class="tag" style="cursor:pointer;display:inline-block;margin:2px 0"><input type="checkbox" id="me-overlay-on" checked/> Karartma aktif</label>
+					<div class="field">
+						<label>Yön</label>
+						<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px" id="me-dirs"></div>
+					</div>
+					<div class="field">
+						<label for="me-overlay-spread">Yoğunluk (spread) <span id="me-spread-v" class="muted small"></span></label>
+						<input type="range" id="me-overlay-spread" min="5" max="100" value="70" style="width:100%"/>
+					</div>
+					<div class="field">
+						<label for="me-overlay-opacity">Opaklık <span id="me-opacity-v" class="muted small"></span></label>
+						<input type="range" id="me-overlay-opacity" min="0" max="100" value="85" style="width:100%"/>
+					</div>
+					<div class="input-row" style="grid-template-columns:1fr 1fr;margin-top:4px">
+						<button class="btn ghost small" type="button" data-preset="none">Temizle</button>
+						<button class="btn ghost small" type="button" data-preset="soft">Yumuşak</button>
+						<button class="btn ghost small" type="button" data-preset="strong">Güçlü</button>
+						<button class="btn ghost small" type="button" data-preset="bottom">Alt gradyan</button>
+					</div>
+				</div>
+				<div class="me-pane" data-pane="badge">
+					<label class="tag" style="cursor:pointer;display:inline-block;margin:6px 0"><input type="checkbox" id="me-badge-on" checked/> Göster</label>
+					<div class="field"><label for="me-badge-text">Metin</label><input class="input" id="me-badge-text"/></div>
+					<div class="input-row" style="grid-template-columns:1fr 1fr">
+						<div class="field"><label for="me-badge-color">Kutu rengi</label><input type="color" class="input" id="me-badge-color"/></div>
+						<div class="field"><label for="me-badge-textcolor">Yazı rengi</label><input type="color" class="input" id="me-badge-textcolor"/></div>
+					</div>
+					<div class="input-row" style="grid-template-columns:1fr 1fr 1fr">
+						<div class="field"><label for="me-badge-size">Boyut</label><input class="input" type="number" id="me-badge-size" min="12" max="60"/></div>
+						<div class="field"><label for="me-badge-radius">Köşe</label><input class="input" type="number" id="me-badge-radius" min="0" max="40"/></div>
+						<div class="field"><label for="me-badge-pad">İç boşluk</label><input class="input" type="number" id="me-badge-pad" min="2" max="40"/></div>
+					</div>
+					<label class="small muted"><input type="checkbox" id="me-badge-upper"/> BÜYÜK HARF</label>
+					<p class="hint">Rozeti tuvale tıklayıp sürükleyerek konumlandırın.</p>
+				</div>
+				<div class="me-pane" data-pane="layers">
+					<div class="me-layers" id="me-layers"></div>
+					<button class="btn ghost small" id="me-addlayer" type="button">＋ Katman ekle</button>
+					<div id="me-layerform" style="margin-top:10px"></div>
+				</div>
+				<div class="me-pane" data-pane="tpl">
+					<div class="small muted" style="margin-bottom:4px">Hazır şablonlar</div>
+					<div id="me-presets" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px"></div>
+					<div class="small muted" style="margin-bottom:4px">Kayıtlı şablonlar</div>
+					<div id="me-tpls" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px">
+						for _, d := range v.Designs {
+							<span style="display:inline-flex;align-items:center;gap:4px">
+								<button class="btn ghost small" data-tplid={ d.ID }>
+									{ d.Name }
+									if d.IsDefault {
+										<svg class="ti ti-metin" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-star"></use></svg>
+									}
+								</button>
+								<button class="btn danger small" data-tplid-del={ d.ID } title="Sil" hx-post="/admin/manset-editor/sil" hx-vals={ d.DeleteVals } hx-target="#manset-panel" hx-swap="outerHTML" hx-confirm="Tasarım silinsin mi?" hx-indicator="#manset-yukleniyor"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-x"></use></svg></button>
+							</span>
+						}
+					</div>
+					<div style="display:flex;gap:6px">
+						<input class="input" id="me-name" placeholder="Şablon adı…" style="flex:1" aria-label="Şablon adı"/>
+						<button class="btn small" id="me-save" type="button"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-device-floppy"></use></svg> Kaydet</button>
+					</div>
+					<label class="small muted" style="display:block;margin-top:4px"><input type="checkbox" id="me-default"/> Varsayılan yap</label>
+					<p class="hint">Aynı zamanda <code>Ctrl/Cmd+S</code> kaydeder.</p>
+				</div>
+				<div class="me-pane" data-pane="ai">
+					<div class="field"><label for="me-ai-konu">Haber konusu</label><input class="input" id="me-ai-konu" placeholder="örn. faiz kararı"/></div>
+					<div style="display:flex;gap:6px;flex-wrap:wrap">
+						<button class="btn ghost small" id="me-ai-title" type="button"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-sparkles"></use></svg> Başlık Öner</button>
+						<button class="btn ghost small" id="me-ai-badge" type="button"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-sparkles"></use></svg> Rozet Öner</button>
+						<button class="btn ghost small" id="me-ai-spot" type="button"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-sparkles"></use></svg> Alt Başlık</button>
+					</div>
+				</div>
+			</div>
+			<div class="card card-pad">
+				<div class="me-toolbar">
+					<button class="btn ghost small" id="me-undo" title="Geri al (Ctrl+Z)"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-arrow-back-up"></use></svg></button>
+					<button class="btn ghost small" id="me-redo" title="Yinele (Ctrl+Y)"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-arrow-forward-up"></use></svg></button>
+					<span class="sep"></span>
+					<select class="select" id="me-zoom" style="width:110px" aria-label="Tuval yakınlaştırma">
+						<option value="fit">Sığdır</option>
+						<option value="0.5">%50</option>
+						<option value="0.75">%75</option>
+						<option value="1">%100</option>
+					</select>
+					<span class="sep"></span>
+					<label class="tag" style="cursor:pointer"><input type="checkbox" id="me-snap" checked/> Kılavuz</label>
+					<label class="tag" style="cursor:pointer"><input type="checkbox" id="me-grid"/> Izgara</label>
+					<span class="sep"></span>
+					<button class="btn ghost small" data-align="left" title="Sola"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-layout-align-left"></use></svg></button>
+					<button class="btn ghost small" data-align="hcenter" title="Yatay orta"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-arrows-horizontal"></use></svg></button>
+					<button class="btn ghost small" data-align="right" title="Sağa"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-layout-align-right"></use></svg></button>
+					<button class="btn ghost small" data-align="top" title="Üste">⤒</button>
+					<button class="btn ghost small" data-align="vcenter" title="Dikey orta"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-arrows-vertical"></use></svg></button>
+					<button class="btn ghost small" data-align="bottom" title="Alta">⤓</button>
+					<span class="sep"></span>
+					<button class="btn ghost small" id="me-front" title="Öne getir"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-arrow-up"></use></svg></button>
+					<button class="btn ghost small" id="me-back" title="Arkaya gönder"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-download"></use></svg></button>
+					<button class="btn ghost small" id="me-dup" title="Çoğalt (Ctrl+D)">⧉</button>
+					<button class="btn danger small" id="me-del" title="Sil (Del)"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-trash"></use></svg></button>
+				</div>
+				<div class="me-stage" id="me-stage">
+					<div class="me-canvaswrap">
+						<canvas id="me-canvas" width="1200" height="675"></canvas>
+						<div class="me-grid" id="me-grid-overlay"></div>
+					</div>
+				</div>
+				<div style="display:flex;gap:8px;justify-content:space-between;align-items:center;margin-top:10px;flex-wrap:wrap">
+					<span class="small muted">Tuval 1200×675 · sunucuda render edilir (JPG/WebP)</span>
+					<div style="display:flex;gap:6px">
+						<select class="select" id="me-fmt" aria-label="Dışa aktarma biçimi">
+							<option value="jpg">JPG</option>
+							<option value="webp">WebP</option>
+						</select>
+						<button class="btn" id="me-export" type="button"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-download"></use></svg> Dışa Aktar</button>
+					</div>
+				</div>
+				<div id="me-out" style="margin-top:10px"></div>
+			</div>
+		</div>
+	</div>
+}

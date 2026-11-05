@@ -1,0 +1,40 @@
+{{define "backlink_panel"}}<div id="backlink-panel">
+  {{if .Flash}}<div class="flash {{.Flash.Kind}}">{{.Flash.Text}}</div>{{end}}
+  <span id="backlink-yukleniyor" class="htmx-indicator small muted" role="status" aria-live="polite">Yükleniyor…</span>
+  {{$b := .Backlink}}
+
+  <div class="card card-pad" style="display:flex;gap:18px;flex-wrap:wrap;align-items:center">
+    <div><div class="small muted">Yayındaki içerik</div><div class="big">{{$b.Stats.Published}}</div></div>
+    <div><div class="small muted">Kümeye bağlı</div><div class="big">{{$b.Stats.WithCluster}}</div></div>
+    <div><div class="small muted">Öksüz (linksiz)</div><div class="big" style="color:{{if gt $b.Stats.Orphan 0}}#e5484d{{else}}var(--ok){{end}}">{{$b.Stats.Orphan}}</div></div>
+    <button class="btn small" style="margin-left:auto" type="button"
+            hx-get="/admin/backlink" hx-target="#backlink-panel" hx-swap="outerHTML" hx-indicator="#backlink-yukleniyor">↻ Yenile</button>
+    <a class="btn small" href="/admin/seo">İç Link Önerisi →</a>
+  </div>
+
+  <p class="hint" style="margin-top:10px">Makale sayfalarında <b>İlgili içerikler</b> bloğu otomatik üretilir (aynı küme + ortak etiket + kategori + başlık benzerliği). Bu, site genelinde iç link (backlink) ağı oluşturur ve SEO'yu güçlendirir. Öksüz içerikler ağa girmez — küme/etiket/kategori ekleyin.</p>
+
+  <h2 style="font-size:1.05rem;margin-top:20px">Konu Kümeleri (link göbekleri)</h2>
+  <table class="table">
+    <thead><tr><th>Küme</th><th>Niyet</th><th>İçerik</th></tr></thead>
+    <tbody>
+    {{range $b.Clusters}}<tr><td><a href="/admin/kumeler?kus={{.ID}}">{{.Name}}</a></td><td class="small muted">{{.Intent}}</td><td><span class="tag">{{.ContentCount}}</span></td></tr>
+    {{else}}<tr><td colspan="3" class="muted">Küme yok. <a href="/admin/kumeler">Konu Kümeleri</a>'nden ekleyin.</td></tr>{{end}}
+    </tbody>
+  </table>
+
+  <h2 style="font-size:1.05rem;margin-top:22px">Öksüz İçerikler (iç link ağına girmeyen)</h2>
+  <table class="table">
+    <thead><tr><th>Başlık</th><th>Kategori</th><th>Güncelleme</th><th></th></tr></thead>
+    <tbody>
+    {{range $b.Orphans}}
+      <tr>
+        <td>{{.Title}}</td>
+        <td class="small muted">{{if .CategoryName}}{{.CategoryName}}{{else}}—{{end}}</td>
+        <td class="small muted">{{.UpdatedAt.Format "2006-01-02"}}</td>
+        <td><a class="btn small" href="/admin/icerikler/{{.ID}}">Düzenle</a></td>
+      </tr>
+    {{else}}<tr><td colspan="4" class="muted">Öksüz içerik yok (tümü kategori/etiket/küme bağlı)</td></tr>{{end}}
+    </tbody>
+  </table>
+</div>{{end}}

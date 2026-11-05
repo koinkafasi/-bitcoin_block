@@ -1,0 +1,1 @@
+ALTER TABLE contents DROP COLUMN IF EXISTS video_seconds;

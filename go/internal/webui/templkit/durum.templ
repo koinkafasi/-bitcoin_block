@@ -1,0 +1,152 @@
+package templkit
+
+// Paylaşılan durum bileşenleri (Faz 163).
+//
+// NEDEN: panelde boş durum 31 ayrı yerde elle yazılmıştı ("Liste boş.",
+// "Kayıt yok.", "Henüz X yok."). Bazısı CTA veriyor, bazısı vermiyor;
+// bazısı emoji taşıyor. Yükleme durumu ise 11 dosyada düz "Yükleniyor…"
+// metniydi: HTMX hedefi boşalıp tek satır metin geliyor, tablo yüksekliği
+// 600 px'den 20 px'e düşüp sayfa zıplıyordu (CLS).
+//
+// Bu dosya iki kalıbı tek yere toplar: BosDurum ve IskeletTablo.
+
+func yukleniyorEtiketi(v string) string {
+	if v == "" {
+		return "Yükleniyor…"
+	}
+	return v
+}
+
+func iskeletSatir(n int) int {
+	if n <= 0 {
+		return 6
+	}
+	return n
+}
+
+func iskeletSutun(n int) int {
+	if n <= 0 {
+		return 4
+	}
+	return n
+}
+
+func iskeletKartSayisi(n int) int {
+	if n <= 0 {
+		return 3
+	}
+	return n
+}
+
+// BosDurum boş liste/panel durumu.
+//   - ikon: yerel sprite adı (ör. "file-text"); boşsa ikon çizilmez.
+//   - ctaEtiket/ctaHref: boşsa düğme çizilmez.
+//
+// role="status": ekran okuyucu, HTMX değişiminden sonra durumu duyurur.
+templ BosDurum(ikon, baslik, aciklama, ctaEtiket, ctaHref string) {
+	<div class="bos-durum" role="status">
+		if ikon != "" {
+			<span class="bos-durum__ikon" aria-hidden="true">
+				<svg class="ti"><use href={ "/static/vendor/tabler-icons.svg?v=b89545a6#ti-" + ikon }></use></svg>
+			</span>
+		}
+		<p class="bos-durum__baslik">{ baslik }</p>
+		if aciklama != "" {
+			<p class="bos-durum__aciklama">{ aciklama }</p>
+		}
+		if ctaEtiket != "" && ctaHref != "" {
+			<a class="btn small" href={ templ.SafeURL(ctaHref) }>{ ctaEtiket }</a>
+		}
+	</div>
+}
+
+// IskeletTablo yükleniyor iskeleti.
+//
+// Satır yüksekliği gerçek tabloya yakın tutulur (44px): hedef değişirken
+// sayfa zıplamasın. `aria-busy` + `aria-label` ile ekran okuyucuya
+// "yükleniyor" bildirilir; görsel çubuklar aria-hidden.
+templ IskeletTablo(satir, sutun int) {
+	<div class="iskelet-tablo" aria-busy="true" aria-label="Yükleniyor">
+		for i := 0; i < iskeletSatir(satir); i++ {
+			<div class="iskelet-satir">
+				for j := 0; j < iskeletSutun(sutun); j++ {
+					<span class={ "iskelet-cizgi", templ.KV("iskelet-cizgi--kisa", j > 0) } aria-hidden="true"></span>
+				}
+			</div>
+		}
+	</div>
+}
+
+// IskeletKart kart/liste ızgarası için iskelet.
+templ IskeletKart(adet int) {
+	<div class="iskelet-kartlar" aria-busy="true" aria-label="Yükleniyor">
+		for i := 0; i < iskeletKartSayisi(adet); i++ {
+			<div class="iskelet-kart" aria-hidden="true">
+				<span class="iskelet-cizgi iskelet-cizgi--baslik"></span>
+				<span class="iskelet-cizgi"></span>
+				<span class="iskelet-cizgi iskelet-cizgi--kisa"></span>
+			</div>
+		}
+	</div>
+}
+
+// Yukleniyor — HTMX göstergesi: dönen halka + metin.
+//
+// Önce 16 yerde düz "Yükleniyor…" metni vardı. Halka, isteğin sürdüğünü
+// renk değişiminden daha net anlatır; `role=status` + `aria-live` ile
+// ekran okuyucuya da bildirilir.
+//
+// Kimlik dışarıdan verilir (`hx-indicator="#id"` hedefi). `.htmx-indicator`
+// sınıfı HTMX'in kendi görünürlük kuralını taşır.
+templ Yukleniyor(kimlik, etiket string) {
+	<span id={ kimlik } class="htmx-indicator yukleniyor" role="status" aria-live="polite">
+		<svg class="yukleniyor__halka" viewBox="0 0 24 24" aria-hidden="true">
+			<circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2.5" opacity=".2"></circle>
+			<path d="M21 12a9 9 0 0 0-9-9" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"></path>
+		</svg>
+		<span>{ yukleniyorEtiketi(etiket) }</span>
+	</span>
+}
+
+// TabloBos tablo içindeki boş durum satırı.
+//
+// NEDEN: BosDurum (Faz 163) 13 yerde kullanılıyordu ama tablo sarmalayıcısı
+// (`<tr><td colspan="N">`) hâlâ elle yazılıyordu; 25 yerde ise boş durum
+// bambaşka biçimde, `class="muted"` tek satır olarak duruyordu. Bu yüzden
+// aynı panelde boş liste bazen ikonlu kutu, bazen gri metin olarak
+// görünüyordu.
+//
+// Ayrıca colspan elle yazıldığı için sütun sayısı değiştiğinde sessizce
+// yanlış kalıyordu: içerik listesinde başlık 9 sütunken boş satır
+// colspan="8" idi ve tablonun sağında 134 px boş bir şerit kalıyordu
+// (ölçüldü). Sütun sayısı artık tek yerde, çağrıda bildiriliyor;
+// `TestTabloBosColspan` kaynak ile başlığı karşılaştırıp kaymayı yakalıyor.
+//
+// sutun: tablodaki <th> sayısı (onay kutusu sütunu dahil).
+templ TabloBos(sutun int, ikon, baslik, aciklama, ctaEtiket, ctaHref string) {
+	<tr class="tablo-bos">
+		<td colspan={ itoaT(tabloBosSutun(sutun)) }>
+			@BosDurum(ikon, baslik, aciklama, ctaEtiket, ctaHref)
+		</td>
+	</tr>
+}
+
+// TabloBosMetin sade (ikonlu kutu istemeyen) tablo boş durumu.
+//
+// NEDEN ayrı: bazı tablolar ikincil/yardımcı listeler (şehir listesi, maç
+// listesi). Oralarda 44 px'lik ikon kutusu görsel gürültü oluyor; tek
+// satırlık açıklama yeterli.
+templ TabloBosMetin(sutun int, metin string) {
+	<tr class="tablo-bos">
+		<td colspan={ itoaT(tabloBosSutun(sutun)) } class="muted small">{ metin }</td>
+	</tr>
+}
+
+// tabloBosSutun: en az 1 sütun. 0/negatif değer sessizce kırık tablo
+// üretmesin (colspan="0" geçersizdir ve tarayıcı onu yok sayar).
+func tabloBosSutun(n int) int {
+	if n < 1 {
+		return 1
+	}
+	return n
+}

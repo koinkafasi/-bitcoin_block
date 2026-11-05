@@ -1,0 +1,22 @@
+-- theblock P0 çekirdek şema — geri alma (0001 down). FK sırasına dikkat (önce çocuklar).
+DROP TABLE IF EXISTS comments;
+DROP TABLE IF EXISTS counters_share;
+DROP TABLE IF EXISTS counters_hit;
+DROP TABLE IF EXISTS headline_designs;
+DROP TABLE IF EXISTS redirects;
+DROP TABLE IF EXISTS settings;
+DROP TABLE IF EXISTS pages;
+DROP TABLE IF EXISTS videos;
+DROP TABLE IF EXISTS gallery_items;
+DROP TABLE IF EXISTS galleries;
+DROP TABLE IF EXISTS contents_extra;
+DROP TABLE IF EXISTS content_tags;
+DROP TABLE IF EXISTS contents;
+DROP TABLE IF EXISTS media_files;
+DROP TABLE IF EXISTS mahrets;
+DROP TABLE IF EXISTS tags;
+DROP TABLE IF EXISTS categories;
+DROP TABLE IF EXISTS content_types;
+DROP TABLE IF EXISTS users;
+DROP FUNCTION IF EXISTS set_updated_at();
+DROP EXTENSION IF EXISTS citext;

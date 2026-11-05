@@ -1,0 +1,2850 @@
+{{define "home"}}<!doctype html><html lang="{{.Lang}}" {{if .RTL}}dir="rtl"{{end}} data-theme="{{.Theme}}"><head>{{template "public_head" .}}{{if .Home}}{{if .Home.JSONLD}}<script type="application/ld+json">{{.Home.JSONLD}}</script>{{end}}{{end}}</head>
+<body>
+{{template "site_header" .}}
+{{if and .Home.BreakingLen (not .Blocks)}}
+<div class="breaking"><div class="container">
+  <span class="tag">{{.T "breaking"}}</span>
+  {{range .Home.Breaking}}<a href="{{$.LangBase}}/{{.DisplaySlug}}-{{.ID}}">{{.Title}}</a>{{end}}
+</div></div>
+{{end}}
+{{if .Etkinlik}}
+<div class="event-ribbon"><div class="container">
+  <span class="tag">Etkinlikler</span>
+  {{range .Etkinlik}}<a href="{{$.LangBase}}/etkinlikler" title="{{.Title}}"><b>{{eventWhen .StartAt}}</b> · {{.Title}}</a>{{end}}
+</div></div>
+{{end}}
+<main class="page" id="main">
+<div class="container{{if and .PageLayout .PageLayout.BlockGap}} pg-blk-gap{{end}}"{{if and .PageLayout .PageLayout.BlockGap}} style="--pg-blk-gap:{{.PageLayout.BlockGap}}"{{end}}>
+  {{if .Blocks}}
+  {{/* --- üst bölge: hikayeler, üst manşet, slider+ray, servis bandı --- */}}
+  <div class="blk-zone blk-zone-ust">{{range .Blocks}}{{if and .Visible (eq .Zone "ust")}}{{template "render_block" .}}{{end}}{{end}}</div>
+  {{/* --- ana kolon + sağ sütun (haberpi 2 kolon düzeni) --- */}}
+  {{$pl := .PageLayout}}
+  <div class="home-grid{{if and $pl (not $pl.Sidebar)}} pg-no-side{{end}}"{{if $pl}} style="--pg-side-w:{{$pl.SidebarWidth}}%;--pg-single-w:{{$pl.ContentWidth}}px"{{end}}>
+    <div class="home-main blk-zone-main">
+      {{range .Blocks}}{{if and .Visible (eq .Zone "ana")}}{{template "render_block" .}}{{end}}{{end}}
+    </div>
+    <aside class="home-side">
+      {{range .Blocks}}{{if and .Visible (eq .Zone "yan")}}{{template "render_block" .}}{{end}}{{end}}
+    </aside>
+  </div>
+  {{/* --- iki kolon bittikten SONRA tam genişlik bloklar (haberpi):
+         kategori panelleri ve foto/video galerileri sol kolonda değil --- */}}
+  <div class="blk-zone blk-zone-genis">{{range .Blocks}}{{if and .Visible (eq .Zone "genis")}}{{template "render_block" .}}{{end}}{{end}}</div>
+  {{else}}
+  {{template "kat_tabs" .}}
+  {{if .Home.Lead}}
+  <section class="lead-grid animate-in">
+    {{with index .Home.Lead 0}}
+    <a class="lead" href="{{$.LangBase}}/{{.DisplaySlug}}-{{.ID}}">
+      <img src="{{mediaURL .CoverMediaID}}" srcset="{{mediaSrcset .CoverMediaID}}" sizes="(max-width: 64rem) 100vw, 66vw" alt="{{.Title}}" loading="eager" fetchpriority="high">
+      <div class="overlay"><div>
+        {{if .IsSD}}<span class="badge b-sd">SD</span>{{end}}{{if .IsAM}}<span class="badge b-am">AM</span>{{end}}
+        <h2>{{.Title}}</h2><div class="spot">{{.Spot}}</div></div>
+    </div></a>
+    {{end}}
+    <div class="gap">
+      {{range .Home.Lead}}{{if ne .ID (index $.Home.Lead 0).ID}}
+      <a class="card" href="{{$.LangBase}}/{{.DisplaySlug}}-{{.ID}}">{{if .CoverMediaID}}<img class="thumb" src="{{mediaThumbURL .CoverMediaID}}" alt="">{{end}}
+        <div class="card-pad"><h3>{{.Title}}</h3><div class="shape">{{$.T "published"}} {{formatTime .PublishedAt}}</div></div></a>
+      {{end}}{{end}}
+    </div>
+  </section>
+  {{end}}
+
+  <h2 class="page-title" style="margin-top:30px">{{if .Home.FilterName}}{{.Home.FilterName}}{{else}}{{.T "trending"}}{{end}}</h2>
+  <section class="grid-2">
+    {{range .Home.Recent}}
+    <a class="card" href="{{$.LangBase}}/{{.DisplaySlug}}-{{.ID}}">
+      {{if .CoverMediaID}}<img class="thumb" src="{{mediaThumbURL .CoverMediaID}}" alt="">{{end}}
+      <div class="card-pad"><h3>{{.Title}}</h3>
+        <div class="shape">{{if .CategorySlug}}{{.CategoryName}}{{end}} · {{formatTime .PublishedAt}}</div>
+      </div></a>
+    {{else}}<p class="muted">Henüz yayınlanmış içerik yok.</p>{{end}}
+  </section>
+  {{end}}
+</div>
+</main>
+{{template "site_footer" .}}
+</body></html>{{end}}
+
+{{define "article"}}<!doctype html><html lang="{{.Lang}}" {{if .RTL}}dir="rtl"{{end}} data-theme="{{.Theme}}"><head>{{template "public_head" .}}
+<link rel="amphtml" href="/amp/{{.Article.Content.DisplaySlug}}-{{.Article.Content.ID}}">
+{{if .Article.Content.CoverMediaID}}<link rel="preload" as="image" href="{{mediaVariantURL .Article.Content.CoverMediaID 1200}}" imagesrcset="{{mediaSrcset .Article.Content.CoverMediaID}}" imagesizes="(max-width: 900px) 100vw, 900px" fetchpriority="high">
+{{end}}{{if .Article.JSONLD}}<script type="application/ld+json">{{.Article.JSONLD}}</script>{{end}}
+{{if .Article.BreadcrumbJSONLD}}<script type="application/ld+json">{{.Article.BreadcrumbJSONLD}}</script>{{end}}
+</head>
+<body>
+{{template "site_header" .}}
+<main class="page" data-article-id="{{.Article.Content.ID}}" data-content-version="{{.Article.Content.Version}}" data-content-status="{{.Article.Content.Status}}"><div class="container{{if and .PageLayout .PageLayout.BlockGap}} pg-blk-gap{{end}}"{{if and .PageLayout .PageLayout.BlockGap}} style="--pg-blk-gap:{{.PageLayout.BlockGap}}"{{end}}>
+{{/* Yazı sayfası "Üst" blokları (bölge: ust) — sayfanın EN ÜSTÜ, iki
+   kolonlu düzenin üstünde ve tam genişlikte. Başlıktan da önce basılır:
+   şablon alanına eklenen modül (ör. Puan Durumu Şeridi) burada görünür. */}}
+<div class="blk-zone blk-zone-ust">{{range .Blocks}}{{if and .Visible (eq .Zone "ust")}}{{template "render_block" .}}{{end}}{{end}}</div>
+{{$pl := .PageLayout}}<div class="art-wrap animate-in{{if and $pl (not $pl.Sidebar)}} pg-no-side{{end}}"{{if $pl}} style="--pg-side-w:{{$pl.SidebarWidth}}%;--pg-single-w:{{$pl.ContentWidth}}px"{{end}}>
+  <article class="article">
+  {{if .User}}
+  <button type="button" class="art-save{{if .Article.Bookmarked}} on{{end}}" id="bmBtn" data-id="{{.Article.Content.ID}}"
+          aria-pressed="{{if .Article.Bookmarked}}true{{else}}false{{end}}" aria-label="Kaydet" title="Kaydet">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12a1 1 0 0 1 1 1v17l-7-4-7 4V4a1 1 0 0 1 1-1z"/></svg>
+  </button>
+  {{end}}
+  <div class="art-content">
+  <nav class="breadcrumb" aria-label="breadcrumb">
+    <a href="{{.HomeURL}}">{{with index .PageTexts "article.anasayfa"}}{{.}}{{else}}Anasayfa{{end}}</a>
+    {{if .Article.Content.CategorySlug}}
+    <span class="bc-sep">›</span>
+    <span class="bc-cat">
+      <a href="{{.LangBase}}/kategori/{{.Article.Content.CategorySlug}}">{{.Article.Content.CategoryName}}</a>
+      <button type="button" class="bc-follow{{if .Article.CatFollowed}} on{{end}}" id="flBtn"
+              data-slug="{{.Article.Content.CategorySlug}}" data-auth="{{if .User}}1{{else}}0{{end}}"
+              aria-pressed="{{if .Article.CatFollowed}}true{{else}}false{{end}}"
+              aria-label="Kategoriyi takip et" title="Kategoriyi takip et">
+        <svg class="bc-follow-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+        <svg class="bc-follow-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
+      </button>
+    </span>
+    {{end}}
+    <span class="bc-sep">›</span><span class="muted bc-cur">{{.Article.Content.Title}}</span>
+  </nav>
+  <div class="shape art-meta-row">
+    {{if .Article.Author}}<span class="art-byline"><a class="art-byline-name" href="{{.LangBase}}/yazar/{{.Article.Author.Slug}}">{{.Article.Author.Name}}</a></span>{{end}}
+    {{if .Article.Editor}}<span class="art-byline"><span class="muted">{{with index .PageTexts "article.editor"}}{{.}}{{else}}Editör{{end}}</span> <a class="art-byline-name" href="{{.LangBase}}/yazar/{{.Article.Editor.Slug}}">{{.Article.Editor.Name}}</a></span>{{end}}
+    <span class="muted">{{formatTime .Article.Content.PublishedAt}}</span>
+    <span class="muted">{{with index .PageTexts "article.okuma_suresi"}}{{.}}{{else}}{{.Article.ReadingMin}} dk okuma{{end}}</span>
+    {{if .Article.Hits}}<span class="muted art-meta-views"><span class="art-eye" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></span>{{with index .PageTexts "article.goruntulenme"}}{{.}}{{else}}{{.Article.Hits}} görüntülenme{{end}}</span>{{end}}
+  </div>
+  <h1 class="title-xl" id="article-title">{{.Article.Content.Title}}</h1>
+  <p class="muted" id="article-spot" style="font-size:1.1rem"{{if not .Article.Content.Spot}} hidden{{end}}>{{.Article.Content.Spot}}</p>
+  {{if .Article.Fields.AISummary}}<div class="card card-pad" style="border-left:3px solid var(--accent);margin:12px 0"><strong class="small muted">{{with index .PageTexts "article.ai_ozet"}}{{.}}{{else}}AI ÖZET{{end}}</strong><p style="margin:.3em 0 0">{{.Article.Fields.AISummary}}</p></div>{{end}}
+  {{if gt (len .Article.Links) 1}}
+  <div class="art-topbar">
+    <div class="lang-switch">
+      <span class="small muted">{{.T "language"}}:</span>
+      {{range .Article.Links}}{{if .Active}}<span class="on" lang="{{.Code}}" aria-current="true">{{.Label}}</span>{{else}}<a href="{{.URL}}" hreflang="{{.Code}}" lang="{{.Code}}">{{.Label}}</a>{{end}}{{end}}
+    </div>
+  </div>
+  {{end}}
+  {{if .User}}<p class="small muted art-user-note" id="bmNote"></p>{{end}}
+
+  {{if .GoogleSourceURL}}
+  <div class="art-source-above">
+    <a class="src-badge" href="{{.GoogleSourceURL}}" target="_blank" rel="noopener"
+       title="Google News — siteyi kaynak olarak ekle (site adresi bağlantıya gömülü)">
+      <svg class="gl" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59A14.5 14.5 0 019.5 24c0-1.59.27-3.13.76-4.59l-7.98-6.19A23.94 23.94 0 000 24c0 3.87.93 7.53 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+      <span>Google News'ta kaynak ekle</span>
+    </a>
+  </div>
+  {{end}}
+
+  {{if .Article.Content.CoverMediaID}}<img class="hero" id="article-cover" src="{{mediaURL .Article.Content.CoverMediaID}}" srcset="{{mediaSrcset .Article.Content.CoverMediaID}}" sizes="(max-width: 900px) 100vw, 900px" alt="{{.Article.Content.Title}}" loading="eager" fetchpriority="high" decoding="async">{{end}}
+
+  <div class="art-toolbar">
+    <div class="art-tools" role="group" aria-label="Yazı boyutu">
+      <button class="btn ghost small" type="button" data-font="-" aria-label="Yazıyı küçült" title="Yazıyı küçült"><span class="art-font-label" aria-hidden="true">A−</span></button>
+      <button class="btn ghost small" type="button" data-font="0" aria-label="Normal boyut" title="Normal boyut"><span class="art-font-label" aria-hidden="true">A</span></button>
+      <button class="btn ghost small" type="button" data-font="+" aria-label="Yazıyı büyüt" title="Yazıyı büyüt"><span class="art-font-label" aria-hidden="true">A+</span></button>
+    </div>
+    <div class="art-share">
+      <button type="button" class="art-share-btn" aria-haspopup="true" aria-expanded="false">
+        <svg class="art-share-btn-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 10.7 15.4 6.8M8.6 13.3l6.8 3.9"/></svg>
+        <span>Paylaş</span>
+        <svg class="art-share-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+      </button>
+      <div class="art-share-menu" role="menu" aria-label="Paylaşım seçenekleri">
+        {{range .Article.ShareBtns}}<a class="art-share-item" href="{{.Href}}" target="_blank" rel="noopener" title="{{.Title}}" role="menuitem">
+          <span class="art-share-ico" aria-hidden="true">{{.IconSVG}}</span><span class="art-share-label">{{.Title}}</span>
+        </a>{{end}}
+        <button type="button" class="art-share-item art-copy-link" data-kopyala="{{.Article.ShareURL}}" title="Bağlantıyı kopyala" aria-label="Bağlantıyı kopyala" role="menuitem">
+          <span class="art-share-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></span><span class="art-share-label">Bağlantıyı kopyala</span>
+        </button>
+        <button type="button" class="art-share-item" id="nativeShareBtn" title="Cihazda paylaş" aria-label="Cihazda paylaş" role="menuitem">
+          <span class="art-share-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3m-5 5 5-5 5 5"/><path d="M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"/></svg></span><span class="art-share-label">Cihazda paylaş</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  {{if .Article.Fields.ImageCredit}}
+  <div class="art-source-strip">
+    <span class="art-image-credit">{{.Article.Fields.ImageCredit}}</span>
+  </div>
+  {{end}}
+  <script>
+  (function(){
+    var b=document.getElementById('bmBtn'); var f=document.getElementById('flBtn');
+    var note=document.getElementById('bmNote');
+    function say(t){ if(note) note.textContent=t; }
+    function saved(el,on){
+      if(!el) return;
+      el.classList.toggle('on', !!on);
+      el.setAttribute('aria-pressed', on?'true':'false');
+      var t=on?'Kaydı kaldır':'Kaydet';
+      el.title=t; el.setAttribute('aria-label', t);
+      var l=el.querySelector('.art-user-btn-label');
+      if(l) l.textContent=on?'Kaydedildi':'Kaydet';
+    }
+    if(b) b.addEventListener('click',function(){
+      fetch('/api/bookmarks/'+b.dataset.id,{method:'POST',credentials:'same-origin'})
+        .then(function(r){return r.json()})
+        .then(function(j){ if(j.ok){ saved(b, j.kayitli); say('Toplam kayıt: '+j.toplam);} });
+    });
+    if(f) f.addEventListener('click',function(){
+      if(f.dataset.auth!=='1'){
+        location.href='{{.LangBase}}/giris?redirect=hesabim';
+        return;
+      }
+      fetch('/api/follow/kategori/'+f.dataset.slug,{method:'POST',credentials:'same-origin'})
+        .then(function(r){return r.json()})
+        .then(function(j){
+          if(!j.ok) return;
+          f.classList.toggle('on', !!j.takipli);
+          f.setAttribute('aria-pressed', j.takipli?'true':'false');
+          f.title=j.takipli?'Takibi bırak':'Kategoriyi takip et';
+          f.setAttribute('aria-label', f.title);
+          say(j.takipli?'Kategori takip ediliyor.':'Kategori takibi bırakıldı.');
+        });
+    });
+  })();
+  </script>
+  <div class="art-audio" id="artAudio" data-src="{{.Article.Fields.AudioURL}}"
+       data-duration="{{printf "%.0f" .Article.Fields.AudioSeconds}}">
+    <div class="art-audio-top">
+      <button type="button" class="art-audio-play" id="ttsPlay" aria-label="Oynat">
+        <svg class="ic-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
+        <svg class="ic-pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>
+      </button>
+      <span class="art-audio-meta">
+        <span class="art-audio-kicker">SESLİ HABER</span>
+        <span class="art-audio-title">{{if .Article.Fields.AudioURL}}Haberi dinle{{else}}Haberi sesli dinle{{end}}</span>
+      </span>
+      <select class="art-audio-rate" id="ttsRate" aria-label="Okuma hızı">
+        <option value="0.8">0.8×</option><option value="1" selected>1×</option><option value="1.2">1.2×</option><option value="1.5">1.5×</option>
+      </select>
+      <button type="button" class="art-audio-mute" id="ttsMute" aria-label="Sesi kapat" aria-pressed="false">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/></svg>
+      </button>
+    </div>
+    <div class="art-audio-bottom">
+      <button type="button" class="art-audio-skip art-audio-restart" id="ttsRestart" aria-label="Baştan başlat" title="Baştan başlat">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>
+      </button>
+      <button type="button" class="art-audio-skip" data-skip="-15" aria-label="15 saniye geri">−15</button>
+      <div class="art-audio-track" id="ttsTrack" role="slider" tabindex="0" aria-label="İlerleme" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+        <span class="art-audio-fill" id="ttsFill"></span>
+      </div>
+      <button type="button" class="art-audio-skip" data-skip="15" aria-label="15 saniye ileri">+15</button>
+      <span class="art-audio-time" id="ttsTime">{{if .Article.Fields.AudioSeconds}}00:00 / {{mmss .Article.Fields.AudioSeconds}}{{else}}00:00{{end}}</span>
+    </div>
+    <div class="art-audio-note" id="ttsNote">{{if .Article.Fields.AudioURL}}Ses dosyası hazır.{{else}}Ses dosyası yok; tarayıcı sesiyle okunur.{{end}}</div>
+  </div>
+
+  {{/* Mobil: yazı uzunken oynatıcı ekrandan çıkınca alttan sabit mini kontrol. */}}
+  <div class="art-audio-mini" id="ttsMini" aria-hidden="true">
+    <button type="button" class="art-audio-mini-play" id="ttsMiniPlay" aria-label="Oynat">
+      <svg class="ic-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
+      <svg class="ic-pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>
+    </button>
+    <div class="art-audio-mini-body">
+      <div class="art-audio-mini-track"><span id="ttsMiniFill"></span></div>
+      <span class="art-audio-mini-time" id="ttsMiniTime">00:00</span>
+    </div>
+    <button type="button" class="art-audio-mini-close" id="ttsMiniClose" aria-label="Mini oynatıcıyı kapat">×</button>
+  </div>
+
+  {{/* Yazı gövdesi bölgesi (Faz 142): görünür "yazi_govde" bloğu varsa
+     gövdeyi blok basar; yoksa aşağıdaki sabit gövde aynen kullanılır. */}}
+  <div class="blk-zone blk-zone-ana">{{range .Blocks}}{{if and .Visible (eq .Zone "ana")}}{{template "render_block" .}}{{end}}{{end}}</div>
+
+  {{if not .HasBodyBlock}}<div class="body" id="article-body">{{if .Article.Locked}}{{.Article.FreeHTML}}<p>…</p>{{else}}{{.Article.HTML}}{{end}}</div>{{end}}
+
+  {{/* Önerilen Video — yazının gövde sonunda ilgili video haberi (Faz 12) */}}
+  {{with .Article.RelatedVideo}}
+  {{/* Rozet karta değil, kartın içindeki <a> etiketine gömülür: iç içe <a> geçersizdir. */}}
+  {{$vb := catBadge $.Article.CatBadges .CategoryID}}
+  <div class="rel-video">
+    <span class="rv-label">▶ ÖNERİLEN VİDEO</span>
+    <a class="rv-card" href="{{$.LangBase}}/{{.DisplaySlug}}-{{.ID}}">
+      {{if .CoverMediaID}}<span class="rv-thumb"><img src="{{mediaThumbURL .CoverMediaID}}" alt="{{.Title}}" loading="lazy"><span class="rv-play" aria-hidden="true"></span></span>{{end}}
+      <span class="rv-meta">
+        <span class="rv-badges">
+          {{if $vb.Name}}<span class="rv-cat">{{$vb.Name}}</span>{{end}}
+          {{if $.Article.RelatedVideoSure}}<span class="rv-sure">{{$.Article.RelatedVideoSure}}</span>{{end}}
+        </span>
+        <strong>{{.Title}}</strong>
+        {{if .Spot}}<span class="rv-spot">{{.Spot}}</span>{{end}}
+      </span>
+    </a>
+  </div>
+  {{end}}
+
+  {{with .Ads}}{{if .Has}}{{if index .SlotMap "sidebar_300x250"}}<div data-bik-reklam="true" data-bik-reklam-id="sidebar_300x250">{{index .SlotMap "sidebar_300x250"}}</div>{{end}}{{end}}{{end}}
+
+  {{with .Ads}}{{if .Has}}{{if index .SlotMap "inline_970x120"}}
+  <h2 class="blk-title" style="font-size:1.05rem">Gözden Kaçmasın</h2>
+  <div class="missed">
+    <div class="ms-img" data-bik-reklam="true" data-bik-reklam-id="inline_970x120">{{index .SlotMap "inline_970x120"}}</div>
+    <div class="ms-txt"><b>{{$.Title}}</b><a href="{{$.HomeURL}}">Görüntüle →</a></div>
+  </div>
+  {{end}}{{end}}{{end}}
+
+  {{if .Article.Locked}}
+  <div class="card card-pad art-locked" role="note">
+    <strong style="font-size:1.05rem">🔒 Abonelere Özel</strong>
+    <p class="muted small">Bu içeriğin tamamı abonelere açıktır.{{if .Article.RequiredTier}} <b>{{.Article.RequiredTier}}</b> ve üzeri bir paket gerekir.{{end}}</p>
+    <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
+      <a class="btn" href="{{.LangBase}}/abonelik">Abonelik paketleri</a>
+      {{if not .MemberLoggedIn}}
+      <a class="btn ghost" href="{{.LangBase}}/giris?redirect=abonelik">Giriş yap</a>
+      <a class="btn ghost" href="{{.LangBase}}/kayit?redirect=abonelik">Ücretsiz kayıt ol</a>
+      {{else}}
+      <a class="btn ghost" href="{{.LangBase}}/hesabim/abonelik">Aboneliğim</a>
+      {{end}}
+    </div>
+  </div>
+  {{end}}
+
+  {{if eq .Article.Content.TypeKey "hesaplayici"}}
+  <script type="application/json" data-calc>{{.Article.CalcJSON}}</script>
+  <div id="calc-root" class="card card-pad" style="margin:14px 0"></div>
+  {{end}}
+
+  <div class="shape" style="margin-top:18px">
+    {{if .Article.Content.IsYMYL}}<span class="badge" style="background:#065f46;color:#fff">YMYL{{if eq .Article.Content.YMYLDurumu "uzman"}} · doğrulandı{{else if eq .Article.Content.YMYLDurumu "kaynakli"}} · kaynaklı{{end}}</span>{{end}}
+    {{range .Article.Rozets}}<span class="badge {{.Class}}">{{.Label}}</span>{{end}}
+    {{if .Article.Content.SourceURL}}<a href="{{.Article.Content.SourceURL}}" target="_blank" rel="nofollow noopener">Kaynak: {{if .Article.Content.SourceName}}{{.Article.Content.SourceName}}{{else}}orijinal haber{{end}}</a>{{end}}
+  </div>
+
+  {{if .Article.Tags}}
+  <div class="art-tags">
+    {{range .Article.Tags}}<a class="tag" href="{{$.LangBase}}/arama?q={{.}}">#{{.}}</a>{{end}}
+  </div>
+  {{end}}
+
+  <script>
+  (function(){
+    var share = document.querySelector('.art-share');
+    if (share) {
+      var sbtn = share.querySelector('.art-share-btn');
+      function close(){ share.classList.remove('open'); if(sbtn){ sbtn.setAttribute('aria-expanded','false'); sbtn.blur(); } }
+
+      if (sbtn) sbtn.addEventListener('click', function(e){
+        e.preventDefault(); e.stopPropagation();
+        var open = share.classList.toggle('open');
+        sbtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+      });
+      document.addEventListener('click', function(e){ if (!share.contains(e.target)) close(); });
+      document.addEventListener('keydown', function(e){ if (e.key === 'Escape') close(); });
+    }
+    document.addEventListener('click', function(e){
+      var b = e.target.closest('.art-copy-link');
+      if (!b) return;
+      e.preventDefault();
+      var u = b.getAttribute('data-kopyala') || location.href;
+      function tamam(){
+        b.classList.add('copied');
+        setTimeout(function(){ b.classList.remove('copied'); }, 1200);
+      }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(u).then(tamam, function(){ prompt('Bağlantıyı kopyala:', u); });
+      } else {
+        prompt('Bağlantıyı kopyala:', u);
+      }
+    });
+    var ns = document.getElementById('nativeShareBtn');
+    if (ns) ns.addEventListener('click', function(){
+      if (navigator.share) {
+        navigator.share({title: document.title, url: location.href}).catch(function(){});
+      } else {
+        prompt('Bağlantıyı kopyala:', location.href);
+      }
+    });
+  })();
+
+  /* Sesli haber: MP3 varsa <audio>, yoksa tarayıcı speechSynthesis (tr-TR). */
+  (function(){
+    var box=document.getElementById('artAudio'); if(!box) return;
+    var src=(box.getAttribute('data-src')||'').trim();
+    var playBtn=document.getElementById('ttsPlay');
+    var restartBtn=document.getElementById('ttsRestart');
+    var fill=document.getElementById('ttsFill');
+    var track=document.getElementById('ttsTrack');
+    var timeEl=document.getElementById('ttsTime');
+    var rateEl=document.getElementById('ttsRate');
+    var muteBtn=document.getElementById('ttsMute');
+    var note=document.getElementById('ttsNote');
+    var mini=document.getElementById('ttsMini');
+    var miniPlay=document.getElementById('ttsMiniPlay');
+    var miniFill=document.getElementById('ttsMiniFill');
+    var miniTime=document.getElementById('ttsMiniTime');
+    var miniClose=document.getElementById('ttsMiniClose');
+    /* Sabit konum, dönüşümlü (.animate-in) ataların içinde çalışmaz: body'ye taşı. */
+    if(mini&&mini.parentNode!==document.body) document.body.appendChild(mini);
+    var miniDismissed=false, started=false, mainVisible=true, userScrollAt=0, followAt=0;
+    var dur=parseFloat(box.getAttribute('data-duration'))||0;
+    var CPS=14;
+    var audio=null, utter=null, synth=window.speechSynthesis||null;
+    var text='', offset=0, playing=false, muted=false, pausedByUser=false, lastSave=0, lastPaint=-1, lastScroll=0;
+    var map={text:'',pos:[]};
+    var mainEl=document.querySelector('main[data-article-id]');
+    var key='tb_tts_pos_'+((mainEl&&mainEl.getAttribute('data-article-id'))||location.pathname);
+    var resumeAt=0;
+    try{ resumeAt=parseFloat(localStorage.getItem(key)||'0')||0; }catch(e){ resumeAt=0; }
+    function savePos(sec){ try{ if(sec>1) localStorage.setItem(key,String(Math.round(sec*10)/10)); else localStorage.removeItem(key); }catch(e){} }
+
+    /* --- Metin haritası + canlı vurgulama (CSS Custom Highlight API) --- */
+    map=buildTextMap(document.querySelector('.article .body'));
+    text=map.text;
+    var HL=(typeof CSS!=='undefined'&&CSS.highlights&&typeof Highlight!=='undefined');
+
+    function buildTextMap(root){
+      if(!root) return {text:'',pos:[]};
+      var tw=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,null);
+      var out='',pos=[],lastSpace=true,n,lastBlock=null;
+      var BLOCK='p,div,li,blockquote,h1,h2,h3,h4,h5,h6,td,th,figcaption,dd,dt,pre';
+      while((n=tw.nextNode())){
+        var p=n.parentElement;
+        if(p&&p.closest('script,style,noscript,.art-audio')) continue;
+        // Blok sınırında (paragraf → paragraf) boşluk eklenmezse kelimeler
+        // birleşir ("detayAdalet"); seslendirme ve vurgu aralıkları bozulur.
+        var blk=p?p.closest(BLOCK):null;
+        if(lastBlock!==null&&blk!==lastBlock&&out.length&&out.charAt(out.length-1)!==' '){
+          out+=' '; pos.push([n,0]); lastSpace=true;
+        }
+        lastBlock=blk;
+        var v=n.nodeValue||'';
+        for(var i=0;i<v.length;i++){
+          var ch=v[i];
+          if(/\s/.test(ch)){ if(lastSpace) continue; ch=' '; lastSpace=true; }
+          else lastSpace=false;
+          out+=ch; pos.push([n,i]);
+        }
+      }
+      while(out.length&&out[out.length-1]===' '){ out=out.slice(0,-1); pos.pop(); }
+      return {text:out,pos:pos};
+    }
+
+    function rangeFor(a,b){
+      if(!map.pos.length) return null;
+      a=Math.max(0,Math.min(map.pos.length-1,a));
+      b=Math.max(a+1,Math.min(map.pos.length,b));
+      var s=map.pos[a],e=map.pos[b-1];
+      var r=document.createRange();
+      try{ r.setStart(s[0],s[1]); r.setEnd(e[0],e[1]+1); }catch(err){ return null; }
+      return r;
+    }
+
+    function isWordChar(ch){ return !!ch && !/\s/.test(ch) && '.!?…,;:()[]"“”‘’—–-'.indexOf(ch)<0; }
+    function wordBounds(p){
+      var a=p,b=p;
+      while(a>0&&isWordChar(text[a-1])) a--;
+      while(b<text.length&&isWordChar(text[b])) b++;
+      if(b===a){ a=Math.max(0,Math.min(p,text.length-1)); b=Math.min(text.length,a+1); }
+      return [a,b];
+    }
+    function sentenceBounds(p){
+      var a=p,b=p;
+      while(a>0&&'.!?…'.indexOf(text[a-1])<0) a--;
+      while(b<text.length&&'.!?…'.indexOf(text[b])<0) b++;
+      if(b<text.length) b++;
+      return [a,b];
+    }
+    function clearPaint(){
+      lastPaint=-1;
+      if(HL){ CSS.highlights.delete('tts-word'); CSS.highlights.delete('tts-sentence'); }
+    }
+    function paint(p,scroll){
+      if(!text) return;
+      p=Math.max(0,Math.min(text.length-1,p));
+      if(p===lastPaint) return;
+      lastPaint=p;
+      if(!HL) return;
+      var w=wordBounds(p), s=sentenceBounds(p);
+      CSS.highlights.delete('tts-word'); CSS.highlights.delete('tts-sentence');
+      var sr=rangeFor(s[0],s[1]); if(sr) CSS.highlights.set('tts-sentence',new Highlight(sr));
+      var wr=rangeFor(w[0],w[1]); if(wr) CSS.highlights.set('tts-word',new Highlight(wr));
+      if(scroll&&wr&&Date.now()-lastScroll>800&&Date.now()-userScrollAt>3500){
+        var rect=wr.getBoundingClientRect();
+        var bottomLimit=window.innerHeight-(document.body.classList.contains('tts-mini-open')?86:80);
+        if(rect.top<90||rect.bottom>bottomLimit){
+          lastScroll=Date.now();
+          followAt=Date.now();
+          window.scrollTo({top:window.scrollY+rect.top-window.innerHeight*0.42,behavior:'smooth'});
+        }
+      }
+    }
+    function charFromTime(){ return dur>0&&text.length?Math.min(text.length-1,Math.floor(audio.currentTime*(text.length/dur))):0; }
+
+    function fmt(s){ s=Math.max(0,Math.round(s||0)); return Math.floor(s/60)+':'+('0'+(s%60)).slice(-2); }
+    function setProgress(cur,total){
+      total=total>0?total:dur;
+      var pct=total>0?Math.min(100,Math.max(0,cur/total*100)):0;
+      if(fill) fill.style.width=pct+'%';
+      if(miniFill) miniFill.style.width=pct+'%';
+      var lbl=fmt(cur)+' / '+(total>0?fmt(total):'--:--');
+      if(timeEl) timeEl.textContent=lbl;
+      if(miniTime) miniTime.textContent=lbl;
+      if(track) track.setAttribute('aria-valuenow',String(Math.round(pct)));
+    }
+    function setPlaying(v){
+      playing=v; box.classList.toggle('playing',v);
+      if(v) started=true;
+      if(playBtn) playBtn.setAttribute('aria-label', v?'Duraklat':'Oynat');
+      if(mini) mini.classList.toggle('playing',v);
+      if(miniPlay) miniPlay.setAttribute('aria-label', v?'Duraklat':'Oynat');
+      syncMini();
+    }
+    function syncMini(){
+      if(!mini) return;
+      var show=!miniDismissed && !mainVisible && (playing||started);
+      mini.classList.toggle('show',show);
+      mini.setAttribute('aria-hidden',show?'false':'true');
+      document.body.classList.toggle('tts-mini-open',show);
+    }
+
+    if(src){
+      audio=new Audio(src); audio.preload='metadata';
+      audio.addEventListener('loadedmetadata',function(){
+        if(isFinite(audio.duration)&&audio.duration>0) dur=audio.duration;
+        if(resumeAt>3&&resumeAt<dur-3){ audio.currentTime=resumeAt; }
+        setProgress(audio.currentTime,dur);
+        paint(charFromTime(),false);
+      });
+      audio.addEventListener('timeupdate',function(){
+        setProgress(audio.currentTime,dur);
+        paint(charFromTime(),true);
+        var now=Date.now();
+        if(now-lastSave>2000){ lastSave=now; savePos(audio.currentTime); }
+      });
+      audio.addEventListener('play',function(){ setPlaying(true); paint(charFromTime(),true); });
+      audio.addEventListener('pause',function(){ if(!audio.ended){ setPlaying(false); savePos(audio.currentTime); } });
+      audio.addEventListener('ended',function(){ setPlaying(false); audio.currentTime=0; savePos(0); setProgress(0,dur); clearPaint(); });
+      if(resumeAt>0&&note) note.textContent='Kaldığınız yerden devam eder.';
+    } else {
+      text=map.text;
+      if(dur<=0&&text) dur=text.length/CPS;
+      if(resumeAt>1&&text){ offset=Math.min(Math.max(0,text.length-1),Math.floor(resumeAt*CPS)); }
+      setProgress(offset/CPS,dur);
+      if(offset>0) paint(offset,false);
+      if(offset>0&&note) note.textContent='Kaldığınız yerden devam eder.';
+      if(!text&&note) note.textContent='Okunacak metin bulunamadı.';
+    }
+
+    function speak(from){
+      if(!synth||!text) return;
+      pausedByUser=false;
+      synth.cancel();
+      utter=new SpeechSynthesisUtterance(text.slice(from));
+      utter.lang='tr-TR';
+      utter.rate=parseFloat(rateEl&&rateEl.value)||1;
+      utter.volume=muted?0:1;
+      var vs=synth.getVoices?synth.getVoices():[];
+      var tr=null;
+      for(var i=0;i<vs.length;i++){ if((vs[i].lang||'').toLowerCase().indexOf('tr')===0){ tr=vs[i]; break; } }
+      if(tr) utter.voice=tr;
+      utter.onboundary=function(e){
+        offset=Math.min(text.length, from+(e.charIndex||0));
+        setProgress(offset/CPS,dur);
+        paint(offset,true);
+        var now=Date.now();
+        if(now-lastSave>1500){ lastSave=now; savePos(offset/CPS); }
+      };
+      utter.onend=function(){
+        if(pausedByUser) return;
+        offset=0; savePos(0); setPlaying(false); setProgress(0,dur); clearPaint();
+      };
+      utter.onerror=function(){ if(!pausedByUser) setPlaying(false); };
+      synth.speak(utter); setPlaying(true);
+      paint(from,true);
+    }
+    function pauseBrowser(){
+      pausedByUser=true;
+      if(synth) synth.cancel();
+      setPlaying(false);
+      savePos(offset/CPS);
+    }
+
+    function togglePlay(){
+      miniDismissed=false;
+      if(audio){ audio.paused?audio.play():audio.pause(); return; }
+      if(!synth){ if(note) note.textContent='Bu tarayıcı sesli okumayı desteklemiyor.'; return; }
+      if(playing){ pauseBrowser(); return; }
+      speak(offset);
+    }
+    if(playBtn) playBtn.addEventListener('click',togglePlay);
+    if(miniPlay) miniPlay.addEventListener('click',togglePlay);
+
+    Array.prototype.forEach.call(document.querySelectorAll('.art-audio-skip'),function(b){
+      b.addEventListener('click',function(){
+        var d=parseInt(b.getAttribute('data-skip'),10)||0;
+        if(audio){
+          audio.currentTime=Math.max(0,Math.min(dur||audio.duration||0,audio.currentTime+d));
+          savePos(audio.currentTime); setProgress(audio.currentTime,dur);
+          paint(charFromTime(),true); return;
+        }
+        offset=Math.max(0,Math.min(Math.max(0,text.length-1),offset+d*CPS));
+        savePos(offset/CPS);
+        paint(offset,true);
+        playing?speak(offset):setProgress(offset/CPS,dur);
+      });
+    });
+
+    if(restartBtn) restartBtn.addEventListener('click',function(){
+      if(audio){
+        audio.pause(); audio.currentTime=0; savePos(0); setProgress(0,dur);
+        clearPaint(); paint(0,false);
+        if(note) note.textContent='Baştan başlatıldı.';
+        return;
+      }
+      pausedByUser=false;
+      if(synth) synth.cancel();
+      offset=0; savePos(0); setProgress(0,dur);
+      clearPaint(); paint(0,false);
+      if(playing){ speak(0); } else { setPlaying(false); }
+      if(note) note.textContent='Baştan başlatıldı.';
+    });
+
+    if(track) track.addEventListener('click',function(e){
+      var r=track.getBoundingClientRect();
+      var pct=Math.min(1,Math.max(0,(e.clientX-r.left)/r.width));
+      if(audio){
+        audio.currentTime=pct*(dur||audio.duration||0); savePos(audio.currentTime);
+        setProgress(audio.currentTime,dur); paint(charFromTime(),true); return;
+      }
+      offset=Math.floor(pct*text.length); savePos(offset/CPS); setProgress(offset/CPS,dur);
+      paint(offset,true);
+      if(playing) speak(offset);
+    });
+
+    if(rateEl) rateEl.addEventListener('change',function(){
+      var r=parseFloat(rateEl.value)||1;
+      if(audio){ audio.playbackRate=r; return; }
+      if(playing) speak(offset);
+    });
+
+    if('IntersectionObserver' in window){
+      new IntersectionObserver(function(es){ mainVisible=es[0].isIntersecting; syncMini(); },{threshold:0.15}).observe(box);
+    }
+    if(miniClose) miniClose.addEventListener('click',function(){
+      miniDismissed=true; syncMini();
+    });
+    ['wheel','touchmove'].forEach(function(ev){
+      window.addEventListener(ev,function(){
+        userScrollAt=Date.now();
+        // Devam eden yumuşak "okunan yeri takip" kaydırması varsa iptal
+        // et: kullanıcı kaydırırken sayfa okuma noktasına geri çekilmemeli.
+        if(followAt&&Date.now()-followAt<1500){
+          followAt=0;
+          window.scrollTo({top:window.scrollY,behavior:'auto'});
+        }
+      },{passive:true});
+    });
+
+    if(muteBtn) muteBtn.addEventListener('click',function(){
+      muted=!muted;
+      muteBtn.setAttribute('aria-pressed',muted?'true':'false');
+      if(audio) audio.muted=muted;
+      if(utter) utter.volume=muted?0:1;
+      muteBtn.style.opacity=muted?'.45':'1';
+    });
+  })();
+  </script>
+
+  {{/* ÖNCEKİ + SIRADAKİ HABER — tek navigasyon kutusunda (Faz 13/14/22).
+         İki ayrı kart yerine ortak çerçeve: masaüstünde yan yana, dar ekranda
+         alt alta. Kutu, yalnız iki komşudan biri varsa da basılır. */}}
+  {{if or .Article.PrevContent .Article.NextContent}}
+  <nav class="haber-nav" aria-label="Yayın sırasında komşu haberler">
+  {{with .Article.PrevContent}}
+  {{$pb := catBadge $.Article.CatBadges .CategoryID}}
+  <a class="next-haber prev-haber" href="{{$.LangBase}}/{{.DisplaySlug}}-{{.ID}}">
+    <span class="nh-path">← ÖNCEKİ HABER</span>
+    <span class="nh-body">
+      {{if .CoverMediaID}}<span class="nh-thumb"><img src="{{mediaThumbURL .CoverMediaID}}" alt="{{.Title}}" loading="lazy"></span>{{end}}
+      <span class="nh-meta">{{if $pb.Name}}<span class="nh-cat">{{$pb.Name}}</span>{{end}}<strong>{{.Title}}</strong>{{if .Spot}}<span class="nh-spot">{{.Spot}}</span>{{end}}</span>
+      <span class="nh-arrow" aria-hidden="true">←</span>
+    </span>
+  </a>
+  {{end}}
+  {{with .Article.NextContent}}
+  {{$nb := catBadge $.Article.CatBadges .CategoryID}}
+  <a class="next-haber" href="{{$.LangBase}}/{{.DisplaySlug}}-{{.ID}}">
+    <span class="nh-path">SONRAKİ HABER →</span>
+    <span class="nh-body">
+      {{if .CoverMediaID}}<span class="nh-thumb"><img src="{{mediaThumbURL .CoverMediaID}}" alt="{{.Title}}" loading="lazy"></span>{{end}}
+      <span class="nh-meta">{{if $nb.Name}}<span class="nh-cat">{{$nb.Name}}</span>{{end}}<strong>{{.Title}}</strong>{{if .Spot}}<span class="nh-spot">{{.Spot}}</span>{{end}}</span>
+      <span class="nh-arrow" aria-hidden="true">→</span>
+    </span>
+  </a>
+  {{end}}
+  </nav>
+  {{end}}
+
+  <section class="art-related-wrap">
+  <h2 class="page-title" style="font-size:1.2rem">{{.T "related"}}</h2>
+  <div class="grid-2 art-related">
+    {{range .Article.Related}}
+    <a class="card" href="{{$.LangBase}}/{{.DisplaySlug}}-{{.ID}}">{{if .CoverMediaID}}<img class="thumb" src="{{mediaThumbURL .CoverMediaID}}" alt="">{{end}}
+      <div class="card-pad"><h3>{{.Title}}</h3>{{if .Spot}}<p class="art-related-spot">{{.Spot}}</p>{{end}}</div></a>
+    {{end}}
+  </div>
+  </section>
+
+  <h2 class="page-title" style="font-size:1.2rem;margin-top:26px">{{.T "comments"}} ({{.Article.CommentCount}})</h2>
+  <div class="gap">
+    {{range .Article.CommentTree}}
+    {{/* Faz 36 — kök yorum + beğeni + Yanıtla */}}
+    <div class="card card-pad">
+      <div class="shape"><strong>{{.C.AuthorName}}</strong> <span class="muted small">{{formatTime .C.CreatedAt}}</span></div>
+      <p style="margin:.4em 0">{{.C.Body}}</p>
+      <div class="yorum-aksiyon" style="display:flex;gap:10px;align-items:center;margin-top:6px">
+        <button type="button" class="yorum-begen" data-id="{{.C.ID}}">❤ <span class="yb-sayi">{{.C.Likes}}</span></button>
+        {{if $.Article.CanComment}}<button type="button" class="yorum-yanitla" data-target="yorum-form-{{.C.ID}}" aria-expanded="false">Yanıtla</button>{{end}}
+      </div>
+      {{if $.Article.CanComment}}
+      <form class="yorum-yanit-form" id="yorum-form-{{.C.ID}}" method="post" action="/yorum/{{$.Article.Content.ID}}" hidden>
+        <input type="hidden" name="parent_id" value="{{.C.ID}}">
+        <div aria-hidden="true" style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden">
+          <label for="yorum-tuzak-r-{{.C.ID}}">Buraya yazmayın<input type="text" id="yorum-tuzak-r-{{.C.ID}}" name="web" tabindex="-1" autocomplete="off" value=""></label>
+        </div>
+        <input class="input" name="isim" placeholder="Ad" required maxlength="80" aria-label="Ad">
+        <textarea class="textarea" name="metin" placeholder="Yanıtınız…" aria-label="Yanıtınız" required maxlength="1000"></textarea>
+        <button class="btn" type="submit">Yanıt gönder</button>
+      </form>
+      {{end}}
+    </div>
+    {{range .Replies}}
+    {{/* Yanıt: kökün altında girintili */}}
+    <div class="card card-pad yorum-yanit">
+      <div class="shape"><strong>{{.AuthorName}}</strong> <span class="muted small">{{formatTime .CreatedAt}}</span></div>
+      <p style="margin:.4em 0">{{.Body}}</p>
+      <div style="display:flex;gap:10px;align-items:center;margin-top:6px">
+        <button type="button" class="yorum-begen" data-id="{{.ID}}">❤ <span class="yb-sayi">{{.Likes}}</span></button>
+      </div>
+    </div>
+    {{end}}
+    {{end}}
+  </div>
+  {{if .Article.CanComment}}
+  <form class="card card-pad gap" id="yorum-yaz" method="post" action="/yorum/{{.Article.Content.ID}}" style="margin-top:14px">
+    {{/* Faz 35 — spam tuzağı: gerçek kullanıcı görmez/doldurmaz; dolduran bot
+         sessizce düşer ve yorum kaydedilmez. Görünmezlik CSS ile. */}}
+    <div aria-hidden="true" style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden">
+      <label for="yorum-tuzak">Buraya yazmayın
+        <input type="text" id="yorum-tuzak" name="web" tabindex="-1" autocomplete="off" value="">
+      </label>
+    </div>
+    <input class="input" name="isim" placeholder="Ad" required maxlength="80" aria-label="Ad">
+    <textarea class="textarea" name="metin" placeholder="Yorumunuz…" aria-label="Yorumunuz" required maxlength="1000"></textarea>
+    <button class="btn" type="submit">{{.T "comments"}}</button>
+  </form>
+  <script>
+  (function(){
+    // Beğeni: POST /yorum/{id}/begen, sayacı güncelle (aynı IP bir kez).
+    document.addEventListener('click', function(e){
+      var b = e.target.closest('.yorum-begen');
+      if (!b) return;
+      var id = b.getAttribute('data-id');
+      if (!id) return;
+      fetch('/yorum/' + id + '/begen', { method: 'POST', credentials: 'same-origin' })
+        .then(function(r){ return r.json(); })
+        .then(function(j){
+          if (j.ok) {
+            var s = b.querySelector('.yb-sayi');
+            if (s) s.textContent = j.likes;
+            b.classList.add('begenildi');
+            b.setAttribute('aria-pressed', 'true');
+          }
+        })
+        .catch(function(){});
+    });
+    // Yanıtla: formu aç/kapat.
+    document.addEventListener('click', function(e){
+      var t = e.target.closest('.yorum-yanitla');
+      if (!t) return;
+      var f = document.getElementById(t.getAttribute('data-target'));
+      if (!f) return;
+      var gizli = f.hidden;
+      f.hidden = !gizli;
+      t.setAttribute('aria-expanded', String(!gizli));
+      if (gizli) { var i = f.querySelector('input[name="isim"]'); if (i) i.focus(); }
+    });
+  })();
+  </script>
+  {{end}}
+
+  {{/* Yazı sayfası "İçerik Altı" blokları (bölge: genis) — yorumların
+     altında, ana kolon genişliğinde. */}}
+  {{if .Blocks}}<div class="blk-zone blk-zone-genis">{{range .Blocks}}{{if and .Visible (eq .Zone "genis")}}{{template "render_block" .}}{{end}}{{end}}</div>{{end}}
+  </div>
+  </article>
+
+  <aside class="art-side">
+    {{/* Yazı sayfası düzeni tanımlıysa modüler bloklar; yoksa eski sabit
+       widget'lar (geriye uyum). Bölge: "yan" = sağ sütun. */}}
+    {{if .Blocks}}
+    {{range .Blocks}}{{if and .Visible (eq .Zone "yan")}}{{template "render_block" .}}{{end}}{{end}}
+    {{else}}
+    {{if .Article.SideLive}}
+    {{with index .Article.SideLive 0}}
+    <div class="side-live"><span class="dot"></span> {{if eq .TypeKey "video"}}CANLI YAYIN{{else}}SON HABER{{end}}</div>
+    <a class="side-big" href="{{$.LangBase}}/{{.DisplaySlug}}-{{.ID}}">
+      {{if .CoverMediaID}}<img src="{{mediaURL .CoverMediaID}}" srcset="{{mediaSrcset .CoverMediaID}}" sizes="(max-width: 900px) 100vw, 320px" alt="{{.Title}}" loading="lazy">{{end}}
+      <span>{{.Title}}</span>
+    </a>
+    {{end}}
+    {{end}}
+
+    {{if .Article.SidePick}}
+    <div>
+      <h2 class="side-h dark">İlginizi Çekebilir</h2>
+      {{with index .Article.SidePick 0}}<a class="side-big" href="{{$.LangBase}}/{{.DisplaySlug}}-{{.ID}}">
+        {{if .CoverMediaID}}<img src="{{mediaURL .CoverMediaID}}" srcset="{{mediaSrcset .CoverMediaID}}" sizes="(max-width: 900px) 100vw, 320px" alt="{{.Title}}" loading="lazy">{{end}}
+        <span>{{.Title}}</span>
+      </a>{{end}}
+      <div class="side-list">{{range $i, $c := .Article.SidePick}}{{if ge $i 1}}
+        <a class="side-row" href="{{$.LangBase}}/{{$c.DisplaySlug}}-{{$c.ID}}">
+          {{if $c.CoverMediaID}}<img src="{{mediaThumbURL $c.CoverMediaID}}" alt="" loading="lazy">{{end}}
+          <span>{{$c.Title}}</span>
+        </a>{{end}}{{end}}</div>
+    </div>
+    {{end}}
+
+    {{if .Article.SideTrend}}
+    <div>
+      <h2 class="side-h">Trend Haberler</h2>
+      <div class="side-list">{{range .Article.SideTrend}}<a class="side-row" href="{{$.LangBase}}/{{.DisplaySlug}}-{{.ID}}">
+        {{if .CoverMediaID}}<img src="{{mediaThumbURL .CoverMediaID}}" alt="" loading="lazy">{{end}}
+        <span>{{.Title}}</span>
+      </a>{{end}}</div>
+    </div>
+    {{end}}
+
+    {{if .Article.SideLatest}}
+    <div>
+      <h2 class="side-h">Son Haberler</h2>
+      {{with index .Article.SideLatest 0}}<a class="side-big" href="{{$.LangBase}}/{{.DisplaySlug}}-{{.ID}}">
+        {{if .CoverMediaID}}<img src="{{mediaURL .CoverMediaID}}" srcset="{{mediaSrcset .CoverMediaID}}" sizes="(max-width: 900px) 100vw, 320px" alt="{{.Title}}" loading="lazy">{{end}}
+        <span>{{.Title}}</span>
+      </a>{{end}}
+      <div class="side-list">{{range $i, $c := .Article.SideLatest}}{{if ge $i 1}}
+        <a class="side-row" href="{{$.LangBase}}/{{$c.DisplaySlug}}-{{$c.ID}}">
+          {{if $c.CoverMediaID}}<img src="{{mediaThumbURL $c.CoverMediaID}}" alt="" loading="lazy">{{end}}
+          <span>{{$c.Title}}</span>
+        </a>{{end}}{{end}}</div>
+    </div>
+    {{end}}
+    {{end}}
+  </aside>
+  </div>
+</div>
+{{if not .Preview}}<script src="{{asset "live.js"}}" defer></script>{{end}}
+</main>
+{{template "site_footer" .}}
+</body></html>{{end}}
+
+{{/* Kategori haber listesi + sayfalama (blok yoksa veya sol ana kolonda) */}}
+{{define "kategori_liste_blok"}}{{with .D}}{{if .Category}}{{template "cat_liste" (withCatBlock . $)}}{{end}}{{end}}{{end}}
+{{/* Video süre rozeti (Faz 21): süresi bilinen videolarda görselin köşesinde.
+     Kullanım: {{template "kart_sure" $icerik}} */}}
+{{define "kart_sure"}}{{with sureSec .VideoSeconds}}<span class="kart-sure">{{.}}</span>{{end}}{{end}}
+
+{{/* ---- Akış vitrini (coinhit/enerji) kart şablonları ----
+     ak_batches: [blok][sütun][kart] verisini 3 sütunlu ızgaraya basar.
+     ak_card: tek kart; tip5 kare görselli büyük kart, tip2 solda görsel,
+     tip4 sağda görsel, tip1 yalnız metin (referans birebir). */}}
+{{define "ak_batches"}}{{range $block := .}}<div class="ak-grid">{{range $col := $block}}<div class="ak-col">{{range $card := $col}}{{if $card.C.ID}}{{template "ak_card" $card}}{{end}}{{end}}</div>{{end}}</div>{{end}}{{end}}
+
+{{define "ak_card"}}{{$c := .C}}{{if eq .Type "type5"}}
+<div class="ak-item ak-type5">
+  <a class="ak-link" href="{{.LangBase}}/{{$c.DisplaySlug}}-{{$c.ID}}" title="{{$c.Title}}">
+    <figure class="ak-fig5">
+      <span class="ak-img5">{{if $c.CoverMediaID}}<img src="{{mediaURL $c.CoverMediaID}}" srcset="{{mediaSrcset $c.CoverMediaID}}" sizes="(max-width: 48rem) 100vw, 33vw" alt="{{$c.Title}}" loading="lazy">{{end}}{{template "kart_sure" $c}}</span>
+      <figcaption class="ak-cap5">
+        <span class="ak-t5"><span class="ak-tx">{{$c.Title}}</span></span>
+      </figcaption>
+    </figure>
+  </a>
+</div>
+{{else if eq .Type "type2"}}
+<div class="ak-item ak-type2">
+  <a class="ak-link" href="{{.LangBase}}/{{$c.DisplaySlug}}-{{$c.ID}}" title="{{$c.Title}}">
+    <figure class="ak-fig">
+      <span class="ak-thumb">{{if $c.CoverMediaID}}<img src="{{mediaThumbURL $c.CoverMediaID}}" alt="{{$c.Title}}" loading="lazy">{{end}}{{template "kart_sure" $c}}</span>
+      <figcaption class="ak-cap">
+        {{if $c.CategoryName}}<span class="ak-cat{{if .HideBadge}} sr-only{{end}}">{{$c.CategoryName}}</span>{{end}}
+        <span class="ak-t"><span class="ak-tx">{{$c.Title}}</span></span>
+      </figcaption>
+    </figure>
+  </a>
+</div>
+{{else if eq .Type "type4"}}
+<div class="ak-item ak-type4">
+  <a class="ak-link" href="{{.LangBase}}/{{$c.DisplaySlug}}-{{$c.ID}}" title="{{$c.Title}}">
+    <figure class="ak-fig">
+      <figcaption class="ak-cap">
+        {{if $c.CategoryName}}<span class="ak-cat{{if .HideBadge}} sr-only{{end}}">{{$c.CategoryName}}</span>{{end}}
+        <span class="ak-t"><span class="ak-tx">{{$c.Title}}</span></span>
+      </figcaption>
+      <span class="ak-thumb">{{if $c.CoverMediaID}}<img src="{{mediaThumbURL $c.CoverMediaID}}" alt="{{$c.Title}}" loading="lazy">{{end}}{{template "kart_sure" $c}}</span>
+    </figure>
+  </a>
+</div>
+{{else}}
+<div class="ak-item ak-type1">
+  <a class="ak-link" href="{{.LangBase}}/{{$c.DisplaySlug}}-{{$c.ID}}" title="{{$c.Title}}">
+    <figure class="ak-fig ak-fig-text">
+      <figcaption class="ak-cap">
+        {{if $c.CategoryName}}<span class="ak-cat{{if .HideBadge}} sr-only{{end}}">{{$c.CategoryName}}</span>{{end}}
+        <span class="ak-t"><span class="ak-tx">{{$c.Title}}</span></span>
+      </figcaption>
+    </figure>
+  </a>
+</div>
+{{end}}{{end}}
+
+{{/* ---- Kategori manşet bloğu (portre / üçlü / klasik) ----
+     cat_liste içindeki tüm manşet düzenleri burada tek yerde üretilir;
+     akış vitrini de aynı manşeti üstte kullanır. Manşet her zaman haber
+     listesinin başındaki haberleri tüketir:
+       portre = heroCount slayt + 2 yan, uclu = heroCount + 3 sol + 2 sağ,
+       klasik = 1 büyük + 2 yan. Yeterli haber yoksa blok basılmaz (klasik
+       düzen 3 haberle de çalışır). */}}
+{{define "cat_hero_blok"}}{{$items := .Category.Items}}{{$n := len $items}}{{$heroCount := .Category.HeroCount}}{{if lt $heroCount 2}}{{$heroCount = 5}}{{end}}
+{{if and (eq .Category.HeroStyle "uclu") (gt $n (add $heroCount 4))}}
+{{/* Üçlü manşet: solda 3, ortada 5 slaytlı portre slider, sağda 2 manşet. */}}
+{{$heroWidth := .Category.HeroWidth}}{{if lt $heroWidth 1}}{{$heroWidth = 44}}{{end}}
+{{$heroRatio := .Category.HeroRatio}}{{if not $heroRatio}}{{$heroRatio = "4/5"}}{{end}}
+{{$ratioClass := "cat-ratio-4-5"}}{{if eq $heroRatio "3/4"}}{{$ratioClass = "cat-ratio-3-4"}}{{else if eq $heroRatio "1/1"}}{{$ratioClass = "cat-ratio-1-1"}}{{else if eq $heroRatio "16/9"}}{{$ratioClass = "cat-ratio-16-9"}}{{end}}
+{{$leftStart := $heroCount}}
+{{$leftEnd := add $heroCount 3}}
+{{$rightStart := $leftEnd}}
+{{$rightEnd := add $heroCount 5}}
+<section class="cat-hero cat-hero-trio {{$ratioClass}}" style="--cat-hero-w:{{$heroWidth}}%">
+  <div class="cat-hero-rail cat-trio-left" aria-label="Sol manşetler">
+    {{range $i, $c := $items}}{{if and (ge $i $leftStart) (lt $i $leftEnd)}}
+    <a href="{{$.LangBase}}/{{$c.DisplaySlug}}-{{$c.ID}}">
+      <span class="chr-media">{{if $c.CoverMediaID}}<img src="{{mediaThumbURL $c.CoverMediaID}}" alt="{{$c.Title}}" loading="lazy">{{end}}</span>
+      <span class="chr-t"><span class="chr-tx">{{$c.Title}}</span></span>
+    </a>
+    {{end}}{{end}}
+  </div>
+  <section class="hero-slider cat-hero-slider" data-autoplay="1" data-interval="6" aria-label="Kategori manşet slaytları">
+    {{range $i, $s := $items}}{{if lt $i $heroCount}}
+    <a class="hero-slide {{if eq $i 0}}on{{end}}" href="{{$.LangBase}}/{{$s.DisplaySlug}}-{{$s.ID}}">
+      {{if $s.CoverMediaID}}<img src="{{mediaURL $s.CoverMediaID}}" srcset="{{mediaSrcset $s.CoverMediaID}}" sizes="(max-width: 48rem) 100vw, {{$heroWidth}}vw" alt="{{$s.Title}}" loading="{{if eq $i 0}}eager{{else}}lazy{{end}}" fetchpriority="{{if eq $i 0}}high{{else}}auto{{end}}">{{end}}
+      {{if $s.CategoryName}}<span class="hero-cat{{if $.Category.HideBadge}} sr-only{{end}}">{{$s.CategoryName}}</span>{{end}}
+      <div class="hero-overlay"{{if $.Category.HeroOverlayStyle}} style="{{$.Category.HeroOverlayStyle}}"{{end}}><div class="container">
+        <h2 class="hero-title{{if $.Category.HeroShadow}} has-shadow{{end}}"{{if $.Category.HeroTitleStyle}} style="{{$.Category.HeroTitleStyle}}"{{end}}>{{$s.Title}}</h2>
+        {{if $s.Spot}}<p class="hero-spot">{{$s.Spot}}</p>{{end}}
+      </div></div>
+    </a>
+    {{end}}{{end}}
+    <button class="hero-nav hero-prev" type="button" aria-label="Önceki manşet"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5 8 12l7 7"/></svg></button>
+    <button class="hero-nav hero-next" type="button" aria-label="Sonraki manşet"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button>
+    {{if gt $heroCount 1}}<div class="hero-dots hero-dots--numbers hero-dots--shape-{{$.Category.HeroPagerShape}} hero-dots--pos-{{$.Category.HeroPagerPos}}"{{if $.Category.HeroPagerStyle}} style="{{$.Category.HeroPagerStyle}}"{{end}} aria-label="Manşet slaytları">
+      {{range $i, $s := $items}}{{if lt $i $heroCount}}<button class="hero-dot {{if eq $i 0}}on{{end}}" type="button" data-idx="{{$i}}" aria-label="Slayt {{add $i 1}}">{{add $i 1}}</button>{{end}}{{end}}
+    </div>{{end}}
+  </section>
+  <div class="cat-hero-rail cat-trio-right" aria-label="Sağ manşetler">
+    {{range $i, $c := $items}}{{if and (ge $i $rightStart) (lt $i $rightEnd)}}
+    <a href="{{$.LangBase}}/{{$c.DisplaySlug}}-{{$c.ID}}">
+      <span class="chr-media">{{if $c.CoverMediaID}}<img src="{{mediaThumbURL $c.CoverMediaID}}" alt="{{$c.Title}}" loading="lazy">{{end}}</span>
+      <span class="chr-t"><span class="chr-tx">{{$c.Title}}</span></span>
+    </a>
+    {{end}}{{end}}
+  </div>
+</section>
+{{else if and (eq .Category.HeroStyle "portre") (gt $n (add $heroCount 1))}}
+{{/* Portre manşet: solda 5 slaytlı dikey slider, sağda iki sabit manşet. */}}
+{{$heroWidth := .Category.HeroWidth}}{{if lt $heroWidth 1}}{{$heroWidth = 58}}{{end}}
+{{$heroRatio := .Category.HeroRatio}}{{if not $heroRatio}}{{$heroRatio = "4/5"}}{{end}}
+{{$ratioClass := "cat-ratio-4-5"}}{{if eq $heroRatio "3/4"}}{{$ratioClass = "cat-ratio-3-4"}}{{else if eq $heroRatio "1/1"}}{{$ratioClass = "cat-ratio-1-1"}}{{else if eq $heroRatio "16/9"}}{{$ratioClass = "cat-ratio-16-9"}}{{end}}
+{{$railEnd := add $heroCount 2}}
+<section class="cat-hero {{$ratioClass}}" style="--cat-hero-w:{{$heroWidth}}%">
+  <section class="hero-slider cat-hero-slider" data-autoplay="1" data-interval="6" aria-label="Kategori manşet slaytları">
+    {{range $i, $s := $items}}{{if lt $i $heroCount}}
+    <a class="hero-slide {{if eq $i 0}}on{{end}}" href="{{$.LangBase}}/{{$s.DisplaySlug}}-{{$s.ID}}">
+      {{if $s.CoverMediaID}}<img src="{{mediaURL $s.CoverMediaID}}" srcset="{{mediaSrcset $s.CoverMediaID}}" sizes="(max-width: 48rem) 100vw, {{$heroWidth}}vw" alt="{{$s.Title}}" loading="{{if eq $i 0}}eager{{else}}lazy{{end}}" fetchpriority="{{if eq $i 0}}high{{else}}auto{{end}}">{{end}}
+      {{if $s.CategoryName}}<span class="hero-cat{{if $.Category.HideBadge}} sr-only{{end}}">{{$s.CategoryName}}</span>{{end}}
+      <div class="hero-overlay"{{if $.Category.HeroOverlayStyle}} style="{{$.Category.HeroOverlayStyle}}"{{end}}><div class="container">
+        <h2 class="hero-title{{if $.Category.HeroShadow}} has-shadow{{end}}"{{if $.Category.HeroTitleStyle}} style="{{$.Category.HeroTitleStyle}}"{{end}}>{{$s.Title}}</h2>
+        {{if $s.Spot}}<p class="hero-spot">{{$s.Spot}}</p>{{end}}
+      </div></div>
+    </a>
+    {{end}}{{end}}
+    <button class="hero-nav hero-prev" type="button" aria-label="Önceki manşet"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5 8 12l7 7"/></svg></button>
+    <button class="hero-nav hero-next" type="button" aria-label="Sonraki manşet"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button>
+    {{if gt $heroCount 1}}<div class="hero-dots hero-dots--numbers hero-dots--shape-{{$.Category.HeroPagerShape}} hero-dots--pos-{{$.Category.HeroPagerPos}}"{{if $.Category.HeroPagerStyle}} style="{{$.Category.HeroPagerStyle}}"{{end}} aria-label="Manşet slaytları">
+      {{range $i, $s := $items}}{{if lt $i $heroCount}}<button class="hero-dot {{if eq $i 0}}on{{end}}" type="button" data-idx="{{$i}}" aria-label="Slayt {{add $i 1}}">{{add $i 1}}</button>{{end}}{{end}}
+    </div>{{end}}
+  </section>
+  <div class="cat-hero-rail">
+    {{range $i, $c := $items}}{{if and (ge $i $heroCount) (lt $i $railEnd)}}
+    <a href="{{$.LangBase}}/{{$c.DisplaySlug}}-{{$c.ID}}">
+      <span class="chr-media">{{if $c.CoverMediaID}}<img src="{{mediaThumbURL $c.CoverMediaID}}" alt="{{$c.Title}}" loading="lazy">{{end}}</span>
+      <span class="chr-t"><span class="chr-tx">{{$c.Title}}</span></span>
+    </a>
+    {{end}}{{end}}
+  </div>
+</section>
+{{else if ge $n 3}}
+{{/* Klasik manşet: 1 büyük + 2 yan. */}}
+{{with index $items 0}}
+<section class="cat-lead">
+  <a class="cl-main" href="{{$.LangBase}}/{{.DisplaySlug}}-{{.ID}}">
+    {{if .CoverMediaID}}<img src="{{mediaURL .CoverMediaID}}" srcset="{{mediaSrcset .CoverMediaID}}" sizes="(max-width: 900px) 100vw, 600px" alt="{{.Title}}" loading="eager">{{end}}{{template "kart_sure" .}}
+    <span class="cl-t">{{.Title}}</span>
+  </a>
+  <div class="cl-rail">
+    {{range $i, $c := $items}}{{if and (ge $i 1) (le $i 2)}}
+    <a class="cl-item" href="{{$.LangBase}}/{{$c.DisplaySlug}}-{{$c.ID}}">
+      {{if $c.CoverMediaID}}<img src="{{mediaThumbURL $c.CoverMediaID}}" alt="{{$c.Title}}" loading="lazy">{{end}}
+      <span class="cl-t">{{$c.Title}}</span>
+    </a>
+    {{end}}{{end}}
+  </div>
+</section>
+{{end}}
+{{end}}{{end}}
+
+{{/* ---- Bağımsız kategori modülleri ----
+     Kategori gövdesi tek bir kategori_liste bloğu yerine dört ayrı modüle
+     ayrılabilir: slider, seçimli manşet rayları, 4'lü ızgara ve akış.
+     Her modül kendi haber aralığını (item_offset) taşır; satır yerleşimi
+     row_layout ile hero-left/center/right olarak birleştirilir. */}}
+{{define "kategori_slider_blok"}}{{with .D}}{{if .Category}}{{template "cat_slider" (withCatBlock . $)}}{{end}}{{end}}{{end}}
+{{define "kategori_secimli_blok"}}{{with .D}}{{if .Category}}{{template "cat_secimli" (withCatBlock . $)}}{{end}}{{end}}{{end}}
+{{define "kategori_4lu_blok"}}{{with .D}}{{if .Category}}{{template "cat_4lu" (withCatBlock . $)}}{{end}}{{end}}{{end}}
+{{define "kategori_akis_blok"}}{{with .D}}{{if .Category}}{{template "cat_akis" (withCatBlock . $)}}{{end}}{{end}}{{end}}
+
+{{define "cat_slider"}}{{$items := .Category.Items}}{{$n := len $items}}{{if gt $n 0}}
+{{$heroWidth := .Category.HeroWidth}}{{if lt $heroWidth 1}}{{$heroWidth = 44}}{{end}}
+{{$heroRatio := .Category.HeroRatio}}{{if not $heroRatio}}{{$heroRatio = "4/5"}}{{end}}
+{{$ratioClass := "cat-ratio-4-5"}}{{if eq $heroRatio "3/4"}}{{$ratioClass = "cat-ratio-3-4"}}{{else if eq $heroRatio "1/1"}}{{$ratioClass = "cat-ratio-1-1"}}{{else if eq $heroRatio "16/9"}}{{$ratioClass = "cat-ratio-16-9"}}{{end}}
+<section class="hero-slider cat-hero-slider {{$ratioClass}}{{if .Category.CatSlotClass}} {{.Category.CatSlotClass}}{{else}} cat-slider-solo{{end}}" data-autoplay="1" data-interval="6" aria-label="Kategori manşet slaytları">
+  {{range $i, $s := $items}}
+  <a class="hero-slide {{if eq $i 0}}on{{end}}" href="{{$.LangBase}}/{{$s.DisplaySlug}}-{{$s.ID}}">
+    {{if $s.CoverMediaID}}<img src="{{mediaURL $s.CoverMediaID}}" srcset="{{mediaSrcset $s.CoverMediaID}}" sizes="{{if $.Category.CatSlotClass}}(max-width: 48rem) 100vw, {{$heroWidth}}vw{{else}}100vw{{end}}" alt="{{$s.Title}}" loading="{{if eq $i 0}}eager{{else}}lazy{{end}}" fetchpriority="{{if eq $i 0}}high{{else}}auto{{end}}">{{end}}
+    {{if $s.CategoryName}}<span class="hero-cat{{if $.Category.HideBadge}} sr-only{{end}}">{{$s.CategoryName}}</span>{{end}}
+    <div class="hero-overlay"{{if $.Category.HeroOverlayStyle}} style="{{$.Category.HeroOverlayStyle}}"{{end}}><div class="container">
+      <h2 class="hero-title{{if $.Category.HeroShadow}} has-shadow{{end}}"{{if $.Category.HeroTitleStyle}} style="{{$.Category.HeroTitleStyle}}"{{end}}>{{$s.Title}}</h2>
+      {{if $s.Spot}}<p class="hero-spot">{{$s.Spot}}</p>{{end}}
+    </div></div>
+  </a>
+  {{end}}
+  <button class="hero-nav hero-prev" type="button" aria-label="Önceki manşet"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5 8 12l7 7"/></svg></button>
+  <button class="hero-nav hero-next" type="button" aria-label="Sonraki manşet"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button>
+  {{if gt $n 1}}<div class="hero-dots hero-dots--numbers hero-dots--shape-{{$.Category.HeroPagerShape}} hero-dots--pos-{{$.Category.HeroPagerPos}}"{{if $.Category.HeroPagerStyle}} style="{{$.Category.HeroPagerStyle}}"{{end}} aria-label="Manşet slaytları">
+    {{range $i, $s := $items}}<button class="hero-dot {{if eq $i 0}}on{{end}}" type="button" data-idx="{{$i}}" aria-label="Slayt {{add $i 1}}">{{add $i 1}}</button>{{end}}
+  </div>{{end}}
+</section>
+{{end}}{{end}}
+
+{{define "cat_secimli"}}{{$items := .Category.Items}}{{$n := len $items}}{{if gt $n 0}}
+<div class="cat-hero-rail{{if .Category.CatSlotClass}} {{.Category.CatSlotClass}}{{end}}{{if eq .Category.RailStyle "yatay"}} cat-rail-yatay{{else}} cat-rail-overlay{{end}}" aria-label="Seçili manşetler">
+  {{range $i, $c := $items}}
+  <a href="{{$.LangBase}}/{{$c.DisplaySlug}}-{{$c.ID}}">
+    <span class="chr-media">{{if $c.CoverMediaID}}<img src="{{mediaThumbURL $c.CoverMediaID}}" alt="{{$c.Title}}" loading="{{if eq $i 0}}eager{{else}}lazy{{end}}">{{end}}</span>
+    <span class="chr-t"><span class="chr-tx">{{$c.Title}}</span></span>
+  </a>
+  {{end}}
+</div>
+{{end}}{{end}}
+
+{{define "cat_4lu"}}{{$items := .Category.Items}}{{$n := len $items}}{{if gt $n 0}}
+{{$cols := .Category.ListCols}}{{if eq $cols 0}}{{$cols = 4}}{{end}}
+<section class="cat-cards cat-cols-{{$cols}} ak-first{{if .Category.CardClass}} {{.Category.CardClass}}{{end}}{{if .Category.CatSlotClass}} {{.Category.CatSlotClass}}{{end}}"{{if .Category.CardCSS}} style="{{.Category.CardCSS}}"{{end}}>
+  {{range $i, $c := $items}}
+  <a class="card cat-card" href="{{$.LangBase}}/{{$c.DisplaySlug}}-{{$c.ID}}">
+    {{if $c.CoverMediaID}}<img class="thumb" src="{{mediaThumbURL $c.CoverMediaID}}" alt="{{$c.Title}}" loading="{{if eq $i 0}}eager{{else}}lazy{{end}}">{{end}}{{template "kart_sure" $c}}
+    <div class="card-pad">
+      {{if $c.CategoryName}}<span class="cat-card-kicker{{if $.Category.HideBadge}} sr-only{{end}}">{{$c.CategoryName}}</span>{{end}}
+      <h3>{{$c.Title}}</h3>
+    </div>
+  </a>
+  {{end}}
+</section>
+{{end}}{{end}}
+
+{{define "cat_akis"}}{{$limit := .Category.FlowLimit}}{{if lt $limit 8}}{{$limit = 60}}{{end}}
+<div class="ak-flow{{if .Category.CardClass}} {{.Category.CardClass}}{{end}}" data-ak-flow
+     data-ak-url="{{.LangBase}}/kategori/{{.Category.Slug}}"
+     data-ak-bas="{{.Category.FlowNext}}"
+     data-ak-sinir="{{$limit}}"
+     data-ak-oto="{{if .Category.FlowAuto}}1{{else}}0{{end}}"
+     {{if or .Category.FlowFontStyle .Category.CardCSS}}style="{{.Category.FlowFontStyle}}{{.Category.CardCSS}}"{{end}}>
+  {{template "ak_batches" .Category.FlowBatches}}
+</div>
+{{if .Category.FlowMore}}
+<div class="ak-more-wrap">
+  <button class="ak-more" type="button" data-ak-more
+          data-ak-url="{{.LangBase}}/kategori/{{.Category.Slug}}">Daha fazla göster</button>
+</div>
+<div class="ak-sentinel" data-ak-sentinel aria-hidden="true"></div>
+{{end}}
+<p class="ak-end" data-ak-end hidden>Tüm haberler gösterildi.</p>
+{{end}}
+
+{{/* Kategori gövdesi: ardışık hero-* modülleri tek .cat-hero satırında. */}}
+{{define "cat_govde"}}{{if .CatRows}}{{range .CatRows}}{{if .Group}}<section class="cat-hero {{.Class}}" style="{{.Style}}">{{range .Blocks}}{{template "render_block" .}}{{end}}</section>{{else}}{{range .Blocks}}{{template "render_block" .}}{{end}}{{end}}{{end}}{{else}}{{range .Blocks}}{{if and .Visible (eq .Zone "govde")}}{{template "render_block" .}}{{end}}{{end}}{{end}}{{end}}
+
+{{define "cat_liste"}}{{$items := .Category.Items}}{{$n := len $items}}{{if gt $n 0}}
+{{$heroCount := .Category.HeroCount}}{{if lt $heroCount 2}}{{$heroCount = 5}}{{end}}
+{{$cols := .Category.ListCols}}{{if eq $cols 0}}{{$cols = 2}}{{end}}
+{{if lt $n 3}}
+{{/* Çok az içerikte manşet/ray düzeni boş sütun bırakmasın. */}}
+<section class="cat-cards cat-cols-{{$cols}}{{if .Category.CardClass}} {{.Category.CardClass}}{{end}}"{{if .Category.CardCSS}} style="{{.Category.CardCSS}}"{{end}}>
+  {{range $i, $c := $items}}
+  <a class="card cat-card" href="{{$.LangBase}}/{{$c.DisplaySlug}}-{{$c.ID}}">
+    {{if $c.CoverMediaID}}<img class="thumb" src="{{mediaThumbURL $c.CoverMediaID}}" alt="{{$c.Title}}" loading="eager">{{end}}{{template "kart_sure" $c}}
+    <div class="card-pad">
+      {{if $c.CategoryName}}<span class="cat-card-kicker{{if $.Category.HideBadge}} sr-only{{end}}">{{$c.CategoryName}}</span>{{end}}
+      <h3>{{$c.Title}}</h3>
+      {{if $c.Spot}}<p class="cat-card-spot">{{$c.Spot}}</p>{{end}}
+    </div>
+  </a>
+  {{end}}
+</section>
+{{else if and (eq .Category.View "klasik") (eq .Category.HeroStyle "portre") (gt $n (add $heroCount 1))}}
+{{/* Portre manşet: solda 5 slaytlı dikey slider, sağda iki sabit manşet.
+     Sol genişlik ve oran blok ayarlarından gelir; iki taraf aynı satır
+     yüksekliğini paylaşır. Alt kartlar seçilen sütun sayısıyla basılır. */}}
+{{$railEnd := add $heroCount 2}}
+{{template "cat_hero_blok" .}}
+{{if gt $n $railEnd}}
+<section class="cat-cards cat-cols-{{$cols}}{{if .Category.CardClass}} {{.Category.CardClass}}{{end}}"{{if .Category.CardCSS}} style="{{.Category.CardCSS}}"{{end}}>
+  {{range $i, $c := $items}}{{if ge $i $railEnd}}
+  <a class="card cat-card" href="{{$.LangBase}}/{{$c.DisplaySlug}}-{{$c.ID}}">
+    {{if $c.CoverMediaID}}<img class="thumb" src="{{mediaThumbURL $c.CoverMediaID}}" alt="{{$c.Title}}" loading="lazy">{{end}}{{template "kart_sure" $c}}
+    <div class="card-pad">
+      {{if $c.CategoryName}}<span class="cat-card-kicker{{if $.Category.HideBadge}} sr-only{{end}}">{{$c.CategoryName}}</span>{{end}}
+      <h3>{{$c.Title}}</h3>
+      {{if $c.Spot}}<p class="cat-card-spot">{{$c.Spot}}</p>{{end}}
+    </div>
+  </a>
+  {{end}}{{end}}
+</section>
+{{end}}
+
+{{else if and (eq .Category.View "klasik") (eq .Category.HeroStyle "uclu") (gt $n (add $heroCount 4))}}
+{{/* Üçlü manşet: solda 3, ortada 5 slaytlı portre slider, sağda 2 manşet.
+     Üç sütun aynı satır yüksekliğini paylaşır; alt kartlar 4 sütunla
+     başlar ve aşağı doğru devam eder. */}}
+{{$railEnd := add $heroCount 5}}
+{{template "cat_hero_blok" .}}
+{{if gt $n $railEnd}}
+<section class="cat-cards cat-cols-{{$cols}}{{if .Category.CardClass}} {{.Category.CardClass}}{{end}}"{{if .Category.CardCSS}} style="{{.Category.CardCSS}}"{{end}}>
+  {{range $i, $c := $items}}{{if ge $i $railEnd}}
+  <a class="card cat-card" href="{{$.LangBase}}/{{$c.DisplaySlug}}-{{$c.ID}}">
+    {{if $c.CoverMediaID}}<img class="thumb" src="{{mediaThumbURL $c.CoverMediaID}}" alt="{{$c.Title}}" loading="lazy">{{end}}{{template "kart_sure" $c}}
+    <div class="card-pad">
+      {{if $c.CategoryName}}<span class="cat-card-kicker{{if $.Category.HideBadge}} sr-only{{end}}">{{$c.CategoryName}}</span>{{end}}
+      <h3>{{$c.Title}}</h3>
+      {{if $c.Spot}}<p class="cat-card-spot">{{$c.Spot}}</p>{{end}}
+    </div>
+  </a>
+  {{end}}{{end}}
+</section>
+{{end}}
+
+{{else if eq .Category.View "akis"}}
+{{/* Akış vitrini (coinhit/enerji modeli):
+     üstte seçilen manşet düzeni (portre/üçlü/klasik), ardından 4 haberlik
+     kart ızgarası; sonrası 3 sütun × 4 kartlık "enerji" bloklarıyla akar.
+     Yeni bloklar "Daha fazla" düğmesi veya kaydırınca otomatik olarak
+     /kategori/<slug>?parca=1 ucundan gelir. */}}
+{{$limit := .Category.FlowLimit}}{{if lt $limit 8}}{{$limit = 60}}{{end}}
+{{$heroEnd := 0}}{{if .Category.AkisHero}}{{$heroEnd = catHeroEnd .Category $n}}{{end}}
+{{if gt $heroEnd 0}}{{template "cat_hero_blok" .}}{{end}}
+{{$gridEnd := add $heroEnd 4}}{{if gt $gridEnd $n}}{{$gridEnd = $n}}{{end}}
+{{if gt $gridEnd $heroEnd}}<section class="cat-cards cat-cols-4 ak-first{{if .Category.CardClass}} {{.Category.CardClass}}{{end}}"{{if or .Category.FlowFontStyle .Category.CardCSS}} style="{{.Category.FlowFontStyle}}{{.Category.CardCSS}}"{{end}}>
+  {{range $i, $c := $items}}{{if and (ge $i $heroEnd) (lt $i $gridEnd)}}
+  <a class="card cat-card" href="{{$.LangBase}}/{{$c.DisplaySlug}}-{{$c.ID}}">
+    {{if $c.CoverMediaID}}<img class="thumb" src="{{mediaThumbURL $c.CoverMediaID}}" alt="{{$c.Title}}" loading="{{if eq $i $heroEnd}}eager{{else}}lazy{{end}}">{{end}}{{template "kart_sure" $c}}
+    <div class="card-pad">
+      {{if $c.CategoryName}}<span class="cat-card-kicker{{if $.Category.HideBadge}} sr-only{{end}}">{{$c.CategoryName}}</span>{{end}}
+      <h3>{{$c.Title}}</h3>
+    </div>
+  </a>
+  {{end}}{{end}}
+</section>{{end}}
+<div class="ak-flow{{if .Category.CardClass}} {{.Category.CardClass}}{{end}}" data-ak-flow
+     data-ak-url="{{$.LangBase}}/kategori/{{.Category.Slug}}"
+     data-ak-bas="{{.Category.FlowNext}}"
+     data-ak-sinir="{{$limit}}"
+     data-ak-oto="{{if .Category.FlowAuto}}1{{else}}0{{end}}"
+     {{if or .Category.FlowFontStyle .Category.CardCSS}}style="{{.Category.FlowFontStyle}}{{.Category.CardCSS}}"{{end}}>
+  {{template "ak_batches" .Category.FlowBatches}}
+</div>
+{{if .Category.FlowMore}}
+<div class="ak-more-wrap">
+  <button class="ak-more" type="button" data-ak-more
+          data-ak-url="{{$.LangBase}}/kategori/{{.Category.Slug}}">Daha fazla göster</button>
+</div>
+<div class="ak-sentinel" data-ak-sentinel aria-hidden="true"></div>
+{{end}}
+<p class="ak-end" data-ak-end hidden>Tüm haberler gösterildi.</p>
+
+{{else if eq .Category.View "liste"}}
+{{/* Sıkı Liste: görsel solda, başlık/özet sağda */}}
+<section class="cat-liste">
+  {{range $i, $c := $items}}<a class="cl-row" href="{{$.LangBase}}/{{$c.DisplaySlug}}-{{$c.ID}}">
+    {{if $c.CoverMediaID}}<span class="cl-row-img">{{if lt $i 3}}<img src="{{mediaThumbURL $c.CoverMediaID}}" alt="{{$c.Title}}" loading="{{if eq $i 0}}eager{{else}}lazy{{end}}">{{else}}<img src="{{mediaThumbURL $c.CoverMediaID}}" alt="{{$c.Title}}" loading="lazy">{{end}}{{template "kart_sure" $c}}</span>{{end}}
+    <span class="cl-row-body"><span class="cl-row-t">{{$c.Title}}</span>{{if $c.Spot}}<span class="cl-row-s">{{$c.Spot}}</span>{{end}}</span>
+  </a>{{end}}
+</section>
+
+{{else if eq .Category.View "izgara"}}
+{{/* Izgara Kartlar: eşit 3 kolonlu medya kartları */}}
+<section class="cat-izgara">
+  {{range $i, $c := $items}}<a class="card" href="{{$.LangBase}}/{{$c.DisplaySlug}}-{{$c.ID}}">
+    {{if $c.CoverMediaID}}<img class="thumb" src="{{mediaThumbURL $c.CoverMediaID}}" alt="{{$c.Title}}" loading="{{if eq $i 0}}eager{{else}}lazy{{end}}">{{end}}{{template "kart_sure" $c}}
+    <div class="card-pad">{{if $c.CategoryName}}<div class="shape">{{$c.CategoryName}}</div>{{end}}<h3>{{$c.Title}}</h3>{{if $c.Spot}}<p class="small muted clamp-2">{{$c.Spot}}</p>{{end}}</div>
+  </a>{{end}}
+</section>
+
+{{else if eq .Category.View "mozaik"}}
+{{/* Mozaik: ilk öğe büyük (geniş), sonraki küçük kartlar */}}
+{{if gt $n 0}}
+<section class="cat-mozaik">
+  {{with index $items 0}}
+  <a class="cm-feat" href="{{$.LangBase}}/{{.DisplaySlug}}-{{.ID}}">
+    {{if .CoverMediaID}}<img src="{{mediaURL .CoverMediaID}}" srcset="{{mediaSrcset .CoverMediaID}}" sizes="(max-width: 900px) 100vw, 600px" alt="{{.Title}}" loading="eager">{{end}}{{template "kart_sure" .}}
+    <div class="cm-feat-mt"><span class="cm-cat">{{.CategoryName}}</span><h2>{{.Title}}</h2>{{if .Spot}}<p>{{.Spot}}</p>{{end}}</div>
+  </a>
+  {{end}}
+  <div class="cm-grid">
+    {{range $i, $c := $items}}{{if gt $i 0}}<a class="cm-cell" href="{{$.LangBase}}/{{$c.DisplaySlug}}-{{$c.ID}}">
+      {{if $c.CoverMediaID}}<img src="{{mediaThumbURL $c.CoverMediaID}}" alt="{{$c.Title}}" loading="lazy">{{end}}
+      <span class="cm-t">{{$c.Title}}</span>
+    </a>{{end}}{{end}}
+  </div>
+</section>
+{{end}}
+
+{{else}}
+{{/* Klasik (varsayılan): 1 büyük + 2 yatay / 3 dikey / kalan ızgara */}}
+{{template "cat_hero_blok" .}}
+{{if gt $n 3}}
+<section class="cat-row-3">
+  {{range $i, $c := $items}}{{if and (ge $i 3) (le $i 5)}}
+  <a class="card" href="{{$.LangBase}}/{{$c.DisplaySlug}}-{{$c.ID}}">
+    {{if $c.CoverMediaID}}<img class="thumb" src="{{mediaThumbURL $c.CoverMediaID}}" alt="" loading="lazy">{{end}}{{template "kart_sure" $c}}
+    <div class="card-pad"><h3>{{$c.Title}}</h3></div>
+  </a>
+  {{end}}{{end}}
+</section>
+{{end}}
+{{if gt $n 6}}
+<section class="grid-2{{if .Category.ListCols}} cat-cols-{{.Category.ListCols}}{{end}}">
+  {{range $i, $c := $items}}{{if ge $i 6}}
+  <a class="card" href="{{$.LangBase}}/{{$c.DisplaySlug}}-{{$c.ID}}">
+    {{if $c.CoverMediaID}}<img class="thumb" src="{{mediaThumbURL $c.CoverMediaID}}" alt="{{$c.Title}}" loading="lazy">{{end}}
+    <div class="card-pad"><h3>{{$c.Title}}</h3></div>
+  </a>
+  {{end}}{{end}}
+</section>
+{{end}}
+{{end}}
+{{else}}
+<p class="muted">Bu kategoride henüz yayınlanmış haber yok.</p>
+{{end}}
+
+{{if and (gt $n 0) (ne .Category.View "akis")}}
+<nav class="pager" aria-label="sayfalama">
+  {{$lb := .LangBase}}
+  {{$slug := .Category.Slug}}
+  {{if .Category.HasPrev}}<a class="pg" href="{{$lb}}/kategori/{{$slug}}?s={{sub .Category.Page 1}}" rel="prev">‹</a>{{end}}
+  <span class="pg on">{{.Category.Page}}</span>
+  {{if .Category.HasNext}}<a class="pg-more" href="{{$lb}}/kategori/{{$slug}}?s={{add .Category.Page 1}}" rel="next">Sonraki →</a>{{end}}
+</nav>
+{{end}}
+{{end}}
+
+{{define "category"}}<!doctype html><html lang="{{.Lang}}" {{if .RTL}}dir="rtl"{{end}} data-theme="{{.Theme}}"><head>{{template "public_head" .}}
+<link rel="alternate" type="application/rss+xml" title="{{.Category.Title}} RSS" href="{{.LangBase}}/rss?kategori={{.Category.Slug}}">
+{{if .BreadcrumbJSONLD}}<script type="application/ld+json">{{.BreadcrumbJSONLD}}</script>{{end}}</head>
+<body>
+{{template "site_header" .}}
+<main class="page" id="main"><div class="container animate-in{{if and .PageLayout .PageLayout.BlockGap}} pg-blk-gap{{end}}"{{if and .PageLayout .PageLayout.BlockGap}} style="--pg-blk-gap:{{.PageLayout.BlockGap}}"{{end}}>
+  {{/* Sayfa üstü görünürlüğü (sayfaya özel şablon): başlık / açıklama / kırıntı
+       görsel olarak gizlenebilir; metinler SEO ve erişilebilirlik için DOM'da
+       sr-only olarak kalır. */}}
+  {{$pl := .PageLayout}}
+  {{$hideTitle := false}}{{if $pl}}{{$hideTitle = $pl.HideTitle}}{{end}}
+  {{$hideDesc := false}}{{if $pl}}{{$hideDesc = $pl.HideDesc}}{{end}}
+  {{$hideCrumb := false}}{{if $pl}}{{$hideCrumb = $pl.HideBreadcrumb}}{{end}}
+  <nav class="breadcrumb{{if $hideCrumb}} sr-only{{end}}" aria-label="kırıntı"><a href="{{.HomeURL}}">Anasayfa</a>
+    {{if .Category.ParentSlug}}<span class="bc-sep">›</span><a href="{{.LangBase}}/kategori/{{.Category.ParentSlug}}">{{.Category.ParentName}}</a>{{end}}
+    <span class="bc-sep">›</span><span class="bc-cur">{{if .Category.CrumbTitle}}{{.Category.CrumbTitle}}{{else}}{{.Category.Title}}{{end}}</span></nav>
+  <div class="cat-head{{if and $hideTitle $hideDesc}} sr-only{{end}}">
+    {{if .Category.ParentSlug}}<a class="cat-eyebrow{{if $hideTitle}} sr-only{{end}}" href="{{.LangBase}}/kategori/{{.Category.ParentSlug}}">{{.Category.ParentName}}</a>{{end}}
+    <h1 class="cat-pill{{if $hideTitle}} sr-only{{end}}">{{if .Category.H1}}{{.Category.H1}}{{else}}{{.Category.Title}} Haberleri{{end}}</h1>
+    {{if .Category.Intro}}<p class="cat-intro{{if $hideDesc}} sr-only{{end}}">{{.Category.Intro}}</p>{{end}}
+  </div>
+  {{if .Category.Tabs}}
+  <nav class="cat-subs cat-subs-{{.CatNavDesign}}" aria-label="Alt kategoriler">
+    <a class="cat-sub{{if not .Category.ParentSlug}} on{{end}}" href="{{.Category.AllURL}}">{{if .Category.AllText}}{{.Category.AllText}}{{else}}Tümü{{end}}</a>
+    {{range .Category.Tabs}}<a class="cat-sub{{if eq .Slug $.Category.Slug}} on{{end}}" href="{{$.LangBase}}/kategori/{{.Slug}}">{{.Name}}</a>{{end}}
+  </nav>
+  {{end}}
+
+  {{if .Blocks}}
+  {{/* Üst bölge: tam genişlik (slider / 6'lı manşet / üst manşet…) */}}
+  <div class="blk-zone blk-zone-ust">{{range .Blocks}}{{if and .Visible (eq .Zone "ust")}}{{template "render_block" .}}{{end}}{{end}}</div>
+  {{$pl := .PageLayout}}
+  <div class="home-grid{{if and $pl (not $pl.Sidebar)}} pg-no-side{{end}}"{{if $pl}} style="--pg-side-w:{{$pl.SidebarWidth}}%;--pg-single-w:{{$pl.ContentWidth}}px"{{end}}>
+    <div class="home-main blk-zone-main">{{if .Category.Moduler}}
+      {{template "cat_govde" .}}
+    {{else}}{{if .Category.Items}}{{template "cat_liste" .}}{{else}}
+      <div class="card card-pad cat-empty">
+        <strong>{{if .Category.EmptyTitle}}{{.Category.EmptyTitle}}{{else}}Bu kategoride henüz yayınlanmış haber yok.{{end}}</strong>
+        <p class="muted">{{if .Category.EmptyText}}{{.Category.EmptyText}}{{else}}Yeni içerikler yayınlandıkça burada listelenecek.{{end}}</p>
+        {{if .Category.ParentSlug}}<a class="btn ghost small" href="{{.LangBase}}/kategori/{{.Category.ParentSlug}}">{{.T "all_in"}} {{.Category.ParentName}} {{.T "news_word"}} →</a>{{end}}
+      </div>
+    {{end}}{{end}}</div>
+    {{/* Sağ sütun: modüler widget'lar */}}
+    <aside class="home-side">{{range .Blocks}}{{if and .Visible (eq .Zone "yan")}}{{template "render_block" .}}{{end}}{{end}}</aside>
+  </div>
+  {{/* Alt bölge: tam genişlik (paneller, galeriler…) */}}
+  <div class="blk-zone blk-zone-genis">{{range .Blocks}}{{if and .Visible (eq .Zone "genis")}}{{template "render_block" .}}{{end}}{{end}}</div>
+  {{else}}
+  {{if .Category.Items}}{{template "cat_liste" .}}{{else}}
+  <div class="card card-pad cat-empty">
+    <strong>Bu kategoride henüz yayınlanmış haber yok.</strong>
+    <p class="muted">Yeni içerikler yayınlandıkça burada listelenecek.</p>
+    {{if .Category.ParentSlug}}<a class="btn ghost small" href="{{.LangBase}}/kategori/{{.Category.ParentSlug}}">{{.T "all_in"}} {{.Category.ParentName}} {{.T "news_word"}} →</a>{{end}}
+  </div>
+  {{end}}
+  {{end}}
+</div></main>
+{{template "site_footer" .}}
+</body></html>{{end}}
+
+{{define "rss_list"}}<!doctype html><html lang="{{.Lang}}" {{if .RTL}}dir="rtl"{{end}} data-theme="{{.Theme}}"><head>{{template "public_head" .}}</head>
+<body>
+{{template "site_header" .}}
+<main class="page" id="main"><div class="container animate-in">
+  <nav class="breadcrumb" aria-label="kırıntı"><a href="{{.HomeURL}}">Anasayfa</a><span class="bc-sep">›</span><span class="bc-cur">RSS Akışları</span></nav>
+  <div class="rss-head">
+    <span class="rss-badge" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M6.18 17.82a2.18 2.18 0 1 1 0 4.36 2.18 2.18 0 0 1 0-4.36M4 4.44A15.56 15.56 0 0 1 19.56 20h-2.83A12.73 12.73 0 0 0 4 7.27V4.44m0 5.66a9.9 9.9 0 0 1 9.9 9.9h-2.83A7.07 7.07 0 0 0 4 12.93V10.1z"/></svg></span>
+    <h1 class="page-title" style="margin:0">RSS Akışları</h1>
+  </div>
+  <p class="rss-lead">Sitemizde yayınlanan haberleri RSS okuyucunuzda veya haber uygulamalarınızda tek bir yerden takip edin.</p>
+
+  <section class="card card-pad rss-info">
+    <h2>RSS nedir?</h2>
+    <p>RSS, yeni yayınlanan haber ve içeriklerin tek bir kaynaktan topluca takip edilmesini sağlayan içerik besleme yöntemidir. RSS okuyucular sayesinde siteyi tekrar tekrar ziyaret etmeden yeni içeriklerden haberdar olabilirsiniz.</p>
+    <h2>Nasıl kullanılır?</h2>
+    <p>Aşağıdaki adreslerden ilginizi çeken akışı kopyalayıp kullandığınız RSS okuyucuya ekleyin. Akışlar tüm haberleri veya yalnızca seçtiğiniz kategoriyi içerir.</p>
+  </section>
+
+  <h2 class="page-title" style="margin-top:26px">Akış adresleri</h2>
+  <div class="rss-grid">
+    {{range .RSSList.Feeds}}
+    <a class="rss-card" href="{{.URL}}" target="_blank" rel="noopener">
+      <span class="rss-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M6.18 17.82a2.18 2.18 0 1 1 0 4.36 2.18 2.18 0 0 1 0-4.36M4 4.44A15.56 15.56 0 0 1 19.56 20h-2.83A12.73 12.73 0 0 0 4 7.27V4.44m0 5.66a9.9 9.9 0 0 1 9.9 9.9h-2.83A7.07 7.07 0 0 0 4 12.93V10.1z"/></svg></span>
+      <span class="rss-card-body"><strong>{{.Name}}</strong><small>{{.URL}}</small></span>
+      <span class="rss-arrow" aria-hidden="true">↗</span>
+    </a>
+    {{end}}
+  </div>
+  <p class="hint" style="margin-top:16px">Akışlar XML biçimindedir. Tarayıcıda açılırsa ham XML görüntülenir; RSS okuyucuya eklemek için adresi kopyalayın.</p>
+</div></main>
+{{template "site_footer" .}}
+</body></html>{{end}}
+
+{{define "archive"}}<!doctype html><html lang="{{.Lang}}" {{if .RTL}}dir="rtl"{{end}} data-theme="{{.Theme}}"><head>{{template "public_head" .}}</head>
+<body>
+{{template "site_header" .}}
+<main class="page" id="main"><div class="container animate-in">
+  <nav class="breadcrumb" aria-label="kırıntı"><a href="{{.HomeURL}}">Anasayfa</a><span class="bc-sep">›</span><span class="bc-cur">{{.T "recent"}}</span></nav>
+  <h1 class="page-title">{{.T "recent"}}</h1>
+  {{template "cat_liste" .}}
+</div></main>
+{{template "site_footer" .}}
+</body></html>{{end}}
+
+{{define "page"}}<!doctype html><html lang="{{.Lang}}" {{if .RTL}}dir="rtl"{{end}} data-theme="{{.Theme}}"><head>{{template "public_head" .}}{{if .BreadcrumbJSONLD}}<script type="application/ld+json">{{.BreadcrumbJSONLD}}</script>{{end}}</head>
+<body>
+{{template "site_header" .}}
+<main class="page" id="main"><div class="container {{if .Page.Contact}}page-doc page-doc-wide{{else}}narrow page-doc{{end}} animate-in">
+  <nav class="breadcrumb" aria-label="kırıntı"><a href="{{.HomeURL}}">Anasayfa</a><span class="bc-sep">›</span><span class="bc-cur">{{.Page.Title}}</span></nav>
+  <div class="blk-zone blk-zone-ust">{{range .Blocks}}{{if and .Visible (eq .Zone "ust")}}{{template "render_block" .}}{{end}}{{end}}</div>
+  <h1 class="page-title">{{.Page.Title}}</h1>
+  {{/* Sayfa gövdesi (Faz 143): görünür "sayfa_govde" bloğu varsa gövdeyi
+     blok basar; yoksa sabit içerik aynen kullanılır. */}}
+  <div class="blk-zone blk-zone-ana">{{range .Blocks}}{{if and .Visible (eq .Zone "ana")}}{{template "render_block" .}}{{end}}{{end}}</div>
+  {{if not .Page.HasBodyBlock}}<div class="page-body" id="page-body">{{.Page.HTML}}</div>{{end}}
+  {{with .Page.Contact}}
+  <section class="contact-block" id="iletisim-form">
+    {{if $.Page.FlashText}}<div class="flash {{$.Page.FlashKind}}">{{$.Page.FlashText}}</div>{{end}}
+    <div class="contact-grid">
+      <div class="contact-cards">
+        <a class="contact-card" href="mailto:{{.Info}}"><span class="cc-label">Genel iletişim</span><strong>{{.Info}}</strong></a>
+        <a class="contact-card" href="mailto:{{.Haber}}"><span class="cc-label">Haber ihbarı</span><strong>{{.Haber}}</strong></a>
+        <a class="contact-card" href="mailto:{{.Reklam}}"><span class="cc-label">Reklam &amp; iş birliği</span><strong>{{.Reklam}}</strong></a>
+        <a class="contact-card" href="mailto:{{.Duzeltme}}"><span class="cc-label">Düzeltme talebi</span><strong>{{.Duzeltme}}</strong></a>
+        {{if .Telefon}}<a class="contact-card" href="tel:{{.Telefon}}"><span class="cc-label">Telefon</span><strong>{{.Telefon}}</strong></a>{{end}}
+        {{if .Adres}}<div class="contact-card"><span class="cc-label">Adres</span><strong>{{.Adres}}</strong></div>{{end}}
+        {{if .Calisma}}<div class="contact-card"><span class="cc-label">Çalışma saatleri</span><strong>{{.Calisma}}</strong></div>{{end}}
+      </div>
+      {{if .FormAktif}}
+      <form class="card card-pad contact-form" method="post" action="/iletisim">
+        <h2 class="contact-form-title">Bize yazın</h2>
+        <p class="small muted" style="margin-top:-4px">Mesajınız haber merkezine ve ilgili birime iletilir. KVKK kapsamında yalnızca talebinizin yanıtlanması için işlenir.</p>
+        <div class="cf-row">
+          <label>Ad Soyad<input class="input" name="ad" required maxlength="120" autocomplete="name"></label>
+          <label>E-posta<input class="input" name="eposta" type="email" required maxlength="180" autocomplete="email"></label>
+        </div>
+        <div class="cf-row">
+          <label>Telefon (opsiyonel)<input class="input" name="telefon" maxlength="40" autocomplete="tel"></label>
+          <label>Konu
+            <select class="input" name="konu">
+              {{range .Konular}}<option value="{{.Key}}">{{.Name}}</option>{{end}}
+            </select>
+          </label>
+        </div>
+        <label class="cf-full">Mesajınız<textarea class="textarea" name="mesaj" rows="6" required maxlength="5000" placeholder="Talebinizi kısaca yazın…"></textarea></label>
+        <div aria-hidden="true" style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden">
+          <label>Buraya yazmayın<input type="text" name="web" tabindex="-1" autocomplete="off"></label>
+        </div>
+        <label class="cf-check">
+          <input type="checkbox" name="onay" value="1" required>
+          <span><a href="/kvkk" target="_blank" rel="noopener">KVKK Aydınlatma Metni</a>'ni okudum; mesajımın yanıtlanması için kişisel verilerimin işlenmesini onaylıyorum.</span>
+        </label>
+        <button class="btn" type="submit">Mesajı gönder</button>
+      </form>
+      {{else}}
+      <div class="card card-pad"><p class="muted" style="margin:0">İletişim formu şu anda kapalı. Yukarıdaki e-posta adreslerinden bize ulaşabilirsiniz.</p></div>
+      {{end}}
+    </div>
+  </section>
+  {{end}}
+  <div class="blk-zone blk-zone-genis">{{range .Blocks}}{{if and .Visible (eq .Zone "genis")}}{{template "render_block" .}}{{end}}{{end}}</div>
+</div></main>
+{{template "site_footer" .}}
+</body></html>{{end}}
+
+{{define "notfound"}}<!doctype html><html lang="{{.Lang}}" {{if .RTL}}dir="rtl"{{end}} data-theme="{{.Theme}}"><head>{{template "public_head" .}}</head>
+<body>
+{{template "site_header" .}}
+<main class="page" id="main"><div class="container narrow" style="text-align:center;padding-top:8vh">
+  <h1 style="font-size:4rem;margin:0">404</h1>
+  <p class="muted">Sayfa bulunamadı.</p>
+  <a class="btn" href="{{.HomeURL}}">{{.T "home"}}</a>
+</div></main>
+{{template "site_footer" .}}
+</body></html>{{end}}
+
+{{define "hava"}}<!doctype html><html lang="{{.Lang}}" {{if .RTL}}dir="rtl"{{end}} data-theme="{{.Theme}}"><head>{{template "public_head" .}}</head>
+<body>
+{{template "site_header" .}}
+<main class="page" id="main"><div class="container">
+  <h1 class="page-title">☀ Hava Durumu</h1>
+  <div class="grid-2">
+    {{range .Hava}}
+    <div class="card card-pad" style="display:flex;justify-content:space-between;align-items:center">
+      <strong>{{.City}}</strong>
+      <span>{{printf "%.0f" .Sicak}}° {{.Aciklama}}</span>
+    </div>{{end}}
+  </div>
+</div></main>
+{{template "site_footer" .}}
+</body></html>{{end}}
+
+{{define "namaz"}}<!doctype html><html lang="{{.Lang}}" {{if .RTL}}dir="rtl"{{end}} data-theme="{{.Theme}}"><head>{{template "public_head" .}}</head>
+<body>
+{{template "site_header" .}}
+<main class="page" id="main"><div class="container">
+  <h1 class="page-title">🕌 Namaz Vakitleri</h1>
+  <div class="grid-2">
+    {{range .NamazList}}
+    <div class="card card-pad">
+      <strong>{{.City}}</strong>
+      <div class="small muted" style="margin:4px 0">İmsak {{.Imsak}} · Güneş {{.Gunes}} · Öğle {{.Ogle}}</div>
+      <div class="small muted">İkindi {{.Ikindi}} · Akşam {{.Aksam}} · Yatsı {{.Yatsi}}{{if .Demo}} <span class="badge" style="background:var(--warn-fill,var(--warn));color:#fff">demo</span>{{end}}</div>
+    </div>{{end}}
+  </div>
+</div></main>
+{{template "site_footer" .}}
+</body></html>{{end}}
+
+{{define "imsakiye"}}<!doctype html><html lang="{{.Lang}}" {{if .RTL}}dir="rtl"{{end}} data-theme="{{.Theme}}"><head>{{template "public_head" .}}</head>
+<body>
+{{template "site_header" .}}
+<main class="page" id="main"><div class="container">
+  <h1 class="page-title">📅 İmsakiye (Ankara)</h1>
+  <table class="table">
+    <thead><tr><th>Gün</th><th>İmsak</th><th>Güneş</th><th>Öğle</th><th>İkindi</th><th>Akşam</th><th>Yatsı</th></tr></thead>
+    <tbody>
+      {{range .Imsakiye}}<tr>
+        <td>{{.Gun}}</td><td>{{.Imsak}}</td><td>{{.Gunes}}</td><td>{{.Ogle}}</td><td>{{.Ikindi}}</td><td>{{.Aksam}}</td><td>{{.Yatsi}}</td>
+      </tr>{{else}}<tr><td colspan="7" class="muted">Veri yok — planlı yenileme bekleniyor.</td></tr>{{end}}
+    </tbody>
+  </table>
+</div></main>
+{{template "site_footer" .}}
+</body></html>{{end}}
+
+{{define "eczane"}}<!doctype html><html lang="{{.Lang}}" {{if .RTL}}dir="rtl"{{end}} data-theme="{{.Theme}}"><head>{{template "public_head" .}}</head>
+<body>
+{{template "site_header" .}}
+<main class="page" id="main"><div class="container">
+  <h1 class="page-title">🏥 Nöbetçi Eczaneler {{if and .Eczane.Demo (not .Eczane.Bos)}}<span class="badge" style="background:var(--warn-fill,var(--warn));color:#fff">demo (kaynak bekliyor)</span>{{end}}</h1>
+  <form method="get" action="{{.LangBase}}/nobetci-eczaneler" style="display:flex;gap:8px;max-width:420px;margin-bottom:16px">
+    <select class="input" name="il" style="flex:1">
+      {{range .Cities}}<option value="{{.Plaka}}" {{if eq (printf "%d" .Plaka) (printf "%d" $.Eczane.Plaka)}}selected{{end}}>{{.Name}}</option>{{end}}
+    </select>
+    <button class="btn" type="submit">Göster</button>
+  </form>
+  <p class="muted">{{.Eczane.Sehir}}{{if .Eczane.Bos}}{{if and .Eczane.Kaynak (ne .Eczane.Kaynak "ulasilamadi")}} · kaynak: {{.Eczane.Kaynak}}{{end}}{{if .Eczane.Tarih}} · {{.Eczane.Tarih}}{{end}}{{else if not .Eczane.Demo}}{{if .Eczane.Tarih}} · {{.Eczane.Tarih}} tarihli liste{{end}}{{if .Eczane.Kaynak}} · kaynak: {{.Eczane.Kaynak}}{{end}}{{end}}</p>
+  <div class="grid-2">
+    {{range .Eczane.List}}
+    <div class="card card-pad">
+      <strong>{{.Ad}}</strong>
+      <div class="small muted">{{.Ilce}}</div>
+      <div class="small muted">{{.Adres}}</div>
+      {{if .Tel}}<div class="small muted">📞 {{.Tel}}</div>{{end}}
+    </div>{{else}}
+      {{if .Eczane.Bos}}
+      {{if eq .Eczane.Kaynak "ulasilamadi"}}
+      <div class="card card-pad">
+        <strong>Nöbetçi eczane kaynağına şu an ulaşılamıyor</strong>
+        <div class="small muted" style="margin-top:6px">
+          Güncel liste alınamadığı için bu sayfada eczane gösterilmiyor.
+          Doğrulanmamış bilgi vermemek adına örnek/temsilî liste basmıyoruz.
+          Acil durumda <strong>112</strong>'yi arayabilir ya da il eczacı
+          odanızın nöbet listesine bakabilirsiniz.
+        </div>
+      </div>
+      {{else}}
+      <div class="card card-pad">
+        <strong>Bugün için nöbetçi eczane yayınlanmadı</strong>
+        <div class="small muted" style="margin-top:6px">
+          Kaynak ({{.Eczane.Kaynak}}) bu il için {{.Eczane.Tarih}} tarihinde liste yayınlamadı.
+          Liste gün içinde eklenebilir; bu sayfa birkaç saat içinde yeniden denetlenir.
+        </div>
+      </div>
+      {{end}}
+      {{else}}
+      <p class="muted">Kayıt yok.</p>
+      {{end}}
+    {{end}}
+  </div>
+</div></main>
+{{template "site_footer" .}}
+</body></html>{{end}}
+
+{{define "hisseler"}}<!doctype html><html lang="{{.Lang}}" {{if .RTL}}dir="rtl"{{end}} data-theme="{{.Theme}}"><head>{{template "public_head" .}}</head>
+<body>
+{{template "site_header" .}}
+<main class="page" id="main"><div class="container">
+  <nav class="crumbs" aria-label="Konum"><a href="{{.HomeURL}}">Anasayfa</a> <span aria-hidden="true">›</span> <a href="{{.LangBase}}/borsa">Piyasa</a> <span aria-hidden="true">›</span> <span>Tüm Hisseler</span></nav>
+  <h1 class="page-title">TÜM HİSSELER</h1>
+  <div class="hsp-wrap" data-hisse-page>
+    <form class="hsp-search" method="get" action="{{.LangBase}}/borsa/hisseler" role="search">
+      <span class="hsp-search-ic" aria-hidden="true">⌕</span>
+      <input type="search" name="q" value="{{.Hisse.Q}}" placeholder="Hisse Ara" aria-label="Hisse ara"
+             autocomplete="off" data-hsp-q>
+      <button type="submit">Ara</button>
+      {{if or .Hisse.Q .Hisse.Harf}}<a class="hsp-clear" href="{{.LangBase}}/borsa/hisseler">Temizle</a>{{end}}
+    </form>
+
+    <div class="hsp-alpha" role="navigation" aria-label="Alfabetik hisse dizini">
+      <a class="hsp-h{{if eq .Hisse.Harf ""}} on{{end}}" href="{{.LangBase}}/borsa/hisseler{{if .Hisse.Q}}?q={{urlquery .Hisse.Q}}{{end}}"{{if eq .Hisse.Harf ""}} aria-current="page"{{end}}>TÜMÜ</a>
+      {{range .Hisse.Harfler}}<a class="hsp-h{{if eq . $.Hisse.Harf}} on{{end}}" href="{{$.LangBase}}/borsa/hisseler?harf={{.}}{{if $.Hisse.Q}}&amp;q={{urlquery $.Hisse.Q}}{{end}}"{{if eq . $.Hisse.Harf}} aria-current="page"{{end}}>{{.}}</a>{{end}}
+    </div>
+
+    <p class="hsp-count"><b data-hsp-count>{{.Hisse.Adet}}</b> hisse{{if .Hisse.Q}} · “{{.Hisse.Q}}” araması{{end}}{{if .Hisse.Harf}} · {{.Hisse.Harf}} ile başlayanlar{{end}}</p>
+
+    <div class="hsp-tablewrap">
+      <table class="hsp-table">
+        <thead>
+          <tr>
+            <th scope="col">HİSSE ADI</th>
+            <th scope="col" class="hsp-r">FİYAT</th>
+            <th scope="col" class="hsp-r">FARK</th>
+          </tr>
+        </thead>
+        <tbody data-hsp-body>
+          {{range .Hisse.Satir}}
+          <tr data-code="{{.Code}}" data-arama="{{.Arama}}" data-fin="hisse" data-fin-sym="{{.Code}}">
+            <td class="hsp-ad">
+              <span class="hsp-av" aria-hidden="true">{{.Ilk}}</span>
+              <a class="hsp-link" href="{{$.LangBase}}/borsa/hisseler?q={{urlquery .Code}}">
+                <span class="hsp-code">{{.Code}}</span>
+                <span class="hsp-full">{{.Name}}</span>
+              </a>
+            </td>
+            <td class="hsp-r hsp-price"{{if .Var}} data-fin-fld="f" data-fin-v="{{.Value}}"{{end}}>{{if .Var}}{{piyasaNum .Value 2}}{{else}}—{{end}}</td>
+            <td class="hsp-r hsp-chg {{if .Var}}hss-{{.Yon}}{{end}}"{{if .Var}} data-fin-fld="d" data-fin-v="{{.Delta}}"{{end}}>
+              {{if .Var}}<span class="hsp-pct" data-fin-pct>%{{piyasaChg .Delta}}</span><span class="hsp-arrow" aria-hidden="true" data-fin-arrow-text>{{if eq .Yon "up"}}▲{{else if eq .Yon "down"}}▼{{else}}–{{end}}</span>{{else}}—{{end}}
+            </td>
+          </tr>
+          {{end}}
+        </tbody>
+      </table>
+      <p class="hsp-empty" data-hsp-empty hidden>Bu aramaya uygun hisse yok. Kodu (THYAO) veya şirket adını deneyin.</p>
+    </div>
+
+    <p class="hsp-meta">
+      <span class="fin-live" data-fin-live="hisse" hidden title="Otomatik güncellenir"><span class="fin-live-dot" aria-hidden="true"></span>Canlı</span>
+      <span data-fin-time="hisse" data-fin-time-format="dt"{{if .Hisse.Guncel.IsZero}} hidden{{end}}>Son güncelleme: {{.Hisse.Guncel.Format "02.01.2006 15:04"}}</span>{{if not .Hisse.Guncel.IsZero}} · {{end}}
+      Fiyatlar gecikmeli olabilir; bilgilendirme amaçlıdır, yatırım tavsiyesi değildir.
+    </p>
+  </div>
+</div></main>
+{{template "site_footer" .}}
+<script src="{{asset "hisse.js"}}" defer></script>
+</body></html>{{end}}
+
+{{define "kripto"}}<!doctype html><html lang="{{.Lang}}" {{if .RTL}}dir="rtl"{{end}} data-theme="{{.Theme}}"><head>{{template "public_head" .}}</head>
+<body>
+{{template "site_header" .}}
+<main class="page" id="main"><div class="container">
+  <nav class="crumbs" aria-label="Konum"><a href="{{.HomeURL}}">Anasayfa</a> <span aria-hidden="true">›</span> <a href="{{.LangBase}}/borsa">Piyasa</a> <span aria-hidden="true">›</span> <span>Kripto Para</span></nav>
+  <h1 class="page-title">KRİPTO PARA</h1>
+  <div class="kps-wrap" data-kripto-page>
+    <form class="hsp-search kps-search" method="get" action="{{.LangBase}}/borsa/kripto" role="search">
+      <span class="hsp-search-ic" aria-hidden="true">⌕</span>
+      <input type="search" name="q" value="{{.KriptoSayfa.Q}}" placeholder="Kripto Para Ara" aria-label="Kripto para ara"
+             autocomplete="off" data-kps-q>
+      <input type="hidden" name="stil" value="{{.KriptoSayfa.Stil}}">
+      <button type="submit">Ara</button>
+      {{if .KriptoSayfa.Q}}<a class="hsp-clear" href="{{.LangBase}}/borsa/kripto?stil={{.KriptoSayfa.Stil}}">Temizle</a>{{end}}
+    </form>
+
+    <div class="kps-bar">
+      <span class="kps-count"><b data-kps-count>{{.KriptoSayfa.Adet}}</b> kripto para{{if .KriptoSayfa.Q}} · “{{.KriptoSayfa.Q}}” araması{{end}}</span>
+      <span class="kps-views" role="group" aria-label="Görünüm">
+        {{range .KriptoSayfa.Stiller}}
+        <a class="kps-view{{if eq .Key $.KriptoSayfa.Stil}} on{{end}}" href="{{$.LangBase}}/borsa/kripto?stil={{.Key}}{{if $.KriptoSayfa.Q}}&amp;q={{urlquery $.KriptoSayfa.Q}}{{end}}"{{if eq .Key $.KriptoSayfa.Stil}} aria-current="true"{{end}}>{{.Label}}</a>
+        {{end}}
+      </span>
+    </div>
+
+    {{if .KriptoSayfa.Rows}}
+    {{if eq .KriptoSayfa.Stil "tablo"}}
+    <div class="hsp-tablewrap">
+      <table class="hsp-table kps-table">
+        <thead>
+          <tr>
+            <th scope="col">KRIPTO</th>
+            <th scope="col" class="hsp-r">24s</th>
+            <th scope="col" class="hsp-r kps-hide-s">7g</th>
+            <th scope="col" class="hsp-r">FİYAT</th>
+            <th scope="col" class="hsp-r kps-hide-s">24s HACİM</th>
+            <th scope="col" class="hsp-r kps-hide-s">PİYASA DEĞERİ</th>
+          </tr>
+        </thead>
+        <tbody data-kps-body>
+          {{range .KriptoSayfa.Rows}}
+          <tr data-code="{{.Symbol}}" data-arama="{{aramaNorm .Symbol}} {{aramaNorm .Name}} {{aramaNorm .Slug}}"
+              data-fin="kripto" data-fin-sym="{{.Symbol}}">
+            <td class="hsp-ad">
+              <span class="krp-ico kps-ico"><span class="krp-ico-yok" aria-hidden="true">{{ilkHarf .Symbol}}</span>{{if .Image}}<img src="{{.Image}}" alt="" width="28" height="28" loading="lazy" decoding="async" data-hata-gizle>{{end}}</span>
+              <span class="hsp-link" title="{{.Name}}">
+                <span class="hsp-code">{{.Symbol}}</span>
+                <span class="hsp-full">{{.Name}}</span>
+              </span>
+            </td>
+            <td class="hsp-r kps-chg {{hisseYon .Delta}}" data-fin-fld="d" data-fin-v="{{.Delta}}">%{{piyasaChg .Delta}}</td>
+            <td class="hsp-r kps-chg {{hisseYon .Delta7}} kps-hide-s" data-fin-fld="d7" data-fin-v="{{.Delta7}}">%{{piyasaChg .Delta7}}</td>
+            <td class="hsp-r hsp-price" data-fin-fld="f" data-fin-v="{{.Value}}">{{piyasaNum .Value 2}}</td>
+            <td class="hsp-r kps-hide-s" data-fin-fld="h" data-fin-v="{{.Volume}}">{{paraKisa .Volume}}</td>
+            <td class="hsp-r kps-hide-s" data-fin-fld="p" data-fin-v="{{.MarketCap}}">{{paraKisa .MarketCap}}</td>
+          </tr>
+          {{end}}
+        </tbody>
+      </table>
+      <p class="hsp-empty" data-kps-empty hidden>Bu aramaya uygun kripto para yok. Kodu (BTC) veya adı (bitcoin) deneyin.</p>
+    </div>
+    {{else if eq .KriptoSayfa.Stil "kart"}}
+    <div class="krp-grid krp-cols-4 krp-page" data-kps-body>
+      {{range .KriptoSayfa.Rows}}
+      <div class="krp-card krp-{{hisseYon .Delta}}" data-code="{{.Symbol}}" data-arama="{{aramaNorm .Symbol}} {{aramaNorm .Name}} {{aramaNorm .Slug}}"
+           data-fin="kripto" data-fin-sym="{{.Symbol}}">
+        <span class="krp-ico"><span class="krp-ico-yok" aria-hidden="true">{{ilkHarf .Symbol}}</span>{{if .Image}}<img src="{{.Image}}" alt="" width="28" height="28" loading="lazy" decoding="async" data-hata-gizle>{{end}}</span>
+        <span class="krp-txt"><span class="krp-name">{{.Name}}</span><span class="krp-sym">{{.Symbol}}</span></span>
+        <span class="krp-fig"><span class="krp-price" data-fin-fld="f" data-fin-v="{{.Value}}">{{piyasaNum .Value 2}}</span><span class="krp-chg" data-fin-fld="d" data-fin-v="{{.Delta}}">%{{piyasaChg .Delta}}</span></span>
+      </div>
+      {{end}}
+      <p class="hsp-empty" data-kps-empty hidden>Bu aramaya uygun kripto para yok.</p>
+    </div>
+    {{else}}
+    <div class="hsp-tablewrap kps-kompakt">
+      <table class="hsp-table">
+        <tbody data-kps-body>
+          {{range .KriptoSayfa.Rows}}
+          <tr data-code="{{.Symbol}}" data-arama="{{aramaNorm .Symbol}} {{aramaNorm .Name}} {{aramaNorm .Slug}}"
+              data-fin="kripto" data-fin-sym="{{.Symbol}}">
+            <td class="hsp-ad"><span class="hsp-code">{{.Symbol}}</span> <span class="hsp-full">{{.Name}}</span></td>
+            <td class="hsp-r hsp-price" data-fin-fld="f" data-fin-v="{{.Value}}">{{piyasaNum .Value 2}}</td>
+            <td class="hsp-r kps-chg {{hisseYon .Delta}}" data-fin-fld="d" data-fin-v="{{.Delta}}">%{{piyasaChg .Delta}}</td>
+          </tr>
+          {{end}}
+        </tbody>
+      </table>
+      <p class="hsp-empty" data-kps-empty hidden>Bu aramaya uygun kripto para yok.</p>
+    </div>
+    {{end}}
+    {{else if .KriptoSayfa.Toplam}}
+    <p class="hsp-empty">“{{.KriptoSayfa.Q}}” için sonuç bulunamadı.</p>
+    {{else}}
+    <p class="muted">Kripto verisi henüz yüklenmedi — planlı yenileme bekleniyor.</p>
+    {{end}}
+
+    <p class="hsp-meta">
+      <span class="fin-live" data-fin-live="kripto" hidden title="Otomatik güncellenir"><span class="fin-live-dot" aria-hidden="true"></span>Canlı</span>
+      <span data-fin-time="kripto" data-fin-time-format="dt"{{if not .KriptoSayfa.Guncel}} hidden{{end}}>Son güncelleme: {{.KriptoSayfa.Guncel}}</span>{{if .KriptoSayfa.Guncel}} · {{end}}
+      Kaynak: CoinGecko (TRY) · Fiyatlar gecikmeli olabilir; bilgilendirme amaçlıdır, yatırım tavsiyesi değildir.
+    </p>
+  </div>
+</div></main>
+{{template "site_footer" .}}
+</body></html>{{end}}
+
+{{define "borsa"}}<!doctype html><html lang="{{.Lang}}" {{if .RTL}}dir="rtl"{{end}} data-theme="{{.Theme}}"><head>{{template "public_head" .}}</head>
+<body>
+{{template "site_header" .}}
+<main class="page" id="main"><div class="container">
+  <h1 class="page-title">📈 Piyasa &amp; Borsa {{if .Borsa.Demo}}<span class="badge" style="background:var(--warn-fill,var(--warn));color:#fff">demo</span>{{end}}</h1>
+  {{if .Borsa.Updated}}<p class="muted small">Son güncelleme: {{.Borsa.Updated.Format "02.01.2006 15:04"}}</p>{{end}}
+  <div class="grid-2">
+  {{range .Borsa.Rows}}
+    <div class="card card-pad" style="display:flex;justify-content:space-between;align-items:center;gap:10px">
+      <div>
+        <strong>{{.Name}}</strong>
+        <div class="small muted">{{.Code}} · {{if eq .Kind "kripto"}}Kripto{{else if eq .Kind "endeks"}}Endeks{{else}}Hisse{{end}}</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-weight:700">{{printf "%.2f" .Value}} {{.Para}}</div>
+        <div class="small" style="color:{{if ge .Delta 0.0}}#2f9e44{{else}}#e5484d{{end}}">{{if ge .Delta 0.0}}▲{{else}}▼{{end}} {{printf "%.2f" .Delta}}%</div>
+      </div>
+    </div>
+  {{else}}<p class="muted">Veri yok — planlı yenileme bekleniyor.</p>{{end}}
+  </div>
+  <p class="muted small" style="margin-top:14px">Kaynaklar: BIST (Yahoo Finance) · kripto (CoinGecko) — TRY. Bilgilendirme amaçlıdır, yatırım tavsiyesi değildir.</p>
+</div></main>
+{{template "site_footer" .}}
+</body></html>{{end}}
+
+{{define "fikstur"}}<!doctype html><html lang="{{.Lang}}" {{if .RTL}}dir="rtl"{{end}} data-theme="{{.Theme}}"><head>{{template "public_head" .}}</head>
+<body>
+{{template "site_header" .}}
+<main class="page" id="main"><div class="container">
+  <h1 class="page-title">Puan Durumu &amp; Fikstür</h1>
+  <div class="fx-widget">
+    <div class="fx-leaguebar">
+      <form method="get" action="{{.LangBase}}/fikstur">
+        <select name="lig" data-autosubmit aria-label="Lig">
+          {{$cl := .CurLeague.Key}}
+          {{range .Leagues}}<option value="{{.Key}}"{{if eq .Key $cl}} selected{{end}}>{{.Name}}</option>{{end}}
+        </select>
+      </form>
+      <span class="small muted">{{.CurLeague.Name}} · {{.FxMeta.Season}}</span>
+    </div>
+    <div class="fx-tabs">
+      <button type="button" class="fx-tab" data-fxt="puan">PUAN DURUMU</button>
+      <button type="button" class="fx-tab on" data-fxt="fikstur">FİKSTÜR</button>
+    </div>
+
+    <div class="fx-pane" id="fxt-puan" style="display:none">
+      <table class="fx-table">
+        <thead><tr>
+          <th class="fx-th-rank">#</th><th class="fx-th-team">Takım</th>
+          <th>O</th><th>G</th><th>B</th><th>M</th><th class="fx-un">A</th><th class="fx-un">Y</th><th>AV</th><th class="fx-th-pts">P</th>
+        </tr></thead>
+        <tbody>
+          {{range .Standings}}<tr>
+            <td class="fx-rank">{{.Rank}}</td>
+            <td class="fx-team"><span class="fx-badge">{{if .Badge}}<img src="{{.Badge}}" alt="{{.Team}}" loading="lazy" data-hata-gizle>{{end}}</span>{{.Team}}</td>
+            <td>{{.Played}}</td><td>{{.Win}}</td><td>{{.Draw}}</td><td>{{.Loss}}</td>
+            <td class="fx-un">{{.GF}}</td><td class="fx-un">{{.GA}}</td><td>{{.GD}}</td>
+            <td class="fx-pts">{{.Points}}</td>
+          </tr>{{else}}<tr><td colspan="10" class="muted" style="text-align:center">Puan durumu verisi yok.</td></tr>{{end}}
+        </tbody>
+      </table>
+      <div class="fx-legend">
+        <span><b>O:</b> Oynadığı Maç</span><span><b>G:</b> Galibiyet</span><span><b>B:</b> Beraberlik</span>
+        <span><b>M:</b> Mağlubiyet</span><span><b>A:</b> Attığı Gol</span><span><b>Y:</b> Yediği Gol</span>
+        <span><b>AV:</b> Averaj</span><span><b>P:</b> Puan</span>
+      </div>
+    </div>
+
+    <div class="fx-pane" id="fxt-fikstur">
+      <div class="fx-weekbar">
+        <form method="get" action="{{.LangBase}}/fikstur" class="fx-weekform">
+          <input type="hidden" name="lig" value="{{.CurLeague.Key}}">
+          <label>Hafta</label>
+          <select name="hafta" data-autosubmit>
+            {{$cur := .FxRound.Round}}
+            {{range .FxRounds}}<option value="{{.}}"{{if eq . $cur}} selected{{end}}>{{.}}. Hafta</option>{{end}}
+          </select>
+        </form>
+        <span class="small muted">{{.CurLeague.Name}} · {{.FxMeta.Season}}</span>
+      </div>
+      <div class="fx-matches">
+        {{range .FxRound.Matches}}<div class="fx-match{{if .Played}} played{{end}}">
+          <div class="fx-mdate"><span>{{.Date}}</span><span class="fx-mtime">{{.Time}}</span></div>
+          <div class="fx-mteam fx-home"><span class="fx-mname">{{.Home}}</span>{{if .HomeBadge}}<img src="{{.HomeBadge}}" alt="{{.Home}}" loading="lazy" data-hata-gizle>{{end}}</div>
+          <div class="fx-mscore">{{if .Played}}{{if .HomeScore}}{{.HomeScore}}{{else}}0{{end}} - {{if .AwayScore}}{{.AwayScore}}{{else}}0{{end}}{{else}}<span class="fx-vs">—</span>{{end}}</div>
+          <div class="fx-mteam fx-away">{{if .AwayBadge}}<img src="{{.AwayBadge}}" alt="{{.Away}}" loading="lazy" data-hata-gizle>{{end}}<span class="fx-mname">{{.Away}}</span></div>
+        </div>{{else}}<p class="muted" style="padding:16px">Bu hafta için maç bulunamadı.</p>{{end}}
+      </div>
+    </div>
+  </div>
+  <p class="muted small" style="margin-top:14px">Kaynak: TheSportsDB (fikstür) &amp; ESPN (puan durumu). Program bilgilendirme amaçlıdır.</p>
+</div></main>
+{{template "site_footer" .}}
+<script>
+(function(){
+  var tabs=document.querySelectorAll('.fx-tab');
+  tabs.forEach(function(b){ b.addEventListener('click',function(){
+    tabs.forEach(function(x){ x.classList.remove('on'); });
+    b.classList.add('on');
+    document.getElementById('fxt-puan').style.display = b.dataset.fxt==='puan'?'':'none';
+    document.getElementById('fxt-fikstur').style.display = b.dataset.fxt==='fikstur'?'':'none';
+  }); });
+})();
+</script>
+</body></html>{{end}}
+
+{{define "astroloji"}}<!doctype html><html lang="{{.Lang}}" {{if .RTL}}dir="rtl"{{end}} data-theme="{{.Theme}}"><head>{{template "public_head" .}}</head>
+<body>
+{{template "site_header" .}}
+<main class="page" id="main"><div class="container">
+  <h1 class="page-title">🔮 Günlük Burç Yorumları</h1>
+  <p class="muted small">{{.Astro.Tarih}} · Bilgilendirme amaçlıdır, eğlence içeriğidir.</p>
+  <div class="grid-2">
+  {{range .Astro.Burclar}}
+    <div class="card card-pad">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px">
+        <strong style="font-size:1.05rem">{{.Sembol}} {{.Ad}}</strong>
+        <span class="small muted">{{.Tarih}} · {{.Element}}</span>
+      </div>
+      <p style="margin:.5em 0">{{.Yorum}}</p>
+      <div class="small muted">🔢 Şanslı sayı: <b>{{.Sayi}}</b> · 🎨 Şanslı renk: <b>{{.Renk}}</b></div>
+    </div>
+  {{end}}
+  </div>
+</div></main>
+{{template "site_footer" .}}
+</body></html>{{end}}
+
+{{define "etkinlikler"}}<!doctype html><html lang="{{.Lang}}" {{if .RTL}}dir="rtl"{{end}} data-theme="{{.Theme}}"><head>{{template "public_head" .}}</head>
+<body>
+{{template "site_header" .}}
+<main class="page" id="main"><div class="container">
+  <h1 class="page-title">📅 Etkinlikler</h1>
+  <div class="gap">
+  {{range .Etkinlik}}
+    <div class="card card-pad" style="border-left:3px solid var(--accent)">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap">
+        <strong style="font-size:1.05rem">{{.Title}}</strong>
+        <span class="tag">{{eventWhen .StartAt}}</span>
+      </div>
+      <div class="small muted">{{.StartAt.Format "02.01.2006 15:04"}}{{if .CategoryName}} · {{.CategoryName}}{{end}}{{if .Location}} · 📍 {{.Location}}{{end}}</div>
+      {{if .Description}}<p style="margin:.5em 0">{{.Description}}</p>{{end}}
+      {{if .URL}}<a class="btn small" href="{{.URL}}" target="_blank" rel="noopener">Ayrıntı</a>{{end}}
+    </div>
+  {{else}}<p class="muted">Yaklaşan etkinlik yok.</p>{{end}}
+  </div>
+</div></main>
+{{template "site_footer" .}}
+</body></html>{{end}}
+
+{{define "kat_tabs"}}<nav class="kat-tabs">
+  {{$tb := "/akis"}}{{if .Akis}}{{$tb = .Akis.TabBase}}{{end}}
+  <a href="{{.LangBase}}{{$tb}}" class="{{if .Akis}}{{if .Akis.Guncel}}on{{end}}{{else}}on{{end}}">Gündem</a>
+  {{$cur := ""}}{{if .Akis}}{{$cur = .Akis.CatSlug}}{{end}}
+  {{range .NavCategories}}<a href="{{$.LangBase}}{{$tb}}?kategori={{.Slug}}" class="{{if eq .Slug $cur}}on{{end}}">{{.Name}}{{if .ContentCount}} <span class="cnt">{{.ContentCount}}</span>{{end}}</a> {{end}}
+  <a href="{{.LangBase}}{{$tb}}?sekme=diger" class="{{if and .Akis .Akis.Other}}on{{end}}">Diğer</a>
+</nav>{{end}}
+
+{{define "akis"}}<!doctype html><html lang="{{.Lang}}" {{if .RTL}}dir="rtl"{{end}} data-theme="{{.Theme}}"><head>{{template "public_head" .}}</head>
+<body>
+{{template "site_header" .}}
+<main class="page" id="main"><div class="container">
+  {{template "kat_tabs" .}}
+  <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin:12px 0;flex-wrap:wrap">
+    <h1 class="page-title" style="margin:0">{{.Akis.CatName}}{{if .Akis.Day}} · {{.Akis.Day}}{{end}}</h1>
+    <div class="tarih-cips">
+      <a href="?{{.Akis.BaseQS}}aralik=bugun" class="{{if eq .Akis.Range "bugun"}}on{{end}}">Bugün</a>
+      <a href="?{{.Akis.BaseQS}}aralik=dun" class="{{if eq .Akis.Range "dun"}}on{{end}}">Dün</a>
+      <a href="?{{.Akis.BaseQS}}aralik=hafta" class="{{if eq .Akis.Range "hafta"}}on{{end}}">Bu hafta</a>
+      {{if .Akis.Day}}<a href="?{{.Akis.BaseQS}}" class="on">Tarih: {{.Akis.Day}} ✕</a>{{end}}
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <form method="get" action="{{.LangBase}}/akis" style="display:flex;gap:4px;align-items:center">
+        {{if .Akis.CatSlug}}<input type="hidden" name="kategori" value="{{.Akis.CatSlug}}">{{end}}
+        {{if .Akis.Other}}<input type="hidden" name="sekme" value="diger">{{end}}
+        <input type="hidden" name="mod" value="{{.Akis.Mode}}">
+        <input class="input" type="date" name="tarih" value="{{.Akis.Day}}" data-autosubmit aria-label="Tarihe göre filtrele" title="Tarihe göre filtrele" style="max-width:160px">
+      </form>
+      <div class="mod-toggle">
+        <a href="?{{.Akis.FilterQS}}mod=feed" class="{{if eq .Akis.Mode "feed"}}on{{end}}" data-mod="feed">Akış</a>
+        <a href="?{{.Akis.FilterQS}}mod=manset" class="{{if eq .Akis.Mode "manset"}}on{{end}}" data-mod="manset">Manşet</a>
+        <a href="?{{.Akis.FilterQS}}mod=grid" class="{{if eq .Akis.Mode "grid"}}on{{end}}" data-mod="grid">Izgara</a>
+      </div>
+    </div>
+  </div>
+  <div id="feed" class="feed {{if eq .Akis.Mode "grid"}}feed-grid{{end}}{{if eq .Akis.Mode "manset"}}feed-manset{{end}}" data-qs="{{.Akis.FilterQS}}">
+    {{range .Akis.Items}}
+    <a class="feed-item" href="{{$.LangBase}}/{{.DisplaySlug}}-{{.ID}}">
+      {{if .CoverMediaID}}<img src="{{mediaThumbURL .CoverMediaID}}" alt="" loading="lazy">{{end}}
+      <div class="fi-body">
+        <h3>{{.Title}}</h3>
+        {{if .Spot}}<div class="shape">{{.Spot}}</div>{{end}}
+        <div class="shape">{{if .CategoryName}}{{.CategoryName}} · {{end}}{{formatTime .PublishedAt}}</div>
+      </div>
+    </a>
+    {{else}}<p class="muted">Bu bölümde yayınlanmış içerik yok.</p>{{end}}
+  </div>
+  {{if .Akis.HasMore}}<div style="text-align:center;margin:18px 0"><button class="btn" id="feedMore" data-page="{{.Akis.Page}}">Daha fazla yükle</button></div>{{end}}
+  <div id="feedEnd" class="muted small" style="text-align:center;margin:14px 0"></div>
+</div></main>
+{{template "site_footer" .}}
+<script>
+(function(){
+  var feed=document.getElementById('feed'); if(!feed) return;
+  var qs=feed.getAttribute('data-qs')||'';
+  var page=parseInt((document.getElementById('feedMore')||{}).dataset?document.getElementById('feedMore').dataset.page:'0')||1;
+  var more=document.getElementById('feedMore');
+  var end=document.getElementById('feedEnd');
+  var loading=false, done={{if .Akis.HasMore}}false{{else}}true{{end}};
+  function card(it){
+    var a=document.createElement('a'); a.className='feed-item'; a.href=it.url;
+    var img=it.cover?'<img src="'+it.cover+'" alt="" loading="lazy">':'';
+    var cat=it.category?it.category+' · ':'';
+    a.innerHTML=img+'<div class="fi-body"><h3>'+it.title+'</h3>'+(it.spot?'<div class="shape">'+it.spot+'</div>':'')+'<div class="shape">'+cat+it.published+'</div></div>';
+    return a;
+  }
+  function skelEl(){ var d=document.createElement('div'); d.className='skel'; d.id='feedSkel'; d.innerHTML='<div class="s-img"></div><div class="s-body"><div class="s-line w85"></div><div class="s-line w60"></div><div class="s-line"></div></div>'; return d; }
+  function rmSkel(){ var e=document.getElementById('feedSkel'); if(e) e.remove(); }
+  function loadMore(){
+    if(loading||done) return; loading=true;
+    if(more) more.textContent='Yükleniyor…';
+    feed.appendChild(skelEl());
+    fetch('/api/akis?'+qs+'sayfa='+(page+1)).then(function(r){return r.json()}).then(function(j){
+      rmSkel();
+      if(j && j.items){ j.items.forEach(function(it){ feed.appendChild(card(it)); }); page++; }
+      done=!(j&&j.has_more);
+      if(more){ more.textContent='Daha fazla yükle'; if(done) more.style.display='none'; }
+      if(done&&end) end.textContent='— akışın sonu —';
+      loading=false;
+    }).catch(function(){ rmSkel(); if(more) more.textContent='Daha fazla yükle'; loading=false; });
+  }
+  if(more) more.addEventListener('click', loadMore);
+  window.addEventListener('scroll', function(){
+    if(done||loading) return;
+    if(document.documentElement.scrollTop+window.innerHeight >= document.body.scrollHeight-400) loadMore();
+  }, {passive:true});
+
+  // görünüm modu (akış / ızgara) — anında geçiş + kalıcı çerez
+  document.querySelectorAll('.mod-toggle a').forEach(function(a){
+    a.addEventListener('click', function(e){
+      e.preventDefault();
+      var mod=a.getAttribute('data-mod');
+      document.cookie='tb_feed_mod='+mod+';path=/;max-age=31536000';
+      feed.classList.toggle('feed-grid', mod==='grid');
+      feed.classList.toggle('feed-manset', mod==='manset');
+      document.querySelectorAll('.mod-toggle a').forEach(function(x){x.classList.toggle('on', x===a);});
+    });
+  });
+})();
+</script>
+</body></html>{{end}}
+
+{{define "arama"}}<!doctype html><html lang="{{.Lang}}" {{if .RTL}}dir="rtl"{{end}} data-theme="{{.Theme}}"><head>{{template "public_head" .}}</head>
+<body>
+{{template "site_header" .}}
+<main class="page" id="main"><div class="container animate-in">
+  <h1 class="page-title">🔍 Arama{{if .Query}}: "{{.Query}}"{{end}}</h1>
+  {{if .Query}}<p class="small muted">{{len .Arama}} sonuç</p>{{end}}
+  {{if .Query}}{{template "cat_liste" .}}{{else}}<p class="muted">Arama yapmak için bir sözcük yazın.</p>{{end}}
+</div></main>
+{{template "site_footer" .}}
+</body></html>{{end}}
+
+{{define "amp"}}<!doctype html><html amp lang="{{.Article.Content.Locale}}"><head>
+<meta charset="utf-8">
+<script async src="https://cdn.ampproject.org/v0.js"></script>
+<title>{{.Article.Content.Title}}</title>
+<link rel="canonical" href="{{.AMPCanonical}}">
+<meta name="viewport" content="width=device-width,minimum-scale=1,initial-scale=1">
+<style amp-boilerplate>body{-webkit-animation:-amp-start 8s steps(1,end) 0s 1 normal both;-moz-animation:-amp-start 8s steps(1,end) 0s 1 normal both;-ms-animation:-amp-start 8s steps(1,end) 0s 1 normal both;animation:-amp-start 8s steps(1,end) 0s 1 normal both}@-webkit-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@-moz-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@-ms-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@-o-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}</style><noscript><style amp-boilerplate>body{-webkit-animation:none;-moz-animation:none;-ms-animation:none;animation:none}</style></noscript>
+<style amp-custom>body{font-family:system-ui,sans-serif;margin:0 auto;max-width:720px;padding:16px;color:#111;line-height:1.6}h1{line-height:1.25}img{max-width:100%;border-radius:8px}a{color:#e11d48}</style>
+</head><body>
+<h1>{{.Article.Content.Title}}</h1>
+{{if .Article.Content.CoverMediaID}}<amp-img src="{{mediaURL .Article.Content.CoverMediaID}}" width="1200" height="675" layout="responsive" alt="{{.Article.Content.Title}}"></amp-img>{{end}}
+<div>{{.Article.HTML}}</div>
+<hr><p class="small"><a href="{{.AMPCanonical}}">{{.SiteName}}</a></p>
+</body></html>{{end}}
+
+{{define "render_block"}}{{if .Wrap}}<div class="blk-st{{if .ModuleStyle}} blk-mod-{{.ModuleStyle}}{{end}}{{if .StAbs}} blk-abs{{end}}{{if .HideMobile}} blk-hide-mobile{{end}}{{if .RowSlotClass}} {{.RowSlotClass}}{{end}}" style="{{.Style}}">{{end}}{{if eq .Type "slider"}}{{template "blk_slider" .}}{{else if eq .Type "manset6"}}{{template "blk_manset6" .}}{{else if eq .Type "manset2"}}{{template "blk_manset2" .}}{{else if eq .Type "son_dakika"}}{{template "blk_son_dakika" .}}{{else if eq .Type "manset"}}{{template "blk_manset" .}}{{else if eq .Type "hikayeler"}}{{template "blk_hikayeler" .}}{{else if eq .Type "ust_manset"}}{{template "blk_ust_manset" .}}{{else if eq .Type "canli_yayin"}}{{template "blk_canli_yayin" .}}{{else if eq .Type "kari_kartlar"}}{{template "blk_kari" .}}{{else if eq .Type "kategori_bloklari"}}{{template "blk_kat_panel" .}}{{else if eq .Type "kategori_panel"}}{{template "blk_kat_panel" .}}{{else if eq .Type "kategori_sekmeli"}}{{template "blk_kategori_sekmeli" .}}{{else if eq .Type "trend_numarali"}}{{template "blk_trend_numarali" .}}{{else if eq .Type "galeri_foto"}}{{template "blk_galeri" .}}{{else if eq .Type "galeri_video"}}{{template "blk_galeri" .}}{{else if eq .Type "one_cikanlar"}}{{template "blk_one_cikanlar" .}}{{else if eq .Type "kategori_izgara"}}{{template "blk_kategori_izgara" .}}{{else if eq .Type "trend"}}{{template "blk_trend" .}}{{else if eq .Type "reklam"}}{{template "blk_reklam" .}}{{else if eq .Type "baslik"}}{{template "blk_baslik" .}}{{else if eq .Type "kategori_liste"}}{{template "kategori_liste_blok" .}}{{else if eq .Type "kategori_slider"}}{{template "kategori_slider_blok" .}}{{else if eq .Type "kategori_secimli"}}{{template "kategori_secimli_blok" .}}{{else if eq .Type "kategori_4lu"}}{{template "kategori_4lu_blok" .}}{{else if eq .Type "kategori_akis"}}{{template "kategori_akis_blok" .}}{{else if eq .Type "metin"}}{{template "blk_metin" .}}{{else if eq .Type "yazi_govde"}}{{template "blk_yazi_govde" .}}{{else if eq .Type "sayfa_govde"}}{{template "blk_sayfa_govde" .}}{{else if eq .Type "servis_bandi"}}{{template "blk_servis" .}}{{else if eq .Type "kur_borsa"}}{{template "blk_kur_borsa" .}}{{else if eq .Type "hisseler"}}{{template "blk_hisseler" .}}{{else if eq .Type "kripto_para"}}{{template "blk_kripto" .}}{{else if eq .Type "kur_cevirici"}}{{template "blk_kur_cevirici" .}}{{else if eq .Type "puan_serit"}}{{template "blk_puan_serit" .}}{{else if eq .Type "gazete_manset"}}{{template "blk_gazete_manset" .}}{{else if eq .Type "puan_durumu"}}{{template "blk_puan_durumu" .}}{{end}}{{if .Wrap}}</div>{{end}}{{end}}
+
+{{/* Hikayeler: zuck.js Snapgram şeridi (haberpi ile birebir açılış/geçiş) */}}
+{{define "blk_hikayeler"}}{{if .Items}}
+<link rel="stylesheet" href="{{asset "vendor/zuck/zuck.css"}}">
+<link rel="stylesheet" href="{{asset "vendor/zuck/snapgram.css"}}">
+<div id="stories"></div>
+<script>
+{{if .StoriesJSON}}window.hikayeData = {{.StoriesJSON}};{{end}}
+</script>
+<script src="{{asset "vendor/zuck/zuck.js"}}" defer></script>
+{{end}}{{end}}
+
+{{/* Puan Durumu tablosu (takım logolu) — hem tek başına blok hem de
+    "Güncel" panelinin sağ sütununda kullanılır. Beklenen: .Standings + .D */}}
+{{define "puan_tablo"}}{{if .Standings}}
+<div class="puan-blk">
+  <div class="puan-head">
+    <span class="puan-title">PUAN DURUMU</span>
+    {{if .D.Puan}}<span class="puan-lig">{{if .D.Puan.League}}{{.D.Puan.League}}{{else}}Süper Lig{{end}}</span>{{end}}
+    <a class="puan-all" href="{{.D.LangBase}}/fikstur">Tümü</a>
+  </div>
+  <div class="puan-scroll">
+  <table class="puan-table">
+    <thead><tr><th class="puan-c-rank">#</th><th class="puan-c-logo"></th><th class="puan-c-team">Takım</th><th class="puan-c-o">O</th><th class="puan-c-g">G</th><th class="puan-c-m">M</th><th class="puan-c-av">AV</th><th class="puan-c-p">P</th></tr></thead>
+    <tbody>
+      {{range .Standings}}<tr>
+        <td class="puan-rank">{{.Rank}}</td>
+        <td class="puan-logo">{{if .Badge}}<img src="{{.Badge}}" alt="{{.Team}}" width="22" height="22" loading="lazy" data-hata-gizle>{{end}}</td>
+        <td class="puan-team">{{.Team}}</td>
+        <td class="puan-o">{{.Played}}</td>
+        <td class="puan-g">{{.Win}}</td>
+        <td class="puan-m">{{.Loss}}</td>
+        <td class="puan-av">{{.GD}}</td>
+        <td class="puan-p">{{.Points}}</td>
+      </tr>{{end}}
+    </tbody>
+  </table>
+  </div>
+  <a class="puan-more" href="{{.D.LangBase}}/fikstur">Tüm Ligler ve Detaylar</a>
+</div>
+{{end}}{{end}}
+
+{{/* Tek başına modül olarak Puan Durumu */}}
+{{define "blk_puan_durumu"}}{{template "puan_tablo" .}}{{end}}
+
+{{/*
+  Gazete Manşetleri (Faz 197) — günün gazete ön sayfaları.
+
+  Kaynak ve ayrıştırma: repo/gazete_manset_kaynak.go (gazeteoku.com).
+  Sayfada gösterilen: kapak görseli + gazete adı + tarih.
+
+  YERLEŞİM — "tek slide" kuralı:
+    • Sağ sütun (zone=yan, .gzm-tek): görünümde TEK kapak durur ve otomatik
+      olarak sıradakine geçer. Sağ sütun ~390 px olduğu için 2-3 kapak yan
+      yana sığmaz; sığdırmaya çalışmak kartları kırıyordu.
+    • Geniş bölge (ana / genis / ust): kapak sayısı kapsayıcı genişliğine
+      göre 1 → 3 → 4 olur (container query).
+
+  Blok BAŞKA bölgeye taşındığında hiçbir şey bozulmaz: düzen yalnız
+  kapsayıcı genişliğine ve zone bilgisine bakar; sabit piksel varsayımı yok.
+  Bu yüzden kullanıcı modülü ana kolona alsa da sağa taşısa da aynı dosya
+  doğru görünür.
+
+  Davranış:
+    • Şerit scroll-snap ile kayar (dokunmatik/trackpad JS'siz de çalışır).
+    • JS varsa ok düğmeleri + noktalar + otomatik geçiş devreye girer.
+    • prefers-reduced-motion: otomatik geçiş ve kaydırma animasyonu kapalı.
+    • Kapağa tıklama KAYNAĞA GİTMEZ (Faz 197c): kapak bir <button>'dur,
+      tıklama sayfa içi büyütücüyü açar (tekerlek/sürükleme/çift tıklama/
+      iki parmak). Buton seçildi bilinçli: JS yüklenmezse tıklama hiçbir
+      yere gitmez; <a href> olsaydı kullanıcı CDN'e savrulurdu.
+      Galeri sayfası (/gazete-mansetleri) aynı büyütücüyü kullanır.
+*/}}
+{{define "blk_gazete_manset"}}{{if .GazeteKapak}}
+{{$baslik := or .GazeteBaslik "Gazete Manşetleri"}}
+<section class="gzm{{if .GazeteDar}} gzm-tek{{end}}" data-gm data-gm-aralik="{{.GazeteAralik}}" aria-label="{{$baslik}}">
+  <div class="gzm-head">
+    {{if .HideHeading}}<h2 class="sr-only">{{$baslik}}</h2>{{else}}<h2 class="gzm-title">{{$baslik}}</h2><span class="gzm-rule" aria-hidden="true"></span>{{end}}
+    <a class="gzm-all" href="{{.D.LangBase}}/gazete-mansetleri" title="Tüm gazete manşetleri">Tümü</a>
+  </div>
+  <div class="gzm-view">
+    <div class="gzm-track" data-gm-track data-gm-grup tabindex="0" role="group" aria-label="{{$baslik}} — kapaklar">
+      {{range .GazeteKapak}}
+      <button type="button" class="gzm-slide" data-gm-slide data-gm-zoom
+         data-gm-buyuk="{{.ImageURL}}" data-gm-ad="{{.Name}}" data-gm-tarih="{{gazeteTarih .PageDate}}"
+         aria-label="{{.Name}} — {{gazeteTarih .PageDate}} manşetini büyüt">
+        <img src="{{orStr .ThumbURL .ImageURL}}" alt="{{.Name}} — {{gazeteTarih .PageDate}} manşeti"
+             width="300" height="437" loading="lazy" decoding="async">
+        <span class="gzm-ad">{{.Name}}</span>
+      </button>
+      {{end}}
+    </div>
+    <button type="button" class="gzm-nav gzm-prev" data-gm-prev aria-label="Önceki gazete">
+      <svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-chevron-left"></use></svg>
+    </button>
+    <button type="button" class="gzm-nav gzm-next" data-gm-next aria-label="Sonraki gazete">
+      <svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-chevron-right"></use></svg>
+    </button>
+  </div>
+  <div class="gzm-dots" data-gm-dots role="tablist" aria-label="Gazete seç"></div>
+  <p class="gzm-meta">{{if .GazeteGun}}<strong>{{gazeteTarih .GazeteGun}}</strong> · {{end}}{{len .GazeteKapak}} gazete · kaynak: gazeteoku.com</p>
+</section>
+{{end}}{{end}}
+
+{{/*
+  Puan Durumu Şeridi — Habertürk spor yazısı düzeniyle BİREBİR.
+
+  Referans (kaynaktan çözüldü):
+    <h2 class="font-black text-xl">PUAN DURUMU</h2>  + yatay çizgi
+    <div class="flex space-x-2 overflow-auto">        ← yatay kaydırma
+      <div class="flex-none md:flex-1 w-10 border">   ← takım başına dikey kart
+        <img logo72>  <span class="text-xxs">GS</span>
+        <div class="border-t"><span>22</span></div>   ← puan
+      </div>
+    </div>
+
+  Yani tablo değil: logo + kısa kod + puan, yatay kaydırmalı kart şeridi.
+  Kartlar eşit genişlikte (flex:1) — 1280 px'de 18 takım sığar; dar
+  ekranda kartlar daralır, sığmayan kısım kaydırılır (üst manşet deseni).
+*/}}
+{{define "blk_puan_serit"}}{{if .PuanBaslik}}
+<section class="pss-block" aria-label="{{.PuanBaslik}}">
+  {{if not .HideHeading}}
+  <div class="pss-head">
+    <h2 class="pss-title">{{.PuanBaslik}}</h2>
+    <div class="pss-rule"></div>
+  </div>
+  {{end}}
+  <div class="pss-scroll" data-pys-scroll>
+    {{range .Standings}}
+    <div class="pss-card">
+      <a class="pss-team" href="{{$.D.LangBase}}/fikstur" title="{{.Team}}">
+        <span class="pss-logo">{{if .Badge}}<img src="{{.Badge}}" alt="{{.Team}}" loading="lazy" data-hata-gizle>{{else}}<span class="pss-logo-yok" aria-hidden="true">{{takimKisa .Team}}</span>{{end}}</span>
+        <span class="pss-code">{{takimKisa .Team}}</span>
+        <span class="pss-pts">{{.Points}}</span>
+      </a>
+    </div>
+    {{end}}
+  </div>
+</section>
+{{end}}{{end}}
+
+{{/* Hisseler modülü — Habertürk ekonomi "HİSSELER" düzeni.
+
+  Referans yapı (haberturk.com/ekonomi, stocks bölümü):
+    HİSSELER  +  yatay çizgi  +  TÜMÜ           ← başlık satırı
+    ┌──────────────────────────────────────────┐
+    │  AEFES    AGHOL    AHGAZ    AKBNK  ...    │  ← çerçeveli kutu,
+    │  15,90    24,70    46,00    63,00         │     kesintisiz kayan
+    │    ▼        ▼        ▲        ▼           │     şerit (marquee)
+    └──────────────────────────────────────────┘
+
+  Kayan şerit CSS ile yapılır (JS yok): liste iki kez basılır, ikinci kopya
+  aria-hidden'dır; animasyon -50% kaydırınca dikişsiz döner. Fareyle üzerine
+  gelince durur; `prefers-reduced-motion` açıksa animasyon kapanır ve şerit
+  yatay kaydırılabilir olur (erişilebilirlik).
+
+  Görünüm şablonları Kur & Borsa ile AYNI sözlüğü kullanır:
+    hss-style-referans | sade | kart | dar
+    hss-arrow-noktali | ucgen | ok | uzun | yok
+    hss-bg-yok | zemin | ozel
+  Ok çizimi kb_ok şablonundan gelir (hss- sınıf önekiyle) — iki modülün
+  göstergeleri birebir aynı görünür.
+*/}}
+{{define "hss_items"}}{{range .Hisseler}}{{$yon := hisseYon .Delta}}
+<a class="hss-item hss-{{$yon}}" href="{{$.D.LangBase}}/borsa/hisseler?q={{.Code}}" title="{{.Name}}"
+   data-fin="hisse" data-fin-sym="{{.Code}}">
+  <span class="hss-txt">
+    <span class="hss-code">{{.Code}}</span>
+    <span class="hss-price" data-fin-fld="f" data-fin-v="{{.Value}}">{{piyasaNum .Value 2}}</span>
+    {{if $.HisseDegisim}}<span class="hss-chg" data-fin-fld="d" data-fin-v="{{.Delta}}">%{{piyasaChg .Delta}}</span>{{end}}
+  </span>
+  {{template "kb_ok" (hssOkFor $.HisseArrow (hisseYonInt .Delta))}}
+</a>
+{{end}}{{end}}
+
+{{define "blk_hisseler"}}{{if .Hisseler}}
+{{$hstil := or .HisseEtkin .HisseStil}}
+<section class="hss-block hss-{{or .HisseYerlesim "serit"}} hss-style-{{$hstil}}{{if .HisseDar}} hss-dar{{end}} hss-arrow-{{or .HisseArrow "noktali"}} hss-bg-{{or .HisseBg "kart"}}"{{if or .HisseCSS .HisseBgCSS}} style="{{.HisseCSS}}{{.HisseBgCSS}}"{{end}}
+  data-hss data-model="{{or .HisseGecis "surekli"}}" data-speed="{{.HisseHiz}}" data-hold="{{.HisseBekle}}" data-glide="{{.HisseKayma}}"
+  aria-label="Borsa hisseleri">
+  {{if .HideHeading}}
+  <h2 class="sr-only">HİSSELER</h2>
+  {{else}}
+  <div class="hss-head">
+    <h2 class="hss-title">HİSSELER</h2>
+    <span class="fin-live" data-fin-live="hisse" hidden title="Otomatik güncellenir"><span class="fin-live-dot" aria-hidden="true"></span>Canlı</span>
+    <span class="hss-rule" aria-hidden="true"></span>
+    <a class="hss-all" href="{{.D.LangBase}}/borsa/hisseler">TÜMÜ</a>
+  </div>
+  {{end}}
+  <div class="hss-frame">
+    <div class="hss-track">
+      <div class="hss-group">{{template "hss_items" .}}</div>
+      {{if ne .HisseYerlesim "izgara"}}<div class="hss-group" aria-hidden="true">{{template "hss_items" .}}</div>{{end}}
+    </div>
+  </div>
+  {{if .HisseAra}}
+  <form class="hss-search" method="get" action="{{.D.LangBase}}/borsa/hisseler" role="search">
+    <input type="search" name="q" placeholder="Hisse ara (ör. THYAO veya Türk Hava)" aria-label="Hisse ara" autocomplete="off">
+    <button type="submit" aria-label="Ara"><span aria-hidden="true">⌕</span><span class="hss-search-t">Ara</span></button>
+  </form>
+  {{end}}
+  {{if not .HisseGuncel.IsZero}}
+  <p class="hss-meta">Son güncelleme: {{.HisseGuncel.Format "15:04"}} · Bilgilendirme amaçlıdır, yatırım tavsiyesi değildir.</p>
+  {{end}}
+</section>
+{{end}}{{end}}
+
+{{/* Kripto Para — Habertürk ekonomi "KRİPTO PARA" bölümü.
+
+   İki yerleşim:
+     izgara (referans) — sabit ızgara, ikon/ad/fiyat/%24s
+     serit             — Hisseler ile aynı kayan şerit (aynı hareket motoru)
+
+   Görünüm şablonları Kur & Borsa / Hisseler ile aynı adları kullanır:
+     krp-style-otomatik | referans | sade | kart | dar | rail | mini
+   "otomatik" bölgeye göre çözülür: geniş → referans, yan sütun → rail.
+   Akış hızı ve model (sürekli / aralıklı) modül ayarındandır; hisse.js
+   hem [data-hss] hem [data-marquee] öğelerini sürer.
+*/}}
+{{define "krp_items"}}{{range .Kripto}}
+<a class="krp-card krp-{{hisseYon .Delta}}" href="{{$.D.LangBase}}/borsa/kripto?q={{urlquery .Symbol}}" title="{{.Name}}"
+   data-fin="kripto" data-fin-sym="{{.Symbol}}">
+  {{if $.KriptoIkon}}
+  <span class="krp-ico"><span class="krp-ico-yok" aria-hidden="true">{{ilkHarf .Symbol}}</span>{{if .Image}}<img src="{{.Image}}" alt="" width="28" height="28" loading="lazy" decoding="async" data-hata-gizle>{{end}}</span>
+  {{end}}
+  <span class="krp-txt">
+    <span class="krp-name">{{.Name}}</span>
+    <span class="krp-sym">{{.Symbol}}</span>
+  </span>
+  <span class="krp-fig">
+    <span class="krp-price" data-fin-fld="f" data-fin-v="{{.Value}}">{{piyasaNum .Value 2}}</span>
+    {{if $.KriptoDegisim}}<span class="krp-chg" data-fin-fld="d" data-fin-v="{{.Delta}}">%{{piyasaChg .Delta}}</span>{{end}}
+  </span>
+</a>
+{{end}}{{end}}
+
+{{/* Kripto Para satırı (rail / mini liste şablonları).
+
+   Yan sütun (sağ ray) için tasarlandı: ikon + kod/ad solda, fiyat ve
+   %24s sağda; her coin tek satır. Dar alanda kart ızgarası yerine
+   okunabilir bir liste verir.
+*/}}
+{{define "krp_rows"}}{{range .Kripto}}
+<a class="krp-row krp-{{hisseYon .Delta}}" href="{{$.D.LangBase}}/borsa/kripto?q={{urlquery .Symbol}}" title="{{.Name}}"
+   data-fin="kripto" data-fin-sym="{{.Symbol}}">
+  {{if $.KriptoIkon}}
+  <span class="krp-row-ico"><span class="krp-ico-yok" aria-hidden="true">{{ilkHarf .Symbol}}</span>{{if .Image}}<img src="{{.Image}}" alt="" width="24" height="24" loading="lazy" decoding="async" data-hata-gizle>{{end}}</span>
+  {{end}}
+  <span class="krp-row-txt">
+    <span class="krp-row-code">{{.Symbol}}</span>
+    <span class="krp-row-name">{{.Name}}</span>
+  </span>
+  <span class="krp-row-fig">
+    <span class="krp-price" data-fin-fld="f" data-fin-v="{{.Value}}">{{piyasaNum .Value 2}}</span>
+    {{if $.KriptoDegisim}}<span class="krp-chg" data-fin-fld="d" data-fin-v="{{.Delta}}">%{{piyasaChg .Delta}}</span>{{end}}
+  </span>
+</a>
+{{end}}{{end}}
+
+{{define "blk_kripto"}}{{if .Kripto}}
+{{$stil := or .KriptoEtkin .KriptoStil}}
+<section class="krp-block krp-{{or .KriptoYerlesim "izgara"}} krp-style-{{$stil}}{{if .KriptoDar}} krp-dar{{end}} krp-bg-{{or .KriptoBg "kart"}}"{{if or .KriptoCSS .KriptoBgCSS}} style="{{.KriptoCSS}}{{.KriptoBgCSS}}"{{end}} aria-label="Kripto para fiyatları"
+  {{if and (eq .KriptoYerlesim "serit") (not .KriptoListe)}}data-marquee data-model="{{or .KriptoGecis "surekli"}}" data-speed="{{.KriptoHiz}}" data-hold="{{.KriptoBekle}}" data-glide="{{.KriptoKayma}}"{{end}}>
+  {{if .HideHeading}}
+  <h2 class="sr-only">KRİPTO PARA</h2>
+  {{else}}
+  <div class="krp-head">
+    <h2 class="krp-title">KRİPTO PARA</h2>
+    <span class="fin-live" data-fin-live="kripto" hidden title="Otomatik güncellenir"><span class="fin-live-dot" aria-hidden="true"></span>Canlı</span>
+    <span class="krp-rule" aria-hidden="true"></span>
+    <a class="krp-all" href="{{.D.LangBase}}/borsa/kripto">TÜMÜ</a>
+  </div>
+  {{end}}
+  {{if .KriptoListe}}
+  <div class="krp-list krp-list-{{$stil}}">{{template "krp_rows" .}}</div>
+  {{else if eq .KriptoYerlesim "serit"}}
+  <div class="krp-frame">
+    <div class="krp-track">
+      <div class="krp-group">{{template "krp_items" .}}</div>
+      <div class="krp-group" aria-hidden="true">{{template "krp_items" .}}</div>
+    </div>
+  </div>
+  {{else}}
+  <div class="krp-grid krp-cols-{{.KriptoKolon}}">{{template "krp_items" .}}</div>
+  {{end}}
+  {{if not .KriptoGuncel.IsZero}}<p class="krp-meta"><span data-fin-time="kripto">Son güncelleme: {{.KriptoGuncel.Format "15:04"}}</span> · Bilgilendirme amaçlıdır, yatırım tavsiyesi değildir.</p>{{end}}
+</section>
+{{end}}{{end}}
+
+{{/* Kur Çevirici — Habertürk "KUR ÇEVİRİCİ" bölümü.
+   Tutar + kaynak + hedef + DÖNÜŞTÜR + sonuç. Kurlar önbellekten gelir ve
+   her <option>'a data-rate olarak basılır; hesap istemcide yapılır
+   (ağ isteği yok). Sunucu da başlangıç sonucunu hesaplar: JS kapalıysa
+   boş kutu görünmez. */}}
+{{define "blk_kur_cevirici"}}{{with .KurCevirici}}
+<section class="kcr-block kcr-bg-{{or $.KCBg "kart"}}" aria-label="Kur çevirici" data-kcr data-fin="kur"{{if $.KCBgCSS}} style="{{$.KCBgCSS}}"{{end}}>
+  <h2 class="kcr-title">{{.Baslik}}</h2>
+  <div class="kcr-form">
+    <label class="kcr-field kcr-amount">
+      <span class="kcr-lbl">Miktar</span>
+      <input type="text" inputmode="decimal" autocomplete="off" value="{{piyasaNum .Miktar 2}}" data-kcr-amount aria-label="Çevrilecek miktar">
+    </label>
+    <label class="kcr-field">
+      <span class="kcr-lbl">Kaynak</span>
+      <select data-kcr-from aria-label="Kaynak para birimi">
+        {{range .Para}}<option value="{{.Code}}" data-rate="{{.Rate}}" data-fin-kur="{{.Code}}"{{if eq .Code $.KurCevirici.From}} selected{{end}}>{{.Code}} — {{.Label}}</option>{{end}}
+      </select>
+    </label>
+    <button type="button" class="kcr-swap" data-kcr-swap aria-label="Para birimlerini değiştir">⇄</button>
+    <label class="kcr-field">
+      <span class="kcr-lbl">Hedef</span>
+      <select data-kcr-to aria-label="Hedef para birimi">
+        {{range .Para}}<option value="{{.Code}}" data-rate="{{.Rate}}" data-fin-kur="{{.Code}}"{{if eq .Code $.KurCevirici.To}} selected{{end}}>{{.Code}} — {{.Label}}</option>{{end}}
+      </select>
+    </label>
+    <button type="button" class="kcr-go" data-kcr-go>DÖNÜŞTÜR</button>
+  </div>
+  <p class="kcr-result" data-kcr-result aria-live="polite">
+    {{if .Var}}{{piyasaNum .Miktar 2}} {{.From}} = <b>{{piyasaNum .Sonuc 4}} {{.To}}</b>{{else}}—{{end}}
+  </p>
+  <p class="kcr-note">* Güncel döviz kurlarını kullanarak diğer para birimlerine çevirin.</p>
+</section>
+{{end}}{{end}}
+
+{{/* Üst manşet: yatay kaydırmalı kart şeridi */}}
+{{define "blk_ust_manset"}}{{if .Items}}
+{{$cs := .CardStyle}}{{$ov := and (ne .UMStyle "klasik") (not $cs)}}
+{{/* Izgara dışındaki düzen yatay kaydırmalıdır ve scrollbar gizlidir;
+     kartların çoğu ekran dışında kalıyordu. Sarmal + oklar bunu görünür kılar. */}}
+{{$kaydirmali := ne .UMLayout "izgara"}}
+<div class="um-sarmal{{if $kaydirmali}} um-sarmal-kaydirmali{{end}}">
+<div class="ust-manset {{if $cs}}cs-scope cs-{{$cs}}{{else}}um-style-{{.UMStyle}}{{end}} um-layout-{{.UMLayout}}{{if eq .UMLayout "izgara"}} um-cols-{{.UMCols}}{{end}}{{if ge .UMTitlePad 0}} um-title-pad{{end}}"{{if or .UMStyleCSS .CardCSS}} style="{{.UMStyleCSS}}{{.CardCSS}}"{{end}}>
+  {{range .Items}}<a class="um-card{{if $ov}} um-ov{{end}}" href="{{$.D.LangBase}}/{{.DisplaySlug}}-{{.ID}}"{{if and $ov ($.ShowTitle)}} title="{{.Title}}"{{end}}>
+    <span class="um-media">{{if .CoverMediaID}}<img src="{{mediaURL .CoverMediaID}}" srcset="{{mediaSrcset .CoverMediaID}}" sizes="{{if eq $.UMLayout "izgara"}}(max-width: 48rem) 50vw, 25vw{{else}}(max-width: 64rem) 80vw, 300px{{end}}" alt="{{.Title}}" loading="lazy">{{end}}
+    {{if .CategoryName}}<span class="um-cat{{if $.CatShape}} cat-shape-{{$.CatShape}}{{end}}{{if or (not $.ShowBadge) $.HideBadge}} sr-only{{end}}" style="{{$.CatStyle}}">{{.CategoryName}}</span>{{end}}
+    {{if $ov}}
+      {{if eq $.UMStyle "band"}}{{else}}<span class="um-shade" aria-hidden="true"></span>{{end}}
+      <p class="um-t{{if not $.ShowTitle}} sr-only{{end}}{{if $.TitleCase}} title-case-{{$.TitleCase}}{{end}}"><span class="um-tx">{{.Title}}</span></p>
+    {{end}}</span>
+    {{if not $ov}}<p class="um-t{{if not $.ShowTitle}} sr-only{{end}}{{if $.TitleCase}} title-case-{{$.TitleCase}}{{end}}"><span class="um-tx">{{.Title}}</span></p>{{end}}
+  </a>{{end}}
+</div>
+{{if $kaydirmali}}<button type="button" class="um-ok um-ok-onceki" aria-label="Önceki kartlar" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5 8 12l7 7"/></svg></button><button type="button" class="um-ok um-ok-sonraki" aria-label="Sonraki kartlar" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button>
+<p class="um-ilerleme" aria-hidden="true"><span class="um-ilerleme-dolgu"></span></p>{{end}}
+</div>
+{{end}}{{end}}
+
+{{/* 6'lı Manşet: mynet tarzı tam genişlik hero slider (solda dikey numaralı pager) */}}
+{{define "blk_manset6"}}{{if .Slides}}
+<section class="m6" data-autoplay="{{if .Autoplay}}1{{else}}0{{end}}" data-interval="{{.Interval}}" data-pager-size="{{.PagerSize}}" data-allow-over="{{if .AllowOver20}}1{{else}}0{{end}}"{{if .PagerSize}} style="--m6-num-size:{{.PagerSize}}px"{{end}}>
+  <div class="m6-track">
+    {{range $i, $s := .Slides}}
+    <a class="m6-slide {{if eq $i 0}}on{{end}}" href="{{$.D.LangBase}}/{{$s.DisplaySlug}}-{{$s.ID}}">
+      {{if $s.CoverMediaID}}<img src="{{mediaURL $s.CoverMediaID}}" srcset="{{mediaSrcset $s.CoverMediaID}}" sizes="(max-width: 64rem) 100vw, 1180px" alt="{{$s.Title}}" loading="{{if eq $i 0}}eager{{else}}lazy{{end}}" fetchpriority="{{if eq $i 0}}high{{else}}auto{{end}}">{{end}}
+      {{if and $s.CategoryName (ne $.CatPosition "inline")}}<span class="m6-cat{{if $.CatShape}} cat-shape-{{$.CatShape}}{{end}}{{if or (not $.ShowBadge) $.HideBadge}} sr-only{{end}}" style="{{$.CatStyle}}">{{$s.CategoryName}}</span>{{end}}
+      {{if or $.ShowTitle $.ShowSpot (and $.ShowBadge (not $.HideBadge))}}<span class="m6-shade"{{if $.OverlayStyle}} style="{{$.OverlayStyle}}"{{end}}></span>{{end}}
+      <div class="m6-cap">
+        {{if and $s.CategoryName (eq $.CatPosition "inline")}}<span class="m6-cat{{if $.CatShape}} cat-shape-{{$.CatShape}}{{end}}{{if or (not $.ShowBadge) $.HideBadge}} sr-only{{end}}" style="{{$.CatStyle}}">{{$s.CategoryName}}</span>{{end}}
+        {{/* İlk slayt sayfanın ana başlığıdır: h1 olur, kalanlar h2 kalır.
+             Blok yeniden kullanılabilir olduğu için tüm başlıklar h2'ydi ve
+             ana sayfada hiç h1 kalmıyordu. */}}
+        {{if eq $i 0}}<h1 class="m6-title m6-title-ana{{if not $.ShowTitle}} sr-only{{end}}{{if $.TitleCase}} title-case-{{$.TitleCase}}{{end}}"{{if $.TitleStyle}} style="{{$.TitleStyle}}"{{end}}>{{$s.Title}}</h1>{{else}}<h2 class="m6-title{{if not $.ShowTitle}} sr-only{{end}}{{if $.TitleCase}} title-case-{{$.TitleCase}}{{end}}"{{if $.TitleStyle}} style="{{$.TitleStyle}}"{{end}}>{{$s.Title}}</h2>{{end}}
+      </div>
+    </a>
+    {{end}}
+    {{if .ShowAll}}<a class="m6-slide m6-slide-all" href="{{.D.LangBase}}/akis?mod=manset"><div class="m6-cap m6-all-cap"><span class="m6-cat">TÜM MANŞETLER</span><h2 class="m6-title">Tüm manşetleri görüntüle →</h2></div></a>{{end}}
+  </div>
+  <ol class="m6-pager m6-pager--{{.PagerLayout}} m6-pager--shape-{{.PagerShape}} m6-pager--pos-{{.PagerPos}}{{if eq .PagerType "dots"}} m6-pager--dots{{end}}"{{if .PagerColor}} style="--pager-color:{{.PagerColor}}"{{end}} aria-label="Manşet slaytları">
+    {{range $i, $s := .Slides}}<li><button type="button" class="m6-num {{if eq $i 0}}on{{end}}" data-idx="{{$i}}" aria-label="{{add $i 1}}. manşet">{{if eq $.PagerType "dots"}}<span class="sr-only">{{add $i 1}}</span>{{else}}{{add $i 1}}{{end}}</button></li>{{end}}
+    {{if .ShowAll}}<li><button type="button" class="m6-num m6-num-all" data-idx="{{len .Slides}}" aria-label="Tüm manşetler">T</button></li>{{end}}
+  </ol>
+  {{if .Arrows}}<button class="m6-arrow m6-prev" type="button" aria-label="Önceki"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5 8 12l7 7"/></svg></button><button class="m6-arrow m6-next" type="button" aria-label="Sonraki"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button>{{end}}
+</section>
+{{end}}{{end}}
+
+{{/* Manşet II: yarım görsel + renkli arka plan + 23'lü numaralı gezinme */}}
+{{define "blk_manset2"}}{{if .Slides}}
+<section class="m2 m2-side-{{.M2Side}}" style="--m2-height:{{.M2Height}}px;--m2-bg:{{.M2Bg}};--m2-accent:{{.M2Accent}}{{if .M2Fade}};--m2-fade:{{.M2Fade}}{{end}}{{if .M2NumBg}};--m2-num-bg:{{.M2NumBg}}{{end}}{{if .M2NumActiveBg}};--m2-num-active-bg:{{.M2NumActiveBg}}{{end}}">
+  <div class="m2-track">
+    {{range $i, $s := .Slides}}
+    <a class="m2-slide{{if eq $i 0}} on{{end}}" href="{{$.D.LangBase}}/{{$s.DisplaySlug}}-{{$s.ID}}">
+      <div class="m2-shade"></div>
+      <figure class="m2-media">
+        {{if $s.CoverMediaID}}<img src="{{mediaURL $s.CoverMediaID}}" srcset="{{mediaSrcset $s.CoverMediaID}}" sizes="(max-width: 900px) 100vw, 55vw" alt="{{$s.Title}}" loading="{{if eq $i 0}}eager{{else}}lazy{{end}}" fetchpriority="{{if eq $i 0}}high{{else}}auto{{end}}">{{end}}
+      </figure>
+      <div class="m2-text">
+        {{if $s.CategoryName}}<span class="m2-cat{{if $.CatShape}} cat-shape-{{$.CatShape}}{{end}}{{if or (not $.ShowBadge) $.HideBadge}} sr-only{{end}}" style="{{$.CatStyle}}">{{$s.CategoryName}}</span>{{end}}
+        <h2 class="m2-title{{if not $.ShowTitle}} sr-only{{end}}{{if $.TitleCase}} title-case-{{$.TitleCase}}{{end}}"{{if $.TitleStyle}} style="{{$.TitleStyle}}"{{end}}>{{$s.Title}}</h2>
+        {{if $s.Spot}}<p class="m2-spot{{if not $.ShowSpot}} sr-only{{end}}">{{$s.Spot}}</p>{{end}}
+      </div>
+    </a>
+    {{end}}
+  </div>
+  <div class="m2-bar">
+    <div class="m2-numbers" role="tablist" aria-label="Manşet II slaytları">
+      {{range $i, $s := .Slides}}<button class="m2-num{{if eq $i 0}} on{{end}}" type="button" data-idx="{{$i}}" role="tab" aria-selected="{{if eq $i 0}}true{{else}}false{{end}}" aria-label="Slayt {{add $i 1}}">{{add $i 1}}</button>{{end}}
+    </div>
+    {{if .Arrows}}<div class="m2-nav"><button class="m2-prev" type="button" aria-label="Önceki manşet"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5 8 12l7 7"/></svg></button><button class="m2-next" type="button" aria-label="Sonraki manşet"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button></div>{{end}}
+  </div>
+</section>
+{{end}}{{end}}
+
+{{/* Slider + sağ ray (haberpi: büyük slider yanında 2 kart) */}}
+{{define "blk_slider"}}{{if .Slides}}
+<div class="hero-row{{if and .SliderStyle (ne .SliderStyle "default")}} hero-row-{{.SliderStyle}}{{end}}">
+  <section class="hero-slider{{if and .SliderStyle (ne .SliderStyle "default")}} hero-style-{{.SliderStyle}}{{end}}{{if eq .SliderStyle "stil5"}} hero-side-{{.M2Side}}{{end}}"{{if and (eq .SliderStyle "stil5") .M2Bg}} style="--m2-bg:{{.M2Bg}};--m2-accent:{{.M2Accent}}{{if .M2Fade}};--m2-fade:{{.M2Fade}}{{end}}{{if .M2NumBg}};--m2-num-bg:{{.M2NumBg}}{{end}}{{if .M2NumActiveBg}};--m2-num-active-bg:{{.M2NumActiveBg}}{{end}}"{{end}} data-autoplay="{{if .Autoplay}}1{{else}}0{{end}}" data-interval="{{.Interval}}" data-dots="{{if .Dots}}1{{else}}0{{end}}" data-pager-size="{{.PagerSize}}">
+    {{range $i, $s := .Slides}}
+    <a class="hero-slide {{if eq $i 0}}on{{end}}" href="{{$.D.LangBase}}/{{$s.DisplaySlug}}-{{$s.ID}}">
+      {{if $s.CoverMediaID}}<img src="{{mediaURL $s.CoverMediaID}}" srcset="{{mediaSrcset $s.CoverMediaID}}" sizes="(max-width: 64rem) 100vw, 66vw" alt="{{$s.Title}}" loading="{{if eq $i 0}}eager{{else}}lazy{{end}}" fetchpriority="{{if eq $i 0}}high{{else}}auto{{end}}">{{end}}
+      {{if and $s.CategoryName (ne $.CatPosition "inline")}}<span class="hero-cat{{if $.CatShape}} cat-shape-{{$.CatShape}}{{end}}{{if or (not $.ShowBadge) $.HideBadge}} sr-only{{end}}" style="{{$.CatStyle}}">{{$s.CategoryName}}</span>{{end}}
+      <div class="hero-overlay{{if and (not $.ShowTitle) (or (not $.ShowBadge) $.HideBadge) (not $.ShowSpot)}} hero-overlay--plain{{end}}"{{if $.OverlayStyle}} style="{{$.OverlayStyle}}"{{end}}><div class="container">
+        {{if and $s.CategoryName (eq $.CatPosition "inline")}}<span class="hero-cat{{if $.CatShape}} cat-shape-{{$.CatShape}}{{end}}{{if or (not $.ShowBadge) $.HideBadge}} sr-only{{end}}" style="{{$.CatStyle}}">{{$s.CategoryName}}</span>{{end}}
+        <h2 class="hero-title{{if not $.ShowTitle}} sr-only{{end}}{{if $.TitleCase}} title-case-{{$.TitleCase}}{{end}}"{{if $.TitleStyle}} style="{{$.TitleStyle}}"{{end}}>{{$s.Title}}</h2>
+        {{if $s.Spot}}<p class="hero-spot{{if not $.ShowSpot}} sr-only{{end}}">{{$s.Spot}}</p>{{end}}
+      </div></div>
+    </a>
+    {{end}}
+    {{if .ShowAll}}<a class="hero-slide hero-slide-all" href="{{.D.LangBase}}/akis?mod=manset"><div class="hero-all"><span>TÜM MANŞETLER</span><strong>Tüm manşetleri görüntüle</strong><em>→</em></div></a>{{end}}
+    {{if .Arrows}}<button class="hero-nav hero-prev" type="button" aria-label="Önceki"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5 8 12l7 7"/></svg></button><button class="hero-nav hero-next" type="button" aria-label="Sonraki"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button>{{end}}
+    {{if ne .PagerType "none"}}<div class="hero-dots{{if eq .PagerType "numbers"}} hero-dots--numbers{{end}} hero-dots--shape-{{.PagerShape}} hero-dots--pos-{{.PagerPos}}"{{if or .PagerSize .PagerColor}} style="{{if .PagerSize}}--hero-dot-size:{{.PagerSize}}px;{{end}}{{if .PagerColor}}--pager-color:{{.PagerColor}}{{end}}"{{end}}>{{range $i, $s := .Slides}}<button class="hero-dot {{if eq $i 0}}on{{end}}" type="button" data-idx="{{$i}}" aria-label="Slayt {{add $i 1}}">{{if eq $.PagerType "numbers"}}<span class="hero-dot-n">{{add $i 1}}</span>{{end}}</button>{{end}}{{if .ShowAll}}<button class="hero-dot hero-dot-all" type="button" data-idx="{{len .Slides}}" aria-label="Tüm manşetler">{{if eq $.SliderStyle "sayili"}}<span class="hero-dot-n">+</span>{{else if eq $.PagerType "numbers"}}<span class="hero-dot-n">T</span>{{else}}→{{end}}</button>{{end}}</div>{{end}}
+  </section>
+  {{/* sağ ray: slider sayısından bağımsız sabit iki haber */}}
+  {{if .Rail}}
+  <div class="hero-rail">
+    {{range $s := .Rail}}
+    <a href="{{$.D.LangBase}}/{{$s.DisplaySlug}}-{{$s.ID}}">
+      {{/* Yuva yatay (1.3-1.8 oran), en geniş 405px. Kare thumb çift kırpıyordu. */}}
+      {{if $s.CoverMediaID}}<img src="{{mediaVariantURL $s.CoverMediaID 480}}" srcset="{{mediaVariantURL $s.CoverMediaID 320}} 320w, {{mediaVariantURL $s.CoverMediaID 480}} 480w" sizes="(max-width: 47.99rem) 46vw, (max-width: 63.99rem) 48vw, (max-width: 79.99rem) 33vw, 410px" alt="{{$s.Title}}" loading="lazy" decoding="async">{{end}}
+      <span class="rail-t">{{$s.Title}}</span>
+    </a>
+    {{end}}
+  </div>
+  {{end}}
+</div>
+{{end}}{{end}}
+
+{{/* Karma kart ızgarası: haberpi mozaik (2 dikey / 3 dikey / 2 yatay tekrarı) */}}
+{{define "blk_kari"}}{{if .Kari}}
+<section class="kari-izgara">
+  {{range .Kari}}{{$h := .Horizontal}}
+  <div class="kr {{if $h}}kr-h{{else}}kr-v{{end}} kr-{{len .Items}}">
+    {{range .Items}}<a class="ky {{if $h}}ky-yatay{{else}}ky-dikey{{end}}" href="{{$.D.LangBase}}/{{.DisplaySlug}}-{{.ID}}">
+      {{/* Yuva her iki yönde de YATAY: ky-dikey 16/10, ky-yatay 4/3.
+           mediaThumbURL 480x480 kare verdiği için görsel iki kez kırpılıyordu —
+           önce kareye (yanlar gidiyor), sonra object-fit ile orana (üst/alt
+           gidiyor); kadrajın ortasında dar bir şerit kalıyordu. Varyant oranı
+           koruduğu için tek kırpma oluyor.
+           sizes ölçümle türetildi (yuva genişliği / viewport):
+             dikey  96vw (<48rem) · 49vw (48-64) · 33vw (64-80) · 403px (80+)
+             yatay  37vw (<48rem) · 21vw (48-64) · 14vw (64-80) · 169px (80+)
+           srcset bilinçli olarak 480'de kesiliyor. 768 eklemek retina'da
+           netleştirirdi ama ana sayfanın kart görselleri ~0,6 MB ağırlaşıyordu;
+           480'lik varyant (480x270) bugünkü kare thumb'ın kullanılabilir
+           kısmıyla (480x300) aynı çözünürlükte, yani netlik değişmiyor,
+           yalnız kadraj düzeliyor ve bayt düşüyor. */}}
+      <span class="ky-media">{{if .CoverMediaID}}<img src="{{mediaVariantURL .CoverMediaID 480}}" srcset="{{mediaVariantURL .CoverMediaID 320}} 320w, {{mediaVariantURL .CoverMediaID 480}} 480w" sizes="{{if $h}}(max-width: 47.99rem) 37vw, (max-width: 63.99rem) 21vw, (max-width: 79.99rem) 14vw, 170px{{else}}(max-width: 47.99rem) 96vw, (max-width: 63.99rem) 49vw, (max-width: 79.99rem) 33vw, 410px{{end}}" alt="{{.Title}}" loading="lazy" decoding="async">{{end}}
+      {{if and .CategoryName (not $h)}}<span class="card-badge{{if $.CatShape}} cat-shape-{{$.CatShape}}{{end}}{{if or (not $.ShowBadge) $.HideBadge}} sr-only{{end}}" style="{{$.CatStyle}}">{{.CategoryName}}</span>{{end}}</span>
+      <h3>{{.Title}}</h3>
+    </a>{{end}}
+  </div>
+  {{end}}
+</section>
+{{end}}{{end}}
+
+{{/* Canlı yayın / son video bloğu (sağ sütun) */}}
+{{define "blk_canli_yayin"}}{{if .Items}}
+{{with index .Items 0}}
+<div class="side-live"><span class="dot"></span> {{if eq .TypeKey "video"}}CANLI YAYIN{{else}}SON HABER{{end}}</div>
+<a class="side-live-card" href="{{$.D.LangBase}}/{{.DisplaySlug}}-{{.ID}}">
+  {{if .CoverMediaID}}<img src="{{mediaURL .CoverMediaID}}" srcset="{{mediaSrcset .CoverMediaID}}" sizes="(max-width: 900px) 100vw, 320px" alt="{{.Title}}" loading="lazy">{{end}}{{template "kart_sure" .}}
+  <span class="sl-t">{{.Title}}</span>
+</a>
+{{end}}
+{{end}}{{end}}
+
+{{define "blk_son_dakika"}}{{if .Items}}
+<div class="son-dakika-band"><div class="container">
+  <span class="sd-label">Son Dakika</span>
+  <div class="sd-scroll">{{range .Items}}<a href="{{$.D.LangBase}}/{{.DisplaySlug}}-{{.ID}}">{{.Title}}</a>{{end}}</div>
+</div></div>
+{{end}}{{end}}
+
+{{define "blk_manset"}}{{if .Items}}
+<section class="manset-grid">
+  {{range .Items}}
+  <a class="manset-item" href="{{$.D.LangBase}}/{{.DisplaySlug}}-{{.ID}}">
+    {{if .CoverMediaID}}<img src="{{mediaURL .CoverMediaID}}" srcset="{{mediaSrcset .CoverMediaID}}" sizes="(max-width: 900px) 100vw, 33vw" alt="{{.Title}}" loading="lazy">{{end}}
+    {{if .CategoryName}}<span class="manset-cat{{if $.CatShape}} cat-shape-{{$.CatShape}}{{end}}{{if or (not $.ShowBadge) $.HideBadge}} sr-only{{end}}" style="{{$.CatStyle}}">{{.CategoryName}}</span>{{end}}
+    <div class="manset-overlay{{if and (not $.ShowTitle) (or (not $.ShowBadge) $.HideBadge) (not $.ShowSpot)}} manset-overlay--plain{{end}}"{{if $.OverlayStyle}} style="{{$.OverlayStyle}}"{{end}}>
+      <h4 class="{{if not $.ShowTitle}}sr-only {{end}}{{if $.TitleCase}}title-case-{{$.TitleCase}}{{end}}"{{if and $.ShowTitle $.TitleStyle}} style="{{$.TitleStyle}}"{{end}}>{{.Title}}</h4>
+      {{if .Spot}}<p class="muted small{{if not $.ShowSpot}} sr-only{{end}}" style="margin:4px 0 0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">{{.Spot}}</p>{{end}}
+    </div>
+  </a>
+  {{end}}
+</section>
+{{end}}{{end}}
+
+{{define "blk_kategori_sekmeli"}}{{if .CatSections}}
+<section class="kat-sekmeli kt-{{.TabStyle}}"{{if .TabCSS}} style="{{.TabCSS}}"{{end}}>
+  <div class="kat-tabs-wrap">{{range $i, $cs := .CatSections}}<button class="kat-tab {{if eq $i 0}}on{{end}}" type="button" data-tab="{{$cs.Slug}}">{{$cs.Name}}</button>{{end}}</div>
+  {{range $i, $cs := .CatSections}}
+  <div class="kat-panel {{if eq $i 0}}on{{end}}" data-panel="{{$cs.Slug}}">
+    <div class="kat-view">
+      {{if gt (len $cs.Pages) 1}}<button class="kat-nav kat-prev" type="button" data-knav="-1" aria-label="Önceki haberler">&#8249;</button>{{end}}
+      <div class="kat-pages">
+      {{range $pi, $pg := $cs.Pages}}
+        <div class="kat-yap kat-page{{if eq $pi 0}} on{{end}}"{{if ne $pi 0}} hidden{{end}}>
+          {{with index $pg 0}}
+          <div class="kat-buyuk">
+            <a href="{{$.D.LangBase}}/{{.DisplaySlug}}-{{.ID}}" title="{{.Title}}">
+              {{/* Yuva yatay (1.5-1.71 oran), en geniş 400px. Kare thumb
+                   çift kırpıyordu; varyant oranı koruyor. */}}
+              {{if .CoverMediaID}}<img src="{{mediaVariantURL .CoverMediaID 480}}" srcset="{{mediaVariantURL .CoverMediaID 320}} 320w, {{mediaVariantURL .CoverMediaID 480}} 480w" sizes="(max-width: 47.99rem) 96vw, (max-width: 63.99rem) 48vw, (max-width: 79.99rem) 33vw, 400px" alt="{{.Title}}" loading="lazy" decoding="async">{{end}}
+              <div class="kat-buyuk-mt">
+                <h4>{{.Title}}</h4>
+                {{if .Spot}}<p class="kat-spot">{{.Spot}}</p>{{end}}
+              </div>
+            </a>
+          </div>
+          {{end}}
+          <div class="kat-kucuk">
+            {{range $j, $it := $pg}}{{if gt $j 0}}
+            <a class="kat-mini" href="{{$.D.LangBase}}/{{$it.DisplaySlug}}-{{$it.ID}}" title="{{$it.Title}}">
+              {{/* Yuva 192x108 (16:9), ana sayfada en çok tekrar eden görsel.
+                   mediaThumbURL 480x480 kare veriyordu; varyant hem oranı korur
+                   (16:9'a daha az kırpma) hem küçüktür: DPR1'de ~%60-70,
+                   DPR2'de ~%25-45 daha az bayt. aspect-ratio CSS'te tanımlı. */}}
+              <span class="kat-mini-gorsel">{{if $it.CoverMediaID}}<img src="{{mediaVariantURL $it.CoverMediaID 320}}" srcset="{{mediaVariantURL $it.CoverMediaID 320}} 320w, {{mediaVariantURL $it.CoverMediaID 480}} 480w" sizes="192px" alt="{{$it.Title}}" loading="lazy" decoding="async">{{end}}</span>
+              <span class="kat-mini-sar"><span class="kat-mini-mt">{{$it.Title}}</span></span>
+            </a>
+            {{end}}{{end}}
+          </div>
+        </div>
+      {{end}}
+      </div>
+      {{if gt (len $cs.Pages) 1}}<button class="kat-nav kat-next" type="button" data-knav="1" aria-label="Sonraki haberler">&#8250;</button>{{end}}
+    </div>
+    <div class="kat-foot">
+      {{if gt (len $cs.Pages) 1}}
+      <div class="kat-nav-dots" aria-label="{{$cs.Name}} haber sayfaları">{{range $pi, $pg := $cs.Pages}}<button class="kat-dot{{if eq $pi 0}} on{{end}}" type="button" data-kpage="{{$pi}}" aria-label="{{add $pi 1}}. sayfa"></button>{{end}}</div>
+      {{else}}<span></span>{{end}}
+      <a class="kat-tum" href="{{$.D.LangBase}}/kategori/{{$cs.Slug}}">Tümünü Gör →</a>
+    </div>
+  </div>
+  {{end}}
+</section>
+{{end}}{{end}}
+
+{{define "blk_trend_numarali"}}{{if .Items}}
+<section class="trend-num side-trend tn-{{.TrendNumStil}}"{{if .TrendNumCSS}} style="{{.TrendNumCSS}}"{{end}}>
+  <h2 class="side-h head-mark-{{.HeadingStyle}}{{if .HideHeading}} sr-only{{end}}">Trend Haberler</h2>
+  <div class="trend-scroll">
+  <ol class="side-trend-list" data-autoscroll="1">{{range $i, $t := .Items}}<li class="st-item">
+    {{/* Yuva 160x96 (yatay). mediaThumbURL 480x480 kare ve ~67 KB veriyordu;
+         320'lik varyant 320x213 ve ~27 KB — hem oran hem boyut doğru.
+         width/height yer ayırır: bu görsellerde CSS oranı tanımlı değildi. */}}
+    {{if .CoverMediaID}}<img src="{{mediaVariantURL .CoverMediaID 320}}" srcset="{{mediaVariantURL .CoverMediaID 320}} 320w, {{mediaVariantURL .CoverMediaID 480}} 480w" sizes="160px" width="160" height="96" alt="" loading="lazy" decoding="async">{{end}}
+    <a href="{{$.D.LangBase}}/{{$t.DisplaySlug}}-{{$t.ID}}">{{$t.Title}}</a>
+    <span class="st-n"><span class="st-n-i">{{add $i 1}}</span></span>
+  </li>{{end}}</ol>
+  </div>
+  {{with .D.Home}}{{with .Trends}}<div class="trend-tags" style="padding:0 12px 12px">{{range .}}<a class="trend-tag" href="{{$.D.LangBase}}/arama?q={{urlquery .Tag}}">{{.Tag}}</a>{{end}}</div>{{end}}{{end}}
+</section>
+{{end}}{{end}}
+
+{{define "blk_galeri"}}{{if .Items}}
+{{$video := eq .Type "galeri_video"}}
+<section class="galeri-blok{{if $video}} galeri-koyu{{end}}">
+  <div class="galeri-head">
+    <h2 class="galeri-etiket head-mark-{{.HeadingStyle}}{{if .HideHeading}} sr-only{{end}}">{{if $video}}Video Galeri{{else}}Foto Galeri{{end}}</h2>
+    <a href="{{.D.LangBase}}/akis">Tümü</a>
+  </div>
+  <div class="galeri-grid{{if $video}} galeri-video{{end}}">{{range .Items}}
+  <a class="galeri-item" href="{{$.D.LangBase}}/{{.DisplaySlug}}-{{.ID}}">
+    {{/* Izgara yuvası çok geniş: masaüstünde 3.03 orana (394x130) kadar
+         çıkıyor, 768px'te tek sütunda 752px oluyor. Kare thumb burada
+         kadrajın yalnız orta şeridini bırakıyordu. */}}
+    {{if .CoverMediaID}}<img src="{{mediaVariantURL .CoverMediaID 480}}" srcset="{{mediaVariantURL .CoverMediaID 320}} 320w, {{mediaVariantURL .CoverMediaID 480}} 480w" sizes="(max-width: 47.99rem) 96vw, (max-width: 63.99rem) 98vw, (max-width: 79.99rem) 32vw, 400px" alt="{{.Title}}" loading="lazy" decoding="async">{{end}}
+    {{template "kart_sure" .}}{{if $video}}<span class="galeri-play"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.14v13.72a1 1 0 001.53.85l10.79-6.86a1 1 0 000-1.7L9.53 4.29A1 1 0 008 5.14z"/></svg></span>{{end}}
+    <div class="galeri-overlay">{{.Title}}</div>
+  </a>{{end}}</div>
+</section>
+{{end}}{{end}}
+
+{{/* Kategori paneli — haberpi düzeni. Kategoriye göre farklı düzen:
+    Güncel: 2 büyük kart + 2 kolonlu liste · Siyaset & diğerleri: 3 kolonlu
+    mozaik (1 büyük + 4 küçük) · Ekonomi: büyük kart + 3 kolonlu liste. */}}
+{{define "blk_kat_panel"}}{{range .CatBlocks}}
+{{$ht := or (eq .Duzen "ekonomi") (eq .Duzen "gastro")}}
+<section class="kat-panel-blok {{.Tone}}{{if $ht}} kp-ht{{end}}{{if eq .Duzen "gastro"}} kp-gs{{end}}">
+  <div class="galeri-head kp-head">
+    <h2 class="galeri-etiket head-mark-{{$.HeadingStyle}}{{if $.HideHeading}} sr-only{{end}}">{{.Name}}</h2>
+    <span class="kp-line"></span>
+    <a href="{{$.D.LangBase}}/kategori/{{.Slug}}">{{if $ht}}TÜMÜ{{else}}Tümü{{end}}</a>
+  </div>
+  {{if eq .Duzen "iki"}}
+  <div class="gc-bigs">
+    <a class="gc-big" href="{{$.D.LangBase}}/{{.Lead.DisplaySlug}}-{{.Lead.ID}}">
+      {{if .Lead.CoverMediaID}}<img src="{{mediaURL .Lead.CoverMediaID}}" srcset="{{mediaSrcset .Lead.CoverMediaID}}" sizes="(max-width: 900px) 100vw, 600px" alt="{{.Lead.Title}}" loading="lazy">{{end}}
+      <span class="gc-t"><span class="gc-tx">{{.Lead.Title}}</span></span>
+    </a>
+    {{range $i, $it := .Items}}{{if eq $i 0}}<a class="gc-big" href="{{$.D.LangBase}}/{{$it.DisplaySlug}}-{{$it.ID}}">
+      {{if $it.CoverMediaID}}<img src="{{mediaURL $it.CoverMediaID}}" srcset="{{mediaSrcset $it.CoverMediaID}}" sizes="(max-width: 900px) 100vw, 600px" alt="{{$it.Title}}" loading="lazy">{{end}}
+      <span class="gc-t"><span class="gc-tx">{{$it.Title}}</span></span>
+    </a>{{end}}{{end}}
+  </div>
+  <div class="gc-list">
+    {{range $i, $it := .Items}}{{if gt $i 0}}<a class="gc-item" href="{{$.D.LangBase}}/{{$it.DisplaySlug}}-{{$it.ID}}">
+      {{if $it.CoverMediaID}}<img src="{{mediaThumbURL $it.CoverMediaID}}" alt="{{$it.Title}}" loading="lazy">{{end}}
+      <span class="gc-it">{{$it.Title}}</span>
+    </a>{{end}}{{end}}
+  </div>
+  {{else if eq .Duzen "buyuk"}}
+  <a class="ec-big" href="{{$.D.LangBase}}/{{.Lead.DisplaySlug}}-{{.Lead.ID}}">
+    {{if .Lead.CoverMediaID}}<img src="{{mediaURL .Lead.CoverMediaID}}" srcset="{{mediaSrcset .Lead.CoverMediaID}}" sizes="(max-width: 900px) 100vw, 400px" alt="{{.Lead.Title}}" loading="lazy">{{end}}
+    <span class="ec-t"><span class="ec-tx">{{.Lead.Title}}</span></span>
+  </a>
+  <div class="ec-list">
+    {{range $i, $it := .Items}}<a class="ec-item" href="{{$.D.LangBase}}/{{$it.DisplaySlug}}-{{$it.ID}}">
+      {{/* Yuva 96x64; 480x480 kare thumb yerine 320 varyantı (bkz. st-item). */}}
+      {{if $it.CoverMediaID}}<img src="{{mediaVariantURL $it.CoverMediaID 320}}" srcset="{{mediaVariantURL $it.CoverMediaID 320}} 320w, {{mediaVariantURL $it.CoverMediaID 480}} 480w" sizes="96px" width="96" height="64" alt="{{$it.Title}}" loading="lazy" decoding="async">{{end}}
+      <span class="ec-it">{{$it.Title}}</span>
+    </a>{{end}}
+  </div>
+  {{else if eq .Duzen "solbuyuk"}}
+  <div class="sb-top">
+    <a class="sb-big" href="{{$.D.LangBase}}/{{.Lead.DisplaySlug}}-{{.Lead.ID}}">
+      {{if .Lead.CoverMediaID}}<img src="{{mediaURL .Lead.CoverMediaID}}" srcset="{{mediaSrcset .Lead.CoverMediaID}}" sizes="(max-width: 900px) 100vw, 600px" alt="{{.Lead.Title}}" loading="lazy">{{end}}
+      <span class="sb-t"><span class="sb-tx">{{.Lead.Title}}</span></span>
+    </a>
+    <div class="sb-col">
+      {{range $i, $it := .Items}}{{if lt $i 2}}<a class="sb-item" href="{{$.D.LangBase}}/{{$it.DisplaySlug}}-{{$it.ID}}">
+        {{if $it.CoverMediaID}}<img src="{{mediaURL $it.CoverMediaID}}" srcset="{{mediaSrcset $it.CoverMediaID}}" sizes="(max-width: 900px) 100vw, 300px" alt="{{$it.Title}}" loading="lazy">{{end}}
+        <span class="sb-t"><span class="sb-tx">{{$it.Title}}</span></span>
+      </a>{{end}}{{end}}
+    </div>
+  </div>
+  <div class="sb-bottom">
+    {{range $i, $it := .Items}}{{if and (ge $i 2) (lt $i 5)}}<a class="sb-card" href="{{$.D.LangBase}}/{{$it.DisplaySlug}}-{{$it.ID}}">
+      {{/* Yuva 16/9 (en geniş 391px). Kare thumb çift kırpıyordu. */}}
+      <span class="sb-img">{{if $it.CoverMediaID}}<img src="{{mediaVariantURL $it.CoverMediaID 480}}" srcset="{{mediaVariantURL $it.CoverMediaID 320}} 320w, {{mediaVariantURL $it.CoverMediaID 480}} 480w" sizes="(max-width: 47.99rem) 88vw, (max-width: 63.99rem) 30vw, (max-width: 79.99rem) 32vw, 390px" alt="{{$it.Title}}" loading="lazy" decoding="async">{{end}}</span>
+      <span class="sb-ct">{{$it.Title}}</span>
+    </a>{{end}}{{end}}
+  </div>
+  {{else if eq .Duzen "ust3alt2"}}
+  <div class="u3-top">
+    <a class="u3-card" href="{{$.D.LangBase}}/{{.Lead.DisplaySlug}}-{{.Lead.ID}}">
+      {{/* Yuva 16/9 (en geniş 388px). Kare thumb çift kırpıyordu. */}}
+      <span class="u3-img">{{if .Lead.CoverMediaID}}<img src="{{mediaVariantURL .Lead.CoverMediaID 480}}" srcset="{{mediaVariantURL .Lead.CoverMediaID 320}} 320w, {{mediaVariantURL .Lead.CoverMediaID 480}} 480w" sizes="(max-width: 47.99rem) 88vw, (max-width: 63.99rem) 30vw, (max-width: 79.99rem) 32vw, 390px" alt="{{.Lead.Title}}" loading="lazy" decoding="async">{{end}}</span>
+      <span class="u3-t"><span class="u3-tx">{{.Lead.Title}}</span></span>
+    </a>
+    {{range $i, $it := .Items}}{{if lt $i 2}}<a class="u3-card" href="{{$.D.LangBase}}/{{$it.DisplaySlug}}-{{$it.ID}}">
+      <span class="u3-img">{{if $it.CoverMediaID}}<img src="{{mediaVariantURL $it.CoverMediaID 480}}" srcset="{{mediaVariantURL $it.CoverMediaID 320}} 320w, {{mediaVariantURL $it.CoverMediaID 480}} 480w" sizes="(max-width: 47.99rem) 88vw, (max-width: 63.99rem) 30vw, (max-width: 79.99rem) 32vw, 390px" alt="{{$it.Title}}" loading="lazy" decoding="async">{{end}}</span>
+      <span class="u3-t"><span class="u3-tx">{{$it.Title}}</span></span>
+    </a>{{end}}{{end}}
+  </div>
+  <div class="u3-bottom">
+    {{range $i, $it := .Items}}{{if and (ge $i 2) (lt $i 4)}}<a class="u3-row" href="{{$.D.LangBase}}/{{$it.DisplaySlug}}-{{$it.ID}}">
+      {{if $it.CoverMediaID}}<img src="{{mediaURL $it.CoverMediaID}}" srcset="{{mediaSrcset $it.CoverMediaID}}" sizes="(max-width: 900px) 100vw, 300px" alt="{{$it.Title}}" loading="lazy">{{end}}
+      <span class="u3-rt">{{$it.Title}}</span>
+    </a>{{end}}{{end}}
+  </div>
+  {{else if eq .Duzen "ekonomi"}}
+  {{/* Habertürk Ekonomi vitrini (birebir): 4 sütunlu ızgara.
+       Solda 2 sütun × 2 satır kaplayan büyük kare kart; sağda iki sütun,
+       her sütunda 2 kart (kare + 16:9 dönüşümlü). Başlıklar görselin ALTINDA. */}}
+  <div class="ek-grid">
+    <a class="ek-card ek-big" href="{{$.D.LangBase}}/{{.Lead.DisplaySlug}}-{{.Lead.ID}}">
+      <span class="ek-img ek-sq">{{if .Lead.CoverMediaID}}<img src="{{mediaURL .Lead.CoverMediaID}}" srcset="{{mediaSrcset .Lead.CoverMediaID}}" sizes="(max-width: 48rem) 100vw, 50vw" alt="{{.Lead.Title}}" loading="lazy">{{end}}</span>
+      <span class="ek-t"><span class="ek-tx">{{.Lead.Title}}</span></span>
+    </a>
+    <div class="ek-col">
+      {{range $i, $it := .Items}}{{if lt $i 2}}
+      <a class="ek-card" href="{{$.D.LangBase}}/{{$it.DisplaySlug}}-{{$it.ID}}">
+        <span class="ek-img {{if eq $i 0}}ek-sq{{else}}ek-wide{{end}}">{{if $it.CoverMediaID}}<img src="{{mediaURL $it.CoverMediaID}}" srcset="{{mediaSrcset $it.CoverMediaID}}" sizes="(max-width: 48rem) 50vw, 25vw" alt="{{$it.Title}}" loading="lazy">{{end}}</span>
+        <span class="ek-t"><span class="ek-tx">{{$it.Title}}</span></span>
+      </a>
+      {{end}}{{end}}
+    </div>
+    <div class="ek-col">
+      {{range $i, $it := .Items}}{{if and (ge $i 2) (lt $i 4)}}
+      <a class="ek-card" href="{{$.D.LangBase}}/{{$it.DisplaySlug}}-{{$it.ID}}">
+        <span class="ek-img {{if eq $i 2}}ek-wide{{else}}ek-sq{{end}}">{{if $it.CoverMediaID}}<img src="{{mediaURL $it.CoverMediaID}}" srcset="{{mediaSrcset $it.CoverMediaID}}" sizes="(max-width: 48rem) 50vw, 25vw" alt="{{$it.Title}}" loading="lazy">{{end}}</span>
+        <span class="ek-t"><span class="ek-tx">{{$it.Title}}</span></span>
+      </a>
+      {{end}}{{end}}
+    </div>
+  </div>
+  {{else if eq .Duzen "gastro"}}
+  {{/* Habertürk GASTRO vitrini (birebir): yatay kaydırmalı 1:2 portre kartlar.
+       4 görünür sütun (lg) / 3 (md) / 2 (mobil). Kartlar dönüşümlü:
+       çift sıra başlık görselin ALTINDA, tek sıra başlık görselin ÜSTÜNDE
+       (Habertürk'teki flex-col-reverse). */}}
+  <div class="gs-scroll" role="region" aria-label="{{.Name}} haberleri">
+    <div class="gs-track">
+      <a class="gs-card" href="{{$.D.LangBase}}/{{.Lead.DisplaySlug}}-{{.Lead.ID}}">
+        <span class="gs-fig">
+          <span class="gs-img">{{if .Lead.CoverMediaID}}<img src="{{mediaURL .Lead.CoverMediaID}}" srcset="{{mediaSrcset .Lead.CoverMediaID}}" sizes="(max-width: 48rem) 50vw, (max-width: 64rem) 33vw, 25vw" alt="{{.Lead.Title}}" loading="lazy">{{end}}</span>
+          <span class="gs-t"><span class="gs-tx">{{.Lead.Title}}</span></span>
+        </span>
+      </a>
+      {{range $i, $it := .Items}}
+      <a class="gs-card{{if odd (add $i 1)}} gs-rev{{end}}" href="{{$.D.LangBase}}/{{$it.DisplaySlug}}-{{$it.ID}}">
+        <span class="gs-fig">
+          <span class="gs-img">{{if $it.CoverMediaID}}<img src="{{mediaURL $it.CoverMediaID}}" srcset="{{mediaSrcset $it.CoverMediaID}}" sizes="(max-width: 48rem) 50vw, (max-width: 64rem) 33vw, 25vw" alt="{{$it.Title}}" loading="lazy">{{end}}</span>
+          <span class="gs-t"><span class="gs-tx">{{$it.Title}}</span></span>
+        </span>
+      </a>
+      {{end}}
+    </div>
+  </div>
+  {{else}}
+  <div class="mo-grid">
+    <a class="mo-big" href="{{$.D.LangBase}}/{{.Lead.DisplaySlug}}-{{.Lead.ID}}">
+      {{if .Lead.CoverMediaID}}<img src="{{mediaURL .Lead.CoverMediaID}}" srcset="{{mediaSrcset .Lead.CoverMediaID}}" sizes="(max-width: 900px) 100vw, 600px" alt="{{.Lead.Title}}" loading="lazy">{{end}}
+      <span class="mo-t"><span class="mo-tx">{{.Lead.Title}}</span></span>
+    </a>
+    <div class="mo-col">
+      {{range $i, $it := .Items}}{{if lt $i 2}}<a class="mo-item" href="{{$.D.LangBase}}/{{$it.DisplaySlug}}-{{$it.ID}}">
+        {{if $it.CoverMediaID}}<img src="{{mediaURL $it.CoverMediaID}}" srcset="{{mediaSrcset $it.CoverMediaID}}" sizes="(max-width: 900px) 100vw, 300px" alt="{{$it.Title}}" loading="lazy">{{end}}
+        <span class="mo-t"><span class="mo-tx">{{$it.Title}}</span></span>
+      </a>{{end}}{{end}}
+    </div>
+    <div class="mo-col">
+      {{range $i, $it := .Items}}{{if and (ge $i 2) (lt $i 4)}}<a class="mo-item" href="{{$.D.LangBase}}/{{$it.DisplaySlug}}-{{$it.ID}}">
+        {{if $it.CoverMediaID}}<img src="{{mediaURL $it.CoverMediaID}}" srcset="{{mediaSrcset $it.CoverMediaID}}" sizes="(max-width: 900px) 100vw, 300px" alt="{{$it.Title}}" loading="lazy">{{end}}
+        <span class="mo-t"><span class="mo-tx">{{$it.Title}}</span></span>
+      </a>{{end}}{{end}}
+    </div>
+  </div>
+  {{end}}
+</section>
+{{end}}{{end}}
+
+{{define "blk_one_cikanlar"}}{{if .Items}}
+<section class="one-cikanlar{{if .CardStyle}} cs-scope cs-{{.CardStyle}}{{end}}"{{if .CardCSS}} style="{{.CardCSS}}"{{end}}><h2 class="blk-title head-mark-{{.HeadingStyle}}{{if .HideHeading}} sr-only{{end}}">Öne Çıkanlar</h2>
+<div class="grid-2">{{range .Items}}<a class="card" href="{{$.D.LangBase}}/{{.DisplaySlug}}-{{.ID}}">{{if .CoverMediaID}}<img class="thumb" src="{{mediaThumbURL .CoverMediaID}}" alt="">{{end}}<div class="card-pad"><h3 class="{{if not $.ShowTitle}}sr-only {{end}}{{if $.TitleCase}}title-case-{{$.TitleCase}}{{end}}">{{.Title}}</h3><div class="shape">{{if .CategoryName}}<span class="one-cat{{if $.CatShape}} cat-shape-{{$.CatShape}}{{end}}{{if or (not $.ShowBadge) $.HideBadge}} sr-only{{end}}" style="{{$.CatStyle}}">{{.CategoryName}}</span> · {{end}}{{formatTime .PublishedAt}}</div></div></a>{{end}}</div>
+</section>
+{{end}}{{end}}
+
+{{define "blk_kategori_izgara"}}{{if .Categories}}
+<section class="kat-izgara"><h2 class="blk-title head-mark-{{.HeadingStyle}}{{if .HideHeading}} sr-only{{end}}">Kategoriler</h2>
+<div class="kat-grid">{{range .Categories}}<a class="kat-card" href="{{$.D.LangBase}}/kategori/{{.Slug}}"><span class="kat-icon">{{catIcon .Icon}}</span><span class="kat-izgara-mt"><span class="kat-izgara-ad">{{.Name}}</span><span class="kat-count">{{.ContentCount}} {{$.D.T "news_count"}}</span></span></a>{{end}}</div>
+</section>
+{{end}}{{end}}
+
+{{define "blk_trend"}}{{if .Trends}}
+<section class="trend-etiketler"><h2 class="blk-title head-mark-{{.HeadingStyle}}{{if .HideHeading}} sr-only{{end}}">Gündem</h2>
+<div class="trend-tags">{{range .Trends}}<a class="trend-tag" href="{{$.D.LangBase}}/arama?q={{urlquery .Tag}}">{{.Tag}}{{if .PostCount}} <span class="trend-count">{{.PostCount}}</span>{{end}}</a>{{end}}</div>
+</section>
+{{end}}{{end}}
+
+{{define "blk_reklam"}}{{with .D.Ads}}{{if .Has}}{{if index .SlotMap $.Slot}}<div class="reklam-blok" data-bik-reklam="true" data-bik-reklam-id="{{if $.ID}}{{$.ID}}{{else}}{{$.Slot}}{{end}}">{{if $.Label}}<div class="reklam-label">{{$.Label}}</div>{{end}}{{index .SlotMap $.Slot}}</div>{{end}}{{end}}{{end}}{{end}}
+
+{{define "blk_baslik"}}{{if .Text}}<h2 class="blk-title head-mark-{{.HeadingStyle}}{{if .HideHeading}} sr-only{{end}}">{{.Text}}</h2>{{end}}{{end}}
+{{define "blk_metin"}}{{if .RichHTML}}<div class="blk-rich">{{.RichHTML}}</div>{{else if .Text}}<div class="blk-rich">{{.Text}}</div>{{end}}{{end}}
+{{/* Yazı gövdesi (Faz 142): sabit gövdenin yerini alır. Veri .D.Article'dan
+   gelir; tasarımcı önizlemesinde Article yoktur, bu yüzden boş kalır. */}}
+{{define "blk_yazi_govde"}}{{if and .D .D.Article .D.HasBodyBlock}}<div class="body" id="article-body">{{if .D.Article.Locked}}{{.D.Article.FreeHTML}}<p>…</p>{{else}}{{.D.Article.HTML}}{{end}}</div>{{end}}{{end}}
+{{/* Kurumsal sayfa gövdesi (Faz 143): sabit içeriğin yerini alır. */}}
+{{define "blk_sayfa_govde"}}{{if and .D .D.Page .D.Page.HTML}}<div class="page-body" id="page-body">{{.D.Page.HTML}}</div>{{end}}{{end}}
+
+{{define "kur_ikon"}}{{if eq .Name "USD"}}
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" d="M12 3v18M16.5 7.5c0-1.4-2-2.5-4.5-2.5S7.5 6.1 7.5 7.5s2 2.2 4.5 2.5 4.5 1.1 4.5 2.5-2 2.5-4.5 2.5-4.5-1.1-4.5-2.5"/></svg>
+{{else if eq .Name "EUR"}}
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" d="M4 10h16M4 14h10M15.5 10a4.5 4.5 0 100 4"/></svg>
+{{else if eq .Name "ALTIN"}}
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" d="M4 18h16M6 14h12M8 10h8M10 6h4"/></svg>
+{{else}}
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 17l6-6 4 4 8-8"/><path stroke-linecap="round" d="M15 7h6v6"/></svg>
+{{end}}{{end}}
+
+{{define "blk_servis"}}{{if or .ServisHava .ServisKurlar}}<section class="hp-ticker-bar sv-bg-{{or .ServisBg "kart"}}"{{if .ServisBgCSS}} style="{{.ServisBgCSS}}"{{end}}>
+  <div class="container">
+    <div class="tk-inner">
+      {{if $.ServisKurlar}}<div class="tk-markets">
+        {{range $.ServisKurlar}}<a class="tk-mk tk-{{.Name}}" href="{{$.D.LangBase}}/borsa"
+           data-fin="servis" data-fin-sym="{{.Name}}">
+          {{template "mk_ikon" .}}
+          <span class="tk-v"><span class="tk-n">{{.Name}}</span><b data-fin-fld="f" data-fin-v="{{.Value}}">{{printf "%.2f" .Value}}</b></span>
+          {{if .Delta}}<span class="tk-chg{{if lt .Delta 0.0}} down{{else}} up{{end}}" data-fin-fld="d" data-fin-v="{{.Delta}}">
+            <svg class="tk-arr" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="{{if lt .Delta 0.0}}M6 9l6 6 6-6{{else}}M18 15l-6-6-6 6{{end}}"/></svg>
+            <span data-fin-pct>{{printf "%.2f" .Delta}}%</span>
+          </span>{{end}}
+        </a>{{end}}
+      </div>{{end}}
+      <div class="tk-hava">
+        <label for="hava-il-select" class="sr-only">Hava Durumu</label>
+        <select id="hava-il-select" class="tk-il" aria-label="Hava Durumu">
+          {{range .ServisCities}}<option value="{{.Slug}}" {{if and $.ServisHava (eq $.ServisHava.Slug .Slug)}}selected{{end}}>{{.Name}}</option>{{end}}
+        </select>
+        <a href="{{$.D.LangBase}}/hava-durumu" id="hava-bilgi" class="tk-weather">
+          <span id="hava-ikon" class="tk-wi" aria-hidden="true"></span>
+          {{with .ServisHava}}<span id="hava-aciklama" class="tk-ac">{{.Aciklama}}</span>
+          <span id="hava-sicaklik" class="tk-sic">{{printf "%.0f" .Sicak}}°C</span>{{end}}
+        </a>
+        <span id="hava-loader" class="tk-load" hidden aria-hidden="true"></span>
+      </div>
+    </div>
+  </div>
+</section>
+{{end}}{{end}}
+
+{{define "mk_ikon"}}<span class="tk-ico" aria-hidden="true"><span class="tk-sym">{{if eq .Name "BIST"}}₺{{else if eq .Name "USD"}}${{else if eq .Name "EUR"}}€{{else if eq .Name "ALTIN"}}◆{{else if eq .Name "BTC"}}₿{{else if eq .Name "ONS"}}◈{{else}}↗{{end}}</span></span>{{end}}
+
+{{/*
+  Kur & Borsa modülü — Habertürk ekonomi şeridiyle BİREBİR.
+
+  Yapı referanstan çözüldü (28 Ekim 2026):
+    <a class="flex space-x-2">
+      <div class="flex flex-col">        <- 3 satır: etiket / fiyat / yüzde
+        <span>BIST 100</span>
+        <span class="lastPrice text-red-700">11.151,03</span>
+        <span class="percentChange">%-0,01</span>
+      </div>
+      <i class="setIcon h-8 w-3"></i>    <- OK EN SAĞDA, 12x32, dikey ortalı
+    </a>
+
+  Okun şekli de referanstan alındı: üstte ok başı + düz gövde, ALTINDA
+  KESİKLİ (noktalı) kuyruk. Yatay kalemde ok başı yok, yalnız kesikli
+  dikey çizgi (referanstaki icon-graphic-fixed).
+
+  Çerçeve YOK: kapsayıcıda yalnız alt çizgi var, kenarlık/köşe yok.
+*/}}
+{{define "blk_kur_borsa"}}{{if .Piyasa}}
+<section class="pys-strip pys-style-{{or .PiyasaStil "referans"}} pys-arrow-{{or .PiyasaOk "noktali"}} pys-bg-{{or .PiyasaBg "yok"}}"{{if .PiyasaBgCSS}} style="{{.PiyasaBgCSS}}"{{end}} aria-label="Piyasa göstergeleri">
+  <div class="container">
+    <div class="pys-scroll" data-pys-scroll>
+      {{range .Piyasa}}
+      <a class="pys-item{{if eq .Yon 1}} pys-up{{else if eq .Yon -1}} pys-down{{end}}"
+         href="{{$.D.LangBase}}/borsa" title="{{.Ad}}"
+         data-fin="piyasa" data-fin-sym="{{.Anahtar}}">
+        <span class="pys-col">
+          <span class="pys-name">{{.Kisa}}</span>
+          <span class="pys-price" data-fin-fld="f" data-fin-v="{{.Deger}}" data-fin-dec="{{.Ondalik}}" data-fin-unit="{{.Birim}}">{{.Birim}}{{piyasaNum .Deger .Ondalik}}</span>
+          <span class="pys-chg" data-fin-fld="d" data-fin-v="{{.Degisim}}">%{{piyasaChg .Degisim}}</span>
+        </span>
+        {{template "kb_ok" (kbArrow $.PiyasaOk .Yon)}}
+      </a>
+      {{end}}
+    </div>
+    {{if not .PiyasaGuncel.IsZero}}
+    <div class="pys-meta"><span data-fin-time="piyasa">Son güncelleme: {{.PiyasaGuncel.Format "15:04"}}</span> · Bilgilendirme amaçlıdır, yatırım tavsiyesi değildir.</div>
+    {{end}}
+  </div>
+</section>
+{{end}}{{end}}
+
+{{/*
+  kb_ok — yön göstergesi (sağda, dikey ortalı).
+
+    noktali : referans birebir — ok başı + gövde, ALTINDA KESİKLİ KUYRUK
+    ucgen   : dolu üçgen
+    ok      : ince chevron
+    uzun    : uzun ok (çizgi + baş)
+    yok     : hiçbiri
+
+  Yatay kalemde (değişim ~0) yön yok: referanstaki gibi yalnız kesikli
+  dikey çizgi çizilir. Yönsüz fiyata ok basmak yanlış bilgi olur.
+*/}}
+{{define "kb_ok"}}{{$c := or .Cls "pys"}}{{if eq .Stil "yok"}}{{else if eq .Stil "ucgen"}}<span class="{{$c}}-ico{{if eq .Yon 0}} {{$c}}-ico-flat{{end}}" aria-hidden="true"><svg class="{{$c}}-ico-svg" viewBox="0 0 24 24"><path d="{{if eq .Yon -1}}M12 19l7-12H5z{{else if eq .Yon 1}}M12 5l7 12H5z{{else}}M5 11h14v2H5z{{end}}"/></svg></span>{{else if eq .Stil "ok"}}<span class="{{$c}}-ico{{if eq .Yon 0}} {{$c}}-ico-flat{{end}}" aria-hidden="true"><svg class="{{$c}}-ico-svg {{$c}}-ico-stroke" viewBox="0 0 24 24"><path d="{{if eq .Yon -1}}M6 9l6 6 6-6{{else if eq .Yon 1}}M18 15l-6-6-6 6{{else}}M5 12h14{{end}}"/></svg></span>{{else if eq .Stil "uzun"}}<span class="{{$c}}-ico{{if eq .Yon 0}} {{$c}}-ico-flat{{end}}" aria-hidden="true"><svg class="{{$c}}-ico-svg {{$c}}-ico-stroke" viewBox="0 0 24 24"><path d="{{if eq .Yon -1}}M6 6l12 12M18 8v10H8{{else if eq .Yon 1}}M6 18L18 6M8 6h10v10{{else}}M5 12h14{{end}}"/></svg></span>{{else}}{{/* noktali — referans */}}<span class="{{$c}}-ico {{$c}}-ico-noktali{{if eq .Yon -1}} {{$c}}-ico-down{{end}}{{if eq .Yon 0}} {{$c}}-ico-flat{{end}}" aria-hidden="true">{{if eq .Yon 0}}<svg class="{{$c}}-ico-svg" viewBox="0 0 18.364 50"><g><rect x="8.13" y="6" width="2.115" height="3.172"/><rect x="8.13" y="12.344" width="2.115" height="3.172"/><rect x="8.13" y="18.688" width="2.115" height="3.172"/><rect x="8.13" y="25.032" width="2.115" height="3.172"/><rect x="8.13" y="31.376" width="2.115" height="3.172"/><rect x="8.13" y="37.72" width="2.115" height="3.172"/><rect x="8.13" y="44.064" width="2.115" height="3.172"/></g></svg>{{else}}<svg class="{{$c}}-ico-svg" viewBox="0 0 18.364 50"><g transform="translate(-7.293 -1.586)"><path d="M17.529,5.623l6.636,6.636,1.491-1.491L16.475,1.586,7.293,10.768l1.491,1.491L15.42,5.623V32.6h2.109Z"/><rect x="15.42" y="35.768" width="2.109" height="3.164"/><rect x="15.42" y="42.095" width="2.109" height="3.164"/><rect x="15.42" y="48.422" width="2.109" height="3.164"/></g></svg>{{end}}</span>{{end}}{{end}}

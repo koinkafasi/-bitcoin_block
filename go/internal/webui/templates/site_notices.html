@@ -1,0 +1,97 @@
+{{define "resmi-ilanlar"}}<!doctype html><html lang="{{.Lang}}" {{if .RTL}}dir="rtl"{{end}} data-theme="{{.Theme}}"><head>{{template "public_head" .}}</head>
+<body>
+{{template "site_header" .}}
+<main class="page"><div class="container">
+  {{$f := .IlanFiltre}}
+  <h1 class="page-title"><svg class="ti ti-metin" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-license"></use></svg> Resmi İlanlar (BİK){{if and .IlanTarih (not $f.Tumu)}} — {{.IlanTarih}}{{end}}</h1>
+
+  {{/* Filtreler. Tarih seçimi tek başına yetmiyordu: kurum veya şehir
+       aramak isteyen kullanıcı yalnız son güne bakabiliyordu. Kurum/şehir/
+       arama verildiğinde sunucu varsayılanı "tüm tarihler" yapar. */}}
+  {{if or .IlanTarihler .IlanKurumlar .IlanSehirler}}
+  <form method="get" action="{{.LangBase}}/resmi-ilanlar" class="ilan-filtre"
+        style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:16px">
+    {{if .IlanTarihler}}
+    <label class="small muted" for="ilanTarih">Tarih</label>
+    <select class="input" id="ilanTarih" name="tarih" style="max-width:200px">
+      <option value="tumu" {{if $f.Tumu}}selected{{end}}>Tüm tarihler</option>
+      {{$cur := $f.Tarih}}{{range .IlanTarihler}}<option value="{{.}}" {{if eq . $cur}}selected{{end}}>{{.}}</option>{{end}}
+    </select>
+    {{end}}
+    {{if .IlanKurumlar}}
+    <label class="small muted" for="ilanKurum">Kurum</label>
+    <select class="input" id="ilanKurum" name="kurum" style="max-width:240px">
+      <option value="">Tümü</option>
+      {{$k := $f.Kurum}}{{range .IlanKurumlar}}<option value="{{.}}" {{if eq . $k}}selected{{end}}>{{.}}</option>{{end}}
+    </select>
+    {{end}}
+    {{if .IlanSehirler}}
+    <label class="small muted" for="ilanSehir">Şehir</label>
+    <select class="input" id="ilanSehir" name="sehir" style="max-width:180px">
+      <option value="">Tümü</option>
+      {{$c := $f.Sehir}}{{range .IlanSehirler}}<option value="{{.}}" {{if eq . $c}}selected{{end}}>{{.}}</option>{{end}}
+    </select>
+    {{end}}
+    <input class="input" type="search" name="q" value="{{$f.Arama}}" placeholder="İlan metninde ara" style="max-width:220px" aria-label="İlan metninde ara">
+    <button class="btn small" type="submit">Filtrele</button>
+    {{if $f.Aktif}}<a class="small" href="{{.LangBase}}/resmi-ilanlar">Filtreyi temizle</a>{{end}}
+  </form>
+  {{end}}
+
+  <div class="gap">
+  {{$lb := .LangBase}}
+  {{range .Ilanlar}}
+    <div class="card card-pad">
+      <div style="display:flex;gap:10px;align-items:baseline;flex-wrap:wrap">
+        {{/* İlan artık kendi kalıcı adresinde yayımlanıyor: liste kartı
+             kaybolsa da ilan erişilebilir kalır ve site haritasına girer. */}}
+        <strong><a href="{{$lb}}/resmi-ilanlar/{{noticeSlug .Title}}-{{.ID}}">{{.Title}}</a></strong>
+        <span class="tag" style="margin-left:auto">{{.NoticeDate}}</span>
+      </div>
+      <div class="small muted">{{if .Institution}}{{.Institution}}{{end}}{{if .City}} · <svg class="ti ti-metin" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-map-pin"></use></svg> {{.City}}{{end}}</div>
+      {{if .Body}}<p class="small" style="margin:.4em 0">{{.Body}}</p>{{end}}
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:.4em">
+        <a class="btn small" href="{{$lb}}/resmi-ilanlar/{{noticeSlug .Title}}-{{.ID}}">İlanı Görüntüle</a>
+        {{if .URL}}<a class="btn small" href="{{.URL}}" target="_blank" rel="noopener">Belgeyi Aç</a>{{end}}
+      </div>
+    </div>
+  {{else}}<p class="muted">{{if $f.Aktif}}Bu filtreye uyan ilan bulunamadı.{{else}}Bu tarih için ilan yok.{{end}}</p>{{end}}
+  </div>
+</div></main>
+{{template "site_footer" .}}
+</body></html>{{end}}
+
+{{define "admin_ilanlar"}}<!doctype html><html lang="tr" data-theme="{{.Theme}}"><head>{{template "admin_head" .}}</head>
+<body><div class="admin-wrap">{{template "admin_side" .}}<main class="admin-main">
+{{template "admin_top" .}}
+<div class="admin-body">
+{{template "ilanlar_panel" .}}
+</div></main></div></body></html>{{end}}
+
+{{define "resmi-ilan-detay"}}<!doctype html><html lang="{{.Lang}}" {{if .RTL}}dir="rtl"{{end}} data-theme="{{.Theme}}"><head>{{template "public_head" .}}</head>
+<body>
+{{template "site_header" .}}
+<main class="page"><div class="container">
+  {{with .Ilan}}
+  <nav class="small muted" style="margin-bottom:10px">
+    <a href="{{$.LangBase}}/resmi-ilanlar"><svg class="ti ti-metin" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-license"></use></svg> Resmi İlanlar</a> ·
+    <a href="{{$.LangBase}}/resmi-ilanlar?tarih={{.NoticeDate}}">{{.NoticeDate}}</a>
+  </nav>
+  <h1 class="page-title">{{.Title}}</h1>
+  <div class="small muted" style="margin-bottom:14px">
+    <span><svg class="ti ti-metin" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-calendar"></use></svg> {{.NoticeDate}}</span>
+    {{if .Institution}} · <a href="{{$.LangBase}}/resmi-ilanlar?kurum={{.Institution}}">{{.Institution}}</a>{{end}}
+    {{if .City}} · <a href="{{$.LangBase}}/resmi-ilanlar?sehir={{.City}}"><svg class="ti ti-metin" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-map-pin"></use></svg> {{.City}}</a>{{end}}
+  </div>
+  {{if .Body}}<div class="card card-pad ilan-govde" style="white-space:pre-wrap">{{.Body}}</div>{{end}}
+  {{if .URL}}
+  <p style="margin-top:14px"><a class="btn" href="{{.URL}}" target="_blank" rel="noopener">Belgeyi Aç</a></p>
+  {{end}}
+  <p class="small muted" style="margin-top:18px">
+    Bu ilan Basın İlan Kurumu mevzuatı kapsamında yayımlanmıştır.
+    <a href="{{$.LangBase}}/resmi-ilanlar">Tüm resmi ilanlar</a>
+  </p>
+  {{end}}
+</div></main>
+{{template "site_footer" .}}
+</body></html>{{end}}

@@ -1,0 +1,57 @@
+{{define "anketler_panel"}}<div id="anketler-panel">
+  {{if .Flash}}<div class="flash {{.Flash.Kind}}">{{.Flash.Text}}</div>{{end}}
+  <span id="anketler-yukleniyor" class="htmx-indicator small muted" role="status" aria-live="polite">Yükleniyor…</span>
+  <div class="card card-pad" style="display:flex;gap:14px;flex-wrap:wrap;align-items:center">
+    <div><div class="small muted">Anket sayısı</div><div class="big">{{len .AnketPanel.Items}}</div></div>
+    <span class="hint" style="margin-left:auto">Oylar <code>contents_extra</code> içinde saklanır; elle oy sayısı düzenlenebilir. Genel sayfa: <a href="/anketler" target="_blank">/anketler</a></span>
+  </div>
+
+  <h2 style="font-size:1.05rem;margin-top:20px">Anketler</h2>
+  <div class="gap">
+  {{range .AnketPanel.Items}}
+    <div class="card card-pad" style="border-left:3px solid {{if eq .Content.Status "yayinda"}}var(--accent){{else}}#666{{end}}">
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <strong>{{.Content.Title}}</strong>
+        <span class="tag" style="margin-left:auto">{{.Content.Status}}</span>
+        <span class="small muted">Toplam {{.Poll.Total}} oy</span>
+      </div>
+      <form method="post" action="/admin/anketler/{{.Content.ID}}" style="margin-top:8px"
+            hx-post="/admin/anketler/{{.Content.ID}}" hx-target="#anketler-panel" hx-swap="outerHTML" hx-indicator="#anketler-yukleniyor">
+        <div style="display:grid;grid-template-columns:2fr 1fr;gap:6px;max-width:560px">
+          <input class="input" name="baslik" value="{{.Content.Title}}">
+          <select class="select" name="durum">
+            <option value="yayinda" {{if eq .Content.Status "yayinda"}}selected{{end}}>Yayında</option>
+            <option value="taslak" {{if eq .Content.Status "taslak"}}selected{{end}}>Taslak</option>
+            <option value="arsiv" {{if eq .Content.Status "arsiv"}}selected{{end}}>Arşiv</option>
+          </select>
+        </div>
+        <div class="small muted" style="margin:.5em 0 .2em">Seçenekler (metin + elle oy):</div>
+        {{range .Poll.Options}}
+        <div style="display:flex;gap:6px;margin-bottom:4px">
+          <input type="hidden" name="oyun_id" value="{{.ID}}">
+          <input class="input" name="oyun_metin" value="{{.Text}}" style="flex:1">
+          <input class="input" name="oyun_sayi" value="{{.Votes}}" style="max-width:90px" title="Oy sayısı">
+        </div>
+        {{end}}
+        <button class="btn small" type="submit" style="margin-top:6px">Kaydet</button>
+      </form>
+      <form method="post" action="/admin/anketler/{{.Content.ID}}/sil" style="margin-top:6px"
+            hx-post="/admin/anketler/{{.Content.ID}}/sil" hx-target="#anketler-panel" hx-swap="outerHTML"
+            hx-confirm="Anket silinsin mi?" hx-indicator="#anketler-yukleniyor"
+            data-confirm="Anket silinsin mi?">
+        <button class="btn small danger" type="submit">Sil</button>
+      </form>
+    </div>
+  {{else}}<p class="muted">Anket yok. Aşağıdan ekleyin.</p>{{end}}
+  </div>
+
+  <h2 style="font-size:1.05rem;margin-top:22px">Yeni Anket</h2>
+  <form method="post" action="/admin/anketler/yeni" class="card card-pad"
+        hx-post="/admin/anketler/yeni" hx-target="#anketler-panel" hx-swap="outerHTML" hx-indicator="#anketler-yukleniyor">
+    <input class="input" name="baslik" required placeholder="Soru (örn. Bu yıl hangi konu daha önemli?)" style="max-width:520px" aria-label="Soru">
+    <input class="input" name="spot" placeholder="Kısa açıklama (ops)" style="margin-top:6px;max-width:520px" aria-label="Kısa açıklama">
+    <textarea class="input" name="secenekler" rows="4" style="margin-top:6px" placeholder="Her satıra bir seçenek. İsterseniz &quot;Metin | oy&quot; biçiminde başlangıç oyu verin." aria-label="Her satıra bir seçenek. İsterseniz &quot;Metin | oy&quot; biçiminde başlangıç oyu verin.">Evet
+Hayır</textarea>
+    <div style="margin-top:8px"><button class="btn" type="submit">Oluştur</button></div>
+  </form>
+</div>{{end}}
