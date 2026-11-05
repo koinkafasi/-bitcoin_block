@@ -114,3 +114,110 @@
 
 /* Mobil: cd.css zaten .cd-nav'ı gizliyor (368. satır). Burada ek kural
  * gerekmiyor; hamburger gezinmesi Faz 2'de cd_shell.templ'e eklenecek. */
+
+/* ---------------------------------------------------------------- mobil gezinme */
+/* JS YOK: <details>/<summary> tarayıcının kendi davranışı. Masaüstünde
+   gizli, mobilde görünür. Gölge yok, ayırma çizgiyle — tasarım kuralı. */
+.cd-mobil { display: none; }
+
+.cd-mobil__dugme {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  list-style: none;
+  padding: 8px 10px;
+  border: 1px solid var(--cd-border-strong);
+  border-radius: var(--cd-radius);
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--cd-fg);
+}
+/* Safari/Chrome varsayılan üçgenini kaldır (kendi çizgilerimiz var). */
+.cd-mobil__dugme::-webkit-details-marker { display: none; }
+.cd-mobil__dugme::marker { content: ""; }
+
+.cd-mobil__cizgi {
+  display: block;
+  width: 14px;
+  height: 2px;
+  background: currentColor;
+}
+.cd-mobil__yazi { margin-left: 2px; }
+
+/* Açılınca çizgiler kapanır: "X" görünümü yerine sadece yazı kalır —
+   ikinci bir kapatma düğmesi eklemek kalabalık olurdu. */
+.cd-mobil[open] .cd-mobil__cizgi { display: none; }
+
+.cd-mobil__panel {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 100%;
+  z-index: 70;
+  background: var(--cd-bg);
+  border-top: 1px solid var(--cd-border);
+  border-bottom: 1px solid var(--cd-border);
+  max-height: 75vh;
+  overflow-y: auto;
+  padding: 8px 0 14px;
+}
+
+.cd-mobil__grup { border-bottom: 1px solid var(--cd-border); }
+.cd-mobil__grup-baslik {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  list-style: none;
+  padding: 12px 20px;
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+.cd-mobil__grup-baslik::-webkit-details-marker { display: none; }
+.cd-mobil__grup-baslik::marker { content: ""; }
+.cd-mobil__grup-baslik::after {
+  content: "";
+  width: 0; height: 0;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 4px solid currentColor;
+  opacity: .5;
+}
+.cd-mobil__grup[open] > .cd-mobil__grup-baslik::after { transform: rotate(180deg); }
+
+.cd-mobil__duz {
+  display: block;
+  padding: 12px 20px;
+  font-size: 0.86rem;
+  font-weight: 700;
+  border-bottom: 1px solid var(--cd-border);
+}
+
+.cd-mobil__sutun {
+  list-style: none;
+  margin: 0;
+  padding: 0 20px 10px 28px;
+}
+.cd-mobil__sutun a {
+  display: block;
+  padding: 7px 0;
+  font-size: 0.85rem;
+  color: var(--cd-fg);
+}
+
+.cd-mobil__eylem {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 14px 20px 4px;
+}
+
+/* Masaüstünde mobil nav gizli; mobilde mega nav gizlenir ve hamburger çıkar. */
+@media (max-width: 1024px) {
+  .cd-mobil { display: block; }
+  .cd-nav--mega { display: none; }
+  .cd-topbar { position: relative; }
+}

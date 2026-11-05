@@ -44,7 +44,7 @@ func (s *Server) handleCDTag(w http.ResponseWriter, r *http.Request) {
 	}
 
 	v := templkit.CDSectionPage{
-		Shell:     s.cdShell(""),
+		Shell:     s.cdShellCtx(ctx, ""),
 		Title:     "#" + ad + " — " + s.siteName,
 		Desc:      ad + " etiketli son kripto haberleri ve analizler.",
 		Canonical: s.cfg.BaseURL + "/tag/" + slug,
@@ -95,7 +95,7 @@ func (s *Server) handleCDCoin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	v := templkit.CDCoinPage{
-		Shell:     s.cdShell("price"),
+		Shell:     s.cdShellCtx(r.Context(), "price"),
 		Title:     bulunan.Name + " (" + sym + ") Fiyatı — " + s.siteName,
 		Desc:      bulunan.Name + " canlı fiyatı, 24 saatlik değişimi ve piyasa sıralaması.",
 		Canonical: s.cfg.BaseURL + "/price/" + strings.ToLower(sym),

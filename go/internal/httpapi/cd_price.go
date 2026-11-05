@@ -57,7 +57,7 @@ func (s *Server) handleCDPrice(w http.ResponseWriter, r *http.Request) {
 	rows := s.cdFiyatSatirlari(r, 50)
 
 	v := templkit.CDPricePage{
-		Shell:     s.cdShell("price"),
+		Shell:     s.cdShellCtx(r.Context(), "price"),
 		Title:     "Kripto Fiyatları — " + s.siteName,
 		Desc:      "Bitcoin, Ethereum ve önde gelen kripto paraların canlı fiyatları, 24 saatlik değişimleri ve piyasa sıralaması.",
 		Canonical: s.cfg.BaseURL + "/price",

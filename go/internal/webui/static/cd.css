@@ -598,3 +598,17 @@
 }
 .cd-yazar strong { display: block; margin-bottom: 6px; color: var(--cd-fg); font-size: 0.95rem; }
 .cd-yazar p { margin: 0; line-height: 1.6; }
+
+/* ---------------------------------------------------------------- boş durum */
+/* İçerik yoksa dürüst boş durum. Uydurma kart göstermek, menüye 404 koymakla
+   aynı hatadır; bu blok "sayfa var, içerik henüz yok" der. */
+.cd-bos {
+  margin-top: 24px;
+  padding: 40px 24px;
+  border: 1px dashed var(--cd-border-strong);
+  border-radius: var(--cd-radius);
+  text-align: center;
+  color: var(--cd-muted-strong);
+  font-size: 0.92rem;
+}
+.cd-bos p { margin: 0; }

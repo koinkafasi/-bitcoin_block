@@ -46,7 +46,7 @@ func cdMegaNav(s CDShell) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		for _, g := range cdMenuGroups() {
+		for _, g := range cdMenuGroups(s) {
 			if cdHasMenu(g) {
 				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<div class=\"cd-nav__grup\">")
 				if templ_7745c5c3_Err != nil {

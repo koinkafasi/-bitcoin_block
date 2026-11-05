@@ -4,12 +4,20 @@ import "strings"
 
 // CoinDesk mega menüsü — veri modeli.
 //
-// Yapı UYDURULMADI: `docs/COINDESK-SPEC.md` §3 "Üst gezinme (birebir)"
-// bölümündeki ölçümden birebir çıkarıldı. Başlıklar, sıra ve gruplama
-// ölçülen hâliyle korunur; yalnız URL'ler §4'teki desene bağlanır.
+// Yapı `docs/COINDESK-SPEC.md` §3 ölçümünden çıkarıldı (başlık sırası,
+// gruplama, sütun düzeni). Ancak **her satırın bir karşılığı olmalı**:
+// ölçümdeki CoinDesk program adları (CoinDesk Daily, Public Keys…), kendi
+// endeksleri (CD20, XBX) ve ABD hisse sembolleri bizde YOK.
 //
-// Tasarım kararı: menü İÇERİĞİ burada sabit (ölçülen yapı), menü
-// GÖRÜNÜMÜ cd-menu.css'te. cdFooterColumns ile aynı desen.
+// KURAL (bu dosyanın sözleşmesi): menüye yalnız **var olan** sayfa yazılır.
+// Ölü bağlantı (404) kullanıcıya "site yarım" der; eksik menü satırı ise
+// yalnız "daha az" der. Ölçüm (5 Kasım 2026): menüdeki 49 hedefin 29'u
+// 404'tü — yapı tamam görünüyordu, site yarımdı.
+//
+// VERİYE BAĞLI SÜTUNLAR:
+//   · Etiketler (Bitcoin/Ethereum…) — yalnız içeriği olan etiketler
+//   · Fiyatlar — canlı ilk 5 coin (CoinGecko önbelleğinden)
+// Böylece veri geldikçe menü kendiliğinden dolar, boş sayfa bağlanmaz.
 
 // CDMenuItem bir açılır menü satırı.
 //
@@ -30,17 +38,19 @@ type CDMenuColumn struct {
 }
 
 // CDMenuGroup üst gezinmedeki tek başlık ve (varsa) açılır menüsü.
-//
-// Columns boşsa başlık düz bağlantıdır (Research, Events — ölçümde bu
-// ikisinde açılır menü yok).
 type CDMenuGroup struct {
 	Label   string
 	Href    string
 	Columns []CDMenuColumn
 }
 
-// cdMenu üst gezinmenin tamamı (COINDESK-SPEC.md §3).
-var cdMenu = []CDMenuGroup{
+// cdMenuSabit menünün veriye bağlı OLMAYAN kısmı.
+//
+// Sıra CoinDesk ölçümüyle aynı: News · Video · Prices · Research · Sponsored.
+// "Events" ve "Data & Indices" ÇIKARILDI: kripto etkinliğimiz ve kendi
+// endeks metodolojimiz yok (uydurma endeks göstermek yanlış veri olurdu).
+// ABD hisse fiyatları da çıkarıldı: veri kaynağı bağlanmadı.
+var cdMenuSabit = []CDMenuGroup{
 	{
 		Label: "News", Href: "/latest-crypto-news",
 		Columns: []CDMenuColumn{
@@ -53,81 +63,22 @@ var cdMenu = []CDMenuGroup{
 				{Label: "Focus", Href: "/focus"},
 				{Label: "Opinion", Href: "/opinion"},
 			}},
-			{Items: []CDMenuItem{
-				{Label: "Newsletters", Kind: "baslik"},
-				{Label: "CoinDesk Headlines", Href: "/newsletters/coindesk-headlines"},
-				{Label: "Crypto Daybook Americas", Href: "/newsletters/crypto-daybook-americas"},
-				{Label: "State of Crypto", Href: "/newsletters/state-of-crypto"},
-				{Label: "Crypto Long & Short", Href: "/newsletters/crypto-long-short"},
-				{Label: "Crypto for Advisors", Href: "/newsletters/crypto-for-advisors"},
-				{Label: "Tokenization Weekly", Href: "/newsletters/tokenization-weekly"},
-				{Label: "CoinDesk Insider", Href: "/newsletters/coindesk-insider"},
-			}},
-			{Items: []CDMenuItem{
-				{Label: "Crypto News", Kind: "baslik"},
-				{Label: "Bitcoin News", Href: "/tag/bitcoin"},
-				{Label: "Ethereum News", Href: "/tag/ethereum"},
-				{Label: "XRP News", Href: "/tag/xrp"},
-				{Label: "Solana News", Href: "/tag/solana"},
-				{Label: "News Analysis", Href: "/news-analysis"},
-				{Label: "Press Releases", Href: "/press-release"},
-			}},
 		},
 	},
 	{
-		Label: "Video", Href: "/video",
+		Label: "Video", Href: "/videos",
 		Columns: []CDMenuColumn{
 			{Items: []CDMenuItem{
-				{Label: "Videos", Href: "/video"},
-				{Label: "CoinDesk Daily", Href: "/video/coindesk-daily"},
-				{Label: "Spotlight", Href: "/video/spotlight"},
-				{Label: "Markets Outlook", Href: "/video/markets-outlook"},
-			}},
-			{Items: []CDMenuItem{
-				{Label: "Privacy in Motion", Href: "/video/privacy-in-motion"},
-				{Label: "Public Keys", Href: "/video/public-keys"},
-				{Label: "Shorts", Href: "/video/shorts"},
-				{Label: "The Policy Show", Href: "/video/the-policy-show"},
+				{Label: "Videos", Href: "/videos"},
+				{Label: "Podcasts", Href: "/podcasts"},
 			}},
 		},
 	},
 	{
 		Label: "Prices", Href: "/price",
-		Columns: []CDMenuColumn{
-			{Items: []CDMenuItem{
-				{Label: "Latest Crypto Prices", Kind: "baslik"},
-				{Label: "Bitcoin (BTC)", Href: "/price/btc"},
-				{Label: "Ethereum (ETH)", Href: "/price/eth"},
-				{Label: "XRP (XRP)", Href: "/price/xrp"},
-				{Label: "Solana (SOL)", Href: "/price/sol"},
-				{Label: "Hyperliquid (HYPE)", Href: "/price/hype"},
-				{Label: "See all crypto prices", Href: "/price", Kind: "tumu"},
-			}},
-			{Items: []CDMenuItem{
-				{Label: "Latest US Stock Prices", Kind: "baslik"},
-				{Label: "S&P 500 (SPY)", Href: "/price/stock/spy"},
-				{Label: "Bullish (BLSH)", Href: "/price/stock/blsh"},
-				{Label: "Circle (CRCL)", Href: "/price/stock/crcl"},
-				{Label: "Coinbase (COIN)", Href: "/price/stock/coin"},
-				{Label: "Strategy (MSTR)", Href: "/price/stock/mstr"},
-				{Label: "See all US stock prices", Href: "/price/stock", Kind: "tumu"},
-			}},
-		},
+		// Sütunlar handler'da canlı veriyle doldurulur (cdMenuFiyatSutunlari).
 	},
-	// Ölçümde bu ikisinde açılır menü YOK; düz bağlantı.
 	{Label: "Research", Href: "/research"},
-	{Label: "Events", Href: "/events"},
-	{
-		Label: "Data & Indices", Href: "/index",
-		Columns: []CDMenuColumn{
-			{Items: []CDMenuItem{
-				{Label: "CoinDesk 20 (CD20)", Href: "/index/cd20"},
-				{Label: "Bitcoin Index (XBX)", Href: "/index/xbx"},
-				{Label: "Ether Index (ETX)", Href: "/index/etx"},
-				{Label: "See all indices", Href: "/index", Kind: "tumu"},
-			}},
-		},
-	},
 	{
 		Label: "Sponsored", Href: "/sponsored-content",
 		Columns: []CDMenuColumn{
@@ -139,9 +90,43 @@ var cdMenu = []CDMenuGroup{
 	},
 }
 
-// cdMenuGroups şablona menüyü verir. Şu an sabit; taksonomiden
-// beslenmesi istenirse yalnız bu fonksiyon değişir, şablon değişmez.
-func cdMenuGroups() []CDMenuGroup { return cdMenu }
+// cdMenuGroups menüyü, kabuktaki veriyle birleştirir.
+//
+// `s.MenuTags` ve `s.MenuCoins` boşsa ilgili sütun **hiç basılmaz**:
+// içeriği olmayan etikete bağlantı vermek 404'e götürür.
+func cdMenuGroups(s CDShell) []CDMenuGroup {
+	out := make([]CDMenuGroup, 0, len(cdMenuSabit)+1)
+	for _, g := range cdMenuSabit {
+		// Prices grubu: canlı coinler.
+		if g.Label == "Prices" {
+			if len(s.MenuCoins) == 0 {
+				// Fiyat servisi yanıt vermediyse menü yine çalışsın:
+				// yalnız "tüm fiyatlar" satırı.
+				g.Columns = []CDMenuColumn{{Items: []CDMenuItem{
+					{Label: "Latest Crypto Prices", Kind: "baslik"},
+					{Label: "See all crypto prices", Href: "/price", Kind: "tumu"},
+				}}}
+			} else {
+				items := []CDMenuItem{{Label: "Latest Crypto Prices", Kind: "baslik"}}
+				items = append(items, s.MenuCoins...)
+				items = append(items, CDMenuItem{Label: "See all crypto prices", Href: "/price", Kind: "tumu"})
+				g.Columns = []CDMenuColumn{{Items: items}}
+			}
+		}
+		// News grubuna etiket sütunu eklenir (içeriği olan etiketler).
+		if g.Label == "News" && len(s.MenuTags) > 0 {
+			tagItems := []CDMenuItem{{Label: "Crypto News", Kind: "baslik"}}
+			tagItems = append(tagItems, s.MenuTags...)
+			tagItems = append(tagItems,
+				CDMenuItem{Label: "News Analysis", Href: "/news-analysis"},
+				CDMenuItem{Label: "Press Releases", Href: "/press-release"},
+			)
+			g.Columns = append(g.Columns, CDMenuColumn{Items: tagItems})
+		}
+		out = append(out, g)
+	}
+	return out
+}
 
 // cdMenuID açılır menünün aria-controls/id değerini üretir.
 // cdSlug yalnız harf/rakam bıraktığı için "Data & Indices" → "dataindices".

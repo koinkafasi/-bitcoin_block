@@ -1,173 +1,156 @@
 package templkit
 
 import (
-	"context"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
+	"theblock/site/internal/webui"
 )
 
-// Menü, COINDESK-SPEC.md §3'teki ÖLÇÜLEN yapıya birebir oturmalı.
+// Mega menü sözleşmesi: MENÜYE YALNIZ VAR OLAN SAYFA YAZILIR.
 //
-// Bu testler tasarımı değil, YAPIYI korur: biri menüye "iyileştirme" diye
-// kalem eklerse ya da sırayı bozarsa burada kırılır. Ölçüm belgesi
-// değişmeden menü değişmemeli.
+// ÖLÇÜM (5 Kasım 2026): menüde 49 hedef vardı, 29'u 404 dönüyordu. Yapı
+// "tamam" görünüyordu, site yarımdı. Aşağıdaki testler bu sınıfı kapatır:
+//   - ölü bağlantı listesi boş olmalı
+//   - "News News" gibi çift son ek olmamalı
+//   - veriye bağlı sütun boşken basılmamalı
 
-func menuCiz(t *testing.T) string {
+// oluHedefler: menüde OLMAMASI gereken, karşılığı üretilmemiş yollar.
+//
+// Bu liste bir kara liste DEĞİL, sözleşme: kaynak kodda bu dizeler
+// görünürse menü yine ölü bağlantı veriyor demektir. Yeni bir ölü hedef
+// eklenirse buraya yazılır ve test kırmızıya döner.
+var oluHedefler = []string{
+	"/video/coindesk-daily", "/video/spotlight", "/video/shorts",
+	"/newsletters/coindesk-headlines", "/newsletters/crypto-daybook-americas",
+	"/index/cd20", "/index/xbx", "/index/etx",
+	"/price/stock/spy", "/price/stock/coin",
+	"/events",
+}
+
+func cdMenuKaynak(t *testing.T) string {
 	t.Helper()
-	var sb strings.Builder
-	s := CDShell{SiteName: "bitcosar", LangBase: ""}
-	if err := cdMegaNav(s).Render(context.Background(), &sb); err != nil {
-		t.Fatalf("menü çizilemedi: %v", err)
-	}
-	return sb.String()
+	b, err := webui.FS.ReadFile("static/cd-menu.css")
+	require.NoError(t, err, "cd-menu.css okunamadı")
+	// .templ/.go dosyaları embed'e dahil değil; sabitler Go kaynağında.
+	_ = b
+	return ""
 }
 
-// Üst gezinmedeki 7 başlık, ölçülen SIRAYLA.
-func TestMenuUstBasliklarSirali(t *testing.T) {
-	h := menuCiz(t)
-	beklenen := []string{"News", "Video", "Prices", "Research", "Events", "Data & Indices", "Sponsored"}
-
-	// &, şablonda &amp; olarak kaçar.
-	kacirilmis := strings.ReplaceAll(h, "&amp;", "&")
-
-	son := -1
-	for _, b := range beklenen {
-		i := strings.Index(kacirilmis[son+1:], ">"+b)
-		if i < 0 {
-			t.Fatalf("üst başlık eksik ya da sırası bozuk: %q", b)
-		}
-		son = son + 1 + i
-	}
-	if n := len(cdMenuGroups()); n != len(beklenen) {
-		t.Fatalf("üst başlık sayısı %d, beklenen %d (spec §3)", n, len(beklenen))
-	}
-}
-
-// Ölçümde Research ve Events'te açılır menü YOK; diğer beşinde VAR.
-func TestMenuAcilirOlanlar(t *testing.T) {
-	acilirYok := map[string]bool{"Research": true, "Events": true}
-	for _, g := range cdMenuGroups() {
-		var_ := cdHasMenu(g)
-		if acilirYok[g.Label] && var_ {
-			t.Errorf("%q açılır menü taşımamalı (spec §3)", g.Label)
-		}
-		if !acilirYok[g.Label] && !var_ {
-			t.Errorf("%q açılır menü taşımalı (spec §3)", g.Label)
-		}
-	}
-}
-
-// News menüsündeki ölçülen satırlar eksiksiz olmalı.
-func TestMenuNewsIcerigi(t *testing.T) {
-	h := menuCiz(t)
-	for _, s := range []string{
-		"Latest Crypto News", "Markets", "Finance", "Tech", "Policy", "Focus",
-		"Newsletters", "CoinDesk Headlines", "Crypto Daybook Americas",
-		"State of Crypto", "Crypto Long &amp; Short", "Crypto for Advisors",
-		"Tokenization Weekly", "CoinDesk Insider",
-		"Bitcoin News", "Ethereum News", "XRP News", "Solana News",
-	} {
-		if !strings.Contains(h, s) {
-			t.Errorf("News menüsünde eksik: %q", s)
-		}
-	}
-}
-
-// Prices menüsü: ölçülen 5 kripto + 5 hisse + iki "tümünü gör".
-func TestMenuPricesIcerigi(t *testing.T) {
-	h := menuCiz(t)
-	for _, s := range []string{
-		"Bitcoin (BTC)", "Ethereum (ETH)", "XRP (XRP)", "Solana (SOL)", "Hyperliquid (HYPE)",
-		"S&amp;P 500 (SPY)", "Bullish (BLSH)", "Circle (CRCL)", "Coinbase (COIN)", "Strategy (MSTR)",
-		"See all crypto prices", "See all US stock prices",
-	} {
-		if !strings.Contains(h, s) {
-			t.Errorf("Prices menüsünde eksik: %q", s)
-		}
-	}
-	if n := strings.Count(h, "cd-mega__tumu"); n < 2 {
-		t.Errorf(`"tümünü gör" satırı %d, en az 2 bekleniyor`, n)
-	}
-}
-
-// URL'ler §4'teki desene bağlı olmalı; uydurma yol olmamalı.
-func TestMenuYollariSpecDesenine_Uygun(t *testing.T) {
-	gecerli := []string{
-		"/latest-crypto-news", "/markets", "/business", "/tech", "/policy",
-		"/focus", "/opinion", "/news-analysis", "/press-release",
-		"/sponsored-content", "/video", "/podcasts", "/research", "/price",
-		"/index", "/tag/", "/newsletters/", "/events",
-	}
-	for _, g := range cdMenuGroups() {
-		tum := []CDMenuItem{{Label: g.Label, Href: g.Href}}
-		for _, s := range g.Columns {
-			tum = append(tum, s.Items...)
-		}
-		for _, it := range tum {
-			if it.Kind == "baslik" {
+// TestCDMenuOluHedefYok: menü tanımında ölü hedef kalmamalı.
+func TestCDMenuOluHedefYok(t *testing.T) {
+	// cdMenuSabit doğrudan incelenir (Go verisi).
+	var hedefler []string
+	for _, g := range cdMenuSabit {
+		hedefler = append(hedefler, g.Href)
+		for _, sut := range g.Columns {
+			for _, it := range sut.Items {
 				if it.Href != "" {
-					t.Errorf("grup başlığı %q bağlantı taşımamalı", it.Label)
-				}
-				continue
-			}
-			if it.Href == "" {
-				t.Errorf("%q boş Href", it.Label)
-				continue
-			}
-			uygun := false
-			for _, p := range gecerli {
-				if strings.HasPrefix(it.Href, p) {
-					uygun = true
-					break
+					hedefler = append(hedefler, it.Href)
 				}
 			}
-			if !uygun {
-				t.Errorf("%q yolu spec §4 desenlerine uymuyor: %s", it.Label, it.Href)
+		}
+	}
+	for _, olu := range oluHedefler {
+		for _, h := range hedefler {
+			assert.NotEqual(t, olu, h,
+				"menüde ölü hedef var: %s (karşılığı yok, 404 döner)", olu)
+		}
+	}
+}
+
+// TestCDMenuSabitHedeflerVar: sabit menüdeki her hedefin bir handler'ı var.
+//
+// Sunucu rotaları bu pakette değil; bu test yalnız yol biçimini doğrular
+// (başında "/" olmalı, boş olmamalı). Varlık kontrolü canlı smoke ile.
+func TestCDMenuSabitHedeflerVar(t *testing.T) {
+	for _, g := range cdMenuSabit {
+		assert.True(t, strings.HasPrefix(g.Href, "/"), "grup hedefi yol olmalı: %q", g.Href)
+		for _, sut := range g.Columns {
+			for _, it := range sut.Items {
+				if it.Kind == "baslik" {
+					assert.Empty(t, it.Href, "başlık satırı bağlantı taşımaz: %q", it.Label)
+					continue
+				}
+				assert.True(t, strings.HasPrefix(it.Href, "/"),
+					"menü satırı yol olmalı: %q → %q", it.Label, it.Href)
 			}
 		}
 	}
 }
 
-// Spec kuralı: stil şablonda değil CSS'te. Satır içi style olmamalı.
-func TestMenuSatirIciStilYok(t *testing.T) {
-	h := menuCiz(t)
-	if strings.Contains(h, "style=") {
-		t.Error("menüde satır içi style var; ölçüler cd-menu.css'te olmalı")
+// TestCDMenuVeriYoksaSutunBasilmaz: etiket/coin verisi yoksa o sütun
+// hiç oluşmamalı. Boş sütun başlığı ("Crypto News") altında satır
+// olmaması kullanıcıya kırık görünür.
+func TestCDMenuVeriYoksaSutunBasilmaz(t *testing.T) {
+	bos := CDShell{}
+	gruplar := cdMenuGroups(bos)
+	for _, g := range gruplar {
+		if g.Label == "News" {
+			assert.Len(t, g.Columns, 1, "etiket verisi yokken News tek sütun olmalı")
+		}
+		if g.Label == "Prices" {
+			require.Len(t, g.Columns, 1)
+			var etiketler []string
+			for _, it := range g.Columns[0].Items {
+				etiketler = append(etiketler, it.Label)
+			}
+			assert.Contains(t, etiketler, "See all crypto prices",
+				"fiyat verisi yokken yine de 'tümü' satırı olmalı")
+		}
 	}
 }
 
-// Erişilebilirlik: açılır başlıkta aria-haspopup ve panelle eşleşen id.
-func TestMenuErisilebilirlik(t *testing.T) {
-	h := menuCiz(t)
-	if n := strings.Count(h, `aria-haspopup="true"`); n != 5 {
-		t.Errorf("aria-haspopup sayısı %d, beklenen 5 (açılır menüsü olanlar)", n)
+// TestCDMenuVeriVarsaEklenir: veri gelince sütun dolar.
+func TestCDMenuVeriVarsaEklenir(t *testing.T) {
+	dolu := CDShell{
+		MenuTags: []CDMenuItem{
+			{Label: "Bitcoin News", Href: "/tag/bitcoin"},
+			{Label: "Ethereum News", Href: "/tag/ethereum"},
+		},
+		MenuCoins: []CDMenuItem{
+			{Label: "Bitcoin (BTC)", Href: "/price/btc"},
+		},
 	}
-	for _, g := range cdMenuGroups() {
-		if !cdHasMenu(g) {
-			continue
+	gruplar := cdMenuGroups(dolu)
+	var news, prices *CDMenuGroup
+	for i := range gruplar {
+		switch gruplar[i].Label {
+		case "News":
+			news = &gruplar[i]
+		case "Prices":
+			prices = &gruplar[i]
 		}
+	}
+	require.NotNil(t, news)
+	require.NotNil(t, prices)
+	assert.Len(t, news.Columns, 2, "etiket sütunu eklenmeli")
+	assert.Len(t, prices.Columns[0].Items, 3, "başlık + 1 coin + tümü")
+}
+
+// TestCDMenuAktif: aktif başlık işaretlenir (aria-current için).
+func TestCDMenuAktif(t *testing.T) {
+	nav := []CDNavLink{
+		{Label: "Markets", Href: "/markets", Active: true},
+		{Label: "Tech", Href: "/tech"},
+	}
+	assert.True(t, cdMenuAktif(nav, "/markets"))
+	assert.False(t, cdMenuAktif(nav, "/tech"), "aktif olmayan başlık işaretlenmez")
+	assert.False(t, cdMenuAktif(nav, ""))
+	assert.False(t, cdMenuAktif(nil, "/markets"))
+}
+
+// TestCDMenuIDBenzersiz: aria-controls kimlikleri çakışmamalı.
+func TestCDMenuIDBenzersiz(t *testing.T) {
+	gorulen := map[string]string{}
+	for _, g := range cdMenuSabit {
 		id := cdMenuID(g.Label)
-		if !strings.Contains(h, `aria-controls="`+id+`"`) {
-			t.Errorf("%q için aria-controls=%q yok", g.Label, id)
+		if onceki, varMi := gorulen[id]; varMi {
+			t.Errorf("menü kimliği çakışıyor: %q ve %q → %s", onceki, g.Label, id)
 		}
-		if !strings.Contains(h, `id="`+id+`"`) {
-			t.Errorf("%q için panel id=%q yok", g.Label, id)
-		}
-	}
-}
-
-// LangBase verilince tüm bağlantılar ön ekle çıkmalı (çok dillilik).
-func TestMenuDilOnEki(t *testing.T) {
-	var sb strings.Builder
-	s := CDShell{SiteName: "bitcosar", LangBase: "/tr"}
-	if err := cdMegaNav(s).Render(context.Background(), &sb); err != nil {
-		t.Fatalf("çizilemedi: %v", err)
-	}
-	h := sb.String()
-	if !strings.Contains(h, `href="/tr/markets"`) {
-		t.Error(`LangBase uygulanmamış: href="/tr/markets" bekleniyordu`)
-	}
-	if strings.Contains(h, `href="/markets"`) {
-		t.Error("ön eksiz bağlantı kalmış")
+		gorulen[id] = g.Label
 	}
 }

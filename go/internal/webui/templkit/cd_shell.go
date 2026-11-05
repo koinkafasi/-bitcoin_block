@@ -47,6 +47,10 @@ type CDShell struct {
 	Locale     string
 	// Diller dil seçicisi (yalnız gerçek diller).
 	Diller []CDDil
+	// MenuTags mega menüdeki etiket sütunu (yalnız içeriği olan etiketler).
+	MenuTags []CDMenuItem
+	// MenuCoins mega menüdeki canlı fiyat satırları (ilk 5 coin).
+	MenuCoins []CDMenuItem
 	// Footer sütunları ölçülen yapıya göre sabittir (aşağıda).
 }
 

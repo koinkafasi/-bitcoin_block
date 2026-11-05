@@ -267,6 +267,12 @@ func (s *Server) routes() {
 	// CoinDesk fiyat sayfası (§14).
 	s.mux.HandleFunc("GET /price", s.handleCDPrice)
 	s.mux.HandleFunc("GET /price/{coin}", s.handleCDCoin)
+	// Mega menünün bağlandığı ek sayfalar (hepsi gerçek; boşsa dürüst
+	// boş durum basar). Ölçüm: bu dört yol menüde 404 veriyordu.
+	s.mux.HandleFunc("GET /videos", s.handleCDVideos)
+	s.mux.HandleFunc("GET /podcasts", s.handleCDPodcasts)
+	s.mux.HandleFunc("GET /sponsored-content", s.handleCDSponsored)
+	s.mux.HandleFunc("GET /newsletters", s.handleCDNewsletters)
 	// Etiket sayfaları (§4 /tag/{tag}).
 	s.mux.HandleFunc("GET /tag/{slug}", s.handleCDTag)
 	// Kaynak görselleri KENDİ origin'imizden (üçüncü taraf çerez/BP sorunu).
@@ -276,9 +282,13 @@ func (s *Server) routes() {
 	// CoinDesk bölüm adresleri (§4): /markets, /business, /tech, /policy …
 	// Tek segment; slug closure ile sabitlenir (mux PathValue literal
 	// desende boş döner — bu tuzak canlı testte yakalandı).
+	//
+	// DİKKAT: /videos ve /podcasts burada YOK — onların kendi handler'ları
+	// var (tür bazlı liste). İkisini birden kaydetmek mux'ta panic üretir
+	// ("conflicts with pattern"), ölçüldü: 53 kez yeniden başlama döngüsü.
 	for _, b := range []string{"markets", "business", "tech", "policy", "opinion",
 		"news-analysis", "latest-crypto-news", "focus", "research",
-		"press-release", "videos", "podcasts"} {
+		"press-release"} {
 		s.mux.HandleFunc("GET /"+b, s.cdBolumHandler(b))
 	}
 	s.mux.HandleFunc("GET /robots.txt", s.handleRobots)

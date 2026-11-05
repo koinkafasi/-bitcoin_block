@@ -32,8 +32,6 @@ var cdSectionMeta = map[string]struct{ Ad, Aciklama string }{
 	"focus":              {"Focus", "Odak dosyaları ve uzun okumalar."},
 	"research":           {"Research", "Araştırma raporları ve veri analizleri."},
 	"press-release":      {"Press Releases", "Basın bültenleri."},
-	"videos":             {"Videos", "Video haberler ve röportajlar."},
-	"podcasts":           {"Podcasts", "Podcast bölümleri."},
 }
 
 // cdBolumHandler tek bir bölümün handler'ını üretir.
@@ -86,7 +84,7 @@ func (s *Server) handleCDSection(w http.ResponseWriter, r *http.Request, slug st
 	}
 
 	v := templkit.CDSectionPage{
-		Shell:     s.cdShell(slug),
+		Shell:     s.cdShellCtx(r.Context(), slug),
 		Title:     meta.Ad + " — " + s.siteName,
 		Desc:      meta.Aciklama,
 		Canonical: s.cfg.BaseURL + "/" + slug,
@@ -137,8 +135,21 @@ func (s *Server) kategoriID(ctx context.Context, slug string) int64 {
 	return id
 }
 
-// cdShell ortak kabuk verisini kurar (nav + arama + dil).
+// cdShell ortak kabuk verisini kurar (nav + arama + dil + mega menü verisi).
+//
+// Mega menünün etiket ve fiyat sütunları da BURADA doldurulur: menü her
+// sayfada aynı görünmeli. Ayrı bir "zengin" varyant tutmak, ana sayfada
+// menünün eksik kalmasına yol açtı (ölçüm: etiket sütunu yalnız liste
+// sayfalarında vardı).
+//
+// Maliyet: iki hafif sorgu — fiyat 60 sn önbellekli (repo.Fiyatlar), etiket
+// sorgusu indeksli GROUP BY. Sayfa başına <1 ms; karşılığında menü tutarlı.
 func (s *Server) cdShell(aktif string) templkit.CDShell {
+	return s.cdShellCtx(context.Background(), aktif)
+}
+
+// cdShellCtx istek bağlamıyla çalışan sürüm (iptal edilebilir).
+func (s *Server) cdShellCtx(ctx context.Context, aktif string) templkit.CDShell {
 	nav := []templkit.CDNavLink{
 		{Label: "Son Haberler", Href: "/latest-crypto-news"},
 		{Label: "Markets", Href: "/markets"},
@@ -154,7 +165,7 @@ func (s *Server) cdShell(aktif string) templkit.CDShell {
 			nav[i].Active = true
 		}
 	}
-	return templkit.CDShell{
+	sh := templkit.CDShell{
 		SiteName:   s.siteName,
 		SearchHref: "/arama",
 		Locale:     "tr",
@@ -166,6 +177,59 @@ func (s *Server) cdShell(aktif string) templkit.CDShell {
 		// kullanıcıyı boş sayfaya götürür).
 		Diller: []templkit.CDDil{{Kod: "tr", Ad: "Türkçe", Aktif: true}},
 	}
+
+	// Etiket sütunu: yalnız İÇERİĞİ OLAN etiketler. Boş etiket sayfasına
+	// bağlantı vermek 404'e götürür (ölçüm: /tag/xrp 404 idi).
+	if etiketler, err := repo.PopulerEtiketler(ctx, s.pool, 6); err == nil {
+		for _, e := range etiketler {
+			ad := etiketMenuAdi(e.Ad)
+			// Sütun başlığı zaten "Crypto News": adı yalnız "News"/"Haber"
+			// olan genel etiket satırı bilgi katmıyor (ölçüm: menüde
+			// "Crypto News → News").
+			if ad == "" || strings.EqualFold(ad, "News") || strings.EqualFold(ad, "Haber") {
+				continue
+			}
+			sh.MenuTags = append(sh.MenuTags, templkit.CDMenuItem{
+				Label: ad,
+				Href:  "/tag/" + e.Slug,
+			})
+			if len(sh.MenuTags) >= 5 {
+				break
+			}
+		}
+	}
+
+	// Fiyat sütunu: canlı ilk 5 coin.
+	for i, f := range repo.Fiyatlar(ctx, s.pool) {
+		if i >= 5 {
+			break
+		}
+		sh.MenuCoins = append(sh.MenuCoins, templkit.CDMenuItem{
+			Label: f.Name + " (" + f.Sym + ")",
+			Href:  "/price/" + strings.ToLower(f.Sym),
+		})
+	}
+	return sh
+}
+
+// etiketMenuAdi menüdeki etiket satırının adını üretir.
+//
+// CoinDesk deseni "Bitcoin News", "Ethereum News" biçiminde. Ancak kaynaktan
+// gelen etiket zaten "News" ise son ek eklemek "News News" üretiyordu
+// (ölçüm: 5 Kasım 2026 menüde görüldü).
+func etiketMenuAdi(ad string) string {
+	ad = strings.TrimSpace(ad)
+	if ad == "" {
+		return ""
+	}
+	// "News", "news", "Haber" ile bitiyorsa dokunma.
+	low := strings.ToLower(ad)
+	for _, sonek := range []string{"news", "haber"} {
+		if strings.HasSuffix(strings.TrimSpace(low), sonek) {
+			return ad
+		}
+	}
+	return ad + " News"
 }
 
 // cdStoryCevir içeriği CoinDesk kart verisine çevirir (ortak yol).

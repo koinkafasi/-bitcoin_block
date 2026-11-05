@@ -63,6 +63,12 @@ func baglaEtiketler(ctx context.Context, pool *pgxpool.Pool, contentID int64, ad
 	return nil
 }
 
+// Etiket bir içerik etiketidir.
+type Etiket struct {
+	Ad   string
+	Slug string
+}
+
 // IcerikEtiketleri bir içeriğin etiketlerini (ad + slug) döndürür.
 func IcerikEtiketleri(ctx context.Context, pool DB, contentID int64) ([]Etiket, error) {
 	rows, err := pool.Query(ctx, `
@@ -85,8 +91,38 @@ func IcerikEtiketleri(ctx context.Context, pool DB, contentID int64) ([]Etiket, 
 	return out, rows.Err()
 }
 
-// Etiket bir içerik etiketi.
-type Etiket struct {
-	Ad   string
-	Slug string
+// PopulerEtiketler içeriği olan etiketleri, içerik sayısına göre döndürür.
+//
+// NEDEN "içeriği olan": mega menüdeki etiket bağlantıları buradan beslenir.
+// İçeriği olmayan bir etikete menüde yer vermek kullanıcıyı 404'e götürür
+// (ölçüm: /tag/xrp 404 idi).
+func PopulerEtiketler(ctx context.Context, pool DB, adet int) ([]Etiket, error) {
+	if adet <= 0 {
+		adet = 5
+	}
+	rows, err := pool.Query(ctx, `
+		SELECT t.name, t.slug, count(*) AS n
+		FROM content_tags ct
+		JOIN tags t ON t.id = ct.tag_id
+		JOIN contents c ON c.id = ct.content_id
+		WHERE c.status = 'yayinda' AND c.site_id = 1
+		GROUP BY t.name, t.slug
+		HAVING count(*) >= 2
+		ORDER BY n DESC, t.name
+		LIMIT $1`, adet)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var out []Etiket
+	for rows.Next() {
+		var e Etiket
+		var n int
+		if err := rows.Scan(&e.Ad, &e.Slug, &n); err != nil {
+			return nil, err
+		}
+		out = append(out, e)
+	}
+	return out, rows.Err()
 }
+

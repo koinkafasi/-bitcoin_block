@@ -126,7 +126,7 @@ func (s *Server) handleCDHome(w http.ResponseWriter, r *http.Request) {
 	}
 
 	d := templkit.CDHomeView{
-		Shell:     s.cdShell(""),
+		Shell:     s.cdShellCtx(r.Context(), ""),
 		Title:     s.siteName + " — Kripto Haberleri ve Piyasa Verisi",
 		Desc:      "Bitcoin, Ethereum ve kripto piyasalarından son haberler, analizler ve canlı fiyatlar.",
 		Canonical: s.cfg.BaseURL + r.URL.Path,

@@ -1,0 +1,63 @@
+package templkit
+
+// Mobil gezinme — JS'siz hamburger.
+//
+// NEDEN <details>/<summary>: CSP 'unsafe-inline' kapalı, satır içi olay
+// çalışmaz. <details> tarayıcının kendi davranışıdır: tıklama, klavye
+// (Enter/Space) ve ekran okuyucu desteği bedava gelir. JS gerekmez —
+// performans bütçesine sıfır ek yük.
+//
+// Masaüstünde cd.css .cd-nav'ı gösterir, .cd-mobil'i gizler; mobilde tersi.
+// Aynı HTML iki genişlikte de doğru davranır (tek işaretleme).
+
+templ cdMobilNav(s CDShell) {
+	<details class="cd-mobil">
+		<summary class="cd-mobil__dugme" aria-label="Menüyü aç">
+			<span class="cd-mobil__cizgi" aria-hidden="true"></span>
+			<span class="cd-mobil__cizgi" aria-hidden="true"></span>
+			<span class="cd-mobil__cizgi" aria-hidden="true"></span>
+			<span class="cd-mobil__yazi">Menü</span>
+		</summary>
+		<div class="cd-mobil__panel">
+			@cdMobilGruplar(s)
+			<div class="cd-mobil__eylem">				<a class="cd-btn cd-btn--ghost" href={ s.SearchHref }>Ara</a>
+				if s.LoginHref != "" {
+					<a class="cd-btn cd-btn--ghost" href={ s.LoginHref }>Giriş</a>
+				}
+				if s.SignupHref != "" {
+					<a class="cd-btn" href={ s.SignupHref }>Ücretsiz üye ol</a>
+				}
+			</div>
+		</div>
+	</details>
+}
+
+// cdMobilGruplar menü gruplarını mobil panelde açar.
+//
+// Masaüstünde hover ile açılan panel, mobilde <details> ile açılır:
+// dokunmatikte hover yok. Grup başlığı (News, Prices…) tıklanabilir bir
+// <summary>, satırlar düz bağlantı.
+templ cdMobilGruplar(s CDShell) {
+	for _, g := range cdMenuGroups(s) {
+		if cdHasMenu(g) {
+			<details class="cd-mobil__grup">
+				<summary class="cd-mobil__grup-baslik">{ g.Label }</summary>
+				for _, sut := range g.Columns {
+					<ul class="cd-mobil__sutun">
+						for _, it := range sut.Items {
+							if it.Kind == "baslik" {
+								<li class="cd-mega__baslik">{ it.Label }</li>
+							} else {
+								<li>
+									<a href={ templ.SafeURL(s.LangBase + it.Href) }>{ it.Label }</a>
+								</li>
+							}
+						}
+					</ul>
+				}
+			</details>
+		} else {
+			<a class="cd-mobil__duz" href={ templ.SafeURL(s.LangBase + g.Href) }>{ g.Label }</a>
+		}
+	}
+}

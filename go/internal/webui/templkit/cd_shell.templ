@@ -54,6 +54,7 @@ templ cdTopbar(s CDShell) {
 			<div class="cd-topbar__inner">
 				@cdLogoMark(s.SiteName)
 				@cdMegaNav(s)
+				@cdMobilNav(s)
 				<div class="cd-topbar__actions">
 					<a class="cd-btn cd-btn--ghost" href={ s.SearchHref } aria-label="Ara">Ara</a>
 					if len(s.Diller) > 1 {

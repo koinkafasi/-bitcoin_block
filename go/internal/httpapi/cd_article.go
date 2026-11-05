@@ -51,7 +51,7 @@ func (s *Server) handleCDArticle(w http.ResponseWriter, r *http.Request, lang, s
 	}
 
 	v := templkit.CDArticleView{
-		Shell:       s.cdShell(bolumSlug),
+		Shell:       s.cdShellCtx(ctx, bolumSlug),
 		Title:       cdMakaleBaslik(c),
 		Desc:        cdMakaleAciklama(c),
 		Canonical:   s.cfg.BaseURL + makaleURL(c),
