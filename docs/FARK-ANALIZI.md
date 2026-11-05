@@ -82,8 +82,8 @@ Durum kodları: ✅ tam · 🟡 kısmi · ⛔ eksik · 🔒 dış veri bekliyor
 | Köşe 2 px, modül arası 40 px | ✅ |
 | `proxima-nova` | 🟡 sistem fontuna düşüyor (lisans gerekli) |
 | Açık tema varsayılan, karanlık medya sorgusu | ✅ |
-| Mega menü (açılır panel) | ⛔ düz nav |
-| Mobil nav (hamburger) | ⛔ |
+| Mega menü (açılır panel) | ✅ 5 grup, JS yok (`:hover`/`:focus-within`) |
+| Mobil nav (hamburger) | ✅ `<details>` tabanlı, JS yok, klavye erişilebilir |
 
 ## 5. Performans (ölçüldü)
 
@@ -113,11 +113,11 @@ Durum kodları: ✅ tam · 🟡 kısmi · ⛔ eksik · 🔒 dış veri bekliyor
 
 ## 7. Öncelik sırası (sıradaki iş)
 
-### P0 — kırık/eksik işlevsellik
-1. **Makale URL'sinde tarih** (`/{section}/{y}/{m}/{d}/{slug}`) — CoinDesk deseni; SEO'da tazelik sinyali. Şu an `slug-id`.
-2. **`BreadcrumbList` JSON-LD** — makale ve bölüm sayfalarında (SERP'te yol gösterir).
-3. **Dil seçici + Giriş/Üye ol** — kabuk alanları hazır, bağlanmadı.
-4. **Mega menü + mobil hamburger** — nav düz.
+### P0 — kırık/eksik işlevsellik ✅ (hepsi kapandı)
+1. ~~Makale URL'sinde tarih~~ ✅ `/{section}/{y}/{m}/{d}/{slug}` + eski `slug-id` 301.
+2. ~~`BreadcrumbList` JSON-LD~~ ✅ makale + bölüm sayfalarında.
+3. ~~Dil seçici + Giriş/Üye ol~~ ✅ kabukta; dil listesi yalnız gerçek dilleri gösterir.
+4. ~~Mega menü + mobil hamburger~~ ✅ 5 grup + veriye bağlı sütunlar; mobilde JS'siz `<details>` panel.
 
 ### P1 — ana sayfa modülleri (veri bağımlı)
 5. Bülten modülü (mevcut `/bulten` altyapısıyla, veri gerekmiyor) — **en kolay kazanç**
@@ -149,3 +149,30 @@ Durum kodları: ✅ tam · 🟡 kısmi · ⛔ eksik · 🔒 dış veri bekliyor
 | mux literal desende `PathValue` boş | bölüm sayfası 404 | slug closure ile sabitlendi |
 | `.gitignore` `vendor/` | 55 statik dosya repo dışı, CI kırmızı | `/go/vendor/` |
 | Lighthouse Chrome yolu | kapı sessizce atlanıyordu | Puppeteer Chrome otomatik bulunur |
+| **Menüde 29 ölü bağlantı** | menü yapısı tam, site yarım (404) | menüye yalnız **var olan** sayfa yazılır + test kara listesi |
+| **`/videos` iki kez tanımlı** | mux panic, servis 53 kez yeniden başladı | bölüm listesinden çıkarıldı, tek sahip tür handler'ı |
+| Menüde "News News" | etiket adı zaten "News" ile bitiyordu | `etiketMenuAdi` son ek kuralı |
+| **Etiket sütunu yalnız liste sayfalarında** | menü sayfadan sayfaya değişiyordu | veri `cdShellCtx`'e taşındı, her sayfada aynı |
+| **Mobilde gezinme yok** | hamburger yazılmamıştı, menü gizliydi | JS'siz `<details>` panel |
+
+## 9. Menü sözleşmesi (kalıcı kural)
+
+> **Menüye yalnız VAR OLAN sayfa yazılır.**
+
+Ölü bağlantı kullanıcıya "site yarım" der; eksik menü satırı yalnızca "daha
+az" der. Bu yüzden CoinDesk ölçümündeki şu satırlar **bilinçli olarak yok**:
+
+| CoinDesk satırı | Neden yok |
+|---|---|
+| `/events` | kripto etkinliğimiz yok |
+| `/index`, `/index/cd20`, `/index/xbx`, `/index/etx` | kendi endeks metodolojimiz yok — uydurma endeks yanlış veri olur |
+| `/price/stock/*` (SPY, COIN, MSTR…) | ABD hisse veri kaynağı bağlanmadı |
+| `/video/coindesk-daily`, `/video/public-keys` … | CoinDesk'in kendi programları |
+| `/newsletters/coindesk-headlines` … | bülten serileri henüz yok (tek bülten var) |
+
+Yerine **veriye bağlı** sütunlar: etiketler (içeriği olan, ≥2 içerik) ve
+canlı ilk 5 coin. Veri yoksa sütun hiç basılmaz.
+
+Koruma: `templkit/cd_menu_test.go` — ölü hedef kara listesi, hedef biçimi,
+"veri yoksa sütun yok", "veri gelince dolar", aktif başlık, `aria-controls`
+tekilliği. Yeni ölü hedef eklendiği anda test kırmızıya döner.
