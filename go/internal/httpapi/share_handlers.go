@@ -237,7 +237,7 @@ func (s *Server) shareContent(ctx context.Context, siteID, contentID int64) (int
 	if err != nil {
 		return 0, []string{"içerik bulunamadı"}
 	}
-	url := strings.TrimRight(s.cfg.BaseURL, "/") + publicArticleURL(c.Locale, c.DisplaySlug(), c.ID)
+	url := strings.TrimRight(s.cfg.BaseURL, "/") + makaleURL(c)
 	text := c.Title + "\n" + c.Spot + "\n" + url
 	cover := coverImageURL(ctx, s, &c)
 	cid := c.ID

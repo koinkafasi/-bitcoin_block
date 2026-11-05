@@ -13,8 +13,9 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
-	"theblock/site/internal/auth"
 	"time"
+
+	"theblock/site/internal/auth"
 
 	"theblock/site/internal/cryptoicon"
 	"theblock/site/internal/i18n"
@@ -384,11 +385,35 @@ func (s *Server) handlePublicSegment(w http.ResponseWriter, r *http.Request) {
 	case seg == "rss.xml":
 		s.handleFeed(w, r)
 	default:
+		// CoinDesk tarihli makale deseni: /{section}/{YYYY}/{MM}/{DD}/{slug}
+		// Ya da bölümsüz: /{YYYY}/{MM}/{DD}/{slug}
+		kalan := segs[i:]
+		if slugTarih, ok := makaleTarihDeseni(kalan); ok {
+			c, err := repo.ContentBySlug(r.Context(), s.pool, slugTarih)
+			if err == nil {
+				if c.Status == "yayinda" {
+					s.handleCDArticle(w, r, lang, slugTarih, c.ID)
+					return
+				}
+				s.handleNotFound(w, r)
+				return
+			}
+		}
+
 		id := articleIDFromSegment(seg)
 		slug := articleSlugFromSegment(seg)
 		if id > 0 {
-			// CoinDesk makale şablonu (§7). Eski theblock makalesi
-			// /klasik/{slug}-{id} altında korunur (karşılaştırma için).
+			// Eski (tarihsiz) adres: kalıcı olarak tarihli kanonik adrese
+			// yönlendirilir. 301 bilinçli: SEO'da bağlantı değeri taşınır.
+			if c, err := repo.ContentBySlugAndID(r.Context(), s.pool, slug, id); err == nil && c.Status == "yayinda" {
+				hedef := makaleURL(c)
+				if r.URL.RawQuery != "" {
+					hedef += "?" + r.URL.RawQuery
+				}
+				http.Redirect(w, r, hedef, http.StatusMovedPermanently)
+				return
+			}
+			// Yönlendirme kurulamadıysa eski davranış korunur.
 			s.handleCDArticle(w, r, lang, slug, id)
 			return
 		}
@@ -1529,7 +1554,7 @@ func (s *Server) handleSitemap(w http.ResponseWriter, r *http.Request) {
 	refs, _ := repo.PublishedLangRefs(ctx, s.pool, site.ID)
 	byRoot := sitemapLangRefs(refs)
 	for _, it := range items {
-		loc := abs + publicArticleURL(it.Locale, it.DisplaySlug(), it.ID)
+		loc := abs + makaleURL(it)
 		sb.WriteString("<url><loc>" + htmlEscape(loc) + "</loc>")
 		if it.UpdatedAt.Year() > 2000 {
 			sb.WriteString("<lastmod>" + it.UpdatedAt.UTC().Format("2006-01-02") + "</lastmod>")
@@ -1809,6 +1834,59 @@ func langOf(r *http.Request, s *Server) string {
 func publicArticleURL(locale, slug string, id int64) string {
 	base := homeURL(locale)
 	return base + slug + "-" + itoa(int(id))
+}
+
+// makaleURL CoinDesk URL deseniyle makale adresi üretir:
+//
+//	/{locale}/{section}/{YYYY}/{MM}/{DD}/{slug}
+//
+// NEDEN: CoinDesk deseni (spec §4) tarihi URL'de taşır — Google Haber'de
+// tazelik sinyali ve kaynakla birebir uyum. Yayın tarihi yoksa (taslak,
+// planlanmış) eski `slug-id` biçimine düşer; kırık bağlantı üretilmez.
+//
+// Bölüm (kategori) yoksa tarih köke yakın kalır: /{YYYY}/{MM}/{DD}/{slug}.
+func makaleURL(c repo.Content) string {
+	base := homeURL(c.Locale)
+	yol := ""
+	if c.CategorySlug != nil && *c.CategorySlug != "" {
+		yol = *c.CategorySlug + "/"
+	}
+	t := c.PublishedAt
+	if t == nil {
+		t = &c.CreatedAt
+	}
+	if t == nil || t.IsZero() {
+		return publicArticleURL(c.Locale, c.DisplaySlug(), c.ID)
+	}
+	return base + yol + t.Format("2006/01/02") + "/" + c.DisplaySlug()
+}
+
+// makaleIDMi /{section}/{y}/{m}/{d}/{slug} desenini çözer.
+//
+// (yil, ay, gun) değerleri takvimsel olarak geçerli olmalı; aksi hâlde
+// desen sayılmaz (ör. /kategori/3/5 gibi başka bir yol olabilir).
+func makaleTarihDeseni(segs []string) (slug string, ok bool) {
+	if len(segs) < 4 {
+		return "", false
+	}
+	n := len(segs)
+	y, m, d, slug := segs[n-4], segs[n-3], segs[n-2], segs[n-1]
+	if len(y) != 4 || len(m) != 2 || len(d) != 2 {
+		return "", false
+	}
+	yi, err1 := strconv.Atoi(y)
+	mi, err2 := strconv.Atoi(m)
+	di, err3 := strconv.Atoi(d)
+	if err1 != nil || err2 != nil || err3 != nil {
+		return "", false
+	}
+	if yi < 2000 || yi > 2100 || mi < 1 || mi > 12 || di < 1 || di > 31 {
+		return "", false
+	}
+	if strings.TrimSpace(slug) == "" {
+		return "", false
+	}
+	return slug, true
 }
 
 // hreflangLinks, yazı sayfasının <head> bölümüne basılacak alternatif dil

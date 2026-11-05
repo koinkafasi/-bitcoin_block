@@ -200,6 +200,20 @@ func ContentMinWeight(ctx context.Context, pool *pgxpool.Pool, id int64) (int, e
 	return n, nil
 }
 
+// ContentBySlug yayın URL'si için yalnız slug ile içerik döndürür.
+//
+// NEDEN: CoinDesk URL deseni tarih taşır ve SON segment yalın slug'dır
+// (/{section}/{y}/{m}/{d}/{slug}). `slug` üzerinde tekil indeks var
+// (ux_contents_slug), bu yüzden arama güvenli.
+func ContentBySlug(ctx context.Context, pool *pgxpool.Pool, slug string) (Content, error) {
+	q := `SELECT ` + contentCols + ` FROM contents c
+		LEFT JOIN categories cat ON cat.id = c.category_id
+		LEFT JOIN users u ON u.id = c.author_id
+		LEFT JOIN mahrets m ON m.id = c.mahrep_id
+		WHERE c.slug = $1`
+	return scanContent(pool.QueryRow(ctx, q, slug))
+}
+
 // ContentBySlugAndID yayın URL'si için slug+id ile içerik döndürür.
 func ContentBySlugAndID(ctx context.Context, pool *pgxpool.Pool, slug string, id int64) (Content, error) {
 	q := `SELECT ` + contentCols + ` FROM contents c

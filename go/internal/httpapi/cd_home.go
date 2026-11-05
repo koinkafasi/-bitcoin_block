@@ -40,7 +40,7 @@ func (s *Server) handleCDHome(w http.ResponseWriter, r *http.Request) {
 		st := templkit.CDStory{
 			Title: c.Title,
 			Spot:  c.Spot,
-			Href:  publicArticleURL(c.Locale, c.DisplaySlug(), c.ID),
+			Href:  makaleURL(c),
 			Image: c.ImageURL,
 		}
 		if c.PublishedAt != nil {

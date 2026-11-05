@@ -92,7 +92,7 @@ func (s *Server) newsSitemap(abs string, items []repo.Content) string {
 		if it.PublishedAt == nil || it.PublishedAt.Before(cut) {
 			continue
 		}
-		loc := abs + publicArticleURL(it.Locale, it.DisplaySlug(), it.ID)
+		loc := abs + makaleURL(it)
 		sb.WriteString("<url><loc>" + htmlEscape(loc) + "</loc><news:news>")
 		sb.WriteString("<news:publication><news:name>" + htmlEscape(s.siteName) + "</news:name><news:language>" + htmlEscape(it.Locale) + "</news:language></news:publication>")
 		sb.WriteString("<news:publication_date>" + it.PublishedAt.UTC().Format(time.RFC3339) + "</news:publication_date>")

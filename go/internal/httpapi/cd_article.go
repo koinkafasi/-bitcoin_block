@@ -53,7 +53,7 @@ func (s *Server) handleCDArticle(w http.ResponseWriter, r *http.Request, lang, s
 		Shell:       s.cdShell(bolumSlug),
 		Title:       cdMakaleBaslik(c),
 		Desc:        cdMakaleAciklama(c),
-		Canonical:   s.cfg.BaseURL + publicArticleURL(c.Locale, c.DisplaySlug(), c.ID),
+		Canonical:   s.cfg.BaseURL + makaleURL(c),
 		Kicker:      strings.ToUpper(bolumAd),
 		SectionName: bolumAd,
 		SectionHref: "/" + bolumSlug,
@@ -109,11 +109,11 @@ func (s *Server) handleCDArticle(w http.ResponseWriter, r *http.Request, lang, s
 			catID = *c.CategoryID
 		}
 		if sonraki, err := repo.ContentAfter(ctx, s.pool, c.SiteID, *c.PublishedAt, c.Locale, c.ID, catID); err == nil {
-			v.NextHref = publicArticleURL(sonraki.Locale, sonraki.DisplaySlug(), sonraki.ID)
+			v.NextHref = makaleURL(sonraki)
 			v.NextTitle = sonraki.Title
 		}
 		if onceki, err := repo.ContentBefore(ctx, s.pool, c.SiteID, *c.PublishedAt, c.Locale, c.ID, catID); err == nil {
-			v.PrevHref = publicArticleURL(onceki.Locale, onceki.DisplaySlug(), onceki.ID)
+			v.PrevHref = makaleURL(onceki)
 			v.PrevTitle = onceki.Title
 		}
 	}
