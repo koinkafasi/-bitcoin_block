@@ -1,0 +1,56 @@
+package templkit
+
+// Tek varlık fiyat sayfası (/price/{coin}).
+
+// CDCoinPage /price/{coin} verisi.
+type CDCoinPage struct {
+	Shell     CDShell
+	Title     string
+	Desc      string
+	Canonical string
+	Sym       string
+	Name      string
+	Rank      int
+	Price     string
+	Change    string
+	Up        bool
+	Others    []CDPriceRow
+}
+
+templ CDCoinPageView(v CDCoinPage) {
+	<!doctype html>
+	<html lang="tr">
+		<head>
+			@cdHead(CDHead{Title: v.Title, Desc: v.Desc, Canonical: v.Canonical,
+				OGType: "website", SiteName: v.Shell.SiteName, RSSFeed: "/rss.xml"})
+		</head>
+		<body class="cd">
+			@cdTopbar(v.Shell)
+			@cdTicker(v.Shell)
+			<main class="cd-wrap">
+				<nav class="cd-crumbs" aria-label="Konum">
+					<a href="/">Ana sayfa</a>
+					<span>/</span>
+					<a href="/price">Fiyatlar</a>
+				</nav>
+				<header class="cd-coin-head">
+					<h1>{ v.Name } <span class="cd-coin-sym">{ v.Sym }</span></h1>
+					<div class="cd-coin-price">
+						<strong>{ v.Price }</strong>
+						if v.Up {
+							<span class="cd-up">{ v.Change }</span>
+						} else {
+							<span class="cd-down">{ v.Change }</span>
+						}
+						<span class="cd-card__meta">· 24s · piyasa sırası #{ v.Rank }</span>
+					</div>
+				</header>
+				<section class="cd-mod">
+					@cdSectionHead("Diğer varlıklar", "/price")
+					@cdPriceTable("", v.Others)
+				</section>
+			</main>
+			@cdFooter(v.Shell)
+		</body>
+	</html>
+}

@@ -119,6 +119,8 @@ func (s *Server) handleCDHome(w http.ResponseWriter, r *http.Request) {
 		Latest:    latest,
 		Prices:    s.cdFiyatSatirlari(r, 10),
 		Sections:  sections,
+		MostRead:  s.cdPopuler(r, 6),
+		Opinion:   s.cdGorus(r, 4),
 		// hreflang: yalnız GERÇEK diller. Şu an içerik Türkçe; EN içerik
 		// üretildiğinde buraya eklenecek (çevirisi olmayan dili yazmak
 		// Google'da "aynı içerik" cezası riski).
@@ -132,6 +134,39 @@ func (s *Server) handleCDHome(w http.ResponseWriter, r *http.Request) {
 	if err := templkit.CDHome(d).Render(ctx, w); err != nil {
 		s.logger.Error("cd ana sayfa render", "error", err)
 	}
+}
+
+// cdPopuler §21 "En Çok Okunan" listesi (son 7 gün ağırlıklı).
+func (s *Server) cdPopuler(r *http.Request, adet int) []templkit.CDStory {
+	items, err := repo.PopulerIcerikler(r.Context(), s.pool, 1, "tr", adet)
+	if err != nil || len(items) == 0 {
+		return nil
+	}
+	simdi := time.Now()
+	var out []templkit.CDStory
+	for _, c := range items {
+		out = append(out, cdStoryCevir(c, simdi))
+	}
+	return out
+}
+
+// cdGorus §20: opinion kategorisindeki içerikler.
+func (s *Server) cdGorus(r *http.Request, adet int) []templkit.CDStory {
+	items, err := repo.BolumIcerikleri(r.Context(), s.pool, 1, "tr", "opinion", adet)
+	if err != nil || len(items) == 0 {
+		return nil
+	}
+	simdi := time.Now()
+	var out []templkit.CDStory
+	for _, c := range items {
+		st := cdStoryCevir(c, simdi)
+		// Yazar adı görüş satırında "kicker" olarak gösterilir.
+		if c.AuthorName != "" {
+			st.Source = c.AuthorName
+		}
+		out = append(out, st)
+	}
+	return out
 }
 
 // trGoreliZaman "3 saat önce" biçiminde insan okur zaman üretir

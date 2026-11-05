@@ -499,3 +499,15 @@
 @media (prefers-reduced-motion: reduce) {
   .cd * { animation: none !important; transition: none !important; }
 }
+
+/* ---------------------------------------------------------------- tek varlık (/price/{coin}) */
+.cd-coin-head { padding: 20px 0 8px; border-bottom: 1px solid var(--cd-border); }
+.cd-coin-sym { font-size: 0.55em; color: var(--cd-muted); letter-spacing: 0.04em; }
+.cd-coin-price {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-top: 8px;
+  font-variant-numeric: tabular-nums;
+}
+.cd-coin-price strong { font-size: 1.9rem; letter-spacing: -0.02em; }
