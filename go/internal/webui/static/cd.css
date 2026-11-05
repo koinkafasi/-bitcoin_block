@@ -1,0 +1,377 @@
+/* cd.css — CoinDesk tasarım sistemi (bitcosar)
+ *
+ * Kaynak: docs/COINDESK-SPEC.md §2. Değerler CoinDesk CSS'inden ÖLÇÜLDÜ;
+ * yorumlanmadı. Bu dosya mevcut public.css'in yerine GEÇMEZ: yeni yüzey
+ * (.cd gövde sınıfı) altında çalışır, eski sayfalar etkilenmez.
+ *
+ * Kural: gölge YOK, ayırma ÇİZGİYLE, köşe 2 px, sıkı başlık aralığı.
+ */
+
+:root {
+  --cd-bg: #ffffff;
+  --cd-fg: #000000;
+  --cd-surface-soft: #f8f8f8;
+  --cd-surface-alt: #f4f4f4;
+  --cd-border: #e9e9e9;
+  --cd-border-strong: #d8d8d8;
+  --cd-muted: #696969;
+  --cd-muted-strong: #4d4d4d;
+  --cd-dark: #262626;
+  --cd-dark-2: #2e3644;
+  --cd-link: #4d90fe;
+  --cd-link-hover: #3860be;
+  --cd-up: #68b631;
+  --cd-down: #ff0062;
+  --cd-warn: #ffd200;
+
+  --cd-font: "proxima-nova", system-ui, -apple-system, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
+  --cd-max: 1280px;
+  --cd-radius: 2px;
+  --cd-gap: 24px;
+
+  /* Dikey ritim: modüller arası 40 px, kart içi 12 px (ölçüldü). */
+  --cd-section-gap: 40px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* CoinDesk açık temayı varsayılan tutuyor (theme-color: rgb(255,255,255)).
+       Karanlık tema yalnız kullanıcı açıkça isterse uygulanır; bu yüzden
+       token'lar ayrı bir sınıfla değil, medya sorgusuyla ezilir. */
+    --cd-bg: #0f0f10;
+    --cd-fg: #f5f5f5;
+    --cd-surface-soft: #17171a;
+    --cd-surface-alt: #1d1d21;
+    --cd-border: #2a2a2e;
+    --cd-border-strong: #3a3a40;
+    --cd-muted: #9a9a9a;
+    --cd-muted-strong: #c4c4c4;
+  }
+}
+
+/* ---------------------------------------------------------------- temel */
+.cd {
+  background: var(--cd-bg);
+  color: var(--cd-fg);
+  font-family: var(--cd-font);
+  font-size: 16px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+.cd *,
+.cd *::before,
+.cd *::after { box-sizing: border-box; }
+
+.cd a { color: inherit; text-decoration: none; }
+.cd a:hover { text-decoration: underline; text-underline-offset: 3px; }
+
+.cd img { max-width: 100%; height: auto; display: block; }
+
+.cd-wrap {
+  max-width: var(--cd-max);
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+/* ---------------------------------------------------------------- başlıklar */
+.cd h1, .cd h2, .cd h3, .cd h4 {
+  margin: 0;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+.cd h1 { font-size: clamp(1.75rem, 3.2vw, 2.6rem); line-height: 1.14; }
+.cd h2 { font-size: clamp(1.25rem, 2vw, 1.6rem); }
+
+/* Bölüm etiketi: CoinDesk'te mavi, büyük harf, harf aralığı geniş. */
+.cd-kicker {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--cd-link);
+}
+
+.cd-section-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid var(--cd-fg);
+  margin-bottom: 18px;
+}
+.cd-section-head h2 { font-size: 1.05rem; letter-spacing: 0.02em; text-transform: uppercase; }
+.cd-section-head a { font-size: 0.8rem; color: var(--cd-link); }
+
+/* ---------------------------------------------------------------- şeritler */
+.cd-ticker {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  background: var(--cd-bg);
+  border-bottom: 1px solid var(--cd-border);
+  font-variant-numeric: tabular-nums;
+}
+.cd-ticker__inner {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding: 8px 0;
+  white-space: nowrap;
+}
+.cd-ticker__inner::-webkit-scrollbar { display: none; }
+.cd-ticker__tabs { display: flex; gap: 6px; flex: none; }
+.cd-ticker__tab {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border: 1px solid var(--cd-border);
+  border-radius: var(--cd-radius);
+  color: var(--cd-muted-strong);
+  background: transparent;
+  cursor: pointer;
+}
+.cd-ticker__tab[aria-selected="true"] {
+  background: var(--cd-fg);
+  color: var(--cd-bg);
+  border-color: var(--cd-fg);
+}
+.cd-ticker__item { display: inline-flex; align-items: baseline; gap: 6px; font-size: 0.82rem; }
+.cd-ticker__sym { font-weight: 700; }
+.cd-ticker__px { color: var(--cd-muted-strong); }
+.cd-up { color: var(--cd-up); }
+.cd-down { color: var(--cd-down); }
+
+/* ---------------------------------------------------------------- üst nav */
+.cd-topbar {
+  border-bottom: 1px solid var(--cd-border);
+  background: var(--cd-bg);
+}
+.cd-topbar__inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  height: 64px;
+}
+.cd-logo {
+  font-size: 1.35rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: var(--cd-fg);
+}
+.cd-logo span { color: var(--cd-link); }
+
+.cd-nav { display: flex; align-items: center; gap: 20px; }
+.cd-nav__link {
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: var(--cd-fg);
+  padding: 6px 0;
+  border-bottom: 2px solid transparent;
+}
+.cd-nav__link:hover { border-bottom-color: var(--cd-fg); text-decoration: none; }
+.cd-nav__link[aria-current="page"] { border-bottom-color: var(--cd-link); }
+
+.cd-topbar__actions { display: flex; align-items: center; gap: 12px; }
+.cd-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  padding: 8px 14px;
+  border-radius: var(--cd-radius);
+  border: 1px solid var(--cd-fg);
+  background: var(--cd-fg);
+  color: var(--cd-bg);
+  cursor: pointer;
+}
+.cd-btn--ghost { background: transparent; color: var(--cd-fg); border-color: var(--cd-border-strong); }
+.cd-btn--link { background: none; border: 0; padding: 0; color: var(--cd-link); }
+
+/* ---------------------------------------------------------------- kart */
+.cd-card { display: flex; flex-direction: column; gap: 8px; }
+.cd-card__media {
+  aspect-ratio: 16 / 9;
+  background: var(--cd-surface-alt);
+  overflow: hidden;
+  border-radius: var(--cd-radius);
+}
+.cd-card__media img { width: 100%; height: 100%; object-fit: cover; }
+.cd-card__title { font-size: 1rem; font-weight: 700; line-height: 1.3; }
+.cd-card--lead .cd-card__title { font-size: clamp(1.15rem, 1.8vw, 1.5rem); }
+.cd-card__spot { font-size: 0.9rem; color: var(--cd-muted-strong); }
+.cd-card__meta {
+  font-size: 0.75rem;
+  color: var(--cd-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Düz liste: CoinDesk "Latest News" — görselsiz, saat damgalı. */
+.cd-list { display: flex; flex-direction: column; }
+.cd-list__item {
+  display: flex;
+  gap: 14px;
+  align-items: baseline;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--cd-border);
+}
+.cd-list__item:last-child { border-bottom: 0; }
+.cd-list__time {
+  flex: none;
+  width: 92px;
+  font-size: 0.75rem;
+  color: var(--cd-muted);
+  font-variant-numeric: tabular-nums;
+}
+.cd-list__title { font-size: 0.95rem; font-weight: 600; line-height: 1.35; }
+
+/* ---------------------------------------------------------------- ızgara */
+.cd-grid { display: grid; gap: var(--cd-gap); }
+.cd-grid--2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.cd-grid--3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.cd-grid--4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.cd-hero {
+  display: grid;
+  grid-template-columns: 1.55fr 1fr;
+  gap: 32px;
+  align-items: start;
+}
+.cd-hero__side { display: flex; flex-direction: column; gap: 18px; }
+
+/* ---------------------------------------------------------------- fiyat tablosu */
+.cd-table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+.cd-table th {
+  text-align: left;
+  font-size: 0.7rem;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--cd-muted);
+  font-weight: 700;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--cd-border);
+}
+.cd-table td { padding: 10px; border-bottom: 1px solid var(--cd-border); font-size: 0.88rem; }
+.cd-table tr:last-child td { border-bottom: 0; }
+.cd-table .num { text-align: right; }
+
+/* ---------------------------------------------------------------- makale */
+.cd-article { max-width: 720px; margin: 0 auto; }
+.cd-article__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  font-size: 0.8rem;
+  color: var(--cd-muted);
+  padding: 12px 0;
+  border-bottom: 1px solid var(--cd-border);
+}
+.cd-article__body { font-size: 1.06rem; line-height: 1.75; }
+.cd-article__body > * + * { margin-top: 1.15em; }
+.cd-article__body h2 { margin-top: 1.8em; font-size: 1.35rem; }
+.cd-article__body blockquote {
+  margin: 1.6em 0;
+  padding-left: 18px;
+  border-left: 3px solid var(--cd-link);
+  color: var(--cd-muted-strong);
+  font-style: italic;
+}
+.cd-article__body img { border-radius: var(--cd-radius); }
+.cd-article__body figcaption { font-size: 0.78rem; color: var(--cd-muted); margin-top: 6px; }
+
+/* Kaynak atfı: toplayıcı sitede ZORUNLU, görünür ve ayrı. */
+.cd-source {
+  margin-top: 28px;
+  padding: 14px 16px;
+  border: 1px solid var(--cd-border);
+  border-left: 3px solid var(--cd-link);
+  background: var(--cd-surface-soft);
+  font-size: 0.85rem;
+  color: var(--cd-muted-strong);
+}
+.cd-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 20px; }
+.cd-tag {
+  font-size: 0.75rem;
+  padding: 4px 10px;
+  border: 1px solid var(--cd-border-strong);
+  border-radius: 999px;
+  color: var(--cd-muted-strong);
+}
+
+/* ---------------------------------------------------------------- alt bilgi */
+.cd-footer {
+  margin-top: 56px;
+  border-top: 1px solid var(--cd-border-strong);
+  background: var(--cd-surface-soft);
+  padding: 40px 0 28px;
+}
+.cd-footer__cols {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 28px;
+}
+.cd-footer h3 {
+  font-size: 0.72rem;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--cd-muted);
+  margin-bottom: 10px;
+}
+.cd-footer ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 7px; }
+.cd-footer a { font-size: 0.84rem; color: var(--cd-muted-strong); }
+.cd-footer__alt {
+  margin-top: 28px;
+  padding-top: 18px;
+  border-top: 1px solid var(--cd-border);
+  font-size: 0.78rem;
+  color: var(--cd-muted);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  justify-content: space-between;
+}
+
+/* ---------------------------------------------------------------- modül aralığı */
+.cd-mod { margin-top: var(--cd-section-gap); }
+.cd-mod--tight { margin-top: 24px; }
+
+/* Reklam yuvası: düzen kayması olmasın diye yükseklik ayrılır (CLS). */
+.cd-ad {
+  min-height: 250px;
+  display: grid;
+  place-items: center;
+  border: 1px dashed var(--cd-border-strong);
+  color: var(--cd-muted);
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* ---------------------------------------------------------------- duyarlı */
+@media (max-width: 1024px) {
+  .cd-hero { grid-template-columns: 1fr; gap: 24px; }
+  .cd-grid--4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .cd-footer__cols { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+@media (max-width: 720px) {
+  .cd-wrap { padding: 0 14px; }
+  .cd-nav { display: none; }
+  .cd-grid--2, .cd-grid--3, .cd-grid--4 { grid-template-columns: 1fr; }
+  .cd-footer__cols { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .cd-list__time { width: 74px; }
+  .cd-article__body { font-size: 1rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cd * { animation: none !important; transition: none !important; }
+}

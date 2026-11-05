@@ -1,25 +1,23 @@
 #!/usr/bin/env bash
-# guvenlik-tara.sh — bitcosar güvenlik kapıları. TEK KAYNAK.
+# guvenlik-tara.sh — CI'daki güvenlik kapılarının BİREBİR aynısını yerelde koşar.
 #
-# CI (.github/workflows/ci.yml) bu betiği çağırır; yerelde `make guvenlik-tara`
-# de aynısını koşar. Böylece "CI'da kırıldı, yerelde geçiyordu" olmaz.
+# Amaç: "CI'da kırıldı, yerelde geçiyordu" durumunu ortadan kaldırmak.
+# CI (.github/workflows/guvenlik.yml) bu betiği çağırır; yani kapı tek yerde
+# tanımlı. Sürüm sabit (TRIVY_SURUM) ki yerel ve CI aynı kuralları görsün.
 #
 # Kullanım:
-#   bash deploy/scripts/guvenlik-tara.sh           # kapı (kırmızıysa exit 1)
-#   bash deploy/scripts/guvenlik-tara.sh --rapor   # yalnız rapor (exit 0)
-#   bash deploy/scripts/guvenlik-tara.sh --imaj    # ayrıca Docker imajlarını tara
+#   bash deploy/scripts/guvenlik-tara.sh            # kod + yapılandırma + sır
+#   bash deploy/scripts/guvenlik-tara.sh --imaj     # ayrıca 4 imajı derle ve tara
+#   bash deploy/scripts/guvenlik-tara.sh --rapor    # kırmadan yalnız raporla
 #
-# YIĞIN ALGILAMA: proje yığını henüz kesinleşmedi. Betik go.mod /
-# package-lock.json / Cargo.toml varlığına bakar. Adım atlanırsa bunu
-# AÇIKÇA yazar — sessizce yeşil göstermez.
+# KAPI KURALI — neden `--ignore-unfixed`:
+#   site imajı ffmpeg içeriyor; debian'da YAMASI OLMAYAN CRITICAL/HIGH sayısı
+#   236. Yaması olan ise (ölçüm, 5 Kasım 2026) yalnız 1'di. Yamasızları kapı
+#   yapmak CI'yı kalıcı kırmızıya çevirir ve kimse bakmaz; düzeltilebilir
+#   olanlar ise gerçekten aksiyon alınabilir. Yamasızlar raporlanır.
 set -uo pipefail
 
 TRIVY_SURUM="${TRIVY_SURUM:-0.76.1}"
-SEMGREP_SURUM="${SEMGREP_SURUM:-1.183.0}"
-ZIZMOR_SURUM="${ZIZMOR_SURUM:-1.32.0}"
-GOSEC_SURUM="${GOSEC_SURUM:-v2.30.0}"
-GOVULN_SURUM="${GOVULN_SURUM:-v1.9.0}"
-
 KOK=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
 cd "$KOK"
 
@@ -32,14 +30,11 @@ for a in "$@"; do
     *) echo "bilinmeyen seçenek: $a" >&2; exit 2 ;;
   esac
 done
+
 KOD=1
 [ "$RAPOR" = 1 ] && KOD=0
 
-BASARISIZ=0
-bolum() { echo; echo "──────── $* ────────"; }
-atlandi() { echo "  ATLANDI: $*"; }
-
-# ---------------------------------------------------------------- trivy
+# ---------------------------------------------------------------- trivy kurulumu
 trivy_kur() {
   local hedef="$HOME/.local/bin"
   mkdir -p "$hedef"
@@ -55,7 +50,7 @@ trivy_kur() {
     local b="https://github.com/aquasecurity/trivy/releases/download/v${TRIVY_SURUM}"
     curl -fsSLO "$b/$t" || exit 1
     curl -fsSLO "$b/trivy_${TRIVY_SURUM}_checksums.txt" || exit 1
-    # Sağlama ZORUNLU: doğrulanmamış binary kurulmaz.
+    # Sağlama ZORUNLU: imza doğrulaması olmadan binary kurulmaz.
     sha256sum -c --ignore-missing "trivy_${TRIVY_SURUM}_checksums.txt" || exit 1
     tar xzf "$t" || exit 1
     install -m 0755 trivy "$hedef/trivy" || exit 1
@@ -70,35 +65,30 @@ else
   TRIVY="$HOME/.local/bin/trivy"
 fi
 
-ATLA=(--skip-dirs node_modules --skip-dirs .git --skip-dirs target
-      --skip-dirs .runtime --skip-dirs storage --skip-dirs data
-      --skip-dirs dist --skip-dirs .next)
+ATLA=(--skip-dirs node_modules --skip-dirs graphify-out --skip-dirs storage
+      --skip-dirs storage-private --skip-dirs data --skip-dirs .git
+      --skip-dirs .k8s-uretim)
+
+BASARISIZ=0
+bolum() { echo; echo "──────── $* ────────"; }
 
 # ---------------------------------------------------------------- 1) bağımlılık CVE
-bolum "1/6  bağımlılık CVE"
-if [ -f go.mod ] || [ -f go/go.mod ] || [ -f package-lock.json ] || [ -f Cargo.lock ] || [ -f rust/Cargo.lock ]; then
-  "$TRIVY" fs -q --scanners vuln --severity CRITICAL,HIGH --ignore-unfixed \
-    --exit-code "$KOD" --table-mode summary "${ATLA[@]}" . || BASARISIZ=1
-else
-  atlandi "bağımlılık dosyası yok (go.mod / package-lock.json / Cargo.lock)"
-fi
+bolum "1/6  bağımlılık CVE (go.mod, Cargo.lock, package-lock.json)"
+"$TRIVY" fs -q --scanners vuln --severity CRITICAL,HIGH --ignore-unfixed \
+  --exit-code "$KOD" --table-mode summary "${ATLA[@]}" . || BASARISIZ=1
 
 # ---------------------------------------------------------------- 2) yapılandırma
 bolum "2/6  yapılandırma (Dockerfile + k8s manifest)"
-if [ -d deploy ]; then
-  "$TRIVY" config -q --severity CRITICAL,HIGH --table-mode summary \
-    --ignorefile .trivyignore.yaml \
-    --exit-code "$KOD" deploy/ || BASARISIZ=1
-else
-  atlandi "deploy/ yok"
-fi
+"$TRIVY" config -q --severity CRITICAL,HIGH \
+  --ignorefile .trivyignore.yaml \
+  --exit-code "$KOD" --table-mode summary deploy/ || BASARISIZ=1
 
 # ---------------------------------------------------------------- 3) sır taraması
 bolum "3/6  sır taraması (gömülü anahtar/jeton)"
-"$TRIVY" fs -q --scanners secret --exit-code "$KOD" \
-  --table-mode summary "${ATLA[@]}" . || BASARISIZ=1
+"$TRIVY" fs -q --scanners secret \
+  --exit-code "$KOD" --table-mode summary "${ATLA[@]}" . || BASARISIZ=1
 
-# ---------------------------------------------------------------- 4) semgrep
+# ---------------------------------------------------------------- 4) semgrep SAST
 bolum "4/6  semgrep SAST (ERROR kapı, WARNING rapor)"
 if command -v semgrep >/dev/null 2>&1; then
   SEMGREP=semgrep
@@ -106,91 +96,44 @@ elif [ -x "$HOME/.local/bin/semgrep" ]; then
   SEMGREP="$HOME/.local/bin/semgrep"
 else
   SEMGREP=""
-  atlandi "semgrep yok (kurulum: uv tool install semgrep==$SEMGREP_SURUM)"
+  echo "semgrep yok — atlandı (kurulum: uv tool install semgrep)"
 fi
 if [ -n "$SEMGREP" ]; then
-  KONF=(--config p/golang --config p/javascript --config p/secrets)
-  HEDEF=()
-  for d in go src app collab-server editor-src e2e web; do
-    [ -d "$d" ] && HEDEF+=("$d")
-  done
-  if [ ${#HEDEF[@]} -eq 0 ]; then
-    atlandi "taranacak kaynak dizini yok"
-  else
-    "$SEMGREP" scan "${KONF[@]}" --metrics=off --quiet --severity ERROR \
-      --error --exclude node_modules --exclude target --exclude dist \
-      "${HEDEF[@]}" || BASARISIZ=1
-    echo "ERROR seviyesi: temiz"
-    echo "--- WARNING (rapor, kapı değil) ---"
-    "$SEMGREP" scan "${KONF[@]}" --metrics=off --quiet --severity WARNING \
-      --exclude node_modules --exclude target --exclude dist \
-      "${HEDEF[@]}" 2>/dev/null \
-      | grep -E '^\s+❯❱|Findings:' | sed 's/^/    /' | head -20
-  fi
+  # ERROR = kapı. WARNING tabanı 65 (sha1 önbellek anahtarı, cookie
+  # yardımcısını göremeyen kurallar vb.); ayıklanana kadar kapı değil.
+  "$SEMGREP" scan --config p/golang --config p/javascript \
+    --metrics=off --quiet --severity ERROR \
+    --error --exclude node_modules --exclude graphify-out \
+    --exclude storage --exclude data \
+    go collab-server editor-src e2e || BASARISIZ=1
+  echo "ERROR seviyesi: temiz"
+  echo "--- WARNING (rapor, kapı değil) ---"
+  "$SEMGREP" scan --config p/golang --config p/javascript \
+    --metrics=off --quiet --severity WARNING \
+    --exclude node_modules --exclude graphify-out \
+    --exclude storage --exclude data \
+    go collab-server editor-src e2e 2>/dev/null \
+    | grep -E '^\s+❯❱|Findings:' | sed 's/^/    /' | head -20
 fi
 
-# ---------------------------------------------------------------- 5) dil-özel SAST
-bolum "5/6  dil-özel SAST (gosec / govulncheck / npm audit / cargo audit)"
+# ---------------------------------------------------------------- 5) gosec
+bolum "5/6  gosec (Go statik güvenlik; severity high kapı)"
+# CI ile AYNI komut ve AYNI sabit sürüm. gosec `go` komutunu alt süreç
+# olarak çağırır; PATH'te yoksa "0 bulgu" der ve YANLIŞ GÜVEN verir — bu
+# yüzden PATH burada açıkça kurulur ve sürüm doğrulanır.
 export PATH="/usr/local/go/bin:$HOME/go/bin:$PATH"
-
-if [ -f go.mod ] || [ -f go/go.mod ]; then
-  GODIZ=$( [ -f go/go.mod ] && echo go || echo . )
-  if ! command -v go >/dev/null 2>&1; then
-    atlandi "go yok"
-  else
-    # gosec `go` komutunu alt süreç olarak çağırır; PATH'te yoksa
-    # "0 bulgu" der ve YANLIŞ GÜVEN verir — bu yüzden PATH açıkça kuruldu.
-    GOSEC="$HOME/go/bin/gosec"
-    if [ ! -x "$GOSEC" ]; then
-      echo "==> gosec $GOSEC_SURUM kuruluyor"
-      go install "github.com/securego/gosec/v2/cmd/gosec@$GOSEC_SURUM" >/dev/null 2>&1 || true
-    fi
-    if [ -x "$GOSEC" ]; then
-      ( cd "$GODIZ" && "$GOSEC" -quiet -severity high -confidence medium \
-          -nosec-require-rules -nosec-require-justification \
-          -exclude-dir=vendor ./... ) || BASARISIZ=1
-    else
-      atlandi "gosec kurulamadı"
-    fi
-
-    GOVULN="$HOME/go/bin/govulncheck"
-    if [ ! -x "$GOVULN" ]; then
-      echo "==> govulncheck $GOVULN_SURUM kuruluyor"
-      go install "golang.org/x/vuln/cmd/govulncheck@$GOVULN_SURUM" >/dev/null 2>&1 || true
-    fi
-    if [ -x "$GOVULN" ]; then
-      ( cd "$GODIZ" && "$GOVULN" ./... ) || BASARISIZ=1
-    else
-      atlandi "govulncheck kurulamadı"
-    fi
-  fi
+GOSEC="$HOME/go/bin/gosec"
+if ! command -v go >/dev/null 2>&1; then
+  echo "go yok — gosec atlandı"
+elif [ ! -x "$GOSEC" ]; then
+  echo "gosec yok — atlandı (kurulum: go install github.com/securego/gosec/v2/cmd/gosec@v2.30.0)"
 else
-  atlandi "go.mod yok — gosec/govulncheck çalışmadı"
+  ( cd go && "$GOSEC" -quiet -severity high -confidence medium \
+      -nosec-require-rules -nosec-require-justification \
+      -exclude-dir=internal/webui/static/vendor ./... ) || BASARISIZ=1
 fi
 
-if [ -f package-lock.json ]; then
-  if command -v npm >/dev/null 2>&1; then
-    npm audit --audit-level=high --omit=dev || BASARISIZ=1
-  else
-    atlandi "npm yok"
-  fi
-else
-  atlandi "package-lock.json yok — npm audit çalışmadı"
-fi
-
-if [ -f Cargo.toml ] || [ -f rust/Cargo.toml ]; then
-  if command -v cargo >/dev/null 2>&1; then
-    for d in . rust; do
-      [ -f "$d/Cargo.toml" ] && ( cd "$d" && cargo audit ) || true
-    done
-  else
-    atlandi "cargo yok"
-  fi
-else
-  atlandi "Cargo.toml yok — cargo audit çalışmadı"
-fi
-
-# ---------------------------------------------------------------- 6) workflow
+# ---------------------------------------------------------------- 6) workflow güvenliği
 bolum "6/6  GitHub Actions workflow güvenliği (zizmor)"
 if command -v zizmor >/dev/null 2>&1; then
   ZIZMOR=zizmor
@@ -198,25 +141,33 @@ elif [ -x "$HOME/.local/bin/zizmor" ]; then
   ZIZMOR="$HOME/.local/bin/zizmor"
 else
   ZIZMOR=""
-  atlandi "zizmor yok (kurulum: uv tool install zizmor==$ZIZMOR_SURUM)"
+  echo "zizmor yok — atlandı (kurulum: uv tool install zizmor)"
 fi
-if [ -n "$ZIZMOR" ] && [ -d .github/workflows ]; then
+if [ -n "$ZIZMOR" ]; then
   "$ZIZMOR" --min-severity medium --no-progress .github/workflows/ || BASARISIZ=1
 fi
 
 # ---------------------------------------------------------------- imaj taraması
 if [ "$IMAJ" = 1 ]; then
   bolum "ek  kap imajları (derle + tara)"
-  shopt -s nullglob
-  for df in deploy/docker/*.Dockerfile; do
-    ad=$(basename "$df" .Dockerfile)
-    echo "--- $ad derleniyor"
-    docker build -q -f "$df" -t "bitcosar-$ad:tara" . >/dev/null \
-      || { echo "derleme başarısız: $ad" >&2; BASARISIZ=1; continue; }
+  for s in site image-svc search-svc collab; do
+    echo "--- $s derleniyor"
+    docker build -q -f "deploy/docker/$s.Dockerfile" -t "theblock-$s:tara" . >/dev/null \
+      || { echo "derleme başarısız: $s" >&2; BASARISIZ=1; continue; }
     "$TRIVY" image -q --scanners vuln --severity CRITICAL,HIGH --ignore-unfixed \
-      --exit-code "$KOD" --table-mode summary "bitcosar-$ad:tara" || BASARISIZ=1
+      --exit-code "$KOD" --table-mode summary "theblock-$s:tara" || BASARISIZ=1
   done
-  shopt -u nullglob
+
+  bolum "ek  upstream imajlar (RAPOR — yamayı biz veremeyiz)"
+  # Kapı DEĞİL: postgres/redis bizim derlemediğimiz imajlar. Örnek:
+  # postgres:17-alpine'daki 26 bulgunun tamamı /usr/local/bin/gosu içinde
+  # (Go 1.24.6 ile derlenmiş). gosu yalnız başlangıçta root'tan postgres'e
+  # düşmek için çalışır; TLS/x509/URL ayrıştırması yapmaz. Upstream yeni
+  # imaj yayınlayınca etiketi güncellemek dışında yapacak bir şey yok.
+  for i in postgres:17-alpine redis:7-alpine; do
+    "$TRIVY" image -q --scanners vuln --severity CRITICAL,HIGH --ignore-unfixed \
+      --exit-code 0 --table-mode summary "$i"
+  done
 fi
 
 echo

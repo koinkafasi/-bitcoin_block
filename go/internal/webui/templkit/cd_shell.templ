@@ -1,0 +1,120 @@
+package templkit
+
+// CoinDesk kabuğu — templ karşılığı.
+//
+// Yalnız YAPI ve SINIF adları burada; ölçüler cd.css'te (docs/COINDESK-SPEC.md
+// §2). Böylece tasarım ayarı tek dosyada kalır, şablon okunur olur.
+//
+// NOT: templ dosyasına `import "strconv"` gibi yardımcılar konmaz; Go
+// yardımcıları cd_shell.go'da (aynı paket). Şablon içinde yalnız alan
+// erişimi ve iki dallı if kullanılır — templ'in koşullu öznitelik sözdizimi
+// sürümden sürüme değişiyor, dallar her sürümde çalışır.
+
+// cdLogoMark "bitcosar" logosu: son nokta mavi (CoinDesk vurgu rengi).
+templ cdLogoMark(siteName string) {
+	<a class="cd-logo" href="/">
+		{ siteName }<span>.</span>
+	</a>
+}
+
+// cdTicker fiyat şeridi. JS'siz de okunur: sekmeler <a>, içerik sunucudan.
+templ cdTicker(s CDShell) {
+	<div class="cd-ticker" role="region" aria-label="Piyasa şeridi">
+		<div class="cd-wrap">
+			<div class="cd-ticker__inner">
+				<div class="cd-ticker__tabs" role="tablist">
+					if s.TickerTab == "stocks" {
+						<a class="cd-ticker__tab" role="tab" aria-selected="false" href="?serit=markets">Markets Live</a>
+						<a class="cd-ticker__tab" role="tab" aria-selected="true" href="?serit=stocks">Crypto Stocks</a>
+					} else {
+						<a class="cd-ticker__tab" role="tab" aria-selected="true" href="?serit=markets">Markets Live</a>
+						<a class="cd-ticker__tab" role="tab" aria-selected="false" href="?serit=stocks">Crypto Stocks</a>
+					}
+				</div>
+				for _, it := range s.Ticker {
+					<a class="cd-ticker__item" href={ "/price/" + cdSlug(it.Sym) }>
+						<span class="cd-ticker__sym">{ it.Sym }</span>
+						<span class="cd-ticker__px">{ it.Price }</span>
+						if it.Up {
+							<span class="cd-up">{ it.Change }</span>
+						} else {
+							<span class="cd-down">{ it.Change }</span>
+						}
+					</a>
+				}
+			</div>
+		</div>
+	</div>
+}
+
+// cdTopbar üst gezinme. Mega menü Faz 2'de; burada birincil bağlantılar.
+templ cdTopbar(s CDShell) {
+	<header class="cd-topbar">
+		<div class="cd-wrap">
+			<div class="cd-topbar__inner">
+				@cdLogoMark(s.SiteName)
+				<nav class="cd-nav" aria-label="Ana menü">
+					for _, l := range s.Nav {
+						if l.Active {
+							<a class="cd-nav__link" href={ l.Href } aria-current="page">{ l.Label }</a>
+						} else {
+							<a class="cd-nav__link" href={ l.Href }>{ l.Label }</a>
+						}
+					}
+				</nav>
+				<div class="cd-topbar__actions">
+					<a class="cd-btn cd-btn--ghost" href={ s.SearchHref } aria-label="Ara">Ara</a>
+					if s.LoginHref != "" {
+						<a class="cd-btn cd-btn--ghost" href={ s.LoginHref }>Giriş</a>
+					}
+					if s.SignupHref != "" {
+						<a class="cd-btn" href={ s.SignupHref }>Ücretsiz üye ol</a>
+					}
+				</div>
+			</div>
+		</div>
+	</header>
+}
+
+// cdFooter alt bilgi — 5 sütun, ölçülen başlıklarla.
+templ cdFooter(s CDShell) {
+	<footer class="cd-footer">
+		<div class="cd-wrap">
+			<div class="cd-footer__cols">
+				for _, col := range cdFooterColumns {
+					<div>
+						<h3>{ col.Title }</h3>
+						<ul>
+							for _, l := range col.Links {
+								<li>
+									<a href={ l[1] }>{ l[0] }</a>
+								</li>
+							}
+						</ul>
+					</div>
+				}
+			</div>
+			<div class="cd-footer__alt">
+				<span>© 2026 bitcosar — Tüm hakları saklıdır.</span>
+				<span>Kaynaklar atıf ile gösterilir; tam metin yayınlanmaz.</span>
+			</div>
+		</div>
+	</footer>
+}
+
+// cdSectionHead bölüm başlığı + "tümü" bağlantısı.
+templ cdSectionHead(title, href string) {
+	<div class="cd-section-head">
+		<h2>{ title }</h2>
+		if href != "" {
+			<a href={ href }>Tümü →</a>
+		}
+	</div>
+}
+
+// cdAd reklam yuvası. Yükseklik ayrılmış: reklam gelmese de düzen kaymaz (CLS).
+templ cdAd(etiket string) {
+	<div class="cd-ad" role="complementary" aria-label="Reklam">
+		{ etiket }
+	</div>
+}
