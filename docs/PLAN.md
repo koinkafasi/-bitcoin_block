@@ -29,7 +29,9 @@ Güvenlik hattı: [`guvenlik-hatti.md`](guvenlik-hatti.md)
 | Gerçek görsel + gerçek etiket | ✅ 119/179 görselli, 109 etiket |
 | `hreflang` + Organization/WebSite/NewsArticle JSON-LD | ✅ |
 | Sitemap + news sitemap + RSS + robots | ✅ |
-| Lighthouse bütçe kapısı | ✅ `make performans` — **perf 96 · SEO 100 · a11y 96 · BP 96**, LCP 1.4 s, CLS 0, TBT 0 ms |
+| Lighthouse bütçe kapısı | ✅ `make performans` — **/ perf 98 · /markets 99 · /price 100**, SEO 100, BP 96, LCP 0.9–1.2 s, CLS 0 |
+| Kaynak görsel proxy (`/kg/{hash}`) | ✅ üçüncü taraf çerez kapandı; dış CDN bağımlılığı yok |
+| Kripto alaka kapısı | ✅ resmî kaynaklarda kripto dışı bülten sızmıyor (SEC 25 → 3) |
 | **Kapsam dışı kalan görsel modüller** | ⏳ video, podcast, endeks, borsa tablosu |
 | EN dil | ⏳ |
 
