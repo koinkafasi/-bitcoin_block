@@ -175,6 +175,9 @@ templ CDHome(v CDHomeView) {
 					</section>
 				}
 
+				<!-- §7 Newsletters: e-posta kayıt -->
+				@cdNewsletter()
+
 				<!-- §13 reklam -->
 				<section class="cd-mod">
 					@cdAd("Reklam")
@@ -199,6 +202,32 @@ templ CDHome(v CDHomeView) {
 			@cdFooter(v.Shell)
 		</body>
 	</html>
+}
+
+// cdNewsletter §7: e-posta kayıt modülü.
+//
+// CoinDesk düzeni: bölüm başlığı + tek satır açıklama + e-posta alanı +
+// kayıt düğmesi + küçük koşul metni. Form, mevcut POST /bulten ucuna
+// gönderilir (çift onay akışı hazır); JS gerekmez — çalışan HTML formu.
+templ cdNewsletter() {
+	<section class="cd-mod">
+		<div class="cd-news">
+			<div>
+				<h2>Günlük bülten</h2>
+				<p class="cd-card__spot">Günün en önemli kripto haberleri, her sabah e-postanızda. Ücretsiz.</p>
+			</div>
+			<form class="cd-news__form" method="post" action="/bulten">
+				<label class="cd-visually-hidden" for="cd-news-email">E-posta adresiniz</label>
+				<input class="cd-news__input" id="cd-news-email" type="email" name="email"
+					required placeholder="ornek@eposta.com" autocomplete="email"/>
+				<button class="cd-btn" type="submit">Abone ol</button>
+			</form>
+		</div>
+		<p class="cd-news__not">
+			Kayıt sonrası onay e-postası gönderilir. Adresiniz yalnız bülten için kullanılır;
+			<a href="/gizlilik-politikasi">gizlilik politikası</a>.
+		</p>
+	</section>
 }
 
 // cdPriceTable §14/§15: sıra, sembol, fiyat, değişim.

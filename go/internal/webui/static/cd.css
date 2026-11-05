@@ -455,6 +455,36 @@
   margin: 32px 0 8px;
 }
 
+/* ---------------------------------------------------------------- bülten (§7) */
+.cd-news {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 24px;
+  align-items: center;
+  padding: 24px;
+  background: var(--cd-surface-soft);
+  border: 1px solid var(--cd-border);
+  border-radius: var(--cd-radius);
+}
+.cd-news h2 { font-size: 1.15rem; margin-bottom: 6px; }
+.cd-news__form { display: flex; gap: 8px; align-items: center; }
+.cd-news__input {
+  font: inherit;
+  font-size: 0.9rem;
+  padding: 9px 12px;
+  min-width: 240px;
+  border: 1px solid var(--cd-border-strong);
+  border-radius: var(--cd-radius);
+  background: var(--cd-bg);
+  color: var(--cd-fg);
+}
+.cd-news__input:focus { outline: 2px solid var(--cd-link); outline-offset: 1px; }
+.cd-news__not {
+  margin: 8px 0 0;
+  font-size: 0.75rem;
+  color: var(--cd-muted);
+}
+
 /* ---------------------------------------------------------------- promo (§3) */
 .cd-promo {
   margin-top: 16px;
@@ -485,6 +515,9 @@
   .cd-block { grid-template-columns: 1fr; gap: 20px; }
   .cd-block__rows { border-left: 0; padding-left: 0; border-top: 1px solid var(--cd-border); }
   .cd-most { grid-template-columns: 1fr; }
+  .cd-news { grid-template-columns: 1fr; }
+  .cd-news__form { flex-wrap: wrap; }
+  .cd-news__input { min-width: 0; flex: 1 1 200px; }
 }
 
 @media (max-width: 720px) {

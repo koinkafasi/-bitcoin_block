@@ -11,7 +11,7 @@ Durum kodları: ✅ tam · 🟡 kısmi · ⛔ eksik · 🔒 dış veri bekliyor
 
 | # | CoinDesk modülü | bitcosar | Not |
 |---|---|---|---|
-| 1 | Üst nav + arama + dil + oturum | 🟡 | nav + arama var; **dil seçici ve Giriş/Üye ol yok** |
+| 1 | Üst nav + arama + dil + oturum | ✅ | nav + arama + dil seçici + Giriş/Üye ol; mega menü hâlâ düz nav |
 | 2 | Fiyat şeridi (Markets Live / Crypto Stocks) | 🟡 | kripto şeridi ✅ (7 varlık, canlı); **Crypto Stocks sekmesi boş** |
 | 3 | Promo banner (etkinlik geri sayımı) | ⛔ | ayar alanı hazır (`cd-promo`), içerik yok |
 | 4 | Today's Videos (oynatıcı + liste) | ⛔ | video verisi/modeli yok |
@@ -43,7 +43,7 @@ Durum kodları: ✅ tam · 🟡 kısmi · ⛔ eksik · 🔒 dış veri bekliyor
 |---|---|---|---|
 | Ana sayfa | `/` | ✅ | 27,7 KB |
 | Bölüm | `/{section}` | ✅ | 6 bölüm dolu (markets 23, policy 77, business 40, tech 40, opinion 1) |
-| Makale | `/{section}/{y}/{m}/{d}/{slug}` | 🟡 | şablon ✅; **URL'de tarih yok** (theblock deseni `slug-id`) |
+| Makale | `/{section}/{y}/{m}/{d}/{slug}` | ✅ | CoinDesk deseni; eski `slug-id` adresler 301 ile taşınıyor |
 | Fiyat | `/price` | ✅ | 25+ varlık |
 | Tek varlık | `/price/{coin}` | ✅ | `/price/btc` → $80.216 +2,19% |
 | Etiket | `/tag/{tag}` | ✅ | 23 kart (Markets) |
@@ -64,7 +64,7 @@ Durum kodları: ✅ tam · 🟡 kısmi · ⛔ eksik · 🔒 dış veri bekliyor
 | `robots.txt` | ✅ | ✅ | 2,9 KB |
 | `hreflang` + `x-default` | 15 dil | 🟡 | `tr` + `x-default` (EN içerik yok) |
 | `NewsArticle` JSON-LD | ✅ | ✅ | zorunlu alanlar dolu |
-| `BreadcrumbList` | ✅ | ⛔ | görsel breadcrumb var, JSON-LD yok |
+| `BreadcrumbList` | ✅ | ✅ | makale: Ana sayfa → Bölüm → Başlık |
 | `Organization`/`WebSite` | ✅ | ✅ | `@graph` içinde |
 | `Person` (yazar) | ✅ | ⛔ | yazar profili yok |
 | Kanonik | dil başına | ✅ | |

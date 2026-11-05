@@ -253,7 +253,7 @@ func cdHead(h CDHead) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 21, "<meta name=\"twitter:card\" content=\"summary_large_image\"><!-- Görsel CDN'lerine erken bağlantı: LCP'yi ~50-100 ms iyileştirir --><link rel=\"preconnect\" href=\"https://cdn.sanity.io\" crossorigin=\"anonymous\"><link rel=\"preconnect\" href=\"https://assets.coingecko.com\" crossorigin=\"anonymous\"><link rel=\"stylesheet\" href=\"/static/cd.css?v=1\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 21, "<meta name=\"twitter:card\" content=\"summary_large_image\"><!-- Görsel CDN'lerine erken bağlantı: LCP'yi ~50-100 ms iyileştirir --><link rel=\"preconnect\" href=\"https://cdn.sanity.io\" crossorigin=\"anonymous\"><link rel=\"preconnect\" href=\"https://assets.coingecko.com\" crossorigin=\"anonymous\"><link rel=\"stylesheet\" href=\"/static/cd.css?v=1\"><!-- Mega menü: cd.css'in üstüne biner, kendi jetonunu tanımlamaz. --><link rel=\"stylesheet\" href=\"/static/cd-menu.css?v=1\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -265,7 +265,7 @@ func cdHead(h CDHead) templ.Component {
 			var templ_7745c5c3_Var13 string
 			templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.ResolveAttributeValue(h.SiteName + " RSS")
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_head.templ`, Line: 76, Col: 78}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_head.templ`, Line: 78, Col: 78}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var13)
 			if templ_7745c5c3_Err != nil {
@@ -278,7 +278,7 @@ func cdHead(h CDHead) templ.Component {
 			var templ_7745c5c3_Var14 templ.SafeURL
 			templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinURLErrs(h.RSSFeed)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_head.templ`, Line: 76, Col: 97}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_head.templ`, Line: 78, Col: 97}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
 			if templ_7745c5c3_Err != nil {
