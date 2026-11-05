@@ -130,7 +130,14 @@ func ValidateOutboundURL(u *url.URL) error {
 }
 
 // DogrulaVeCek kullanıcı kaynaklı adresi doğrulayıp güvenli istemciyle çeker.
+// DogrulaVeCek SSRF korumalı GET. UA dışarıdan verilebilir (kaynak görsel
+// çekiminde tanıtıcı UA gerekir; bazı CDN'ler varsayılanı engelliyor).
 func DogrulaVeCek(ctx context.Context, rawURL string, timeout time.Duration) (*http.Response, error) {
+	return DogrulaVeCekUA(ctx, rawURL, timeout, "TheBlockBot/1.0 (+https://theblock.com.tr)")
+}
+
+// DogrulaVeCekUA DogrulaVeCek'in UA'sı özelleştirilebilir sürümü.
+func DogrulaVeCekUA(ctx context.Context, rawURL string, timeout time.Duration, ua string) (*http.Response, error) {
 	u, err := url.Parse(strings.TrimSpace(rawURL))
 	if err != nil {
 		return nil, fmt.Errorf("%w: ayrıştırılamadı", ErrGuvenliOlmayanAdres)
@@ -142,6 +149,6 @@ func DogrulaVeCek(ctx context.Context, rawURL string, timeout time.Duration) (*h
 	if err != nil {
 		return nil, err
 	}
-	req.Header.Set("User-Agent", "TheBlockBot/1.0 (+https://theblock.com.tr)")
+	req.Header.Set("User-Agent", ua)
 	return SafeFetchClient(timeout).Do(req)
 }

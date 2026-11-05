@@ -481,6 +481,14 @@ func CrawlFeed(ctx context.Context, pool *pgxpool.Pool, f *Feed, rules []WordRul
 		// Körlemesine 240 rune kesmek cümleyi ortadan bölüyordu (ölçüm:
 		// yayındaki 94 spot noktalamasız bitiyordu). Cümle sınırına saygılı.
 		spot = cumleGuvenliKirp(spot, 240)
+		// Spot başlığın tekrarıysa ATILIR.
+		//
+		// ÖLÇÜM (5 Kasım 2026): Fed/ECB feed'lerinde `<description>` başlığın
+		// aynısı. Sayfada başlık iki kez alt alta basılıyordu (kart + spot).
+		// Okuyucuya bilgi katmıyor, tasarımı şişiriyor.
+		if spotEsitBaslik(spot, title) {
+			spot = ""
+		}
 
 		// Yakın-kopya kapısı: url_hash farklı olsa da aynı haber başka
 		// kaynaktan gelmiş olabilir (bkz. bot_dedupe.go). Mükerrer ise
@@ -546,6 +554,13 @@ func CrawlFeed(ctx context.Context, pool *pgxpool.Pool, f *Feed, rules []WordRul
 			// Kaynağın kendi kapak görseli (mutlak http/https). Boşsa kart
 			// görselsiz basılır; uydurma görsel konmaz.
 			ImageURL: it.Image,
+		}
+		// Görseli KENDİ origin'imizden servis etmek için hash'i kaydet
+		// (üçüncü taraf çerez + dış CDN bağımlılığı; bkz. migration 0116).
+		if it.Image != "" {
+			if h := KaynakGorselKaydet(ctx, pool, it.Image); h != "" {
+				c.ImageURL = KaynakGorselYol(h)
+			}
 		}
 		nid, err := CreateContent(ctx, pool, c)
 		if err != nil {

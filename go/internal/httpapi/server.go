@@ -269,6 +269,8 @@ func (s *Server) routes() {
 	s.mux.HandleFunc("GET /price/{coin}", s.handleCDCoin)
 	// Etiket sayfaları (§4 /tag/{tag}).
 	s.mux.HandleFunc("GET /tag/{slug}", s.handleCDTag)
+	// Kaynak görselleri KENDİ origin'imizden (üçüncü taraf çerez/BP sorunu).
+	s.mux.HandleFunc("GET /kg/{hash}", s.handleKaynakGorsel)
 	// CoinDesk bölüm adresleri (§4): /markets, /business, /tech, /policy …
 	// Tek segment; slug closure ile sabitlenir (mux PathValue literal
 	// desende boş döner — bu tuzak canlı testte yakalandı).

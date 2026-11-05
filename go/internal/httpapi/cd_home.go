@@ -64,12 +64,28 @@ func (s *Server) handleCDHome(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// §8 manşet: 1 büyük + 3 yan. §5 latest: ilk 12 (saat damgalı liste).
+	//
+	// MANŞET GÖRSELLİ OLMALI: CoinDesk manşeti büyük görselli basar.
+	// Görselsiz haber manşete düşünce sayfanın üstü boş bir metin bloğu
+	// oluyordu (ölçüm: Fed bülteni manşette, görsel yok). Görselli haber
+	// yoksa ilk haber kullanılır — manşet yine dolar.
+	leadIdx := 0
+	for i := range donus {
+		if donus[i].Image != "" {
+			leadIdx = i
+			break
+		}
+	}
 	var lead templkit.CDStory
 	var side, latest []templkit.CDStory
+	if len(donus) > 0 {
+		lead = donus[leadIdx]
+	}
 	for i, st := range donus {
-		if i == 0 {
-			lead = st
-		} else if i <= 3 {
+		if i == leadIdx {
+			continue
+		}
+		if len(side) < 3 {
 			side = append(side, st)
 		}
 		if len(latest) < 12 {
