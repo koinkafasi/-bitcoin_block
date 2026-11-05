@@ -125,4 +125,3 @@ func PopulerEtiketler(ctx context.Context, pool DB, adet int) ([]Etiket, error) 
 	}
 	return out, rows.Err()
 }
-

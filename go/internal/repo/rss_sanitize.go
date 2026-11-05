@@ -26,8 +26,8 @@ type rssXMLItem struct {
 	// media:content ile content:encoded çakışmaması için etiket adı tam
 	// yazılır (encoding/xml ad alanını eşleştirmede atlar, iki farklı
 	// alanın aynı etikete bağlanması sıralamaya göre sonuncuyu kazanır).
-	Medias     []rssMedia    `xml:"content"`
-	Thumbnails []rssMedia    `xml:"thumbnail"`
+	Medias     []rssMedia     `xml:"content"`
+	Thumbnails []rssMedia     `xml:"thumbnail"`
 	Enclosures []rssEnclosure `xml:"enclosure"`
 }
 
