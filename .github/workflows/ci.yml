@@ -79,7 +79,17 @@ jobs:
           set -euo pipefail
           D=$([ -f go/go.mod ] && echo go || echo .)
           cd "$D"
-          test -z "$(gofmt -l . | tee /dev/stderr)"
+          # Teşhis: gofmt kırmızıysa sürüm ve FARK basılır. Yalnız dosya
+          # adı görmek "yerelde temiz, CI'da değil" durumunu çözümsüz
+          # bırakıyordu (5 Kasım 2026: sürüm farkı).
+          go version
+          command -v gofmt
+          if [ -n "$(gofmt -l .)" ]; then
+            echo "::error::gofmt gerektiren dosyalar:"
+            gofmt -l .
+            gofmt -d . || true
+            exit 1
+          fi
           go vet ./...
           go test ./...
           go build ./...
