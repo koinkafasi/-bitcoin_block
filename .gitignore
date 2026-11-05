@@ -1,0 +1,38 @@
+# Sırlar ve yerel dosyalar — ASLA commit edilmez.
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+secrets.env
+secrets/
+.runtime/
+
+# Go
+/bin/
+*.test
+*.out
+vendor/
+
+# Node
+node_modules/
+npm-debug.log*
+pnpm-lock.yaml.bak
+.next/
+dist/
+coverage/
+
+# Rust
+target/
+
+# Editör / işletim sistemi
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Güvenlik araç çıktıları
+.trivy-cache/
+gosec-report.json
+semgrep.sarif

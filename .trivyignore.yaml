@@ -1,0 +1,20 @@
+# .trivyignore.yaml — yapılandırma/kod bulguları için süreli istisnalar.
+#
+# KURAL: `statement` olmadan kayıt EKLENMEZ. Gerekçesiz istisna, kapıyı
+# sessizce delmekle aynıdır. Süre bitince istisna kendiliğinden düşer.
+#
+# Örnek:
+#   misconfigurations:
+#     - id: DS002
+#       paths: ["deploy/docker/web.Dockerfile"]
+#       statement: "Derleme aşaması root gerektiriyor; çalışma imajı non-root."
+#       expired_at: 2027-01-01
+#
+# NOT: Trivy bu dosyayı EŞLEME (mapping) olarak bekler; kök düzeyde `[]`
+# yazmak "cannot unmarshal !!seq into result.IgnoreConfig" hatası verir.
+# Boş liste her anahtar için ayrı yazılır.
+
+vulnerabilities: []
+misconfigurations: []
+secrets: []
+licenses: []

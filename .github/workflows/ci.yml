@@ -1,0 +1,108 @@
+name: bitcosar-ci
+
+# Güvenlik önce: her push ve PR'da aynı kapılar koşar.
+# Kapılar TEK yerde tanımlı (deploy/scripts/guvenlik-tara.sh); bu workflow
+# onu çağırır, böylece yerel `make guvenlik-tara` ile CI birebir aynıdır.
+#
+# Action'lar SHA ile sabitlenmiştir: `@v4` hareketli bir etikettir; etiket
+# sahibi taşıyabilir ve o kod bizim CI'mızda sırlarla çalışır.
+# (zizmor: unpinned-uses)
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+# En küçük yetki: bu hat hiçbir şey YAZMAZ.
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  guvenlik:
+    name: Güvenlik kapıları
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+        with:
+          go-version: "1.27.3"
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: "22"
+
+      # Trivy DB ~60 MB; her koşuda indirmemek için önbellek.
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/trivy
+          key: trivy-db-${{ github.run_id }}
+          restore-keys: trivy-db-
+
+      - name: Semgrep ve zizmor (sabit sürüm)
+        run: |
+          python3 -m pip install --quiet --disable-pip-version-check \
+            semgrep==1.183.0 zizmor==1.32.0
+
+      - name: Kapılar
+        run: bash deploy/scripts/guvenlik-tara.sh
+
+  uygulama:
+    name: Derleme ve test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+        with:
+          go-version: "1.27.3"
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: "22"
+
+      # Yığın henüz kesinleşmedi: hangi yığın varsa onu derle. Hiçbiri yoksa
+      # iş YEŞİL kalır ama adım "atlandı" der (sessiz geçiş yok).
+      - name: Go (format + vet + test + derleme)
+        if: ${{ hashFiles('go.mod') != '' || hashFiles('go/go.mod') != '' }}
+        run: |
+          set -euo pipefail
+          D=$([ -f go/go.mod ] && echo go || echo .)
+          cd "$D"
+          test -z "$(gofmt -l . | tee /dev/stderr)"
+          go vet ./...
+          go test ./...
+          go build ./...
+
+      - name: Node (varsa)
+        if: ${{ hashFiles('package-lock.json') != '' }}
+        run: |
+          set -euo pipefail
+          npm ci
+          npm run --if-present lint
+          npm run --if-present test
+          npm run --if-present build
+
+      - name: Rust (varsa)
+        if: ${{ hashFiles('Cargo.toml') != '' || hashFiles('rust/Cargo.toml') != '' }}
+        run: |
+          set -euo pipefail
+          D=$([ -f rust/Cargo.toml ] && echo rust || echo .)
+          cd "$D"
+          cargo fmt --check
+          cargo clippy --all-targets -- -D warnings
+          cargo test
+
+      - name: Yığın yok (bilgi)
+        if: ${{ hashFiles('go.mod','go/go.mod','package-lock.json','Cargo.toml','rust/Cargo.toml') == '' }}
+        run: echo "::notice::Henüz derlenecek yığın yok — yalnız güvenlik kapıları koştu."
