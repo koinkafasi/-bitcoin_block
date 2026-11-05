@@ -11,6 +11,7 @@ secrets/
 
 # Go
 /bin/
+/go/bin/
 *.test
 *.out
 # DİKKAT: çıplak `vendor/` YAZILMAZ. Go'nun bağımlılık dizinini hedeflerken
