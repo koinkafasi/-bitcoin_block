@@ -64,6 +64,9 @@ type CDHomeView struct {
 	// Hreflang gerçek çeviriler (dil → mutlak URL). Yalnız çevirisi
 	// olanlar; boşsa x-default basılır.
 	Hreflang map[string]string
+	// JSONLD Go tarafında üretilmiş yapısal veri (script etiketiyle).
+	// templ `<script>` içeriğini ham saydığı için burada taşınır.
+	JSONLD string
 }
 
 // CDArticleView makale sayfası (§7).
@@ -91,6 +94,10 @@ type CDArticleView struct {
 	PrevTitle   string
 	NextHref    string
 	NextTitle   string
+	// BaseURL yapısal veri (breadcrumb) için mutlak kök.
+	BaseURL string
+	// JSONLD Go tarafında üretilmiş NewsArticle + BreadcrumbList.
+	JSONLD string
 }
 
 // CDTag makale etiketi.
@@ -114,4 +121,6 @@ type CDSectionPage struct {
 	Page      int
 	PrevHref  string
 	NextHref  string
+	// JSONLD Go tarafında üretilmiş yapısal veri.
+	JSONLD string
 }

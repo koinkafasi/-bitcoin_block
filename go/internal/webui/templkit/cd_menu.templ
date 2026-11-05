@@ -18,15 +18,28 @@ templ cdMegaNav(s CDShell) {
 		for _, g := range cdMenuGroups() {
 			if cdHasMenu(g) {
 				<div class="cd-nav__grup">
-					<a
-						class="cd-nav__link cd-nav__link--acilir"
-						href={ templ.SafeURL(s.LangBase + g.Href) }
-						aria-haspopup="true"
-						aria-controls={ cdMenuID(g.Label) }
-					>
-						{ g.Label }
-						<span class="cd-nav__ok" aria-hidden="true"></span>
-					</a>
+					if cdMenuAktif(s.Nav, g.Href) {
+						<a
+							class="cd-nav__link cd-nav__link--acilir"
+							href={ templ.SafeURL(s.LangBase + g.Href) }
+							aria-haspopup="true"
+							aria-controls={ cdMenuID(g.Label) }
+							aria-current="page"
+						>
+							{ g.Label }
+							<span class="cd-nav__ok" aria-hidden="true"></span>
+						</a>
+					} else {
+						<a
+							class="cd-nav__link cd-nav__link--acilir"
+							href={ templ.SafeURL(s.LangBase + g.Href) }
+							aria-haspopup="true"
+							aria-controls={ cdMenuID(g.Label) }
+						>
+							{ g.Label }
+							<span class="cd-nav__ok" aria-hidden="true"></span>
+						</a>
+					}
 					<div class="cd-mega" id={ cdMenuID(g.Label) }>
 						<div class="cd-mega__ic">
 							for _, sut := range g.Columns {

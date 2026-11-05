@@ -61,6 +61,7 @@ func (s *Server) handleCDArticle(w http.ResponseWriter, r *http.Request, lang, s
 		Spot:        c.Spot,
 		BodyHTML:    string(s.blocksToHTML(c.Detail, nil)),
 		Image:       c.ImageURL,
+		BaseURL:     strings.TrimRight(s.cfg.BaseURL, "/"),
 	}
 	if c.AuthorName != "" {
 		v.Author = c.AuthorName
@@ -117,6 +118,9 @@ func (s *Server) handleCDArticle(w http.ResponseWriter, r *http.Request, lang, s
 			v.PrevTitle = onceki.Title
 		}
 	}
+
+	// NewsArticle + BreadcrumbList (Go tarafında; templ script içini ham sayar).
+	v.JSONLD = string(makaleJSONLD(v, makaleYayinISO(c)))
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.Header().Set("Cache-Control", cacheControlPublic)

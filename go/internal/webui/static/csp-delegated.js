@@ -125,4 +125,19 @@
       geri();
     }
   }, true);
+
+  // --- data-git: <select> değeri bir adres; değişince oraya git ---
+  //
+  // Dil seçici için. Satır içi `onchange` CSP tarafından ÇALIŞTIRILMAZ
+  // ('unsafe-inline' yok) — bu yüzden delege dinleyici şart.
+  document.addEventListener('change', function (e) {
+    var el = e.target;
+    if (!el || !el.hasAttribute || !el.hasAttribute('data-git')) return;
+    var hedef = el.value;
+    // Yalnız aynı-site yolları: '//evil.com' ve 'http://…' reddedilir
+    // (açık yönlendirme koruması; aynı kural sunucuda da var).
+    if (hedef && hedef.charAt(0) === '/' && hedef.charAt(1) !== '/') {
+      window.location.href = hedef;
+    }
+  }, true);
 })();

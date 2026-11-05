@@ -64,6 +64,26 @@ templ cdTopbar(s CDShell) {
 				</nav>
 				<div class="cd-topbar__actions">
 					<a class="cd-btn cd-btn--ghost" href={ s.SearchHref } aria-label="Ara">Ara</a>
+					if len(s.Diller) > 1 {
+						<!-- Dil seçici: satır içi olay YOK (CSP 'unsafe-inline'
+						     kapatıldı). data-git ile csp-delegated.js yönlendirir. -->
+						<label class="cd-lang">
+							<span class="cd-visually-hidden">Dil</span>
+							<select class="cd-lang__sec" data-git aria-label="Dil">
+								for _, d := range s.Diller {
+									if d.Aktif {
+										<option value={ d.Href } selected>{ d.Kod }</option>
+									} else {
+										<option value={ d.Href }>{ d.Kod }</option>
+									}
+								}
+							</select>
+						</label>
+					} else {
+						for _, d := range s.Diller {
+							<span class="cd-lang__tek" aria-label="Dil">{ d.Kod }</span>
+						}
+					}
 					if s.LoginHref != "" {
 						<a class="cd-btn cd-btn--ghost" href={ s.LoginHref }>Giriş</a>
 					}

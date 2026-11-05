@@ -138,7 +138,7 @@ templ CDHome(v CDHomeView) {
 		<head>
 			@cdHead(CDHead{Title: v.Title, Desc: v.Desc, Canonical: v.Canonical,
 				OGType: "website", Image: v.Lead.Image, Hreflang: v.Hreflang,
-				SiteName: v.Shell.SiteName, RSSFeed: "/rss.xml"})
+				SiteName: v.Shell.SiteName, RSSFeed: "/rss.xml", JSONLD: v.JSONLD})
 		</head>
 		<body class="cd">
 			@cdTopbar(v.Shell)

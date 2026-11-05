@@ -52,6 +52,7 @@ func (s *Server) handleCDTag(w http.ResponseWriter, r *http.Request) {
 		Href:      "/tag/" + slug,
 		Page:      sayfa,
 		Stories:   kartlar,
+		JSONLD:    string(siteAdiJSONLD(s.siteName, s.cfg.BaseURL+"/tag/"+slug)),
 	}
 	if len(kartlar) > 0 {
 		v.Lead = kartlar[0]
@@ -105,6 +106,7 @@ func (s *Server) handleCDCoin(w http.ResponseWriter, r *http.Request) {
 		Change:    repo.DegisimBicim(bulunan.Change),
 		Up:        bulunan.Change >= 0,
 		Others:    s.cdFiyatSatirlari(r, 12),
+		JSONLD:    string(siteAdiJSONLD(s.siteName, s.cfg.BaseURL+"/price/"+strings.ToLower(sym))),
 	}
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.Header().Set("Cache-Control", "public, max-age=60")

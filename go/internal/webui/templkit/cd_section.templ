@@ -12,7 +12,7 @@ templ CDSectionPageView(v CDSectionPage) {
 		<head>
 			@cdHead(CDHead{Title: v.Title, Desc: v.Desc, Canonical: v.Canonical,
 				OGType: "website", Image: v.Lead.Image, SiteName: v.Shell.SiteName,
-				RSSFeed: "/rss.xml", NoIndex: v.Page > 1})
+				RSSFeed: "/rss.xml", NoIndex: v.Page > 1, JSONLD: v.JSONLD})
 		</head>
 		<body class="cd">
 			@cdTopbar(v.Shell)

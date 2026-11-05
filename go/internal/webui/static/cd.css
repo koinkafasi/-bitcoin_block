@@ -511,3 +511,33 @@
   font-variant-numeric: tabular-nums;
 }
 .cd-coin-price strong { font-size: 1.9rem; letter-spacing: -0.02em; }
+
+/* ---------------------------------------------------------------- dil seçici */
+.cd-lang { display: inline-flex; align-items: center; }
+.cd-lang__sec {
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 6px 8px;
+  border: 1px solid var(--cd-border-strong);
+  border-radius: var(--cd-radius);
+  background: var(--cd-bg);
+  color: var(--cd-fg);
+  cursor: pointer;
+}
+.cd-lang__tek {
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--cd-muted);
+}
+.cd-visually-hidden {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0);
+  white-space: nowrap; border: 0;
+}

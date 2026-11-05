@@ -13,9 +13,8 @@ templ CDArticle(v CDArticleView) {
 	<html lang="tr">
 		<head>
 			@cdHead(CDHead{Title: v.Title, Desc: v.Desc, Canonical: v.Canonical,
-				OGType: "article", Image: v.Image, SiteName: v.Shell.SiteName})
-			<!-- NewsArticle yapısal verisi: Google Haber için zorunlu alanlar -->
-			@cdArticleJSONLD(v)
+				OGType: "article", Image: v.Image, SiteName: v.Shell.SiteName,
+				JSONLD: v.JSONLD})
 		</head>
 		<body class="cd">
 			@cdTopbar(v.Shell)
@@ -100,20 +99,4 @@ templ CDArticle(v CDArticleView) {
 	</html>
 }
 
-// cdArticleJSONLD NewsArticle yapısal verisi.
-templ cdArticleJSONLD(v CDArticleView) {
-	<script type="application/ld+json">
-	{
-		"@context": "https://schema.org",
-		"@type": "NewsArticle",
-		"headline": {{ templ.JSONString(v.Headline) }},
-		"description": {{ templ.JSONString(v.Desc) }},
-		"url": {{ templ.JSONString(v.Canonical) }},
-		"mainEntityOfPage": {{ templ.JSONString(v.Canonical) }},
-		"articleSection": {{ templ.JSONString(v.SectionName) }},
-		"author": {"@type": "Organization", "name": {{ templ.JSONString(v.Author) }}},
-		"publisher": {"@type": "Organization", "name": {{ templ.JSONString(v.Shell.SiteName) }}}
-		{{ if v.Image != "" }}, "image": [{{ templ.JSONString(v.Image) }}]{{ end }}
-	}
-	</script>
-}
+

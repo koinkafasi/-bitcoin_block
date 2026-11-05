@@ -1,5 +1,7 @@
 package templkit
 
+import "strings"
+
 // CoinDesk mega menüsü — veri modeli.
 //
 // Yapı UYDURULMADI: `docs/COINDESK-SPEC.md` §3 "Üst gezinme (birebir)"
@@ -12,9 +14,10 @@ package templkit
 // CDMenuItem bir açılır menü satırı.
 //
 // Kind alanı satırın rolünü taşır; şablon buna göre biçim verir:
-//   ""        normal bağlantı
-//   "baslik"  grup başlığı (tıklanmaz)
-//   "tumu"    "tümünü gör" satırı (ayraçtan sonra, vurgulu)
+//
+//	""        normal bağlantı
+//	"baslik"  grup başlığı (tıklanmaz)
+//	"tumu"    "tümünü gör" satırı (ayraçtan sonra, vurgulu)
 type CDMenuItem struct {
 	Label string
 	Href  string
@@ -146,3 +149,45 @@ func cdMenuID(label string) string { return "cd-mega-" + cdSlug(label) }
 
 // cdHasMenu başlığın açılır menüsü var mı.
 func cdHasMenu(g CDMenuGroup) bool { return len(g.Columns) > 0 }
+
+// cdMenuAktif, üst başlığın aktif olup olmadığını s.Nav'dan türetir.
+//
+// CDShell'de "geçerli yol" alanı yok; aktiflik, handler'ın s.Nav içinde
+// işaretlediği bağlantıdan okunur. Böylece mega menü, CDShell'e yeni alan
+// eklemeden ve handler'lara dokunmadan mevcut aria-current davranışını
+// korur. Karşılaştırma son ek üzerinden yapılır: s.Nav yolları dil ön eki
+// taşıyabilir ("/tr/markets"), menü tanımı taşımaz ("/markets").
+func cdMenuAktif(nav []CDNavLink, href string) bool {
+	if href == "" {
+		return false
+	}
+	for _, l := range nav {
+		if !l.Active || l.Href == "" {
+			continue		}
+		if l.Href == href || strings.HasSuffix(l.Href, href) {
+			return true
+		}
+	}
+	return false
+}
+
+// cdMenuAktif, üst başlığın aktif olup olmadığını s.Nav'dan türetir.
+//
+// CDShell'de "geçerli yol" alanı yok; aktiflik, handler'ın s.Nav içinde
+// işaretlediği bağlantıdan okunur. Böylece mega menü, CDShell'e yeni alan
+// eklemeden ve handler'lara dokunmadan mevcut aria-current davranışını
+// korur. Karşılaştırma son ek üzerinden: s.Nav yolları dil ön eki
+// taşıyabilir ("/tr/markets"), menü tanımı taşımaz ("/markets").
+func cdMenuAktif(nav []CDNavLink, href string) bool {
+	if href == "" {
+		return false
+	}
+	for _, l := range nav {
+		if !l.Active || l.Href == "" {
+			continue		}
+		if l.Href == href || strings.HasSuffix(l.Href, href) {
+			return true
+		}
+	}
+	return false
+}

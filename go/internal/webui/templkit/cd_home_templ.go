@@ -759,7 +759,7 @@ func CDHome(v CDHomeView) templ.Component {
 		}
 		templ_7745c5c3_Err = cdHead(CDHead{Title: v.Title, Desc: v.Desc, Canonical: v.Canonical,
 			OGType: "website", Image: v.Lead.Image, Hreflang: v.Hreflang,
-			SiteName: v.Shell.SiteName, RSSFeed: "/rss.xml"}).Render(ctx, templ_7745c5c3_Buffer)
+			SiteName: v.Shell.SiteName, RSSFeed: "/rss.xml", JSONLD: v.JSONLD}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

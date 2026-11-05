@@ -7,7 +7,7 @@ package templkit
 // Tekrar eden head bloğu, bir sayfada düzeltmenin diğerlerinde unutulması
 // demekti (theblock'ta yaşandı).
 
-// CDHead sayfa başı verisi.
+// cdHead sayfa başı verisi.
 type CDHead struct {
 	Title     string
 	Desc      string
@@ -26,6 +26,9 @@ type CDHead struct {
 	RSSFeed string
 	// NoIndex arama/sayfalama gibi dizine girmemesi gereken sayfalar.
 	NoIndex bool
+	// JSONLD Go tarafında üretilmiş yapısal veri bloğu (script etiketiyle
+	// birlikte). templ script içeriğini ham saydığı için burada taşınır.
+	JSONLD string
 }
 
 // templ func: haritayı sıralı basmak için sabit dil sırası.
@@ -69,25 +72,13 @@ templ cdHead(h CDHead) {
 	<link rel="preconnect" href="https://assets.coingecko.com" crossorigin="anonymous"/>
 
 	<link rel="stylesheet" href="/static/cd.css?v=1"/>
+	<!-- Mega menü: cd.css'in üstüne biner, kendi jetonunu tanımlamaz. -->
+	<link rel="stylesheet" href="/static/cd-menu.css?v=1"/>
 	if h.RSSFeed != "" {
 		<link rel="alternate" type="application/rss+xml" title={ h.SiteName + " RSS" } href={ h.RSSFeed }/>
 	}
-
-	<script type="application/ld+json">
-	{
-		"@context": "https://schema.org",
-		"@graph": [
-			{
-				"@type": "Organization",
-				"name": {{ templ.JSONString(h.SiteName) }},
-				"url": {{ templ.JSONString(h.Canonical) }}
-			},
-			{
-				"@type": "WebSite",
-				"name": {{ templ.JSONString(h.SiteName) }},
-				"url": {{ templ.JSONString(h.Canonical) }}
-			}
-		]
-	}
-	</script>
+	<!-- CSP uyumlu delege dinleyiciler (data-* öznitelikleri) -->
+	<script src="/static/csp-delegated.js?v=1" defer></script>
+	<!-- Organization + WebSite: templ script içini ham saydığı için Go'da üretilir -->
+	@templ.Raw(h.JSONLD)
 }

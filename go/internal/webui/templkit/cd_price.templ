@@ -9,6 +9,7 @@ type CDPricePage struct {
 	Desc      string
 	Canonical string
 	Rows      []CDPriceRow
+	JSONLD    string
 }
 
 templ CDPricePageView(v CDPricePage) {
@@ -16,7 +17,8 @@ templ CDPricePageView(v CDPricePage) {
 	<html lang="tr">
 		<head>
 			@cdHead(CDHead{Title: v.Title, Desc: v.Desc, Canonical: v.Canonical,
-				OGType: "website", SiteName: v.Shell.SiteName, RSSFeed: "/rss.xml"})
+				OGType: "website", SiteName: v.Shell.SiteName, RSSFeed: "/rss.xml",
+				JSONLD: v.JSONLD})
 		</head>
 		<body class="cd">
 			@cdTopbar(v.Shell)

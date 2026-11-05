@@ -93,6 +93,7 @@ func (s *Server) handleCDSection(w http.ResponseWriter, r *http.Request, slug st
 		Section:   meta.Ad,
 		Href:      "/" + slug,
 		Page:      sayfa,
+		JSONLD:    string(siteAdiJSONLD(s.siteName, s.cfg.BaseURL+"/"+slug)),
 	}
 	if len(kartlar) > 0 {
 		v.Lead = kartlar[0]
@@ -158,6 +159,12 @@ func (s *Server) cdShell(aktif string) templkit.CDShell {
 		SearchHref: "/arama",
 		Locale:     "tr",
 		Nav:        nav,
+		LoginHref:  "/giris",
+		SignupHref: "/kayit",
+		// Dil seçici: yalnız GERÇEK diller listelenir. Şu an içerik Türkçe;
+		// EN içerik hattı gelince "en" de eklenir (çevirisi olmayan dil
+		// kullanıcıyı boş sayfaya götürür).
+		Diller: []templkit.CDDil{{Kod: "tr", Ad: "Türkçe", Aktif: true}},
 	}
 }
 

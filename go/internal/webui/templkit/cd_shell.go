@@ -25,6 +25,14 @@ type CDNavLink struct {
 	Active bool
 }
 
+// CDDil dil seçicideki tek dil.
+type CDDil struct {
+	Kod   string
+	Ad    string
+	Aktif bool
+	Href  string
+}
+
 // CDShell, CoinDesk kabuğunun sayfa verisidir.
 type CDShell struct {
 	SiteName   string
@@ -37,6 +45,8 @@ type CDShell struct {
 	LoginHref  string
 	SignupHref string
 	Locale     string
+	// Diller dil seçicisi (yalnız gerçek diller).
+	Diller []CDDil
 	// Footer sütunları ölçülen yapıya göre sabittir (aşağıda).
 }
 

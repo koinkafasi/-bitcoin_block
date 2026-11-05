@@ -62,6 +62,7 @@ func (s *Server) handleCDPrice(w http.ResponseWriter, r *http.Request) {
 		Desc:      "Bitcoin, Ethereum ve önde gelen kripto paraların canlı fiyatları, 24 saatlik değişimleri ve piyasa sıralaması.",
 		Canonical: s.cfg.BaseURL + "/price",
 		Rows:      rows,
+		JSONLD:    string(siteAdiJSONLD(s.siteName, s.cfg.BaseURL+"/price")),
 	}
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.Header().Set("Cache-Control", "public, max-age=60")

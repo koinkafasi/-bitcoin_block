@@ -125,6 +125,7 @@ func (s *Server) handleCDHome(w http.ResponseWriter, r *http.Request) {
 		// üretildiğinde buraya eklenecek (çevirisi olmayan dili yazmak
 		// Google'da "aynı içerik" cezası riski).
 		Hreflang: map[string]string{"tr": s.cfg.BaseURL + "/"},
+		JSONLD:   string(orgJSONLD(s.siteName, strings.TrimRight(s.cfg.BaseURL, "/"), s.cfg.BaseURL+r.URL.Path)),
 	}
 	// Fiyat şeridi (§3) — veri yoksa boş kalır, şablon basmaz.
 	d.Shell.Ticker = s.cdTickerDoldur(r)

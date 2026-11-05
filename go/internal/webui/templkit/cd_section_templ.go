@@ -40,7 +40,7 @@ func CDSectionPageView(v CDSectionPage) templ.Component {
 		}
 		templ_7745c5c3_Err = cdHead(CDHead{Title: v.Title, Desc: v.Desc, Canonical: v.Canonical,
 			OGType: "website", Image: v.Lead.Image, SiteName: v.Shell.SiteName,
-			RSSFeed: "/rss.xml", NoIndex: v.Page > 1}).Render(ctx, templ_7745c5c3_Buffer)
+			RSSFeed: "/rss.xml", NoIndex: v.Page > 1, JSONLD: v.JSONLD}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
