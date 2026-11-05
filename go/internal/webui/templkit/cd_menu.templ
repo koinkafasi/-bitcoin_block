@@ -1,0 +1,57 @@
+package templkit
+
+// CoinDesk mega menüsü — şablon.
+//
+// Veri cd_menu.go'da (ölçüm: COINDESK-SPEC.md §3), görünüm cd-menu.css'te.
+//
+// JS YOK: açılma `:hover` ve `:focus-within` ile çalışır. Böylece
+// klavyeyle sekme atan kullanıcı da menüyü açabilir ve JS kapalıyken
+// bağlantılar yine erişilebilir kalır (başlığın kendisi de bir <a>).
+//
+// Mobilde cd-menu.css menüyü gizler; oradaki gezinme hamburger ile
+// çözülür (Faz 2 kapsamı, cd_shell.templ).
+
+// cdMegaNav üst gezinme + açılır menüler.
+// cd_shell.templ içindeki düz <nav class="cd-nav"> yerine çağrılır.
+templ cdMegaNav(s CDShell) {
+	<nav class="cd-nav cd-nav--mega" aria-label="Ana menü">
+		for _, g := range cdMenuGroups() {
+			if cdHasMenu(g) {
+				<div class="cd-nav__grup">
+					<a
+						class="cd-nav__link cd-nav__link--acilir"
+						href={ templ.SafeURL(s.LangBase + g.Href) }
+						aria-haspopup="true"
+						aria-controls={ cdMenuID(g.Label) }
+					>
+						{ g.Label }
+						<span class="cd-nav__ok" aria-hidden="true"></span>
+					</a>
+					<div class="cd-mega" id={ cdMenuID(g.Label) }>
+						<div class="cd-mega__ic">
+							for _, sut := range g.Columns {
+								<ul class="cd-mega__sutun">
+									for _, it := range sut.Items {
+										if it.Kind == "baslik" {
+											<li class="cd-mega__baslik">{ it.Label }</li>
+										} else if it.Kind == "tumu" {
+											<li class="cd-mega__tumu">
+												<a href={ templ.SafeURL(s.LangBase + it.Href) }>{ it.Label }</a>
+											</li>
+										} else {
+											<li>
+												<a href={ templ.SafeURL(s.LangBase + it.Href) }>{ it.Label }</a>
+											</li>
+										}
+									}
+								</ul>
+							}
+						</div>
+					</div>
+				</div>
+			} else {
+				<a class="cd-nav__link" href={ templ.SafeURL(s.LangBase + g.Href) }>{ g.Label }</a>
+			}
+		}
+	</nav>
+}

@@ -1,5 +1,7 @@
 package templkit
 
+import "strconv"
+
 // CoinDesk tasarım kabuğu (bitcosar).
 // Kaynak: docs/COINDESK-SPEC.md §3 (üst gezinme + fiyat şeridi) ve §6
 // (ana sayfa modül sırası). Değerler ölçüldü: nav sırası, şerit içeriği,
@@ -85,6 +87,11 @@ func cdSekmeEtiketi(tab string) string {
 		return "Crypto Stocks"
 	}
 	return "Markets Live"
+}
+
+// cdSiraya numarayı 1-tabanlı metne çevirir (0 → "1").
+func cdSiraya(i int) string {
+	return strconv.Itoa(i + 1)
 }
 
 // cdSlug sembolü fiyat yolu parçasına çevirir (BTC → btc).

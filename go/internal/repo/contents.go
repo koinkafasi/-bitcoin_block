@@ -54,6 +54,9 @@ type Content struct {
 	Locale        string
 	TranslationOf *int64
 	SiteID        int64
+	// ImageURL kaynağın verdiği kapak görseli (mutlak http/https URL).
+	// Toplanan içerikte dolu; editörün yüklediği görsel cover_media_id'dedir.
+	ImageURL string
 
 	// join (opsiyonel dolu)
 	CategoryName *string
@@ -135,6 +138,7 @@ const contentCols = `c.id, c.type_key, c.status, c.title, COALESCE(c.spot,''), c
 	c.seo_title, c.seo_description, c.canonical_url,
 	c.publish_at, c.published_at, c.version, c.created_at, c.updated_at, c.locale, c.translation_of, c.site_id,
 	c.is_ymyl, c.ymyl_uzman, c.ymyl_durumu, c.ai_score,
+	c.image_url,
 	cat.name, cat.slug, u.name, m.name`
 
 // ScanContent satırı Content'e aktarır.
@@ -150,6 +154,7 @@ func scanContent(row pgx.Row) (Content, error) {
 		&c.SeoTitle, &c.SeoDesc, &c.CanonicalURL,
 		&c.PublishAt, &c.PublishedAt, &c.Version, &c.CreatedAt, &c.UpdatedAt, &c.Locale, &c.TranslationOf, &c.SiteID,
 		&c.IsYMYL, &c.YMYLUzman, &c.YMYLDurumu, &c.AiScore,
+		&c.ImageURL,
 		&catName, &catSlug, &c.AuthorName, &mahrepName,
 	)
 	if errors.Is(err, pgx.ErrNoRows) {
@@ -226,8 +231,8 @@ func CreateContent(ctx context.Context, pool *pgxpool.Pool, c *Content) (int64, 
 			 is_am, is_um, is_dm, is_sd, is_fh, is_hk,
 			 source_url, source_name, comment_status, is_exclusive, min_tier_weight,
 			 seo_title, seo_description, canonical_url, publish_at, published_at,
-			 locale, translation_of, site_id, ai_score)
-		VALUES ($1,$2,$3,$4,$5::jsonb,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28,$29,$30,$31,$32)
+			 locale, translation_of, site_id, ai_score, image_url)
+		VALUES ($1,$2,$3,$4,$5::jsonb,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28,$29,$30,$31,$32,$33)
 		RETURNING id`,
 		c.TypeKey, c.Status, c.Title, c.Spot, orEmptyJSON(c.Detail), slug,
 		nullableInt(c.CategoryID), c.AuthorID, nullableInt(c.MahrepID),
@@ -236,7 +241,7 @@ func CreateContent(ctx context.Context, pool *pgxpool.Pool, c *Content) (int64, 
 		nullableText(c.SourceURL), nullableText(c.SourceName), c.CommentStatus, c.IsExclusive, c.MinTierWeight,
 		nullableText(c.SeoTitle), nullableText(c.SeoDesc), nullableText(c.CanonicalURL),
 		c.PublishAt, c.PublishedAt, c.Locale, nullableInt64(c.TranslationOf), siteIDOr1(c.SiteID),
-		c.AiScore,
+		c.AiScore, c.ImageURL,
 	).Scan(&id)
 	return id, err
 }
@@ -666,6 +671,7 @@ func scanContentWithTotal(row pgx.Row) (contentRow, error) {
 		&c.SeoTitle, &c.SeoDesc, &c.CanonicalURL,
 		&c.PublishAt, &c.PublishedAt, &c.Version, &c.CreatedAt, &c.UpdatedAt, &c.Locale, &c.TranslationOf, &c.SiteID,
 		&c.IsYMYL, &c.YMYLUzman, &c.YMYLDurumu, &c.AiScore,
+		&c.ImageURL,
 		&catName, &catSlug, &c.AuthorName, &mahrepName, &total,
 	)
 	if err != nil {

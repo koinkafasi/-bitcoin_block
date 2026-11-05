@@ -260,7 +260,10 @@ func (s *Server) routes() {
 	s.mux.HandleFunc("GET /healthz", s.handleHealth)
 	s.mux.HandleFunc("GET /readyz", s.handleReadyz)
 	s.mux.HandleFunc("POST /csp-rapor", s.handleCSPReport)
-	s.mux.HandleFunc("GET /{$}", s.handleHome)
+	s.mux.HandleFunc("GET /{$}", s.handleCDHome)
+	// Eski (theblock) düzeni karşılaştırma için korunur.
+	s.mux.HandleFunc("GET /klasik", s.handleHome)
+	s.mux.HandleFunc("GET /cd", s.handleCDHome)
 	s.mux.HandleFunc("GET /robots.txt", s.handleRobots)
 	// Takım logoları kendi altyapımızdan servis edilir (bkz. teamlogo_handlers.go).
 	s.mux.HandleFunc("GET /takim-logo/{key}", s.handleTeamLogo)

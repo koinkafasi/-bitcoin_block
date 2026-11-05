@@ -1,0 +1,247 @@
+package templkit
+
+// CoinDesk ana sayfa şablonu — modül sırası spec §6 ile BİREBİR.
+//
+// Sapma yok: her modül aynı sırada, aynı görsel dilde. Veri yoksa modül
+// basılmaz (boş kutu göstermek tasarımı bozuk gösterir) ama sıra korunur.
+
+// cdCard kapak görselli haber kartı (CoinDesk kart deseni).
+templ cdCard(s CDStory, lead bool) {
+	if lead {
+		<article class="cd-card cd-card--lead">
+			@cdCardBody(s)
+		</article>
+	} else {
+		<article class="cd-card">
+			@cdCardBody(s)
+		</article>
+	}
+}
+
+templ cdCardBody(s CDStory) {
+	if s.Image != "" {
+		<a class="cd-card__media" href={ s.Href } tabindex="-1" aria-hidden="true">
+			<img src={ s.Image } alt="" loading="lazy" decoding="async"
+				referrerpolicy="no-referrer"/>
+		</a>
+	}
+	if s.Kicker != "" {
+		<span class="cd-kicker">{ s.Kicker }</span>
+	}
+	<h3 class="cd-card__title"><a href={ s.Href }>{ s.Title }</a></h3>
+	if s.Spot != "" {
+		<p class="cd-card__spot">{ s.Spot }</p>
+	}
+	@cdMeta(s)
+}
+
+templ cdMeta(s CDStory) {
+	<div class="cd-card__meta">
+		if s.Time != "" {
+			<span>{ s.Time }</span>
+		}
+		if s.Source != "" {
+			if s.Time != "" {
+				<span> · </span>
+			}
+			if s.SourceURL != "" {
+				<a href={ s.SourceURL } rel="nofollow noopener" target="_blank">{ s.Source }</a>
+			} else {
+				<span>{ s.Source }</span>
+			}
+		}
+	</div>
+}
+
+// cdLatestRow §5 "Latest News": saat damgası solda, başlık sağda, görsel yok.
+templ cdLatestRow(s CDStory) {
+	<div class="cd-list__item">
+		<span class="cd-list__time">{ s.Time }</span>
+		<div class="cd-list__main">
+			<a class="cd-list__title" href={ s.Href }>{ s.Title }</a>
+			if s.Source != "" {
+				<span class="cd-card__meta"> · { s.Source }</span>
+			}
+		</div>
+	</div>
+}
+
+// cdBlock §22 bölüm bloğu: 1 büyük görselli + 2 alt başlık + 3 satır.
+templ cdBlock(sec CDSection) {
+	<section class="cd-mod">
+		@cdSectionHead(sec.Title, sec.Href)
+		<div class="cd-block">
+			<div class="cd-block__lead">
+				@cdCard(sec.Lead, false)
+				for _, s := range sec.Second {
+					<div class="cd-block__sub">
+						<a class="cd-block__subtitle" href={ s.Href }>{ s.Title }</a>
+						@cdMeta(s)
+					</div>
+				}
+			</div>
+			<div class="cd-block__rows">
+				for _, s := range sec.Rows {
+					<a class="cd-block__row" href={ s.Href }>{ s.Title }</a>
+				}
+			</div>
+		</div>
+	</section>
+}
+
+// cdMostRead §21: 1 büyük + 5 numaralı satır.
+templ cdMostRead(items []CDStory) {
+	if len(items) > 0 {
+		<section class="cd-mod">
+			@cdSectionHead("En Çok Okunan", "")
+			<div class="cd-most">
+				@cdCard(items[0], false)
+				<ol class="cd-most__list">
+					for i := 1; i < len(items); i++ {
+						<li class="cd-most__item">
+							<span class="cd-most__rank">{ cdSiraya(i) }</span>
+							<a href={ items[i].Href }>{ items[i].Title }</a>
+						</li>
+					}
+				</ol>
+			</div>
+		</section>
+	}
+}
+
+// cdOpinion §20: yazar avatarlı satırlar.
+templ cdOpinion(items []CDStory) {
+	if len(items) > 0 {
+		<section class="cd-mod">
+			@cdSectionHead("Görüş", "/opinion")
+			<div class="cd-opinion">
+				for _, s := range items {
+					<div class="cd-opinion__row">
+						if s.Image != "" {
+							<img class="cd-opinion__avatar" src={ s.Image } alt="" loading="lazy"
+								referrerpolicy="no-referrer"/>
+						}
+						<div>
+							<span class="cd-kicker">{ s.Source }</span>
+							<a class="cd-opinion__title" href={ s.Href }>{ s.Title }</a>
+						</div>
+					</div>
+				}
+			</div>
+		</section>
+	}
+}
+
+templ CDHome(v CDHomeView) {
+	<!doctype html>
+	<html lang="tr">
+		<head>
+			<meta charset="utf-8"/>
+			<meta name="viewport" content="width=device-width, initial-scale=1"/>
+			<title>{ v.Title }</title>
+			<meta name="description" content={ v.Desc }/>
+			<link rel="canonical" href={ v.Canonical }/>
+			<meta name="theme-color" content="#ffffff"/>
+			<link rel="stylesheet" href="/static/cd.css?v=1"/>
+			<link rel="alternate" type="application/rss+xml" title="bitcosar RSS" href="/rss.xml"/>
+		</head>
+		<body class="cd">
+			@cdTopbar(v.Shell)
+			@cdTicker(v.Shell)
+			<main class="cd-wrap">
+				<!-- §3 promo banner -->
+				if v.Promo != "" {
+					<div class="cd-promo">{ v.Promo }</div>
+				}
+
+				<!-- §8 manşet bloğu: 1 büyük + 3 yan -->
+				if v.Lead.Href != "" {
+					<section class="cd-mod">
+						<div class="cd-hero">
+							@cdCard(v.Lead, true)
+							<div class="cd-hero__side">
+								for _, s := range v.Side {
+									@cdCard(s, false)
+								}
+							</div>
+						</div>
+					</section>
+				}
+
+				<!-- §5 Latest News: saat damgalı düz liste -->
+				if len(v.Latest) > 0 {
+					<section class="cd-mod">
+						@cdSectionHead("Son Haberler", "/latest-crypto-news")
+						<div class="cd-list">
+							for _, s := range v.Latest {
+								@cdLatestRow(s)
+							}
+						</div>
+					</section>
+				}
+
+				<!-- §13 reklam -->
+				<section class="cd-mod">
+					@cdAd("Reklam")
+				</section>
+
+				<!-- §14 prices -->
+				@cdPriceTable("Kripto Fiyatları", v.Prices)
+
+				<!-- §21 most read -->
+				@cdMostRead(v.MostRead)
+
+				<!-- §20 opinion -->
+				@cdOpinion(v.Opinion)
+
+				<!-- §22 bölüm blokları -->
+				for _, sec := range v.Sections {
+					if sec.Lead.Href != "" {
+						@cdBlock(sec)
+					}
+				}
+			</main>
+			@cdFooter(v.Shell)
+		</body>
+	</html>
+}
+
+// cdPriceTable §14/§15: sıra, sembol, fiyat, değişim.
+templ cdPriceTable(baslik string, rows []CDPriceRow) {
+	if len(rows) > 0 {
+	<section class="cd-mod">
+		@cdSectionHead(baslik, "/price")
+		<table class="cd-table">
+			<thead>
+				<tr>
+					<th>#</th>
+					<th>Varlık</th>
+					<th class="num">Fiyat</th>
+					<th class="num">24s</th>
+				</tr>
+			</thead>
+			<tbody>
+				for _, r := range rows {
+					<tr>
+						<td>{ cdSiraya(r.Rank) }</td>
+						<td>
+							<a href={ r.Href }>
+								<strong>{ r.Sym }</strong>
+								<span class="cd-card__meta"> { r.Name }</span>
+							</a>
+						</td>
+						<td class="num">{ r.Price }</td>
+						<td class="num">
+							if r.Up {
+								<span class="cd-up">{ r.Change }</span>
+							} else {
+								<span class="cd-down">{ r.Change }</span>
+							}
+						</td>
+					</tr>
+				}
+			</tbody>
+		</table>
+	</section>
+	}
+}

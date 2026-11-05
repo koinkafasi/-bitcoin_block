@@ -1,0 +1,116 @@
+/* cd-menu.css — CoinDesk mega menü (bitcosar)
+ *
+ * cd.css'in ÜSTÜNE biner; kendi jetonunu tanımlamaz, yalnız --cd-*
+ * kullanır. Kural aynı: gölge YOK, ayırma ÇİZGİYLE, köşe 2 px.
+ *
+ * Açılma JS'siz: :hover + :focus-within. Klavyeyle sekme atan kullanıcı
+ * başlığa gelince menü açılır, içindeki bağlantılar sırayla gezilir.
+ */
+
+.cd-nav--mega { position: relative; }
+
+/* Başlık + açılır kabı: menü başlığın altına hizalanır. */
+.cd-nav__grup { position: relative; display: flex; align-items: center; }
+
+.cd-nav__link--acilir { display: inline-flex; align-items: center; gap: 5px; }
+
+/* Küçük ok. Ayrı karakter yerine CSS üçgeni: fontdan bağımsız. */
+.cd-nav__ok {
+  width: 0; height: 0;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 4px solid currentColor;
+  opacity: .55;
+  transition: transform .12s ease, opacity .12s ease;
+}
+.cd-nav__grup:hover .cd-nav__ok,
+.cd-nav__grup:focus-within .cd-nav__ok { opacity: 1; transform: rotate(180deg); }
+
+/* ---- Açılır panel ---- */
+.cd-mega {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 60;
+  min-width: 220px;
+  background: var(--cd-bg);
+  border: 1px solid var(--cd-border);
+  border-radius: var(--cd-radius);
+  /* Spec: gölge yok — derinlik çizgiyle verilir. */
+  padding: 14px 0;
+
+  /* Kapalıyken DOM'da kalır ama ekran okuyucuya ve fareye kapalı. */
+  visibility: hidden;
+  opacity: 0;
+  transform: translateY(-2px);
+  transition: opacity .12s ease, transform .12s ease, visibility .12s;
+}
+.cd-nav__grup:hover > .cd-mega,
+.cd-nav__grup:focus-within > .cd-mega {
+  visibility: visible;
+  opacity: 1;
+  transform: none;
+}
+
+/* Başlıkla panel arasında fare boşluğu kalmasın: köprü. */
+.cd-nav__grup::after {
+  content: "";
+  position: absolute;
+  top: 100%; left: 0; right: 0;
+  height: 10px;
+}
+
+.cd-mega__ic {
+  display: flex;
+  gap: 0;
+  align-items: flex-start;
+}
+
+/* Sütunlar çizgiyle ayrılır (gölgeyle değil). */
+.cd-mega__sutun {
+  list-style: none;
+  margin: 0;
+  padding: 0 20px;
+  min-width: 190px;
+}
+.cd-mega__sutun + .cd-mega__sutun { border-left: 1px solid var(--cd-border); }
+
+.cd-mega__sutun li { margin: 0; }
+
+.cd-mega__sutun a {
+  display: block;
+  padding: 6px 0;
+  font-size: .875rem;
+  line-height: 1.35;
+  color: var(--cd-fg);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.cd-mega__sutun a:hover { color: var(--cd-link-hover); text-decoration: underline; }
+
+/* Grup başlığı: tıklanmaz, küçük ve sönük. */
+.cd-mega__baslik {
+  padding: 4px 0 8px;
+  font-size: .6875rem;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--cd-muted);
+}
+.cd-mega__baslik + li a { padding-top: 0; }
+
+/* "Tümünü gör": ayraçtan sonra, mavi. */
+.cd-mega__tumu {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--cd-border);
+}
+.cd-mega__tumu a { color: var(--cd-link); font-weight: 600; }
+
+/* Hareket azaltma tercihi: geçişleri kapat, görünürlük aynı kalsın. */
+@media (prefers-reduced-motion: reduce) {
+  .cd-mega, .cd-nav__ok { transition: none; }
+}
+
+/* Mobil: cd.css zaten .cd-nav'ı gizliyor (368. satır). Burada ek kural
+ * gerekmiyor; hamburger gezinmesi Faz 2'de cd_shell.templ'e eklenecek. */

@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"errors"
+	"html"
 	"io"
 	"net/http"
 	neturl "net/url"
@@ -136,6 +137,8 @@ type RSSItem struct {
 	Section     string
 	Categories  []string
 	Enriched    bool
+	// Image kaynağın verdiği kapak görseli (mutlak URL). Boş olabilir.
+	Image string
 }
 
 // FetchRSS URL'den RSS 2.0 / Atom / RDF öğelerini okur.
@@ -303,7 +306,8 @@ func parseRSS(doc string) ([]RSSItem, error) {
 			date = it.DCDate
 		}
 		out = append(out, RSSItem{Title: strings.TrimSpace(it.Title), Link: strings.TrimSpace(it.Link),
-			Description: stripHTML(body), PubDate: parseRSSDate(date), Categories: cats})
+			Description: stripHTML(body), PubDate: parseRSSDate(date), Categories: cats,
+			Image: rssGorsel(it, body)})
 	}
 	for _, it := range feed.AtomItems {
 		body := it.Summary
@@ -321,9 +325,87 @@ func parseRSS(doc string) ([]RSSItem, error) {
 			}
 		}
 		out = append(out, RSSItem{Title: strings.TrimSpace(it.Title), Link: strings.TrimSpace(it.Link),
-			Description: stripHTML(body), PubDate: parseRSSDate(it.Updated), Categories: cats})
+			Description: stripHTML(body), PubDate: parseRSSDate(it.Updated), Categories: cats,
+			Image: rssHTMLGorsel(body)})
 	}
 	return out, nil
+}
+
+// rssGorsel bir RSS 2.0/RDF öğesinin kapak görselini bulur.
+//
+// Sıra bilinçli: media:thumbnail en küçük/kırpılmış olan, media:content ise
+// yayın için hazırlanmış geniş görsel. Bu yüzden content → thumbnail →
+// enclosure → gövde HTML'i sırası izlenir. Tüm adaylar http(s) olmalı;
+// veri: URI'leri ve göreli yollar atılır (şablon bunları gösteremez).
+func rssGorsel(it rssXMLItem, govde string) string {
+	for _, m := range it.Medias {
+		if u := gecerliGorselURL(m.URL); u != "" && (m.Medium == "" || m.Medium == "image") {
+			return u
+		}
+	}
+	for _, m := range it.Thumbnails {
+		if u := gecerliGorselURL(m.URL); u != "" {
+			return u
+		}
+	}
+	for _, e := range it.Enclosures {
+		if u := gecerliGorselURL(e.URL); u != "" && (e.Type == "" || strings.HasPrefix(e.Type, "image/")) {
+			return u
+		}
+	}
+	return rssHTMLGorsel(govde)
+}
+
+// rssHTMLGorsel gövde HTML'i içindeki ilk <img src> adresini döndürür.
+func rssHTMLGorsel(govde string) string {
+	lower := strings.ToLower(govde)
+	for i := 0; ; {
+		j := strings.Index(lower[i:], "<img")
+		if j < 0 {
+			return ""
+		}
+		j += i
+		k := strings.Index(lower[j:], "src=")
+		if k < 0 {
+			return ""
+		}
+		k += j + len("src=")
+		if k >= len(govde) {
+			return ""
+		}
+		quote := govde[k]
+		if quote != '"' && quote != '\'' {
+			i = k
+			continue
+		}
+		rest := govde[k+1:]
+		end := strings.IndexByte(rest, quote)
+		if end < 0 {
+			return ""
+		}
+		if u := gecerliGorselURL(rest[:end]); u != "" {
+			return u
+		}
+		i = k + 1 + end
+	}
+}
+
+// gecerliGorselURL yalnız mutlak http(s) adreslerini kabul eder.
+//
+// NEDEN: feed'lerde `data:` URI'leri (base64) ve `//cdn...` gibi şemasız
+// yollar var. data: URI'yi <img src> olarak basmak HTML'i megabaytlarca
+// şişirir; şemasız yolu basmak sayfayı https'te karışık içerik hatasına
+// düşürür. İkisi de sessiz bozulma; burada elenir.
+func gecerliGorselURL(raw string) string {
+	u := strings.TrimSpace(html.UnescapeString(raw))
+	if u == "" {
+		return ""
+	}
+	lu := strings.ToLower(u)
+	if strings.HasPrefix(lu, "https://") || strings.HasPrefix(lu, "http://") {
+		return u
+	}
+	return ""
 }
 
 func stripHTML(s string) string {
@@ -458,11 +540,19 @@ func CrawlFeed(ctx context.Context, pool *pgxpool.Pool, f *Feed, rules []WordRul
 			CommentStatus: "acik",
 			Locale:        "tr",
 			AiScore:       score,
+			// Kaynağın kendi kapak görseli (mutlak http/https). Boşsa kart
+			// görselsiz basılır; uydurma görsel konmaz.
+			ImageURL: it.Image,
 		}
 		nid, err := CreateContent(ctx, pool, c)
 		if err != nil {
 			lastErr = err
 			continue
+		}
+		// Kaynağın GERÇEK etiketleri (RSS <category>). Hata içeriği
+		// engellemez: etiket yazılamazsa haber yine yayına girer.
+		if len(it.Categories) > 0 {
+			_ = baglaEtiketler(ctx, pool, nid, it.Categories)
 		}
 		if _, err := pool.Exec(ctx, `INSERT INTO crawled_items (feed_id, url, url_hash) VALUES ($1,$2,$3)`,
 			f.ID, it.Link, hash); err != nil {

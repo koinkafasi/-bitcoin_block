@@ -17,6 +17,31 @@ type rssXMLItem struct {
 	PubDate    string   `xml:"pubDate"`
 	DCDate     string   `xml:"date"`
 	Categories []string `xml:"category"`
+	// Görsel alanları. Feed'ler görseli üç ayrı yerde taşıyor:
+	//   · media:content / media:thumbnail (Media RSS — CoinDesk, Decrypt)
+	//   · enclosure (RSS 2.0 standardı)
+	//   · <img src> description/gövde HTML'i içinde (eski feed'ler)
+	//
+	// `xml:"content"` eşleşmeleri ad alanını yok sayar; bu yüzden
+	// media:content ile content:encoded çakışmaması için etiket adı tam
+	// yazılır (encoding/xml ad alanını eşleştirmede atlar, iki farklı
+	// alanın aynı etikete bağlanması sıralamaya göre sonuncuyu kazanır).
+	Medias     []rssMedia    `xml:"content"`
+	Thumbnails []rssMedia    `xml:"thumbnail"`
+	Enclosures []rssEnclosure `xml:"enclosure"`
+}
+
+// rssMedia Media RSS görsel öğesi.
+type rssMedia struct {
+	URL    string `xml:"url,attr"`
+	Type   string `xml:"type,attr"`
+	Medium string `xml:"medium,attr"`
+}
+
+// rssEnclosure RSS 2.0 ek dosyası (çoğunlukla görsel).
+type rssEnclosure struct {
+	URL  string `xml:"url,attr"`
+	Type string `xml:"type,attr"`
 }
 
 // sanitizeXML gövdeyi encoding/xml'in katlanabildiği hale getirir.
