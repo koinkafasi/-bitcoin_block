@@ -460,6 +460,10 @@ func CrawlFeed(ctx context.Context, pool *pgxpool.Pool, f *Feed, rules []WordRul
 	// atmak gereksiz yük olurdu.
 	slugIDs, _ := categorySlugIDs(ctx, pool)
 	count := 0
+	// alakasiz: resmî kaynakta kripto terimi bulunmayan öğe sayısı.
+	// Log'da görünür ki "kaynak çalışıyor ama hep eleniyor" durumu
+	// sessizce kaybolmasın (ölçüm için gerekli).
+	alakasiz := 0
 	for _, it := range items {
 		if it.Link == "" || it.Title == "" {
 			continue
@@ -488,6 +492,19 @@ func CrawlFeed(ctx context.Context, pool *pgxpool.Pool, f *Feed, rules []WordRul
 		// Okuyucuya bilgi katmıyor, tasarımı şişiriyor.
 		if spotEsitBaslik(spot, title) {
 			spot = ""
+		}
+
+		// Alaka kapısı: resmî kurum kaynaklarında (SEC/Fed/ECB) kripto
+		// terimi yoksa içerik ATLANIR. Kripto medyası feed'lerinde kapı yok.
+		// Gerekçe ve ölçüm: internal/repo/alaka.go
+		if kaynakAlakaGerekli(f.Aggregator) && !kriptoAlakali(title+" "+spot) {
+			// "Çekildi" işaretlenir: her turda yeniden denenmesin.
+			if _, err := pool.Exec(ctx, `INSERT INTO crawled_items (feed_id, url, url_hash) VALUES ($1,$2,$3)`,
+				f.ID, it.Link, hash); err != nil {
+				lastErr = err
+			}
+			alakasiz++
+			continue
 		}
 
 		// Yakın-kopya kapısı: url_hash farklı olsa da aynı haber başka
@@ -582,6 +599,16 @@ func CrawlFeed(ctx context.Context, pool *pgxpool.Pool, f *Feed, rules []WordRul
 	status, errMsg := "ok", ""
 	if lastErr != nil {
 		status, errMsg = "kismi", lastErr.Error()
+	}
+	// Alaka kapısı bilgisi durum satırına yazılır: panelde "çalışıyor ama
+	// 0 yeni" görünen resmî kaynağın neden boş olduğu anlaşılsın.
+	if alakasiz > 0 {
+		not := "alaka kapısı: " + itoa(alakasiz) + " öğe kripto dışı"
+		if errMsg == "" {
+			errMsg = not
+		} else {
+			errMsg += " | " + not
+		}
 	}
 	_ = markFeedCheck(ctx, pool, f.ID, status, errMsg, count)
 	return count, lastErr
