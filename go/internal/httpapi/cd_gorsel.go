@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 
@@ -57,17 +58,29 @@ func (s *Server) handleKaynakGorsel(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 		return
 	}
+	b, ct, ok := s.kaynakGorselAsil(r, hash)
+	if !ok {
+		http.NotFound(w, r)
+		return
+	}
+	s.kaynakGorselSun(w, r, b, ct)
+}
 
+// kaynakGorselAsil orijinal baytları verir: diskte varsa oradan, yoksa
+// indirip atomik yazdıktan sonra.
+//
+// İki uç da (orijinal ve ölçekli) buradan geçer — indirme, SSRF koruması ve
+// DB işaretlemesi TEK yerde kalsın. Ayrıldığında biri güncellenmeden diğeri
+// kalıyor; /kg/ ucunun güvenlik kapısı tam bu akışta.
+func (s *Server) kaynakGorselAsil(r *http.Request, hash string) ([]byte, string, bool) {
 	yol := kaynakGorselDiskYolu(hash)
 	if b, ct, ok := kaynakGorselOku(yol); ok {
-		s.kaynakGorselSun(w, r, b, ct)
-		return
+		return b, ct, true
 	}
 
 	kaynak := repo.KaynakGorselURL(r.Context(), s.pool, hash)
 	if kaynak == "" {
-		http.NotFound(w, r)
-		return
+		return nil, "", false
 	}
 
 	b, ct, err := kaynakGorselIndir(r, kaynak)
@@ -75,12 +88,88 @@ func (s *Server) handleKaynakGorsel(w http.ResponseWriter, r *http.Request) {
 		s.logger.Warn("kaynak görsel indirilemedi", "hash", hash, "error", err)
 		// Görsel gelmezse yarım sayfa bırakmayalım: 404 → tarayıcı
 		// `<img>` için yer tutucu gösterir, düzen bozulmaz.
-		http.NotFound(w, r)
-		return
+		return nil, "", false
 	}
 	kaynakGorselYaz(yol, b)
 	repo.KaynakGorselIsaretle(r.Context(), s.pool, hash, ct, int64(len(b)))
-	s.kaynakGorselSun(w, r, b, ct)
+	return b, ct, true
+}
+
+// handleKaynakGorselOlcekli — kaynak görselin ölçeklenmiş hâli.
+//
+// GET /kg/{hash}/{genislik}
+//
+// NEDEN (ölçüm, 5 Kasım 2026): /kg/ önbellekliyordu ama BOYUTLANDIRMIYORDU.
+// Ana sayfadaki beş görsel canlı ölçüldü: 708+262+245+106+65 KB = 1,39 MB;
+// dokuz görselle ~2,5 MB. Oysa en geniş yuva 474x266 (lead 734x413) — yani
+// 708 KB'lık bir PNG 292x164'lük karta giriyordu. Ölçülen variant/480
+// ortalaması 27 KB; aynı sayfa ~250 KB'ye iniyor.
+//
+// Akış orijinalle aynı iskelet: diskte varsa sun, yoksa üret-yaz-sun.
+// Ölçekli dosya orijinalin yanında durur, adı genişlikle ayrışır.
+//
+// Çıktı DAİMA JPEG (platform.ResizeToWidth öyle kodluyor). Bu bilinçli:
+// kaynaklarda WebP/PNG karışık geliyor, tek biçim önbelleği ve Content-Type'ı
+// basitleştiriyor. Animasyonlu GIF animasyonunu yitirir — haber kapaklarında
+// animasyon yok, ölçüldü.
+func (s *Server) handleKaynakGorselOlcekli(w http.ResponseWriter, r *http.Request) {
+	hash := strings.TrimSpace(r.PathValue("hash"))
+	if !gecerliKaynakGorselHash(hash) {
+		http.NotFound(w, r)
+		return
+	}
+	genislik, err := strconv.Atoi(r.PathValue("genislik"))
+	if err != nil || !kaynakGorselGenislikGecerli(genislik) {
+		http.NotFound(w, r)
+		return
+	}
+
+	vYol := kaynakGorselVaryantYolu(hash, genislik)
+	if b, _, ok := kaynakGorselOku(vYol); ok {
+		s.kaynakGorselSun(w, r, b, "image/jpeg")
+		return
+	}
+
+	asil, ct, ok := s.kaynakGorselAsil(r, hash)
+	if !ok {
+		http.NotFound(w, r)
+		return
+	}
+
+	kucuk, err := platform.ResizeToWidth(asil, genislik)
+	if err != nil {
+		// Kodlama desteklenmiyorsa orijinali ver: büyük ama görünür.
+		// Boş kare bırakmaktan iyidir.
+		s.logger.Warn("kaynak görsel ölçeklenemedi",
+			"hash", hash, "genislik", genislik, "error", err)
+		s.kaynakGorselSun(w, r, asil, ct)
+		return
+	}
+	// Yazma başarısız olsa bile yanıtı döndür; sonraki istek yeniden üretir.
+	kaynakGorselYaz(vYol, kucuk)
+	s.kaynakGorselSun(w, r, kucuk, "image/jpeg")
+}
+
+// kaynakGorselGenislikGecerli izin verilen genişlikler.
+//
+// Liste KAPALI ve bu bir güvenlik kararı: istemci serbest genişlik
+// isteyebilseydi her istek yeni bir dosya üretirdi — /kg/<hash>/1,
+// /kg/<hash>/2 … ile disk doldurulur ve her biri CPU yakar (ölçekleme
+// pahalı). Değerler mediaSrcset ile aynı tutuluyor ki iki görsel sistemi
+// ayrı listelere düşmesin.
+func kaynakGorselGenislikGecerli(genislik int) bool {
+	switch genislik {
+	case 320, 480, 768, 960, 1200, 1600:
+		return true
+	}
+	return false
+}
+
+// kaynakGorselVaryantYolu ölçekli dosyanın yolu: orijinalle aynı shard
+// dizininde, adı genişlikle ayrışır ("<hash>-480"). Hash 32 hex karakterle
+// doğrulandığı ve genişlik kapalı listeden geldiği için yol aşımı yok.
+func kaynakGorselVaryantYolu(hash string, genislik int) string {
+	return kaynakGorselDiskYolu(hash) + "-" + strconv.Itoa(genislik)
 }
 
 // kaynakGorselSun gövdeyi uzun önbellekle sunar.

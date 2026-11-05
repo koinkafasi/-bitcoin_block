@@ -6,23 +6,37 @@ package templkit
 // basılmaz (boş kutu göstermek tasarımı bozuk gösterir) ama sıra korunur.
 
 // cdCard kapak görselli haber kartı (CoinDesk kart deseni).
-templ cdCard(s CDStory, lead bool) {
+//
+// lead YALNIZ görünüm içindir (cd-card--lead sınıfı); görselin genişliği
+// yuvadan gelir. İkisi ayrı: ölçüm gösterdi ki .cd-block'un "lead olmayan"
+// kartı 808px, hero'nun lead'i 734px — boolean genişliği belirlemiyor.
+templ cdCard(s CDStory, lead bool, yuva CDYuva) {
 	if lead {
 		<article class="cd-card cd-card--lead">
-			@cdCardBody(s)
+			@cdCardBody(s, yuva)
 		</article>
 	} else {
 		<article class="cd-card">
-			@cdCardBody(s)
+			@cdCardBody(s, yuva)
 		</article>
 	}
 }
 
-templ cdCardBody(s CDStory) {
+templ cdCardBody(s CDStory, yuva CDYuva) {
 	if s.Image != "" {
 		<a class="cd-card__media" href={ s.Href } tabindex="-1" aria-hidden="true">
-			<img src={ s.Image } alt="" loading="lazy" decoding="async"
-				referrerpolicy="no-referrer"/>
+			<!-- İki dal: templ'in koşullu öznitelik sözdizimi sürümden
+			     sürüme değişiyor (bkz. cd_shell.templ notu). Kaynak görseli
+			     ölçeklenebiliyorsa srcset/sizes basılır, değilse adres
+			     olduğu gibi kalır (dış adres, /media/... vb.). -->
+			if cdKgOlcekli(s.Image) {
+				<img src={ cdKgSrc(s.Image, yuva) } srcset={ cdKgSrcset(s.Image, yuva) }
+					sizes={ cdKgSizes(yuva) } alt="" loading="lazy" decoding="async"
+					referrerpolicy="no-referrer"/>
+			} else {
+				<img src={ s.Image } alt="" loading="lazy" decoding="async"
+					referrerpolicy="no-referrer"/>
+			}
 		</a>
 	}
 	if s.Kicker != "" {
@@ -72,7 +86,7 @@ templ cdBlock(sec CDSection) {
 		@cdSectionHead(sec.Title, sec.Href)
 		<div class="cd-block">
 			<div class="cd-block__lead">
-				@cdCard(sec.Lead, false)
+				@cdCard(sec.Lead, false, YuvaBlokLead)
 				for _, s := range sec.Second {
 					<div class="cd-block__sub">
 						<a class="cd-block__subtitle" href={ s.Href }>{ s.Title }</a>
@@ -95,7 +109,7 @@ templ cdMostRead(items []CDStory) {
 		<section class="cd-mod">
 			@cdSectionHead("En Çok Okunan", "")
 			<div class="cd-most">
-				@cdCard(items[0], false)
+				@cdCard(items[0], false, YuvaEnCokOkunan)
 				<ol class="cd-most__list">
 					for i := 1; i < len(items); i++ {
 						<li class="cd-most__item">
@@ -118,8 +132,13 @@ templ cdOpinion(items []CDStory) {
 				for _, s := range items {
 					<div class="cd-opinion__row">
 						if s.Image != "" {
-							<img class="cd-opinion__avatar" src={ s.Image } alt="" loading="lazy"
-								referrerpolicy="no-referrer"/>
+							if cdKgOlcekli(s.Image) {
+								<img class="cd-opinion__avatar" src={ cdKgSrc(s.Image, YuvaAvatar) }
+									alt="" loading="lazy" referrerpolicy="no-referrer"/>
+							} else {
+								<img class="cd-opinion__avatar" src={ s.Image } alt="" loading="lazy"
+									referrerpolicy="no-referrer"/>
+							}
 						}
 						<div>
 							<span class="cd-kicker">{ s.Source }</span>
@@ -153,10 +172,10 @@ templ CDHome(v CDHomeView) {
 				if v.Lead.Href != "" {
 					<section class="cd-mod">
 						<div class="cd-hero">
-							@cdCard(v.Lead, true)
+							@cdCard(v.Lead, true, YuvaHeroLead)
 							<div class="cd-hero__side">
 								for _, s := range v.Side {
-									@cdCard(s, false)
+									@cdCard(s, false, YuvaHeroYan)
 								}
 							</div>
 						</div>

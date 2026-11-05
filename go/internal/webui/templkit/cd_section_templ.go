@@ -91,7 +91,7 @@ func CDSectionPageView(v CDSectionPage) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = cdCard(v.Lead, true).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = cdCard(v.Lead, true, YuvaHeroLead).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -100,7 +100,7 @@ func CDSectionPageView(v CDSectionPage) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			for _, s := range v.Side {
-				templ_7745c5c3_Err = cdCard(s, false).Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = cdCard(s, false, YuvaHeroYan).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -124,7 +124,7 @@ func CDSectionPageView(v CDSectionPage) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			for _, s := range v.Stories {
-				templ_7745c5c3_Err = cdCard(s, false).Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = cdCard(s, false, YuvaKart).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}

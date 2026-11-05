@@ -47,7 +47,16 @@ templ CDArticle(v CDArticleView) {
 					</div>
 					if v.Image != "" {
 						<figure class="cd-article__cover">
-							<img src={ v.Image } alt="" referrerpolicy="no-referrer" loading="eager"/>
+							if cdKgOlcekli(v.Image) {
+								<img src={ cdKgSrc(v.Image, YuvaMakaleKapak) }
+									srcset={ cdKgSrcset(v.Image, YuvaMakaleKapak) }
+									sizes={ cdKgSizes(YuvaMakaleKapak) } alt=""
+									referrerpolicy="no-referrer" loading="eager"
+									fetchpriority="high"/>
+							} else {
+								<img src={ v.Image } alt="" referrerpolicy="no-referrer"
+									loading="eager" fetchpriority="high"/>
+							}
 							if v.ImageCredit != "" {
 								<figcaption>{ v.ImageCredit }</figcaption>
 							}
@@ -96,7 +105,7 @@ templ CDArticle(v CDArticleView) {
 						@cdSectionHead("İlgili Haberler", v.SectionHref)
 						<div class="cd-grid cd-grid--3">
 							for _, s := range v.Related {
-								@cdCard(s, false)
+								@cdCard(s, false, YuvaKart)
 							}
 						</div>
 					</section>

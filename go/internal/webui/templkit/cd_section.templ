@@ -26,10 +26,10 @@ templ CDSectionPageView(v CDSectionPage) {
 				if v.Lead.Href != "" {
 					<section class="cd-mod">
 						<div class="cd-hero">
-							@cdCard(v.Lead, true)
+							@cdCard(v.Lead, true, YuvaHeroLead)
 							<div class="cd-hero__side">
 								for _, s := range v.Side {
-									@cdCard(s, false)
+									@cdCard(s, false, YuvaHeroYan)
 								}
 							</div>
 						</div>
@@ -41,7 +41,7 @@ templ CDSectionPageView(v CDSectionPage) {
 						@cdSectionHead("Son Haberler", "")
 						<div class="cd-grid cd-grid--3">
 							for _, s := range v.Stories {
-								@cdCard(s, false)
+								@cdCard(s, false, YuvaKart)
 							}
 						</div>
 					</section>
