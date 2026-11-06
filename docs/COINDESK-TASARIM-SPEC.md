@@ -1021,19 +1021,127 @@ Açık/kapalı ölçümü:
 **Türkçe başlık aynı puntoda %50 daha uzun.** 22px gövde kararı
 alınırken bu hesaba katılmalı (§13).
 
-### 10.3 Bölüm sayfası (`/markets`)
+### 10.3 Kategori / bölüm sayfası (`/tr/business`) — tam ölçüm
+
+Ölçüm 6 Kasım 2026, 1920px, **Türkçe** sayfa (`/tr/business`, H1 "Finans").
+
+#### Ağaç (gerçek DOM, geometriyle)
 
 ```
-İçerik:  1384px, 12 sütunlu ızgara, gap 16px
-H1:      36/44 w700  ("Markets")
-H1 altı açıklama:  YOK  (mevcut spec §8 "tek satır açıklama" diyor — yok)
-Lead görseli:      689×388
-Izgara kartları:   327×185 (5 adet) · 241×135 (4 adet)
-Kart başlıkları:   H2 24/30 w500 · 20/26 w500 · 16/24 w500
-Sayfalama:         "More stories" DÜĞMESİ — sonsuz kaydırma değil
+main.relative.flex.min-h-screen.flex-col            1905×2240
+ section.flex-grow.border-t.border-default          1905×2240   ← ÜST ÇİZGİ
+  div.container.mx-auto                             1432×953    maxW 1432 · grid-cols-16 · gap 24
+   div.flex.flex-col.justify-center                 1384×873
+    div.border-b.border-solid.border-strong.mb-6    1384×61     ← H1 bandı
+    div.grid.xl:grid-cols-12.sm:grid-cols-4         1384×788    ← 12 kolon · gap 16
+  div.container.mx-auto                             1432×1326   ← İKİNCİ bant
+   div                                              1384×1246
+    div.flex.flex-col.gap-6                         1032×1134   ← liste kolonu
+    div.flex.justify-center.self-center.mt-6        1384×80     ← sayfalama
 ```
 
-Ek ızgara: 4 sütun × 240.5px, gap 24px.
+| | Değer |
+|---|---|
+| Kapsayıcı | **max-width 1432px** (ana sayfa 1512'den DAR) |
+| İçerik | **1384px** (1432 − 48) |
+| Dış ızgara | `grid-cols-16`, gap 24px |
+| Kart ızgarası | **12 kolon**, gap **16px** → sütun 100.656px |
+| Duyarlı | `xl:grid-cols-12` · `sm:grid-cols-4` · `xs:grid-cols-2` |
+| Liste kolonu | **1032px** = 12 kolonun **9'u** (9×100.656 + 8×16) |
+| `<section>` | `border-top: 1px border-default` |
+
+#### H1 bandı
+
+```
+div.border-b.border-solid.border-strong.mb-6        1384×61
+  h1.font-headline.font-serif.font-bold             1384×44   36px/44px w700
+```
+
+| | |
+|---|---|
+| H1 | **36/44 w700** (`font-headline font-serif font-bold`) |
+| Alt çizgi | **1px `border-strong`** — modül ayırıcı kademesi (§6.1) |
+| Alt boşluk | `mb-6` = **24px** |
+| Açıklama paragrafı | **YOK** (hem `/markets` hem `/tr/business`'te yok) |
+
+> Mevcut spec §8'de "bölüm adı + tek satır açıklama" yazıyordu — ölçümde
+> açıklama yok. Düzeltildi.
+
+#### Görsel yuvaları ve kart kademeleri
+
+| Yuva | Kolon | Adet |
+|---|---|---|
+| **689×388** | 6 kolon (6×100.656 + 5×16 = 684) | 1 — öne çıkan |
+| **327×185** | 3 kolon (3×100.656 + 2×16 = 334) | 5 |
+| **241×135** | liste satırı küçük görseli | 4 |
+
+Hepsi 16:9. Kart başlıkları: **24/30 w500** (öne çıkan) · **20/26 w500** ·
+**16/24 w500**. Bölüm başlığı 28/36 w700. Kart spotu **16/24 w400**.
+
+#### Sayfalama
+
+```
+div.flex.justify-center.self-center.mt-6.md:mt-8     1384×80
+  button  166×48 · radius 8px · padding 8px 24px · 14px w600 · border 1px
+  metin: "Daha fazla hikaye"   (EN: "More stories")
+```
+
+**Sonsuz kaydırma YOK** — açık düğme. Üst boşluk `mt-6` (24px), 768px+
+`md:mt-8` (32px). Ortalanmış (`justify-center self-center`).
+
+#### Kategori sayfasında HERO YOK
+
+CoinDesk'in kategori sayfası şu sırayla: üst çizgi → H1 bandı → 12 kolonlu
+öne çıkan ızgara → liste kolonu (1032) → sayfalama. **`.cd-hero` benzeri
+asimetrik manşet bloğu yok.**
+
+---
+
+### 10.3.1 bitcosar kategori sayfası — fark tablosu (ölçüldü)
+
+`demo.bitcosar.com/business`, aynı viewport. **1 eşleşme / 5 fark.**
+
+| Konu | CoinDesk | bitcosar | Aksiyon |
+|---|---|---|---|
+| H1 tipografi | 36/44 w700 | **36/44 w700** | ✅ |
+| Kapsayıcı | **max-width 1432px** | yok (`main` maxW 1384) | 1432 kademesi ekle |
+| İçerik genişliği | **1384** | 1336 | 48px dar |
+| Kart ızgarası | **12 kolon · gap 16** | `.cd-grid--3` 3 kolon · gap 24 | 12 kolona geç |
+| H1 alt çizgisi | **1px `border-strong`** | var ama kademe doğrulanmadı | `border-strong` olduğunu sabitle |
+| Sayfalama | 166×48 · r8px · 14px w600 · border 1px | **418×51 · r0 · 20px w500** | Düzelt |
+| Liste kolonu | **1032px** (12'nin 9'u) | 1336 (tam genişlik) | 9 kolona al |
+| Kart başlığı | 24/30 · 20/26 · 16/24 | 20/24 (19×) | Üç kademeyi kur |
+| Görsel yuvaları | 689×388 · 327×185 · 241×135 | 429×241 · 596×335 · 290×163 | Izgara düzelince oturur |
+
+#### GERÇEK HATA — lead kartı en dar kolonda
+
+Ölçülen ağaç:
+
+```
+section.cd-mod
+  div.cd-hero                      1336×1275  [grid cols:3  gap:24px 80px]
+    article.cd-card.cd-card--lead    290×477   ← LEAD, en dar kolonda
+    div.cd-hero__side                596×1227  ← yan kartlar DAHA GENİŞ
+    (üçüncü kolon BOŞ)
+```
+
+`.cd-hero` ızgarası ana sayfa için `290px 608px 290px` kurulmuş. Kategori
+sayfası o ızgaraya **yalnız iki çocuk** veriyor; sonuç:
+
+- Lead kartı **290px** — yan kartlardan (596px) **dar**. Manşet en küçük
+  görünüyor, hiyerarşi tersine dönmüş.
+- Üçüncü 290px kolon **boş** duruyor (1336 − 290 − 80 − 596 = 370 ≈ 290+80).
+
+Bu bir tasarım tercihi değil, ızgara/çocuk uyuşmazlığı. İki yol var:
+
+1. **CoinDesk'e uy:** kategori sayfasında hero'yu kaldır, 12 kolonlu öne
+   çıkan ızgara + 9 kolonlu liste kur (§10.3).
+2. **Hero'yu koruyacaksan:** kategori için ayrı ızgara ver
+   (örn. `grid-template-columns: 689px 1fr` ya da `6fr 3fr`), lead'i geniş
+   kolona yerleştir ve boş kolon bırakma.
+
+Ölçüm (1) lehine: CoinDesk'in kategori sayfasında hero yok ve öne çıkan
+görsel 689px (bizdeki 290'ın iki katından fazla).
 
 ### 10.4 Fiyat listesi (`/price`)
 
@@ -1215,18 +1323,36 @@ Bizim değerler `go/internal/webui/static/cd.css`'ten **okundu**, tahmin değil.
 | Çeviri etiketi ("AI tarafından çevrildi") | EN çeviri hattı gelince; şu an çevrilmiş içerik yok |
 | Hisse şablonu (`/price/stock/*`) | ABD hisse verisi bağlanmadı (§14) |
 | Dördüncü genişlik kademesi (1432) | Yalnız hisse sayfasında; veri yok |
-| Mega panel genişliği | tek genişlik | **menü başına**: 589/728/750/836/960 | İçeriğe göre ayarla |
-| Mega panel gölgesi | yok | **üç katmanlı** yükselti (0 2/4/12px) | Ekle |
-| Mega panel başlığı | yok | ikon 32×32 + ad **16/24 w700** + ok svg | Ekle |
-| Mega grup başlığı | `cd-mega__baslik` | **14/21 w700** (`font-metadata-lg font-bold`) | Ölçüyü eşle |
-| Mega satır | — | **14/22 w400** | Ölçüyü eşle |
-| "Tümünü gör" | `cd-mega__tumu` | **14/21 w700**, sütun sonunda | Ölçüyü eşle |
-| **Açıklamalı kart tipi** | yok | 257×96, p 12/16, r8px; başlık 14/20 w500 + açıklama 12/16 w400 subtle | Ekle (Research/Data için) |
-| Mega açılış efekti | `:hover` anında | **animasyon YOK** (transition 0s) | ✅ zaten eşleşiyor |
-| Mega tetikleyici | `<a>` | **`<button>`** + `aria-expanded` | Bizde `<a>`+`aria-haspopup` — **bizimki iyi**, koru |
-| Mega açılma düzeneği | CSS `:hover`/`:focus-within`, JS'siz | JS + `aria-expanded` | **Bizimki iyi** (CSP, a11y), koru |
-| Sağdaki panel | — | Sponsored `left: auto` + `top: 100%` | Taşmayı önlemek için ekle |
-| Üst başlık sayısı | 5 | **8** (More dahil) | Bilinçli sapma (§14) |
+
+### 11.2 Dördüncü tur (mega menü + mobil taşma) — DURUM (6 Kasım 2026)
+
+Gerçek Chrome'da `getComputedStyle` + `getBoundingClientRect` ile doğrulandı.
+
+| Konu | CoinDesk (ölçülen) | bitcosar | Durum |
+|---|---|---|---|
+| Panel genişliği | menü başına sabit: 589/728/750/836/960 | menü başına sınıf: `--589` / `--750` / `--836` | ✅ (960/728 karşılığı içerik yok) |
+| Panel gölgesi | üç katmanlı yükselti `0 2/4/12px` | birebir aynı üç katman | ✅ |
+| Panel yüzeyi | r 8 · border 1 px · padding 20/24 · bg surface-default | aynı | ✅ |
+| Panel başlığı | ikon 32×32 + ad **16/24 w700** + ok svg | aynı (ölçüldü: ikon 32 px) | ✅ |
+| Grup başlığı | **14/21 w700** (`font-metadata-lg font-bold`) | aynı (önceki 12/16 w500 yanlıştı) | ✅ |
+| Menü satırı | **14/22 w400** | aynı | ✅ |
+| "Tümünü gör" | **14/21 w700**, sütun sonunda, üst ayraç | aynı | ✅ |
+| **Açıklamalı kart tipi** | 257×96 · p 12/16 · r 8 · başlık 14/20 w500 + açıklama 12/16 w400 subtle | Research panelinde birebir (ölçüldü: 256×96) | ✅ |
+| Açılış efekti | **YOK** (transition 0s, animation none, transform none) | aynı — geçiş tamamen kaldırıldı | ✅ |
+| Tetikleyici | `<button>` + `aria-expanded` + JS | `<a>` + `aria-haspopup` + CSS `:hover`/`:focus-within` | ✅ **bilinçli sapma** (§14) |
+| Sağdaki panel | Sponsored sağa hizalı | nav referanslı `right: 0` (grubun değil, nav'ın sağ kenarı) | ✅ |
+| Üst başlık sayısı | 8 (More dahil) | 5 | ✅ **bilinçli sapma** (§14) |
+
+**4. turda bulunan GERÇEK hata — mobilde 190 px yatay taşma.** Üst çubuk
+aksiyon şeridi (Ara · dil · Giriş · Ücretsiz üye ol) 390 px'lik görüntü
+alanında ne sarılıyor ne katlanıyordu (`clientWidth` 390 / `scrollWidth`
+580). Aynı üç bağlantı hamburger panelinde zaten olduğu için üst çubukta
+**kopyalar gizlendi**; tema düğmesi kaldı. Doğrulama: taşma **0 px**.
+
+**Ölçüm yöntemi hatası da düzeltildi.** Önceki turda "taşma yok" demiştim;
+yanlış ölçüt kullanmıştım — `window.innerWidth` içerikle birlikte büyüyor,
+`scrollWidth` ile karşılaştırınca fark görünmüyor. Doğru ölçüt
+`documentElement.scrollWidth - clientWidth`.
 
 ---
 
