@@ -61,13 +61,14 @@ type CDHomeView struct {
 
 	// §6 sırası:
 	//  4 today's videos · 5 latest news · 6 thought leadership
-	//  7 newsletters · 8 manşet bloğu · 9 press releases · 10 research
+	//  8 manşet bloğu · 9 press releases · 10 research
 	//  12 clips · 13 reklam · 14 prices · 15 stocks · 16 exchange benchmark
 	//  17 videos · 18 indices · 19 podcasts · 20 opinion · 21 most read
 	//  22 bölüm blokları
 	//
-	// §3 promo bandı YOK: CoinDesk ana sayfasında böyle bir şerit yok
-	// (6 Kasım 2026 ölçümü). Uydurma şerit kaldırıldı.
+	// §3 promo bandı ve §7 bülten formu ana sayfada YOK: CoinDesk TR ana
+	// sayfasında ne promo şeridi ne de form var (6 Kasım 2026 ölçümü).
+	// Bülten bileşeni /bulten sayfasında duruyor.
 	Lead      CDStory
 	Side      []CDStory
 	Latest    []CDStory     // §5 — saat damgalı düz liste

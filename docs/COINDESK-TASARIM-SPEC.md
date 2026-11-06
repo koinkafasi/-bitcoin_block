@@ -1465,9 +1465,15 @@ Kaldırılan kod (ölü kontrol bırakılmadı):
 - admin ayarlarındaki **promo** sekmesi ve `promo_*` alanları,
 - `repo/promo.go` + `promo_test.go` (artık çağıranı yok).
 
-Doğrulama (1920 px): `promoVar: false`, hero section `border-top: 0px`,
-`.cd-hero` `padding: 32px 0`; mobil 390 px taşma **0**. Lighthouse `/`:
-performans **100** · SEO **100** · a11y 97 · BP **100** · LCP 0.4 s · CLS 0.
+Aynı turda **§7 "Günlük bülten" formu** da ana sayfadan kaldırıldı:
+CoinDesk TR ana sayfasında hiç form yok (yalnız footer'da "Newsletters"
+bağlantıları var; ölçümde `form` sayısı 0). `cdNewsletter` bileşeni
+`/newsletters` sayfasında kalıyor — orada form gerçekten var.
+
+Doğrulama (1920 px): `promoVar: false`, `news: false`, hero section
+`border-top: 0px`, `.cd-hero` `padding: 32px 0`; mobil 390 px taşma **0**.
+Lighthouse `/`: performans **100** · SEO **100** · a11y 97 · BP **100** ·
+LCP 0.4 s · CLS 0.
 
 ---
 
