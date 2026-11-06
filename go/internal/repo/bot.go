@@ -262,6 +262,126 @@ func xmlEncodingDecl(body []byte) string {
 	return rest[:end]
 }
 
+// atomEntry Atom (RFC 4287) öğesi.
+//
+// ÖLÇÜM (6 Kasım 2026): Atom beslemeleri SIFIR kullanılabilir öğe
+// veriyordu. İki sebep vardı ve ikisi de sessizdi:
+//
+//  1. Atom'da bağlantı eleman METNİ değil, `<link href="...">`
+//     ÖZNİTELİĞİDİR. `xml:"link"` boş dönüyordu; bot `it.Link == ""`
+//     olan öğeyi atladığı için besleme tamamen boşa düşüyordu.
+//  2. Kapak görseli gövde HTML'inde aranıyordu; Atom yayıncıları görseli
+//     `media:group/media:content@url` ya da `media:thumbnail@url` ile
+//     verir (YouTube, Vimeo, Substack böyle).
+//
+// Doğrulama: CoinDesk YouTube beslemesi (15 öğe) düzeltmeden önce 0,
+// sonra 15 öğe veriyor.
+type atomEntry struct {
+	Title string `xml:"title"`
+	// Links: Atom birden fazla link taşır (alternate, self, enclosure…).
+	// rel="alternate" olan insan tarafından okunacak sayfadır.
+	Links []struct {
+		Href string `xml:"href,attr"`
+		Rel  string `xml:"rel,attr"`
+		Type string `xml:"type,attr"`
+	} `xml:"link"`
+	Content    string `xml:"content"`
+	Summary    string `xml:"summary"`
+	Updated    string `xml:"updated"`
+	Published  string `xml:"published"`
+	Categories []struct {
+		Term  string `xml:"term,attr"`
+		Label string `xml:"label,attr"`
+	} `xml:"category"`
+	// MediaGroup: media:group içindeki content/thumbnail. `xml:"group"`
+	// ad alanını yok sayar (encoding/xml ad alanıyla eşleştirmez).
+	MediaGroup struct {
+		Contents   []rssMedia `xml:"content"`
+		Thumbnails []rssMedia `xml:"thumbnail"`
+		Desc       string     `xml:"description"`
+	} `xml:"group"`
+	// Öğe düzeyinde media:* ALANI YOK — bilinçli.
+	//
+	// `encoding/xml` ad alanını yok sayar, bu yüzden atom:content ile
+	// media:content aynı etikete ("content") düşer ve `go vet` haklı
+	// olarak çakışma bildirir; ayrıştırmada da sıralamaya göre biri
+	// diğerini ezer. Aynı tuzak rss_sanitize.go'da da belgelenmiş.
+	// Gövde için atom:content gerekli olduğundan görsel YALNIZ
+	// media:group'tan okunur — YouTube, Vimeo ve Substack group veriyor.
+}
+
+// atomBaglanti insan tarafından okunacak adresi seçer.
+//
+// Sıra: rel="alternate" → rel boş (varsayılan alternate'tir) → ilk http(s).
+// rel="self" ATLANIR: beslemenin kendi adresidir, öğenin değil.
+func atomBaglanti(e atomEntry) string {
+	var ilk string
+	for _, l := range e.Links {
+		h := strings.TrimSpace(l.Href)
+		if h == "" || !strings.HasPrefix(h, "http") {
+			continue
+		}
+		rel := strings.ToLower(strings.TrimSpace(l.Rel))
+		if rel == "alternate" {
+			return h
+		}
+		if rel == "self" || rel == "enclosure" {
+			continue
+		}
+		if rel == "" && ilk == "" {
+			ilk = h
+		}
+		if ilk == "" {
+			ilk = h
+		}
+	}
+	return ilk
+}
+
+// atomGorsel Atom öğesinin kapak görselini bulur.
+//
+// SIRA ÖLÇÜMLE BELİRLENDİ: media:thumbnail ÖNCE gelir.
+// YouTube'un media:content'i görsel değil, oynatıcı adresidir:
+//
+//	<media:content url="https://www.youtube.com/v/XXX?version=3"
+//	               type="application/x-shockwave-flash"/>
+//	<media:thumbnail url="https://i4.ytimg.com/vi/XXX/hqdefault.jpg"/>
+//
+// İlk sürümde content önce denendiği için 15 videonun 15'ine flash
+// oynatıcı adresi kapak olarak yazılıyordu — `<img src>` onu gösteremez,
+// yani kartlar görselsiz kalırdı. Artık thumbnail önce; content ancak
+// GÖRSEL olduğunu beyan ederse kabul edilir.
+func atomGorsel(e atomEntry, govde string) string {
+	// 1) thumbnail: spec gereği her zaman görseldir.
+	for _, m := range e.MediaGroup.Thumbnails {
+		if u := gecerliGorselURL(m.URL); u != "" {
+			return u
+		}
+	}
+	// 2) content: yalnız görsel olduğunu beyan edenler.
+	for _, m := range e.MediaGroup.Contents {
+		if !medyaGorselMi(m) {
+			continue
+		}
+		if u := gecerliGorselURL(m.URL); u != "" {
+			return u
+		}
+	}
+	return rssHTMLGorsel(govde)
+}
+
+// medyaGorselMi media:content gerçekten görsel mi beyan ediyor.
+//
+// `type="image/..."` ya da `medium="image"` arar. İkisi de yoksa
+// REDDEDİLİR: beyansız content video/ses/oynatıcı olabiliyor ve
+// `<img>` içinde kırık görünür.
+func medyaGorselMi(m rssMedia) bool {
+	if strings.HasPrefix(strings.ToLower(strings.TrimSpace(m.Type)), "image/") {
+		return true
+	}
+	return strings.EqualFold(strings.TrimSpace(m.Medium), "image")
+}
+
 // parseRSS basit RSS 2.0 / Atom / RDF ayrıştırıcı.
 func parseRSS(doc string) ([]RSSItem, error) {
 	var feed struct {
@@ -271,17 +391,7 @@ func parseRSS(doc string) ([]RSSItem, error) {
 		// RDF (RSS 1.0) biçiminde öğeler doğrudan kökün altındadır ve tarih
 		// dc:date alanındadır. DW Türkçe bu biçimi kullanıyor.
 		RDFItems  []rssXMLItem `xml:"item"`
-		AtomItems []struct {
-			Title      string `xml:"title"`
-			Link       string `xml:"link"`
-			Content    string `xml:"content"`
-			Summary    string `xml:"summary"`
-			Updated    string `xml:"updated"`
-			Categories []struct {
-				Term  string `xml:"term,attr"`
-				Label string `xml:"label,attr"`
-			} `xml:"category"`
-		} `xml:"entry"`
+		AtomItems []atomEntry  `xml:"entry"`
 	}
 	raw := sanitizeXML(doc)
 	dec := xml.NewDecoder(strings.NewReader(raw))
@@ -314,6 +424,9 @@ func parseRSS(doc string) ([]RSSItem, error) {
 		if body == "" {
 			body = it.Content
 		}
+		if body == "" {
+			body = it.MediaGroup.Desc
+		}
 		cats := make([]string, 0, len(it.Categories))
 		for _, c := range it.Categories {
 			raw := strings.TrimSpace(c.Term)
@@ -324,9 +437,15 @@ func parseRSS(doc string) ([]RSSItem, error) {
 				cats = append(cats, raw)
 			}
 		}
-		out = append(out, RSSItem{Title: strings.TrimSpace(it.Title), Link: strings.TrimSpace(it.Link),
-			Description: stripHTML(body), PubDate: parseRSSDate(it.Updated), Categories: cats,
-			Image: rssHTMLGorsel(body)})
+		// published, updated'dan daha doğru: güncelleme tarihi yeniden
+		// yayımlamada değişir ve eski haber yeni gibi görünür.
+		tarih := it.Published
+		if tarih == "" {
+			tarih = it.Updated
+		}
+		out = append(out, RSSItem{Title: strings.TrimSpace(it.Title), Link: atomBaglanti(it),
+			Description: stripHTML(body), PubDate: parseRSSDate(tarih), Categories: cats,
+			Image: atomGorsel(it, body)})
 	}
 	return out, nil
 }
