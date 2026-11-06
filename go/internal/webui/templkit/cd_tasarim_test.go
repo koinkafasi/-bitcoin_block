@@ -52,7 +52,7 @@ func TestCDTasarimTokenlari(t *testing.T) {
 		"--cd-brand: #ffd200",
 		// kapsayıcı ve köşe (ölçüldü: 1512 / 4 px)
 		"--cd-max: 1512px",
-		"--cd-max-section: 1384px",
+		"--cd-max-section: 1432px",
 		"--cd-max-footer: 1280px",
 		"--cd-radius: 4px",
 		"--cd-section-gap: 24px",
@@ -181,14 +181,14 @@ func TestCDEtiketlerDuz(t *testing.T) {
 // TestCDButce: CSS bütçesi. Tasarım sistemi kalınlaştıkça dosya büyür;
 // bütçe aşıldığında bilinçli bir güncelleme gerekir (sessiz kabul yok).
 //
-// Eşik 48 KB (6 Kasım 2026, üçüncü ölçüm turu): özet kutusu, eylem pilleri,
-// semantik font ölçeği ve dokuz bileşen eklendi. Değerler px olarak yazılı
-// (36px/44px gibi) ve her jetonun gerekçesi yorumda duruyor. Gerçek maliyet
-// sıkıştırılmış boyut: bu dosya gzip'te ~9 KB — tek bloklayıcı CSS için
-// kabul edilebilir.
+// Eşik 52 KB (6 Kasım 2026, beşinci tur): hero üç kolonu (ray modülleri)
+// ve bölüm bloklarının 2×2 ızgarası eklendi; eski 923/461 blok kuralları
+// kaldırıldı. Değerler px olarak yazılı ve her jetonun gerekçesi yorumda
+// duruyor. Gerçek maliyet sıkıştırılmış boyut: bu dosya gzip'te ~9 KB —
+// tek bloklayıcı CSS için kabul edilebilir.
 func TestCDButce(t *testing.T) {
 	css := cdCSS(t)
-	assert.Less(t, len(css), 48*1024, "cd.css bütçe aşıldı: %d bayt", len(css))
+	assert.Less(t, len(css), 52*1024, "cd.css bütçe aşıldı: %d bayt", len(css))
 }
 
 // TestCDModulRitmi: modüller MARGIN YAZMAZ, ritim ebeveynin gap'inden
@@ -216,12 +216,12 @@ func TestCDModulRitmi(t *testing.T) {
 	assert.Contains(t, main, "gap: var(--cd-section-gap)")
 }
 
-// TestCDUcGenislikKademesi: gövde 1512 · bölüm 1384 · footer 1280
-// (spec §2.2 — üç ayrı kademe, tek değer yetmiyor).
+// TestCDUcGenislikKademesi: gövde 1512 · bölüm kapsayıcısı 1432 (içerik
+// 1384 = 1432 − 2×24 dolgu) · footer 1280 (spec §2.2 — üç ayrı kademe).
 func TestCDUcGenislikKademesi(t *testing.T) {
 	css := cdCSS(t)
 	assert.Contains(t, css, "--cd-max: 1512px")
-	assert.Contains(t, css, "--cd-max-section: 1384px")
+	assert.Contains(t, css, "--cd-max-section: 1432px")
 	assert.Contains(t, css, "--cd-max-footer: 1280px")
 	assert.Contains(t, css, ".cd-wrap--bolum { max-width: var(--cd-max-section); }")
 	assert.Contains(t, css, ".cd-footer__ic {")

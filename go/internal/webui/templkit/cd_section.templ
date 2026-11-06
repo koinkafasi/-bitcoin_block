@@ -27,15 +27,20 @@ templ CDSectionPageView(v CDSectionPage) {
 					     hiyerarşiyi bozuyordu. -->
 				</header>
 
+				<!-- ÖNE ÇIKAN: 12 kolonlu ızgara, gap 16 (ölçüm, spec §10.3).
+				     İlk kart 6 kolon (689px), diğerleri 3 kolon (327px).
+				     `.cd-hero` BURADA KULLANILMAZ: CoinDesk kategori
+				     sayfasında asimetrik manşet bloğu yok, ve o ızgaraya
+				     iki çocuk verilince manşet en dar kolona düşüyordu —
+				     yan kartlar ondan geniş görünüyordu ve bir kolon boş
+				     kalıyordu (ölçüldü: lead 290 / yan 596, spec §10.3.1). -->
 				if v.Lead.Href != "" {
 					<section class="cd-mod">
-						<div class="cd-hero">
-							@cdCard(v.Lead, true, YuvaHeroLead)
-							<div class="cd-hero__side">
-								for _, s := range v.Side {
-									@cdCard(s, false, YuvaHeroYan)
-								}
-							</div>
+						<div class="cd-kat-one">
+							@cdCard(v.Lead, true, YuvaKatLead)
+							for _, s := range v.Side {
+								@cdCard(s, false, YuvaKatKart)
+							}
 						</div>
 					</section>
 				}
@@ -43,10 +48,13 @@ templ CDSectionPageView(v CDSectionPage) {
 				if len(v.Stories) > 0 {
 					<section class="cd-mod">
 						@cdSectionHead("Son Haberler", "")
-						<div class="cd-grid cd-grid--3">
-							for _, s := range v.Stories {
-								@cdCard(s, false, YuvaKart)
-							}
+						<!-- Liste bandı: 12 kolonun 9'u (1032px ölçüldü). -->
+						<div class="cd-kat-bant">
+							<div class="cd-kat-liste">
+								for _, s := range v.Stories {
+									@cdCard(s, false, YuvaKatKart)
+								}
+							</div>
 						</div>
 					</section>
 				} else {

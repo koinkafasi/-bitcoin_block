@@ -63,7 +63,10 @@
        bölüm    1384 (12 sütun × 100.656 + 11 × 16)
        footer   1280 (5 sütun × 236.797 + 4 × 24)
      Dördüncü kademe (hisse 1432) veri gelince eklenecek. */
-  --cd-max-section: 1384px;
+  /* Kategori/bolum KAPSAYICISI 1432, ICERIK 1384 (1432 - 2x24 padding).
+     Onceki deger 1384 kapsayiciya veriliyordu, icerik 1336'ya dusuyordu —
+     olculen CoinDesk degerinden 48 px dar. */
+  --cd-max-section: 1432px;
   --cd-max-footer: 1280px;
   --cd-pad: 24px;                /* ≥768: 24 px · <768: 16 px */
   --cd-radius: 4px;              /* baskın (120×); 2 px kullanılmıyor */
@@ -979,38 +982,81 @@ html.cd-js .cd-tema { display: inline-flex; }
 /* CoinDesk deseni: solda 1 büyük görselli haber + 2 alt başlık,
    sağda 3 satır başlık. Izgara, gölge yok, ayırıcı çizgi.
    Sütun aralığı ana sayfa ızgarasıyla aynı: 80 px. */
-.cd-block {
+/* ---------------------------------------------------------------- bölüm blokları (§22) */
+/* ÖLÇÜLDÜ (coindesk.com/tr, 6 Kasım 2026): ana sayfanın alt bölümü TEK bir
+   2×2 ızgara — 724 + 724 px, gap 16. Her hücre kendi `border-top` çizgisini
+   taşır (1 px #a6a6a6) ve `padding: 20px 20px 0` kullanır; hücreler arasında
+   dış çizgi/çerçeve YOK. Hücre içi: başlık 14/21 w500 + 16 px ok (gap 4),
+   ardından 334 + 334 px iç ızgara (gap 16): solda görselli kart
+   (görsel 16/9 + başlık 24/30 w500 + saat 14/21), sağda üç satır
+   (başlık 18/26 w500 + saat 14/21, aralarında 1 px çizgi + 16 px boşluk).
+   ÖNCEKİ SÜRÜM kategori başına tam genişlik 923/461 modüldü — CoinDesk'te
+   böyle bir düzen yok, ölçümle düzeltildi. */
+.cd-bloklar {
   display: grid;
-  grid-template-columns: 2fr 1fr;
-  column-gap: 80px;
-  row-gap: 24px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  padding-bottom: 64px;   /* ölçüldü: section `padding: 0 24px 64px` */
+}
+.cd-blok {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+  border-top: 1px solid var(--cd-border-strong);
+  padding: 20px 20px 0;
+}
+/* Hücre başlığı bir BAĞLANTI (h2 değil): 14/21 w500 + 16 px ok. */
+.cd-blok__bas {
+  display: flex;
+  width: fit-content;
+  align-items: center;
+  gap: 4px;
+  font-size: 14px;
+  line-height: 21px;
+  font-weight: 500;
+  color: var(--cd-fg);
+  text-decoration: none;
+}
+.cd-blok__bas:hover { text-decoration: underline; text-underline-offset: 3px; }
+.cd-blok__ok { flex: 0 0 auto; }
+.cd-blok__ic {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
   align-items: start;
 }
-.cd-block__lead { display: flex; flex-direction: column; gap: 16px; }
-.cd-block__sub {
-  padding-top: 12px;
-  border-top: 1px solid var(--cd-border);
-}
-.cd-block__subtitle {
+.cd-blok__kart { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.cd-blok__gorsel {
   display: block;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border-radius: var(--cd-radius);
+  background: var(--cd-surface-alt);
+}
+.cd-blok__gorsel img { display: block; width: 100%; height: 100%; object-fit: cover; }
+/* Kart başlığı 24/30 w500 (ölçüldü: `lg:text-[24px] lg:leading-[30px]`). */
+.cd-blok__manset {
+  font-size: 24px;
+  line-height: 30px;
+  font-weight: 500;
+  color: var(--cd-fg);
+}
+.cd-blok__manset:hover { text-decoration: underline; text-underline-offset: 3px; }
+.cd-blok__zaman { font-size: 14px; line-height: 21px; color: var(--cd-muted); }
+.cd-blok__liste { display: flex; flex-direction: column; min-width: 0; }
+.cd-blok__satir { display: flex; flex-direction: column; }
+/* Ayırıcı 1 px, iki yanında 16 px (ölçüldü `my-4`) — ilk satırda YOK. */
+.cd-blok__ayirici { border-top: 1px solid var(--cd-border); margin: 16px 0; }
+.cd-blok__baslik {
   font-size: 18px;
   line-height: 26px;
   font-weight: 500;
+  color: var(--cd-fg);
 }
-.cd-block__rows {
-  display: flex;
-  flex-direction: column;
-  border-left: 1px solid var(--cd-border);
-  padding-left: 24px;
-}
-.cd-block__row {
-  padding: 12px 0;
-  border-bottom: 1px solid var(--cd-border);
-  font-size: 16px;
-  line-height: 24px;
-  font-weight: 500;
-}
-.cd-block__row:last-child { border-bottom: 0; }
+.cd-blok__baslik:hover { text-decoration: underline; text-underline-offset: 3px; }
+.cd-blok__meta { margin-top: 4px; }
+.cd-blok__meta time { font-size: 14px; line-height: 21px; color: var(--cd-muted); }
 
 /* ---------------------------------------------------------------- ikili satır (§20+§21) */
 /* ÖLÇÜLDÜ (coindesk.com/tr): "Görüş" ve "En Çok Okunan" YAN YANA.
@@ -1095,9 +1141,58 @@ html.cd-js .cd-tema { display: inline-flex; }
 
 /* ---------------------------------------------------------------- bölüm başlığı (§8) */
 /* Bölüm H1 36/44 **w700** — makale H1'inden (w500) bilinçli fark (ölçüldü). */
-.cd-section-title { padding: 24px 0 8px; border-bottom: 1px solid var(--cd-border); }
+/* H1 bandinin alt cizgisi MODUL AYIRICISI kademesindedir (border-strong),
+   ic ayirici degil. Olculdu: CoinDesk /tr/business
+   `div.border-b.border-solid.border-strong.mb-6`. Alt bosluk 24 px (mb-6). */
+.cd-section-title {
+  padding: 24px 0 8px;
+  margin-bottom: 24px;
+  border-bottom: 1px solid var(--cd-border-strong);
+}
 .cd-section-title h1 { margin: 0 0 6px; font-size: 36px; line-height: 44px; font-weight: 700; }
 .cd-section-title .cd-card__spot { margin: 0 0 10px; }
+
+/* -------------------------------------------------- kategori izgarasi (§10.3) */
+/* Olculdu (CoinDesk /tr/business): one cikan alan 12 KOLON, gap 16 px;
+   sutun 100.656 px (1384 icerikte). One cikan kart 6 kolon (689 px),
+   digerleri 3 kolon (327 px). Liste bandi 12 kolonun 9'u = 1032 px.
+   Kategori sayfasinda `.cd-hero` KULLANILMAZ — CoinDesk'te yok ve iki
+   cocukla beslenince manset en dar kolona dusuyordu (bkz. spec §10.3.1). */
+.cd-kat-one,
+.cd-kat-bant {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 16px;
+}
+/* One cikan: ilk kart 6 kolon, digerleri 3. `:first-child` yerine
+   acik sinif kullanilmiyor cunku sira sablonda sabit ve tek kaynak
+   olmasi gerekiyor. */
+.cd-kat-one > *       { grid-column: span 3; }
+.cd-kat-one > :first-child { grid-column: span 6; }
+
+/* Liste: 12 kolonun 9'u, dikey akis. Sabit 1032 px YAZILMADI — izgara
+   fraksiyonu kullanilirsa daralan ekranda kendiliginden oraniyor. */
+.cd-kat-liste { grid-column: span 9; display: flex; flex-direction: column; gap: 24px; }
+
+/* Duyarli: olculen sinif onekleri xl:grid-cols-12 · sm:grid-cols-4 ·
+   xs:grid-cols-2. Asagidaki esikler o uc kademeyi karsiliyor.
+   NOT: CoinDesk'in bu genisliklerdeki SPAN degerleri olculemedi (pencere
+   yeniden boyutlandirma bu makinede calismiyor); asagisi makul varsayim
+   ve browser_resize ile dogrulanmasi gerekiyor. */
+@media (max-width: 1279px) {
+  .cd-kat-one,
+  .cd-kat-bant { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .cd-kat-one > *       { grid-column: span 2; }
+  .cd-kat-one > :first-child { grid-column: span 4; }
+  .cd-kat-liste { grid-column: span 4; }
+}
+@media (max-width: 639px) {
+  .cd-kat-one,
+  .cd-kat-bant { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .cd-kat-one > *,
+  .cd-kat-one > :first-child { grid-column: span 2; }
+  .cd-kat-liste { grid-column: span 2; }
+}
 
 /* ---------------------------------------------------------------- sayfalama */
 .cd-pager {
@@ -1115,14 +1210,16 @@ html.cd-js .cd-tema { display: inline-flex; }
   justify-content: center;
   margin: 32px 0 8px;
 }
+/* Olculdu (CoinDesk /tr/business "Daha fazla hikaye"): 166x48,
+   radius 8 px (pill DEGIL), padding 8/24, 14 px w600, 1 px cerceve. */
 .cd-daha__btn {
   font: inherit;
   font-size: 14px;
   line-height: 20px;
-  font-weight: 500;
-  padding: 10px 24px;
+  font-weight: 600;
+  padding: 8px 24px;
   border: 1px solid var(--cd-border-strong);
-  border-radius: 9999px;
+  border-radius: 8px;
   background: transparent;
   color: var(--cd-fg);
   text-decoration: none;
@@ -1188,11 +1285,16 @@ html.cd-js .cd-tema { display: inline-flex; }
 
 /* ---------------------------------------------------------------- duyarlı */
 /* CoinDesk kırılma noktaları: 768 (md) ve 1024 (lg) tasarımı yöneten. */
+/* Bölüm blokları `lg:grid-cols-2` — 1024 ve üstü İKİ kolon. Tailwind `lg`
+   alt sınır olduğu için eşik 1023 olmalı; `max-width: 1024` yazmak tam
+   1024'te tek kolona düşürüyordu (ölçüldü). */
+@media (max-width: 1023px) {
+  .cd-bloklar { grid-template-columns: minmax(0, 1fr); }
+}
+
 @media (max-width: 1024px) {
   .cd-grid--4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .cd-footer__cols { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-  .cd-block { grid-template-columns: 1fr; column-gap: 0; row-gap: 24px; }
-  .cd-block__rows { border-left: 0; padding-left: 0; border-top: 1px solid var(--cd-border); }
   .cd-most { grid-template-columns: 1fr; }
   .cd-news { grid-template-columns: 1fr; }
   .cd-news__form { flex-wrap: wrap; }
@@ -1203,6 +1305,9 @@ html.cd-js .cd-tema { display: inline-flex; }
   .cd-wrap { padding: 0 16px; }
   .cd-nav { display: none; }
   .cd-grid--2, .cd-grid--3, .cd-grid--4 { grid-template-columns: 1fr; }
+  /* CoinDesk `md` altında hücre içi ızgara tek kolona düşer (ölçüldü:
+     `grid-cols-1 md:grid-cols-2`). */
+  .cd-blok__ic { grid-template-columns: minmax(0, 1fr); }
   .cd-footer__cols { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .cd-list__time { width: 74px; }
   /* Mobilde iki sticky katman görüntü alanını yiyor (139 px). Şerit

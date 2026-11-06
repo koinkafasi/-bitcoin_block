@@ -18,7 +18,7 @@ import (
 //
 //	.cd-hero   minmax(0,1fr) 290px, sütun aralığı 80
 //	           → lead 1464-80-290 = 1094 · yan 290
-//	.cd-block  2fr 1fr,    sütun aralığı 80 → lead (1464-80)*2/3 = 922
+//	.cd-blok__ic 724'lük hücrede 334 + 334, gap 16 → görselli kart 334
 //	.cd-most   1fr 1fr,    gap 24           →      (1464-24)/2   = 720
 //	.cd-article max-width: 680px            →                     680
 //	.cd-grid--3 gap 24                      →      (1464-48)/3   = 472
@@ -30,9 +30,9 @@ import (
 
 // CDYuva kartın hangi yuvada durduğunu söyler.
 //
-// Neden bir yuva tipi, `lead bool` değil: ölçüm gösterdi ki .cd-block
-// içindeki "lead olmayan" kart hero lead'inden DAHA GENİŞ. Boolean ile
-// doğru sizes üretilemiyor.
+// Neden bir yuva tipi, `lead bool` değil: ölçüm gösterdi ki aynı sayfadaki
+// "lead" kartlar FARKLI genişliklerde (hero 1094, bölüm hücresi 334). Boolean
+// ile doğru sizes üretilemiyor.
 type CDYuva uint8
 
 const (
@@ -42,7 +42,9 @@ const (
 	YuvaHeroLead
 	// YuvaHeroYan hero'nun yan sütunu (290px) — dar ray kartı.
 	YuvaHeroYan
-	// YuvaBlokLead bölüm bloğunun büyük kartı (922px) — en geniş kart.
+	// YuvaBlokLead bölüm hücresinin görselli kartı — iç ızgaranın sol
+	// kolonu (334px). 5. turda ölçüldü: CoinDesk bölüm bloğu 724'lük
+	// hücrenin içinde 334 + 334 ızgara kullanıyor.
 	YuvaBlokLead
 	// YuvaEnCokOkunan "En Çok Okunan" iki sütunu (720px).
 	YuvaEnCokOkunan
@@ -50,6 +52,12 @@ const (
 	YuvaMakaleKapak
 	// YuvaAvatar görüş yazarı avatarı (48px, sabit).
 	YuvaAvatar
+	// YuvaKatLead kategori sayfasının öne çıkan kartı (689px).
+	// 12 kolonlu ızgaranın 6'sı: 6×100.656 + 5×16 = 689 (spec §10.3).
+	YuvaKatLead
+	// YuvaKatKart kategori ızgarasının normal kartı (327px).
+	// 12 kolonun 3'ü: 3×100.656 + 2×16 = 327 (spec §10.3).
+	YuvaKatKart
 )
 
 // Mobil/tablet genişlik İFADELERİ (calc() sarmalayıcısı olmadan).
@@ -61,6 +69,9 @@ const (
 	ifadeTam   = "100vw - 48px"
 	// Izgara 768–1024 arası HÂLÂ 3 sütun: (100vw - 2*24 yan - 2*24 gap) / 3
 	ifadeKartTablet = "(100vw - 96px) / 3"
+	// Kategori ızgarası 1279 altında 4 kolona düşer ve kart 2 kolon kaplar,
+	// yani 2-up: (100vw - 2*24 yan - 16 gap) / 2
+	ifadeKatTablet = "(100vw - 64px) / 2"
 )
 
 // yuvaBilgi her yuvanın sizes'ı, srcset basamakları ve srcset'siz
@@ -90,9 +101,9 @@ var yuvaBilgi = map[CDYuva]struct {
 		Varsayilan: 480,
 	},
 	YuvaBlokLead: {
-		Sizes:      cdSizes(ifadeMobil, ifadeTam, 922),
-		Basamaklar: []int{480, 768, 960, 1200, 1600},
-		Varsayilan: 960,
+		Sizes:      cdSizes(ifadeMobil, ifadeTam, 334),
+		Basamaklar: []int{320, 480, 768},
+		Varsayilan: 480,
 	},
 	YuvaEnCokOkunan: {
 		Sizes:      cdSizes(ifadeMobil, ifadeTam, 720),
@@ -112,6 +123,21 @@ var yuvaBilgi = map[CDYuva]struct {
 		Sizes:      "48px",
 		Basamaklar: []int{320},
 		Varsayilan: 320,
+	},
+	// ---- Kategori/bölüm sayfası (spec §10.3) ----
+	// Kapsayıcı 1432, içerik 1384, 12 kolon gap 16.
+	// Basamaklar çarpanlı sizes'a göre: etkin ihtiyaç yuva × 1,3.
+	//   lead 689 × 1,3 ≈ 896 → 960 karşılıyor
+	//   kart 327 × 1,3 ≈ 425 → 480 karşılıyor
+	YuvaKatLead: {
+		Sizes:      cdSizes(ifadeMobil, ifadeTam, 689),
+		Basamaklar: []int{480, 768, 960},
+		Varsayilan: 768,
+	},
+	YuvaKatKart: {
+		Sizes:      cdSizes(ifadeMobil, ifadeKatTablet, 327),
+		Basamaklar: []int{320, 480, 768},
+		Varsayilan: 480,
 	},
 }
 

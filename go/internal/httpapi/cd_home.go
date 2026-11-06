@@ -111,12 +111,13 @@ func (s *Server) handleCDHome(w http.ResponseWriter, r *http.Request) {
 		haric[st.Href] = true
 	}
 
-	// §22 bölüm blokları: 1 büyük + 2 alt + 3 satır (CoinDesk deseni).
+	// §22 bölüm blokları — CoinDesk 2×2 sırası: Piyasalar · Politika ·
+	// Teknoloji · Finans (ölçüldü). Hücre başına 1 görselli + 3 satır.
 	bolumler := []cdBolum{
 		{"Markets", "markets"},
-		{"Finance", "business"},
-		{"Tech", "tech"},
 		{"Policy", "policy"},
+		{"Tech", "tech"},
+		{"Finance", "business"},
 	}
 	var sections []templkit.CDSection
 	for _, b := range bolumler {
@@ -126,19 +127,14 @@ func (s *Server) handleCDHome(w http.ResponseWriter, r *http.Request) {
 				continue
 			}
 			grup = append(grup, cevir(c))
-			if len(grup) >= 6 {
+			if len(grup) >= 4 {
 				break
 			}
 		}
 		sec := templkit.CDSection{Title: b.Ad, Href: "/" + b.Slug}
 		if len(grup) > 0 {
 			sec.Lead = grup[0]
-		}
-		for i := 1; i < len(grup) && i <= 2; i++ {
-			sec.Second = append(sec.Second, grup[i])
-		}
-		for i := 3; i < len(grup); i++ {
-			sec.Rows = append(sec.Rows, grup[i])
+			sec.Rows = grup[1:]
 		}
 		sections = append(sections, sec)
 	}

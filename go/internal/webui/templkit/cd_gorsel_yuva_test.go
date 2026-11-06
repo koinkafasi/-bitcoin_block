@@ -68,7 +68,7 @@ func TestYuvaBasamaklariEtkinYogunlukYetiyor(t *testing.T) {
 		YuvaKart:        472,
 		YuvaHeroLead:    1094,
 		YuvaHeroYan:     290,
-		YuvaBlokLead:    922,
+		YuvaBlokLead:    334,
 		YuvaEnCokOkunan: 720,
 		YuvaMakaleKapak: 680,
 	}
@@ -191,17 +191,19 @@ func TestYuvaSizesDoldurulmus(t *testing.T) {
 	}
 }
 
-// Blok lead'i hero lead'inden GENİŞ olmalı — bu ölçümün ta kendisi.
+// Blok kartı yuvası, hero lead'inden DAR olmalı — ölçümün ta kendisi.
 //
 // NEDEN TEST: `lead bool` ile genişlik türetme denemesi tam burada kırılıyor.
 // Biri yuva tipini boolean'a geri çevirmeye kalkarsa burada görünür.
-func TestBlokLeadHeroLeadtenGenis(t *testing.T) {
-	// .cd-block 2fr/1fr sütun aralığı 80 → (1464-80)*2/3 = 922
-	// .cd-hero hero lead = 1464-80-290 = 1094 (hero artık en geniş yuva)
+// 5. tur ölçümü: CoinDesk bölüm bloğu 724'lük hücrede 334 + 334 ızgara
+// kullanıyor; eski 922 px değeri yanlış düzene aitti.
+func TestBlokKartiHeroLeadtenDar(t *testing.T) {
+	// .cd-blok__ic 724'lük hücrede (724 - 2*20 dolgu - 16 gap) / 2 = 334
+	// .cd-hero hero lead = 1464-80-290 = 1094 (hero en geniş yuva)
 	blok := yuvaBilgi[YuvaBlokLead].Sizes
 	hero := yuvaBilgi[YuvaHeroLead].Sizes
-	if !strings.Contains(blok, "922px") {
-		t.Errorf("blok lead sizes'ında 922px yok: %q", blok)
+	if !strings.Contains(blok, "334px") {
+		t.Errorf("blok kartı sizes'ında 334px yok: %q", blok)
 	}
 	if !strings.Contains(hero, "1094px") {
 		t.Errorf("hero lead sizes'ında 1094px yok: %q", hero)

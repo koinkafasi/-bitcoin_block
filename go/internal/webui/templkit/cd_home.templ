@@ -168,23 +168,70 @@ templ cdLatestRow(s CDStory) {
 	</div>
 }
 
-// cdBlock §22 bölüm bloğu: 1 büyük görselli + 2 alt başlık + 3 satır.
-templ cdBlock(sec CDSection) {
-	<section class="cd-mod">
-		@cdSectionHead(sec.Title, sec.Href)
-		<div class="cd-block">
-			<div class="cd-block__lead">
-				@cdCard(sec.Lead, false, YuvaBlokLead)
-				for _, s := range sec.Second {
-					<div class="cd-block__sub">
-						<a class="cd-block__subtitle" href={ s.Href }>{ s.Title }</a>
-						@cdMeta(s)
-					</div>
+// cdBloklar §22 bölüm blokları — CoinDesk'in 2×2 ızgarası.
+//
+// ÖLÇÜLDÜ (coindesk.com/tr, 6 Kasım 2026): alt bölüm tek bir ızgara,
+// 724 + 724 px, gap 16. Her hücre KENDİ `border-top` çizgisini taşıyor
+// (1 px #a6a6a6) ve `padding: 20px 20px 0`. Önceki sürüm kategori başına
+// tam genişlik 923/461 modül basıyordu — CoinDesk'te böyle bir düzen YOK.
+templ cdBloklar(sections []CDSection) {
+	if len(sections) > 0 {
+		<section class="cd-bloklar">
+			for _, sec := range sections {
+				if sec.Lead.Href != "" {
+					@cdBlokHucre(sec)
 				}
-			</div>
-			<div class="cd-block__rows">
-				for _, s := range sec.Rows {
-					<a class="cd-block__row" href={ s.Href }>{ s.Title }</a>
+			}
+		</section>
+	}
+}
+
+// cdBlokHucre tek bölüm hücresi: başlık bağlantısı + [görselli kart | 3 satır].
+//
+// Anatomi (birebir): başlık 14/21 w500 + 16 px ok (gap 4), iç ızgara
+// 334+334 gap 16; solda görsel 16/9 + başlık 24/30 w500 + saat 14/21,
+// sağda üç satır: başlık 18/26 w500 + saat 14/21, aralarında 1 px çizgi
+// ve iki yanında 16 px boşluk.
+templ cdBlokHucre(sec CDSection) {
+	<section class="cd-blok">
+		<a class="cd-blok__bas" href={ sec.Href }>
+			{ sec.Title }
+			<svg class="cd-blok__ok" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+				<path d="M6 3.5 10.5 8 6 12.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+			</svg>
+		</a>
+		<div class="cd-blok__ic">
+			<article class="cd-blok__kart">
+				if sec.Lead.Image != "" {
+					<a class="cd-blok__gorsel" href={ sec.Lead.Href } tabindex="-1" aria-hidden="true">
+						if cdKgOlcekli(sec.Lead.Image) {
+							<img src={ cdKgSrc(sec.Lead.Image, YuvaBlokLead) } srcset={ cdKgSrcset(sec.Lead.Image, YuvaBlokLead) }
+								sizes={ cdKgSizes(YuvaBlokLead) } alt="" loading="lazy" decoding="async"
+								referrerpolicy="no-referrer"/>
+						} else {
+							<img src={ sec.Lead.Image } alt="" loading="lazy" decoding="async"
+								referrerpolicy="no-referrer"/>
+						}
+					</a>
+				}
+				<a class="cd-blok__manset" href={ sec.Lead.Href }>{ sec.Lead.Title }</a>
+				if sec.Lead.Time != "" {
+					<time class="cd-blok__zaman">{ sec.Lead.Time }</time>
+				}
+			</article>
+			<div class="cd-blok__liste">
+				for i, s := range sec.Rows {
+					<div class="cd-blok__satir">
+						if i > 0 {
+							<div class="cd-blok__ayirici" aria-hidden="true"></div>
+						}
+						<a class="cd-blok__baslik" href={ s.Href }>{ s.Title }</a>
+						if s.Time != "" {
+							<div class="cd-blok__meta">
+								<time>{ s.Time }</time>
+							</div>
+						}
+					</div>
 				}
 			</div>
 		</div>
@@ -360,12 +407,8 @@ templ CDHome(v CDHomeView) {
 				<!-- §20+§21 Görüş (25%) + En Çok Okunan (75%) yan yana -->
 				@cdIkili(v.Opinion, v.MostRead)
 
-				<!-- §22 bölüm blokları -->
-				for _, sec := range v.Sections {
-					if sec.Lead.Href != "" {
-						@cdBlock(sec)
-					}
-				}
+				<!-- §22 bölüm blokları — tek 2×2 ızgara -->
+				@cdBloklar(v.Sections)
 			</main>
 			@cdFooter(v.Shell)
 		</body>
