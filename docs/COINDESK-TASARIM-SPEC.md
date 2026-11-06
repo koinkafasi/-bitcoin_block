@@ -38,6 +38,12 @@ makale sayfasının tam sıralı anatomisi, **Özet/Summary açılır kutusu**,
 aksiyon satırı üç pill'i (okuma süresi · Paylaş · Google News), tarih
 bloğunun `::before` ayırıcısı, TR↔EN dil farkları, **hisse detay şablonu**
 (`/price/stock/*`) ve coin sayfasından farkları.
+
+**Dördüncü tur (6 Kasım):** mega menü — tetikleyici düğme, panel
+geometrisi ve menü başına genişlikler, üç katmanlı gölge, panel başlığı
+satırı, iki içerik tipi (bağlantı listesi / **açıklamalı kart**) ve
+**açılış efektinin olmadığının ölçülmesi**. Hover ile açılma
+doğrulanamadı (sentetik olay CSS `:hover` tetiklemiyor).
 - Ana stylesheet `cssRules` ile okunamadı (yalnız 92 kural erişilebilir);
   bu yüzden "CSS'te şöyle yazıyor" değil "tarayıcı şunu hesapladı" deniyor.
 
@@ -558,6 +564,146 @@ parametresi yok. Yani sekme seçimi paylaşılabilir/derin bağlanabilir değil.
 > bağlanabilir — CoinDesk'ten **iyi**). Ama kaydırma durumu dönüşümü
 > (iki satır → tek satır) ve header'ın sticky olması bizde yok.
 
+### 7.2A Mega menü — tetikleyici, panel, içerik, efekt
+
+#### Tetikleyici (üst gezinme öğesi)
+
+```html
+<nav aria-label="Primary" class="hidden h-full lg:block">      <!-- 642×40 -->
+  <ul class="flex h-full items-center justify-center gap-1">   <!-- gap 4px -->
+    <li class="group/disc hidden lg:flex">
+      <button type="button" aria-expanded="false" aria-controls="_R_qkcqnivb_"
+        class="appearance-none border-0 bg-transparent p-0
+               hover:bg-surface-subtle flex h-full items-center
+               justify-center rounded px-4">
+        <span class="flex h-[2.5rem] …">News</span>
+```
+
+| | Ölçüm |
+|---|---|
+| Öğe | **`<button>`**, bağlantı değil |
+| Tipografi | **16/24 w400** |
+| Dolgu | `padding: 0 16px` |
+| Köşe | `rounded` = **4px** |
+| Zemin | saydam · **hover: `surface-subtle`** |
+| Öğe arası | `ul` **gap 4px** |
+| Erişilebilirlik | `aria-expanded` + `aria-controls` **var**; `aria-haspopup` **YOK** |
+| İç yükseklik | `h-[2.5rem]` = 40px |
+
+**8 üst başlık** ölçüldü: News · Video · Prices · Research · Events ·
+Data & Indices · **More** · Sponsored.
+(Daha önce 7 saymıştım; "More" taşan öğeleri toplayan sekizinci başlık.)
+
+#### Panel
+
+```
+div.absolute.z-10.left-[12rem].top-[64px].w-[750px]
+position: absolute · left: 192px (12rem) · top: 64px · z-index: 10
+padding: 20px 24px            (Research'te 20px 16px)
+border-radius: 8px
+border-left: 1px + border-top: 1px   solid border-default
+background: surface-default
+box-shadow:
+   0  2px  2px -1px rgba(10,10,10,0.04),
+   0  4px  6px -2px rgba(10,10,10,0.03),
+   0 12px 16px -4px rgba(10,10,10,0.08)
+```
+
+**Üç katmanlı yükselti gölgesi** — sayfadaki diğer gölge (`0 0 10px`)
+ile aynı değil; menü kendi yükselti jetonunu kullanıyor.
+
+**Panel genişlikleri menü başına FARKLI** — içeriğe göre sabitlenmiş:
+
+| Menü | Genişlik | Konum |
+|---|---|---|
+| Video · Prices · Events · Sponsored | **589px** | `left: 192px` |
+| Data & Indices | **728px** | `left: 192px` |
+| **News** | **750px** | `left: 192px` |
+| Research | **836px** | `left: 192px` |
+| More | **960px** | `left: 192px` |
+
+İstisna: **Sponsored** `left: auto` + `top: 100%` — son başlık olduğu
+için sağa hizalı, yoksa ekrandan taşardı.
+
+#### Açılış efekti — YOK (ölçüldü)
+
+```
+transition-property: all        transition-duration: 0s
+animation-name: none            animation-duration: 0s
+transform: none                 backdrop-filter: none
+will-change: auto
+```
+
+Kapalı hâl: `display: none` + `opacity: 0` (`visibility: visible`).
+Açık hâl: `display: block` + `opacity: 1`.
+
+**Yani solma, kayma veya ölçek animasyonu yok; panel anında görünüyor.**
+`display` animasyonlanamadığı için `transition: all` yazılı olsa da
+etkisiz. Tetikleyici düğmede de `transition: all 0s` — hover zemini de
+anında.
+
+> Ölçüm notu: panel `click` ile açıldı ve `aria-expanded` `true` oldu.
+> JS ile gönderilen `mouseover`/`mouseenter` paneli açmadı — gerçek
+> işaretçi gerektiği için **hover ile açılıp açılmadığı doğrulanamadı**.
+> `li` üzerindeki `group/disc` sınıfı grup-hover düzeneğini düşündürüyor
+> ama bu çıkarım, ölçüm değil.
+
+#### Panel içeriği — iki yerleşim tipi
+
+Ortak iskelet:
+
+```
+div > div.pb-3 > div.flex.flex-col.gap-4        (700×392, gap 16px, pb 12px)
+  1) başlık satırı   div.flex.items-center.gap-2    700×32
+       svg 32×32 (ikon) + span.font-sans.font-bold 16/24 w700 + svg 9×18 (ok)
+  2) içerik bloğu
+```
+
+**Tip A — bağlantı listesi** (News, Video, Prices):
+
+```
+div.mt-1.flex.w-full.flex-wrap        700×340   gap 20px · padding-left 8px
+  div.flex.w-1/3.flex-col   231×340   gap 20px      ← 3 sütun (w-1/3)
+    div.flex.flex-col.gap-3  231×223  gap 12px      ← satır grubu
+    a.font-metadata-lg.font-bold  231×21            ← "See all …"
+```
+
+| Öğe | Ölçüm |
+|---|---|
+| Panel başlığı | **16/24 w700** (`font-sans font-bold`) |
+| Grup başlığı | **14/21 w700** (`font-metadata-lg font-bold`) — ör. "Latest Crypto News", "Newsletters" |
+| Normal satır | **14/22 w400** (`font-metadata-lg font-normal`) — ör. "Markets", "Tech" |
+| "See all …" | **14/21 w700** — sütun sonunda, vurgulu |
+| Sütun | 3 × `w-1/3` = 231px · sütun arası 20px · satır grubu 12px |
+
+**Tip B — açıklamalı kart** (Research, muhtemelen Data & Indices / More):
+
+```
+ızgara: grid-template-columns: 256.656px 256.656px 256.656px · column-gap 16px
+kart:   a   257×96   flex row · padding 12px 16px · radius 8px · bg saydam
+```
+
+| Öğe | Ölçüm |
+|---|---|
+| Kart başlığı | **14/20 w500**, `text-default` (`font-sans font-medium`) |
+| Kart açıklaması | **12/16 w400**, `text-subtle` (`font-sans font-normal`) |
+
+Ölçülen örnekler:
+"**Research Hub** / Bespoke research, primers, and quarterly upd…" ·
+"**Exchange Benchmark** / The institutional standa…"
+
+**İki tip arasındaki fark:** liste tipi yalnız ad verir; kart tipi ada
+bir satır açıklama ekler ve kendi kutusunu (8px yarıçap, 12/16 dolgu)
+taşır.
+
+> **bitcosar farkı:** bizim mega menü tek tip — düz bağlantı listesi
+> (`cd_menu.templ`, `cd-mega__sutun`). Açıklamalı kart tipi, panel başlığı
+> satırı (ikon + ad + ok), menü başına değişen panel genişliği ve üç
+> katmanlı gölge yok. Panelimiz `:hover`/`:focus-within` ile JS'siz
+> açılıyor — CoinDesk `aria-expanded` ile JS kullanıyor; **bizimki
+> erişilebilirlik ve CSP açısından daha iyi**, korunmalı. Bizde
+> `aria-haspopup` da var, onlarda yok.
+
 ### 7.3 Reklam yuvası
 
 ```
@@ -1063,6 +1209,18 @@ Bizim değerler `go/internal/webui/static/cd.css`'ten **okundu**, tahmin değil.
 | Makale kicker | — | `font-title` 16/32 w500, bölüm adı | Eşle |
 | Hisse şablonu | yok | `/price/stock/*` — 2 kolon 392+976, içerik **1432** | Veri gelirse |
 | Genişlik kademeleri | tek (1512) | **dört**: 1512 · 1432 · 1384 · 1280 | Dördünü ayır |
+| Mega panel genişliği | tek genişlik | **menü başına**: 589/728/750/836/960 | İçeriğe göre ayarla |
+| Mega panel gölgesi | yok | **üç katmanlı** yükselti (0 2/4/12px) | Ekle |
+| Mega panel başlığı | yok | ikon 32×32 + ad **16/24 w700** + ok svg | Ekle |
+| Mega grup başlığı | `cd-mega__baslik` | **14/21 w700** (`font-metadata-lg font-bold`) | Ölçüyü eşle |
+| Mega satır | — | **14/22 w400** | Ölçüyü eşle |
+| "Tümünü gör" | `cd-mega__tumu` | **14/21 w700**, sütun sonunda | Ölçüyü eşle |
+| **Açıklamalı kart tipi** | yok | 257×96, p 12/16, r8px; başlık 14/20 w500 + açıklama 12/16 w400 subtle | Ekle (Research/Data için) |
+| Mega açılış efekti | `:hover` anında | **animasyon YOK** (transition 0s) | ✅ zaten eşleşiyor |
+| Mega tetikleyici | `<a>` | **`<button>`** + `aria-expanded` | Bizde `<a>`+`aria-haspopup` — **bizimki iyi**, koru |
+| Mega açılma düzeneği | CSS `:hover`/`:focus-within`, JS'siz | JS + `aria-expanded` | **Bizimki iyi** (CSP, a11y), koru |
+| Sağdaki panel | — | Sponsored `left: auto` + `top: 100%` | Taşmayı önlemek için ekle |
+| Üst başlık sayısı | 5 | **8** (More dahil) | Bilinçli sapma (§14) |
 
 ---
 
