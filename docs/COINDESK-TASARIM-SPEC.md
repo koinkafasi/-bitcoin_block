@@ -32,6 +32,12 @@ bant genişliği alternasyonu, başlık+şerit iç kapsayıcı hizası, reklam
 yuvası, hero tam kompozisyonu, footer iç yapısı, modül dikey ritmi,
 slider mekaniği, **şeridin kaydırma durumu dönüşümü ve sekme veri
 değişimi**.
+
+**Üçüncü tur (6 Kasım):** semantik font ölçeği (`font-*` sınıf haritası),
+makale sayfasının tam sıralı anatomisi, **Özet/Summary açılır kutusu**,
+aksiyon satırı üç pill'i (okuma süresi · Paylaş · Google News), tarih
+bloğunun `::before` ayırıcısı, TR↔EN dil farkları, **hisse detay şablonu**
+(`/price/stock/*`) ve coin sayfasından farkları.
 - Ana stylesheet `cssRules` ile okunamadı (yalnız 92 kural erişilebilir);
   bu yüzden "CSS'te şöyle yazıyor" değil "tarayıcı şunu hesapladı" deniyor.
 
@@ -240,6 +246,32 @@ bölüm H1, gezinme). 600 kullanılmıyor.
 **Dikkat:** Modül başlıkları (`Prices`, `Videos`, `Today's Videos`) yalnız
 **16px/24–32px w500**. Büyük bölüm başlığı değil — CoinDesk modül
 başlıklarını küçük tutuyor, hiyerarşiyi kart başlıklarıyla kuruyor.
+
+### 4.1 Semantik font sınıfları — CoinDesk'in KENDİ adlandırılmış ölçeği
+
+Sınıf adlarından çıkarıldı (`font-*`), hesaplanmış değerlerle eşlendi.
+**Bu, frekans tablosundan daha değerli: hiyerarşinin kendi adları.**
+
+| Sınıf | Ölçüm | Nerede | Sıklık |
+|---|---|---|---|
+| `font-serif` | **40px / 48px w400** | büyük teşhir başlığı | 10× |
+| `font-headline` | **36px / 44px w500** | **makale H1**, bölüm H1 | 3× |
+| `font-headline-sm` | **28px / 36px w500** | makale ara başlığı (H2/H3) | 2× |
+| `font-body-lg` | **22px / 30px w400** | **makale gövdesi** | 4× |
+| `font-headline-2xs` | **20px / 26px w500** | kart başlığı | 13× |
+| `font-body` | **18px / 24px w400** | — | 3× |
+| `font-title` | **16px / 32px w500** | modül başlığı, kicker | 2× |
+| `font-label` | **14px / 24px w500** | kutu başlığı ("Summary") | 2× |
+| `font-metadata-lg` | **14px / 22px w400** | yazar, tarih, pill — **en sık** | 45× |
+| `font-sans` | **14px / 22px w400** | gövde dışı metin | 39× |
+| `font-metadata` | **12px / 16px w400** | küçük meta | 13× |
+
+`!text-md !leading-6` gibi `!` önekli ezmeler de var — özet kutusunda
+`font-body-lg`'yi 16/24'e düşürmek için (§10.2.2).
+
+> **Bizde:** adlandırılmış ölçek yok, `cd.css`'te her yerde ham `rem`
+> değerleri. Bu tabloyu jetonlaştırmak (`--cd-font-headline` vb.) hem
+> tutarlılığı hem değişikliği kolaylaştırır.
 
 ### Sayfa bazında başlıklar
 
@@ -727,29 +759,121 @@ CoinDesk" 1512×721, Opinion 1512×527, Most Read 1074×495.
 
 Yan ray (`aside`) genişliği **290px**.
 
-### 10.2 Makale sayfası
+### 10.2 Makale sayfası — tam sıralı anatomi
 
 ```
-Sütun:    680px, YATAY ORTALANMIŞ (sol 597px @1920 → (1920-680)/2 ≈ 620)
+Sütun:    680px, YATAY ORTALANMIŞ (sol 597px @1920)
 Yan ray:  YOK — tek sütun
 ```
 
+Ölçülen sıra (Türkçe makale, y koordinatıyla):
+
+| y | Öğe | Ölçüm |
+|---|---|---|
+| 212 | kicker | `div.font-title` 680×32 — **16/32 w500**, bölüm adı ("Piyasalar") |
+| 246 | **H1** | `h1.font-headline.font-medium.mt-1` **36/44 w500** |
+| 386 | deck | `h2.font-sans.text-base.leading-6` **16/24 w400** |
+| 458 | "Yazan" | `div.font-metadata-lg.text-sm` 680×22 — 14/22 w400 |
+| 460 | yazar adları | `a.underline` — **ALTI ÇİZİLİ** (sitede nadir!) |
+| 488 | tarih bloğu | `div.font-metadata-lg.text-subtle` 680×47 |
+| 510 | çeviri etiketi | `a` 160×25 — **"AI tarafından çevrildi"** (yalnız çeviri dillerinde) |
+| 551 | aksiyon satırı | `flex gap-3 flex-wrap` 680×32 — üç pill |
+| 615 | kapak | `figure` 680×383 |
+| 1092 | **Özet kutusu** | §10.2.2 |
+| 1178 | gövde | `div.document-body.font-body-lg` **22/30 w400** |
+
+#### 10.2.1 Tarih bloğu — `·` ayırıcısı `::before` ile
+
+```html
+<span>Güncellendi</span> <time>5 Kas 2026 ÖS 9:26 GMT-5</time>
+<span class="before:content-['·'] before:mx-2 before:text-subtle">Yayınlandı</span>
+<time>5 Kas 2026 ÖS 1:48 GMT-5</time>
+```
+
+**İki tarih birlikte gösteriliyor:** güncelleme + yayın. Aradaki `·`
+ayırıcı bir karakter değil, `::before` ile basılıyor; `mx-2` = **8px**
+yan boşluk, rengi `text-subtle`. Saat dilimi **GMT-5** (UTC değil).
+
+#### 10.2.2 Özet kutusu (açılır) — "Summary" / "Özet"
+
+Kapak görselinin **altında**, gövdenin **üstünde**.
+
+```
+dış çerçeve   div.mt-4.mb-8.rounded-[7px].p-[2px]     680×116
+                margin: 16px 0 32px · radius 7px · padding 2px
+iç kutu       div.rounded-[5px].bg-surface-default     676×112
+                radius 5px · padding 20px 20px 12px · bg surface-default
+başlık satırı div.flex.items-center.justify-between.mb-4   636×24
+                span.font-label.font-medium   **14/24 w500**  "Summary"/"Özet"
+                (sağda) "Show" / "Göster"  →  "Hide" / "Gizle"
+içerik        div.transition-all.duration-300.ease-in-out
+                div.document-body.font-body-lg.!font-sans.!text-md.!leading-6
+                  → **16/24 w400** (gövdeden KÜÇÜK; `!` ile eziliyor)
+                ul.unordered-list.pl-6
+                  flex column · gap 8px · list-style none · pl 24px · mb 16px
+                  li → pl 24px (toplam girinti 48px)
+solma katmanı div.absolute.bottom-0.left-0.right-0.h-8   636×32  (kapalıyken)
+```
+
+**İki iç içe yarıçap (7px dış / 5px iç + 2px dolgu)** — 2px çerçeve
+etkisi yaratıyor; düz `border` değil, bu yüzden gradyan çerçeve mümkün.
+
+**Madde işareti gerçek bullet değil:**
+
+```css
+li::before { content: ""; width: 5px; background: #ECECEC; border-radius: 9999px; }
+```
+
+`list-style: none` + **5px yuvarlak nokta** `::before` ile.
+
+Açık/kapalı ölçümü:
+
+| | Kapalı | Açık |
+|---|---|---|
+| `ul` yüksekliği | **24px** (1 satır) | **184px** |
+| Görünen `li` | 1 | 3 |
+| `li` yükseklikleri | — | 72 / 48 / 48px |
+| Düğme | "Show" / "Göster" | "Hide" / "Gizle" |
+| Solma katmanı | **var** (`h-8` = 32px) | yok |
+| Geçiş | `transition-all 300ms ease-in-out` | aynı |
+
+İçerik AI üretimi özet; 3 madde.
+
+#### 10.2.3 Aksiyon satırı — üç pill
+
+`div.flex.items-center.gap-3.flex-wrap` 680×32, **gap 12px**.
+
+| Pill | Ölçüm |
+|---|---|
+| Okuma süresi | 122×32 (TR 129×32) · `r9999px` · `border 1px border-default` · `padding 4px 16px 4px 12px` · `gap 4px` · 14/22 w400 · ikon + "3 min read" / "3 dk okuma" |
+| Paylaş | `button.share-dialog-button.h-8` 91×32 · `r9999px` · "Share" / "Paylaş" |
+| **Google News** | 300×32 (TR 319×32) · `r9999px` · `border 1px border-default` · `padding 4px 12px` · `background: transparent` · 14/22 w400 · "Make … preferred on Google News" / "…'ı …'da tercih edilen yap" · `href: google.com/preferences/source?q=coindesk.com` |
+
+Üçü de **pill (9999px) ve 32px yüksek** — tutarlı bir aksiyon şeridi.
+
+#### 10.2.4 Gövde ve diğer öğeler
+
 | Öğe | Ölçüm |
 |---|---|
-| H1 | 36/44 w500 |
-| Deck (H1 altı) | 16/24 w400 |
-| Gövde `<p>` | **22/30 w400, mb 32px** |
-| Ara başlık | 28/36 w500 |
-| Blockquote | 22/30 w400 — ayrı stil ölçülmedi |
-| Yazar | 14/22 w400 |
-| Tarih | `Nov 5, 2026, 8:30 p.m. EST` — 14/22, `text-subtle` |
-| `<time datetime>` | `2026-11-06T01:30:00.000Z` (ISO, UTC) |
-| figcaption | 12/16 w400 ls 0.4px |
-| Etiketler | **düz bağlantı** 16/24 — pill değil, zemin/kenarlık/dolgu yok |
-| Paylaşım | X (`x.com/intent/tweet`), LinkedIn, paylaşım diyaloğu |
-| Breadcrumb | **bulunamadı** — mevcut spec §7 "Home / Markets" diyor; bugün yok |
+| Gövde `<p>` | **22/30 w400**, `margin-bottom: 32px` |
+| Ara başlık | **28/36 w500** (`font-headline-sm`) |
+| Blockquote | 22/30 w400 |
+| figcaption | 12/16 w400 **ls 0.4px**, `text-subtle` |
+| Etiketler | **düz bağlantı** 16/24 — pill değil |
+| Breadcrumb | makalede **YOK** (hisse sayfasında var) |
 
-Gövde 17 paragraf; metin görünen genişliği 636px (680 sütun içinde).
+#### 10.2.5 Dil farkları (TR ↔ EN)
+
+| | EN | TR |
+|---|---|---|
+| H1 yüksekliği | 88px (**2 satır**) | **132px (3 satır)** |
+| Google News pill | 300×32 | 319×32 |
+| Çeviri etiketi | yok | **"AI tarafından çevrildi"** 160×25 |
+| Tarih | "Nov 5, 2026, 8:30 p.m. EST" | "5 Kas 2026 ÖS 9:26 GMT-5" |
+| `<html lang>` | `en` | `tr` |
+
+**Türkçe başlık aynı puntoda %50 daha uzun.** 22px gövde kararı
+alınırken bu hesaba katılmalı (§13).
 
 ### 10.3 Bölüm sayfası (`/markets`)
 
@@ -802,6 +926,71 @@ hangisi olduğunu söylemiyor. Karar gerek: tam ad SEO'da daha iyi
 ("bitcoin price" aramasıyla eşleşiyor), sembol kısa.
 
 ---
+
+### 10.6 Hisse detay (`/price/stock/meta`) — coin sayfasından FARKLI şablon
+
+Aynı değil: ölçüm iki ayrı şablon olduğunu gösteriyor.
+
+```
+İçerik bandı:  1432px        ← DÖRDÜNCÜ genişlik kademesi
+Izgara:        392px 976px   gap 32px   → 1400px
+```
+
+| | Coin (`/price/bitcoin`) | **Hisse (`/price/stock/meta`)** |
+|---|---|---|
+| `<h1>` | 20/30 w500 ("Bitcoin") | **YOK** |
+| Büyük fiyat | **36/38 w500** | **28/42 w500** |
+| Grafik | `<canvas>` 1385×500 | `<canvas>` **976×500** |
+| Düzen | tek kolon | **iki kolon 392 + 976** |
+| Zaman sekmeleri | 1M · YTD · 1Y · All | **1D · 5D · 1M · YTD · 1Y · All** |
+| Grafik kipi | — | **Basic / Advanced** |
+| Breadcrumb | — | **var**: "Prices > Meta Platforms, Inc." |
+| İçerik genişliği | 1512 | **1432** |
+
+#### Sol ray (392px)
+
+```
+flex column · gap 40px · padding 12px 32px 32px
+border-top 1px + border-bottom 1px (border-default)
+iç genişlik 326px
+```
+
+| Bölüm | Ölçüm |
+|---|---|
+| Breadcrumb + ad | 326×245 |
+| **"Key Stats"** | `section` 326×328 |
+| **"About …"** | `section` 326×407 |
+
+İstatistik satırı anatomisi (ölçüldü):
+
+```
+157×64   flex · gap 4px · padding 8px 0 · border-bottom 1px border-default
+  etiket:  14/21 w400  text-subtle   "Market Cap"
+  değer:   14/21 w700  text-default  "$1610.805B"
+```
+
+**Etiket w400 subtle, değer w700 default** — iki kademeli vurgu, her
+satır alt çizgiyle ayrılıyor. Ölçülen alanlar: Market Cap, Volume (24h),
+52-Week Range.
+
+#### Sağ kolon (976px)
+
+```
+Grafik kipi:  «Basic» / «Advanced»  — 12/22 w400 · r6px · padding 4px 12px
+              aktif: bg surface-default · pasif: transparent
+Zaman:        1D · 5D · 1M · YTD · 1Y · All
+OHLC okuma:   "O:$632.30  H:$…"  grafiğin üstünde
+Performans:   976×88 · border-top 1px
+              "24 hours · 5 days · 1 month · YTD · 1 year"  16/24 w400
+              yüzdeler 14/21 w400, pos/neg renkleriyle
+```
+
+Sekme stili fiyat şeridindeki sekmeyle **aynı desen** (r6px, aktif zemin)
+ama tipografi 12/22 (şeritte 12/16).
+
+> **bitcosar:** bizde `/price/stock/*` şablonu **hiç yok**; ABD hisse
+> verisi bağlanmadığı için menüden de çıkarıldı (§14). Bu bölüm veri
+> kaynağı bağlanırsa uygulanmak üzere kayıtlı.
 
 ## 11. bitcosar ↔ CoinDesk fark tablosu
 
@@ -862,6 +1051,18 @@ Bizim değerler `go/internal/webui/static/cd.css`'ten **okundu**, tahmin değil.
 | Şerit sekme a11y | — | `aria-selected` **YOK** (CoinDesk eksiği) | **Bizde ekle** — onlardan iyi olalım |
 | Şerit sekme durumu | `?serit=` sorgu param. | istemci tarafı, URL değişmiyor | **Bizimki daha iyi**, koru |
 | Yan ray başlığı | — | **14px w500** (ana kolon 16px w500) | İki kademe ayır |
+| Semantik font ölçeği | ham `rem` değerleri | **adlandırılmış**: `font-headline` 36/44, `font-body-lg` 22/30, `font-metadata-lg` 14/22 … | Jetonlaştır |
+| **Özet kutusu** | yok | açılır, 7px/5px iç içe çerçeve, 5px nokta `::before`, 300ms geçiş | Ekle |
+| Okuma süresi pill | yok | 122×32 `r9999px` border 1px, ikon + "3 min read" | Ekle |
+| Google News pill | yok | 300×32 `r9999px`, `google.com/preferences/source` | Ekle |
+| Paylaş düğmesi | bağlantı listesi | `button.h-8.rounded-full` 91×32 + diyalog | Pill'e çevir |
+| Yazar bağlantısı | — | **`underline`** (sitede nadir istisna) | Eşle |
+| Tarih bloğu | tek tarih | **Güncellendi + Yayınlandı**, `·` `::before` `mx-2` | Ekle |
+| Çeviri etiketi | yok | **"AI tarafından çevrildi"** (çeviri dillerinde) | **Bizde gerekli** — içerik çevrilecek |
+| Saat dilimi | — | **GMT-5 / EST** (UTC değil) | Karar gerek |
+| Makale kicker | — | `font-title` 16/32 w500, bölüm adı | Eşle |
+| Hisse şablonu | yok | `/price/stock/*` — 2 kolon 392+976, içerik **1432** | Veri gelirse |
+| Genişlik kademeleri | tek (1512) | **dört**: 1512 · 1432 · 1384 · 1280 | Dördünü ayır |
 
 ---
 
