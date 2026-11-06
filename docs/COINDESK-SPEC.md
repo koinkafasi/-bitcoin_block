@@ -6,6 +6,18 @@ Bu belge **uydurma değil, ölçüm**: `https://www.coindesk.com/` sayfasından,
 Ölçüm kaynağı: sayfa HTML'i (1,32 MB), `robots.txt`, CSS öbekleri
 (`3683addgw5ehx.css`), sitemap dizinleri.
 
+> **Bu belge YAPIYI tanımlar** (URL desenleri, modül sırası, içerik tipleri).
+> **Görünüm** (palet, tipografi, boşluk, ızgara, bileşen geometrisi) ayrı
+> belgede: **`COINDESK-TASARIM-SPEC.md`** (6 Kasım 2026, gerçek Chrome'da
+> hesaplanmış stillerle ölçüldü).
+>
+> **UYARI — aşağıdaki §2 token listesi ESKİDİR.** Bugünkü CoinDesk'te CSS
+> özel özelliği hiç yok (Tailwind derlenmiş değerler basıyor) ve şu
+> değerler yanlış: font (`proxima-nova` değil **Neue Haas**), bağlantı
+> rengi (mavi değil, **metin rengi**), `--up`/`--down`, `--warn` (aslında
+> **marka** rengi), `--border`, `--muted`. Doğru değerler için tasarım
+> spec'inin §0 ve §5 bölümlerine bakın.
+
 ---
 
 ## 1. Teknoloji (gözlem)
