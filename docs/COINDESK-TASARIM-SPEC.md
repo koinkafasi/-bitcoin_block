@@ -26,6 +26,12 @@ Her sayı **gerçek Chrome'da hesaplanmış stilden** okundu
   yerine **sınıf adlarından ve `sizes` özniteliğinden** çıkarıldı — bunlar
   da ölçülmüş kanıt, aşağıda kaynağıyla veriliyor.
 - Hover/focus durumları
+
+**İkinci tur eklemeleri (6 Kasım):** kenarlık/ayırıcı haritası (33 desen),
+bant genişliği alternasyonu, başlık+şerit iç kapsayıcı hizası, reklam
+yuvası, hero tam kompozisyonu, footer iç yapısı, modül dikey ritmi,
+slider mekaniği, **şeridin kaydırma durumu dönüşümü ve sekme veri
+değişimi**.
 - Ana stylesheet `cssRules` ile okunamadı (yalnız 92 kural erişilebilir);
   bu yüzden "CSS'te şöyle yazıyor" değil "tarayıcı şunu hesapladı" deniyor.
 
@@ -111,6 +117,77 @@ Kapsayıcı:  div.mx-auto.max-w-[var(--page-max,1512px)].px-4.md:px-6
 **Alt bilgi:** 5 sütun × 236.797px, gap 24px → **1280px** içerik.
 
 Ölçülen diğer ızgaralar: 4 sütun gap 24px (240.5px); 2 sütun gap 16px (en sık).
+
+### 2.1 Tam genişlik ↔ kapsanmış bant alternasyonu
+
+**Sayfanın en belirgin yapısal kuralı; kolay kaçırılıyor.** Sayfa iki tür
+yatay bandın sırayla dizilmesinden oluşuyor.
+
+Ölçülen dizilim (ana sayfa, 1920px viewport):
+
+```
+y   73   1905px  TAM GENİŞLİK   fiyat şeridi      (iç kapsayıcı 1512px)
+y  140   1512px  KAPSANMIŞ      hero — 3 kolon [290px 608px 290px]
+y 1936   1905px  TAM GENİŞLİK   «Advertisement»   (iç kapsayıcı YOK)
+y 2000   1512px  KAPSANMIŞ      «Explore more…» — TEK kolon + slider
+y 2721   1512px  KAPSANMIŞ      «Opinion» — 2 kolon [427.5px 598.5px]
+y 3248   1905px  TAM GENİŞLİK   «Advertisement»
+y 3312   1512px  KAPSANMIŞ      2 kolon [724px 724px]
+```
+
+**Kritik ayrım — başlık ve şerit:** dış kutuları tam genişlik ama
+**içerikleri gövdeyle birebir hizalı.**
+
+```
+header   dış 1905px (sol 0)   →   iç sarmalayıcı 1512px, sol 197, padX 24px
+şerit    dış 1905px (sol 0)   →   iç sarmalayıcı 1512px, sol 197, padX 24px
+gövde          —              →   kapsayıcı      1512px, sol 197, padX 24px
+logo                              sol 221  (= 197 + 24)  ✓ hizalı
+```
+
+Yani **tam genişlik olan yalnızca zemin ve alt çizgi.** Menüdeki logo,
+gezinme ve şeritteki fiyatlar gövde sütunuyla aynı hizada başlıyor.
+"Menü geniş, gövde dar" görünümünün kaynağı bu: arka plan kenardan kenara
+akıyor, içerik akmıyor.
+
+**Reklam yuvaları farklı:** iç kapsayıcı YOK, gerçekten kenardan kenara —
+`1905×64`, `background: transparent`, `padding: 32px 0`, metin
+"Advertisement". İçerik modüllerinin arasına girip ritmi kapsanmıştan tam
+genişliğe çeviriyorlar.
+
+### 2.2 Ölçülen kolon düzenleri
+
+| Bölge | Kolon | Ölçüm |
+|---|---|---|
+| Hero | **3** | `290px 608px 290px`, gap 24px/80px, **≥1284px** |
+| «Explore more» | **1** (ızgara yok) | tek kolon + yatay slider |
+| «Opinion» | 2 | `427.5px 598.5px` — **eşit değil** |
+| Alt blok | 2 | `724px 724px` — eşit |
+| Bölüm sayfası | 12 | `100.656px` × 12, gap 16px → 1384px |
+| Footer | 5 | `236.797px` × 5, gap 24px → 1280px |
+
+**Üç ayrı genişlik kademesi var:** gövde 1512 · bölüm ızgarası 1384 ·
+footer 1280.
+
+### 2.3 Slider bölgesi (yatay kaydırmalı)
+
+«Explore more from CoinDesk» ölçümü:
+
+```
+bölge      1512px kapsanmış (iç 1464px)
+grid-template-columns: none          ← ızgara YOK, tek kolon
+kaydırıcı  1464px
+           overflow-x: auto
+           gap: 16px
+           scroll-snap-type: x mandatory
+           çocuk: 6
+kart       400px   scroll-snap-align: start
+oklar      24×24   border-radius: 9999px
+           aria-label "Previous cards" / "Next cards"
+```
+
+**JS'siz çalışıyor:** yerel kaydırma + CSS snap; oklar yalnız kolaylık.
+Dikey klip karuseli aynı desen ama `aspect-[9/16]` ve `rounded-lg`.
 
 ---
 
@@ -242,60 +319,313 @@ mode"` düğmesi; `<html>` üzerinde `light`/`dark` sınıfını değiştiriyor.
 
 ---
 
-## 6. Köşe, gölge, çizgi
+## 6. Çizgi, ayırıcı, köşe, gölge sistemi
+
+Kenarlık taşıyan **33 farklı öğe deseni** tarandı. Tek cümleyle:
+**her kenarlık 1px solid.** 2px, 3px, `dashed`, `dotted` hiç yok.
+
+### 6.1 İki kademeli ayırıcı — bu bir hiyerarşi
+
+| Kademe | Jeton | Açık | Koyu | Kullanım |
+|---|---|---|---|---|
+| **Güçlü** | `border-strong` | #A6A6A6 | #585858 | **`<section>` üst çizgisi** = modül ayırıcı |
+| Normal | `border-default` | #D9D9D9 | #262626 | `<div>` iç ayırıcı, kart çerçevesi, tablo satırı |
 
 ```
-Yarıçap:  4px (120×)  ·  8px (72×)  ·  9999px/pill (66×)  ·  1px (19×)  ·  6px (4×)
-Gölge:    0 0 10px rgba(0,0,0,0.4)  (21×)   — yalnız bindirme/açılır katman
-          0 0 10px rgba(0,0,0,0.5)  (1×)
+section.border-t.border-strong       modül ayrımı                10 kez
+div.my-4.border-t.border-default     iç ayırıcı, margin-y 16px    8 kez
+div.mb-4.border-t.border-default     iç ayırıcı, margin-b 16px    5 kez
+div.mb-2.border-t.border-default     iç ayırıcı, margin-b 8px     4 kez
+div.border-t.border-default          çıplak iç ayırıcı            8 kez
+div.border-b.border-default          alt çizgi                    1 kez
+hr.border-default                    3 adet; 1px, margin 0
 ```
 
-**Kart ve blok ayrımı çizgiyle:** `section.flex.flex-col.border-t.border-solid`
-— modüller **üst çizgiyle** ayrılıyor, gölge veya kutu yok. "Gölge yok"
-kuralı **kartlar için doğru**, sayfa genelinde değil.
+**Kural:** modülü diğerinden ayıran çizgi **güçlü**, modül İÇİNDEKİ
+bölmeleri ayıran çizgi **normal**.
+
+### 6.2 Dikey tüy çizgi (hairline)
+
+```
+div.h-8.border-l.border-default     1×32px     6 kez
+```
+
+Satır içi öğeleri ayıran **32px yüksekliğinde 1px dikey çizgi**,
+`border-left` ile, margin yok.
+
+### 6.3 Kolon ayırıcısı — `::before`, boşluğun tam ortasında
+
+Hero'nun merkez kolonu:
+
+```css
+section::before {
+  content: "";
+  position: absolute;
+  width: 1px;
+  height: 1732px;          /* kolon boyu */
+  background: #262626;     /* border-default — BORDER DEĞİL, BACKGROUND */
+  inset: 0 647px 0 -40px;
+  left: -40px;             /* 80px kolon boşluğunun TAM ORTASI */
+}
+```
+
+**80px kolon boşluğunun varlık sebebi bu:** çizgiyi ortalamak, iki yanda
+40px nefes payı bırakmak. `border` değil `background` olduğu için ızgara
+hücresinin dışına, boşluğun içine taşabiliyor — `border` ile yapılamaz.
+
+### 6.4 Modül dikey ritmi — margin YOK
+
+Ölçülen 8 modülün hepsinde `margin-top: 0`, `margin-bottom: 0`:
+
+```
+   ⟨ebeveynin gap'i: 24px⟩
+───────────────────────────  border-top: 1px border-strong
+   ⟨padding-top: 16px⟩
+   modül içeriği
+```
+
+**Üstteki boşluk ebeveynin `gap`'inden, çizgi altındaki 16px modülün
+kendi `padding-top`'ından.** Modül kendi dışına margin yazmadığı için
+yer değiştirdiğinde ritim bozulmuyor (`order-*` ile dizilim mümkün —
+bkz. §7A).
+
+Modül içi `gap`: **12px · 16px · 20px**. Ana içerik bandı
+`padding-top: 0`, `padding-bottom: 32px`.
+
+### 6.5 Köşe yarıçapı
+
+```
+4px      (120×)  kart görseli (`rounded`) — varsayılan
+8px      ( 72×)  `rounded-lg`: dikey video, büyük kutular
+9999px   ( 66×)  pill: düğme, rozet, yuvarlak ok
+1px      ( 19×)  neredeyse keskin
+6px      (  4×)  şerit sekmesi
+50%      (  3×)  avatar
+```
+
+### 6.6 Gölge
+
+```
+0 0 10px rgba(0,0,0,0.4)    21 öğe
+0 0 10px rgba(0,0,0,0.5)     1 öğe
+```
+
+Kaydırma (offset) ve yayılma (spread) **yok** — yalnız 10px bulanıklık.
+Kartlarda gölge yok; bindirme/açılır katmanda var.
+
+### 6.7 Dört kenarı çerçeveli öğeler
+
+```
+div.overflow-hidden.rounded.border.border-default             kart çerçevesi
+div.relative.h-[632px].rounded-lg.border            (5×)      632px sabit kutu
+span.rounded.border.border-default.px-1.5                     rozet, yan dolgu 6px
+button.size-6.rounded-full  border 1px rgba(255,255,255,.3)   24px yuvarlak ok
+li.flex.items-center.gap-2.p-[7px]  border rgba(255,255,255,.06)  tablo satır kartı
+```
+
+Yuvarlak düğme ve liste satırı kenarlıkları **yarı saydam beyaz** —
+jeton değil, bağlama özel.
 
 ---
 
-## 7. Global bileşenler
+## 7. Global bileşenler — tam iç yapı
 
 ### 7.1 Başlık (header)
 
 ```
-#main-navigation   1905×73   position: STICKY   bg: #000000 (koyu) 
-logo               169×32
-gezinme            7 öğe, 16/24 w400, hidden lg:block
+header#main-navigation
+dış:  1905×73   sol 0      max-width: none   padding: 0
+iç:   1512px    sol 197    padding-x: 24px        ← gövdeyle AYNI
+position: sticky · top: 0 · z-index: 102
 ```
 
-Gezinme öğeleri (ölçülen sıra): **News · Video · Prices · Research ·
-Events · Data & Indices · Sponsored**
+| Parça | Ölçüm |
+|---|---|
+| Logo | 169×32, **sol 221** (= 197 + 24, gövde içeriğiyle hizalı) |
+| Gezinme | 642px, sol 422; 7 öğe, **16px/24px w400** |
+| Görünürlük | `hidden h-full lg:block` — 1024 altı gizli, yerine hamburger |
 
-> bitcosar'da Events ve Data & Indices **bilerek yok** (veri/metodoloji
-> olmadığı için; bkz. commit `8ecf27f`). Bu bilinçli bir sapma, hata değil.
-
-### 7.2 Fiyat şeridi (ticker)
-
-```
-1905×67   position: STICKY   bg: surface-default   border-bottom: 1px
-```
-
-İki sekme: `Markets Live` | `Crypto Stocks`. Ardından CD20, BTC, ETH, XRP…
-
-**Başlık + şerit ikisi de sticky → toplam sabit yükseklik 140px.**
-Çıpa kaydırmasında (`scroll-margin-top`) bu hesaba katılmalı.
-
-Erişilebilirlik ayrıntısı: yüzde değeri görsel olarak `6.33%` yazarken
-ekran okuyucuya `Down 6.33 percent` veriliyor — ayrı metin düğümü.
-
-### 7.3 Alt bilgi (footer)
+### 7.2 Fiyat şeridi (ticker) — kaydırmaya göre DEĞİŞİYOR
 
 ```
-1905×966   padding: 48px 32px   bg: surface-default
-ızgara: 5 × 236.797px, gap 24px → 1280px
-bağlantı: 16/24 w400
+dış:  1905×67   sol 0     padding: 0
+iç:   1512px    sol 197   padding-x: 24px
+position: sticky · top: 73px · z-index: 40
+border-bottom: 1px solid border-default   (tam genişlik)
 ```
 
-Sütun 1 "About" 46 bağlantı, sütun 2 "Cryptocurrencies" 25 bağlantı
-→ sütunlar **eşit uzunlukta değil**, içerik kadar.
+**İki katmanlı sticky yığın:**
+
+```
+header   top 0     yükseklik 73   z-index 102
+şerit    top 73    yükseklik 67   z-index  40      ← header'ın ALTINA kenetlenir
+                   ─────────────
+                   toplam 140px sabit
+```
+
+Header z-index'i daha yüksek: şerit header'ın altından geçer.
+Çıpa kaydırmasında `scroll-margin-top: 140px` gerekir.
+
+#### Kaydırma durumu — öğe iki satırdan tek satıra iner
+
+Şeridin kapsayıcısı sabit (1905×67, top 73) ama **içindeki öğenin
+yerleşimi değişiyor.** Ölçüldü:
+
+| | Sayfa başı (scrollY 0) | Kaydırılmış (scrollY 1500) |
+|---|---|---|
+| Öğe kutusu | **157×50** | **196×32** |
+| `flex-direction` | **column** | **row** |
+| `gap` | 2px | **8px** |
+| `align-items` | normal | **baseline** |
+| `padding` | 4px 8px | 4px 8px (değişmez) |
+| Sembol kutusu | 141×18 (tam genişlik) | **33×18** (içerik kadar) |
+| Fiyat kutusu | 141×22 | 139×22 |
+
+Yani: başta **sembol üstte / fiyat altta** (iki satır, 50px yüksek),
+kaydırınca **yan yana** (tek satır, 32px yüksek). Dikeyde 18px kazanılıyor,
+yatayda öğe 39px genişliyor. Sembol kutusu `w-full`'dan içerik genişliğine
+düşüyor.
+
+#### Sekmeler — veri kaynağını değiştiriyor
+
+İki sekme: `Markets Live` (Crypto) ve `Crypto Stocks`.
+
+| | Ölçüm |
+|---|---|
+| Tipografi | 12px/16px **w500** (aktif) / **w400** (pasif) |
+| Aktif zemin | `surface-default` · Pasif: `transparent` |
+| Köşe | `border-radius: 6px` |
+| Dolgu | `padding: 0 8px` |
+| `aria-selected` | **YOK** — aktiflik yalnız ağırlık + zeminle anlatılıyor |
+
+**Sekme değişince şeridin verisi tamamen değişiyor** (ölçüldü, 7 öğe → 7 öğe):
+
+```
+Markets Live (kripto + kendi endeksi):
+  CD20 $2,052.08 ▼6.49%   BTC $75,486.03 ▼6.02%   ETH $2,222.27 ▼8.08%
+  XRP $1.20 ▼8.23%        SOL $89.22 ▼6.78%       HYPE $77.58 ▼6.75%
+  TRX $0.31 ▼0.46%
+
+Crypto Stocks (ABD hisseleri):
+  SPY $733.22 ▼4.38%   BLSH $20.67 ▼10.56%   COIN $136.68 ▼9.78%
+  CRCL $69.38 ▼8.91%   MSTR $129.32 ▼9.21%   NVDA $181.87 ▼9.16%
+  HOOD $78.19 ▼10.57%
+```
+
+**URL değişmiyor** (`location.search` boş) — istemci tarafı durum, sorgu
+parametresi yok. Yani sekme seçimi paylaşılabilir/derin bağlanabilir değil.
+
+| Parça | Ölçüm |
+|---|---|
+| Şerit öğesi bağlantısı | `/price/{sembol}` ve `/index/{endeks}` |
+| Yüzde | 12px/18px w500, pos/neg renkleri |
+| Erişilebilirlik | görselde `6.33%`, okuyucuya ayrı düğümde `Down 6.33 percent` |
+
+> **bitcosar farkı:** bizim `cdTicker` iki sekmeyi `?serit=markets` /
+> `?serit=stocks` sorgu parametresiyle çözüyor (sunucu tarafı, derin
+> bağlanabilir — CoinDesk'ten **iyi**). Ama kaydırma durumu dönüşümü
+> (iki satır → tek satır) ve header'ın sticky olması bizde yok.
+
+### 7.3 Reklam yuvası
+
+```
+1905×64   background: transparent   padding: 32px 0
+iç kapsayıcı YOK — gerçekten kenardan kenara
+metin: "Advertisement"
+```
+
+Ölçülen iki yuva: y1936 ve y3248 (bkz. §2.1).
+
+### 7.4 Alt bilgi (footer)
+
+```
+footer#footer   1905×966
+padding: 48px 32px · flex column · items-center
+iç kapsayıcı: max-w 1280px · flex column · gap 32px
+```
+
+Dört yatay bant (ölçülen sıra):
+
+| # | İçerik | Ölçüm |
+|---|---|---|
+| 1 | Logo | 1280×29 (logo 150×29) |
+| 2 | Bağlantı sütunları | 1280×562 — **grid 5 × 236.797px, gap 24px** |
+| 3 | Yasal bağlantılar | 534×24 + 288×24, `justify-between`, gap `8px 24px` |
+| 4 | Feragat + telif | 1280×21 ve 1280×48, `flex column gap: 24px` |
+
+Mobilde sütunlar `grid-cols-2`, 768+ **5 sütun**.
+
+| Öğe | Ölçüm |
+|---|---|
+| Sütun başlığı | **14px/22px w500**, `text-strong`, **`capitalize`** |
+| Sütun bağlantısı | **12px/16px w400**, `text-subtle` |
+| Telif | 12px/21px w400, `text-subtle` — "© 2026 CoinDesk, Inc." |
+| Sosyal ikon | 5 adet |
+| `<hr>` | 1px `border-default`, margin 0, 1280px (2 adet) |
+
+Sütunlar **eşit uzunlukta değil** — içerik kadar ("About" 46 bağlantı,
+"Cryptocurrencies" 25 bağlantı).
+
+**Footer iç genişliği 1280px** — gövdenin 1512'sinden dar, üçüncü kademe.
+
+---
+
+## 7A. Hero gövdesi — tam kompozisyon
+
+Menünün hemen altındaki **3 kolona bölünmüş** alan.
+
+```
+div.group/hero   1464×1796
+  flex flex-col gap-6 pt-8 pb-4
+  [@media(min-width:1284px)]:  grid-cols-[290px_608px_290px]   gap: 24px 80px
+```
+
+**Kırılma 1284px** — ızgara merdiveninde 1280 değil **1284**. Altında tek
+kolon, `flex column`, `gap: 24px`.
+
+| | |
+|---|---|
+| Kolon genişlikleri | **290px · 608px · 290px** (açıkça px, `fr` değil) |
+| Boşluk | satır 24px · **kolon 80px** (ortasında 1px çizgi, §6.3) |
+| Dolgu | `padding-top: 32px` · `padding-bottom: 16px` |
+| Toplam | 290+608+290 + 2×80 = **1448** (1464 içeriğe oturur) |
+
+### Sol ray (290px) — `aside.contents`
+
+`display: contents` → çocuklar doğrudan ebeveyn ızgarasına katılıyor, ara
+sarmalayıcı ızgarayı bozmuyor. `gap: 24px`. Üç blok (`order-2`, `order-8`,
+`order-10`), her biri `section.border-t.border-strong.pt-4` → 455 / 306 / 208px.
+
+### Merkez (608px) — `section.contents`
+
+Sol kenarında `::before` dikey ayırıcı (§6.3).
+
+| Sıra | İçerik | Ölçüm |
+|---|---|---|
+| `order-1` | **lead kart** | `article.flex.flex-col.gap-4` 608×571 (görsel 608×342) |
+| `order-5` | blok | 608×119, gap 16px |
+| `order-7` | blok | 608×237 |
+| `order-9` | blok | 608×237 |
+| `order-11` | blok | 608×181 |
+
+### Sağ ray (290px) — `aside.hidden ... 1284px:flex`
+
+1284px altında **tamamen gizli**. `gap: 24px`.
+
+| Modül | Ölçüm |
+|---|---|
+| "Today's Videos" | `section.gap-4` 290×360; başlık **14px w500**; çerçeveli kutu 290×268 |
+| "Featured Research" | `section.border-t.border-strong.pt-4.gap-5` 290×503; kart 290×386 |
+| Dikey klipler | `section.border-t.border-strong.gap-3` 290×566; **`aspect-[9/16]`** 290×516, `rounded-lg`, `bg-black-fixed` |
+
+**Yan ray modül başlıkları 14px w500, ana kolon modül başlıkları 16px w500**
+— iki ayrı kademe.
+
+### `order-*` ile yeniden dizilim
+
+Masaüstü yerleşimi ızgarada, mobil okuma sırası `order` ile
+(1, 2, 5, 7, 8, 9, 10, 11). **Tek HTML, iki kompozisyon** — modüllerin
+margin yazmaması (§6.4) bunu mümkün kılıyor.
 
 ---
 
@@ -510,6 +840,28 @@ Bizim değerler `go/internal/webui/static/cd.css`'ten **okundu**, tahmin değil.
 | Sayfalama | **"Daha fazla haber" düğmesi** | "More stories" düğmesi | ✅ |
 | `/price` URL | **`/price/bitcoin`** (sembol → 301) | **`/price/bitcoin`** | ✅ |
 | Gezinme | 5 başlık | 7 başlık | **Bilinçli sapma** — veri yok, değiştirme |
+
+### 11.1 İkinci turda bulunanlar (6 Kasım, henüz uygulanmadı)
+
+| Konu | bitcosar (bugün) | CoinDesk (ölçüm) | Aksiyon |
+|---|---|---|---|
+| **Bant genişliği** | `.cd-wrap` her yerde tek kapsayıcı | **tam genişlik zemin + 1512 hizalı iç içerik** | Başlık/şerit zeminini tam genişlik yap, içeriği 1512'de hizala |
+| Reklam yuvası | kapsanmış | **tam genişlik**, `padding: 32px 0`, iç kapsayıcı yok | Düzelt |
+| Genişlik kademeleri | tek (1512) | **üç**: gövde 1512 · bölüm 1384 · footer 1280 | Footer ve bölüm ızgarasını ayır |
+| Ayırıcı kademesi | tek `--cd-border` | **`border-strong` (modül) + `border-default` (iç)** | İkinci jeton ekle |
+| Kolon ayırıcısı | yok | `::before` 1px, 80px boşluğun ortasında (`background`) | Hero'ya ekle |
+| Dikey tüy çizgi | yok | `border-l` 1×32px satır içi ayırıcı | Ekle |
+| Modül ritmi | margin (`--cd-section-gap: 40px`) | **gap 24 + border-strong + `pt-4`**, margin YOK | Yaklaşımı değiştir |
+| Hero ızgarası | `1.55fr 1fr` gap 32 | **`290px 608px 290px`** gap 24/80, ≥**1284px** | Düzelt |
+| Hero yan ray | her zaman basılır | **1284px altında `hidden`** | Karar gerek |
+| Mobil dizilim | sabit sıra | `order-*` ile ayrı mobil sırası | Teknik yok |
+| Slider | yok | `scroll-snap-type: x mandatory`, kart 400px, **JS'siz** | Ekle |
+| `display: contents` | yok | ray sarmalayıcıları ızgarayı bozmasın diye | Teknik yok |
+| **Şerit kaydırma durumu** | tek görünüm | **`column`→`row`**, 157×50 → 196×32, gap 2→8 | Ekle |
+| Şerit sticky | yalnız şerit | **header + şerit** (0/73, z 102/40) | Header'ı da sticky yap |
+| Şerit sekme a11y | — | `aria-selected` **YOK** (CoinDesk eksiği) | **Bizde ekle** — onlardan iyi olalım |
+| Şerit sekme durumu | `?serit=` sorgu param. | istemci tarafı, URL değişmiyor | **Bizimki daha iyi**, koru |
+| Yan ray başlığı | — | **14px w500** (ana kolon 16px w500) | İki kademe ayır |
 
 ---
 
