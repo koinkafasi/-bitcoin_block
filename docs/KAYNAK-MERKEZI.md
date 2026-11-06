@@ -93,3 +93,93 @@ Aynı haber 5 kaynakta birden çıkıyor. Strateji:
 
 `go/migrations/0221_kripto_kaynaklar.up.sql` — A + C + D grupları
 `feeds` tablosuna yazılır (`aggregator=true`, `trust` 60–95).
+
+---
+
+## Spam / reklam ayıklaması — ölçüm ve karar (6 Kasım 2026)
+
+Dört canlı kaynak indirildi, **97 öğe** tanıtım işaretleri için tarandı.
+
+| kaynak | öğe | PR/sponsor yolu | sponsor ifşası | teşvik/scam | affiliate |
+|---|---|---|---|---|---|
+| cryptobriefing | 30 | 0 | 1* | 0 | 0 |
+| cryptoslate | 10 | 0 | 0 | 0 | 0 |
+| decrypt | 37 | 0 | 0 | 0 | 0 |
+| theblock | 20 | 0 | 0 | 0 | 0 |
+
+\* Tek isabet **yanlış pozitifti**: *"North Korea reportedly rewards top
+hackers with Pyongyang apartments after Binance heist"* — gerçek haber.
+Onu yakalayan geniş desen kaldırıldı ve regresyon testi yazıldı.
+
+**Sonuç: mevcut kaynaklarda spam ve reklam pratikte yok.** Dördü de ciddi
+yayın; beslemeleri temiz. Buna rağmen kapı yazıldı
+(`internal/repo/reklam.go`) — bugün hiçbir şeyi düşürmüyor, amacı daha
+gürültülü bir kaynak eklendiğinde hazır olmak (basın bülteni toplayıcısı,
+borsa blogu, Türkçe kripto siteleri).
+
+### Kapı NİYE dar — ikinci ölçüm
+
+Aynı 97 öğe projenin mevcut `kriptoGucluTerimler` listesiyle de süzüldü:
+
+| kaynak | öğe | alakalı | **alakasız** | oran |
+|---|---|---|---|---|
+| cryptobriefing | 30 | 30 | 0 | 0% |
+| cryptoslate | 10 | 10 | 0 | 0% |
+| decrypt | 37 | 21 | **16** | **43%** |
+| theblock | 20 | 10 | **10** | **50%** |
+| **toplam** | 97 | 71 | **26** | **27%** |
+
+Düşenlere bakıldığında hepsi **gerçek kripto haberi**:
+
+- *"Zcash's major network upgrade NU7 goes live on mainnet"*
+- *"Ark Invest buys more Coinbase as shares plunge 10%"*
+- *"Hyperliquid Strategies files to become CFTC-registered FCM"*
+
+Terim listesinde Zcash, Coinbase, Hyperliquid, Kalshi yok. Yani **alaka
+kapısı toplayıcılara uygulanırsa meşru haberin %27'si kaybolur.** Bu,
+kapının yalnız resmî kurum kaynaklarıyla sınırlı tutulmasının (alaka.go)
+ölçülmüş gerekçesidir.
+
+Dolayısıyla reklam kapısı **alaka filtresi değildir** ve öyle
+genişletilmemelidir. `reklam_test.go` içindeki `TestAlakaFiltresiDegil`
+bunu sabitliyor: kripto dışı ama meşru haber (petrol fiyatı, Meta davası)
+geçmek zorunda.
+
+### Kapının kullandığı sinyaller
+
+Güvenilirlik sırasıyla:
+
+1. **Adres yolu** — `/press-release`, `/sponsored`, `/partner-content`,
+   `/advertorial`, `/paid-post`, `/basin-bulteni`, `/sponsorlu`…
+   En güvenilir: yayıncı kendi URL şemasında ayırıyor.
+2. **Yönlendirme parametresi** — `?ref=`, `aff=`, `affiliate=`,
+   `referral=`, `invite=`, `promo=`.
+   `utm_campaign` **bilinçli olarak yok**: meşru haber bağlantılarında da
+   bulunuyor, ayırt etmiyor (test: `TestUtmCampaignReklamDegil`).
+3. **Açık sponsor ifşası** — tam ifadeler ("this article is sponsored",
+   "sponsorlu içerik"…), başlıkta ya da gövdenin **ilk 600 baytında**.
+   `"in partnership with"` **çıkarıldı**: gerçek haberde geçiyor
+   ("Samsung Wallet, Solana ile ortaklıkla…").
+   `"press release"` yalnız **yolda** aranır; gövdede geçmesi haberi
+   reklam yapmaz ("şirket basın bülteninde açıkladı").
+4. **Başlıkta teşvik kalıbı** — "guaranteed returns", "use code",
+   "claim your free", "next 100x gem", "garantili kazanç"…
+   Tek başına **"airdrop" / "presale" / "token sale" YOK**: bunlar gerçek
+   kripto haberinin konusu (test: `TestAirdropPresaleHaberiIsaretlenmez`).
+
+Kapı tetiklendiğinde öğe `crawled_items`'a yazılır (her turda yeniden
+denenmesin) ve besleme özetine **gerekçesiyle** not düşülür:
+`reklam kapısı: 3 öğe tanıtım (adres yolu: /press-release)`.
+
+### Yan bulgu — CoinDesk feed'i bozuk DEĞİL
+
+Ölçüm sırasında CoinDesk adresi `308` döndü ve 0 öğe göründü; önce bozuk
+sanıldı. **Doğrusu:** `.../rss/` adresi `.../rss`'e kalıcı yönlendirme
+yapıyor ve izlenince `200` ile 25 öğe geliyor. Toplayıcının istemcisi
+(`platform.SafeFetchClient`) yönlendirmeyi **izliyor** — en çok 3, her
+hedefi SSRF'e karşı doğrulayarak. Ölçüm betiği `curl -L` kullanmadığı
+için yanıltmıştı; katalogdaki satır doğru.
+
+İsteğe bağlı küçük iyileştirme: seed'deki adresten sondaki eğik çizgi
+atılırsa (`0111_kripto_kaynaklar.up.sql`) her tur bir HTTP gidiş-dönüşü
+kazanılır. Davranış değişmez.

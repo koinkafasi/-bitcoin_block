@@ -464,6 +464,11 @@ func CrawlFeed(ctx context.Context, pool *pgxpool.Pool, f *Feed, rules []WordRul
 	// Log'da görünür ki "kaynak çalışıyor ama hep eleniyor" durumu
 	// sessizce kaybolmasın (ölçüm için gerekli).
 	alakasiz := 0
+	// reklam: tanitim/sponsorlu olarak isaretlenip atlanan oge sayisi.
+	// reklamIlkNeden: ilk tetiklenen gerekce; ozet notunda gosterilir ki
+	// kapinin NIYE tetiklendigi panelden gorulebilsin (sessiz dusme olmasin).
+	reklam := 0
+	reklamIlkNeden := ""
 	for _, it := range items {
 		if it.Link == "" || it.Title == "" {
 			continue
@@ -504,6 +509,23 @@ func CrawlFeed(ctx context.Context, pool *pgxpool.Pool, f *Feed, rules []WordRul
 				lastErr = err
 			}
 			alakasiz++
+			continue
+		}
+
+		// Reklam/tanitim kapisi: adres yolu, yonlendirme parametresi, acik
+		// sponsor ifsasi ya da baslikta tesvik kalibi varsa icerik ATLANIR.
+		// Bu bir ALAKA filtresi DEGILDIR; gerekce ve olcum:
+		// internal/repo/reklam.go
+		if reklamMi, neden := ReklamIcerikMi(it.Link, title, spot); reklamMi {
+			// "Cekildi" isaretlenir: her turda yeniden denenmesin.
+			if _, err := pool.Exec(ctx, `INSERT INTO crawled_items (feed_id, url, url_hash) VALUES ($1,$2,$3)`,
+				f.ID, it.Link, hash); err != nil {
+				lastErr = err
+			}
+			if reklamIlkNeden == "" {
+				reklamIlkNeden = neden
+			}
+			reklam++
 			continue
 		}
 
@@ -602,6 +624,17 @@ func CrawlFeed(ctx context.Context, pool *pgxpool.Pool, f *Feed, rules []WordRul
 	}
 	// Alaka kapısı bilgisi durum satırına yazılır: panelde "çalışıyor ama
 	// 0 yeni" görünen resmî kaynağın neden boş olduğu anlaşılsın.
+	if reklam > 0 {
+		not := "reklam kapısı: " + itoa(reklam) + " öğe tanıtım"
+		if reklamIlkNeden != "" {
+			not += " (" + reklamIlkNeden + ")"
+		}
+		if errMsg == "" {
+			errMsg = not
+		} else {
+			errMsg += " | " + not
+		}
+	}
 	if alakasiz > 0 {
 		not := "alaka kapısı: " + itoa(alakasiz) + " öğe kripto dışı"
 		if errMsg == "" {
