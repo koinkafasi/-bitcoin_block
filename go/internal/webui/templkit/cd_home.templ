@@ -145,8 +145,8 @@ templ cdAkis(items []CDStory) {
 					<a class="cd-akis__gorsel" href={ s.Href } tabindex="-1" aria-hidden="true">
 						if cdKgOlcekli(s.Image) {
 							<img src={ cdKgSrc(s.Image, YuvaAkis) } srcset={ cdKgSrcset(s.Image, YuvaAkis) }
-								sizes={ cdKgSizes(YuvaAkis) } alt="" loading="lazy" decoding="async"
-								referrerpolicy="no-referrer"/>
+								sizes={ cdKgSizes(YuvaAkis) } alt="" loading="lazy" fetchpriority="low"
+								decoding="async" referrerpolicy="no-referrer"/>
 						} else {
 							<img src={ s.Image } alt="" loading="lazy" decoding="async"
 								referrerpolicy="no-referrer"/>
@@ -198,12 +198,12 @@ templ cdBasinSlider(items []CDBasin) {
 				<div class="cd-basin__nav">
 					for i := range items {
 						<label class={ "cd-basin__ok cd-basin__ok--geri cd-basin__durum-" + cdSiraya(i) }
-							for={ "cd-basin-" + cdSiraya(cdBasinGeri(i, len(items))) }
-							aria-label="Önceki bülten">
+							for={ "cd-basin-" + cdSiraya(cdBasinGeri(i, len(items))) }>
 							<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
 								viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false">
 								<path d="M15.41 16.59L10.83 12l4.58-4.59L14 6l-6 6 6 6 1.41-1.41z"></path>
 							</svg>
+							<span class="cd-visually-hidden">Önceki bülten</span>
 						</label>
 					}
 					<div class="cd-basin__noktalar">
@@ -216,12 +216,12 @@ templ cdBasinSlider(items []CDBasin) {
 					</div>
 					for i := range items {
 						<label class={ "cd-basin__ok cd-basin__ileri cd-basin__durum-" + cdSiraya(i) }
-							for={ "cd-basin-" + cdSiraya(cdBasinIleri(i, len(items))) }
-							aria-label="Sonraki bülten">
+							for={ "cd-basin-" + cdSiraya(cdBasinIleri(i, len(items))) }>
 							<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
 								viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false">
 								<path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"></path>
 							</svg>
+							<span class="cd-visually-hidden">Sonraki bülten</span>
 						</label>
 					}
 				</div>
@@ -278,13 +278,23 @@ templ cdVideoModul(items []CDVideo) {
 					<div class="cd-video__oklar">
 						for i := range items {
 							<label class={ "cd-video__ok cd-video__ok--geri cd-video__durum-" + cdSiraya(i) }
-								for={ "cd-video-" + cdSiraya(cdBasinGeri(i, len(items))) }
-								aria-label="Önceki video">‹</label>
+								for={ "cd-video-" + cdSiraya(cdBasinGeri(i, len(items))) }>
+								<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+									viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false">
+									<path d="M15.41 16.59L10.83 12l4.58-4.59L14 6l-6 6 6 6 1.41-1.41z"></path>
+								</svg>
+								<span class="cd-visually-hidden">Önceki video</span>
+							</label>
 						}
 						for i := range items {
 							<label class={ "cd-video__ok cd-video__ok--ileri cd-video__durum-" + cdSiraya(i) }
-								for={ "cd-video-" + cdSiraya(cdBasinIleri(i, len(items))) }
-								aria-label="Sonraki video">›</label>
+								for={ "cd-video-" + cdSiraya(cdBasinIleri(i, len(items))) }>
+								<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+									viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false">
+									<path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"></path>
+								</svg>
+								<span class="cd-visually-hidden">Sonraki video</span>
+							</label>
 						}
 					</div>
 				}
@@ -477,8 +487,8 @@ templ cdBlokHucre(sec CDSection) {
 					<a class="cd-blok__gorsel" href={ sec.Lead.Href } tabindex="-1" aria-hidden="true">
 						if cdKgOlcekli(sec.Lead.Image) {
 							<img src={ cdKgSrc(sec.Lead.Image, YuvaBlokLead) } srcset={ cdKgSrcset(sec.Lead.Image, YuvaBlokLead) }
-								sizes={ cdKgSizes(YuvaBlokLead) } alt="" loading="lazy" decoding="async"
-								referrerpolicy="no-referrer"/>
+								sizes={ cdKgSizes(YuvaBlokLead) } alt="" loading="lazy" fetchpriority="low"
+								decoding="async" referrerpolicy="no-referrer"/>
 						} else {
 							<img src={ sec.Lead.Image } alt="" loading="lazy" decoding="async"
 								referrerpolicy="no-referrer"/>
@@ -606,7 +616,8 @@ templ CDHome(v CDHomeView) {
 		<head>
 			@cdHead(CDHead{Title: v.Title, Desc: v.Desc, Canonical: v.Canonical,
 				OGType: "website", Image: v.Lead.Image, Hreflang: v.Hreflang,
-				SiteName: v.Shell.SiteName, RSSFeed: "/rss.xml", JSONLD: v.JSONLD})
+				SiteName: v.Shell.SiteName, RSSFeed: "/rss.xml", JSONLD: v.JSONLD,
+				LCPGorsel: cdLCPOnYukle(v.Lead)})
 		</head>
 		<body class="cd">
 			@cdTopbar(v.Shell)

@@ -1618,11 +1618,52 @@ gofmt -l          boş
 templ generate    temiz
 4xx istek         0
 konsol hatası     0
-font yükleme      inter/alegreya 400-500-700 → 6/6 HTTP 200, hepsi "loaded"
+font yükleme      inter-var + alegreya-var → 2/2 HTTP 200, ikisi de "loaded"
 1920 taşma        0
 390 taşma         0 (sağ ray gizli, sol ray flex)
 kaydırma durumu   html.cd-kaydi=true, yön=row, yüzde=block
 ```
+
+### 11.8 Onuncu tur (gerçek hatalar: kontrast, ARIA, font ağırlığı) — DURUM
+
+Lighthouse 12 ölçümleri bu turda **üç gerçek hata** ortaya çıkardı. Hiçbiri
+görsel incelemeyle fark edilmezdi.
+
+| Konu | Ölçülen sorun | Düzeltme |
+|---|---|---|
+| **Birincil düğme kontrastı** | `.cd a { color: inherit }` özgüllüğü (0,1,1) `.cd-btn`'inkinden (0,1,0) büyük olduğu için üst çubuktaki "Ücretsiz üye ol" düğmesi **siyah zeminde #262626** yazıyla çiziliyordu — kontrast **1,4:1** (AA eşiği 4,5:1). Mobil ölçümde görünmüyordu çünkü o düğme ≤767 px'te gizli | `a.cd-btn { color: var(--cd-bg) }` / `a.cd-btn--ghost { color: var(--cd-fg) }` |
+| **ARIA yasağı** | Basın ve video oklarında `<label aria-label="…">` kullanılmıştı; ARIA spesifikasyonunda `label` öğesinde adlandırma **yasak** (`aria-prohibited-attr`, 4 düğüm) | metin `<span class="cd-visually-hidden">` içine alındı; oklar da "‹ ›" karakteri yerine 20/16 px SVG chevron oldu |
+| **Font ağırlığı** | Altı sabit ağırlık dosyası (173 KB, 6 istek); LH mobilde 5 font isteği LCP görseliyle yarışıyordu | İki **değişken** font (94 KB, 2 istek): `inter-var.woff2` + `alegreya-var.woff2`, `font-weight: 400 700` |
+
+Bonus: Inter'in `opsz` (optik boyut) ekseni korundu — `font-optical-sizing`
+varsayılanı 36 px manşette daha sıkı, 14 px UI metninde daha açık aralık seçer.
+Neue Haas da optik boyutlu bir aileydi.
+
+LCP iyileştirmeleri (ölçümle doğrulandı):
+
+| Değişiklik | Etki |
+|---|---|
+| `<link rel="preload" as="image" imagesrcset imagesizes>` (manşet görseli) | LH "load delay" **942 → 447 ms** |
+| Alt katlama görsellerine `fetchpriority="low"` (akış + bölüm blokları) | LCP görseliyle bant genişliği yarışı azaldı |
+| Türkçeye daraltılmış alt küme | 254 → 173 KB (sabit), sonra değişken fontla 94 KB |
+
+**Alt küme tuzağı:** ilk daraltmada `U+0100-017F` unutuldu ve **Ğ/Ş/ğ/ş**
+glifleri düştü — Türkçe başlıklar bozuk çizilecekti. Glif kapsam testi
+yakaladı; aralık eklendi. Bu kontrol (`dar_kapsam.py`) her font üretiminden
+sonra koşulmalı.
+
+Lighthouse 12 sonuçları:
+
+| Profil | Perf | A11y | BP | SEO | LCP | CLS | TBT |
+|---|---|---|---|---|---|---|---|
+| **Masaüstü** (`--preset=desktop`) | **100** | **100** | **100** | **100** | 0,7 s | 0,003 | 0 ms |
+| Mobil (simüle 1.6 Mbps) | 94 | **100** | **100** | **100** | 2,9 s | 0,003 | 0 ms |
+
+Mobil performansın 94'te kalması **tasarımın kendisinden**: ana sayfa
+CoinDesk'ten devralınan görsel ağırlıklı bir düzen (24 istek, 11 görsel).
+Aynı profilde LCP görseli 94 KB JPEG (960w). Gerçek tarayıcıda (kısıtlama
+yok) LCP 0,86 s masaüstü / 0,08 s mobil. JPEG kalitesini düşürmek
+(q82 → q78) tasarım sadakatini bozacağı için yapılmadı.
 
 ---
 

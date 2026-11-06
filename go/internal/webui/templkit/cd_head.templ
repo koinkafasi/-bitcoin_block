@@ -29,6 +29,21 @@ type CDHead struct {
 	// JSONLD Go tarafında üretilmiş yapısal veri bloğu (script etiketiyle
 	// birlikte). templ script içeriğini ham saydığı için burada taşınır.
 	JSONLD string
+	// LCPGorsel varsa <link rel="preload" as="image"> basılır.
+	//
+	// NEDEN: Lighthouse mobil profilinde LCP fazı TTFB + "load delay" +
+	// "render delay" olarak ölçüldü (7 Kasım 2026): 450 + 942 + 1346 ms.
+	// Load delay'in nedeni, manşet görselinin DOM'un ORTASINDA keşfedilmesi
+	// ve o sırada 9 alt-katlama görselinin isteğe girmesi. Preload, tarayıcı
+	// preload scanner'ının aynı srcset/sizes'ı CSS'ten ÖNCE görmesini sağlar.
+	LCPGorsel *CDPreload
+}
+
+// CDPreload önceden yüklenecek görsel (srcset/sizes ile birebir aynı).
+type CDPreload struct {
+	Src    string
+	Srcset string
+	Sizes  string
 }
 
 // templ func: haritayı sıralı basmak için sabit dil sırası.
@@ -40,6 +55,17 @@ templ cdHead(h CDHead) {
 	<title>{ h.Title }</title>
 	<meta name="description" content={ h.Desc }/>
 	<link rel="canonical" href={ h.Canonical }/>
+	<!-- LCP görselini MÜMKÜN OLAN EN ERKEN anda başlat. `imagesrcset` ve
+	     `imagesizes`, <img> ile BİREBİR aynı olmalı; farklı olursa tarayıcı
+	     iki ayrı aday sayar ve aynı görsel iki kez indirilir. -->
+	if h.LCPGorsel != nil && h.LCPGorsel.Src != "" {
+		if h.LCPGorsel.Srcset != "" {
+			<link rel="preload" as="image" href={ h.LCPGorsel.Src }
+				imagesrcset={ h.LCPGorsel.Srcset } imagesizes={ h.LCPGorsel.Sizes } fetchpriority="high"/>
+		} else {
+			<link rel="preload" as="image" href={ h.LCPGorsel.Src } fetchpriority="high"/>
+		}
+	}
 	if h.NoIndex {
 		<meta name="robots" content="noindex,follow"/>
 	}

@@ -251,3 +251,26 @@ func cdKgSrcset(url string, yuva CDYuva) string {
 
 // cdKgSizes yuvanın sizes değeri.
 func cdKgSizes(yuva CDYuva) string { return yuvaBilgi[yuva].Sizes }
+
+// cdLCPOnYukle hero manşetinin görselini <link rel=preload> için hazırlar.
+//
+// NEDEN: ana sayfada LCP öğesi manşet görseli. DOM'da sol rayın (5 satır)
+// ve orta kolon metninin ARDINDAN geliyor; tarayıcı preload scanner'ı
+// görsele gelene kadar 9 alt-katlama görseli isteğe giriyor (ölçüldü:
+// 713 ms'de dokuz istek birden). Preload, görseli CSS'ten önce başlatıyor.
+//
+// srcset/sizes <img> ile BİREBİR aynı üretiliyor — farklı olsa tarayıcı
+// iki ayrı aday sayıp görseli iki kez indirir.
+func cdLCPOnYukle(s CDStory) *CDPreload {
+	if s.Image == "" {
+		return nil
+	}
+	if !cdKgOlcekli(s.Image) {
+		return &CDPreload{Src: s.Image}
+	}
+	return &CDPreload{
+		Src:    cdKgSrc(s.Image, YuvaHeroLead),
+		Srcset: cdKgSrcset(s.Image, YuvaHeroLead),
+		Sizes:  cdKgSizes(YuvaHeroLead),
+	}
+}

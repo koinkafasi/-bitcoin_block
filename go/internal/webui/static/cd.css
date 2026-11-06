@@ -36,50 +36,31 @@
  * Dosyalar Türkçe + Latin + para/sembol aralığına alt kümelendi.
  * Lisanslar: fonts/INTER-OFL.txt, fonts/ALEGREYA-OFL.txt.
  *
+ * DEĞİŞKEN FONT (7 Kasım 2026): altı sabit ağırlık dosyası (173 KB, 6 istek)
+ * yerine iki değişken dosya (94 KB, 2 istek) kullanılıyor. Lighthouse mobil
+ * profilinde her istek sırada beklediği için istek SAYISI da maliyet:
+ * LCP fazında 5 font isteği görsel yüklemeleriyle yarışıyordu.
+ * `font-weight: 400 700` aralığı Inter'in `opsz` (optik boyut) eksenini de
+ * korur — `font-optical-sizing: auto` varsayılanı 36 px manşette daha sıkı
+ * harf aralığı seçer, 14 px UI metninde daha açık. Neue Haas da optik
+ * boyutlu bir aileydi.
+ *
  * `font-display: swap`: font yüklenirken sistem fontu görünür, metin
  * görünmez kalmaz (CLS'ten daha önemli: okunabilirlik).
  */
 @font-face {
   font-family: "Inter";
   font-style: normal;
-  font-weight: 400;
+  font-weight: 400 700;
   font-display: swap;
-  src: url("fonts/inter-400.woff2") format("woff2");
-}
-@font-face {
-  font-family: "Inter";
-  font-style: normal;
-  font-weight: 500;
-  font-display: swap;
-  src: url("fonts/inter-500.woff2") format("woff2");
-}
-@font-face {
-  font-family: "Inter";
-  font-style: normal;
-  font-weight: 700;
-  font-display: swap;
-  src: url("fonts/inter-700.woff2") format("woff2");
+  src: url("fonts/inter-var.woff2") format("woff2-variations");
 }
 @font-face {
   font-family: "Alegreya";
   font-style: normal;
-  font-weight: 400;
+  font-weight: 400 700;
   font-display: swap;
-  src: url("fonts/alegreya-400.woff2") format("woff2");
-}
-@font-face {
-  font-family: "Alegreya";
-  font-style: normal;
-  font-weight: 500;
-  font-display: swap;
-  src: url("fonts/alegreya-500.woff2") format("woff2");
-}
-@font-face {
-  font-family: "Alegreya";
-  font-style: normal;
-  font-weight: 700;
-  font-display: swap;
-  src: url("fonts/alegreya-700.woff2") format("woff2");
+  src: url("fonts/alegreya-var.woff2") format("woff2-variations");
 }
 
 :root {
@@ -509,6 +490,14 @@ html.cd-kaydi .cd-ticker__item .cd-down { display: inline; }
 }
 .cd-btn--ghost { background: transparent; color: var(--cd-fg); border-color: var(--cd-border-strong); }
 .cd-btn--link { background: none; border: 0; padding: 0; color: var(--cd-fg); text-decoration: underline; }
+/* GERÇEK HATA (7 Kasım 2026, Lighthouse masaüstü a11y 97 → bulundu):
+   `.cd a { color: inherit }` özgüllüğü (0,1,1), `.cd-btn`'inkinden (0,1,0)
+   BÜYÜK olduğu için birincil düğmenin beyaz yazısını eziyordu. Üst çubuktaki
+   "Ücretsiz üye ol" SİYAH zeminde #262626 metinle çiziliyordu — kontrast
+   1,4:1 (WCAG AA eşiği 4,5:1). Mobil ölçümde görünmüyordu çünkü o düğme
+   ≤767 px'te gizli. Bağlantı düğmeleri için renk burada sabitleniyor. */
+a.cd-btn { color: var(--cd-bg); }
+a.cd-btn--ghost { color: var(--cd-fg); }
 
 /* Tema anahtarı — JS varsa görünür (JS yoksa ölü düğme göstermeyiz). */
 .cd-tema {
@@ -977,14 +966,21 @@ html.cd-js .cd-tema { display: inline-flex; }
   background: var(--cd-bg);
   border-color: var(--cd-border);
 }
-.cd-video__oklar { display: flex; align-items: center; gap: 4px; }
+.cd-video__oklar { display: flex; align-items: center; gap: 8px; }
+/* CoinDesk: 24 px yuvarlak düğme, içinde 16 px chevron; arada 8 px. */
 .cd-video__ok {
-  font-size: 20px;
-  line-height: 24px;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: 1px solid var(--cd-border);
+  border-radius: 9999px;
   color: var(--cd-fg);
   cursor: pointer;
-  padding: 0 4px;
 }
+.cd-video__ok:hover { background: var(--cd-surface-soft); }
+.cd-video__ok svg { display: block; }
 .cd-video__durum-1, .cd-video__durum-2, .cd-video__durum-3,
 .cd-video__durum-4, .cd-video__durum-5, .cd-video__durum-6,
 .cd-video__durum-7, .cd-video__durum-8 { display: none; }
