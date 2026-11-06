@@ -125,18 +125,28 @@ func (s *Server) handleCDHome(w http.ResponseWriter, r *http.Request) {
 		sections = append(sections, sec)
 	}
 
+	// §3 promo bandı: ayarla yönetilir. Kapalıysa/boşsa şablon basmaz.
+	promo := repo.AktifPromo(ctx, s.pool, time.Now())
+
 	d := templkit.CDHomeView{
 		Shell:     s.cdShellCtx(r.Context(), ""),
 		Title:     s.siteName + " — Kripto Haberleri ve Piyasa Verisi",
 		Desc:      "Bitcoin, Ethereum ve kripto piyasalarından son haberler, analizler ve canlı fiyatlar.",
 		Canonical: s.cfg.BaseURL + r.URL.Path,
-		Lead:      lead,
-		Side:      side,
-		Latest:    latest,
-		Prices:    s.cdFiyatSatirlari(r, 10),
-		Sections:  sections,
-		MostRead:  s.cdPopuler(r, 6),
-		Opinion:   s.cdGorus(r, 4),
+		Promo: templkit.CDPromo{
+			Aktif:    promo.Aktif,
+			Metin:    promo.Metin,
+			Baglanti: promo.Baglanti,
+			CTA:      promo.CTA,
+			Kalan:    promo.Kalan,
+		},
+		Lead:     lead,
+		Side:     side,
+		Latest:   latest,
+		Prices:   s.cdFiyatSatirlari(r, 10),
+		Sections: sections,
+		MostRead: s.cdPopuler(r, 6),
+		Opinion:  s.cdGorus(r, 4),
 		// hreflang: yalnız GERÇEK diller. Şu an içerik Türkçe; EN içerik
 		// üretildiğinde buraya eklenecek (çevirisi olmayan dili yazmak
 		// Google'da "aynı içerik" cezası riski).

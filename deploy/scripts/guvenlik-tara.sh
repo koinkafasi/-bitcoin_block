@@ -122,15 +122,45 @@ bolum "5/6  gosec (Go statik güvenlik; severity high kapı)"
 # olarak çağırır; PATH'te yoksa "0 bulgu" der ve YANLIŞ GÜVEN verir — bu
 # yüzden PATH burada açıkça kurulur ve sürüm doğrulanır.
 export PATH="/usr/local/go/bin:$HOME/go/bin:$PATH"
+GOSEC_SURUM="${GOSEC_SURUM:-v2.30.0}"
 GOSEC="$HOME/go/bin/gosec"
+
+# Sürüm SABİT ve DOĞRULANIR — 6 Kasım 2026'da ölçüldü: yerelde `dev`
+# derlemesi vardı, CI'da hiç kurulu değildi. Sonuç iki yönlü yanlış güven:
+#   · yerel "dev" taint analizi G703 verdi (CI yeşildi → "yerelde kırık"),
+#   · CI'da gosec yoktu → kapı sessizce atlanıyordu (hiç taranmıyordu).
+# Artık eksik/yanlış sürüm kendiliğinden kurulur; kurulamazsa kapı KIRILIR
+# (atlamak yok: sessiz geçiş güvenlik kapısını dekorasyona çevirir).
+#
+# DİKKAT: `gosec -version` kaynaktan derlenen her kurulumda "dev" yazar
+# (sürüm ldflags ile yalnız resmî sürümlerde gömülüyor). Bu yüzden sürüm
+# `go version -m` build info'sundan okunur; aksi halde kontrol hiç tutmaz
+# ve her koşuda yeniden kurulum yapılır.
+gosec_surum_dogru() {
+  [ -x "$GOSEC" ] || return 1
+  go version -m "$GOSEC" 2>/dev/null | grep -qE "mod[[:space:]]+github.com/securego/gosec/v2[[:space:]]+${GOSEC_SURUM}([[:space:]]|$)"
+}
+
+gosec_kur() {
+  if gosec_surum_dogru; then
+    return 0
+  fi
+  echo "==> gosec $GOSEC_SURUM kuruluyor (GOBIN=$HOME/go/bin)"
+  GOBIN="$HOME/go/bin" go install "github.com/securego/gosec/v2/cmd/gosec@$GOSEC_SURUM" 2>/dev/null
+}
+
 if ! command -v go >/dev/null 2>&1; then
-  echo "go yok — gosec atlandı"
-elif [ ! -x "$GOSEC" ]; then
-  echo "gosec yok — atlandı (kurulum: go install github.com/securego/gosec/v2/cmd/gosec@v2.30.0)"
+  echo "go yok — gosec KOŞTURULAMADI"
+  BASARISIZ=1
 else
-  ( cd go && "$GOSEC" -quiet -severity high -confidence medium \
-      -nosec-require-rules -nosec-require-justification \
-      -exclude-dir=internal/webui/static/vendor ./... ) || BASARISIZ=1
+  if ! gosec_kur; then
+    echo "gosec $GOSEC_SURUM kurulamadı — kapı kırıldı" >&2
+    BASARISIZ=1
+  else
+    ( cd go && "$GOSEC" -quiet -severity high -confidence medium \
+        -nosec-require-rules -nosec-require-justification \
+        -exclude-dir=internal/webui/static/vendor ./... ) || BASARISIZ=1
+  fi
 fi
 
 # ---------------------------------------------------------------- 6) workflow güvenliği

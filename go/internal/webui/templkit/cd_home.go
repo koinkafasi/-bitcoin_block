@@ -1,5 +1,7 @@
 package templkit
 
+import "strings"
+
 // CoinDesk ana sayfa — veri tipleri.
 //
 // Modül sırası docs/COINDESK-SPEC.md §6'dan BİREBİR alınmıştır; sıra
@@ -42,6 +44,24 @@ type CDPriceRow struct {
 	Href   string
 }
 
+// CDPromo §3 duyuru bandı.
+//
+// VERİ SETTINGS'TEN gelir (repo.AktifPromo): metin/bağlantı/bitiş editörce
+// yönetilir, kod deploy'u gerekmez. `Kalan` sunucuda hesaplanmış geri sayım
+// metnidir; JS YOK (CSP satır içi script'e izin vermiyor).
+//
+// Boşsa ana sayfada hiç basılmaz — boş çerçeve düzeni bozar.
+type CDPromo struct {
+	Aktif    bool
+	Metin    string
+	Baglanti string
+	CTA      string
+	Kalan    string
+}
+
+// Gorunur mu.
+func (p CDPromo) Gorunur() bool { return p.Aktif && strings.TrimSpace(p.Metin) != "" }
+
 // CDHomeView ana sayfa şablon verisi.
 type CDHomeView struct {
 	Shell     CDShell
@@ -55,7 +75,7 @@ type CDHomeView struct {
 	//  12 clips · 13 reklam · 14 prices · 15 stocks · 16 exchange benchmark
 	//  17 videos · 18 indices · 19 podcasts · 20 opinion · 21 most read
 	//  22 bölüm blokları
-	Promo    string
+	Promo    CDPromo
 	Lead     CDStory
 	Side     []CDStory
 	Latest   []CDStory    // §5 — saat damgalı düz liste

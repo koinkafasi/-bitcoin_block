@@ -36,6 +36,7 @@ Güvenlik hattı: [`guvenlik-hatti.md`](guvenlik-hatti.md)
 | Kaynak görsel proxy (`/kg/{hash}`) | ✅ üçüncü taraf çerez kapandı; dış CDN bağımlılığı yok |
 | Kripto alaka kapısı | ✅ resmî kaynaklarda kripto dışı bülten sızmıyor (SEC 25 → 3) |
 | **Video / podcast / endeks / borsa tablosu** | 🟡 sayfalar hazır (`/videos`, `/podcasts`), **içerik ve veri kaynağı yok** → dürüst boş durum basar |
+| **Promo bandı (§3)** | ✅ settings'ten yönetilir (`/admin/ayarlar?seke=promo`), geri sayım sunucuda (JS yok), süresi geçince kendiliğinden kapanır |
 | EN dil | ⏳ |
 
 ---

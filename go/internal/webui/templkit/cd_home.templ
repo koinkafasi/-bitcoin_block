@@ -163,9 +163,21 @@ templ CDHome(v CDHomeView) {
 			@cdTopbar(v.Shell)
 			@cdTicker(v.Shell)
 			<main class="cd-wrap">
-				<!-- §3 promo banner -->
-				if v.Promo != "" {
-					<div class="cd-promo">{ v.Promo }</div>
+				<!-- §3 promo banner: ayarla yönetilir, boşsa basılmaz -->
+				if v.Promo.Gorunur() {
+					<div class="cd-promo" role="note">
+						<span class="cd-promo__metin">{ v.Promo.Metin }</span>
+						if v.Promo.Kalan != "" {
+							<span class="cd-promo__kalan">{ v.Promo.Kalan } kaldı</span>
+						}
+						if v.Promo.Baglanti != "" {
+							if v.Promo.CTA != "" {
+								<a class="cd-promo__cta" href={ templ.SafeURL(v.Promo.Baglanti) }>{ v.Promo.CTA }</a>
+							} else {
+								<a class="cd-promo__bag" href={ templ.SafeURL(v.Promo.Baglanti) }>Devamı</a>
+							}
+						}
+					</div>
 				}
 
 				<!-- §8 manşet bloğu: 1 büyük + 3 yan -->

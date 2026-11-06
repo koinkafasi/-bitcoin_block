@@ -43,6 +43,12 @@ type settingsData struct {
 	Kunye      []bikKunyeAlan
 	KunyeEksik []string
 	KunyeYedek map[string]string
+	// §3 promo bandı ayarları.
+	PromoAktif    bool
+	PromoMetin    string
+	PromoBaglanti string
+	PromoCTA      string
+	PromoBitis    string
 }
 
 // handleSettingsGet ayarları yükler ve sekmeyi gösterir.
@@ -130,6 +136,15 @@ func (s *Server) buildSettingsData(r *http.Request) *tmplData {
 
 	if logs, err := repo.ListLogs(ctx, s.pool, 60); err == nil {
 		sc.Logs = logs
+	}
+
+	// §3 promo bandı — ayarlar sayfasında düzenlenir.
+	if promoSet, err := repo.GetSettings(ctx, s.pool, "promo"); err == nil {
+		sc.PromoAktif = ayarBoolB(promoSet["aktif"])
+		sc.PromoMetin = jsonStr(promoSet["metin"])
+		sc.PromoBaglanti = jsonStr(promoSet["baglanti"])
+		sc.PromoCTA = jsonStr(promoSet["baglanti_metin"])
+		sc.PromoBitis = jsonStr(promoSet["bitis"])
 	}
 	d.Ayar = sc
 	return d
@@ -241,6 +256,17 @@ func (s *Server) handleSettingsSave(w http.ResponseWriter, r *http.Request) {
 	set("yapay_zeka", "default_provider", r.FormValue("ai_provider"))
 	set("yapay_zeka", "model", r.FormValue("ai_model"))
 
+	// promo — §3 ana sayfa bandı. Tek form tüm sekmeleri taşıdığı için
+	// metin alanının varlığı "bu ayar bölümü formda" demektir; checkbox
+	// işaretsizse gönderilmez, bu yüzden aktiflik ayrı okunur.
+	if r.Form.Has("promo_metin") {
+		set("promo", "aktif", r.FormValue("promo_aktif") != "")
+		set("promo", "metin", strings.TrimSpace(r.FormValue("promo_metin")))
+		set("promo", "baglanti", strings.TrimSpace(r.FormValue("promo_baglanti")))
+		set("promo", "baglanti_metin", strings.TrimSpace(r.FormValue("promo_cta")))
+		set("promo", "bitis", strings.TrimSpace(r.FormValue("promo_bitis")))
+	}
+
 	// kunye — BİK tebliği md. 8/1-d. Alan yalnızca formda VARSA yazılır:
 	// başka bir sekme kaydedilirken bu bölümün sessizce silinmesini
 	// engeller (Marka alanlarındaki aynı desen).
@@ -296,6 +322,22 @@ func jsonStr(b []byte) string {
 		return s
 	}
 	return ""
+}
+
+// ayarBoolB settings boolean değerini okur (jsonb true/false, JSON string
+// `"true"`, düz "true"/"1"). SetSetting geçersiz JSON'u string'e sardığı için
+// tırnaklı biçim de gerçek bir durumdur — yoksa işaretli checkbox "kapalı"
+// görünürdü.
+func ayarBoolB(b []byte) bool {
+	t := strings.Trim(strings.TrimSpace(string(b)), `"`)
+	if t == "" || t == "null" {
+		return false
+	}
+	var v bool
+	if json.Unmarshal([]byte(t), &v) == nil {
+		return v
+	}
+	return t == "1" || strings.EqualFold(t, "true")
 }
 
 func obj(b []byte) map[string]any {

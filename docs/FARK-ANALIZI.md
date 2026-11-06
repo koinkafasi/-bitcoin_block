@@ -13,7 +13,7 @@ Durum kodları: ✅ tam · 🟡 kısmi · ⛔ eksik · 🔒 dış veri bekliyor
 |---|---|---|---|
 | 1 | Üst nav + arama + dil + oturum | ✅ | nav + arama + dil seçici + Giriş/Üye ol; mega menü hâlâ düz nav |
 | 2 | Fiyat şeridi (Markets Live / Crypto Stocks) | 🟡 | kripto şeridi ✅ (7 varlık, canlı); **Crypto Stocks sekmesi boş** |
-| 3 | Promo banner (etkinlik geri sayımı) | ⛔ | ayar alanı hazır (`cd-promo`), içerik yok |
+| 3 | Promo banner (etkinlik geri sayımı) | ✅ | settings `promo`; geri sayım sunucuda, süresi geçince kapanır |
 | 4 | Today's Videos (oynatıcı + liste) | ⛔ | video verisi/modeli yok |
 | 5 | **Latest News** (saat damgalı liste) | ✅ | 12 satır, "3 saat önce" biçimi |
 | 6 | Thought Leadership (sponsorlu) | ⛔ | sponsorlu içerik türü var, kayıt yok |
@@ -120,9 +120,9 @@ Durum kodları: ✅ tam · 🟡 kısmi · ⛔ eksik · 🔒 dış veri bekliyor
 4. ~~Mega menü + mobil hamburger~~ ✅ 5 grup + veriye bağlı sütunlar; mobilde JS'siz `<details>` panel.
 
 ### P1 — ana sayfa modülleri (veri bağımlı)
-5. Bülten modülü (mevcut `/bulten` altyapısıyla, veri gerekmiyor) — **en kolay kazanç**
-6. Promo banner (ayar tabanlı, veri gerekmiyor)
-7. Videos / Podcasts / Clips (önce içerik türü + yükleme akışı)
+5. ~~Bülten modülü~~ ✅ §7 form ana sayfada; `/newsletters` sayfası ayrı.
+6. ~~Promo banner~~ ✅ settings `promo` + `/admin/ayarlar?seke=promo`; geri sayım sunucuda.
+7. Videos / Podcasts / Clips (önce içerik türü + yükleme akışı) — 🟡 sayfalar hazır, içerik yok
 8. Stocks tablosu (veri kaynağı seçimi)
 9. Indices / Exchange Benchmark (kendi metodolojimiz)
 
@@ -176,3 +176,24 @@ canlı ilk 5 coin. Veri yoksa sütun hiç basılmaz.
 Koruma: `templkit/cd_menu_test.go` — ölü hedef kara listesi, hedef biçimi,
 "veri yoksa sütun yok", "veri gelince dolar", aktif başlık, `aria-controls`
 tekilliği. Yeni ölü hedef eklendiği anda test kırmızıya döner.
+
+## 10. Promo bandı (§3) — tasarım kararları
+
+CoinDesk'te bant "etkinlik geri sayımı" taşır. Bizde etkinlik takvimi yok,
+bu yüzden **uydurma geri sayım basılmıyor**; bant ayarla yönetilir ve
+editörün girdiği gerçek bir bitiş tarihine bağlanır.
+
+| Karar | Gerekçe |
+|---|---|
+| Metin/bağlantı `settings` (`promo`) | duyuru değişince kod deploy'u gerekmesin |
+| Kapalıyken **hiç basılmaz** | boş çerçeve düzeni bozar (sıfır yükseklikte çizgi kalır) |
+| Geri sayım sunucuda (JS yok) | CSP satır içi script'e izin vermiyor; sayfa 60 sn önbellekli olduğu için saniye hassasiyeti zaten yanıltıcı |
+| Süresi geçmiş `bitis` → bant düşer | editör tarihi güncellemeyi unutsa bile süresi dolmuş kampanya sayfada kalmaz |
+| Bozuk tarih → bant kalır, geri sayım yok | editörün yazım hatası duyuruyu tamamen düşürmemeli |
+| Vurgu şeridi `--cd-fg` | palet yalnız ölçülmüş token'ları taşır; yeni renk uydurulmaz |
+
+İlk yayın: "Günün kripto özeti her sabah e-postanızda" → `/newsletters`
+(migration `0118`). Gerçek sayfa, çalışan kayıt formu; uydurma hedef yok.
+
+Koruma: `repo/promo_test.go` — geri sayım metni, boş bant kuralları,
+süresi geçmiş kampanya, bozuk tarih, `settings` biçim toleransı.

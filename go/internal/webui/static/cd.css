@@ -612,3 +612,42 @@
   font-size: 0.92rem;
 }
 .cd-bos p { margin: 0; }
+
+/* §3 promo banner — metin · geri sayım · CTA tek çizgide.
+   Gölge yok, ayırma çizgiyle (tasarım kuralı); sol kenarda 3 px vurgu
+   şeridi bandı "editoryal içerik"ten ayırır. Vurgu rengi --cd-fg:
+   palet yalnız ölçülmüş token'ları taşır, yeni renk uydurulmaz. */
+.cd-promo__metin { color: var(--cd-fg); font-weight: 600; }
+
+.cd-promo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  border-left: 3px solid var(--cd-fg);
+}
+
+/* Geri sayım: ikincil bilgi, ayrı kutu. */
+.cd-promo__kalan {
+  padding: 2px 8px;
+  border: 1px solid var(--cd-border);
+  border-radius: var(--cd-radius);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* CTA: bant içinde bağlantı; alt çizgi ile değil ok ile ayrılır. */
+.cd-promo__cta,
+.cd-promo__bag {
+  margin-left: auto;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.cd-promo__cta::after,
+.cd-promo__bag::after { content: " →"; }
+
+@media (max-width: 640px) {
+  /* Mobilde CTA alt satıra geçer, "margin-left:auto" boşluk bırakmasın. */
+  .cd-promo__cta,
+  .cd-promo__bag { margin-left: 0; }
+}

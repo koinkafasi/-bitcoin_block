@@ -165,6 +165,11 @@ func ayarlarViewFrom(sc *settingsData, locales []i18n.Locale, fl *flashMsg) temp
 		})
 	}
 	v.KunyeEksik = sc.KunyeEksik
+	v.PromoAktif = sc.PromoAktif
+	v.PromoMetin = sc.PromoMetin
+	v.PromoBaglanti = sc.PromoBaglanti
+	v.PromoCTA = sc.PromoCTA
+	v.PromoBitis = sc.PromoBitis
 	return v
 }
 

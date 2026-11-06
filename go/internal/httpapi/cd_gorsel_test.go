@@ -5,6 +5,7 @@ import (
 	"image"
 	"image/color"
 	"image/png"
+	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -57,10 +58,13 @@ func TestKaynakGorselYol(t *testing.T) {
 //
 // NEDEN: tek dizinde on binlerce dosya bazı dosya sistemlerinde yavaşlar;
 // ayrıca yedekleme/rsync dağıtımı tek dizinde kilitlenir.
+//
+// Yol artık KÖKTEN GÖRELİ üretilir (os.Root hapishanesi): mutlak yol
+// kurulmaz, böylece depolama dizini dışına çıkmak yapısal olarak imkânsız.
 func TestKaynakGorselDiskYoluDagilimi(t *testing.T) {
-	yol := kaynakGorselDiskYolu("80fe8a843afddb33661ff0f019b8ac11")
-	assert.Contains(t, yol, "/kaynak/80/")
-	assert.Contains(t, yol, "80fe8a843afddb33661ff0f019b8ac11")
+	yol := kaynakGorselGoreli("80fe8a843afddb33661ff0f019b8ac11", "")
+	assert.Equal(t, filepath.Join("80", "80fe8a843afddb33661ff0f019b8ac11"), yol)
+	assert.False(t, filepath.IsAbs(yol), "göreli yol kök dışına çıkamaz")
 }
 
 // ---- Ölçekli uç: /kg/{hash}/{genislik} ----
@@ -100,13 +104,13 @@ func TestKaynakGorselGenislikMediaSrcsetIleAyni(t *testing.T) {
 // bir daha elde edilemez ve her genişlik aynı dosyayı okur.
 func TestKaynakGorselVaryantYolu(t *testing.T) {
 	const h = "80fe8a843afddb33661ff0f019b8ac11"
-	asil := kaynakGorselDiskYolu(h)
-	v480 := kaynakGorselVaryantYolu(h, 480)
-	v768 := kaynakGorselVaryantYolu(h, 768)
+	asil := kaynakGorselGoreli(h, "")
+	v480 := kaynakGorselGoreli(h, "-480")
+	v768 := kaynakGorselGoreli(h, "-768")
 
 	assert.NotEqual(t, asil, v480, "varyant orijinalin üzerine yazmamalı")
 	assert.NotEqual(t, v480, v768, "her genişlik ayrı dosya olmalı")
-	assert.Contains(t, v480, "/kaynak/80/", "aynı shard dizininde kalmalı")
+	assert.Contains(t, v480, filepath.Join("80", ""), "aynı shard dizininde kalmalı")
 	assert.Equal(t, asil+"-480", v480)
 }
 

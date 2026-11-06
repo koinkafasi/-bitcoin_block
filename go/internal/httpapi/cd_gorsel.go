@@ -73,8 +73,7 @@ func (s *Server) handleKaynakGorsel(w http.ResponseWriter, r *http.Request) {
 // DB işaretlemesi TEK yerde kalsın. Ayrıldığında biri güncellenmeden diğeri
 // kalıyor; /kg/ ucunun güvenlik kapısı tam bu akışta.
 func (s *Server) kaynakGorselAsil(r *http.Request, hash string) ([]byte, string, bool) {
-	yol := kaynakGorselDiskYolu(hash)
-	if b, ct, ok := kaynakGorselOku(yol); ok {
+	if b, ct, ok := kaynakGorselOku(hash, ""); ok {
 		return b, ct, true
 	}
 
@@ -90,7 +89,7 @@ func (s *Server) kaynakGorselAsil(r *http.Request, hash string) ([]byte, string,
 		// `<img>` için yer tutucu gösterir, düzen bozulmaz.
 		return nil, "", false
 	}
-	kaynakGorselYaz(yol, b)
+	kaynakGorselYaz(hash, "", b)
 	repo.KaynakGorselIsaretle(r.Context(), s.pool, hash, ct, int64(len(b)))
 	return b, ct, true
 }
@@ -124,8 +123,8 @@ func (s *Server) handleKaynakGorselOlcekli(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	vYol := kaynakGorselVaryantYolu(hash, genislik)
-	if b, _, ok := kaynakGorselOku(vYol); ok {
+	vYol := "-" + strconv.Itoa(genislik)
+	if b, _, ok := kaynakGorselOku(hash, vYol); ok {
 		s.kaynakGorselSun(w, r, b, "image/jpeg")
 		return
 	}
@@ -146,7 +145,7 @@ func (s *Server) handleKaynakGorselOlcekli(w http.ResponseWriter, r *http.Reques
 		return
 	}
 	// Yazma başarısız olsa bile yanıtı döndür; sonraki istek yeniden üretir.
-	kaynakGorselYaz(vYol, kucuk)
+	kaynakGorselYaz(hash, vYol, kucuk)
 	s.kaynakGorselSun(w, r, kucuk, "image/jpeg")
 }
 
@@ -163,13 +162,6 @@ func kaynakGorselGenislikGecerli(genislik int) bool {
 		return true
 	}
 	return false
-}
-
-// kaynakGorselVaryantYolu ölçekli dosyanın yolu: orijinalle aynı shard
-// dizininde, adı genişlikle ayrışır ("<hash>-480"). Hash 32 hex karakterle
-// doğrulandığı ve genişlik kapalı listeden geldiği için yol aşımı yok.
-func kaynakGorselVaryantYolu(hash string, genislik int) string {
-	return kaynakGorselDiskYolu(hash) + "-" + strconv.Itoa(genislik)
 }
 
 // kaynakGorselSun gövdeyi uzun önbellekle sunar.
@@ -221,14 +213,38 @@ func kaynakGorselIndir(r *http.Request, rawURL string) ([]byte, string, error) {
 	return b, ct, nil
 }
 
-// kaynakGorselDiskYolu dağıtık dosya sistemi dostu yol üretir.
-// İlk iki hex karakter alt dizin: tek dizinde binlerce dosya olmasın.
-func kaynakGorselDiskYolu(hash string) string {
-	return filepath.Join(platform.StorageDir(), "kaynak", hash[:2], hash)
+// kaynakGorselKok depolama kökünü "hapishane" olarak açar (storage/kaynak).
+//
+// NEDEN os.Root (Go 1.24+): hash doğrulaması doğru ama SAVUNMA TEK KATMAN
+// olmamalı. Doğrulama bir gün gevşetilirse (ya da çağrı yolu değişirse)
+// `..` içeren bir ad storage dışına çıkabilirdi. os.Root çekirdek tarafından
+// uygulanır: kökün dışına çıkan her işlem hata döner — kod ne yazarsa yazsın.
+//
+// (Ölçüm, 6 Kasım 2026: gosec G703 bu dosyada 5 bulgu verdi — taint analizi
+// `gecerliKaynakGorselHash` doğrulamasını göremiyor. Bulgu "yanlış pozitif"
+// olsa da işaret ettiği şey gerçek: yol güvenliği tek bir doğrulama
+// fonksiyonuna bağlıydı. os.Root bunu yapısal garantiye çevirir.)
+func kaynakGorselKok() (*os.Root, error) {
+	kok := filepath.Join(platform.StorageDir(), "kaynak")
+	if err := os.MkdirAll(kok, 0o755); err != nil {
+		return nil, err
+	}
+	return os.OpenRoot(kok)
 }
 
-func kaynakGorselOku(yol string) ([]byte, string, bool) {
-	b, err := os.ReadFile(yol)
+// kaynakGorselGoreli kökten göreli ad: "<ilk2>/<ad>".
+// Ad yalnız doğrulanmış hash ve (varsa) "-<genişlik>" son ekinden oluşur.
+func kaynakGorselGoreli(hash, ek string) string {
+	return filepath.Join(hash[:2], hash+ek)
+}
+
+func kaynakGorselOku(hash, ek string) ([]byte, string, bool) {
+	kok, err := kaynakGorselKok()
+	if err != nil {
+		return nil, "", false
+	}
+	defer kok.Close()
+	b, err := kok.ReadFile(kaynakGorselGoreli(hash, ek))
 	if err != nil || len(b) == 0 {
 		return nil, "", false
 	}
@@ -236,16 +252,22 @@ func kaynakGorselOku(yol string) ([]byte, string, bool) {
 }
 
 // kaynakGorselYaz atomik yazar: yarım dosya sunulmaz.
-func kaynakGorselYaz(yol string, b []byte) {
-	if err := os.MkdirAll(filepath.Dir(yol), 0o755); err != nil {
+func kaynakGorselYaz(hash, ek string, b []byte) {
+	kok, err := kaynakGorselKok()
+	if err != nil {
 		return
 	}
-	tmp := yol + ".tmp"
-	if err := os.WriteFile(tmp, b, 0o644); err != nil {
+	defer kok.Close()
+	if err := kok.MkdirAll(hash[:2], 0o755); err != nil {
 		return
 	}
-	if err := os.Rename(tmp, yol); err != nil {
-		_ = os.Remove(tmp)
+	ad := kaynakGorselGoreli(hash, ek)
+	tmp := ad + ".tmp"
+	if err := kok.WriteFile(tmp, b, 0o644); err != nil {
+		return
+	}
+	if err := kok.Rename(tmp, ad); err != nil {
+		_ = kok.Remove(tmp)
 	}
 }
 
