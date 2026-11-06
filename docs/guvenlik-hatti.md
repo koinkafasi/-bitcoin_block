@@ -33,6 +33,44 @@ Neden: `@latest` bir gün yeni kurallarla gelir ve kapıyı habersiz kırar.
 Bu, theblock projesinde tam olarak yaşandı (gosec v2.30.0 altı taint kuralı
 ekledi, bulgu 0 → 139). Sürüm yükseltmesi bilinçli bir commit olmalıdır.
 
+### Araç KURULUMU da betiğin işi
+
+Sürümü sabitlemek yetmiyor: araç **kurulu değilse** kapı sessizce atlanır.
+6 Kasım 2026'da ölçüldü — CI'da `gosec` **kurulu değildi**, betik
+"gosec yok — atlandı" deyip geçiyordu. Yani "6 kapı" gerçekte 5 kapıydı ve
+hiç kimse fark etmiyordu (koşu yeşil).
+
+Kural: **güvenlik aracı yoksa kapı KIRILIR.** Betik Trivy ve gosec'i sabit
+sürümle kendisi kurar; kuramazsa `BASARISIZ=1`.
+
+Sürüm doğrulaması ince bir tuzak taşıyor: `gosec -version` **kaynaktan
+derlenen her kurulumda "dev" yazar** (sürüm yalnız resmî sürüm
+ikililerine gömülü). Bu yüzden sürüm `go version -m` build info'sundan
+okunur:
+
+```bash
+go version -m "$GOSEC" | grep -qE "mod[[:space:]]+github.com/securego/gosec/v2[[:space:]]+v2\.30\.0"
+```
+
+`-version` ile bakılsaydı kontrol hiç tutmaz ve her koşuda yeniden
+kurulum yapılırdı.
+
+## Yol güvenliği — `os.Root` hapishanesi
+
+Dosya sistemine yazan her uç, kökü `os.OpenRoot` ile açar:
+
+```go
+kok, err := os.OpenRoot(filepath.Join(platform.StorageDir(), "kaynak"))
+b, err := kok.ReadFile(filepath.Join(hash[:2], hash)) // kökten GÖRELİ
+```
+
+Neden: ad doğrulaması (32 hex) doğru olsa da güvenlik **tek katmana**
+bağlı kalır; doğrulama bir gün gevşetilirse `..` ile depolama dışına
+çıkılır. `os.Root` bunu çekirdek tarafından uygulanan yapısal garantiye
+çevirir — kod ne yazarsa yazsın kök dışına çıkan işlem hata döner.
+`gosec` G703 bulgusu (taint analizi doğrulama fonksiyonunu göremiyor) bu
+değişiklikle kapandı.
+
 ## gosec istisnaları (`#nosec`)
 
 - Çıplak `#nosec` **susturmaz**; kural kimliği **ve** gerekçe zorunlu.
