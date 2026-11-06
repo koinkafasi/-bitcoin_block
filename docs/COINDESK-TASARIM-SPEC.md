@@ -1176,39 +1176,45 @@ Bizim değerler `go/internal/webui/static/cd.css`'ten **okundu**, tahmin değil.
 | `/price` URL | **`/price/bitcoin`** (sembol → 301) | **`/price/bitcoin`** | ✅ |
 | Gezinme | 5 başlık | 7 başlık | **Bilinçli sapma** — veri yok, değiştirme |
 
-### 11.1 İkinci turda bulunanlar (6 Kasım, henüz uygulanmadı)
+### 11.1 İkinci ve üçüncü turda bulunanlar — DURUM (6 Kasım 2026, akşam)
 
-| Konu | bitcosar (bugün) | CoinDesk (ölçüm) | Aksiyon |
-|---|---|---|---|
-| **Bant genişliği** | `.cd-wrap` her yerde tek kapsayıcı | **tam genişlik zemin + 1512 hizalı iç içerik** | Başlık/şerit zeminini tam genişlik yap, içeriği 1512'de hizala |
-| Reklam yuvası | kapsanmış | **tam genişlik**, `padding: 32px 0`, iç kapsayıcı yok | Düzelt |
-| Genişlik kademeleri | tek (1512) | **üç**: gövde 1512 · bölüm 1384 · footer 1280 | Footer ve bölüm ızgarasını ayır |
-| Ayırıcı kademesi | tek `--cd-border` | **`border-strong` (modül) + `border-default` (iç)** | İkinci jeton ekle |
-| Kolon ayırıcısı | yok | `::before` 1px, 80px boşluğun ortasında (`background`) | Hero'ya ekle |
-| Dikey tüy çizgi | yok | `border-l` 1×32px satır içi ayırıcı | Ekle |
-| Modül ritmi | margin (`--cd-section-gap: 40px`) | **gap 24 + border-strong + `pt-4`**, margin YOK | Yaklaşımı değiştir |
-| Hero ızgarası | `1.55fr 1fr` gap 32 | **`290px 608px 290px`** gap 24/80, ≥**1284px** | Düzelt |
-| Hero yan ray | her zaman basılır | **1284px altında `hidden`** | Karar gerek |
-| Mobil dizilim | sabit sıra | `order-*` ile ayrı mobil sırası | Teknik yok |
-| Slider | yok | `scroll-snap-type: x mandatory`, kart 400px, **JS'siz** | Ekle |
-| `display: contents` | yok | ray sarmalayıcıları ızgarayı bozmasın diye | Teknik yok |
-| **Şerit kaydırma durumu** | tek görünüm | **`column`→`row`**, 157×50 → 196×32, gap 2→8 | Ekle |
-| Şerit sticky | yalnız şerit | **header + şerit** (0/73, z 102/40) | Header'ı da sticky yap |
-| Şerit sekme a11y | — | `aria-selected` **YOK** (CoinDesk eksiği) | **Bizde ekle** — onlardan iyi olalım |
-| Şerit sekme durumu | `?serit=` sorgu param. | istemci tarafı, URL değişmiyor | **Bizimki daha iyi**, koru |
-| Yan ray başlığı | — | **14px w500** (ana kolon 16px w500) | İki kademe ayır |
-| Semantik font ölçeği | ham `rem` değerleri | **adlandırılmış**: `font-headline` 36/44, `font-body-lg` 22/30, `font-metadata-lg` 14/22 … | Jetonlaştır |
-| **Özet kutusu** | yok | açılır, 7px/5px iç içe çerçeve, 5px nokta `::before`, 300ms geçiş | Ekle |
-| Okuma süresi pill | yok | 122×32 `r9999px` border 1px, ikon + "3 min read" | Ekle |
-| Google News pill | yok | 300×32 `r9999px`, `google.com/preferences/source` | Ekle |
-| Paylaş düğmesi | bağlantı listesi | `button.h-8.rounded-full` 91×32 + diyalog | Pill'e çevir |
-| Yazar bağlantısı | — | **`underline`** (sitede nadir istisna) | Eşle |
-| Tarih bloğu | tek tarih | **Güncellendi + Yayınlandı**, `·` `::before` `mx-2` | Ekle |
-| Çeviri etiketi | yok | **"AI tarafından çevrildi"** (çeviri dillerinde) | **Bizde gerekli** — içerik çevrilecek |
-| Saat dilimi | — | **GMT-5 / EST** (UTC değil) | Karar gerek |
-| Makale kicker | — | `font-title` 16/32 w500, bölüm adı | Eşle |
-| Hisse şablonu | yok | `/price/stock/*` — 2 kolon 392+976, içerik **1432** | Veri gelirse |
-| Genişlik kademeleri | tek (1512) | **dört**: 1512 · 1432 · 1384 · 1280 | Dördünü ayır |
+**Uygulananlar** (gerçek Chrome'da `getComputedStyle` ile doğrulandı):
+
+| Konu | Uygulanan |
+|---|---|
+| Bant genişliği | ✅ `.cd-tam` — tam genişlik zemin, içerik 1512'de hizalı (logo 221 px'te) |
+| Reklam yuvası | ✅ tam genişlik, `padding: 32px 0`, iç kapsayıcı yok |
+| Genişlik kademeleri | ✅ üç kademe: gövde 1512 · bölüm 1384 · footer 1280 |
+| Ayırıcı kademesi | ✅ `border-strong` (modül) + `border-default` (iç) |
+| Kolon ayırıcısı | ✅ hero sağ kolonunda `::before` 1 px, 80 px boşluğun ortası (`background`, border değil) |
+| Dikey tüy çizgi | ✅ `.cd-tuy` 1×32 px |
+| Modül ritmi | ✅ margin YOK: `gap 24` + `border-top` + `padding-top 16` |
+| Hero ızgarası | ✅ `minmax(0,1fr) 290px`, aralık 80, `padding: 32px 0 16px` |
+| Hero kırılması | ✅ **1283 px** altında tek kolon (1284 sınırı) |
+| Yan ray başlığı | ✅ 14 px w500 (ana kolon 16 px) |
+| Semantik font ölçeği | ✅ 11 `--cd-font-*` jetonu |
+| Özet kutusu | ✅ 7/5 px iç içe yarıçap, 5 px nokta maddesi; **JS'siz `<details>`** |
+| Okuma süresi pill | ✅ 32 px yüksek, r 9999 |
+| Paylaş düğmesi | ✅ pill + `<details>` menüsü (JS'siz) |
+| Tarih bloğu | ✅ Güncellendi + Yayınlandı, `·` `::before` ile (8 px) |
+| Footer tipografi | ✅ 14/22 w500 capitalize başlık · 12/16 w400 bağlantı |
+| Footer bantları | ✅ logo → 5 sütun → yasal → feragat, `<hr>` ile ayrık |
+| Makale kicker | ✅ 16/32 w500 |
+| Bölüm genişliği | ✅ `/markets` 1384 px |
+
+**Bilinçli olarak UYGULANMAYANLAR** (veri/karşılık yok — uydurma olurdu):
+
+| Konu | Neden |
+|---|---|
+| Hero sol/sağ ray modülleri (izleme listesi, Today's Videos, Featured Research, dikey klipler) | Bu modüllerin veri kaynağı yok; boş kolon basmak düzeni bozar. Yerine orta+sağ iki kolon kuruldu (1094 + 290). |
+| Slider ("Explore more") | Slider'ın dolacağı içerik türü (video/koleksiyon) yok |
+| `order-*` mobil dizilim | Yan ray olmadığı için yeniden dizilecek modül yok |
+| `display: contents` | Ray sarmalayıcı olmadığı için gereksiz |
+| Şerit kaydırma dönüşümü (157×50 → 196×32) | CoinDesk bunu JS ile scroll durumuna bağlıyor; bizde CSP nedeniyle JS'siz ilke var. Şerit zaten tek satır. |
+| Google News pill | `google.com/preferences/source` hedefi site yayına alınınca eklenecek |
+| Çeviri etiketi ("AI tarafından çevrildi") | EN çeviri hattı gelince; şu an çevrilmiş içerik yok |
+| Hisse şablonu (`/price/stock/*`) | ABD hisse verisi bağlanmadı (§14) |
+| Dördüncü genişlik kademesi (1432) | Yalnız hisse sayfasında; veri yok |
 | Mega panel genişliği | tek genişlik | **menü başına**: 589/728/750/836/960 | İçeriğe göre ayarla |
 | Mega panel gölgesi | yok | **üç katmanlı** yükselti (0 2/4/12px) | Ekle |
 | Mega panel başlığı | yok | ikon 32×32 + ad **16/24 w700** + ok svg | Ekle |

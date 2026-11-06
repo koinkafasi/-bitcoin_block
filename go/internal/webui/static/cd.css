@@ -58,14 +58,38 @@
     -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 
   --cd-max: 1512px;              /* --page-max (ölçüldü) */
+  /* ÜÇ GENİŞLİK KADEMESİ (spec §2.2) — tek değer yetmiyor:
+       gövde    1512 → içerik 1464
+       bölüm    1384 (12 sütun × 100.656 + 11 × 16)
+       footer   1280 (5 sütun × 236.797 + 4 × 24)
+     Dördüncü kademe (hisse 1432) veri gelince eklenecek. */
+  --cd-max-section: 1384px;
+  --cd-max-footer: 1280px;
   --cd-pad: 24px;                /* ≥768: 24 px · <768: 16 px */
   --cd-radius: 4px;              /* baskın (120×); 2 px kullanılmıyor */
   --cd-radius-lg: 8px;           /* 72× */
+  --cd-radius-ozet: 7px;         /* özet kutusu dış çerçeve (§10.2.2) */
+  --cd-radius-ozet-ic: 5px;      /* iç kutu — 2 px dolgu "çerçeve" etkisi */
   --cd-gap: 24px;
 
-  /* Dikey ritim boşluk ÖLÇEĞİNDEN: 2·4·6·8·10·12·16·20·24·32.
-     40 px ölçek dışıydı (spec §3). */
-  --cd-section-gap: 32px;
+  /* ---- semantik font ölçeği (spec §4.1) ----
+     CoinDesk'in KENDİ adlandırması; hiyerarşi adlardan okunuyor.
+     Değerler ölçülen boyut/satır çiftleri (px). */
+  --cd-font-serif: 40px/48px;    /* büyük teşhir başlığı */
+  --cd-font-headline: 36px/44px; /* makale + bölüm H1 */
+  --cd-font-headline-sm: 28px/36px; /* makale ara başlığı */
+  --cd-font-body-lg: 22px/30px;  /* makale gövdesi */
+  --cd-font-headline-2xs: 20px/26px; /* kart başlığı */
+  --cd-font-body: 18px/24px;
+  --cd-font-title: 16px/32px;    /* modül başlığı, kicker */
+  --cd-font-label: 14px/24px;    /* kutu başlığı ("Özet") */
+  --cd-font-metadata-lg: 14px/22px; /* yazar, tarih, pill — en sık */
+  --cd-font-metadata: 12px/16px; /* küçük meta */
+
+  /* Dikey ritim: modüller arası boşluk ebeveynin gap'inden gelir (spec
+     §6.4 — modül kendi dışına MARGIN YAZMAZ; yer değiştirebilsin). */
+  --cd-section-gap: 24px;
+  --cd-mod-pt: 16px;             /* çizgi altı iç boşluk */
 
   /* Bindirme gölgesi — kartlarda KULLANILMAZ. */
   --cd-shadow-overlay: 0 0 10px rgba(0, 0, 0, 0.4);
@@ -140,6 +164,20 @@ html { scroll-padding-top: calc(var(--cd-sticky-h) + 8px); }
   font-size: 16px;
   line-height: 1.5714;
   -webkit-font-smoothing: antialiased;
+  /* Tam genişlik bantların (reklam, §2.1) yatay kaydırma üretmemesi için.
+     `clip` seçildi, `hidden` değil: `hidden` kaydırma kabı yaratır ve
+     `position: sticky` çalışmayı bırakır (menü/şerit yapışmaz olurdu). */
+  overflow-x: clip;
+}
+
+/* ---- tam genişlik bant (spec §2.1) ----
+   Reklam yuvaları gerçekten kenardan kenara: 1905×64, iç kapsayıcı YOK,
+   padding 32 px 0. Gövde kapsanmış bandı bununla kesiliyor. */
+.cd-tam {
+  width: 100vw;
+  margin-left: 50%;
+  transform: translateX(-50%);
+  padding: 32px 0;
 }
 .cd *,
 .cd *::before,
@@ -156,6 +194,10 @@ html { scroll-padding-top: calc(var(--cd-sticky-h) + 8px); }
   margin: 0 auto;
   padding: 0 var(--cd-pad);
 }
+
+/* Bölüm sayfaları 12 sütunlu ızgaraya oturuyor → içerik 1384 px.
+   Ana sayfa 1464'te kalıyor: iki kademe bilinçli (spec §2.2). */
+.cd-wrap--bolum { max-width: var(--cd-max-section); }
 
 /* ---------------------------------------------------------------- başlıklar */
 /* Ölçülen ağırlık dağılımı: 400 (364×) · 500 (164×) · 700 (19×).
@@ -369,14 +411,56 @@ html.cd-js .cd-tema { display: inline-flex; }
 .cd-grid--4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 /* Ana sayfa ızgarasının SÜTUN aralığı 80 px (satır 24 px) — ölçülen geniş
    boşluk. Sütun aralığı satır aralığından ayrı bir jeton. */
+/* ---------------------------------------------------------------- hero (spec §7A) */
+/* CoinDesk 3 kolon: 290 · 608 · 290. Bizde sol ray (izleme listesi) ve sağ
+   ray (videolar/araştırma/klipler) modülleri YOK — veri yok, boş kolon
+   basmak düzeni bozar. Bu yüzden ölçülen değerlerden anlamlı olanı
+   alıyoruz: ORTA 608 benzeri esnek kolon + SAĞ 290, kolon aralığı 80.
+   Ana sayfa ızgarasıyla aynı sütun aralığı jetonu. */
 .cd-hero {
   display: grid;
-  grid-template-columns: 1.55fr 1fr;
+  grid-template-columns: minmax(0, 1fr) 290px;
   column-gap: 80px;
   row-gap: 24px;
   align-items: start;
+  padding: 32px 0 16px;
 }
-.cd-hero__side { display: flex; flex-direction: column; gap: 24px; }
+/* Orta kolon: solunda 1 px dikey ayırıcı. `border` DEĞİL `background`:
+   border ızgara hücresinin dışına taşamaz; çizgi 80 px boşluğun TAM
+   ortasında durmalı (spec §6.3). */
+.cd-hero > .cd-card,
+.cd-hero__orta {
+  position: relative;
+  min-width: 0;
+}
+.cd-hero__side {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  min-width: 0;
+}
+/* Çizgi sağ kolonun SOL kenarında: iki kolon arasındaki boşluğun ortası. */
+.cd-hero__side::before {
+  content: "";
+  position: absolute;
+  width: 1px;
+  inset-block: 0;
+  left: -40px;              /* 80 px boşluğun ortası */
+  background: var(--cd-border);
+}
+/* Yan raydaki modül başlığı 14 px w500 — ana kolonda 16 px (spec §7A). */
+.cd-hero__side .cd-section-head h2 { font-size: 14px; line-height: 22px; }
+
+@media (max-width: 1283px) {
+  /* 1284 altında tek kolon (spec §7A kırılma noktası). Çizgi kalkar:
+     dikey ayırıcı iki kolon arasındaki boşluğun anlamı. */
+  .cd-hero {
+    grid-template-columns: minmax(0, 1fr);
+    column-gap: 0;
+  }
+  .cd-hero__side::before { display: none; }
+}
 
 /* ---------------------------------------------------------------- fiyat tablosu */
 /* CoinDesk /price gerçek <table>: th 12/18 w700, td 12/18 w400,
@@ -420,6 +504,15 @@ html.cd-js .cd-tema { display: inline-flex; }
 .cd-crumbs a { color: var(--cd-muted); }
 
 .cd-article { max-width: 680px; margin: 0 auto; }
+/* Makale kicker'ı 16/32 w500 (`font-title`) — kart kicker'ından (12/16)
+   BÜYÜK. Ölçüm spec §10.2: "div.font-title 680×32". */
+.cd-article .cd-kicker {
+  font-size: 16px;
+  line-height: 32px;
+  font-weight: 500;
+  letter-spacing: 0;
+  color: var(--cd-fg);
+}
 /* Makale H1 36/44 w500 — bölüm H1'inden AĞIRLIK farkı (700). */
 .cd-article h1 {
   margin: 8px 0 12px;
@@ -452,8 +545,73 @@ html.cd-js .cd-tema { display: inline-flex; }
   line-height: 22px;
   color: var(--cd-muted);
   padding: 12px 0;
-  border-bottom: 1px solid var(--cd-border);
 }
+/* Tarih bloğu (spec §10.2.1): "Güncellendi … · Yayınlandı …".
+   Ayırıcı `·` bir KARAKTER değil, `::before` ile basılıyor; 8 px yan
+   boşluk ve ikincil renk. Sabit bir "·" span'i basmak, ekran okuyucuya
+   anlamsız bir işaret okuturdu. */
+.cd-article__tarih {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  font-size: 14px;
+  line-height: 22px;
+  color: var(--cd-muted);
+}
+.cd-article__tarih > * + *::before {
+  content: "·";
+  margin: 0 8px;
+  color: var(--cd-muted);
+}
+/* Eylem şeridi (spec §10.2.3): üç pill, hepsi 32 px yüksek, r 9999,
+   border 1 px. Okuma süresi · paylaş · Google News. */
+.cd-aksiyon {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin: 12px 0 0;
+}
+.cd-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 32px;
+  padding: 4px 16px 4px 12px;
+  border: 1px solid var(--cd-border);
+  border-radius: 9999px;
+  background: transparent;
+  color: var(--cd-fg);
+  font-size: 14px;
+  line-height: 22px;
+  white-space: nowrap;
+}
+.cd-pill:hover { background: var(--cd-surface-soft); text-decoration: none; }
+.cd-pill--duz { padding: 4px 16px; }
+/* Paylaş düğmesi: `button` görünümlü ama gerçek bağlantı DEĞİL —
+   JS'siz çalışması için <details> paneliyle açılıyor (aşağıda). */
+.cd-paylas { position: relative; }
+.cd-paylas__liste {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 50;
+  min-width: 180px;
+  display: flex;
+  flex-direction: column;
+  padding: 6px;
+  border: 1px solid var(--cd-border);
+  border-radius: var(--cd-radius);
+  background: var(--cd-bg);
+  box-shadow: var(--cd-shadow-overlay);
+}
+.cd-paylas__liste a {
+  padding: 8px 10px;
+  border-radius: var(--cd-radius);
+  font-size: 14px;
+  line-height: 22px;
+}
+.cd-paylas__liste a:hover { background: var(--cd-surface-soft); }
 /* Gövde 22/30, paragraf arası 32 px — EN GÖRÜNÜR fark (spec §11). */
 .cd-article__body {
   font-size: 22px;
@@ -487,6 +645,85 @@ html.cd-js .cd-tema { display: inline-flex; }
   margin-top: 6px;
 }
 
+/* ---------------------------------------------------------------- özet kutusu (§10.2.2) */
+/* Kapak ile gövde arasında. İki iç içe yarıçap (7 dış / 5 iç + 2 px dolgu)
+   "çerçeve" etkisi yaratıyor; düz border değil.
+   JS YOK: `<details>` kullanılıyor. CoinDesk buton + state ile açıyor;
+   <details> klavye ve ekran okuyucu desteğini bedava verir. */
+.cd-ozet {
+  margin: 16px 0 32px;
+  padding: 2px;
+  border: 1px solid var(--cd-border);
+  border-radius: var(--cd-radius-ozet);
+}
+.cd-ozet__ic {
+  position: relative;
+  border-radius: var(--cd-radius-ozet-ic);
+  background: var(--cd-bg);
+  padding: 20px 20px 12px;
+}
+.cd-ozet summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  cursor: pointer;
+  list-style: none;
+  font-size: 14px;
+  line-height: 24px;
+  font-weight: 500;
+}
+.cd-ozet summary::-webkit-details-marker { display: none; }
+.cd-ozet summary::marker { content: ""; }
+/* Açma/kapama metni CSS ile: JS yok, iki <span> arasında geçiş. */
+.cd-ozet__ac { display: inline; color: var(--cd-muted); font-weight: 400; }
+.cd-ozet__kapat { display: none; color: var(--cd-muted); font-weight: 400; }
+.cd-ozet[open] .cd-ozet__ac { display: none; }
+.cd-ozet[open] .cd-ozet__kapat { display: inline; }
+/* Kapalıyken içerik TEK satır + alt solma; native <details> kapalıyken
+   içeriği tamamen gizler, o yüzden önizleme satırı ayrı basılıyor. */
+.cd-ozet__onizleme {
+  position: relative;
+  max-height: 24px;
+  overflow: hidden;
+  font-size: 16px;
+  line-height: 24px;
+}
+.cd-ozet__onizleme::after {
+  content: "";
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  height: 32px;
+  background: linear-gradient(to bottom, transparent, var(--cd-bg));
+}
+.cd-ozet[open] .cd-ozet__onizleme { display: none; }
+.cd-ozet[open] .cd-ozet__govde { display: block; animation: cd-ozet-ac 300ms ease-in-out; }
+.cd-ozet__govde { display: none; font-size: 16px; line-height: 24px; }
+.cd-ozet__govde ul {
+  list-style: none;
+  margin: 0 0 16px;
+  padding: 0 0 0 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.cd-ozet__govde li { position: relative; padding-left: 24px; }
+/* Madde işareti gerçek bullet DEĞİL: 5 px yuvarlak nokta (spec §10.2.2). */
+.cd-ozet__govde li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 10px;
+  width: 5px;
+  height: 5px;
+  border-radius: 9999px;
+  background: var(--cd-muted);
+}
+@keyframes cd-ozet-ac {
+  from { opacity: 0; transform: translateY(-2px); }
+  to { opacity: 1; transform: none; }
+}
+
 /* Kaynak atfı: toplayıcı sitede ZORUNLU, görünür ve ayrı. */
 .cd-source {
   margin-top: 32px;
@@ -510,47 +747,103 @@ html.cd-js .cd-tema { display: inline-flex; }
 }
 .cd-tag:hover { text-decoration: underline; text-underline-offset: 3px; }
 
-/* ---------------------------------------------------------------- alt bilgi */
-/* Ölçüm: padding 48px 32px · 5 sütun · gap 24px · bağlantı 16/24 w400. */
+/* ---------------------------------------------------------------- alt bilgi (§7.4) */
+/* Ölçüm: dış 1905×966, padding 48px 32px, İÇ kapsayıcı 1280px (üçüncü
+   genişlik kademesi), dört yatay bant, gap 32px.
+   Sütun başlığı 14/22 w500 `capitalize` · bağlantı 12/16 w400 subtle. */
 .cd-footer {
   margin-top: 56px;
-  border-top: 1px solid var(--cd-border);
+  border-top: 1px solid var(--cd-border-strong);
   background: var(--cd-bg);
-  padding: 48px 0 32px;
+  padding: 48px 32px;
 }
+.cd-footer__ic {
+  max-width: var(--cd-max-footer);
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+.cd-footer__logo {
+  font-size: 24px;
+  line-height: 29px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: var(--cd-fg-strong);
+}
+.cd-footer__logo span { color: var(--cd-brand); }
 .cd-footer__cols {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 24px;
 }
 .cd-footer h3 {
-  font-size: 12px;
-  line-height: 16px;
-  letter-spacing: 0.4px;
-  text-transform: uppercase;
-  color: var(--cd-muted);
-  font-weight: 500;
-  margin-bottom: 10px;
-}
-/* Sütunlar EŞİT UZUNLUKTA DEĞİL: içerik kadar (ölçüldü: 46 vs 25 bağlantı). */
-.cd-footer ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
-.cd-footer a { font-size: 16px; line-height: 24px; font-weight: 400; color: var(--cd-fg); }
-.cd-footer__alt {
-  margin-top: 32px;
-  padding-top: 20px;
-  border-top: 1px solid var(--cd-border);
   font-size: 14px;
   line-height: 22px;
-  color: var(--cd-muted);
+  /* `capitalize`: CoinDesk başlıkları ilk harf büyük yazıyor ("Cryptocurrencies"),
+     BÜYÜK HARF değil. Eski sürüm uppercase + 12 px'ti. */
+  text-transform: capitalize;
+  color: var(--cd-fg-strong);
+  font-weight: 500;
+  margin: 0 0 8px;
+}
+/* Sütunlar EŞİT UZUNLUKTA DEĞİL: içerik kadar (ölçüldü: 46 vs 25 bağlantı). */
+.cd-footer ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+.cd-footer a { font-size: 12px; line-height: 16px; font-weight: 400; color: var(--cd-muted); }
+.cd-footer hr {
+  border: 0;
+  border-top: 1px solid var(--cd-border);
+  margin: 0;
+  width: 100%;
+}
+.cd-footer__yasal {
   display: flex;
   flex-wrap: wrap;
-  gap: 14px;
+  gap: 8px 24px;
   justify-content: space-between;
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--cd-muted);
+}
+.cd-footer__alt {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  font-size: 12px;
+  line-height: 21px;
+  color: var(--cd-muted);
 }
 
-/* ---------------------------------------------------------------- modül aralığı */
-.cd-mod { margin-top: var(--cd-section-gap); }
-.cd-mod--tight { margin-top: 24px; }
+/* ---------------------------------------------------------------- modül ritmi (§6.4) */
+/* CoinDesk modülleri KENDİ DIŞINA MARGIN YAZMIYOR:
+     ⟨ebeveyn gap 24⟩ → border-top 1px border-strong → padding-top 16 → içerik
+   Böylece modül `order` ile yer değiştirebiliyor (tek HTML, iki kompozisyon)
+   ve iki modül arasında çift boşluk oluşmuyor.
+   AYIRICI İKİ KADEME (spec §6.1): modül arası GÜÇLÜ (#A6A6A6),
+   modül içi normal (#D9D9D9). Hiyerarşi çizginin koyuluğundan okunuyor. */
+.cd-mod {
+  border-top: 1px solid var(--cd-border-strong);
+  padding-top: var(--cd-mod-pt);
+}
+.cd-mod--cizgisiz { border-top: 0; padding-top: 0; }
+.cd-mod--tight { padding-top: 8px; }
+
+/* Ana içerik kolonu: modüller arası boşluk ebeveynden. */
+.cd-main {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cd-section-gap);
+}
+
+/* Dikey tüy çizgi (spec §6.2): satır içi öğeleri ayıran 1×32 px. */
+.cd-tuy {
+  display: inline-block;
+  align-self: center;
+  width: 1px;
+  height: 32px;
+  border-left: 1px solid var(--cd-border);
+  vertical-align: middle;
+}
 
 /* ---------------------------------------------------------------- bölüm bloğu (§22) */
 /* CoinDesk deseni: solda 1 büyük görselli haber + 2 alt başlık,
@@ -730,7 +1023,6 @@ html.cd-js .cd-tema { display: inline-flex; }
 /* ---------------------------------------------------------------- duyarlı */
 /* CoinDesk kırılma noktaları: 768 (md) ve 1024 (lg) tasarımı yöneten. */
 @media (max-width: 1024px) {
-  .cd-hero { grid-template-columns: 1fr; column-gap: 0; row-gap: 24px; }
   .cd-grid--4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .cd-footer__cols { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .cd-block { grid-template-columns: 1fr; column-gap: 0; row-gap: 24px; }

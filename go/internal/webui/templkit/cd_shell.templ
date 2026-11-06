@@ -102,10 +102,15 @@ templ cdTopbar(s CDShell) {
 	</header>
 }
 
-// cdFooter alt bilgi — 5 sütun, ölçülen başlıklarla.
+// cdFooter alt bilgi — ölçülen dört bant (spec §7.4).
+//
+// Sıra: logo → 5 bağlantı sütunu → yasal bağlantılar → feragat + telif.
+// İç genişlik 1280 px: gövdenin 1512'sinden DAR (üçüncü kademe).
 templ cdFooter(s CDShell) {
 	<footer class="cd-footer">
-		<div class="cd-wrap">
+		<div class="cd-footer__ic">
+			<a class="cd-footer__logo" href="/">{ s.SiteName }<span>.</span></a>
+
 			<div class="cd-footer__cols">
 				for _, col := range cdFooterColumns {
 					<div>
@@ -120,6 +125,19 @@ templ cdFooter(s CDShell) {
 					</div>
 				}
 			</div>
+
+			<hr/>
+
+			<div class="cd-footer__yasal">
+				<a href="/gizlilik-politikasi">Gizlilik</a>
+				<a href="/kullanim-kosullari">Kullanım Koşulları</a>
+				<a href="/cerez-politikasi">Çerez Politikası</a>
+				<a href="/reklam-politikasi">Reklam Politikası</a>
+				<a href="/iletisim">İletişim</a>
+			</div>
+
+			<hr/>
+
 			<div class="cd-footer__alt">
 				<span>© 2026 bitcosar — Tüm hakları saklıdır.</span>
 				<span>Kaynaklar atıf ile gösterilir; tam metin yayınlanmaz.</span>

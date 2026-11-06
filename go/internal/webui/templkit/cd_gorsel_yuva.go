@@ -13,20 +13,20 @@ import (
 // httpapi'ye /kg/{hash}/{genislik} eklendi; burası şablonların doğru
 // genişliği istemesini sağlıyor.
 //
-// YUVA GENİŞLİKLERİ UYDURULMADI — cd.css'ten hesaplandı (6 Kasım 2026
-// ölçümü: kapsayıcı 1512, yan boşluk 24 → içerik 1464):
+// YUVA GENİŞLİKLERİ UYDURULMADI — cd.css'ten hesaplandı (6 Kasım 2026,
+// üçüncü ölçüm turu: kapsayıcı 1512, yan boşluk 24 → içerik 1464):
 //
-//	.cd-hero   1.55fr 1fr, sütun aralığı 80 → lead (1464-80)*1.55/2.55 = 841
-//	                                          yan  (1464-80)*1.00/2.55 = 543
-//	.cd-block  2fr 1fr,    sütun aralığı 80 → lead (1464-80)*2/3        = 922
-//	.cd-most   1fr 1fr,    gap 24           →      (1464-24)/2          = 720
-//	.cd-article max-width: 680px            →                            680
-//	.cd-grid--3 gap 24                      →      (1464-48)/3          = 472
-//	.cd-opinion__avatar                     →                             48 (sabit)
+//	.cd-hero   minmax(0,1fr) 290px, sütun aralığı 80
+//	           → lead 1464-80-290 = 1094 · yan 290
+//	.cd-block  2fr 1fr,    sütun aralığı 80 → lead (1464-80)*2/3 = 922
+//	.cd-most   1fr 1fr,    gap 24           →      (1464-24)/2   = 720
+//	.cd-article max-width: 680px            →                     680
+//	.cd-grid--3 gap 24                      →      (1464-48)/3   = 472
+//	bölüm sayfası (.cd-wrap--bolum, 1384)   →      (1384-48)/3   = 445
+//	.cd-opinion__avatar                     →                      48 (sabit)
 //
-// Kırılma noktaları CoinDesk'in ölçülen merdiveninden: 1024 (lg) ve 768
-// (md). 1024'te hero/blok TEK sütuna düşer; 767'de ızgaralar tek sütun
-// olur ve .cd-wrap yan boşluğu 24 → 16 px.
+// Kırılma noktaları: 1284 (hero tek kolon — CoinDesk 1284 kullanıyor,
+// 1280 değil), 1024 (blok tek kolon), 768 (ızgara tek kolon, yan boşluk 16).
 
 // CDYuva kartın hangi yuvada durduğunu söyler.
 //
@@ -38,9 +38,9 @@ type CDYuva uint8
 const (
 	// YuvaKart genel ızgara kartı (.cd-grid--3 / --4). En dar yuva.
 	YuvaKart CDYuva = iota
-	// YuvaHeroLead ana sayfa hero'sunun büyük kartı (841px).
+	// YuvaHeroLead ana sayfa hero'sunun büyük kartı (1094px).
 	YuvaHeroLead
-	// YuvaHeroYan hero'nun yan sütunu (543px).
+	// YuvaHeroYan hero'nun yan sütunu (290px) — dar ray kartı.
 	YuvaHeroYan
 	// YuvaBlokLead bölüm bloğunun büyük kartı (922px) — en geniş kart.
 	YuvaBlokLead
@@ -80,14 +80,14 @@ var yuvaBilgi = map[CDYuva]struct {
 		Varsayilan: 480,
 	},
 	YuvaHeroLead: {
-		Sizes:      cdSizes(ifadeMobil, ifadeTam, 841),
+		Sizes:      cdSizes(ifadeMobil, ifadeTam, 1094),
 		Basamaklar: []int{480, 768, 960, 1200, 1600},
 		Varsayilan: 960,
 	},
 	YuvaHeroYan: {
-		Sizes:      cdSizes(ifadeMobil, ifadeTam, 543),
-		Basamaklar: []int{320, 480, 768, 960, 1200},
-		Varsayilan: 768,
+		Sizes:      cdSizes(ifadeMobil, ifadeTam, 290),
+		Basamaklar: []int{320, 480, 768},
+		Varsayilan: 480,
 	},
 	YuvaBlokLead: {
 		Sizes:      cdSizes(ifadeMobil, ifadeTam, 922),

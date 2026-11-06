@@ -1,12 +1,14 @@
 package templkit
 
-// CoinDesk makale sayfası (§7) — birebir yapı:
+// CoinDesk makale sayfası (§7, §10.2) — ölçülen sıra:
 //
-//	breadcrumb → kicker (bölüm) → H1 → spot → yazar/tarih/okuma →
-//	kapak görseli → gövde (tek sütun, 720 px) → kaynak atfı (ZORUNLU) →
-//	etiketler → ilgili haberler → önceki/sonraki.
+//	kicker (16/32) → H1 (36/44 w500) → deck (16/24) → "Yazan" + yazar →
+//	tarih bloğu (Güncellendi · Yayınlandı) → eylem pilleri →
+//	kapak (16/9) → ÖZET KUTUSU → gövde (22/30) → kaynak atfı → etiketler →
+//	yazar kutusu → ilgili → önceki/sonraki.
 //
-// JS yok. Gövde sunucuda üretilmiş güvenilir HTML'dir (blok motoru).
+// JS yok: özet kutusu ve paylaş menüsü `<details>` ile açılıyor. Gövde
+// sunucuda üretilmiş güvenilir HTML'dir (blok motoru).
 
 templ CDArticle(v CDArticleView) {
 	<!doctype html>
@@ -19,7 +21,7 @@ templ CDArticle(v CDArticleView) {
 		<body class="cd">
 			@cdTopbar(v.Shell)
 			@cdTicker(v.Shell)
-			<main class="cd-wrap">
+			<main class="cd-wrap cd-main">
 				<nav class="cd-crumbs" aria-label="Konum">
 					<a href="/">Ana sayfa</a>
 					<span>/</span>
@@ -32,19 +34,50 @@ templ CDArticle(v CDArticleView) {
 						<p class="cd-article__spot">{ v.Spot }</p>
 					}
 					<div class="cd-article__meta">
-						<span>{ v.Author }</span>
-						if v.PublishedAt != "" {
-							<span>·</span>
-							<span>{ v.PublishedAt }</span>
+						<span>Yazan</span>
+						if v.AuthorURL != "" {
+							<a class="cd-yazar-bag" href={ v.AuthorURL }>{ v.Author }</a>
+						} else {
+							<span>{ v.Author }</span>
 						}
-						<span>·</span>
-						<span>{ cdOkumaMetni(v.ReadMinutes) }</span>
-						<span class="cd-article__paylas">
-							<a href={ templ.SafeURL(v.ShareX) } rel="nofollow noopener" target="_blank" aria-label="X'te paylaş">X</a>
-							<a href={ templ.SafeURL(v.ShareWhatsApp) } rel="nofollow noopener" target="_blank" aria-label="WhatsApp'ta paylaş">WhatsApp</a>
-							<a href={ templ.SafeURL(v.ShareLinkedIn) } rel="nofollow noopener" target="_blank" aria-label="LinkedIn'de paylaş">LinkedIn</a>
-						</span>
 					</div>
+
+					<!-- Tarih bloğu: Güncellendi + Yayınlandı.
+					     "Güncellendi" YALNIZ gerçekten sonradan düzenlendiyse
+					     basılır; her içerikte `updated_at` yayından birkaç
+					     dakika sonra olduğu için eşik 1 saat (ölçüldü:
+					     126/126 içerik "güncellenmiş" görünüyordu). -->
+					if v.PublishedAt != "" {
+						<div class="cd-article__tarih">
+							if v.UpdatedAt != "" {
+								<span>Güncellendi <time datetime={ v.UpdatedISO }>{ v.UpdatedAt }</time></span>
+								<span>Yayınlandı <time datetime={ v.PublishedISO }>{ v.PublishedAt }</time></span>
+							} else {
+								<span>Yayınlandı <time datetime={ v.PublishedISO }>{ v.PublishedAt }</time></span>
+							}
+						</div>
+					}
+
+					<!-- Eylem şeridi: üç pill (spec §10.2.3), hepsi 32 px. -->
+					<div class="cd-aksiyon">
+						<span class="cd-pill">
+							<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"
+								focusable="false"><circle cx="8" cy="8" r="6" fill="none"
+								stroke="currentColor" stroke-width="1.5"/><path d="M8 4.5V8l2.5 1.5"
+								stroke="currentColor" stroke-width="1.5" fill="none"
+								stroke-linecap="round"/></svg>
+							{ cdOkumaMetni(v.ReadMinutes) }
+						</span>
+						<details class="cd-paylas">
+							<summary class="cd-pill cd-pill--duz">Paylaş</summary>
+							<div class="cd-paylas__liste">
+								<a href={ templ.SafeURL(v.ShareX) } rel="nofollow noopener" target="_blank">X'te paylaş</a>
+								<a href={ templ.SafeURL(v.ShareWhatsApp) } rel="nofollow noopener" target="_blank">WhatsApp'ta paylaş</a>
+								<a href={ templ.SafeURL(v.ShareLinkedIn) } rel="nofollow noopener" target="_blank">LinkedIn'de paylaş</a>
+							</div>
+						</details>
+					</div>
+
 					if v.Image != "" {
 						<figure class="cd-article__cover">
 							if cdKgOlcekli(v.Image) {
@@ -62,6 +95,31 @@ templ CDArticle(v CDArticleView) {
 							}
 						</figure>
 					}
+
+					<!-- Özet kutusu (spec §10.2.2). `ai_summary` BOŞSA hiç
+					     basılmaz: uydurma özet yazmak yanlış bilgi olurdu. -->
+					if v.Summary != "" {
+						<details class="cd-ozet">
+							<div class="cd-ozet__ic">
+								<summary>
+									<span>Özet</span>
+									<span>
+										<span class="cd-ozet__ac">Göster</span>
+										<span class="cd-ozet__kapat">Gizle</span>
+									</span>
+								</summary>
+								<p class="cd-ozet__onizleme">{ v.SummaryIlkSatir }</p>
+								<div class="cd-ozet__govde">
+									<ul>
+										for _, m := range v.SummaryMaddeler {
+											<li>{ m }</li>
+										}
+									</ul>
+								</div>
+							</div>
+						</details>
+					}
+
 					<div class="cd-article__body">
 						@templ.Raw(v.BodyHTML)
 					</div>

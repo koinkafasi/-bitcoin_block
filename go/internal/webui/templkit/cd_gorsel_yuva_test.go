@@ -66,8 +66,8 @@ func TestYuvaBasamaklariEtkinYogunlukYetiyor(t *testing.T) {
 	// Yuva genişlikleri cd.css'ten hesaplandı (bkz. cd_gorsel_yuva.go).
 	yuvaGenislik := map[CDYuva]int{
 		YuvaKart:        472,
-		YuvaHeroLead:    841,
-		YuvaHeroYan:     543,
+		YuvaHeroLead:    1094,
+		YuvaHeroYan:     290,
 		YuvaBlokLead:    922,
 		YuvaEnCokOkunan: 720,
 		YuvaMakaleKapak: 680,
@@ -197,13 +197,17 @@ func TestYuvaSizesDoldurulmus(t *testing.T) {
 // Biri yuva tipini boolean'a geri çevirmeye kalkarsa burada görünür.
 func TestBlokLeadHeroLeadtenGenis(t *testing.T) {
 	// .cd-block 2fr/1fr sütun aralığı 80 → (1464-80)*2/3 = 922
-	// .cd-hero 1.55fr/1fr sütun aralığı 80 → (1464-80)*1.55/2.55 = 841
+	// .cd-hero hero lead = 1464-80-290 = 1094 (hero artık en geniş yuva)
 	blok := yuvaBilgi[YuvaBlokLead].Sizes
 	hero := yuvaBilgi[YuvaHeroLead].Sizes
 	if !strings.Contains(blok, "922px") {
 		t.Errorf("blok lead sizes'ında 922px yok: %q", blok)
 	}
-	if !strings.Contains(hero, "841px") {
-		t.Errorf("hero lead sizes'ında 841px yok: %q", hero)
+	if !strings.Contains(hero, "1094px") {
+		t.Errorf("hero lead sizes'ında 1094px yok: %q", hero)
+	}
+	// Yan ray 290 px — ölçülen CoinDesk sağ rayıyla aynı.
+	if yan := yuvaBilgi[YuvaHeroYan].Sizes; !strings.Contains(yan, "290px") {
+		t.Errorf("hero yan sizes'ında 290px yok: %q", yan)
 	}
 }

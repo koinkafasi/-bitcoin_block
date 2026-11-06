@@ -103,19 +103,34 @@ type CDArticleView struct {
 	Headline    string
 	Spot        string
 	Author      string
+	// AuthorURL yazar sayfası (varsa). CoinDesk yazar adını ALT ÇİZİLİ
+	// bağlantı yapıyor — sitede alt çizginin nadir istisnası (spec §10.2).
+	AuthorURL   string
 	PublishedAt string
+	// PublishedISO <time datetime> için ISO-8601 (makine okur).
+	PublishedISO string
+	// UpdatedAt yalnız gerçekten sonradan düzenlendiyse dolar; boşsa
+	// "Güncellendi" satırı BASILMAZ (uydurma güncelleme tarihi yanıltır).
+	UpdatedAt   string
+	UpdatedISO  string
 	ReadMinutes int
-	BodyHTML    string // güvenilir, sunucuda üretilmiş
-	Image       string
-	ImageCredit string
-	SourceName  string
-	SourceURL   string
-	Tags        []CDTag
-	Related     []CDStory
-	PrevHref    string
-	PrevTitle   string
-	NextHref    string
-	NextTitle   string
+	// Summary AI özeti (ai_summary). Boşsa özet kutusu hiç basılmaz.
+	Summary string
+	// SummaryIlkSatir kapalıyken görünen tek satır önizleme.
+	SummaryIlkSatir string
+	// SummaryMaddeler açıldığında listelenen maddeler (cümlelere bölünmüş).
+	SummaryMaddeler []string
+	BodyHTML        string // güvenilir, sunucuda üretilmiş
+	Image           string
+	ImageCredit     string
+	SourceName      string
+	SourceURL       string
+	Tags            []CDTag
+	Related         []CDStory
+	PrevHref        string
+	PrevTitle       string
+	NextHref        string
+	NextTitle       string
 	// BaseURL yapısal veri (breadcrumb) için mutlak kök.
 	BaseURL string
 	// JSONLD Go tarafında üretilmiş NewsArticle + BreadcrumbList.

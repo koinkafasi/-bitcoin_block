@@ -71,8 +71,28 @@ func (s *Server) handleCDArticle(w http.ResponseWriter, r *http.Request, lang, s
 	}
 	if c.PublishedAt != nil {
 		v.PublishedAt = c.PublishedAt.Format("2 Ocak 2006 15:04 MST")
+		v.PublishedISO = c.PublishedAt.UTC().Format(time.RFC3339)
+	}
+	// "Güncellendi" yalnız GERÇEKTEN sonradan düzenlendiyse.
+	//
+	// NEDEN EŞİK: `updated_at` crawler'ın her upsert'ünde tazeleniyor; ham
+	// karşılaştırma 126/126 içeriği "güncellenmiş" gösteriyordu (ölçüldü,
+	// 6 Kasım 2026). Oysa içerik aynıydı. 1 saatlik eşik yalnız gerçek
+	// editoryal düzenlemeyi yakalar; altındaki fark tarama gürültüsüdür.
+	if !c.UpdatedAt.IsZero() && c.PublishedAt != nil &&
+		c.UpdatedAt.Sub(*c.PublishedAt) > time.Hour {
+		v.UpdatedAt = c.UpdatedAt.Format("2 Ocak 2006 15:04 MST")
+		v.UpdatedISO = c.UpdatedAt.UTC().Format(time.RFC3339)
 	}
 	v.ReadMinutes = cdOkumaDakika(c.Spot, v.BodyHTML)
+
+	// Özet kutusu (spec §10.2.2): yalnız ai_summary DOLUYSA.
+	// Uydurma özet yazmak yanlış bilgi olurdu — boşsa kutu basılmaz.
+	if ozet := repo.AiOzet(ctx, s.pool, c.ID); ozet != "" {
+		v.Summary = ozet
+		v.SummaryIlkSatir = ilkCumle(ozet)
+		v.SummaryMaddeler = cumlelereBol(ozet, 3)
+	}
 	if c.SourceName != nil {
 		v.SourceName = *c.SourceName
 	}

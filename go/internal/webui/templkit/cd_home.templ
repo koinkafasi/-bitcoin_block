@@ -162,7 +162,7 @@ templ CDHome(v CDHomeView) {
 		<body class="cd">
 			@cdTopbar(v.Shell)
 			@cdTicker(v.Shell)
-			<main class="cd-wrap">
+			<main class="cd-wrap cd-main">
 				<!-- §3 promo banner: ayarla yönetilir, boşsa basılmaz -->
 				if v.Promo.Gorunur() {
 					<div class="cd-promo" role="note">
@@ -209,8 +209,12 @@ templ CDHome(v CDHomeView) {
 				<!-- §7 Newsletters: e-posta kayıt -->
 				@cdNewsletter()
 
-				<!-- §13 reklam -->
-				<section class="cd-mod">
+				<!-- §13 reklam — TAM GENİŞLİK bant (spec §2.1, §7.3).
+				     İç kapsayıcı YOK: kenardan kenara, padding 32 px 0.
+				     Gövde kapsanmış bandı bununla kesiliyor; modül ritmi
+				     bu yüzden "kapsanmış → tam → kapsanmış" alternasyonu
+				     oluşturuyor. -->
+				<section class="cd-tam">
 					@cdAd("Reklam")
 				</section>
 

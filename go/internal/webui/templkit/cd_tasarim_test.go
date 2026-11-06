@@ -52,8 +52,14 @@ func TestCDTasarimTokenlari(t *testing.T) {
 		"--cd-brand: #ffd200",
 		// kapsayıcı ve köşe (ölçüldü: 1512 / 4 px)
 		"--cd-max: 1512px",
+		"--cd-max-section: 1384px",
+		"--cd-max-footer: 1280px",
 		"--cd-radius: 4px",
-		"--cd-section-gap: 32px",
+		"--cd-section-gap: 24px",
+		// semantik font ölçeği (spec §4.1)
+		"--cd-font-headline: 36px/44px",
+		"--cd-font-body-lg: 22px/30px",
+		"--cd-font-metadata-lg: 14px/22px",
 		// sticky iki katman toplamı
 		"--cd-sticky-h: 140px",
 	} {
@@ -167,13 +173,133 @@ func TestCDEtiketlerDuz(t *testing.T) {
 // TestCDButce: CSS bütçesi. Tasarım sistemi kalınlaştıkça dosya büyür;
 // bütçe aşıldığında bilinçli bir güncelleme gerekir (sessiz kabul yok).
 //
-// Eşik 32 KB (6 Kasım 2026): ölçülen değerler px olarak yazıldığı için
-// (36px/44px gibi) rem kısaltmasından uzun; ayrıca her jetonun neden o
-// değeri taşıdığı yorumda duruyor. Gerçek maliyet sıkıştırılmış boyut:
-// bu dosya gzip'te ~6 KB — tek bloklayıcı CSS için kabul edilebilir.
+// Eşik 48 KB (6 Kasım 2026, üçüncü ölçüm turu): özet kutusu, eylem pilleri,
+// semantik font ölçeği ve dokuz bileşen eklendi. Değerler px olarak yazılı
+// (36px/44px gibi) ve her jetonun gerekçesi yorumda duruyor. Gerçek maliyet
+// sıkıştırılmış boyut: bu dosya gzip'te ~9 KB — tek bloklayıcı CSS için
+// kabul edilebilir.
 func TestCDButce(t *testing.T) {
 	css := cdCSS(t)
-	assert.Less(t, len(css), 32*1024, "cd.css bütçe aşıldı: %d bayt", len(css))
+	assert.Less(t, len(css), 48*1024, "cd.css bütçe aşıldı: %d bayt", len(css))
+}
+
+// TestCDModulRitmi: modüller MARGIN YAZMAZ, ritim ebeveynin gap'inden
+// gelir ve ayırıcı İKİ KADEMELİ (spec §6.1, §6.4).
+//
+// NEDEN TEST: margin ile ritim kurmak çalışır ama modül yer değiştirdiğinde
+// (order-* / tek HTML iki kompozisyon) çift boşluk üretir. Bu kural
+// sessizce bozulabilir — kimse "margin-top: 40px" eklendiğinde hata görmez.
+func TestCDModulRitmi(t *testing.T) {
+	css := cdCSS(t)
+	i := strings.Index(css, ".cd-mod {")
+	require.GreaterOrEqual(t, i, 0, ".cd-mod kuralı yok")
+	blok := css[i:]
+	blok = blok[:strings.Index(blok, "}")]
+	assert.NotContains(t, blok, "margin", "modül dışına margin yazmamalı")
+	assert.Contains(t, blok, "border-top: 1px solid var(--cd-border-strong)",
+		"modül ayırıcısı GÜÇLÜ kademe olmalı")
+	assert.Contains(t, blok, "padding-top: var(--cd-mod-pt)")
+
+	// Ana kolon modülleri gap ile dizer.
+	i = strings.Index(css, ".cd-main {")
+	require.GreaterOrEqual(t, i, 0, ".cd-main kuralı yok")
+	main := css[i:]
+	main = main[:strings.Index(main, "}")]
+	assert.Contains(t, main, "gap: var(--cd-section-gap)")
+}
+
+// TestCDUcGenislikKademesi: gövde 1512 · bölüm 1384 · footer 1280
+// (spec §2.2 — üç ayrı kademe, tek değer yetmiyor).
+func TestCDUcGenislikKademesi(t *testing.T) {
+	css := cdCSS(t)
+	assert.Contains(t, css, "--cd-max: 1512px")
+	assert.Contains(t, css, "--cd-max-section: 1384px")
+	assert.Contains(t, css, "--cd-max-footer: 1280px")
+	assert.Contains(t, css, ".cd-wrap--bolum { max-width: var(--cd-max-section); }")
+	assert.Contains(t, css, ".cd-footer__ic {")
+	i := strings.Index(css, ".cd-footer__ic {")
+	blok := css[i:]
+	blok = blok[:strings.Index(blok, "}")]
+	assert.Contains(t, blok, "max-width: var(--cd-max-footer)")
+}
+
+// TestCDFooterTipografi: sütun başlığı 14/22 w500 capitalize, bağlantı
+// 12/16 w400 (spec §7.4). Eski sürüm 12 px UPPERCASE idi.
+func TestCDFooterTipografi(t *testing.T) {
+	css := cdCSS(t)
+	i := strings.Index(css, ".cd-footer h3 {")
+	require.GreaterOrEqual(t, i, 0)
+	blok := css[i:]
+	blok = blok[:strings.Index(blok, "}")]
+	assert.Contains(t, blok, "font-size: 14px")
+	assert.Contains(t, blok, "font-weight: 500")
+	assert.Contains(t, blok, "text-transform: capitalize")
+	// Yorumlar ayıklanır: blok, eski sürümün "uppercase" olduğunu ANLATIYOR.
+	assert.NotContains(t, cdYorumsuz(blok), "uppercase",
+		"CoinDesk footer başlığı büyük harf değil")
+
+	i = strings.Index(css, ".cd-footer a {")
+	require.GreaterOrEqual(t, i, 0)
+	blok = css[i:]
+	blok = blok[:strings.Index(blok, "}")]
+	assert.Contains(t, blok, "font-size: 12px")
+	assert.Contains(t, blok, "line-height: 16px")
+}
+
+// TestCDHeroKirilma: hero 1284'te tek kolona düşer (spec §7A — 1280 değil).
+func TestCDHeroKirilma(t *testing.T) {
+	css := cdCSS(t)
+	assert.Contains(t, css, "@media (max-width: 1283px)")
+	i := strings.Index(css, ".cd-hero {")
+	require.GreaterOrEqual(t, i, 0)
+	blok := css[i:]
+	blok = blok[:strings.Index(blok, "}")]
+	assert.Contains(t, blok, "column-gap: 80px", "sütun aralığı 80 px (dikey çizginin ortası)")
+	assert.Contains(t, blok, "padding: 32px 0 16px")
+}
+
+// TestCDOzetKutusu: iki iç içe yarıçap + 5 px nokta maddesi (spec §10.2.2).
+func TestCDOzetKutusu(t *testing.T) {
+	css := cdCSS(t)
+	assert.Contains(t, css, "--cd-radius-ozet: 7px")
+	assert.Contains(t, css, "--cd-radius-ozet-ic: 5px")
+	i := strings.Index(css, ".cd-ozet__govde li::before {")
+	require.GreaterOrEqual(t, i, 0, "madde noktası kuralı yok")
+	blok := css[i:]
+	blok = blok[:strings.Index(blok, "}")]
+	assert.Contains(t, blok, "width: 5px")
+	assert.Contains(t, blok, "border-radius: 9999px")
+	// JS'siz: <details> kullanılmalı, buton+state değil.
+	assert.Contains(t, css, ".cd-ozet[open]")
+}
+
+// TestCDEylemPilleri: 32 px yüksek, 9999 px yarıçap (spec §10.2.3).
+func TestCDEylemPilleri(t *testing.T) {
+	css := cdCSS(t)
+	i := strings.Index(css, ".cd-pill {")
+	require.GreaterOrEqual(t, i, 0)
+	blok := css[i:]
+	blok = blok[:strings.Index(blok, "}")]
+	assert.Contains(t, blok, "height: 32px")
+	assert.Contains(t, blok, "border-radius: 9999px")
+	assert.Contains(t, blok, "font-size: 14px")
+}
+
+// TestCDTamGenislikBant: reklam yuvası kenardan kenara (spec §2.1).
+//
+// NEDEN `overflow-x: clip`: 100vw bant yatay kaydırma üretir; `hidden`
+// ile kapatmak sticky'yi bozar (kaydırma kabı yaratır). Bu ayrımı test
+// tutuyor, çünkü ikisi de "taşmayı kes" gibi görünüyor.
+func TestCDTamGenislikBant(t *testing.T) {
+	css := cdCSS(t)
+	assert.Contains(t, css, "overflow-x: clip")
+	assert.NotContains(t, css, "overflow-x: hidden")
+	i := strings.Index(css, ".cd-tam {")
+	require.GreaterOrEqual(t, i, 0)
+	blok := css[i:]
+	blok = blok[:strings.Index(blok, "}")]
+	assert.Contains(t, blok, "width: 100vw")
+	assert.Contains(t, blok, "padding: 32px 0")
 }
 
 // TestCDShellSiniflari: şablon ile CSS aynı sınıflarda buluşuyor.
@@ -183,6 +309,8 @@ func TestCDShellSiniflari(t *testing.T) {
 		"cd-ticker", "cd-topbar", "cd-footer", "cd-logo",
 		"cd-card", "cd-list", "cd-article", "cd-source", "cd-ad",
 		"cd-up", "cd-down", "cd-section-head", "cd-tema", "cd-daha",
+		"cd-main", "cd-mod", "cd-hero", "cd-wrap--bolum", "cd-tam",
+		"cd-ozet", "cd-pill", "cd-aksiyon", "cd-footer__ic", "cd-tuy",
 	} {
 		assert.Contains(t, css, "."+sinif, "CSS sınıfı eksik: %s", sinif)
 	}
