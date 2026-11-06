@@ -59,10 +59,16 @@ templ cdTopbar(s CDShell) {
 					<a class="cd-btn cd-btn--ghost" href={ s.SearchHref } aria-label="Ara">Ara</a>
 					<!-- Tema anahtarı. Varsayılan GİZLİ (`display:none`); init
 					     betiği `html.cd-js` ekleyince görünür. JS yoksa ölü
-					     düğme göstermiyoruz. Tercih localStorage'da. -->
+					     düğme göstermiyoruz. Tercih localStorage'da.
+					     Simge SVG: projede templ dosyalarında emoji YASAK
+					     (emoji_test.go, TestTumTemplDosyalariEmojisiz). -->
 					<button class="cd-tema" type="button" data-tema
 						aria-label="Koyu temaya geç" aria-pressed="false">
-						<span aria-hidden="true">◐</span>
+						<svg class="cd-tema__ikon" viewBox="0 0 16 16" width="16" height="16"
+							aria-hidden="true" focusable="false">
+							<path d="M8 1a7 7 0 100 14A7 7 0 008 1zm0 1.5a5.5 5.5 0 010 11z"
+								fill="currentColor"/>
+						</svg>
 					</button>
 					if len(s.Diller) > 1 {
 						<!-- Dil seçici: satır içi olay YOK (CSP 'unsafe-inline'

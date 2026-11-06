@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="bitcosar">
+  <!-- Marka simgesi: siyah zemin, sarı nokta (logo "." vurgusu).
+       Emoji YOK — projede templ/CSS varlıklarında emoji yasak
+       (emoji_test.go). Renkler cd.css jetonlarıyla aynı: --cd-fg-strong
+       ve --cd-brand (#FFD200), tema ile DÖNMEZ. -->
+  <rect width="32" height="32" rx="4" fill="#000000"/>
+  <circle cx="16" cy="16" r="6" fill="#FFD200"/>
+</svg>

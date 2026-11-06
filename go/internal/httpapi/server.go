@@ -301,6 +301,10 @@ func (s *Server) routes() {
 	s.mux.HandleFunc("GET /takim-logo/{key}", s.handleTeamLogo)
 	s.mux.HandleFunc("GET /manifest.webmanifest", s.handleManifest)
 	s.mux.HandleFunc("GET /manifest.json", s.handleManifest)
+	// favicon.ico: tarayıcılar ve botlar KÖKTEN ister; rota yoksa her sayfa
+	// yüklemesinde 404 üretiyordu (ölçüldü, 6 Kasım 2026). ICO üretmek
+	// yerine PNG'nin aynısı sunuluyor — tarayıcılar MIME'a bakıyor.
+	s.mux.HandleFunc("GET /favicon.ico", s.handleFavicon)
 	s.mux.HandleFunc("GET /ads.txt", s.handleAdsTxt)
 	s.mux.HandleFunc("GET /sitemap.xml", s.handleSitemap)
 	s.mux.HandleFunc("GET /sitemap-news.xml", s.handleSitemapNews)

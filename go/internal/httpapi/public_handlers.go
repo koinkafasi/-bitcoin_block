@@ -2054,6 +2054,32 @@ func (s *Server) handleManifest(w http.ResponseWriter, r *http.Request) {
 	_, _ = w.Write(b)
 }
 
+// handleFavicon /favicon.ico — kök ikon.
+//
+// NEDEN AYRI ROTA: tarayıcılar ve botlar `/favicon.ico`'yu head'de bağlantı
+// olmasa da KÖKTEN ister. Rota yokken her sayfa yüklemesinde 404 üretiyordu
+// (ölçüldü, 6 Kasım 2026 — sayfadaki tek 404 kaynağı buydu).
+//
+// ICO biçimi üretmiyoruz: PNG'yi `image/png` olarak sunuyoruz. Tarayıcılar
+// favicon'da MIME'a bakar, uzantıya bakmaz; ayrı bir ikili üretmek
+// gereksiz. Cache uzun: ikon içerik-adresli değil ama değişince `?v=`
+// ile değil dosya değişimiyle gelir — bu yüzden 1 gün makul.
+func (s *Server) handleFavicon(w http.ResponseWriter, r *http.Request) {
+	staticFS, err := fs.Sub(webui.FS, "static")
+	if err != nil {
+		http.NotFound(w, r)
+		return
+	}
+	b, err := fs.ReadFile(staticFS, "icon-192.png")
+	if err != nil {
+		http.NotFound(w, r)
+		return
+	}
+	w.Header().Set("Content-Type", "image/png")
+	w.Header().Set("Cache-Control", "public, max-age=86400")
+	_, _ = w.Write(b)
+}
+
 func themeFromReq(r *http.Request) string {
 	if c, err := r.Cookie("tb_theme"); err == nil {
 		if c.Value == "dark" || c.Value == "light" {

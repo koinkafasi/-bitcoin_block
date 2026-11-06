@@ -71,6 +71,15 @@ templ cdHead(h CDHead) {
 	<link rel="preconnect" href="https://cdn.sanity.io" crossorigin="anonymous"/>
 	<link rel="preconnect" href="https://assets.coingecko.com" crossorigin="anonymous"/>
 
+	<!-- İkonlar. favicon.ico birçok tarayıcı ve bot tarafından KÖKTEN
+	     istenir; bağlantı verilmezse her sayfa yüklemesinde 404 üretir
+	     (ölçüldü, 6 Kasım 2026: tek 404 kaynağı buydu). SVG + PNG birlikte
+	     veriliyor: SVG modern tarayıcıda keskin, PNG eski/bot yolunda. -->
+	<link rel="icon" href="/static/icon-192.png" sizes="192x192" type="image/png"/>
+	<link rel="icon" href="/static/favicon.svg" type="image/svg+xml"/>
+	<link rel="apple-touch-icon" href="/static/icon-192.png"/>
+	<link rel="manifest" href="/manifest.webmanifest"/>
+
 	<link rel="stylesheet" href={ "/static/cd.css?v=" + cdVarlik() }/>
 	<!-- Mega menü: cd.css'in üstüne biner, kendi jetonunu tanımlamaz. -->
 	<link rel="stylesheet" href={ "/static/cd-menu.css?v=" + cdVarlik() }/>

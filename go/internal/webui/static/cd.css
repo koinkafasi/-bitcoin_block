@@ -316,6 +316,8 @@ html { scroll-padding-top: calc(var(--cd-sticky-h) + 8px); }
 }
 html.cd-js .cd-tema { display: inline-flex; }
 .cd-tema:hover { background: var(--cd-surface-soft); }
+/* Simge mevcut metin rengini izler; koyu temada otomatik döner. */
+.cd-tema__ikon { display: block; }
 
 /* ---------------------------------------------------------------- kart */
 .cd-card { display: flex; flex-direction: column; gap: 16px; }
