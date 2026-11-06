@@ -1435,6 +1435,40 @@ Lighthouse `/`: performans **100** · SEO **100** · a11y 97 · BP **100** ·
 LCP 0.4 s · CLS 0. CSS bütçesi 48 → **52 KB** (beşinci tur bileşenleri;
 gzip'te ~9 KB).
 
+### 11.5 Yedinci tur (promosyon şeridi kaldırıldı) — DURUM
+
+CoinDesk TR ana sayfasında **"Günün kripto özeti her sabah e-postanızda"**
+diye bir şerit YOK. Ölçüm (6 Kasım 2026): `main` içindeki ilk şey doğrudan
+hero; hero `border-top: 0`, `padding: 32px 0`; önünde promo/duyuru bandı
+hiç yok.
+
+Bizde iki fazlalık vardı:
+
+1. `.cd-promo` bandı — y 156, h 52, `margin-top: 16px`, 1 px #d9d9d9
+   çerçeve + 3 px sol vurgu. Bu şerit uydurmaydı.
+2. Hemen altındaki hero `<section class="cd-mod">` → `border-top:
+   1px #a6a6a6`. Kullanıcının gördüğü "kalın çizgi" buydu.
+
+| Konu | CoinDesk (ölçülen) | bitcosar | Durum |
+|---|---|---|---|
+| Promo şeridi | yok | kaldırıldı | ✅ |
+| Hero `border-top` | 0 | 0 (`cd-mod--cizgisiz`) | ✅ |
+| Hero `padding` | `32px 0` | `32px 0` | ✅ |
+| Hero içeriği | `main` + 32 px | `main` + 32 px | ✅ |
+
+Kaldırılan kod (ölü kontrol bırakılmadı):
+
+- `cd_home.templ` içindeki promo bloğu,
+- handler'da `repo.AktifPromo` çağrısı ve `CDHomeView.Promo` alanı,
+- `templkit.CDPromo` tipi ve `Gorunur()` yöntemi,
+- `.cd-promo*` CSS kuralları (iki blok),
+- admin ayarlarındaki **promo** sekmesi ve `promo_*` alanları,
+- `repo/promo.go` + `promo_test.go` (artık çağıranı yok).
+
+Doğrulama (1920 px): `promoVar: false`, hero section `border-top: 0px`,
+`.cd-hero` `padding: 32px 0`; mobil 390 px taşma **0**. Lighthouse `/`:
+performans **100** · SEO **100** · a11y 97 · BP **100** · LCP 0.4 s · CLS 0.
+
 ---
 
 ## 12. Kopyalanması önerilen sözleşmeler

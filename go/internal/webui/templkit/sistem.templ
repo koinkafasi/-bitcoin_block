@@ -63,12 +63,6 @@ type AyarlarView struct {
 	// boş bırakıldığında canlıda o değer basılır — ipucu olarak gösterilir.
 	Kunye      []AyarKunye
 	KunyeEksik []string
-	// §3 Promo bandı — ana sayfada fiyat şeridinin altındaki duyuru satırı.
-	PromoAktif    bool
-	PromoMetin    string
-	PromoBaglanti string
-	PromoCTA      string
-	PromoBitis    string
 }
 
 // AyarKunye tek bir künye alanı.
@@ -106,7 +100,6 @@ templ AyarlarPanel(v AyarlarView) {
 				<a href="#" data-sek="gorsel">gorsel</a>
 				<a href="#" data-sek="moduller">moduller</a>
 				<a href="#" data-sek="izinler">izinler</a>
-				<a href="#" data-sek="promo">promo</a>
 				<a href="#" data-sek="baglantilar">baglantilar</a>
 				<a href="#" data-sek="kunye">kunye</a>
 				<a href="#" data-sek="yapay_zeka">yapay_zeka</a>
@@ -202,35 +195,6 @@ templ AyarlarPanel(v AyarlarView) {
 							}
 						</tbody>
 					</table>
-				</div>
-			</section>
-			<section class="card card-pad animate-in" data-sek="promo" style="display:none">
-				<h3 style="margin:0 0 4px;font-size:1rem">Ana sayfa promo bandı (§3)</h3>
-				<p class="hint" style="margin-top:0">
-					Fiyat şeridinin hemen altındaki tek satırlık duyuru bandı. Yalnız
-					<b>gerçek</b> bir hedefe bağlayın (bülten, fiyatlar, araştırma);
-					sayfada karşılığı olmayan bağlantı 404'e götürür. Bant kapalıyken
-					ana sayfada hiç basılmaz.
-				</p>
-				<div class="field"><label><input type="checkbox" name="promo_aktif" if v.PromoAktif { checked }/> Promo bandını göster</label></div>
-				<div class="field">
-					<label for="f_promo_metin">Metin</label>
-					<input id="f_promo_metin" class="input" name="promo_metin" value={ v.PromoMetin } placeholder="Günün kripto özeti her sabah e-postanızda"/>
-				</div>
-				<div class="grid-2">
-					<div class="field">
-						<label for="f_promo_baglanti">Bağlantı (yol veya https URL)</label>
-						<input id="f_promo_baglanti" class="input" name="promo_baglanti" value={ v.PromoBaglanti } placeholder="/newsletters"/>
-					</div>
-					<div class="field">
-						<label for="f_promo_cta">Bağlantı metni</label>
-						<input id="f_promo_cta" class="input" name="promo_cta" value={ v.PromoCTA } placeholder="Abone ol"/>
-					</div>
-				</div>
-				<div class="field">
-					<label for="f_promo_bitis">Bitiş (isteğe bağlı, geri sayım)</label>
-					<input id="f_promo_bitis" class="input" type="datetime-local" name="promo_bitis" value={ v.PromoBitis }/>
-					<span class="small muted">Doldurulursa bantta “3 gün 4 saat kaldı” yazar (JS yok, sunucuda hesaplanır). Boş bırakılırsa geri sayım gösterilmez; süre geçince bant kendiliğinden kapanır.</span>
 				</div>
 			</section>
 			<section class="card card-pad animate-in" data-sek="baglantilar" style="display:none">

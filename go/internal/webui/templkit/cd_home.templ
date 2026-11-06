@@ -345,30 +345,16 @@ templ CDHome(v CDHomeView) {
 			@cdTopbar(v.Shell)
 			@cdTicker(v.Shell)
 			<main class="cd-wrap cd-main">
-				<!-- §3 promo banner: ayarla yönetilir, boşsa basılmaz -->
-				if v.Promo.Gorunur() {
-					<div class="cd-promo" role="note">
-						<span class="cd-promo__metin">{ v.Promo.Metin }</span>
-						if v.Promo.Kalan != "" {
-							<span class="cd-promo__kalan">{ v.Promo.Kalan } kaldı</span>
-						}
-						if v.Promo.Baglanti != "" {
-							if v.Promo.CTA != "" {
-								<a class="cd-promo__cta" href={ templ.SafeURL(v.Promo.Baglanti) }>{ v.Promo.CTA }</a>
-							} else {
-								<a class="cd-promo__bag" href={ templ.SafeURL(v.Promo.Baglanti) }>Devamı</a>
-							}
-						}
-					</div>
-				}
-
 				<!-- §8 manşet bloğu — CoinDesk hero'su ÜÇ kolon (spec §7A):
 				     290 sol ray · 608 merkez · 290 sağ ray, kolon arası 80.
 				     Sol ray: "Son Haberler" (başlık + saat, görselsiz).
 				     Sağ ray: bölüm modülleri (video/araştırma/klipler
-				     bizde yok — uydurma basmıyoruz). -->
+				     bizde yok — uydurma basmıyoruz).
+				     Hero ÇİZGİSİZ: CoinDesk'te ana içeriğin ilk modülü
+				     `border-top: 0`, `padding: 32px 0` (ölçüldü). Önünde
+				     promo bandı da YOK — o şerit bizde uydurmaydı. -->
 				if v.Lead.Href != "" {
-					<section class="cd-mod">
+					<section class="cd-mod cd-mod--cizgisiz">
 						<div class="cd-hero">
 							@cdHeroSolRay(v.RailLeft)
 							<div class="cd-hero__orta">

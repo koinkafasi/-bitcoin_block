@@ -263,7 +263,10 @@ func TestCDHeroKirilma(t *testing.T) {
 	blok := css[i:]
 	blok = blok[:strings.Index(blok, "}")]
 	assert.Contains(t, blok, "column-gap: 80px", "sütun aralığı 80 px (dikey çizginin ortası)")
-	assert.Contains(t, blok, "padding: 32px 0 16px")
+	// CoinDesk hero'su `padding: 32px 0` (6 Kasım 2026 ölçümü). Önceki
+	// alt 16 px, promo şeridi varken yazılmıştı; şerit kaldırıldı.
+	assert.Contains(t, blok, "padding: 32px 0")
+	assert.NotContains(t, blok, "padding: 32px 0 16px")
 }
 
 // TestCDOzetKutusu: iki iç içe yarıçap + 5 px nokta maddesi (spec §10.2.2).

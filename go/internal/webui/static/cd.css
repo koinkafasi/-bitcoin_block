@@ -473,7 +473,9 @@ html.cd-js .cd-tema { display: inline-flex; }
   row-gap: 24px;
   justify-content: center;
   align-items: start;
-  padding: 32px 0 16px;
+  /* ÖLÇÜLDÜ (coindesk.com/tr): hero `padding: 32px 0` — alt boşluk da 32.
+     Önceki 16 px, promo şeridinin kaldırılmasıyla ortaya çıkan sapmaydı. */
+  padding: 32px 0;
 }
 /* Orta kolon: solunda 1 px dikey ayırıcı. `border` DEĞİL `background`:
    border ızgara hücresinin dışına taşamaz; çizgi 80 px boşluğun TAM
@@ -1259,17 +1261,6 @@ html.cd-js .cd-tema { display: inline-flex; }
   color: var(--cd-muted);
 }
 
-/* ---------------------------------------------------------------- promo (§3) */
-.cd-promo {
-  margin-top: 16px;
-  padding: 14px 18px;
-  border: 1px solid var(--cd-border);
-  background: var(--cd-surface-soft);
-  font-size: 14px;
-  line-height: 22px;
-  color: var(--cd-fg);
-}
-
 /* Reklam yuvası: düzen kayması olmasın diye yükseklik ayrılır (CLS). */
 .cd-ad {
   min-height: 250px;
@@ -1430,42 +1421,3 @@ html.cd-js .cd-tema { display: inline-flex; }
   line-height: 22px;
 }
 .cd-bos p { margin: 0; }
-
-/* §3 promo banner — metin · geri sayım · CTA tek çizgide.
-   Gölge yok, ayırma çizgiyle (tasarım kuralı); sol kenarda 3 px vurgu
-   şeridi bandı "editoryal içerik"ten ayırır. Vurgu rengi --cd-fg:
-   palet yalnız ölçülmüş token'ları taşır, yeni renk uydurulmaz. */
-.cd-promo__metin { color: var(--cd-fg); font-weight: 600; }
-
-.cd-promo {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 10px;
-  border-left: 3px solid var(--cd-fg);
-}
-
-/* Geri sayım: ikincil bilgi, ayrı kutu. */
-.cd-promo__kalan {
-  padding: 2px 8px;
-  border: 1px solid var(--cd-border);
-  border-radius: var(--cd-radius);
-  font-variant-numeric: tabular-nums;
-  white-space: nowrap;
-}
-
-/* CTA: bant içinde bağlantı; alt çizgi ile değil ok ile ayrılır. */
-.cd-promo__cta,
-.cd-promo__bag {
-  margin-left: auto;
-  font-weight: 700;
-  white-space: nowrap;
-}
-.cd-promo__cta::after,
-.cd-promo__bag::after { content: " →"; }
-
-@media (max-width: 640px) {
-  /* Mobilde CTA alt satıra geçer, "margin-left:auto" boşluk bırakmasın. */
-  .cd-promo__cta,
-  .cd-promo__bag { margin-left: 0; }
-}

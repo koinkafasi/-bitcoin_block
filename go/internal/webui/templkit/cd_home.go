@@ -1,7 +1,5 @@
 package templkit
 
-import "strings"
-
 // CoinDesk ana sayfa — veri tipleri.
 //
 // Modül sırası docs/COINDESK-SPEC.md §6'dan BİREBİR alınmıştır; sıra
@@ -43,24 +41,6 @@ type CDPriceRow struct {
 	Href   string
 }
 
-// CDPromo §3 duyuru bandı.
-//
-// VERİ SETTINGS'TEN gelir (repo.AktifPromo): metin/bağlantı/bitiş editörce
-// yönetilir, kod deploy'u gerekmez. `Kalan` sunucuda hesaplanmış geri sayım
-// metnidir; JS YOK (CSP satır içi script'e izin vermiyor).
-//
-// Boşsa ana sayfada hiç basılmaz — boş çerçeve düzeni bozar.
-type CDPromo struct {
-	Aktif    bool
-	Metin    string
-	Baglanti string
-	CTA      string
-	Kalan    string
-}
-
-// Gorunur mu.
-func (p CDPromo) Gorunur() bool { return p.Aktif && strings.TrimSpace(p.Metin) != "" }
-
 // CDRailModul hero yan rayındaki tek modül (bölüm kartı).
 //
 // CoinDesk sağ rayı üç modül yığar (Bugünün Videoları · Öne Çıkan
@@ -80,12 +60,14 @@ type CDHomeView struct {
 	Canonical string
 
 	// §6 sırası:
-	//  3 promo banner · 4 today's videos · 5 latest news · 6 thought leadership
+	//  4 today's videos · 5 latest news · 6 thought leadership
 	//  7 newsletters · 8 manşet bloğu · 9 press releases · 10 research
 	//  12 clips · 13 reklam · 14 prices · 15 stocks · 16 exchange benchmark
 	//  17 videos · 18 indices · 19 podcasts · 20 opinion · 21 most read
 	//  22 bölüm blokları
-	Promo     CDPromo
+	//
+	// §3 promo bandı YOK: CoinDesk ana sayfasında böyle bir şerit yok
+	// (6 Kasım 2026 ölçümü). Uydurma şerit kaldırıldı.
 	Lead      CDStory
 	Side      []CDStory
 	Latest    []CDStory     // §5 — saat damgalı düz liste
