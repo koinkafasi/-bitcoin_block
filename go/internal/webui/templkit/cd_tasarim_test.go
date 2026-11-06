@@ -142,7 +142,9 @@ func TestCDMakaleTipografi(t *testing.T) {
 		assert.Contains(t, css, kural.deger, "%s eksik", kural.ad)
 	}
 	// Bölüm H1'i makale H1'inden AĞIR (700 vs 500) — ölçülen fark.
-	assert.Contains(t, css, ".cd-section-title h1 { margin: 0 0 6px; font-size: 36px; line-height: 44px; font-weight: 700; }")
+	// 7 Kasım 2026: başlıklar CoinDesk'in "Family" serif'ine geçti; kural
+	// `font-family` ile birlikte doğrulanıyor.
+	assert.Contains(t, css, ".cd-section-title h1 { font-family: var(--cd-serif); margin: 0 0 6px; font-size: 36px; line-height: 44px; font-weight: 700; }")
 }
 
 // TestCDModulBasligi: modül başlığı **14/21 w500**, altında çizgi YOK.
@@ -181,14 +183,14 @@ func TestCDEtiketlerDuz(t *testing.T) {
 // TestCDButce: CSS bütçesi. Tasarım sistemi kalınlaştıkça dosya büyür;
 // bütçe aşıldığında bilinçli bir güncelleme gerekir (sessiz kabul yok).
 //
-// Eşik 52 KB (6 Kasım 2026, beşinci tur): hero üç kolonu (ray modülleri)
-// ve bölüm bloklarının 2×2 ızgarası eklendi; eski 923/461 blok kuralları
-// kaldırıldı. Değerler px olarak yazılı ve her jetonun gerekçesi yorumda
-// duruyor. Gerçek maliyet sıkıştırılmış boyut: bu dosya gzip'te ~9 KB —
-// tek bloklayıcı CSS için kabul edilebilir.
+// Eşik 80 KB (7 Kasım 2026, dokuzuncu tur): sağ/sol ray modülleri
+// (video, araştırma, klipler, düşünce, tek görsel, basın slider, akış)
+// ve iki fontlu tipografi sistemi eklendi. Değerler px olarak yazılı ve
+// her jetonun gerekçesi yorumda duruyor. Gerçek maliyet sıkıştırılmış
+// boyut: bu dosya gzip'te ~12 KB — tek bloklayıcı CSS için kabul edilebilir.
 func TestCDButce(t *testing.T) {
 	css := cdCSS(t)
-	assert.Less(t, len(css), 52*1024, "cd.css bütçe aşıldı: %d bayt", len(css))
+	assert.Less(t, len(css), 80*1024, "cd.css bütçe aşıldı: %d bayt", len(css))
 }
 
 // TestCDModulRitmi: modüller MARGIN YAZMAZ, ritim ebeveynin gap'inden

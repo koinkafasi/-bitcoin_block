@@ -1525,6 +1525,105 @@ Menü süzgecinin sözleşmesi `internal/webui/templkit/cd_menu_test.go` içinde
 üç testle korunuyor: boş bölüm elenir, dolu bölüm kalır, veri yoksa filtre
 uygulanmaz.
 
+### 11.7 Dokuzuncu tur (ana sayfa modülleri + iki fontlu tipografi) — DURUM
+
+Tur 8'de iskeleti kurulan ana sayfa bu turda **ölçümle piksel hizalaması**
+yapıldı (7 Kasım 2026, gerçek Chrome, 1920×1400, `getComputedStyle`).
+
+#### 11.7.1 Font sistemi — TÜRDEN YANLIŞ KURULMUŞTU
+
+Önceki turlarda CoinDesk'in **tek** fontu olduğu (Neue Haas) ve ikamesinin
+Inter Tight olduğu varsayıldı. `document.fonts` + 522 öğenin hesaplanmış
+stili ölçüldüğünde tablo başka çıktı:
+
+| Aile | Öğe | Nerede | Boyut/ağırlık örnekleri |
+|---|---|---|---|
+| **Neue Haas** (sans) | 428 | UI: etiket, saat, ticker, deck, sponsor, menü, düğme | 14/21 w500, 12/18 w400, 10/14 w500 |
+| **Family** (serif) | 94 | Editoryal: manşet, kart başlığı, makale gövdesi | 20/26 w500, 18/26 w500, 36/44 w500, **gövde 22/30 w400** |
+| DM Mono | 2 | yalnız sayısal rozet | — |
+
+Yani CoinDesk **iki fontlu**: sans UI'da, serif editoryal içerikte. Biz tek
+sans fontuyla başlıkları çiziyorduk — bu, tasarımın en görünür sapmasıydı.
+
+Ticari lisanslı oldukları için repoya konamazlar. Aynı 6 metinlik korpusla
+(20 px, genişlik + x-yükseklik + cap) ücretsiz adaylar ölçüldü:
+
+| İkame | Genişlik farkı | x-yüksekliği | cap | Karar |
+|---|---|---|---|---|
+| **Inter** 400/500 | Neue Haas'a **+3,4 % / +2,1 %** | 0,546 vs 0,550 | 0,728 | ✅ sans |
+| Inter Tight 400/500 | −7,0 % / −6,8 % (DAR) | 0,546 | 0,728 | ❌ değiştirildi |
+| **Alegreya** 400/500/700 | Family'ye **+2,0 / +1,2 / +0,5 %** | **0,452 vs 0,464** | 0,637 vs 0,660 | ✅ serif |
+| Crimson Pro | +0,1 % | 0,420 — metni küçük gösteriyor | 0,573 | ❌ cap çok düşük |
+| EB Garamond | +0,2 % | 0,400 | 0,650 | ❌ x-yüksekliği düşük |
+| Newsreader / Petrona / Source Serif | +9 % … +18 % | 0,426–0,475 | 0,641–0,670 | ❌ genişlik |
+
+Gömülen dosyalar: `inter-400/500/700.woff2` + `alegreya-400/500/700.woff2`
+(Türkçe + Latin + para/sembol alt kümesi, **~254 KB** toplam). Lisanslar
+`INTER-OFL.txt` / `ALEGREYA-OFL.txt`. Eski `inter-tight-*.woff2` silindi.
+
+`--cd-font` = `"Neue Haas", …, "Inter", system-ui` ·
+`--cd-serif` = `"Family", "Alegreya", Georgia, serif`.
+Serif sınıfları: `.cd-card__title`, `.cd-list__title`, `.cd-ray__baslik`,
+`.cd-dusunce__baslik`, `.cd-tekgorsel__baslik`, `.cd-akis__baslik`,
+`.cd-basin__baslik`, `.cd-video__baslik`, `.cd-arastirma__baslik`,
+`.cd-arastirma__rapor`, `.cd-hero-lead__baslik`, `.cd-blok__manset`,
+`.cd-blok__baslik`, `.cd-opinion__baslik`, `.cd-section-title h1`,
+`.cd-article h1`, `.cd-article__body`.
+
+#### 11.7.2 Ölçülen modül geometrisi — 1920 px
+
+| Modül | CoinDesk | bitcosar (tur 9) | Durum |
+|---|---|---|---|
+| Düşünce Liderliği | 290×306 | 290×**306** | ✅ |
+| Bugünün Videoları | 290×360 | 290×**360** | ✅ |
+| Öne Çıkan Araştırma | 290×503 | 290×**503** | ✅ |
+| Bugünün Klipleri | 290×566 | 290×**566** | ✅ |
+| Basın Bültenleri | 608×181 | 608×**181** | ✅ |
+| Hero sol ray | 290×1077 | 290×1111 | ⚠️ +34 |
+| Görüş satırı / avatar | 74 / 48 | 74 / 48 | ✅ |
+| Akış satırı / görsel | 608×102 / 152×86 | 608×102 / 152×86 | ✅ |
+| Yatay taşma | 0 | **0** | ✅ |
+
+Hero sol ray farkı **veri kaynaklı**, tasarım değil: CoinDesk'in son haber
+satırları 3 satıra kırılıyor, bizdeki Türkçe başlıklar 2 satırda kalıyor;
+ayrıca tek görselli manşetin metni kısa. Aynı sayıda satırla geometri aynı.
+
+#### 11.7.3 Bu turda düzeltilen GERÇEK tasarım hataları
+
+| Konu | Ölçülen sorun | Düzeltme |
+|---|---|---|
+| Araştırma metriği | "50.8%" + ayrı **serif sarı çip** sanıldı; gerçekte metrik + **birimi** tek vurgu span'ında, sarı bant **gradyan** | `.cd-arastirma__metrik` inline + `linear-gradient(transparent 52%, brand 52% … 86%)`; sayı 56/56 w500 ls −1 px, birim 18/26 w500 alt satıra sarar |
+| Araştırma kartı | zemin `surface-soft`, radius yok, etiketler **hap** (9999), rapor bağlantısı alt çizgili sans | zemin saydam, radius 4, etiket radius 4 + siyah metin + `max-height 58` kırpma, rapor **serif** 16/22 alt çizgisiz |
+| Modül başlığı oku | dört modülde de "→" **karakteri** (13×21, dikey ortalanmıyor, ekran okuyucu "sağ ok" okuyor) | `cdRayOk()`: 16×16 SVG chevron, `currentColor`, `aria-hidden` |
+| Başlık türü | Video / Araştırma / Görüş / En Çok Okunan'da **bağlantı + ok**; CoinDesk'te düz `h2` | `.cd-ray__duz` — yalnız "Son Haberler", "Düşünce Liderliği" ve "Bugünün Klipleri" bağlantılı + ok |
+| Video kutusu | çerçevesiz; modül 359 (hedef 360) | `border: 1px + radius 4` → 360 |
+| Basın modülü | modül sonu çizgisi yok; 180 (hedef 181) | `.cd-basin__cizgi` (1 px #d9d9d9) |
+| Basın gezinme | nokta **8 px** / gap 8, oklar "‹ ›" karakteri | nokta **10 px** / gap **16**, oklar 20 px SVG, 32 px yuvarlak |
+| Basın sponsoru | `letter-spacing: 0.4px`, 12/18 | `0.06em` (=0.72 px) — CoinDesk ölçümü |
+| Düşünce sponsoru | 12/18 (hedef 14/21) | 14/21 → modül 303 → **306** |
+| Sol ray listesi | satır arası 16 px, **ayırıcı yok** | 8 px + `border-top` 1 px (ilk satır hariç) |
+| Tek görsel manşet | başlık 20/26, meta 12/18, aralık yok | başlık 22/30, meta 14/21, kart `gap: 8px` |
+| "Daha fazla" düğmesi | `.cd-btn` 14/20 pad 8×14; CoinDesk 14/21 pad 8×12 | modül içi `.cd-video__alt .cd-btn` eşitlemesi |
+
+Font geçişiyle birlikte **Basın başlığı 3 satırdan 2 satıra** indi
+(139 karakter, 608 px): daha önce 78 px yer kaplıyordu, CoinDesk'te 52 px.
+
+#### 11.7.4 Doğrulama
+
+```
+go vet ./...      temiz
+go test ./...     tüm paketler ok (2 test değeri bilinçli güncellendi:
+                  serif font ailesi + CSS bütçesi 52 → 80 KB)
+gofmt -l          boş
+templ generate    temiz
+4xx istek         0
+konsol hatası     0
+font yükleme      inter/alegreya 400-500-700 → 6/6 HTTP 200, hepsi "loaded"
+1920 taşma        0
+390 taşma         0 (sağ ray gizli, sol ray flex)
+kaydırma durumu   html.cd-kaydi=true, yön=row, yüzde=block
+```
+
 ---
 
 ## 12. Kopyalanması önerilen sözleşmeler

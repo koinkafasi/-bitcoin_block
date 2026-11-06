@@ -58,6 +58,9 @@ const (
 	// YuvaKatKart kategori ızgarasının normal kartı (327px).
 	// 12 kolonun 3'ü: 3×100.656 + 2×16 = 327 (spec §10.3).
 	YuvaKatKart
+	// YuvaAkis hero orta kolonundaki 8'li haber akışının küçük görseli
+	// (152×86; 16/9). Ölçüldü 6 Kasım 2026.
+	YuvaAkis
 )
 
 // Mobil/tablet genişlik İFADELERİ (calc() sarmalayıcısı olmadan).
@@ -138,6 +141,12 @@ var yuvaBilgi = map[CDYuva]struct {
 		Sizes:      cdSizes(ifadeMobil, ifadeKatTablet, 327),
 		Basamaklar: []int{320, 480, 768},
 		Varsayilan: 480,
+	},
+	// 152 px küçük görsel; etkin ihtiyaç 152 × 1,3 ≈ 198 → 320 yeter.
+	YuvaAkis: {
+		Sizes:      cdSizes(ifadeMobil, ifadeTam, 152),
+		Basamaklar: []int{320, 480},
+		Varsayilan: 320,
 	},
 }
 

@@ -41,15 +41,61 @@ type CDPriceRow struct {
 	Href   string
 }
 
-// CDRailModul hero yan rayındaki tek modül (bölüm kartı).
+// CDDusunce "Düşünce Liderliği" modülü (sol ray).
 //
-// CoinDesk sağ rayı üç modül yığar (Bugünün Videoları · Öne Çıkan
-// Araştırma · Bugünün Klipleri). Bizde o içerik türleri yok; aynı
-// yapıyı gerçek veriyle dolduruyoruz: her bölümden bir kart.
-type CDRailModul struct {
-	Title string
-	Href  string
-	Story CDStory
+// CoinDesk'te sponsorlu içerik: görsel + başlık + "Sponsored by …".
+// Kaynak gerçek CoinDesk sponsorlu içeriği; kendi sponsorlu arşivimiz
+// dolduğunda aynı bileşen oradan beslenecek.
+type CDDusunce struct {
+	Baslik  string
+	Sponsor string
+	Image   string
+	Href    string
+}
+
+// CDVideo "Bugünün Videoları" modülü (sağ ray).
+//
+// Oynatıcı yerine kapak + başlık: video altyapısı gelene kadar kart
+// kaynağa gider (kullanıcı isteği: geçici olarak CoinDesk video linki).
+type CDVideo struct {
+	Etiket string
+	Baslik string
+	Image  string
+	Href   string
+	Sure   string
+}
+
+// CDArastirma "Öne Çıkan Araştırma" metrik kartı (sağ ray).
+type CDArastirma struct {
+	Metrik    string
+	Baslik    string
+	Aciklama  string
+	Rapor     string
+	Etiketler []string
+	Href      string
+}
+
+// CDKlip "Bugünün Klipleri" dikey (9/16) video kartı.
+type CDKlip struct {
+	Baslik string
+	Image  string
+	Href   string
+}
+
+// CDBasin "Basın Bültenleri" slider slaytı.
+type CDBasin struct {
+	Baslik  string
+	Sponsor string
+	Href    string
+}
+
+// CDUzman "Görüş" satırındaki uzman/editoryal profil.
+type CDUzman struct {
+	Ad     string
+	Unvan  string
+	Avatar string
+	Makale string
+	Href   string
 }
 
 // CDHomeView ana sayfa şablon verisi.
@@ -69,14 +115,21 @@ type CDHomeView struct {
 	// §3 promo bandı ve §7 bülten formu ana sayfada YOK: CoinDesk TR ana
 	// sayfasında ne promo şeridi ne de form var (6 Kasım 2026 ölçümü).
 	// Bülten bileşeni /bulten sayfasında duruyor.
-	Lead      CDStory
-	Side      []CDStory
-	Latest    []CDStory     // §5 — saat damgalı düz liste
-	RailLeft  []CDStory     // §7A sol ray — "Son Haberler" (başlık + saat)
-	RailRight []CDRailModul // §7A sağ ray — bölüm modülleri
-	MostRead  []CDStory     // §21 — 1 büyük + 5 satır
-	Opinion   []CDStory     // §20 — yazar avatarlı
-	Prices    []CDPriceRow  // §14
+	Lead CDStory
+	// §7A sol ray: "Son Haberler" + Düşünce Liderliği + tek görselli manşet.
+	RailLeft  []CDStory
+	Dusunce   *CDDusunce
+	TekGorsel CDStory
+	// §7A orta kolon: manşet + 8 görselli haber + Basın Bültenleri slider.
+	Akis  []CDStory
+	Basin []CDBasin
+	// §7A sağ ray: video · araştırma · klipler (1284 altında gizli).
+	Videolar  []CDVideo
+	Arastirma *CDArastirma
+	Klipler   []CDKlip
+	MostRead  []CDStory    // §21 — 1 büyük + 5 satır
+	Opinion   []CDUzman    // §20 — uzman adı + unvan + avatar
+	Prices    []CDPriceRow // §14
 	Sections  []CDSection
 	// Hreflang gerçek çeviriler (dil → mutlak URL). Yalnız çevirisi
 	// olanlar; boşsa x-default basılır.
@@ -161,4 +214,20 @@ type CDSectionPage struct {
 	NextHref  string
 	// JSONLD Go tarafında üretilmiş yapısal veri.
 	JSONLD string
+}
+
+// cdBasinGeri / cdBasinIleri JS'siz slider'ın halka gezinmesi.
+// i 0-tabanlı; dönen değer de 0-tabanlı (şablon cdSiraya ile 1'e çevirir).
+func cdBasinGeri(i, n int) int {
+	if n <= 0 {
+		return 0
+	}
+	return (i - 1 + n) % n
+}
+
+func cdBasinIleri(i, n int) int {
+	if n <= 0 {
+		return 0
+	}
+	return (i + 1) % n
 }

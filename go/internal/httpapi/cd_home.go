@@ -63,7 +63,7 @@ func (s *Server) handleCDHome(w http.ResponseWriter, r *http.Request) {
 		donus = append(donus, cevir(c))
 	}
 
-	// §8 manşet: 1 büyük + 3 yan. §5 latest: ilk 12 (saat damgalı liste).
+	// §8 manşet: 1 büyük + 8 görselli akış + 5 satır "Son Haberler".
 	//
 	// MANŞET GÖRSELLİ OLMALI: CoinDesk manşeti büyük görselli basar.
 	// Görselsiz haber manşete düşünce sayfanın üstü boş bir metin bloğu
@@ -77,38 +77,54 @@ func (s *Server) handleCDHome(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	var lead templkit.CDStory
-	var side, latest []templkit.CDStory
 	if len(donus) > 0 {
 		lead = donus[leadIdx]
 	}
+
+	// Aynı haber iki modülde görünmesin: hero içinde tek kullanım.
+	kullanildi := map[string]bool{}
+	if lead.Href != "" {
+		kullanildi[lead.Href] = true
+	}
+
+	// Orta kolon akışı: manşetten sonraki 8 GÖRSELLİ haber (ölçüldü:
+	// 152×86 küçük görsel + 20/26 başlık + 12/18 saat).
+	var akis []templkit.CDStory
 	for i, st := range donus {
-		if i == leadIdx {
+		if i == leadIdx || st.Image == "" || kullanildi[st.Href] {
 			continue
 		}
-		if len(side) < 3 {
-			side = append(side, st)
-		}
-		if len(latest) < 12 {
-			latest = append(latest, st)
+		akis = append(akis, st)
+		kullanildi[st.Href] = true
+		if len(akis) == 8 {
+			break
 		}
 	}
 
 	// §7A sol ray: CoinDesk'in "Son Haberler" modülü — 5 satır.
-	// Manşetteki haber tekrar etmesin diye onu atlıyoruz.
 	var railSol []templkit.CDStory
 	for i, st := range donus {
-		if i == leadIdx {
+		if i == leadIdx || kullanildi[st.Href] {
 			continue
 		}
 		railSol = append(railSol, st)
+		kullanildi[st.Href] = true
 		if len(railSol) == 5 {
 			break
 		}
 	}
-	// Sağ ray aynı haberi ikinci kez basmasın: manşet + sol ray dışlanır.
-	haric := map[string]bool{lead.Href: true}
-	for _, st := range railSol {
-		haric[st.Href] = true
+
+	// Sol rayın altındaki tek görselli manşet (CoinDesk canlı blog kartı
+	// yuvası; bizde canlı blog yok, aynı geometriyi görselli haberle
+	// dolduruyoruz).
+	var tekGorsel templkit.CDStory
+	for i, st := range donus {
+		if i == leadIdx || st.Image == "" || kullanildi[st.Href] {
+			continue
+		}
+		tekGorsel = st
+		kullanildi[st.Href] = true
+		break
 	}
 
 	// §22 bölüm blokları — CoinDesk 2×2 sırası: Piyasalar · Politika ·
@@ -145,14 +161,18 @@ func (s *Server) handleCDHome(w http.ResponseWriter, r *http.Request) {
 		Desc:      "Bitcoin, Ethereum ve kripto piyasalarından son haberler, analizler ve canlı fiyatlar.",
 		Canonical: s.cfg.BaseURL + r.URL.Path,
 		Lead:      lead,
-		Side:      side,
-		Latest:    latest,
 		RailLeft:  railSol,
-		RailRight: railSag(donus, bolumler, haric),
+		Dusunce:   cdGeciciDusunce(),
+		TekGorsel: tekGorsel,
+		Akis:      akis,
+		Basin:     cdGeciciBasin(),
+		Videolar:  cdGeciciVideolar(),
+		Arastirma: cdGeciciArastirma(),
+		Klipler:   cdGeciciKlipler(),
 		Prices:    s.cdFiyatSatirlari(r, 10),
 		Sections:  sections,
 		MostRead:  s.cdPopuler(r, 6),
-		Opinion:   s.cdGorus(r, 4),
+		Opinion:   s.cdUzmanlar(r, 4),
 		// hreflang: yalnız GERÇEK diller. Şu an içerik Türkçe; EN içerik
 		// üretildiğinde buraya eklenecek (çevirisi olmayan dili yazmak
 		// Google'da "aynı içerik" cezası riski).
@@ -172,36 +192,6 @@ func (s *Server) handleCDHome(w http.ResponseWriter, r *http.Request) {
 // cdBolum ana sayfadaki bölüm bloklarının tanımı.
 type cdBolum struct{ Ad, Slug string }
 
-// railSag hero sağ rayını doldurur.
-//
-// CoinDesk sağ rayında üç modül var: "Bugünün Videoları" (oynatıcı),
-// "Öne Çıkan Araştırma" (metrik kartı) ve "Bugünün Klipleri" (9/16 klip).
-// Bu üç içerik türünün HİÇBİRİ bizde yayında değil (video 0, yayında
-// araştırma 0, klip 0). Uydurma metrik ya da boş oynatıcı basmak
-// tasarımı dolduruyor gibi gösterip yanlış bilgi verirdi; bu yüzden ray
-// gerçek bölüm verisiyle doluyor: her bölümden bir kart.
-func railSag(items []templkit.CDStory, bolumler []cdBolum, haric map[string]bool) []templkit.CDRailModul {
-	out := make([]templkit.CDRailModul, 0, len(bolumler))
-	for _, b := range bolumler {
-		if len(out) == 3 {
-			break
-		}
-		for _, st := range items {
-			// Kicker bölüm adını taşıyor (handler büyük harfe çeviriyor).
-			if !strings.EqualFold(st.Kicker, b.Ad) {
-				continue
-			}
-			// Manşette ya da sol rayda görünen haber tekrar basılmaz.
-			if haric[st.Href] {
-				continue
-			}
-			out = append(out, templkit.CDRailModul{Title: b.Ad, Href: "/" + b.Slug, Story: st})
-			break
-		}
-	}
-	return out
-}
-
 // cdPopuler §21 "En Çok Okunan" listesi (son 7 gün ağırlıklı).
 func (s *Server) cdPopuler(r *http.Request, adet int) []templkit.CDStory {
 	items, err := repo.PopulerIcerikler(r.Context(), s.pool, 1, "tr", adet)
@@ -216,21 +206,25 @@ func (s *Server) cdPopuler(r *http.Request, adet int) []templkit.CDStory {
 	return out
 }
 
-// cdGorus §20: opinion kategorisindeki içerikler.
-func (s *Server) cdGorus(r *http.Request, adet int) []templkit.CDStory {
-	items, err := repo.BolumIcerikleri(r.Context(), s.pool, 1, "tr", "opinion", adet)
+// cdUzmanlar §20 "Görüş": avatarı olan uzman/editoryal profiller.
+//
+// NEDEN içerik değil PROFİL: CoinDesk "Opinion" modülünde yazar adı +
+// unvan + 48 px avatar basıyor; makale kartı değil. Profiller `users`
+// tablosunda (rol = Yazar); makale başlığı profilin öne çıkan yazısıdır.
+func (s *Server) cdUzmanlar(r *http.Request, adet int) []templkit.CDUzman {
+	items, err := repo.Uzmanlar(r.Context(), s.pool, adet)
 	if err != nil || len(items) == 0 {
 		return nil
 	}
-	simdi := time.Now()
-	var out []templkit.CDStory
-	for _, c := range items {
-		st := cdStoryCevir(c, simdi)
-		// Yazar adı görüş satırında "kicker" olarak gösterilir.
-		if c.AuthorName != "" {
-			st.Source = c.AuthorName
-		}
-		out = append(out, st)
+	out := make([]templkit.CDUzman, 0, len(items))
+	for _, u := range items {
+		out = append(out, templkit.CDUzman{
+			Ad:     u.Ad,
+			Unvan:  u.Unvan,
+			Avatar: u.Avatar,
+			Makale: u.Makale,
+			Href:   u.MakaleURL,
+		})
 	}
 	return out
 }

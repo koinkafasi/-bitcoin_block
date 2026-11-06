@@ -1,0 +1,2 @@
+-- 0119 geri alımı.
+ALTER TABLE users DROP COLUMN IF EXISTS avatar_url;

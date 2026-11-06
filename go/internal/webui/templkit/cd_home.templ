@@ -4,6 +4,22 @@ package templkit
 //
 // Sapma yok: her modül aynı sırada, aynı görsel dilde. Veri yoksa modül
 // basılmaz (boş kutu göstermek tasarımı bozuk gösterir) ama sıra korunur.
+//
+// 8. tur: hero üç kolonu CoinDesk'in GERÇEK modül listesiyle doldu —
+// sol: Son Haberler · Düşünce Liderliği · tek görselli manşet;
+// orta: manşet · 8 görselli akış · Basın Bültenleri slider;
+// sağ: Bugünün Videoları · Öne Çıkan Araştırma · Bugünün Klipleri.
+
+// cdRayOk modül başlığındaki ok — CoinDesk'in 16×16 SVG chevron'u
+// (`M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6-6-6z`). Eski sürüm
+// "→" KARAKTERİ basıyordu: metin fontundan geldiği için 13×21 kutuya
+// düşüyor, dikeyde ortalanmıyor ve ekran okuyucuya "sağ ok" okutuyordu.
+templ cdRayOk() {
+	<svg class="cd-ray__ok" xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+		viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false">
+		<path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6-6-6z" fill="currentColor"></path>
+	</svg>
+}
 
 // cdCard kapak görselli haber kartı (CoinDesk kart deseni).
 //
@@ -20,44 +36,75 @@ package templkit
 // Görsel YOK — ölçümde bu modülde hiç görsel yok.
 templ cdHeroSolRay(items []CDStory) {
 	if len(items) > 0 {
-		<aside class="cd-hero__sol">
-			<section class="cd-ray">
-				<a class="cd-ray__bas" href="/latest-crypto-news">
-					Son Haberler
-					<span class="cd-ray__ok" aria-hidden="true">→</span>
-				</a>
-				<ul class="cd-ray__liste">
-					for _, s := range items {
-						<li class="cd-ray__satir">
-							<a class="cd-ray__baslik" href={ s.Href }>{ s.Title }</a>
-							if s.Time != "" {
-								<time class="cd-ray__saat">{ s.Time }</time>
-							}
-						</li>
-					}
-				</ul>
-			</section>
-		</aside>
+		<section class="cd-ray cd-ray--cizgili">
+			<a class="cd-ray__bas" href="/latest-crypto-news">
+				Son Haberler
+				@cdRayOk()
+			</a>
+			<ul class="cd-ray__liste">
+				for _, s := range items {
+					<li class="cd-ray__satir">
+						<a class="cd-ray__baslik" href={ s.Href }>{ s.Title }</a>
+						if s.Time != "" {
+							<time class="cd-ray__saat">{ s.Time }</time>
+						}
+					</li>
+				}
+			</ul>
+		</section>
 	}
 }
 
-// cdHeroSagRay sağ ray — CoinDesk'te üç modül yığılır (video · araştırma ·
-// klipler). Bizde o içerik türleri yok; aynı yapıyı gerçek bölüm
-// verisiyle dolduruyoruz: modül başına bir kart (görsel 16/9 + başlık
-// 20/26 w500 + meta 12/18). 1284 px altında tamamen gizli (ölçüldü).
-templ cdHeroSagRay(mods []CDRailModul) {
-	if len(mods) > 0 {
-		<aside class="cd-hero__sag">
-			for _, m := range mods {
-				<section class="cd-ray cd-ray--cizgili">
-					<a class="cd-ray__bas" href={ m.Href }>
-						{ m.Title }
-						<span class="cd-ray__ok" aria-hidden="true">→</span>
-					</a>
-					@cdCard(m.Story, false, YuvaHeroYan)
-				</section>
+// cdDusunceModul "Düşünce Liderliği" — sponsorlu içerik kartı.
+//
+// Ölçüldü (coindesk.com, 6 Kasım 2026): sol kolonda 290×306;
+// başlık 14/21 w500 + 16 px ok, görsel 290×163, başlık 20/26 w500,
+// sponsor satırı 12/18 w400 yeşil.
+templ cdDusunceModul(d CDDusunce) {
+	<section class="cd-ray cd-ray--cizgili cd-dusunce">
+		<a class="cd-ray__bas" href="/sponsored-content">
+			Düşünce Liderliği
+			@cdRayOk()
+		</a>
+		<article class="cd-dusunce__kart">
+			if d.Image != "" {
+				<a class="cd-dusunce__gorsel" href={ d.Href } tabindex="-1" aria-hidden="true">
+					<img src={ d.Image } alt="" loading="lazy" decoding="async"
+						referrerpolicy="no-referrer"/>
+				</a>
 			}
-		</aside>
+			<a class="cd-dusunce__baslik" href={ d.Href }>{ d.Baslik }</a>
+			if d.Sponsor != "" {
+				<span class="cd-dusunce__sponsor">Sponsorlu: { d.Sponsor }</span>
+			}
+		</article>
+	</section>
+}
+
+// cdTekGorsel sol rayın altındaki tek görselli manşet.
+//
+// CoinDesk bu yuvada canlı blog kartı basıyor (görsel + LIVE + başlık).
+// Bizde canlı blog yok; aynı geometri görselli haberle doluyor.
+templ cdTekGorsel(s CDStory) {
+	if s.Href != "" {
+		<section class="cd-ray cd-ray--cizgili cd-tekgorsel">
+			<a class="cd-tekgorsel__gorsel" href={ s.Href } tabindex="-1" aria-hidden="true">
+				if cdKgOlcekli(s.Image) {
+					<img src={ cdKgSrc(s.Image, YuvaHeroYan) } srcset={ cdKgSrcset(s.Image, YuvaHeroYan) }
+						sizes={ cdKgSizes(YuvaHeroYan) } alt="" loading="lazy" decoding="async"
+						referrerpolicy="no-referrer"/>
+				} else {
+					<img src={ s.Image } alt="" loading="lazy" decoding="async"
+						referrerpolicy="no-referrer"/>
+				}
+			</a>
+			<div class="cd-tekgorsel__kart">
+				<a class="cd-tekgorsel__baslik" href={ s.Href }>{ s.Title }</a>
+				if s.Time != "" {
+					<time class="cd-ray__saat">{ s.Time }</time>
+				}
+			</div>
+		</section>
 	}
 }
 
@@ -81,6 +128,241 @@ templ cdHeroLead(s CDStory) {
 		</div>
 		@cdCardGorsel(s, YuvaHeroLead)
 	</article>
+}
+
+// cdAkis manşetin altındaki 8 görselli haber listesi.
+//
+// Ölçüldü: satır 608×119; solda 152×86 görsel, sağda 20/26 w500 başlık
+// (en çok 3 satır) + 12/18 saat. Satır aralarında 1 px ayırıcı.
+templ cdAkis(items []CDStory) {
+	if len(items) > 0 {
+		<div class="cd-akis">
+			for i, s := range items {
+				if i > 0 {
+					<div class="cd-akis__ayirici" aria-hidden="true"></div>
+				}
+				<article class="cd-akis__satir">
+					<a class="cd-akis__gorsel" href={ s.Href } tabindex="-1" aria-hidden="true">
+						if cdKgOlcekli(s.Image) {
+							<img src={ cdKgSrc(s.Image, YuvaAkis) } srcset={ cdKgSrcset(s.Image, YuvaAkis) }
+								sizes={ cdKgSizes(YuvaAkis) } alt="" loading="lazy" decoding="async"
+								referrerpolicy="no-referrer"/>
+						} else {
+							<img src={ s.Image } alt="" loading="lazy" decoding="async"
+								referrerpolicy="no-referrer"/>
+						}
+					</a>
+					<div class="cd-akis__metin">
+						<a class="cd-akis__baslik" href={ s.Href }>{ s.Title }</a>
+						if s.Time != "" {
+							<time class="cd-akis__saat">{ s.Time }</time>
+						}
+					</div>
+				</article>
+			}
+		</div>
+	}
+}
+
+// cdBasinSlider "Basın Bültenleri" — JS'siz slider (radio + label).
+//
+// CoinDesk: modül etiketi 14/21 w500, slayt başlığı 20/26 w500,
+// "SPONSORED BY …" 12/18 yeşil büyük harf, altta ‹ • • • › gezinme.
+// Radyo düğmeleri klavyeyle de çalışır (ok tuşları); JS gerekmez.
+templ cdBasinSlider(items []CDBasin) {
+	if len(items) > 0 {
+		<section class="cd-basin">
+			<p class="cd-basin__etiket">Basın Bültenleri</p>
+			<div class="cd-basin__kutu">
+				for i := range items {
+					if i == 0 {
+						<input class="cd-basin__durum" type="radio" name="cd-basin"
+							id={ "cd-basin-" + cdSiraya(i) } checked
+							aria-label={ "Basın bülteni " + cdSiraya(i) }/>
+					} else {
+						<input class="cd-basin__durum" type="radio" name="cd-basin"
+							id={ "cd-basin-" + cdSiraya(i) }
+							aria-label={ "Basın bülteni " + cdSiraya(i) }/>
+					}
+				}
+				<div class="cd-basin__slaytlar">
+					for _, b := range items {
+						<article class="cd-basin__slayt">
+							<a class="cd-basin__baslik" href={ b.Href }>{ b.Baslik }</a>
+							if b.Sponsor != "" {
+								<span class="cd-basin__sponsor">Sponsorlu: { b.Sponsor }</span>
+							}
+						</article>
+					}
+				</div>
+				<div class="cd-basin__nav">
+					for i := range items {
+						<label class={ "cd-basin__ok cd-basin__ok--geri cd-basin__durum-" + cdSiraya(i) }
+							for={ "cd-basin-" + cdSiraya(cdBasinGeri(i, len(items))) }
+							aria-label="Önceki bülten">
+							<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+								viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false">
+								<path d="M15.41 16.59L10.83 12l4.58-4.59L14 6l-6 6 6 6 1.41-1.41z"></path>
+							</svg>
+						</label>
+					}
+					<div class="cd-basin__noktalar">
+						for i := range items {
+							<label class={ "cd-basin__nokta cd-basin__nokta-" + cdSiraya(i) }
+								for={ "cd-basin-" + cdSiraya(i) }>
+								<span class="cd-visually-hidden">{ "Bülten " + cdSiraya(i) }</span>
+							</label>
+						}
+					</div>
+					for i := range items {
+						<label class={ "cd-basin__ok cd-basin__ileri cd-basin__durum-" + cdSiraya(i) }
+							for={ "cd-basin-" + cdSiraya(cdBasinIleri(i, len(items))) }
+							aria-label="Sonraki bülten">
+							<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+								viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false">
+								<path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"></path>
+							</svg>
+						</label>
+					}
+				</div>
+			</div>
+			<div class="cd-basin__cizgi"></div>
+		</section>
+	}
+}
+
+// cdVideoModul "Bugünün Videoları" — kapak + başlık, JS'siz karusel.
+//
+// CoinDesk'te oynatıcı var; bizde video altyapısı yok. Kart kaynağa
+// gider (geçici CoinDesk linki), kaynak etiketi görünür kalır.
+templ cdVideoModul(items []CDVideo) {
+	if len(items) > 0 {
+		<section class="cd-ray cd-video">
+			<h2 class="cd-ray__duz">Bugünün Videoları</h2>
+			if len(items) > 1 {
+				for i := range items {
+					if i == 0 {
+						<input class="cd-basin__durum" type="radio" name="cd-video"
+							id={ "cd-video-" + cdSiraya(i) } checked
+							aria-label={ "Video " + cdSiraya(i) }/>
+					} else {
+						<input class="cd-basin__durum" type="radio" name="cd-video"
+							id={ "cd-video-" + cdSiraya(i) }
+							aria-label={ "Video " + cdSiraya(i) }/>
+					}
+				}
+			}
+			<div class="cd-video__kutu">
+				<div class="cd-video__slaytlar">
+					for _, v := range items {
+						<article class="cd-video__slayt">
+							<a class="cd-video__gorsel" href={ v.Href } tabindex="-1" aria-hidden="true">
+								<img src={ v.Image } alt="" loading="lazy" decoding="async"
+									referrerpolicy="no-referrer"/>
+								if v.Sure != "" {
+									<span class="cd-video__sure">{ v.Sure }</span>
+								}
+							</a>
+							<div class="cd-video__metin">
+								if v.Etiket != "" {
+									<span class="cd-video__etiket">{ v.Etiket }</span>
+								}
+								<a class="cd-video__baslik" href={ v.Href }>{ v.Baslik }</a>
+							</div>
+						</article>
+					}
+				</div>
+			</div>
+			<div class="cd-video__alt">
+				if len(items) > 1 {
+					<div class="cd-video__oklar">
+						for i := range items {
+							<label class={ "cd-video__ok cd-video__ok--geri cd-video__durum-" + cdSiraya(i) }
+								for={ "cd-video-" + cdSiraya(cdBasinGeri(i, len(items))) }
+								aria-label="Önceki video">‹</label>
+						}
+						for i := range items {
+							<label class={ "cd-video__ok cd-video__ok--ileri cd-video__durum-" + cdSiraya(i) }
+								for={ "cd-video-" + cdSiraya(cdBasinIleri(i, len(items))) }
+								aria-label="Sonraki video">›</label>
+						}
+					</div>
+				}
+				<a class="cd-btn cd-btn--ghost" href="/videos">Daha fazla</a>
+			</div>
+		</section>
+	}
+}
+
+// cdArastirmaModul "Öne Çıkan Araştırma" — metrik kartı.
+//
+// Ölçüldü: kart 290×386; dev metrik (50.8%) sarı vurgulu, altında
+// sarı zeminli başlık, açıklama 16/24, ayırıcı, rapor adı ve etiket
+// pill'leri. Veri gerçek CoinDesk araştırması (geçici).
+templ cdArastirmaModul(a *CDArastirma) {
+	if a != nil {
+		<section class="cd-ray cd-ray--cizgili cd-arastirma">
+			<h2 class="cd-ray__duz">Öne Çıkan Araştırma</h2>
+			<div class="cd-arastirma__kart">
+				<div class="cd-arastirma__ust">
+					if a.Metrik != "" || a.Baslik != "" {
+						<div class="cd-arastirma__metrik-kap">
+							<span class="cd-arastirma__metrik">
+								if a.Metrik != "" {
+									<span class="cd-arastirma__metrik-sayi">{ a.Metrik }</span>
+								}
+								if a.Baslik != "" {
+									<span class="cd-arastirma__metrik-birim">{ a.Baslik }</span>
+								}
+							</span>
+						</div>
+					}
+					if a.Aciklama != "" {
+						<p class="cd-arastirma__aciklama">{ a.Aciklama }</p>
+					}
+				</div>
+				if a.Rapor != "" {
+					<a class="cd-arastirma__rapor" href={ a.Href }>{ a.Rapor }</a>
+				}
+				if len(a.Etiketler) > 0 {
+					<ul class="cd-arastirma__etiketler">
+						for _, e := range a.Etiketler {
+							<li>{ e }</li>
+						}
+					</ul>
+				}
+			</div>
+			<div class="cd-video__alt">
+				<a class="cd-btn cd-btn--ghost" href="/research">Daha fazla</a>
+			</div>
+		</section>
+	}
+}
+
+// cdKlipler "Bugünün Klipleri" — 9/16 dikey video kartı.
+//
+// Ölçüldü: 290×516, köşe 8 px, siyah zemin, ortada oynat düğmesi.
+// Bizde klip üretimi yok; kart CoinDesk klipler akışına gider (geçici).
+templ cdKlipler(items []CDKlip) {
+	if len(items) > 0 {
+		<section class="cd-ray cd-ray--cizgili cd-klipler">
+			<a class="cd-ray__bas" href="/videos">
+				Bugünün Klipleri
+				@cdRayOk()
+			</a>
+			for _, k := range items {
+				<a class="cd-klip" href={ k.Href }>
+					<img src={ k.Image } alt={ k.Baslik } loading="lazy" decoding="async"
+						referrerpolicy="no-referrer"/>
+					<span class="cd-klip__oynat" aria-hidden="true">
+						<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+							<path d="M8 5v14l11-7z"></path>
+						</svg>
+					</span>
+				</a>
+			}
+		</section>
+	}
 }
 
 // cdCard görsel kart. Manşet için cdHeroLead kullanılır.
@@ -154,19 +436,6 @@ templ cdMeta(s CDStory) {
 				<span>{ s.Source }</span>
 			}
 		}
-	</div>
-}
-
-// cdLatestRow §5 "Latest News": saat damgası solda, başlık sağda, görsel yok.
-templ cdLatestRow(s CDStory) {
-	<div class="cd-list__item">
-		<span class="cd-list__time">{ s.Time }</span>
-		<div class="cd-list__main">
-			<a class="cd-list__title" href={ s.Href }>{ s.Title }</a>
-			if s.Source != "" {
-				<span class="cd-card__meta"> · { s.Source }</span>
-			}
-		</div>
 	</div>
 }
 
@@ -246,7 +515,7 @@ templ cdBlokHucre(sec CDSection) {
 // tek satırın iki paneli (ölçüldü: 366 + 1074, gap 24). Her panelin
 // `border-top` çizgisi kendi genişliğinde kalıyor — bu yüzden sarmalayıcı
 // değil paneller çizgi taşıyor.
-templ cdIkili(yorum, enCok []CDStory) {
+templ cdIkili(yorum []CDUzman, enCok []CDStory) {
 	if len(yorum) > 0 || len(enCok) > 0 {
 		<section class="cd-mod">
 			<div class="cd-ikili">
@@ -288,22 +557,25 @@ templ cdMostRead(items []CDStory) {
 	}
 }
 
-// cdOpinion §20 — yazar avatarlı satırlar (ölçüldü: 12/18 yazar, 18/26 başlık).
-templ cdOpinion(items []CDStory) {
+// cdOpinion §20 — uzman profili: ad 12/18, makale başlığı 18/26, avatar 48.
+//
+// CoinDesk'te satırda yalnız ad + başlık görünür; unvan profil
+// sayfasında kalır. Avatar yoksa satır basılmaz (repo katmanı süzer).
+templ cdOpinion(items []CDUzman) {
 	if len(items) > 0 {
 		<section class="cd-panel">
 			<h2>Görüş</h2>
 			<div class="cd-opinion">
-				for i, s := range items {
+				for i, u := range items {
 					if i == 0 {
 						<div class="cd-opinion__satir">
-							@cdOpinionMetin(s)
-							@cdOpinionAvatar(s)
+							@cdUzmanMetin(u)
+							@cdUzmanAvatar(u)
 						</div>
 					} else {
 						<div class="cd-opinion__satir cd-opinion__satir--cizgili">
-							@cdOpinionMetin(s)
-							@cdOpinionAvatar(s)
+							@cdUzmanMetin(u)
+							@cdUzmanAvatar(u)
 						</div>
 					}
 				}
@@ -312,24 +584,19 @@ templ cdOpinion(items []CDStory) {
 	}
 }
 
-templ cdOpinionMetin(s CDStory) {
+templ cdUzmanMetin(u CDUzman) {
 	<div class="cd-opinion__metin">
-		if s.Source != "" {
-			<span class="cd-opinion__yazar">{ s.Source }</span>
+		if u.Ad != "" {
+			<span class="cd-opinion__yazar">{ u.Ad }</span>
 		}
-		<a class="cd-opinion__baslik" href={ s.Href }>{ s.Title }</a>
+		<a class="cd-opinion__baslik" href={ u.Href }>{ u.Makale }</a>
 	</div>
 }
 
-templ cdOpinionAvatar(s CDStory) {
-	if s.Image != "" {
-		if cdKgOlcekli(s.Image) {
-			<img class="cd-opinion__avatar" src={ cdKgSrc(s.Image, YuvaAvatar) }
-				alt="" loading="lazy" referrerpolicy="no-referrer"/>
-		} else {
-			<img class="cd-opinion__avatar" src={ s.Image } alt="" loading="lazy"
-				referrerpolicy="no-referrer"/>
-		}
+templ cdUzmanAvatar(u CDUzman) {
+	if u.Avatar != "" {
+		<img class="cd-opinion__avatar" src={ u.Avatar } alt="" width="48" height="48"
+			loading="lazy" decoding="async" referrerpolicy="no-referrer"/>
 	}
 }
 
@@ -347,47 +614,40 @@ templ CDHome(v CDHomeView) {
 			<main class="cd-wrap cd-main">
 				<!-- §8 manşet bloğu — CoinDesk hero'su ÜÇ kolon (spec §7A):
 				     290 sol ray · 608 merkez · 290 sağ ray, kolon arası 80.
-				     Sol ray: "Son Haberler" (başlık + saat, görselsiz).
-				     Sağ ray: bölüm modülleri (video/araştırma/klipler
-				     bizde yok — uydurma basmıyoruz).
+				     Sol: Son Haberler · Düşünce Liderliği · tek görselli manşet.
+				     Orta: manşet · 8 görselli akış · Basın Bültenleri slider.
+				     Sağ: Bugünün Videoları · Öne Çıkan Araştırma · Bugünün
+				     Klipleri (1284 px altında tamamen gizli).
 				     Hero ÇİZGİSİZ: CoinDesk'te ana içeriğin ilk modülü
-				     `border-top: 0`, `padding: 32px 0` (ölçüldü). Önünde
-				     promo bandı da YOK — o şerit bizde uydurmaydı. -->
+				     `border-top: 0`, `padding: 32px 0` (ölçüldü). -->
 				if v.Lead.Href != "" {
 					<section class="cd-mod cd-mod--cizgisiz">
 						<div class="cd-hero">
-							@cdHeroSolRay(v.RailLeft)
+							<aside class="cd-hero__sol">
+								@cdHeroSolRay(v.RailLeft)
+								if v.Dusunce != nil {
+									@cdDusunceModul(*v.Dusunce)
+								}
+								if v.TekGorsel.Href != "" {
+									@cdTekGorsel(v.TekGorsel)
+								}
+							</aside>
 							<div class="cd-hero__orta">
 								@cdHeroLead(v.Lead)
+								@cdAkis(v.Akis)
+								@cdBasinSlider(v.Basin)
 							</div>
-							@cdHeroSagRay(v.RailRight)
+							<aside class="cd-hero__sag">
+								@cdVideoModul(v.Videolar)
+								@cdArastirmaModul(v.Arastirma)
+								@cdKlipler(v.Klipler)
+							</aside>
 						</div>
 					</section>
 				}
-
-				<!-- §5 Latest News: saat damgalı düz liste -->
-				if len(v.Latest) > 0 {
-					<section class="cd-mod">
-						@cdSectionHead("Son Haberler", "/latest-crypto-news")
-						<div class="cd-list">
-							for _, s := range v.Latest {
-								@cdLatestRow(s)
-							}
-						</div>
-					</section>
-				}
-
-				<!-- §7 bülten formu ana sayfada YOK: CoinDesk TR ana
-				     sayfasında hiç form bulunmuyor (6 Kasım 2026 ölçümü;
-				     yalnız footer'da "Newsletters" bağlantıları var).
-				     `cdNewsletter` bileşeni /bulten sayfasında kalıyor —
-				     orada form gerçekten var. -->
 
 				<!-- §13 reklam — TAM GENİŞLİK bant (spec §2.1, §7.3).
-				     İç kapsayıcı YOK: kenardan kenara, padding 32 px 0.
-				     Gövde kapsanmış bandı bununla kesiliyor; modül ritmi
-				     bu yüzden "kapsanmış → tam → kapsanmış" alternasyonu
-				     oluşturuyor. -->
+				     İç kapsayıcı YOK: kenardan kenara, padding 32 px 0. -->
 				<section class="cd-tam">
 					@cdAd("Reklam")
 				</section>

@@ -18,17 +18,29 @@ templ cdLogoMark(siteName string) {
 }
 
 // cdTicker fiyat şeridi. JS'siz de okunur: sekmeler <a>, içerik sunucudan.
+//
+// 8. tur (kullanıcı isteği): "Markets Live" düğme değil METİN etiket;
+// yanında canlı noktası. Sekmeler "Kripto" / "Hisse" — tıklanınca aynı
+// sayfa `?serit=` ile sunucudan yeni veriyle döner (derin bağlanabilir).
+//
+// Kaydırma durumu: sayfa başında öğe İKİ SATIR (sembol üstte, fiyat
+// altta) ve değişim gizli — sade görünüm. `html.cd-kaydi` (csp-delegated.js
+// scroll eşiğinde ekler) ile öğe TEK SATIRA geçer ve değişim görünür.
 templ cdTicker(s CDShell) {
 	<div class="cd-ticker" role="region" aria-label="Piyasa şeridi">
 		<div class="cd-wrap">
 			<div class="cd-ticker__inner">
+				<span class="cd-ticker__canli">
+					<span class="cd-ticker__nokta" aria-hidden="true"></span>
+					Canlı Piyasalar
+				</span>
 				<div class="cd-ticker__tabs" role="tablist">
 					if s.TickerTab == "stocks" {
-						<a class="cd-ticker__tab" role="tab" aria-selected="false" href="?serit=markets">Markets Live</a>
-						<a class="cd-ticker__tab" role="tab" aria-selected="true" href="?serit=stocks">Crypto Stocks</a>
+						<a class="cd-ticker__tab" role="tab" aria-selected="false" href="?serit=markets">Kripto</a>
+						<a class="cd-ticker__tab" role="tab" aria-selected="true" href="?serit=stocks">Hisse</a>
 					} else {
-						<a class="cd-ticker__tab" role="tab" aria-selected="true" href="?serit=markets">Markets Live</a>
-						<a class="cd-ticker__tab" role="tab" aria-selected="false" href="?serit=stocks">Crypto Stocks</a>
+						<a class="cd-ticker__tab" role="tab" aria-selected="true" href="?serit=markets">Kripto</a>
+						<a class="cd-ticker__tab" role="tab" aria-selected="false" href="?serit=stocks">Hisse</a>
 					}
 				</div>
 				for _, it := range s.Ticker {

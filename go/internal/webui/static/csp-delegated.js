@@ -171,4 +171,18 @@
   }, true);
 
   temaDugmeleri();
+
+  // --- cd-kaydi: fiyat şeridinin kaydırma durumu ---
+  //
+  // Kullanıcı isteği: sayfa başında şerit SADE (iki satır, yüzde gizli);
+  // sticky menü aşağı inince GENİŞ görünüm (tek satır + yüzde). Eşik
+  // 80 px: menü ~73 px, şerit 67 px — ilk ekranın üstünde kalıyor.
+  // Sınıf <html> üzerinde: CSS `html.cd-kaydi .cd-ticker__item` ile
+  // bütün şeridi tek kuralla çeviriyor.
+  function kaydiGuncelle() {
+    var kaydi = (window.scrollY || window.pageYOffset || 0) > 80;
+    document.documentElement.classList.toggle('cd-kaydi', kaydi);
+  }
+  kaydiGuncelle();
+  window.addEventListener('scroll', kaydiGuncelle, { passive: true });
 })();
