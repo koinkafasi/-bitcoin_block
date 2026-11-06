@@ -103,6 +103,15 @@ type completionReq struct {
 	MaxTokens      int             `json:"max_tokens,omitempty"`
 	Temperature    float64         `json:"temperature,omitempty"`
 	ResponseFormat *responseFormat `json:"response_format,omitempty"`
+	// ReasoningEffort muhakeme tabanlı modellerde düşünme bütçesini kısar.
+	//
+	// ÖLÇÜM (6 Kasım 2026, evren/deepseek-v4.1-flash, OmniRoute): 4.000
+	// karakterlik bir istemde model `max_tokens` bütçesinin TAMAMINI
+	// muhakemeye harcayıp `finish_reason=length` ile BOŞ içerik döndürdü —
+	// otomatik yazım işleri "boş yanıt" hatasıyla düşüyordu. `low` ile aynı
+	// istem tam JSON üretti (108-162 sn). Sağlayıcı parametreyi desteklemezse
+	// boş bırakılır (env ile kapatılabilir).
+	ReasoningEffort string `json:"reasoning_effort,omitempty"`
 }
 
 type responseFormat struct {
@@ -115,11 +124,12 @@ func (p *httpProvider) Complete(ctx context.Context, req Request) (Response, err
 		model = p.model
 	}
 	body, err := json.Marshal(completionReq{
-		Model:       model,
-		Messages:    toAPIMsgs(req.Messages),
-		Stream:      false,
-		MaxTokens:   req.MaxTokens,
-		Temperature: req.Temperature,
+		Model:           model,
+		Messages:        toAPIMsgs(req.Messages),
+		Stream:          false,
+		MaxTokens:       req.MaxTokens,
+		Temperature:     req.Temperature,
+		ReasoningEffort: p.reasoningEffort,
 	})
 	if err != nil {
 		return Response{}, err
@@ -129,7 +139,8 @@ func (p *httpProvider) Complete(ctx context.Context, req Request) (Response, err
 		body, err = json.Marshal(completionReq{
 			Model: model, Messages: toAPIMsgs(req.Messages), Stream: false,
 			MaxTokens: req.MaxTokens, Temperature: req.Temperature,
-			ResponseFormat: &responseFormat{Type: "json_object"},
+			ResponseFormat:  &responseFormat{Type: "json_object"},
+			ReasoningEffort: p.reasoningEffort,
 		})
 		if err != nil {
 			return Response{}, err

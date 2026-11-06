@@ -283,12 +283,16 @@ func (s *Service) ProcessJob(ctx context.Context, jobID int64) (Result, error) {
 		{Role: ai.RoleSystem, Content: CommonSystemPrompt + "\n\nGÖREV:\n" + act.Instruction},
 		{Role: ai.RoleUser, Content: userPrompt(act, freshCtx, selection, body, instruction, angle, sources)},
 	}
-	maxTokens := 1800
+	// 1800 YETMİYOR: muhakeme tabanlı model (evren/deepseek-v4.1-flash)
+	// uzun istemlerde bütçenin tamamını düşünmeye harcayıp BOŞ içerik
+	// döndürüyordu (finish_reason=length). Ölçüm 6 Kasım 2026: `low` çaba +
+	// 4000 token ile yanıt 108-162 sn'de tam JSON olarak geldi.
+	maxTokens := 4000
 	switch {
 	case act.ID == "audio_draft":
-		maxTokens = 3200
+		maxTokens = 4500
 	case act.Research:
-		maxTokens = 2600
+		maxTokens = 4500
 	}
 	resp, err := s.ai.CompleteStrict(ctx, ai.Request{
 		Messages: messages, JSONMode: true, MaxTokens: maxTokens, Temperature: 0.25,

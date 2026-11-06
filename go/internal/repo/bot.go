@@ -568,7 +568,7 @@ func parseRSSDate(s string) time.Time {
 
 // CrawlFeed feed'i çeker, yeni öğeleri taslak içerik yapar. İçe aktarılan sayı döner.
 func CrawlFeed(ctx context.Context, pool *pgxpool.Pool, f *Feed, rules []WordRule, defaultAuthor int64) (imported int, lastErr error) {
-	items, err := FetchRSS(f.URL)
+	items, err := feedOku(ctx, f)
 	if err != nil {
 		// Panelin "son durum" sütunu bu satırlardan besleniyor; çekim
 		// sonucunu yazmamak, ölü feed'i panelde "hiç denenmemiş" gösteriyordu.
@@ -588,6 +588,10 @@ func CrawlFeed(ctx context.Context, pool *pgxpool.Pool, f *Feed, rules []WordRul
 	// kapinin NIYE tetiklendigi panelden gorulebilsin (sessiz dusme olmasin).
 	reklam := 0
 	reklamIlkNeden := ""
+	// govdeDenemesi: keşif kaynağında bu turda kaç makale gövdesi çekildiği.
+	// Sınır var, çünkü okuyucu proxy'si ücretsiz katmanda dakika başına
+	// istek sınırı koyuyor; 25 öğenin tamamı için denemek 429 üretirdi.
+	govdeDenemesi := 0
 	for _, it := range items {
 		if it.Link == "" || it.Title == "" {
 			continue
@@ -674,6 +678,20 @@ func CrawlFeed(ctx context.Context, pool *pgxpool.Pool, f *Feed, rules []WordRul
 		// 982/986 içerik TEK paragraf). Paragraflara bölününce okunur oluyor;
 		// metin uydurulmuyor, yalnız cümle sınırlarından ayrılıyor.
 		detail := paragrafBloklari(ApplyReplacer(it.Description, rules))
+		// Keşif kaynaklarında (kind=bing) RSS yalnız tek cümlelik özet
+		// taşıyor. Makale gövdesi okuyucu proxy'sinden çekilir; çekilemezse
+		// özetle devam edilir — zenginleştirme içerik üretimini engellemez.
+		if govdeGerekli(f.Kind) && govdeDenemesi < kaynakGovdeTurLimiti {
+			govdeDenemesi++
+			if g, gerr := KaynakGovdeCek(ctx, it.Link); gerr == nil {
+				if blok := paragrafBloklari(strings.Join(g.Paragraflar, "\n\n")); len(blok) > 0 {
+					detail = blok
+				}
+				if it.Image == "" && g.Gorsel != "" {
+					it.Image = g.Gorsel
+				}
+			}
+		}
 		// Alaka puanı içerik oluşturulurken hesaplanır: kategori yayın kapısı
 		// (categories.min_score) bu alana bakar. Eskiden yalnızca panelden
 		// hesaplandığı için taslakların tamamı 0 puanla duruyordu (B4).
@@ -694,6 +712,17 @@ func CrawlFeed(ctx context.Context, pool *pgxpool.Pool, f *Feed, rules []WordRul
 		if id, ok := slugIDs[slug]; ok && (f.CategoryID == nil || *f.CategoryID != id) {
 			v := id
 			catID = &v
+		}
+		// Keşif kaynaklarında (kind=bing) bölüm, ADRES YOLUNDAN okunur ve
+		// otoriterdir. Neden: "18 years in, what has Bitcoin truly done?"
+		// gibi bir görüş yazısı başlığındaki "bitcoin" sözcüğü yüzünden
+		// metin sınıflandırıcısı onu markets'a atıyordu — görüş sayfası boş
+		// kalıyordu. Kaynağın kendi bölüm adı (…/opinion/…) daha güvenilir.
+		if govdeGerekli(f.Kind) && it.Section != "" {
+			if id, ok := slugIDs[strings.ToLower(it.Section)]; ok {
+				v := id
+				catID = &v
+			}
 		}
 		c := &Content{
 			TypeKey:       "haber",

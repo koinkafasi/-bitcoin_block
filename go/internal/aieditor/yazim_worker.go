@@ -310,6 +310,7 @@ func yazimSonucu(res Result) (repo.YazimSonucu, bool) {
 		SeoDesc:  strings.TrimSpace(res.Fields["meta_description"]),
 		// SEO alanları da yazma sınırından geçer (70/165 rune).
 		Paragraf: paragraflar,
+		Ozet:     strings.TrimSpace(res.Fields["ai_summary"]),
 	}
 	return y, true
 }

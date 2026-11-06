@@ -68,6 +68,7 @@ func NewClient(logger *slog.Logger) *Client {
 	if key != "" {
 		c.providers = append(c.providers, &httpProvider{
 			name: "omniroute", baseURL: base, apiKey: key, model: model, client: c.httpClient, logger: logger,
+			reasoningEffort: strings.TrimSpace(os.Getenv("OMNIROUTE_REASONING_EFFORT")),
 		})
 	}
 	c.providers = append(c.providers, &mockProvider{client: c})
@@ -143,12 +144,13 @@ func (c *Client) Chat(ctx context.Context, messages []Msg) (string, error) {
 // ---- HTTP provider (OpenAI-uyumlu) ----
 
 type httpProvider struct {
-	name    string
-	baseURL string
-	apiKey  string
-	model   string
-	client  *http.Client
-	logger  *slog.Logger
+	name            string
+	baseURL         string
+	apiKey          string
+	model           string
+	reasoningEffort string
+	client          *http.Client
+	logger          *slog.Logger
 }
 
 func (p *httpProvider) Name() string { return p.name }

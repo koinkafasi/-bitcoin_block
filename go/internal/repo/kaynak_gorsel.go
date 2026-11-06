@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
+	neturl "net/url"
 	"strings"
 )
 
@@ -28,7 +29,7 @@ func KaynakGorselHash(url string) string {
 // görsel basmaz. Gövde indirme burada YAPILMAZ: çekim, görsel ilk
 // istendiğinde olur (crawler turunu yavaşlatmamak için).
 func KaynakGorselKaydet(ctx context.Context, pool DB, rawURL string) string {
-	rawURL = strings.TrimSpace(rawURL)
+	rawURL = GorselAdresiCoz(rawURL)
 	if rawURL == "" {
 		return ""
 	}
@@ -44,6 +45,48 @@ func KaynakGorselKaydet(ctx context.Context, pool DB, rawURL string) string {
 		return ""
 	}
 	return hash
+}
+
+// GorselAdresiCoz ara görsel proxy'sini gerçek CDN adresine indirger.
+//
+// SORUN (ölçüm, 6 Kasım 2026): CoinDesk görselleri Next.js görsel
+// proxy'sinden geliyor:
+//
+//	https://www.coindesk.com/_next/image?url=<CDN adresi>&w=1200&q=75
+//
+// Proxy bot koruması uyguluyor: sunucudan indirme denemeleri **HTTP 429**
+// dönüyordu (günlükte "kaynak görsel indirilemedi … HTTP 429"). Aynı
+// görselin CDN adresi doğrudan **200** veriyor (153 KB JPEG).
+//
+// Bu yüzden `url=` parametresi çözülür ve CDN adresi kullanılır. Çözüm
+// uygulanamazsa adres olduğu gibi döner (davranış değişmez).
+//
+// GÜVENLİK: yalnız `url` parametresinin kendisi alınır ve yalnız
+// http(s) kabul edilir; `javascript:`/`data:` gibi şemalar elenir.
+func GorselAdresiCoz(rawURL string) string {
+	rawURL = strings.TrimSpace(rawURL)
+	if rawURL == "" {
+		return ""
+	}
+	u, err := neturl.Parse(rawURL)
+	if err != nil {
+		return rawURL
+	}
+	// Yalnız bilinen görsel proxy'leri: her adresin sorgusundaki `url`
+	// parametresini çözmek, meşru bir adresi bozabilirdi.
+	if !strings.Contains(strings.ToLower(u.Host), "coindesk.com") ||
+		!strings.Contains(u.Path, "/_next/image") {
+		return rawURL
+	}
+	ic := u.Query().Get("url")
+	if ic == "" {
+		return rawURL
+	}
+	iu, err := neturl.Parse(ic)
+	if err != nil || (iu.Scheme != "http" && iu.Scheme != "https") || iu.Host == "" {
+		return rawURL
+	}
+	return iu.String()
 }
 
 // KaynakGorselURL hash'in kaynak adresini döndürür (yoksa "").

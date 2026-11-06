@@ -209,6 +209,26 @@ func (s *Server) cdShellCtx(ctx context.Context, aktif string) templkit.CDShell 
 			Href:  "/price/" + repo.CoinSlug(f.Name),
 		})
 	}
+
+	// Bölüm doluluğu: menüye yalnız YAYINDA İÇERİĞİ OLAN bölüm yazılır.
+	// Ölçüm (6 Kasım 2026): Focus · Videos · Podcasts · News Analysis ·
+	// Press Releases bölümlerinde 0 içerik vardı; menü beş ölü bağlantı
+	// veriyordu. Sorgu başarısız olursa harita boş kalır ve filtre uygulanmaz.
+	if dolu, err := repo.DoluBolumler(ctx, s.pool, 1); err == nil {
+		sh.MenuBolumler = dolu
+		// Üst gezinme de aynı kurala uyar: "Video" yayında videosu yokken
+		// basılmaz. /latest-crypto-news ve /price gibi liste sayfaları
+		// bölüm sayılmadığı için etkilenmez.
+		nav2 := make([]templkit.CDNavLink, 0, len(sh.Nav))
+		for _, n := range sh.Nav {
+			if slug := strings.Trim(strings.TrimSpace(n.Href), "/"); slug != "" &&
+				!strings.Contains(slug, "/") && !dolu[slug] {
+				continue
+			}
+			nav2 = append(nav2, n)
+		}
+		sh.Nav = nav2
+	}
 	return sh
 }
 

@@ -4,7 +4,7 @@ import "strings"
 
 // PromptVersion tüm eylem promptlarının sürümüdür. Prompt metni değiştiğinde
 // artırılır ve ai_jobs/ai_usage_logs içinde saklanır.
-const PromptVersion = "ai-editor-v1"
+const PromptVersion = "ai-editor-v2"
 
 // Action AI editörünün tek bir eylemini tanımlar. Prompt'lar kodun farklı
 // yerlerine dağılmaz; bu kayıt defterinde tek yerde ve sürümle tutulur.
@@ -41,11 +41,13 @@ Kurallar:
 - HTML etiketi, &nbsp; gibi varlık, emoji, markdown veya "devamını oku"
   kalıntısı kullanma. Düz metin yaz.
 - spot: 110-170 karakter, tek cümle, haberin özü. Tıklama tuzağı yok.
+- ai_summary: 2 veya 3 cümle, 40-70 kelime. Makale sayfasındaki "Özet"
+  kutusuna basılır; yalnız gövdedeki bilgiyi kullan, yeni olgu ekleme.
 - seo_title: 30-60 karakter; haber başlığını birebir kopyalama.
 - meta_description: 110-155 karakter; ne oldu ve neden önemli.
 - keywords: 3-6 kısa terim.
 Şu JSON şemasını döndür:
-{"title":"","spot":"","paragraphs":[""],"seo_title":"","meta_description":"","keywords":[""],"claims_to_verify":[""]}`,
+{"title":"","spot":"","ai_summary":"","paragraphs":[""],"seo_title":"","meta_description":"","keywords":[""],"claims_to_verify":[""]}`,
 	},
 	{
 		ID: "research_news", Label: "Araştırarak Haber Yap", Group: "Araştırma", Icon: "🔎", Research: true,

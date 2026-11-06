@@ -166,6 +166,11 @@ func cdMenuKartVar(g CDMenuGroup) bool {
 //
 // `s.MenuTags` ve `s.MenuCoins` boşsa ilgili sütun **hiç basılmaz**:
 // içeriği olmayan etikete bağlantı vermek 404'e götürür.
+//
+// Aynı kural bölüm satırları için de geçerli: `s.MenuBolumler` doluysa
+// yalnız YAYINDA İÇERİĞİ OLAN bölümlerin satırı basılır. Ölçüm (6 Kasım
+// 2026): Focus · Videos · Podcasts · News Analysis · Press Releases
+// bölümlerinde 0 içerik vardı; menü beş ölü bağlantı veriyordu.
 func cdMenuGroups(s CDShell) []CDMenuGroup {
 	out := make([]CDMenuGroup, 0, len(cdMenuSabit)+1)
 	for _, g := range cdMenuSabit {
@@ -195,9 +200,83 @@ func cdMenuGroups(s CDShell) []CDMenuGroup {
 			)
 			g.Columns = append(g.Columns, CDMenuColumn{Items: tagItems})
 		}
+		// İçeriği olmayan bölüm satırları düşürülür.
+		g.Columns = cdBosBolumleriEle(s, g.Columns)
 		out = append(out, g)
 	}
+	// Tüm sütunları boşalan grup (ör. yayında videosu ve podcast'i yokken
+	// "Video") hiç basılmaz: açılır menüsü boş bir başlık tıklanınca boş
+	// sayfaya götürür.
+	dolu := out[:0]
+	for _, g := range out {
+		if len(g.Columns) > 0 || strings.TrimSpace(g.Href) == "" {
+			dolu = append(dolu, g)
+			continue
+		}
+		// Sütunsuz grup yalnız hedef sayfası doluysa kalır (ör. Research
+		// kart sütunu boşaldıysa ama /research doluysa başlık kalsın).
+		if cdBolumVar(s, g.Href) {
+			dolu = append(dolu, g)
+		}
+	}
+	return dolu
+}
+
+// cdBosBolumleriEle sütunlardan içeriği olmayan bölüm satırlarını eler.
+//
+// Ölçüt `cdBolumVar`: yalnız TEK PARÇALI yollar (/videos, /focus …) bölüm
+// sayılır. /latest-crypto-news ve /price gibi liste sayfaları ve /tag/x
+// etiketleri bu süzgecin dışında — onların doluluğu MenuTags/MenuCoins ile
+// ayrıca denetleniyor.
+func cdBosBolumleriEle(s CDShell, sutunlar []CDMenuColumn) []CDMenuColumn {
+	if len(s.MenuBolumler) == 0 {
+		return sutunlar
+	}
+	out := make([]CDMenuColumn, 0, len(sutunlar))
+	for _, sut := range sutunlar {
+		items := make([]CDMenuItem, 0, len(sut.Items))
+		for _, it := range sut.Items {
+			if !cdBolumVar(s, it.Href) {
+				// Bölüm sayfası ve yayında içeriği yok → satır basılmaz.
+				if cdBolumYoluMu(it.Href) {
+					continue
+				}
+			}
+			items = append(items, it)
+		}
+		if len(items) == 0 {
+			continue
+		}
+		out = append(out, CDMenuColumn{Items: items})
+	}
 	return out
+}
+
+// cdBolumVar hedef bölümün yayında içeriği var mı.
+//
+// MenuBolumler boşsa (veri yüklenmemiş) her yol "var" sayılır: filtre
+// yalnız gerçek veriyle çalışır, yoksa menüyü kazara boşaltırdı.
+func cdBolumVar(s CDShell, href string) bool {
+	slug := cdBolumSlug(href)
+	if slug == "" {
+		return true
+	}
+	if len(s.MenuBolumler) == 0 {
+		return true
+	}
+	return s.MenuBolumler[slug]
+}
+
+// cdBolumYoluMu yolun tek parçalı bir bölüm adresi olup olmadığı.
+func cdBolumYoluMu(href string) bool { return cdBolumSlug(href) != "" }
+
+// cdBolumSlug "/videos" → "videos"; "/tag/btc" ve "/" → "".
+func cdBolumSlug(href string) string {
+	h := strings.Trim(strings.TrimSpace(href), "/")
+	if h == "" || strings.Contains(h, "/") {
+		return ""
+	}
+	return h
 }
 
 // cdMenuID açılır menünün aria-controls/id değerini üretir.

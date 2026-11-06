@@ -149,8 +149,12 @@ func YazimUygulanacakIsler(ctx context.Context, pool *pgxpool.Pool, siteID int64
 
 // YazimSonucu içeriğe yazılacak AI çıktısıdır.
 type YazimSonucu struct {
-	Title    string
-	Spot     string
+	Title string
+	Spot  string
+	// Ozet `contents.ai_summary` alanıdır: makale sayfasındaki özet kutusu
+	// (spec §10.2.2) yalnız bu alan DOLUYSA basılır. Boş bırakılırsa var
+	// olan özet korunur — AI'ın özet üretmemesi elle yazılmış özeti silmez.
+	Ozet     string
 	Paragraf []string
 	SeoTitle string
 	SeoDesc  string
@@ -175,10 +179,11 @@ func SetContentYazim(ctx context.Context, pool *pgxpool.Pool, id int64, surum in
 			detail = $4::jsonb,
 			seo_title = NULLIF($5,''),
 			seo_description = NULLIF($6,''),
+			ai_summary = COALESCE(NULLIF($8,''), ai_summary),
 			version = version + 1,
 			updated_at = now()
 		 WHERE id = $1 AND ($7 = 0 OR version = $7)`,
-		id, y.Title, y.Spot, detay, y.SeoTitle, y.SeoDesc, surum)
+		id, y.Title, y.Spot, detay, y.SeoTitle, y.SeoDesc, surum, y.Ozet)
 	if err != nil {
 		return err
 	}

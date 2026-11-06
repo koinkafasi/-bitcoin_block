@@ -52,6 +52,15 @@ type CDShell struct {
 	MenuTags []CDMenuItem
 	// MenuCoins mega menüdeki canlı fiyat satırları (ilk 5 coin).
 	MenuCoins []CDMenuItem
+	// MenuBolumler YAYINDA İÇERİĞİ OLAN bölüm slug'ları.
+	//
+	// NEDEN: menü sabit tanımlı, ama Focus/Videos/Podcasts/News Analysis/
+	// Press Releases bölümlerinde yayında içerik yok (ölçüm 6 Kasım 2026:
+	// 0). Boş bölüme bağlantı vermek kullanıcıyı "içerik yok" sayfasına
+	// götürüyordu — menü sitenin tamamını vaat edip yarısını vermiyor.
+	// Bu harita doluysa yalnız içeriği olan bölümler basılır; boşsa (panel
+	// sayfaları, testler) filtre uygulanmaz ve menü eskisi gibi çalışır.
+	MenuBolumler map[string]bool
 	// Footer sütunları ölçülen yapıya göre sabittir (aşağıda).
 }
 
@@ -94,6 +103,42 @@ var cdFooterColumns = []struct {
 		{"Kullanım Koşulları", "/kullanim-kosullari"},
 		{"Çerez Politikası", "/cerez-politikasi"},
 	}},
+}
+
+// cdFooterSutunlari alt bilgi sütunlarını döndürür; içeriği olmayan bölüm
+// satırları elenir.
+//
+// NEDEN: alt bilgi de bir gezinmedir. Ölçüm (6 Kasım 2026): Focus · Video ·
+// Podcast · Analiz · Basın Bültenleri bölümlerinde yayında içerik yoktu,
+// ama alt bilgi beş ölü bağlantı veriyordu. Kural mega menüyle aynı:
+// `MenuBolumler` doluysa yalnız içeriği olan bölüm basılır. Hiç satırı
+// kalmayan sütun (ör. Medya) başlığıyla birlikte düşer — boş başlık
+// göstermek "burada bir şey olmalıydı" hissi verir.
+func cdFooterSutunlari(s CDShell) []struct {
+	Title string
+	Links [][2]string
+} {
+	out := make([]struct {
+		Title string
+		Links [][2]string
+	}, 0, len(cdFooterColumns))
+	for _, sut := range cdFooterColumns {
+		var links [][2]string
+		for _, l := range sut.Links {
+			if !cdBolumVar(s, l[1]) && cdBolumYoluMu(l[1]) {
+				continue
+			}
+			links = append(links, l)
+		}
+		if len(links) == 0 {
+			continue
+		}
+		out = append(out, struct {
+			Title string
+			Links [][2]string
+		}{Title: sut.Title, Links: links})
+	}
+	return out
 }
 
 // CDSekme etiketi: "markets" → "Markets Live".

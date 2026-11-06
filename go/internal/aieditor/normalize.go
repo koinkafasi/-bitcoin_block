@@ -97,6 +97,15 @@ func normalizeResult(act Action, m map[string]any, sources []Source) (Result, er
 		if ma := str(m, "meta_description"); ma != "" {
 			field("meta_description", seoTemizle(ma))
 		}
+		// ai_summary makale sayfasındaki özet kutusudur (spec §10.2.2).
+		// Cümle sayısı denetimi UYARI üretir, sonucu düşürmez: özet boşsa
+		// kutu hiç basılmaz, yanlış özet basmaktan iyidir.
+		if oz := str(m, "ai_summary"); oz != "" {
+			field("ai_summary", oz)
+			if n := len(sentenceRe.FindAllString(oz, -1)); n < 2 || n > 3 {
+				warn(fmt.Sprintf("AI özeti %d cümle görünüyor; spec 2–3 cümle istiyor.", n))
+			}
+		}
 
 	case "audio_draft":
 		r.Title = str(m, "title")

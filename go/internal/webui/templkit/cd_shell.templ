@@ -112,7 +112,7 @@ templ cdFooter(s CDShell) {
 			<a class="cd-footer__logo" href="/">{ s.SiteName }<span>.</span></a>
 
 			<div class="cd-footer__cols">
-				for _, col := range cdFooterColumns {
+				for _, col := range cdFooterSutunlari(s) {
 					<div>
 						<h3>{ col.Title }</h3>
 						<ul>

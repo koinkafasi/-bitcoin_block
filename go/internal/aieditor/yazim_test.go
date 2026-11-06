@@ -72,8 +72,30 @@ func TestYazimSonucuEsleme(t *testing.T) {
 	}
 }
 
-func TestYazimSonucuSectionsYedegi(t *testing.T) {
-	// Alanlar boşsa Sections'tan okunur (eski işlerin sonucu böyle).
+// TestYazimOzetiTasinir: AI özeti (ai_summary) içeriğe yazılan alanlara
+// taşınmalı. Makale sayfasındaki özet kutusu yalnız bu alan doluyken basılır
+// (spec §10.2.2); taşınmazsa kutu hiç görünmez.
+func TestYazimOzetiTasinir(t *testing.T) {
+	res := Result{Action: "news", Fields: map[string]string{
+		"title":      "Başlık",
+		"body":       "Birinci paragraf. İkinci cümle.",
+		"ai_summary": "Bitcoin 76 bin dolar civarında dengelendi. Yatırımcılar iş verilerini bekliyor.",
+	}}
+	y, ok := yazimSonucu(res)
+	if !ok {
+		t.Fatal("sonuç eşlenemedi")
+	}
+	if y.Ozet == "" {
+		t.Fatal("ai_summary taşınmadı: özet kutusu boş kalır")
+	}
+	// Boş özet, var olan özeti SİLMEMELİ: SQL COALESCE(NULLIF(...)) kullanır.
+	src := okuKaynak(t, "../repo/ai_yazim.go")
+	if !strings.Contains(src, "ai_summary = COALESCE(NULLIF($8,''), ai_summary)") {
+		t.Error("boş özet mevcut özeti eziyor")
+	}
+}
+
+func TestYazimSonucuSectionsYedegi(t *testing.T) { // Alanlar boşsa Sections'tan okunur (eski işlerin sonucu böyle).
 	res := Result{
 		Action:   "news",
 		Title:    "Başlık",

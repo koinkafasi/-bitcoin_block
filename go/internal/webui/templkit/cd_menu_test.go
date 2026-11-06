@@ -154,3 +154,83 @@ func TestCDMenuIDBenzersiz(t *testing.T) {
 		gorulen[id] = g.Label
 	}
 }
+
+// TestCDMenuBosBolumlerElenir: yayında içeriği OLMAYAN bölümün menü satırı
+// basılmaz.
+//
+// ÖLÇÜM (6 Kasım 2026): Focus · Videos · Podcasts · News Analysis · Press
+// Releases bölümlerinde 0 yayında içerik vardı; menü beş ölü bağlantı
+// veriyordu ve tıklayan "içerik yok" sayfasına düşüyordu.
+func TestCDMenuBosBolumlerElenir(t *testing.T) {
+	s := CDShell{MenuBolumler: map[string]bool{
+		"markets": true, "policy": true, "tech": true, "business": true,
+		"opinion": true, "research": true,
+	}}
+	gruplar := cdMenuGroups(s)
+
+	var linkler []string
+	for _, g := range gruplar {
+		for _, sut := range g.Columns {
+			for _, it := range sut.Items {
+				linkler = append(linkler, it.Href)
+			}
+		}
+	}
+	icinde := func(href string) bool {
+		for _, l := range linkler {
+			if l == href {
+				return true
+			}
+		}
+		return false
+	}
+	for _, bos := range []string{"/videos", "/podcasts", "/focus", "/news-analysis", "/press-release"} {
+		if icinde(bos) {
+			t.Errorf("içeriği olmayan bölüm menüde: %s", bos)
+		}
+	}
+	// İçeriği olan bölümler KALMALI (filtre fazla eleme yapmamalı).
+	for _, dolu := range []string{"/markets", "/policy", "/tech", "/business", "/opinion"} {
+		if !icinde(dolu) {
+			t.Errorf("içeriği olan bölüm menüden düştü: %s", dolu)
+		}
+	}
+	// Tüm sütunları boşalan "Video" grubu (başlığı da boş sayfaya gider)
+	// hiç basılmamalı.
+	for _, g := range gruplar {
+		if g.Label == "Video" {
+			t.Error("boş Video grubu menüde kaldı")
+		}
+	}
+}
+
+// TestCDMenuBolumVerisiYoksaFiltreYok: veri yüklenmemişse menü boşaltılmaz.
+func TestCDMenuBolumVerisiYoksaFiltreYok(t *testing.T) {
+	gruplar := cdMenuGroups(CDShell{})
+	var videoVar bool
+	for _, g := range gruplar {
+		if g.Label == "Video" {
+			videoVar = true
+		}
+	}
+	if !videoVar {
+		t.Error("MenuBolumler boşken menü süzülmemeli (panel ve test sayfaları)")
+	}
+}
+
+// TestCDBolumSlug: yalnız tek parçalı yollar bölüm sayılır.
+func TestCDBolumSlug(t *testing.T) {
+	for giris, beklenen := range map[string]string{
+		"/videos":             "videos",
+		"/focus":              "focus",
+		"/tag/bitcoin":        "",
+		"/latest-crypto-news": "latest-crypto-news",
+		"/":                   "",
+		"":                    "",
+		"/price/bitcoin":      "",
+	} {
+		if got := cdBolumSlug(giris); got != beklenen {
+			t.Errorf("cdBolumSlug(%q) = %q, beklenen %q", giris, got, beklenen)
+		}
+	}
+}

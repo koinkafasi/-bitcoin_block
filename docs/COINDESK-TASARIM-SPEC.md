@@ -1501,6 +1501,30 @@ Doğrulama (1920 px): `promoVar: false`, `news: false`, hero section
 Lighthouse `/`: performans **100** · SEO **100** · a11y 97 · BP **100** ·
 LCP 0.4 s · CLS 0.
 
+### 11.6 Sekizinci tur (Görüş paneli mobilde + ölü menü bağlantıları) — DURUM
+
+AI özet/çeviri hattı kurulurken ortaya çıkan iki **gerçek** hata ölçümle
+bulundu (6 Kasım 2026, gerçek Chrome).
+
+| Konu | Ölçülen sorun | Düzeltme | Durum |
+|---|---|---|---|
+| Görüş paneli, 390 px | panel genişliği **90 px** — başlıklar 2-3 karakterde kırılıyordu (`.cd-ikili__sol` `flex: 0 0 25%` mobilde de uygulanıyordu) | `≤1023px`: `.cd-ikili { flex-direction: column }`, iki sütun `width: 100%` | ✅ 358 px |
+| Boş bölüm menüsü | Focus · Videos · Podcasts · News Analysis · Press Releases bölümlerinde **0 yayında içerik**; mega menü + üst gezinme + alt bilgi **11 ölü bağlantı** veriyordu | `repo.DoluBolumler` + `CDShell.MenuBolumler`; satır yalnız yayında içerik varsa basılır | ✅ 0 ölü bağlantı |
+| Kaynak görseli | `/kg/…` uçları **404**; günlükte `kaynak görsel indirilemedi … HTTP 429` | `repo.GorselAdresiCoz`: CoinDesk `/_next/image?url=…` proxy'si gerçek `cdn.sanity.io` adresine indirgenir (proxy 429, CDN 200) | ✅ 4xx yok |
+| `ai_summary` | yayındaki **0/126** içerikte özet kutusu boştu | AI yazım promptu + `cmd/ozet-doldur` | ✅ dolduruldu |
+
+Hata ölçümleri:
+
+```
+Görüş paneli genişliği   390px önce 90px  → sonra 358px   (taşma 0)
+/kg 4xx                  2 istek/ana sayfa → 0
+focus/videos/... menüde  11 satır          → 0 satır
+```
+
+Menü süzgecinin sözleşmesi `internal/webui/templkit/cd_menu_test.go` içinde
+üç testle korunuyor: boş bölüm elenir, dolu bölüm kalır, veri yoksa filtre
+uygulanmaz.
+
 ---
 
 ## 12. Kopyalanması önerilen sözleşmeler

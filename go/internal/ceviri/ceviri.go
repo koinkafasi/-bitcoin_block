@@ -320,8 +320,12 @@ func ceviriBaslik(ctx context.Context, aiclient *ai.Client, c repo.Content, dil 
 			{Role: "system", Content: ceviriSystem(dil)},
 			{Role: "user", Content: ceviriInstruksiyonBaslik(dil) + "\n\n---\n" + string(istek)},
 		},
-		JSONMode:    true,
-		MaxTokens:   500,
+		JSONMode: true,
+		// 500 token muhakeme tabanlı modellerde YETMİYOR: model bütçenin
+		// tamamını düşünmeye harcayıp JSON'u yarıda kesiyordu (canlı ölçüm
+		// 6 Kasım 2026: "çeviri yanıtı JSON değil: unexpected end of JSON
+		// input"). Başlık + spot + SEO + özet rahat sığsın diye 1200.
+		MaxTokens:   1200,
 		Temperature: 0.2,
 	})
 	if err != nil {
@@ -388,8 +392,9 @@ func ceviriParca(ctx context.Context, aiclient *ai.Client, parcalar []string, di
 		},
 		JSONMode: true,
 		// 2200 karakterlik kaynak ≈ 800 token İngilizce üretim; 1600 sınırı
-		// kesilmeye karşı pay bırakır (ölçüm: 1200 yetmedi).
-		MaxTokens:   1600,
+		// kesilmeye karşı pay bırakır (ölçüm: 1200 yetmedi). Muhakeme tabanlı
+		// modeller bütçenin bir kısmını düşünmeye harcadığı için 2600.
+		MaxTokens:   2600,
 		Temperature: 0.2,
 	})
 	if err != nil {

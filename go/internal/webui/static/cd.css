@@ -1281,6 +1281,13 @@ html.cd-js .cd-tema { display: inline-flex; }
    1024'te tek kolona düşürüyordu (ölçüldü). */
 @media (max-width: 1023px) {
   .cd-bloklar { grid-template-columns: minmax(0, 1fr); }
+  /* Görüş (25%) + En Çok Okunan (75%) alt alta iner.
+     ÖLÇÜM (6 Kasım 2026, 390px): bölünme mobilde de uygulanınca Görüş
+     paneli 90px'e sıkışıyordu — başlıklar 2-3 karakterde kırılıyordu.
+     CoinDesk `lg` altında bu ikiliyi tek kolona düşürüyor. */
+  .cd-ikili { flex-direction: column; }
+  .cd-ikili__sol,
+  .cd-ikili__sag { flex: 0 0 auto; width: 100%; }
 }
 
 @media (max-width: 1024px) {
