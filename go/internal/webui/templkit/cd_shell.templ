@@ -32,7 +32,7 @@ templ cdTicker(s CDShell) {
 					}
 				</div>
 				for _, it := range s.Ticker {
-					<a class="cd-ticker__item" href={ "/price/" + cdSlug(it.Sym) }>
+					<a class="cd-ticker__item" href={ "/price/" + it.Slug }>
 						<span class="cd-ticker__sym">{ it.Sym }</span>
 						<span class="cd-ticker__px">{ it.Price }</span>
 						if it.Up {
@@ -57,6 +57,13 @@ templ cdTopbar(s CDShell) {
 				@cdMobilNav(s)
 				<div class="cd-topbar__actions">
 					<a class="cd-btn cd-btn--ghost" href={ s.SearchHref } aria-label="Ara">Ara</a>
+					<!-- Tema anahtarı. Varsayılan GİZLİ (`display:none`); init
+					     betiği `html.cd-js` ekleyince görünür. JS yoksa ölü
+					     düğme göstermiyoruz. Tercih localStorage'da. -->
+					<button class="cd-tema" type="button" data-tema
+						aria-label="Koyu temaya geç" aria-pressed="false">
+						<span aria-hidden="true">◐</span>
+					</button>
 					if len(s.Diller) > 1 {
 						<!-- Dil seçici: satır içi olay YOK (CSP 'unsafe-inline'
 						     kapatıldı). data-git ile csp-delegated.js yönlendirir. -->

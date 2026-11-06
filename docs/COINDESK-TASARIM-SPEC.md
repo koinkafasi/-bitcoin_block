@@ -36,6 +36,14 @@ Her sayı **gerçek Chrome'da hesaplanmış stilden** okundu
 `COINDESK-SPEC.md` §2'deki token listesi **bugünkü siteyle uyuşmuyor**.
 O liste eski bir build'den çıkarılmış. Bugün CoinDesk'te:
 
+> **DURUM (6 Kasım 2026, akşam): bu bölümün tamamı UYGULANDI.**
+> `cd.css` artık aşağıdaki ölçülen değerleri taşıyor; eski yanlış değerler
+> `cd_tasarim_test.go` içindeki `TestCDEskiYanlisDegerlerYok` kapısıyla
+> geri gelmeye karşı korunuyor. Canlıda `getComputedStyle` ile doğrulandı:
+> kapsayıcı 1512, yan boşluk 24, köşe 4 px, metin #262626, ayırıcı #D9D9D9,
+> yükseliş #218410, düşüş #BB020A, sticky toplam 140 px, makale sütunu 680,
+> gövde 22/30, etiketler düz bağlantı.
+
 **CSS özel özelliği (custom property) HİÇ YOK.** Tailwind, değerleri
 derleyerek basıyor. Semantik sınıf adları (`bg-surface-subtle`,
 `text-subtle`) var ama arkasında `--degisken` yok. Yani §2'deki
@@ -469,34 +477,38 @@ hangisi olduğunu söylemiyor. Karar gerek: tam ad SEO'da daha iyi
 
 Bizim değerler `go/internal/webui/static/cd.css`'ten **okundu**, tahmin değil.
 
+> **DURUM (6 Kasım 2026): tablo UYGULANDI.** Aşağıdaki "aksiyon" kolonundaki
+> kalemlerin tamamı yapıldı; kalan üç bilinçli sapma §14'te gerekçesiyle
+> yazılı. Doğrulama gerçek Chrome'da `getComputedStyle` ile ölçüldü.
+
 | Konu | bitcosar (bugün) | CoinDesk (ölçüm) | Aksiyon |
 |---|---|---|---|
-| Font | `"proxima-nova", system-ui…` | **`"Neue Haas", sans-serif`** | Lisans gerekir; en yakın ikame kararı |
-| Kapsayıcı | `--cd-max: 1280px`, pad 20px → **1240** | **1512px**, pad 16/24 → **1464** | 224px daha dar görünüyoruz |
-| Köşe yarıçapı | `--cd-radius: 2px` | **4px** (+8px, pill) | Düzelt |
-| Gölge | hiç yok (`box-shadow` 0 kez) | kart yok, **bindirmede var** | Açılır menüde gölge eklenebilir |
-| Bağlantı rengi | `--cd-link: #4d90fe` mavi | **metin rengi**, altı çizili değil | Düzelt — sitede mavi bağlantı yok |
-| "Tümü →" bağlantısı | `--cd-link` (mavi) | metin/ikincil renk | Yukarıdakiyle birlikte düzelt |
-| Ana metin | `--cd-fg: #000000` | **#262626** | Düzelt |
-| İkincil metin | `--cd-muted: #696969` | **#676767** | Düzelt |
-| Ayırıcı | `--cd-border: #e9e9e9` | **#D9D9D9** | Düzelt (#E9E9E9 = disable) |
-| Yükseliş | `--cd-up: #68b631` | **#218410** / koyu #18E589 | Düzelt |
-| Düşüş | `--cd-down: #ff0062` | **#BB020A** / koyu #FF454D | Düzelt |
-| Marka | `--cd-warn: #ffd200` | **marka** #FFD200 | Adı değiştir: `--cd-brand` |
-| Yüzeyler | `soft #f8f8f8`, `alt #f4f4f4` | `default #FFF`, `subtle #F4F4F4`, `action #D9D9D9`, `disable #E9E9E9` | Jeton setini eşle |
-| Koyu tema | yalnız medya sorgusu | **kullanıcı anahtarı** + `html.light/.dark` | Anahtar ekle, tercihi sakla |
-| Makale sütunu | **720px** | **680px** | Düzelt |
-| Makale gövdesi | `1.06rem` (≈17px) / 1.75 | **22px / 30px, mb 32px** | **En görünür fark** — düzelt |
-| Makale ara başlık | `1.35rem` (≈21.6px) | **28px / 36px w500** | Düzelt |
-| Makale H1 | belirtilmemiş | 36/44 w500 | Sabitle |
-| Bölüm H1 | belirtilmemiş | 36/44 **w700** | Sabitle (makaleden farklı!) |
-| Modül başlığı | `1.05rem` + **UPPERCASE** + `ls 0.02em` | **16/24 w500, UPPERCASE DEĞİL** | Düzelt — büyük harf CoinDesk'te yok |
-| Dikey ritim | `--cd-section-gap: 40px` | boşluk ölçeği 2–32px | 40px ölçek dışı |
-| Etiketler | **pill**: `padding 4px 10px`, `border 1px`, `radius 999px` | **düz bağlantı** 16/24, zemin/kenarlık/dolgu yok | Düzelt |
-| Sticky | **yalnız** `.cd-ticker` | header **+** ticker (toplam 140px) | Header'i de sticky yap, `scroll-margin-top` ayarla |
-| `sizes` | düz DPR-2 | **çarpanlı** (0.433/0.65) | Bayt kazancı var |
-| Sayfalama | — | "More stories" düğmesi (sonsuz kaydırma yok) | Kontrol et |
-| `/price` URL | `/price/btc` | **`/price/bitcoin`** | Karar gerek |
+| Font | `"Neue Haas", Inter, system-ui…` | **`"Neue Haas", sans-serif`** | ✅ lisans varsa Neue Haas, yoksa Inter/sistem; webfont GÖMÜLMEDİ (bütçe) |
+| Kapsayıcı | `--cd-max: 1512px`, pad 16/24 → **1464** | **1512px**, pad 16/24 → **1464** | ✅ |
+| Köşe yarıçapı | `--cd-radius: 4px` (+8, pill 9999) | **4px** (+8px, pill) | ✅ |
+| Gölge | yalnız `--cd-shadow-overlay` (mega menü) | kart yok, **bindirmede var** | ✅ |
+| Bağlantı rengi | metin rengi (`currentColor`), alt çizgi yok | **metin rengi**, altı çizili değil | ✅ |
+| "Tümü →" bağlantısı | metin/ikincil renk | metin/ikincil renk | ✅ |
+| Ana metin | `--cd-fg: #262626` | **#262626** | ✅ |
+| İkincil metin | `--cd-muted: #676767` | **#676767** | ✅ |
+| Ayırıcı | `--cd-border: #d9d9d9` | **#D9D9D9** | ✅ |
+| Yükseliş | `--cd-up: #218410` / koyu #18E589 | **#218410** / koyu #18E589 | ✅ |
+| Düşüş | `--cd-down: #bb020a` / koyu #FF454D | **#BB020A** / koyu #FF454D | ✅ |
+| Marka | `--cd-brand: #ffd200` | **marka** #FFD200 | ✅ ad düzeltildi |
+| Yüzeyler | default #FFF · subtle #F4F4F4 · action #D9D9D9 · disable #E9E9E9 | aynı | ✅ |
+| Koyu tema | **kullanıcı anahtarı** + `html.light/.dark` | anahtar + sistem | ✅ |
+| Makale sütunu | **680px** | **680px** | ✅ |
+| Makale gövdesi | **22px / 30px, mb 32px** | **22px / 30px, mb 32px** | ✅ |
+| Makale ara başlık | **28/36 w500** | **28px / 36px w500** | ✅ |
+| Makale H1 | **36/44 w500** | 36/44 w500 | ✅ |
+| Bölüm H1 | **36/44 w700** | 36/44 **w700** | ✅ |
+| Modül başlığı | **16/24 w500, büyük harf YOK** | **16/24 w500** | ✅ |
+| Dikey ritim | `--cd-section-gap: 32px` | boşluk ölçeği 2–32px | ✅ |
+| Etiketler | **düz bağlantı** 16/24 | **düz bağlantı** 16/24 | ✅ |
+| Sticky | **başlık + şerit** (140px) | header **+** ticker (140px) | ✅ |
+| `sizes` | **çarpanlı** (0.433/0.65) | **çarpanlı** | ✅ |
+| Sayfalama | **"Daha fazla haber" düğmesi** | "More stories" düğmesi | ✅ |
+| `/price` URL | **`/price/bitcoin`** (sembol → 301) | **`/price/bitcoin`** | ✅ |
 | Gezinme | 5 başlık | 7 başlık | **Bilinçli sapma** — veri yok, değiştirme |
 
 ---
@@ -525,17 +537,82 @@ Bizim değerler `go/internal/webui/static/cd.css`'ten **okundu**, tahmin değil.
 
 ---
 
-## 13. Açık kararlar
+## 13. Açık kararlar — KAPANDI (6 Kasım 2026)
 
-1. **Font:** "Neue Haas" ticari. İkame mi, yoksa lisans mı? (Inter /
-   Helvetica Now / system-ui adayları.)
-2. **Kapsayıcı 1512'ye çıksın mı?** Mevcut 1280 daha sıkışık ama okunur.
-   Tasarım tercihi.
-3. **Makale gövdesi 22px** — en görünür fark. CoinDesk'e birebir mi
-   uyalım, yoksa Türkçe metin için 20px mi? (Türkçe sözcükler İngilizceden
-   uzun, 22px'te satır başına sözcük azalıyor.)
-4. **`/price/{sembol}` mı `/price/{tam-ad}` mı** — SEO kararı.
-5. **Koyu tema anahtarı** — kullanıcı tercihi saklanacak mı (çerez/localStorage)?
+| # | Soru | Karar | Gerekçe |
+|---|---|---|---|
+| 1 | Font: lisans mı, ikame mi? | **Yığın: Neue Haas → Inter → sistem** | Lisans alınırsa ilk sıra zaten devreye girer, kod değişmez. Webfont GÖMÜLMEDİ: 4 ağırlık ≈120 KB ve Lighthouse 100'ü korumak istiyoruz; sistem groteskleri Neue Haas'a yeterince yakın. |
+| 2 | Kapsayıcı 1512'ye çıksın mı? | **Evet, 1512 px** | Spec'in tamamı bu genişlikte ölçüldü; 1280'de kalırsak `sizes` hesabı, ızgara oranları ve boşluk ölçeği tutmuyor. 1920'de yatay taşma yok (doğrulandı). |
+| 3 | Makale gövdesi 22 px mi? | **22 px (mobilde 20 px)** | Masaüstünde satır uzunluğu 680 px sütunda 22 px'te ~48 karakter — Türkçe için kabul edilebilir üst sınır. Mobilde 22 px tek satırda 20-25 karaktere düşüyordu; 20 px'e indirildi. |
+| 4 | `/price/{sembol}` mı `/price/{tam-ad}` mı? | **Tam ad kanonik**, sembol **301** | "bitcoin price" araması tam adla birebir eşleşiyor. Eski `/price/btc` adresleri 301 ile taşındı: bağlantı kırılmadı, iki adres ayrı sayfa olarak indekslenmiyor (kanonik tekilleşti). |
+| 5 | Koyu tema tercihi saklanacak mı? | **Evet, `localStorage('tema')`** | CoinDesk deseni. İlk sınıf `<head>` içinde bloklayıcı minik betikle yazılıyor (FOUC yok); `localStorage` kapalıysa `prefers-color-scheme` devralıyor. Düğme JS yoksa gizli (`html.cd-js`). |
+
+## 14. Bilinçli sapmalar (değiştirilmeyecek)
+
+| Konu | CoinDesk | bitcosar | Neden |
+|---|---|---|---|
+| Gezinme başlıkları | 7 (News · Video · Prices · Research · **Events** · **Data & Indices** · Sponsored) | 5 | Etkinlik takvimimiz ve kendi endeks metodolojimiz yok — uydurma sayfa 404 demektir (bkz. §9 menü sözleşmesi) |
+| Makale breadcrumb | yok | **var** | Toplayıcı sitede kaynak/atıf zinciri SEO ve şeffaflık için gerekli |
+| Makalede kaynak kutusu | yok | **var (zorunlu)** | Telif/atıf yükümlülüğü; tam metin yayınlanmıyor |
+| Yazar kutusu | yok | **var** | E-E-A-T sinyali + düzeltme kanalı |
+| Paylaşım | X · LinkedIn · diyalog | X · WhatsApp · LinkedIn | Türkiye'de WhatsApp baskın paylaşım kanalı |
+| Yorumlar | var | yok | Moderasyon yükü; Faz 3 |
+
+---
+
+## 15. Uygulama sırasında bulunan GERÇEK hatalar
+
+Bu tur yalnız görsel değerleri düzeltmedi; **iki sessiz hata** ortaya çıktı.
+İkisi de "sayfa 200 dönüyor, ama bir şey çalışmıyor" sınıfındaydı — bu
+yüzden aylarca görünmeden kalabilirdi.
+
+### 15.1 `cspWriter.Flush` HTML tamponunu bırakıyordu → satır içi betikler engelli
+
+`templ`, bileşeni bitirirken kendi tamponunu boşaltıyor ve yazıcı
+`http.Flusher` ise `Flush()` çağırıyor (`runtime.ReleaseBuffer`).
+`cspWriter.Flush` bu çağrıyı "akışa geç" sayıp `akis = true` yapıyordu;
+`finish()` akışta CSP üretmediği için yanıt **hash'siz** politika alıyordu.
+
+Sonuç: templ ile render edilen **her sayfada** satır içi `<script>`
+engellendi. Konsolda:
+
+```
+Executing inline script violates … 'script-src 'self' 'sha256-…'
+Either the 'unsafe-inline' keyword, a hash ('sha256-yuDK…'), or a nonce …
+```
+
+Düzeltme: `Flush`, HTML yanıtında tamponu **korur** (hash ancak nihai
+gövdeden üretilebilir); HTML dışı akışlar (zip/csv/SSE) eskisi gibi akar.
+Regresyon testi: `TestCSPWriterHTMLFlushSonrasiHash`.
+
+### 15.2 CSP hash'i HTML **yorumundaki** `<script>` kelimesini sayıyordu
+
+Hash'leyici metinde `<script` arıyordu. Templ'in basacağı yorum metninde
+"`buildCSP gövdedeki her <script>'in sha256'sını…`" yazıyordu; yorum +
+gerçek betik tek parça olarak hash'lendi:
+
+| | bayt | hash |
+|---|---|---|
+| sunucu (yorum dahil) | 478 | `sha256-+5vpu0VH…` (yanlış) |
+| tarayıcı (yalnız gerçek) | 400 | `sha256-yuDKVlqu…` (doğru) |
+
+Hash hiç tutmadı. Düzeltme: `htmlYorumAtla` — yorum içindeki etiket metni
+sayılmaz (`<script>` ve `<style>` için). Regresyon testleri:
+`TestCSPYorumIcindekiEtiketSayilmaz`, `…StilSayilmaz`, `…ScriptTamamenAtlanir`.
+
+### 15.3 Statik varlık sürümü `?v=1` sabitti
+
+Tasarım sistemi baştan yazıldığında tarayıcılar eski `cd.css`'i önbellekten
+servis etti; ölçüm "hiçbir şey değişmemiş" gibi göründü ve **yanlış teşhis**
+riski doğdu (değerler doğruydu, dosya eskiydi). Sürüm artık süreç başına
+değişiyor (`assetVer` → `templkit.VarlikSurum`).
+
+### 15.4 Doğrulama
+
+Gerçek Chrome, 1920×871, `getComputedStyle` — spec §11'deki kalemlerin
+tamamı ölçüldü; **25/25 uyumlu**. Tema anahtarı: açık → koyu geçiş,
+`localStorage` kalıcılığı, yeniden yükleme sonrası tercih korunuyor.
+Lighthouse: `/` 100 · `/markets` 100 · `/price` 100 (SEO 100, BP 96, CLS 0).
 
 ---
 

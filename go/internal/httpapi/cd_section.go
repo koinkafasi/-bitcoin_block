@@ -206,7 +206,7 @@ func (s *Server) cdShellCtx(ctx context.Context, aktif string) templkit.CDShell 
 		}
 		sh.MenuCoins = append(sh.MenuCoins, templkit.CDMenuItem{
 			Label: f.Name + " (" + f.Sym + ")",
-			Href:  "/price/" + strings.ToLower(f.Sym),
+			Href:  "/price/" + repo.CoinSlug(f.Name),
 		})
 	}
 	return sh

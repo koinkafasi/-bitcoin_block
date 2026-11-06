@@ -28,6 +28,7 @@ import (
 	"theblock/site/internal/transcribe"
 	"theblock/site/internal/tts"
 	"theblock/site/internal/webui"
+	"theblock/site/internal/webui/templkit"
 )
 
 type Server struct {
@@ -118,6 +119,10 @@ func NewServerApp(cfg config.Config, logger *slog.Logger, pool *pgxpool.Pool, bu
 		assetVer:   strconv.FormatInt(time.Now().Unix(), 36),
 	}
 	s.siteName = s.initialSiteName()
+	// Statik varlık sürümünü templkit'e de ver: cd_head.templ `?v=` ile
+	// tarayıcı önbelleğini kırıyor. Sabit "1" kalınca tasarım değişiklikleri
+	// eski önbellekten servis ediliyordu (6 Kasım 2026'da yaşandı).
+	templkit.VarlikSurum = s.assetVer
 
 	funcs := templateFuncs()
 	funcs["mediaURL"] = s.mediaURL

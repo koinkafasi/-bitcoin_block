@@ -52,25 +52,29 @@ func TestKgOlceklenemeyenAdresDegismez(t *testing.T) {
 	}
 }
 
-// En geniş basamak, yuvanın DPR 2 ihtiyacını KARŞILAMALI.
+// En geniş basamak, yuvanın ETKİN YOĞUNLUK ihtiyacını KARŞILAMALI.
 //
 // Bu testin tamamı theblock'ta yapılan hatanın tekrarını önlemek için:
 // srcset 480'de kesilmişti, DPR 2-3'te görüntü bozuldu.
-func TestYuvaBasamaklariDPR2Yetiyor(t *testing.T) {
+//
+// ÖNEMLİ: sizes ÇARPANLI (spec §9). Tarayıcı 2dppx dalında sizes'ı
+// 0.65 ile çarpar, sonra DPR ile çarpar → seçilen aday = yuva × 1,3.
+// Yani gereksinim yuva × 2 DEĞİL, yuva × 1,3. Bu test o sözleşmeyi
+// sabitler: biri çarpanı kaldırırsa ya da basamakları kısaltırsa burada
+// kırmızıya döner.
+func TestYuvaBasamaklariEtkinYogunlukYetiyor(t *testing.T) {
 	// Yuva genişlikleri cd.css'ten hesaplandı (bkz. cd_gorsel_yuva.go).
 	yuvaGenislik := map[CDYuva]int{
-		YuvaKart:        397,
-		YuvaHeroLead:    734,
-		YuvaHeroYan:     474,
-		YuvaBlokLead:    808,
-		YuvaEnCokOkunan: 608,
-		YuvaMakaleKapak: 720,
+		YuvaKart:        472,
+		YuvaHeroLead:    841,
+		YuvaHeroYan:     543,
+		YuvaBlokLead:    922,
+		YuvaEnCokOkunan: 720,
+		YuvaMakaleKapak: 680,
 	}
-	// Ucun en buyuk basamagi 1600 (httpapi.kaynakGorselGenislikGecerli);
-	// bunun ustu istenemez. Ayrica basamaklar kaba: 808px yuva DPR 2'de
-	// 1616 ister, en yakin basamak 1600 — %1 fark, gozle ayirt edilemez.
-	// Kural: en buyuk basamak ya DPR 2 ihtiyacinin %95'ini karsilar ya da
-	// zaten tavandir.
+	// Çarpanlı sizes'ın hedeflediği etkin yoğunluk.
+	const carpan = 1.3
+	// Ucun en büyük basamağı 1600 (httpapi.kaynakGorselGenislikGecerli).
 	const tavan = 1600
 	for yuva, genislik := range yuvaGenislik {
 		b := yuvaBilgi[yuva].Basamaklar
@@ -78,13 +82,31 @@ func TestYuvaBasamaklariDPR2Yetiyor(t *testing.T) {
 			t.Fatalf("yuva %d basamaksız", yuva)
 		}
 		enBuyuk := b[len(b)-1]
-		gerek := genislik * 2
+		gerek := int(float64(genislik) * carpan)
 		if enBuyuk >= tavan {
-			continue // tavana dayanmis; daha genisi uc zaten vermiyor
+			continue // tavana dayanmış; daha genisi uc zaten vermiyor
 		}
-		if enBuyuk*100 < gerek*95 {
-			t.Errorf("yuva %d: en büyük basamak %d, DPR 2 için ~%d gerekiyor",
-				yuva, enBuyuk, gerek)
+		if enBuyuk < gerek {
+			t.Errorf("yuva %d (%dpx): en büyük basamak %d, etkin yoğunluk ~%d gerekiyor",
+				yuva, genislik, enBuyuk, gerek)
+		}
+	}
+}
+
+// Sizes ÇARPANLI olmalı: 2dppx'te yuva × 0,65, 3dppx'te × 0,433.
+//
+// NEDEN TEST: çarpanı sessizce kaldırmak baytı ~%35 artırır ama görsel
+// hiç bozulmaz — yani kimse fark etmez. Bu test sözleşmeyi tutar.
+func TestYuvaSizesCarpanli(t *testing.T) {
+	for yuva, bilgi := range yuvaBilgi {
+		if yuva == YuvaAvatar {
+			continue // 48px sabit; çarpan anlamsız
+		}
+		if !strings.Contains(bilgi.Sizes, "* 0.65") {
+			t.Errorf("yuva %d: 2dppx çarpanı (0.65) yok: %q", yuva, bilgi.Sizes)
+		}
+		if !strings.Contains(bilgi.Sizes, "* 0.433") {
+			t.Errorf("yuva %d: 3dppx çarpanı (0.433) yok: %q", yuva, bilgi.Sizes)
 		}
 	}
 }
@@ -163,7 +185,7 @@ func TestYuvaSizesDoldurulmus(t *testing.T) {
 		if yuva == YuvaAvatar {
 			continue // 40px sabit; vw dalı anlamsız
 		}
-		if !strings.Contains(bilgi.Sizes, "max-width: 720px") {
+		if !strings.Contains(bilgi.Sizes, "max-width: 767px") {
 			t.Errorf("yuva %d: mobil dalı yok (%q)", yuva, bilgi.Sizes)
 		}
 	}
@@ -174,14 +196,14 @@ func TestYuvaSizesDoldurulmus(t *testing.T) {
 // NEDEN TEST: `lead bool` ile genişlik türetme denemesi tam burada kırılıyor.
 // Biri yuva tipini boolean'a geri çevirmeye kalkarsa burada görünür.
 func TestBlokLeadHeroLeadtenGenis(t *testing.T) {
-	// .cd-block 2fr/1fr gap 28 → (1240-28)*2/3 = 808
-	// .cd-hero 1.55fr/1fr gap 32 → (1240-32)*1.55/2.55 = 734
+	// .cd-block 2fr/1fr sütun aralığı 80 → (1464-80)*2/3 = 922
+	// .cd-hero 1.55fr/1fr sütun aralığı 80 → (1464-80)*1.55/2.55 = 841
 	blok := yuvaBilgi[YuvaBlokLead].Sizes
 	hero := yuvaBilgi[YuvaHeroLead].Sizes
-	if !strings.Contains(blok, "808px") {
-		t.Errorf("blok lead sizes'ında 808px yok: %q", blok)
+	if !strings.Contains(blok, "922px") {
+		t.Errorf("blok lead sizes'ında 922px yok: %q", blok)
 	}
-	if !strings.Contains(hero, "734px") {
-		t.Errorf("hero lead sizes'ında 734px yok: %q", hero)
+	if !strings.Contains(hero, "841px") {
+		t.Errorf("hero lead sizes'ında 841px yok: %q", hero)
 	}
 }

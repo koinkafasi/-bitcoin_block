@@ -20,7 +20,11 @@ templ CDSectionPageView(v CDSectionPage) {
 			<main class="cd-wrap">
 				<header class="cd-section-title">
 					<h1>{ v.Section }</h1>
-					<p class="cd-card__spot">{ v.Desc }</p>
+					<!-- CoinDesk bölüm sayfasında H1 altı AÇIKLAMA YOK
+					     (ölçüm, spec §10.3 — eski spec "tek satır açıklama"
+					     diyordu, yanlış). Metin yine <meta description>'da
+					     ve kart spotlarında duruyor; görünür tekrar
+					     hiyerarşiyi bozuyordu. -->
 				</header>
 
 				if v.Lead.Href != "" {
@@ -51,12 +55,16 @@ templ CDSectionPageView(v CDSectionPage) {
 
 				@cdMostRead(v.MostRead)
 
-				<nav class="cd-pager" aria-label="Sayfalama">
+				<!-- Sayfalama: CoinDesk "More stories" DÜĞMESİ kullanıyor,
+				     sonsuz kaydırma değil (spec §10.3). "Önceki" bağlantısı
+				     erişilebilirlik için yanında kalır (klavye/geri dönüş):
+				     yalnız ileri düğme, 2. sayfada geri dönüşü imkânsız kılar. -->
+				<nav class="cd-daha" aria-label="Sayfalama">
 					if v.PrevHref != "" {
-						<a class="cd-btn cd-btn--ghost" href={ v.PrevHref }>← Önceki</a>
+						<a class="cd-daha__geri" href={ v.PrevHref } rel="prev">← Önceki</a>
 					}
 					if v.NextHref != "" {
-						<a class="cd-btn cd-btn--ghost" href={ v.NextHref }>Sonraki →</a>
+						<a class="cd-daha__btn" href={ v.NextHref } rel="next">Daha fazla haber</a>
 					}
 				</nav>
 			</main>

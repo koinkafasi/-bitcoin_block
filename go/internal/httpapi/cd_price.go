@@ -2,7 +2,6 @@ package httpapi
 
 import (
 	"net/http"
-	"strings"
 
 	"theblock/site/internal/repo"
 	"theblock/site/internal/webui/templkit"
@@ -21,6 +20,7 @@ func (s *Server) cdTickerDoldur(r *http.Request) []templkit.CDTickerItem {
 		}
 		out = append(out, templkit.CDTickerItem{
 			Sym:    f.Sym,
+			Slug:   repo.CoinSlug(f.Name),
 			Price:  repo.FiyatBicim(f.Price),
 			Change: repo.DegisimBicim(f.Change),
 			Up:     f.Change >= 0,
@@ -44,7 +44,7 @@ func (s *Server) cdFiyatSatirlari(r *http.Request, adet int) []templkit.CDPriceR
 			Price:  repo.FiyatBicim(f.Price),
 			Change: repo.DegisimBicim(f.Change),
 			Up:     f.Change >= 0,
-			Href:   "/price/" + strings.ToLower(f.Sym),
+			Href:   "/price/" + repo.CoinSlug(f.Name),
 		})
 	}
 	return out

@@ -13,6 +13,7 @@ import "strconv"
 // CDTickerItem fiyat şeridindeki tek kalem.
 type CDTickerItem struct {
 	Sym    string
+	Slug   string // kanonik yol parçası (tam ad): "bitcoin"
 	Price  string
 	Change string // "+%3.48" gibi, işaret dahil
 	Up     bool
@@ -78,7 +79,7 @@ var cdFooterColumns = []struct {
 		{"Görüş", "/opinion"},
 		{"Analiz", "/news-analysis"},
 		{"Araştırma", "/research"},
-		{"Endeksler", "/index"},
+		{"Basın Bültenleri", "/press-release"},
 	}},
 	{"Medya", [][2]string{
 		{"Video", "/videos"},
@@ -117,6 +118,9 @@ func cdOkumaMetni(dk int) string {
 }
 
 // cdSlug sembolü fiyat yolu parçasına çevirir (BTC → btc).
+//
+// DİKKAT: kanonik fiyat adresi artık TAM ADDIR (`/price/bitcoin`); bu
+// yardımcı yalnız sembol karşılaştırması ve 301 yönlendirmesi için kalır.
 func cdSlug(sym string) string {
 	out := make([]rune, 0, len(sym))
 	for _, r := range sym {

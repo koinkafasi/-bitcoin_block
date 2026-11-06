@@ -36,7 +36,10 @@
   background: var(--cd-bg);
   border: 1px solid var(--cd-border);
   border-radius: var(--cd-radius);
-  /* Spec: gölge yok — derinlik çizgiyle verilir. */
+  /* Gölge YALNIZ bindirme katmanında (spec §6: 21 öğe, hepsi açılır
+     panel/diyalog; kartlarda yok). Panel sayfanın üstünde yüzdüğü için
+     ayırıcı çizgi tek başına yetmiyor. */
+  box-shadow: var(--cd-shadow-overlay);
   padding: 14px 0;
 
   /* Kapalıyken DOM'da kalır ama ekran okuyucuya ve fareye kapalı. */
@@ -80,32 +83,33 @@
 .cd-mega__sutun a {
   display: block;
   padding: 6px 0;
-  font-size: .875rem;
-  line-height: 1.35;
+  font-size: 14px;
+  line-height: 21px;
   color: var(--cd-fg);
   text-decoration: none;
   white-space: nowrap;
 }
-.cd-mega__sutun a:hover { color: var(--cd-link-hover); text-decoration: underline; }
+.cd-mega__sutun a:hover { color: var(--cd-fg-strong); text-decoration: underline; }
 
-/* Grup başlığı: tıklanmaz, küçük ve sönük. */
+/* Grup başlığı: tıklanmaz, küçük ve sönük (12/16 w500, ls 0.4px). */
 .cd-mega__baslik {
   padding: 4px 0 8px;
-  font-size: .6875rem;
-  font-weight: 700;
-  letter-spacing: .08em;
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 500;
+  letter-spacing: 0.4px;
   text-transform: uppercase;
   color: var(--cd-muted);
 }
 .cd-mega__baslik + li a { padding-top: 0; }
 
-/* "Tümünü gör": ayraçtan sonra, mavi. */
+/* "Tümünü gör": ayraçtan sonra. CoinDesk'te ayrı renk yok — metin rengi. */
 .cd-mega__tumu {
   margin-top: 8px;
   padding-top: 8px;
   border-top: 1px solid var(--cd-border);
 }
-.cd-mega__tumu a { color: var(--cd-link); font-weight: 600; }
+.cd-mega__tumu a { color: var(--cd-fg); font-weight: 500; }
 
 /* Hareket azaltma tercihi: geçişleri kapat, görünürlük aynı kalsın. */
 @media (prefers-reduced-motion: reduce) {

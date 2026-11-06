@@ -253,43 +253,82 @@ func cdHead(h CDHead) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 21, "<meta name=\"twitter:card\" content=\"summary_large_image\"><!-- Görsel CDN'lerine erken bağlantı: LCP'yi ~50-100 ms iyileştirir --><link rel=\"preconnect\" href=\"https://cdn.sanity.io\" crossorigin=\"anonymous\"><link rel=\"preconnect\" href=\"https://assets.coingecko.com\" crossorigin=\"anonymous\"><link rel=\"stylesheet\" href=\"/static/cd.css?v=1\"><!-- Mega menü: cd.css'in üstüne biner, kendi jetonunu tanımlamaz. --><link rel=\"stylesheet\" href=\"/static/cd-menu.css?v=1\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 21, "<meta name=\"twitter:card\" content=\"summary_large_image\"><!-- Görsel CDN'lerine erken bağlantı: LCP'yi ~50-100 ms iyileştirir --><link rel=\"preconnect\" href=\"https://cdn.sanity.io\" crossorigin=\"anonymous\"><link rel=\"preconnect\" href=\"https://assets.coingecko.com\" crossorigin=\"anonymous\"><link rel=\"stylesheet\" href=\"")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var13 templ.SafeURL
+		templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinURLErrs("/static/cd.css?v=" + cdVarlik())
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_head.templ`, Line: 74, Col: 63}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 22, "\"><!-- Mega menü: cd.css'in üstüne biner, kendi jetonunu tanımlamaz. --><link rel=\"stylesheet\" href=\"")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var14 templ.SafeURL
+		templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinURLErrs("/static/cd-menu.css?v=" + cdVarlik())
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_head.templ`, Line: 76, Col: 68}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 23, "\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		if h.RSSFeed != "" {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 22, "<link rel=\"alternate\" type=\"application/rss+xml\" title=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 24, "<link rel=\"alternate\" type=\"application/rss+xml\" title=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var13 string
-			templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.ResolveAttributeValue(h.SiteName + " RSS")
+			var templ_7745c5c3_Var15 string
+			templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.ResolveAttributeValue(h.SiteName + " RSS")
 			if templ_7745c5c3_Err != nil {
 				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_head.templ`, Line: 78, Col: 78}
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var13)
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var15)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 23, "\" href=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 25, "\" href=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var14 templ.SafeURL
-			templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinURLErrs(h.RSSFeed)
+			var templ_7745c5c3_Var16 templ.SafeURL
+			templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinURLErrs(h.RSSFeed)
 			if templ_7745c5c3_Err != nil {
 				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_head.templ`, Line: 78, Col: 97}
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 24, "\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 26, "\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 25, "<!-- CSP uyumlu delege dinleyiciler (data-* öznitelikleri) --><script src=\"/static/csp-delegated.js?v=1\" defer></script><!-- Organization + WebSite: templ script içini ham saydığı için Go'da üretilir -->")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 27, "<!-- CSP uyumlu delege dinleyiciler (data-* öznitelikleri) --><script src=\"")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var17 string
+		templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.ResolveAttributeValue("/static/csp-delegated.js?v=" + cdVarlik())
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_head.templ`, Line: 81, Col: 57}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var17)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 28, "\" defer></script><!-- Tema başlangıcı — BLOKLAYICI ve head'de olmalı: gövde boyanmadan\n\t     önce html sınıfı yazılmazsa koyu tema seçen kullanıcı bir kare\n\t     beyaz görür (FOUC). CSP satır içi betiğe izin veriyor çünkü\n\t     buildCSP her satır içi bloğun sha256'sını başlığa ekliyor;\n\t     'unsafe-inline' gerekmiyor.\n\t     DİKKAT: bu yorumda bilerek \"script\" etiketi YAZILMIYOR. CSP\n\t     tarayıcısı yorum içindeki etiket metnini atlıyor (htmlYorumAtla)\n\t     ama yorumu temiz tutmak ikinci savunma katmanı. --><script>\n\t\t(function () {\n\t\t\ttry {\n\t\t\t\tvar t = localStorage.getItem('tema');\n\t\t\t\tvar koyu = t === 'dark' || (t !== 'light' &&\n\t\t\t\t\twindow.matchMedia('(prefers-color-scheme: dark)').matches);\n\t\t\t\tdocument.documentElement.className = koyu ? 'dark' : 'light';\n\t\t\t\tdocument.documentElement.classList.add('cd-js');\n\t\t\t} catch (e) {\n\t\t\t\t/* localStorage kapalı (gizli mod): medya sorgusu devralır. */\n\t\t\t}\n\t\t})();\n\t</script><!-- Organization + WebSite: templ script içini ham saydığı için Go'da üretilir -->")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

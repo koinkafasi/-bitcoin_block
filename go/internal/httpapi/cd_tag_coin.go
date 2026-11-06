@@ -71,20 +71,42 @@ func (s *Server) handleCDTag(w http.ResponseWriter, r *http.Request) {
 
 // handleCDCoin /price/{coin} — tek varlık fiyat sayfası.
 //
-// Veri CoinGecko listesinden gelir (ayrı istek yok): sembol eşleşmesi
-// yeterli. Bilinmeyen sembolde 404.
+// KANONİK ADRES TAM ADDIR (`/price/bitcoin`) — CoinDesk deseni (spec
+// §10.5). SEO'da "bitcoin price" aramasıyla birebir eşleşiyor. Eski
+// sembol adresleri (`/price/btc`) 301 ile buraya taşınır: bağlantı kırılmaz,
+// iki adres ayrı sayfa olarak indekslenmez (kanonik tekilleşir).
+//
+// Veri CoinGecko listesinden gelir (ayrı istek yok): ad VEYA sembol
+// eşleşmesi yeterli. Bilinmeyen değerde 404.
 func (s *Server) handleCDCoin(w http.ResponseWriter, r *http.Request) {
-	sym := strings.ToUpper(strings.TrimSpace(r.PathValue("coin")))
-	if sym == "" {
+	parca := strings.TrimSpace(r.PathValue("coin"))
+	if parca == "" {
 		s.handleNotFound(w, r)
 		return
 	}
+	aranan := strings.ToLower(parca)
+
 	fiyatlar := repo.Fiyatlar(r.Context(), s.pool)
 	var bulunan *repo.FiyatSatiri
 	for i := range fiyatlar {
-		if fiyatlar[i].Sym == sym {
+		// Önce kanonik slug (tam ad), sonra sembol.
+		if repo.CoinSlug(fiyatlar[i].Name) == aranan {
 			bulunan = &fiyatlar[i]
 			break
+		}
+	}
+	if bulunan == nil {
+		for i := range fiyatlar {
+			if strings.ToLower(fiyatlar[i].Sym) == aranan {
+				bulunan = &fiyatlar[i]
+				// Sembol adresi kanonik değil: kalıcı yönlendir.
+				hedef := "/price/" + repo.CoinSlug(fiyatlar[i].Name)
+				if r.URL.RawQuery != "" {
+					hedef += "?" + r.URL.RawQuery
+				}
+				http.Redirect(w, r, hedef, http.StatusMovedPermanently)
+				return
+			}
 		}
 	}
 	if bulunan == nil {
@@ -94,11 +116,15 @@ func (s *Server) handleCDCoin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	slug := repo.CoinSlug(bulunan.Name)
+	sym := bulunan.Sym
+	kanonik := s.cfg.BaseURL + "/price/" + slug
+
 	v := templkit.CDCoinPage{
 		Shell:     s.cdShellCtx(r.Context(), "price"),
 		Title:     bulunan.Name + " (" + sym + ") Fiyatı — " + s.siteName,
 		Desc:      bulunan.Name + " canlı fiyatı, 24 saatlik değişimi ve piyasa sıralaması.",
-		Canonical: s.cfg.BaseURL + "/price/" + strings.ToLower(sym),
+		Canonical: kanonik,
 		Sym:       sym,
 		Name:      bulunan.Name,
 		Rank:      bulunan.Rank,
@@ -106,7 +132,7 @@ func (s *Server) handleCDCoin(w http.ResponseWriter, r *http.Request) {
 		Change:    repo.DegisimBicim(bulunan.Change),
 		Up:        bulunan.Change >= 0,
 		Others:    s.cdFiyatSatirlari(r, 12),
-		JSONLD:    string(siteAdiJSONLD(s.siteName, s.cfg.BaseURL+"/price/"+strings.ToLower(sym))),
+		JSONLD:    string(siteAdiJSONLD(s.siteName, kanonik)),
 	}
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.Header().Set("Cache-Control", "public, max-age=60")

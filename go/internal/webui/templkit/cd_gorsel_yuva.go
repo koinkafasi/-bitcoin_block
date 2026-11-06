@@ -13,109 +13,152 @@ import (
 // httpapi'ye /kg/{hash}/{genislik} eklendi; burası şablonların doğru
 // genişliği istemesini sağlıyor.
 //
-// YUVA GENİŞLİKLERİ UYDURULMADI — cd.css'ten hesaplandı:
-// --cd-max 1280, .cd-wrap padding 0 20px → içerik en çok 1240px.
+// YUVA GENİŞLİKLERİ UYDURULMADI — cd.css'ten hesaplandı (6 Kasım 2026
+// ölçümü: kapsayıcı 1512, yan boşluk 24 → içerik 1464):
 //
-//	.cd-hero   1.55fr 1fr, gap 32 → lead (1240-32)*1.55/2.55 = 734
-//	                                 yan  (1240-32)*1.00/2.55 = 474
-//	.cd-block  2fr 1fr,    gap 28 → lead (1240-28)*2/3        = 808
-//	.cd-most   1fr 1fr,    gap 24 →      (1240-24)/2          = 608
-//	.cd-article max-width: 720px  →                             720
-//	.cd-grid--3                   →      (1240-48)/3          = 397
-//	.cd-opinion__avatar           →                              40 (sabit)
+//	.cd-hero   1.55fr 1fr, sütun aralığı 80 → lead (1464-80)*1.55/2.55 = 841
+//	                                          yan  (1464-80)*1.00/2.55 = 543
+//	.cd-block  2fr 1fr,    sütun aralığı 80 → lead (1464-80)*2/3        = 922
+//	.cd-most   1fr 1fr,    gap 24           →      (1464-24)/2          = 720
+//	.cd-article max-width: 680px            →                            680
+//	.cd-grid--3 gap 24                      →      (1464-48)/3          = 472
+//	.cd-opinion__avatar                     →                             48 (sabit)
 //
-// Bu değerler tarayıcıda da ölçüldü ve birebir çıktı (bkz.
-// docs/DENETIM-2026-11-05.md): lead 734x413, orta 474x266, küçük 292x164.
-//
-// Kırılma noktaları: 1024px'te .cd-hero ve .cd-block TEK sütuna düşer,
-// 720px'te .cd-grid--* de düşer ve .cd-wrap padding'i 14px olur. sizes
-// dalları bunu izler.
+// Kırılma noktaları CoinDesk'in ölçülen merdiveninden: 1024 (lg) ve 768
+// (md). 1024'te hero/blok TEK sütuna düşer; 767'de ızgaralar tek sütun
+// olur ve .cd-wrap yan boşluğu 24 → 16 px.
 
 // CDYuva kartın hangi yuvada durduğunu söyler.
 //
 // Neden bir yuva tipi, `lead bool` değil: ölçüm gösterdi ki .cd-block
-// içindeki "lead olmayan" kart 808px — yani hero'nun lead'inden (734)
-// DAHA GENİŞ. Boolean ile doğru sizes üretilemiyor.
+// içindeki "lead olmayan" kart hero lead'inden DAHA GENİŞ. Boolean ile
+// doğru sizes üretilemiyor.
 type CDYuva uint8
 
 const (
 	// YuvaKart genel ızgara kartı (.cd-grid--3 / --4). En dar yuva.
 	YuvaKart CDYuva = iota
-	// YuvaHeroLead ana sayfa hero'sunun büyük kartı (734px).
+	// YuvaHeroLead ana sayfa hero'sunun büyük kartı (841px).
 	YuvaHeroLead
-	// YuvaHeroYan hero'nun yan sütunu (474px).
+	// YuvaHeroYan hero'nun yan sütunu (543px).
 	YuvaHeroYan
-	// YuvaBlokLead bölüm bloğunun büyük kartı (808px) — en geniş kart.
+	// YuvaBlokLead bölüm bloğunun büyük kartı (922px) — en geniş kart.
 	YuvaBlokLead
-	// YuvaEnCokOkunan "En Çok Okunan" iki sütunu (608px).
+	// YuvaEnCokOkunan "En Çok Okunan" iki sütunu (720px).
 	YuvaEnCokOkunan
-	// YuvaMakaleKapak makale kapağı (720px, LCP görseli).
+	// YuvaMakaleKapak makale kapağı (680px, LCP görseli).
 	YuvaMakaleKapak
-	// YuvaAvatar görüş yazarı avatarı (40px, sabit).
+	// YuvaAvatar görüş yazarı avatarı (48px, sabit).
 	YuvaAvatar
 )
 
-// Mobil/tablet dalları. Ortak olduğu için tek yerde:
+// Mobil/tablet genişlik İFADELERİ (calc() sarmalayıcısı olmadan).
 //
-//	≤720px  : tek sütun, .cd-wrap padding 14px → 100vw - 28px
-//	≤1024px : hero ve blok tek sütun, padding 20px → 100vw - 40px
+//	≤767px  : tek sütun, .cd-wrap yan boşluğu 16px → 100vw - 32px
+//	≤1024px : hero ve blok tek sütun, yan boşluk 24px → 100vw - 48px
 const (
-	dalMobil  = "(max-width: 720px) calc(100vw - 28px)"
-	dalTablet = "(max-width: 1024px) calc(100vw - 40px)"
+	ifadeMobil = "100vw - 32px"
+	ifadeTam   = "100vw - 48px"
+	// Izgara 768–1024 arası HÂLÂ 3 sütun: (100vw - 2*24 yan - 2*24 gap) / 3
+	ifadeKartTablet = "(100vw - 96px) / 3"
 )
 
 // yuvaBilgi her yuvanın sizes'ı, srcset basamakları ve srcset'siz
 // tarayıcılar için varsayılan genişliği.
 //
-// Basamak seçimi kuralı: en geniş basamak, yuvanın DPR 2'deki ihtiyacını
-// KARŞILAMALI (yuva x 2). Aksi hâlde retina ekranda bulanıklaşır — bu hata
-// theblock'ta bir kez yapıldı, srcset 480'de kesilince DPR 2-3'te görüntü
-// bozuldu. Basamaklar httpapi'deki kapalı listeden (320/480/768/960/1200/1600).
+// Basamak seçimi kuralı: en geniş basamak, yuvanın **etkin yoğunluk**
+// ihtiyacını karşılamalı. Çarpanlı sizes kullanıldığı için bu ihtiyaç
+// yuva × 1,3 (aşağıdaki cdSizes açıklamasına bakın), yuva × 2 değil.
 var yuvaBilgi = map[CDYuva]struct {
 	Sizes      string
 	Basamaklar []int
 	Varsayilan int
 }{
-	// .cd-grid--3 → 397; 1024'te --4 iki sütuna düşer → ~calc(50vw - 27px).
 	YuvaKart: {
-		Sizes:      dalMobil + ", (max-width: 1024px) calc(50vw - 27px), 397px",
+		Sizes:      cdSizes(ifadeMobil, ifadeKartTablet, 472),
 		Basamaklar: []int{320, 480, 768, 960},
 		Varsayilan: 480,
 	},
 	YuvaHeroLead: {
-		Sizes:      dalMobil + ", " + dalTablet + ", 734px",
+		Sizes:      cdSizes(ifadeMobil, ifadeTam, 841),
 		Basamaklar: []int{480, 768, 960, 1200, 1600},
-		Varsayilan: 768,
+		Varsayilan: 960,
 	},
 	YuvaHeroYan: {
-		Sizes:      dalMobil + ", " + dalTablet + ", 474px",
+		Sizes:      cdSizes(ifadeMobil, ifadeTam, 543),
 		Basamaklar: []int{320, 480, 768, 960, 1200},
-		Varsayilan: 480,
+		Varsayilan: 768,
 	},
 	YuvaBlokLead: {
-		Sizes:      dalMobil + ", " + dalTablet + ", 808px",
+		Sizes:      cdSizes(ifadeMobil, ifadeTam, 922),
 		Basamaklar: []int{480, 768, 960, 1200, 1600},
-		Varsayilan: 768,
+		Varsayilan: 960,
 	},
 	YuvaEnCokOkunan: {
-		Sizes:      dalMobil + ", " + dalTablet + ", 608px",
+		Sizes:      cdSizes(ifadeMobil, ifadeTam, 720),
 		Basamaklar: []int{320, 480, 768, 960, 1200},
-		Varsayilan: 480,
-	},
-	// .cd-article max-width 720 — 1024 dalı gereksiz, zaten 720'de sabitlenir.
-	YuvaMakaleKapak: {
-		Sizes:      dalMobil + ", 720px",
-		Basamaklar: []int{480, 768, 960, 1200, 1600},
 		Varsayilan: 768,
 	},
-	// 40px sabit. Kapalı listenin en küçüğü 320: DPR 3'te bile fazlasıyla
+	// .cd-article max-width 680 — tablette de 680'de sabitlenir.
+	YuvaMakaleKapak: {
+		Sizes:      cdSizes(ifadeMobil, "680px", 680),
+		Basamaklar: []int{480, 768, 960, 1200},
+		Varsayilan: 768,
+	},
+	// 48px sabit. Kapalı listenin en küçüğü 320: DPR 3'te bile fazlasıyla
 	// yeter. Bilinçli küçük bir fazlalık — iki görsel sistemi (mediaSrcset
 	// ve /kg/) aynı genişlik kümesinde kalsın diye liste bölünmedi.
 	YuvaAvatar: {
-		Sizes:      "40px",
+		Sizes:      "48px",
 		Basamaklar: []int{320},
 		Varsayilan: 320,
 	},
+}
+
+// cdSizes CoinDesk'in "çarpanlı" sizes tekniğini üretir (spec §9).
+//
+// NEDEN (bu, spec'in bizim için en değerli bulgusu): tarayıcı `w`
+// tanımlayıcısında "yoğunluk = aday_piksel / sizes_değeri" hesaplar ve
+// DPR'ye eşit olanı hedefler. Yani sizes'ı küçük beyan edersek, DPR 2'de
+// seçilen aday = sizes × 2 olur. CoinDesk 2dppx dalında sizes'ı 0.65 ile
+// çarpıyor → aday = yuva × 0.65 × 2 = yuva × 1,3; 3dppx'te 0.433 ile
+// çarpıyor → yuva × 0.433 × 3 = yuva × 1,3. İkisi de **1,3×**'te buluşuyor.
+//
+// Etki: retina ekranda 2×/3× yerine 1,3× indiriliyor. Gözle fark yok,
+// bayt ~%35 azalıyor ve srcset basamağı bir-iki kademe küçüğe iniyor.
+//
+// Biçim (spec §9'daki ölçülen dizenin aynısı):
+//
+//	(mobil, 3dppx) → calc(<mobil> * 0.583)   // 3 × 0,583 ≈ 1,75×
+//	(mobil, 2dppx) → calc(<mobil> * 0.875)   // 2 × 0,875 = 1,75×
+//	(mobil)        → calc(<mobil>)
+//	… tablet katmanı …
+//	(3dppx)        → calc(<px> * 0.433)
+//	(2dppx)        → calc(<px> * 0.65)
+//	               → <px>
+//
+// Mobilde 1,75× (masaüstünde 1,3×) — CoinDesk de böyle yapıyor: küçük
+// ekranda piksel yoğunluğu daha çok önemli, ağ maliyeti daha az.
+func cdSizes(mobil, tablet string, masaustu int) string {
+	c := make([]string, 0, 9)
+	if mobil != "" {
+		c = append(c,
+			"(max-width: 767px) and (min-resolution: 3dppx) calc(("+mobil+") * 0.583)",
+			"(max-width: 767px) and (min-resolution: 2dppx) calc(("+mobil+") * 0.875)",
+			"(max-width: 767px) calc("+mobil+")")
+	}
+	if tablet != "" {
+		c = append(c,
+			"(max-width: 1024px) and (min-resolution: 3dppx) calc(("+tablet+") * 0.583)",
+			"(max-width: 1024px) and (min-resolution: 2dppx) calc(("+tablet+") * 0.875)",
+			"(max-width: 1024px) calc("+tablet+")")
+	}
+	px := strconv.Itoa(masaustu) + "px"
+	c = append(c,
+		"(min-resolution: 3dppx) calc("+px+" * 0.433)",
+		"(min-resolution: 2dppx) calc("+px+" * 0.65)",
+		px)
+	return strings.Join(c, ", ")
 }
 
 // cdKgOlcekli adres ölçeklenebilir bir kaynak görseli mi.

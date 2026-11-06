@@ -140,4 +140,35 @@
       window.location.href = hedef;
     }
   }, true);
+
+  // --- data-tema: açık/koyu tema anahtarı ---
+  //
+  // Başlangıç sınıfı cd_head.templ'deki BLOKLAYICI init betiğinde yazılır
+  // (FOUC'u önlemek için); burada yalnız kullanıcı tıklaması işlenir.
+  // Tercih localStorage'da saklanır, böylece işletim sistemi ayarı
+  // değişse bile kullanıcının seçimi korunur (CoinDesk deseni).
+  function temaDugmeleri() {
+    var koyu = document.documentElement.classList.contains('dark');
+    var dugmeler = document.querySelectorAll('[data-tema]');
+    for (var i = 0; i < dugmeler.length; i++) {
+      dugmeler[i].setAttribute('aria-pressed', koyu ? 'true' : 'false');
+      dugmeler[i].setAttribute('aria-label',
+        koyu ? 'Açık temaya geç' : 'Koyu temaya geç');
+    }
+  }
+
+  document.addEventListener('click', function (e) {
+    var el = e.target;
+    if (!el || !el.closest) return;
+    var btn = el.closest('[data-tema]');
+    if (!btn) return;
+    var kok = document.documentElement;
+    var koyu = !kok.classList.contains('dark');
+    kok.classList.remove('light', 'dark');
+    kok.classList.add(koyu ? 'dark' : 'light');
+    try { localStorage.setItem('tema', koyu ? 'dark' : 'light'); } catch (err) { /* yok say */ }
+    temaDugmeleri();
+  }, true);
+
+  temaDugmeleri();
 })();

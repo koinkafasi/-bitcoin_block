@@ -115,8 +115,33 @@ func (c *cspWriter) Write(p []byte) (int, error) {
 	return c.buf.Write(p)
 }
 
-// Flush tamponlamayı bırakıp alttaki yazıcıya devreder (SSE, uzun yoklama).
+// Flush alt yazıcıyı boşaltır.
+//
+// HTML YANITLARINDA TAMPON KORUNUR — bu bir hata düzeltmesidir, tercih
+// değil. `templ` bileşenini bitirirken kendi iç tamponunu boşaltıyor ve
+// `http.Flusher` arayüzünü görürse `Flush()` çağırıyor
+// (`runtime.ReleaseBuffer` → `Buffer.Flush`). Eski sürüm bu çağrıyı
+// "akışa geç" sayıp `akis=true` yapıyordu; `finish()` de akışta CSP
+// üretmediği için yanıt HASH'SİZ politika alıyordu.
+//
+// Sonuç (ölçüldü, 6 Kasım 2026): templ ile render edilen HER sayfada
+// satır içi `<script>` sessizce engelleniyordu — tarayıcı konsolunda
+// "Executing inline script violates..." hatası; tema başlangıç betiği
+// hiç çalışmadı, koyu tema tercihi uygulanmadı. Hata görünmüyordu çünkü
+// sayfa yine 200 dönüyordu.
+//
+// HTML için tamponu tutmak zorunlu: hash'ler ancak NİHAİ gövdeden
+// üretilebilir. Bellek koruması zaten var (`cspBufferLimit`, 8 MB).
+// SSE ve HTML dışı akışlar (zip/csv dışa aktarma) etkilenmez: onların
+// Content-Type'ı `text/event-stream` ya da HTML değil, aşağıdaki koşul
+// onları eskisi gibi akıtır.
 func (c *cspWriter) Flush() {
+	ct := c.w.Header().Get("Content-Type")
+	htmlMi := ct == "" || strings.HasPrefix(ct, "text/html")
+	if !c.akis && htmlMi {
+		// HTML: gövde CSP hash'leri için tamponda kalmalı.
+		return
+	}
 	if !c.akis {
 		_ = c.bosalt()
 		c.akis = true
@@ -202,7 +227,9 @@ func cspStyleHashes(html string) []string {
 
 	rest := html
 	for {
-		i := indexFold(rest, "<style")
+		// Yorum içindeki "<style" etiket değildir (bkz. htmlYorumAtla).
+		yeni, i := htmlYorumAtla(rest, "<style")
+		rest = yeni
 		if i < 0 {
 			break
 		}
@@ -243,7 +270,7 @@ func cspStyleHashes(html string) []string {
 //   - veri blokları (application/json, ld+json, text/template, text/plain) —
 //     yürütülmezler, CSP bunlara uygulanmaz.
 func cspScriptHashes(html string) []string {
-	if !strings.Contains(html, "<script") {
+	if indexFold(html, "<script") < 0 {
 		return nil
 	}
 	gorulen := map[string]bool{}
@@ -251,7 +278,9 @@ func cspScriptHashes(html string) []string {
 
 	rest := html
 	for {
-		i := indexFold(rest, "<script")
+		// HTML YORUMU içindeki "<script" etiket DEĞİLDİR (bkz. htmlYorumAtla).
+		yeni, i := htmlYorumAtla(rest, "<script")
+		rest = yeni
 		if i < 0 {
 			break
 		}

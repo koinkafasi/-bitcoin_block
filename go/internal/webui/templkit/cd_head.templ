@@ -71,14 +71,35 @@ templ cdHead(h CDHead) {
 	<link rel="preconnect" href="https://cdn.sanity.io" crossorigin="anonymous"/>
 	<link rel="preconnect" href="https://assets.coingecko.com" crossorigin="anonymous"/>
 
-	<link rel="stylesheet" href="/static/cd.css?v=1"/>
+	<link rel="stylesheet" href={ "/static/cd.css?v=" + cdVarlik() }/>
 	<!-- Mega menü: cd.css'in üstüne biner, kendi jetonunu tanımlamaz. -->
-	<link rel="stylesheet" href="/static/cd-menu.css?v=1"/>
+	<link rel="stylesheet" href={ "/static/cd-menu.css?v=" + cdVarlik() }/>
 	if h.RSSFeed != "" {
 		<link rel="alternate" type="application/rss+xml" title={ h.SiteName + " RSS" } href={ h.RSSFeed }/>
 	}
 	<!-- CSP uyumlu delege dinleyiciler (data-* öznitelikleri) -->
-	<script src="/static/csp-delegated.js?v=1" defer></script>
+	<script src={ "/static/csp-delegated.js?v=" + cdVarlik() } defer></script>
+	<!-- Tema başlangıcı — BLOKLAYICI ve head'de olmalı: gövde boyanmadan
+	     önce html sınıfı yazılmazsa koyu tema seçen kullanıcı bir kare
+	     beyaz görür (FOUC). CSP satır içi betiğe izin veriyor çünkü
+	     buildCSP her satır içi bloğun sha256'sını başlığa ekliyor;
+	     'unsafe-inline' gerekmiyor.
+	     DİKKAT: bu yorumda bilerek "script" etiketi YAZILMIYOR. CSP
+	     tarayıcısı yorum içindeki etiket metnini atlıyor (htmlYorumAtla)
+	     ama yorumu temiz tutmak ikinci savunma katmanı. -->
+	<script>
+		(function () {
+			try {
+				var t = localStorage.getItem('tema');
+				var koyu = t === 'dark' || (t !== 'light' &&
+					window.matchMedia('(prefers-color-scheme: dark)').matches);
+				document.documentElement.className = koyu ? 'dark' : 'light';
+				document.documentElement.classList.add('cd-js');
+			} catch (e) {
+				/* localStorage kapalı (gizli mod): medya sorgusu devralır. */
+			}
+		})();
+	</script>
 	<!-- Organization + WebSite: templ script içini ham saydığı için Go'da üretilir -->
 	@templ.Raw(h.JSONLD)
 }
