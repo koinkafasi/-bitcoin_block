@@ -23,14 +23,13 @@ type CDStory struct {
 	ShareURL string
 }
 
-// CDSection ana sayfadaki bölüm bloğu (Markets / Finance / Tech / Policy).
-// CoinDesk düzeni: 1 büyük görselli haber + 2 alt başlık + 3 satır.
+// CDSection ana sayfadaki bölüm hücresi (Markets / Policy / Tech / Finance).
+// CoinDesk düzeni (ölçüldü): 1 görselli haber + 3 saat damgalı satır.
 type CDSection struct {
-	Title  string
-	Href   string
-	Lead   CDStory
-	Second []CDStory
-	Rows   []CDStory
+	Title string
+	Href  string
+	Lead  CDStory
+	Rows  []CDStory
 }
 
 // CDPriceRow fiyat tablosu satırı (CoinDesk "Prices" modülü).

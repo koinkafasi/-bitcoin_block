@@ -1403,6 +1403,38 @@ yanlış ölçüt kullanmıştım — `window.innerWidth` içerikle birlikte bü
 20/24, manşet 28/36 çıkıyordu. İkisi de `:where()` + `html { overflow-x: clip }`
 ile düzeltildi; Lighthouse `/` **100**, CLS 0, LCP 0.3 s.
 
+### 11.4 Altıncı tur (bölüm blokları 2×2 + kategori kapsayıcısı) — DURUM
+
+Ana sayfanın alt bölümü **tamamen yanlış düzendeydi**: bizde kategori başına
+tam genişlikte bir modül (923 + 461, sütun arası 80) vardı. CoinDesk'te ise
+**tek bir 2×2 ızgara** var: 724 + 724, gap 16, her hücre kendi `border-top`
+çizgisini taşıyor.
+
+| Konu | CoinDesk (ölçülen) | bitcosar | Durum |
+|---|---|---|---|
+| Dış düzen | 2×2 ızgara, 724/724, gap 16, alt dolgu 64 | birebir (724/724, gap 16, pb 64) | ✅ |
+| Hücre | `border-top` 1 px #a6a6a6, `padding: 20px 20px 0`, gap 16 | birebir | ✅ |
+| Hücre başlığı | bağlantı 14/21 w500 + 16 px ok, gap 4 | birebir | ✅ |
+| İç ızgara | 334 + 334, gap 16 | birebir (334/334) | ✅ |
+| Görselli kart | görsel 16/9 (334×188) + başlık 24/30 w500 + saat 14/21 | birebir | ✅ |
+| Sağ satırlar | 3 satır: başlık 18/26 w500 + saat 14/21; aralarında 1 px çizgi, iki yanı 16 px | birebir (`my-4`) | ✅ |
+| Kategori sırası | Piyasalar · Politika · Teknoloji · Finans | birebir | ✅ |
+| Kapsayıcı kademesi | bölüm sayfası kapsayıcı **1432**, içerik **1384** | 1432 / 1384 (önceki 1384/1336) | ✅ |
+| 1024 sınırı | `lg:grid-cols-2` → 1024 ve üstü İKİ kolon | birebir (eşik 1023'e çekildi) | ✅ |
+| Mobil | tek kolon; hücre içi de tek kolon (`md` altı) | birebir; taşma 0 | ✅ |
+
+**Bu turda bulunan iki şey:**
+1. `.cd-wrap--bolum` jetonu **1384**'e ayarlıydı; bu değer KAPSAYICIYA
+   veriliyordu, içerik 1336'ya düşüyordu. CoinDesk ölçümü kapsayıcı 1432 /
+   içerik 1384. Düzeltildi (test de 1432'yi doğruluyor).
+2. Tailwind `lg` bir ALT sınır: `lg:grid-cols-2` 1024'te İKİ kolon demek.
+   `@media (max-width: 1024px)` yazmak tam 1024'te tek kolona düşürüyordu;
+   eşik 1023'e çekildi.
+
+Lighthouse `/`: performans **100** · SEO **100** · a11y 97 · BP **100** ·
+LCP 0.4 s · CLS 0. CSS bütçesi 48 → **52 KB** (beşinci tur bileşenleri;
+gzip'te ~9 KB).
+
 ---
 
 ## 12. Kopyalanması önerilen sözleşmeler
