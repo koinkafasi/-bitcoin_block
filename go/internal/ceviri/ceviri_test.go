@@ -268,8 +268,10 @@ func TestParcaliUretim(t *testing.T) {
 	src := mustOku(t, "ceviri.go")
 
 	assert.Contains(t, src, "parcaKarakter = 2200")
-	assert.Contains(t, src, "MaxTokens:   1600",
-		"1200 kesiliyordu; 1600 pay bırakır")
+	// 1600 → 2600: muhakeme tabanlı model bütçenin bir kısmını düşünmeye
+	// harcıyor; 6 Kasım 2026'da 1600'lük bütçe kesiliyordu.
+	assert.Contains(t, src, "MaxTokens:   2600",
+		"muhakeme tabanlı modelde 1600 kesiliyor; 2600 pay bırakır")
 	assert.Contains(t, src, "for _, grup := range parcalaraBol(p)")
 
 	// Başlık ve gövde AYRI istekler: başlık isteminde paragraf yok.
@@ -279,7 +281,9 @@ func TestParcaliUretim(t *testing.T) {
 	govde := src[i : i+son]
 	assert.NotContains(t, govde, `"paragraphs"`,
 		"başlık isteği paragraf taşımamalı (token israfı)")
-	assert.Contains(t, govde, "MaxTokens:   500")
+	// 500 → 1200: 500'de başlık+spot+SEO JSON'u yarıda kesiliyordu
+	// (canlı ölçüm 6 Kasım 2026: "unexpected end of JSON input").
+	assert.Contains(t, govde, "MaxTokens:   1200")
 
 	// Parça sayısı doğrulanır: eksik/fazla paragraf kabul edilmez.
 	assert.Contains(t, src, "parça paragraf sayısı uyuşmuyor")

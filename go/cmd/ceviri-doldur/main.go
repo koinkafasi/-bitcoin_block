@@ -87,6 +87,17 @@ func main() {
 	}
 	defer pool.Close()
 
+	// Tek eşzamanlı koşu: iki süreç aynı satırları seçerse aynı içerik için
+	// iki AI çağrısı yapılır (sürüm koruması veriyi bozmaz ama maliyeti
+	// ikiye katlar). Zamanlayıcı ile elle koşu çakışabildiği için
+	// danışma kilidi alınır; alınamazsa sessizce çıkılır.
+	var kilitVar bool
+	if err := pool.QueryRow(ctx, `SELECT pg_try_advisory_lock(4242)`).Scan(&kilitVar); err != nil || !kilitVar {
+		fmt.Println("başka bir ceviri-doldur koşusu var; çıkılıyor")
+		return
+	}
+	defer pool.Exec(context.Background(), `SELECT pg_advisory_unlock(4242)`)
+
 	bekleyen, err := bekleyenSayisi(ctx, pool, *siteID, *kaynak)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "sorgu:", err)
