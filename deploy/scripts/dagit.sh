@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
-# dagit.sh — theblock-site servisini HEAD'den derleyip yeniden başlatır.
+# dagit.sh — site servisini çalışma ağacından derleyip yeniden başlatır.
+#
+# Servis ve port: DAGIT_SERVIS / DAGIT_PORT ile ezilebilir.
+# Varsayılan: bitcosar-site.service · 8090
 #
 # Neden betik: dağıtım elle iki komutla yapılıyordu ve her seferinde iki şey
 # ters gidiyordu. Birincisi, komut Windows terminalinde çalıştırılınca
@@ -12,7 +15,7 @@
 # gelmezse çıkış kodu sıfır değildir ve günlüğün son satırları basılır.
 #
 # Kullanım (WSL içinden):   bash deploy/scripts/dagit.sh
-# Kullanım (Windows'tan):   wsl -d ubuntu -- bash -lc "cd /home/alper/theblock && bash deploy/scripts/dagit.sh"
+# Kullanım (Windows'tan):   wsl -d Ubuntu -- bash -lc "cd /home/alper/bitcosar && bash deploy/scripts/dagit.sh"
 #
 # Seçenekler:
 #   --atla-test    testleri atla (acil düzeltme için; varsayılan koşar)
@@ -21,8 +24,17 @@ set -uo pipefail
 KOK=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
 cd "$KOK"
 
-SERVIS=theblock-site.service
-PORT="${DAGIT_PORT:-8070}"
+# TEHLIKELI VARSAYILAN DUZELTILDI (6 Kasim 2026): burada
+# `SERVIS=theblock-site.service` ve `PORT=8070` yaziliyordu — theblock'tan
+# kalma. O servis bu makinede GERCEKTEN var ve ayri bir projeyi (~/theblock)
+# calistiriyor. Betik bu depodan kosturulunca bitcosar'in ikilisini derleyip
+# THEBLOCK'u yeniden baslatiyordu; sagligi da 8070'ten (theblock'un portu)
+# okuyup "TAMAM" diyordu. Yani yanlis servisi yeniden baslatip basarili
+# rapor veren bir dagitim.
+#
+# Artik depo adindan turetiliyor, ortam degiskeniyle ezilebiliyor.
+SERVIS="${DAGIT_SERVIS:-bitcosar-site.service}"
+PORT="${DAGIT_PORT:-8090}"
 ATLA_TEST=0
 [ "${1:-}" = "--atla-test" ] && ATLA_TEST=1
 

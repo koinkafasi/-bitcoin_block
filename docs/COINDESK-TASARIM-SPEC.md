@@ -1098,11 +1098,29 @@ div.border-b.border-solid.border-strong.mb-6        1384×61
 
 #### Görsel yuvaları ve kart kademeleri
 
-| Yuva | Kolon | Adet |
+| Yuva (görsel ölçümü) | Izgara hücresi (KESİN) | Adet |
 |---|---|---|
-| **689×388** | 6 kolon (6×100.656 + 5×16 = 684) | 1 — öne çıkan |
-| **327×185** | 3 kolon (3×100.656 + 2×16 = 334) | 5 |
-| **241×135** | liste satırı küçük görseli | 4 |
+| 689×388 | **6 kolon = 683.9px** | 1 — öne çıkan |
+| 327×185 | **3 kolon = 334.0px** | 5 |
+| 241×135 | liste satırı küçük görseli | 4 |
+
+> **DİKKAT — hangi sayı doğru:** soldaki sütun `getBoundingClientRect`
+> ile GÖRSELDEN okundu; sağdaki ızgara matematiğinden. Kolon
+> 100.656px, gap 16px, içerik 1384:
+>
+> ```
+>  6 kolon + 5 gap = 6×100.656 +  5×16 =  683.9   (öne çıkan)
+>  3 kolon + 2 gap = 3×100.656 +  2×16 =  334.0   (kart)
+>  9 kolon + 8 gap = 9×100.656 +  8×16 = 1033.9   (liste)
+> 12 kolon + 11 gap = 12×100.656 + 11×16 = 1383.9 (içerik)
+> ```
+>
+> **Karşılaştırmada ızgara sayıları kullanılmalı.** Görsel ölçümleri
+> (689/327) birkaç piksel sapıyor — görselin kendi oranı ve `object-fit`
+> yuvayı tam doldurmayabiliyor. bitcosar 684/334/1034 ölçüyor, yani
+> ızgaraya **tam isabet** ediyor; 689'a karşı 684 görmek bir fark değil,
+> yanlış referanstır. (Bu tuzağa bir kez düşüldü ve beş sahte fark
+> raporlandı.)
 
 Hepsi 16:9. Kart başlıkları: **24/30 w500** (öne çıkan) · **20/26 w500** ·
 **16/24 w500**. Bölüm başlığı 28/36 w700. Kart spotu **16/24 w400**.
@@ -1133,16 +1151,24 @@ asimetrik manşet bloğu yok.**
 | Konu | CoinDesk | bitcosar | Aksiyon |
 |---|---|---|---|
 | H1 tipografi | 36/44 w700 | **36/44 w700** | ✅ |
-| Kapsayıcı | **max-width 1432px** | yok (`main` maxW 1384) | 1432 kademesi ekle |
-| İçerik genişliği | **1384** | 1336 | 48px dar |
-| Kart ızgarası | **12 kolon · gap 16** | `.cd-grid--3` 3 kolon · gap 24 | 12 kolona geç |
-| H1 alt çizgisi | **1px `border-strong`** | var ama kademe doğrulanmadı | `border-strong` olduğunu sabitle |
-| Sayfalama | 166×48 · r8px · 14px w600 · border 1px | **418×51 · r0 · 20px w500** | Düzelt |
-| Liste kolonu | **1032px** (12'nin 9'u) | 1336 (tam genişlik) | 9 kolona al |
+| Kapsayıcı | **max-width 1432px** | 1432px | ✅ |
+| İçerik genişliği | **1384** | 1384 | ✅ |
+| Kart ızgarası | **12 kolon · gap 16** | 12 kolon · gap 16 | ✅ |
+| H1 alt çizgisi | **1px `border-strong`** | `border-strong` | ✅ |
+| H1 alt boşluğu | **24px** | 24px | ✅ |
+| Sayfalama | r8px · 14px w600 · p8/24 | r8px · w600 · p8/24 | ✅ |
+| Liste kolonu | **9 kolon = 1033.9** | 1034 | ✅ |
+| Öne çıkan kart | **6 kolon = 683.9** | 684 | ✅ |
+| Kategori kartı | **3 kolon = 334.0** | 334 | ✅ |
 | Kart başlığı | 24/30 · 20/26 · 16/24 | 20/24 (19×) | Üç kademeyi kur |
 | Görsel yuvaları | 689×388 · 327×185 · 241×135 | 429×241 · 596×335 · 290×163 | Izgara düzelince oturur |
 
-#### GERÇEK HATA — lead kartı en dar kolonda
+#### GERÇEK HATA — lead kartı en dar kolonda (ÇÖZÜLDÜ, commit dd5f75b)
+
+> **DURUM:** hero kategori sayfasından kaldırıldı, 12 kolonlu ızgara
+> kuruldu. Canlı ölçüm: lead 684 > kart 334, boş kolon yok.
+> `cd_kategori_test.go` / `TestKategoriHeroKullanmaz` geri dönüşü
+> engelliyor. Aşağıdaki kayıt, niye yapıldığının belgesi.
 
 Ölçülen ağaç:
 

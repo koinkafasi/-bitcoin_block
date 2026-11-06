@@ -67,14 +67,20 @@ templ CDSectionPageView(v CDSectionPage) {
 				     sonsuz kaydırma değil (spec §10.3). "Önceki" bağlantısı
 				     erişilebilirlik için yanında kalır (klavye/geri dönüş):
 				     yalnız ileri düğme, 2. sayfada geri dönüşü imkânsız kılar. -->
-				<nav class="cd-daha" aria-label="Sayfalama">
-					if v.PrevHref != "" {
-						<a class="cd-daha__geri" href={ v.PrevHref } rel="prev">← Önceki</a>
-					}
-					if v.NextHref != "" {
-						<a class="cd-daha__btn" href={ v.NextHref } rel="next">Daha fazla haber</a>
-					}
-				</nav>
+				<!-- Tek sayfalık bölümde nav HİÇ basılmaz. Ölçümde boş
+				     `<nav class="cd-daha">` render ediliyordu: 0 çocuk ama
+				     `margin: 32px 0 8px` taşıdığı için sayfanın altına
+				     sebepsiz 40px boşluk bırakıyordu. -->
+				if v.PrevHref != "" || v.NextHref != "" {
+					<nav class="cd-daha" aria-label="Sayfalama">
+						if v.PrevHref != "" {
+							<a class="cd-daha__geri" href={ v.PrevHref } rel="prev">← Önceki</a>
+						}
+						if v.NextHref != "" {
+							<a class="cd-daha__btn" href={ v.NextHref } rel="next">Daha fazla haber</a>
+						}
+					</nav>
+				}
 			</main>
 			@cdFooter(v.Shell)
 		</body>
