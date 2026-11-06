@@ -29,11 +29,11 @@ Güvenlik hattı: [`guvenlik-hatti.md`](guvenlik-hatti.md)
 | Gerçek görsel + gerçek etiket | ✅ 119/179 görselli, 109 etiket |
 | `hreflang` + Organization/WebSite/NewsArticle JSON-LD | ✅ |
 | Sitemap + news sitemap + RSS + robots | ✅ |
-| Lighthouse bütçe kapısı | ✅ `make performans` — **/ 100 · /markets 100 · /price 100**, SEO 100, BP **100**, LCP 0.3–0.8 s, CLS 0 |
+| Lighthouse bütçe kapısı | ✅ `make performans` — **/ 100 · /markets 100 · /price 100**, SEO 100, BP **100**, a11y 95–97, LCP 0.3–0.5 s, CLS 0 |
 | **Mega menü (§3)** | ✅ 5 grup, açılır panel, JS yok; etiket+coin sütunları canlı veriden |
 | **Mobil gezinme** | ✅ JS'siz `<details>` hamburger, masaüstünde gizli |
 | **Menüde ölü bağlantı** | ✅ 0 (ölçüm: 49 hedefin 29'u 404'tü); testle korunuyor |
-| **Tasarım spec'i (`COINDESK-TASARIM-SPEC.md`)** | ✅ 25/25 ölçüm uyumlu: kapsayıcı 1512, köşe 4 px, metin #262626, makale 680/22-30, etiketler düz, sticky 140 px |
+| **Tasarım spec'i (`COINDESK-TASARIM-SPEC.md`)** | ✅ 3 tur uygulandı: kapsayıcı 1512/bölüm 1384/footer 1280, köşe 4 px, metin #262626, makale 680/22-30, etiketler düz, sticky 140 px, modül ritmi margin'siz, tam genişlik reklam bandı, özet kutusu + eylem pilleri |
 | **Koyu tema anahtarı** | ✅ `html.light/.dark` + `localStorage`, FOUC yok |
 | Kaynak görsel proxy (`/kg/{hash}`) | ✅ üçüncü taraf çerez kapandı; dış CDN bağımlılığı yok |
 | Kripto alaka kapısı | ✅ resmî kaynaklarda kripto dışı bülten sızmıyor (SEC 25 → 3) |
