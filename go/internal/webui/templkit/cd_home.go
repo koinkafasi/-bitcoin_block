@@ -62,6 +62,17 @@ type CDPromo struct {
 // Gorunur mu.
 func (p CDPromo) Gorunur() bool { return p.Aktif && strings.TrimSpace(p.Metin) != "" }
 
+// CDRailModul hero yan rayındaki tek modül (bölüm kartı).
+//
+// CoinDesk sağ rayı üç modül yığar (Bugünün Videoları · Öne Çıkan
+// Araştırma · Bugünün Klipleri). Bizde o içerik türleri yok; aynı
+// yapıyı gerçek veriyle dolduruyoruz: her bölümden bir kart.
+type CDRailModul struct {
+	Title string
+	Href  string
+	Story CDStory
+}
+
 // CDHomeView ana sayfa şablon verisi.
 type CDHomeView struct {
 	Shell     CDShell
@@ -75,14 +86,16 @@ type CDHomeView struct {
 	//  12 clips · 13 reklam · 14 prices · 15 stocks · 16 exchange benchmark
 	//  17 videos · 18 indices · 19 podcasts · 20 opinion · 21 most read
 	//  22 bölüm blokları
-	Promo    CDPromo
-	Lead     CDStory
-	Side     []CDStory
-	Latest   []CDStory    // §5 — saat damgalı düz liste
-	MostRead []CDStory    // §21 — 1 büyük + 5 satır
-	Opinion  []CDStory    // §20 — yazar avatarlı
-	Prices   []CDPriceRow // §14
-	Sections []CDSection
+	Promo     CDPromo
+	Lead      CDStory
+	Side      []CDStory
+	Latest    []CDStory     // §5 — saat damgalı düz liste
+	RailLeft  []CDStory     // §7A sol ray — "Son Haberler" (başlık + saat)
+	RailRight []CDRailModul // §7A sağ ray — bölüm modülleri
+	MostRead  []CDStory     // §21 — 1 büyük + 5 satır
+	Opinion   []CDStory     // §20 — yazar avatarlı
+	Prices    []CDPriceRow  // §14
+	Sections  []CDSection
 	// Hreflang gerçek çeviriler (dil → mutlak URL). Yalnız çevirisi
 	// olanlar; boşsa x-default basılır.
 	Hreflang map[string]string

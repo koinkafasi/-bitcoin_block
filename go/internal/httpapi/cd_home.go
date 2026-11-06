@@ -93,8 +93,26 @@ func (s *Server) handleCDHome(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	// §7A sol ray: CoinDesk'in "Son Haberler" modülü — 5 satır.
+	// Manşetteki haber tekrar etmesin diye onu atlıyoruz.
+	var railSol []templkit.CDStory
+	for i, st := range donus {
+		if i == leadIdx {
+			continue
+		}
+		railSol = append(railSol, st)
+		if len(railSol) == 5 {
+			break
+		}
+	}
+	// Sağ ray aynı haberi ikinci kez basmasın: manşet + sol ray dışlanır.
+	haric := map[string]bool{lead.Href: true}
+	for _, st := range railSol {
+		haric[st.Href] = true
+	}
+
 	// §22 bölüm blokları: 1 büyük + 2 alt + 3 satır (CoinDesk deseni).
-	bolumler := []struct{ Ad, Slug string }{
+	bolumler := []cdBolum{
 		{"Markets", "markets"},
 		{"Finance", "business"},
 		{"Tech", "tech"},
@@ -140,13 +158,15 @@ func (s *Server) handleCDHome(w http.ResponseWriter, r *http.Request) {
 			CTA:      promo.CTA,
 			Kalan:    promo.Kalan,
 		},
-		Lead:     lead,
-		Side:     side,
-		Latest:   latest,
-		Prices:   s.cdFiyatSatirlari(r, 10),
-		Sections: sections,
-		MostRead: s.cdPopuler(r, 6),
-		Opinion:  s.cdGorus(r, 4),
+		Lead:      lead,
+		Side:      side,
+		Latest:    latest,
+		RailLeft:  railSol,
+		RailRight: railSag(donus, bolumler, haric),
+		Prices:    s.cdFiyatSatirlari(r, 10),
+		Sections:  sections,
+		MostRead:  s.cdPopuler(r, 6),
+		Opinion:   s.cdGorus(r, 4),
 		// hreflang: yalnız GERÇEK diller. Şu an içerik Türkçe; EN içerik
 		// üretildiğinde buraya eklenecek (çevirisi olmayan dili yazmak
 		// Google'da "aynı içerik" cezası riski).
@@ -161,6 +181,39 @@ func (s *Server) handleCDHome(w http.ResponseWriter, r *http.Request) {
 	if err := templkit.CDHome(d).Render(ctx, w); err != nil {
 		s.logger.Error("cd ana sayfa render", "error", err)
 	}
+}
+
+// cdBolum ana sayfadaki bölüm bloklarının tanımı.
+type cdBolum struct{ Ad, Slug string }
+
+// railSag hero sağ rayını doldurur.
+//
+// CoinDesk sağ rayında üç modül var: "Bugünün Videoları" (oynatıcı),
+// "Öne Çıkan Araştırma" (metrik kartı) ve "Bugünün Klipleri" (9/16 klip).
+// Bu üç içerik türünün HİÇBİRİ bizde yayında değil (video 0, yayında
+// araştırma 0, klip 0). Uydurma metrik ya da boş oynatıcı basmak
+// tasarımı dolduruyor gibi gösterip yanlış bilgi verirdi; bu yüzden ray
+// gerçek bölüm verisiyle doluyor: her bölümden bir kart.
+func railSag(items []templkit.CDStory, bolumler []cdBolum, haric map[string]bool) []templkit.CDRailModul {
+	out := make([]templkit.CDRailModul, 0, len(bolumler))
+	for _, b := range bolumler {
+		if len(out) == 3 {
+			break
+		}
+		for _, st := range items {
+			// Kicker bölüm adını taşıyor (handler büyük harfe çeviriyor).
+			if !strings.EqualFold(st.Kicker, b.Ad) {
+				continue
+			}
+			// Manşette ya da sol rayda görünen haber tekrar basılmaz.
+			if haric[st.Href] {
+				continue
+			}
+			out = append(out, templkit.CDRailModul{Title: b.Ad, Href: "/" + b.Slug, Story: st})
+			break
+		}
+	}
+	return out
 }
 
 // cdPopuler §21 "En Çok Okunan" listesi (son 7 gün ağırlıklı).

@@ -27,33 +27,60 @@
 .cd-nav__grup:focus-within .cd-nav__ok { opacity: 1; transform: rotate(180deg); }
 
 /* ---- Açılır panel ---- */
+/* ÖLÇÜM (spec §7.2A): radius 8px · border-left + border-top 1px ·
+   padding 20px 24px · bg surface-default. */
 .cd-mega {
   position: absolute;
   top: 100%;
   left: 0;
   z-index: 60;
-  min-width: 220px;
   background: var(--cd-bg);
   border: 1px solid var(--cd-border);
-  border-radius: var(--cd-radius);
-  /* Gölge YALNIZ bindirme katmanında (spec §6: 21 öğe, hepsi açılır
-     panel/diyalog; kartlarda yok). Panel sayfanın üstünde yüzdüğü için
-     ayırıcı çizgi tek başına yetmiyor. */
-  box-shadow: var(--cd-shadow-overlay);
-  padding: 14px 0;
+  border-radius: var(--cd-radius-lg);
+  /* ÜÇ KATMANLI yükselti gölgesi — menünün KENDİ jetonu. Sayfadaki diğer
+     gölge (0 0 10px) ile aynı değil; CoinDesk de menüde ayrı bir yükselti
+     kullanıyor (ölçüldü: 0 2px 2px -1px .04 / 0 4px 6px -2px .03 /
+     0 12px 16px -4px .08). Panel sayfanın üstünde yüzdüğü için tek
+     çizgiyle ayrım yetmiyor. */
+  box-shadow:
+    0 2px 2px -1px rgba(10, 10, 10, 0.04),
+    0 4px 6px -2px rgba(10, 10, 10, 0.03),
+    0 12px 16px -4px rgba(10, 10, 10, 0.08);
+  padding: 20px 24px;
 
   /* Kapalıyken DOM'da kalır ama ekran okuyucuya ve fareye kapalı. */
   visibility: hidden;
   opacity: 0;
-  transform: translateY(-2px);
-  transition: opacity .12s ease, transform .12s ease, visibility .12s;
+  /* AÇILIŞ EFEKTİ YOK — ölçüldü (spec §7.2A): CoinDesk'te transition 0s,
+     animation none, transform none. Panel anında görünüyor. Bizde de öyle:
+     transform/opacity geçişi YOK. Panelin anında açılması, fareyle
+     gezinen kullanıcı için "menü nerede" belirsizliği bırakmıyor. */
 }
 .cd-nav__grup:hover > .cd-mega,
 .cd-nav__grup:focus-within > .cd-mega {
   visibility: visible;
   opacity: 1;
-  transform: none;
 }
+
+/* Panel genişliği MENÜ BAŞINA (spec §7.2A). Değerler CoinDesk'ten
+   ölçülen üç kademe; sınıf adı da genişliği söylüyor ki şablonda
+   eşleme aramak gerekmesin. */
+.cd-nav__grup--589 > .cd-mega { width: 589px; }
+.cd-nav__grup--750 > .cd-mega { width: 750px; }
+.cd-nav__grup--836 > .cd-mega { width: 836px; }
+/* Son başlık: panel SAĞA hizalı — ama doğru referansa göre.
+   Naïf `right: 0` grubun kendi sağ kenarına hizalar; menü ortalanmış
+   olduğu için panel ekranın ortasında açılıyordu (ölçüldü: sol 494 px,
+   başlık ~1400 px'te). Doğru referans NAV: grubu `static` yapıp paneli
+   nav'a göre konumluyoruz, böylece sağ kenar menünün sağ kenarı oluyor
+   ve panel ekrandan taşmıyor (spec §7.2A istisnası). */
+.cd-nav--mega { position: relative; }
+.cd-nav__grup--sag { position: static; }
+.cd-nav__grup--sag > .cd-mega { left: auto; right: 0; }
+/* Köprü `--sag` grubunda işe yaramaz (grup static): panel zaten grubun
+   altında başlıyor, arada boşluk yok. Tüm nav genişliğinde bir köprü
+   başka başlıkların hover'ını da yakalardı. */
+.cd-nav__grup--sag::after { display: none; }
 
 /* Başlıkla panel arasında fare boşluğu kalmasın: köprü. */
 .cd-nav__grup::after {
@@ -63,9 +90,28 @@
   height: 10px;
 }
 
+/* ---- Panel başlığı (spec §7.2A) ----
+   ikon 32×32 + ad 16/24 w700 + ok svg 9×18, gap 8. */
+.cd-mega__bas {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--cd-border);
+}
+.cd-mega__ikon { display: inline-flex; flex: none; color: var(--cd-fg); }
+.cd-mega__ad {
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 700;
+  color: var(--cd-fg);
+}
+.cd-mega__ok { flex: none; color: var(--cd-muted); }
+
 .cd-mega__ic {
   display: flex;
-  gap: 0;
+  gap: 20px;
   align-items: flex-start;
 }
 
@@ -73,51 +119,106 @@
 .cd-mega__sutun {
   list-style: none;
   margin: 0;
-  padding: 0 20px;
+  padding: 0;
   min-width: 190px;
 }
-.cd-mega__sutun + .cd-mega__sutun { border-left: 1px solid var(--cd-border); }
+.cd-mega__sutun + .cd-mega__sutun {
+  border-left: 1px solid var(--cd-border);
+  padding-left: 20px;
+}
 
 .cd-mega__sutun li { margin: 0; }
 
+/* Satır 14/22 w400 (ölçüldü). */
 .cd-mega__sutun a {
   display: block;
-  padding: 6px 0;
+  padding: 4px 0;
   font-size: 14px;
-  line-height: 21px;
+  line-height: 22px;
+  font-weight: 400;
   color: var(--cd-fg);
   text-decoration: none;
   white-space: nowrap;
 }
 .cd-mega__sutun a:hover { color: var(--cd-fg-strong); text-decoration: underline; }
 
-/* Grup başlığı: tıklanmaz, küçük ve sönük (12/16 w500, ls 0.4px). */
+/* Grup başlığı 14/21 w700 (ölçüldü: `font-metadata-lg font-bold`).
+   Önceki sürüm 12/16 w500'dü — ölçümle uyuşmuyordu. */
 .cd-mega__baslik {
   padding: 4px 0 8px;
-  font-size: 12px;
-  line-height: 16px;
-  font-weight: 500;
-  letter-spacing: 0.4px;
-  text-transform: uppercase;
-  color: var(--cd-muted);
+  font-size: 14px;
+  line-height: 21px;
+  font-weight: 700;
+  color: var(--cd-fg);
 }
 .cd-mega__baslik + li a { padding-top: 0; }
 
-/* "Tümünü gör": ayraçtan sonra. CoinDesk'te ayrı renk yok — metin rengi. */
+/* "Tümünü gör": 14/21 w700, sütun sonunda (ölçüldü). */
 .cd-mega__tumu {
   margin-top: 8px;
-  padding-top: 8px;
+  padding-top: 10px;
   border-top: 1px solid var(--cd-border);
 }
-.cd-mega__tumu a { color: var(--cd-fg); font-weight: 500; }
-
-/* Hareket azaltma tercihi: geçişleri kapat, görünürlük aynı kalsın. */
-@media (prefers-reduced-motion: reduce) {
-  .cd-mega, .cd-nav__ok { transition: none; }
+.cd-mega__tumu a {
+  font-size: 14px;
+  line-height: 21px;
+  font-weight: 700;
+  color: var(--cd-fg);
 }
 
-/* Mobil: cd.css zaten .cd-nav'ı gizliyor (368. satır). Burada ek kural
- * gerekmiyor; hamburger gezinmesi Faz 2'de cd_shell.templ'e eklenecek. */
+/* ---- Açıklamalı kart ızgarası (spec §7.2A Tip B) ----
+   3 sütun × 256.656 px, sütun arası 16; kart 257×96, padding 12/16,
+   radius 8. Başlık 14/20 w500 + açıklama 12/16 w400 subtle. */
+.cd-mega__kartlar {
+  display: grid;
+  grid-template-columns: repeat(3, 256px);
+  column-gap: 16px;
+  row-gap: 4px;
+  align-items: start;
+}
+.cd-mega__kart-grup {
+  grid-column: 1 / -1;
+  font-size: 14px;
+  line-height: 21px;
+  font-weight: 700;
+  color: var(--cd-fg);
+  padding: 4px 0 8px;
+}
+.cd-mega__kart {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-height: 96px;
+  padding: 12px 16px;
+  border-radius: var(--cd-radius-lg);
+  background: transparent;
+  text-decoration: none;
+}
+.cd-mega__kart:hover {
+  background: var(--cd-surface-soft);
+  text-decoration: none;
+}
+.cd-mega__kart-ad {
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 500;
+  color: var(--cd-fg);
+}
+.cd-mega__kart-aciklama {
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 400;
+  color: var(--cd-muted);
+}
+
+/* Hareket azaltma: panelde geçiş yok (zaten yok — spec §7.2A "açılış
+   efekti YOK"), yalnız sekme oku dönüşü kapatılıyor. */
+@media (prefers-reduced-motion: reduce) {
+  .cd-nav__ok { transition: none; }
+}
+
+/* Mobil: cd.css .cd-nav'ı gizliyor; gezinme hamburger panelinde
+ * (cd_mobil.templ). Burada ek kural gerekmiyor. */
 
 /* ---------------------------------------------------------------- mobil gezinme */
 /* JS YOK: <details>/<summary> tarayıcının kendi davranışı. Masaüstünde

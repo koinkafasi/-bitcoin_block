@@ -805,6 +805,35 @@ Masaüstü yerleşimi ızgarada, mobil okuma sırası `order` ile
 (1, 2, 5, 7, 8, 9, 10, 11). **Tek HTML, iki kompozisyon** — modüllerin
 margin yazmaması (§6.4) bunu mümkün kılıyor.
 
+### 7A.1 bitcosar'da uygulanışı — ölçülmüş (6 Kasım 2026)
+
+Izgara birebir: `290px minmax(0,608px) 290px`, `gap 24px 80px`,
+`justify-content: center`, `padding: 32px 0 16px`, kırılma **1283 px**.
+Gerçek Chrome'da ölçülen: sol ray **x 286 · 290 px**, merkez **608 px**,
+sağ ray **x 1344 · 290 px** — CoinDesk ile aynı x konumları.
+
+| Ray | CoinDesk modülleri | bitcosar'da ne var |
+|---|---|---|
+| Sol (290) | Son Haberler · Düşünce Liderliği | **Son Haberler** — 5 satır: başlık 16/24 w500 (3 satır clamp) + saat 12/18 w400. Birebir anatomi; modül 290×571 (CoinDesk 575). |
+| Merkez (608) | manşet + 4 blok | **Manşet** — metin üstte (36/44 w700), görsel altta 608×342 (16/9). |
+| Sağ (290) | Bugünün Videoları · Öne Çıkan Araştırma · Bugünün Klipleri | **Üç bölüm kartı** (Markets · Finance · Tech): `border-top` strong + `padding-top` 16, başlık 14/21 w500 + ok, kart 290 (görsel 16/9 + başlık 20/26 w500 + meta 12/18, iç boşluk 8). |
+
+**Basılmayanlar (veri yok, uydurma olurdu):** video oynatıcı (yayında video
+0), "Öne Çıkan Araştırma" metrik kartı (yayında araştırma 0), 9/16 dikey
+klipler (klip 0), sponsorlu "Düşünce Liderliği" (sponsorlu içerik 0).
+Modül iskeleti hazır: ilgili içerik türü yayına girdiğinde şablon aynı
+anatomiyi kullanacak.
+
+**Bu turda bulunan iki gerçek hata** (ikisi de sessizdi):
+
+1. `body { margin: 8px }` hiç sıfırlanmamıştı — tüm sayfa 8 px'lik çerçeve
+   içindeydi; header x=8 w=1889 (olması gereken 0/1905). Ayrıca
+   `overflow-x: clip` `body`'deydi, `html`'de değil → tam genişlik bant
+   `scrollWidth` 1913 üretiyordu.
+2. `.cd h1…h4` (özgüllük 0,1,1) bileşen sınıflarını eziyordu: kart başlığı
+   20/24 (yazılan 20/26), manşet başlığı 28/36 (yazılan 36/44). Temel
+   kurallar `:where()` ile sıfır özgüllüğe alındı.
+
 ---
 
 ## 8. Kart anatomisi (en kritik bileşen)
@@ -1314,7 +1343,7 @@ Bizim değerler `go/internal/webui/static/cd.css`'ten **okundu**, tahmin değil.
 
 | Konu | Neden |
 |---|---|
-| Hero sol/sağ ray modülleri (izleme listesi, Today's Videos, Featured Research, dikey klipler) | Bu modüllerin veri kaynağı yok; boş kolon basmak düzeni bozar. Yerine orta+sağ iki kolon kuruldu (1094 + 290). |
+| Hero sol/sağ ray modülleri (izleme listesi, Today's Videos, Featured Research, dikey klipler) | **KISMEN UYGULANDI** — 3 kolon kuruldu (290·608·290). Sol ray: "Son Haberler" (başlık + saat, görselsiz). Sağ ray: üç bölüm kartı. CoinDesk'in video/araştırma/klipler modülleri veri kaynağı olmadığı için basılmıyor (bkz. §7A.1). |
 | Slider ("Explore more") | Slider'ın dolacağı içerik türü (video/koleksiyon) yok |
 | `order-*` mobil dizilim | Yan ray olmadığı için yeniden dizilecek modül yok |
 | `display: contents` | Ray sarmalayıcı olmadığı için gereksiz |
@@ -1353,6 +1382,26 @@ alanında ne sarılıyor ne katlanıyordu (`clientWidth` 390 / `scrollWidth`
 yanlış ölçüt kullanmıştım — `window.innerWidth` içerikle birlikte büyüyor,
 `scrollWidth` ile karşılaştırınca fark görünmüyor. Doğru ölçüt
 `documentElement.scrollWidth - clientWidth`.
+
+### 11.3 Beşinci tur (hero rayları + gövde hatası) — DURUM
+
+| Konu | CoinDesk (ölçülen) | bitcosar | Durum |
+|---|---|---|---|
+| Hero ızgarası | `290px 608px 290px`, gap 24/80, justify center | birebir; sol x 286, sağ x 1344 | ✅ |
+| Sol ray modülü | Son Haberler: başlık 14/21 w500, satır 16/24 w500 + saat 12/18 w400 | birebir (5 satır, 290×571) | ✅ |
+| Sağ ray modülü | border-top strong + pt 16, başlık 14/21 w500, kart gap 8 | birebir | ✅ |
+| Ray kartı tipografisi | başlık 20/26 w500, kicker YOK, iç boşluk 8 | birebir (kicker ray kartında gizli) | ✅ |
+| Manşet başlığı | 36/44 **w700** | birebir (önceki 24/30 w500) | ✅ |
+| Manşet sırası | metin üstte, görsel altta | birebir | ✅ |
+| Video · araştırma · klip modülleri | var | **basılmıyor** — veri 0 (uydurma olmaz) | ⛔ |
+| Mobil | tek kolon, sol ray manşetin altında, sağ ray gizli | birebir; taşma 0 | ✅ |
+| 1283 sınırı | tek kolon | birebir | ✅ |
+
+**Beşinci turda bulunan iki sessiz hata:** `body { margin: 8px }` sıfırlanmamıştı
+(tüm sayfa çerçeveliydi, tam genişlik bant `scrollWidth` 1913 üretiyordu);
+`.cd h1…h4` temel kuralı (0,1,1) bileşen sınıflarını eziyordu — kart başlığı
+20/24, manşet 28/36 çıkıyordu. İkisi de `:where()` + `html { overflow-x: clip }`
+ile düzeltildi; Lighthouse `/` **100**, CLS 0, LCP 0.3 s.
 
 ---
 

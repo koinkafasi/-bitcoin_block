@@ -10,6 +10,78 @@ package templkit
 // lead YALNIZ görünüm içindir (cd-card--lead sınıfı); görselin genişliği
 // yuvadan gelir. İkisi ayrı: ölçüm gösterdi ki .cd-block'un "lead olmayan"
 // kartı 808px, hero'nun lead'i 734px — boolean genişliği belirlemiyor.
+// cdHeroSolRay sol ray — CoinDesk "Son Haberler" modülü (ölçüldü 290×575).
+//
+// Anatomi (birebir): `border-top: 1px solid border-strong` + `padding-top: 16px`,
+// başlık bağlantısı 14/21 w500 `padding-bottom: 16px`, ardından beş satır:
+// başlık 16/24 w500 (3 satırla sınırlı) + saat 12/18 w400 sönük.
+// Görsel YOK — ölçümde bu modülde hiç görsel yok.
+templ cdHeroSolRay(items []CDStory) {
+	if len(items) > 0 {
+		<aside class="cd-hero__sol">
+			<section class="cd-ray">
+				<a class="cd-ray__bas" href="/latest-crypto-news">
+					Son Haberler
+					<span class="cd-ray__ok" aria-hidden="true">→</span>
+				</a>
+				<ul class="cd-ray__liste">
+					for _, s := range items {
+						<li class="cd-ray__satir">
+							<a class="cd-ray__baslik" href={ s.Href }>{ s.Title }</a>
+							if s.Time != "" {
+								<time class="cd-ray__saat">{ s.Time }</time>
+							}
+						</li>
+					}
+				</ul>
+			</section>
+		</aside>
+	}
+}
+
+// cdHeroSagRay sağ ray — CoinDesk'te üç modül yığılır (video · araştırma ·
+// klipler). Bizde o içerik türleri yok; aynı yapıyı gerçek bölüm
+// verisiyle dolduruyoruz: modül başına bir kart (görsel 16/9 + başlık
+// 20/26 w500 + meta 12/18). 1284 px altında tamamen gizli (ölçüldü).
+templ cdHeroSagRay(mods []CDRailModul) {
+	if len(mods) > 0 {
+		<aside class="cd-hero__sag">
+			for _, m := range mods {
+				<section class="cd-ray cd-ray--cizgili">
+					<a class="cd-ray__bas" href={ m.Href }>
+						{ m.Title }
+						<span class="cd-ray__ok" aria-hidden="true">→</span>
+					</a>
+					@cdCard(m.Story, false, YuvaHeroYan)
+				</section>
+			}
+		</aside>
+	}
+}
+
+// cdHeroLead manşet kartı — CoinDesk ölçümü: metin ÜSTTE, görsel ALTTA.
+//
+// Ayrı bileşen, çünkü sıra genel karttan farklı: yan kartlarda görsel
+// üstte (290×163 görsel + 290×81 metin), manşette altta (608×237 metin +
+// 608×342 görsel). Tek `cdCard` içinde `lead` bayrağıyla dallandırmak
+// iki farklı DOM sırası üretiyordu; burada niyet adıyla yazılı.
+templ cdHeroLead(s CDStory) {
+	<article class="cd-hero-lead">
+		<div class="cd-hero-lead__metin">
+			if s.Kicker != "" {
+				<span class="cd-kicker">{ s.Kicker }</span>
+			}
+			<h2 class="cd-hero-lead__baslik"><a href={ s.Href }>{ s.Title }</a></h2>
+			if s.Spot != "" {
+				<p class="cd-card__spot">{ s.Spot }</p>
+			}
+			@cdMeta(s)
+		</div>
+		@cdCardGorsel(s, YuvaHeroLead)
+	</article>
+}
+
+// cdCard görsel kart. Manşet için cdHeroLead kullanılır.
 templ cdCard(s CDStory, lead bool, yuva CDYuva) {
 	if lead {
 		<article class="cd-card cd-card--lead">
@@ -19,6 +91,22 @@ templ cdCard(s CDStory, lead bool, yuva CDYuva) {
 		<article class="cd-card">
 			@cdCardBody(s, yuva)
 		</article>
+	}
+}
+
+// cdCardGorsel yalnız görseli basar (manşette metinden sonra gelir).
+templ cdCardGorsel(s CDStory, yuva CDYuva) {
+	if s.Image != "" {
+		<a class="cd-card__media" href={ s.Href } tabindex="-1" aria-hidden="true">
+			if cdKgOlcekli(s.Image) {
+				<img src={ cdKgSrc(s.Image, yuva) } srcset={ cdKgSrcset(s.Image, yuva) }
+					sizes={ cdKgSizes(yuva) } alt="" loading="eager" fetchpriority="high"
+					decoding="async" referrerpolicy="no-referrer"/>
+			} else {
+				<img src={ s.Image } alt="" loading="eager" fetchpriority="high"
+					decoding="async" referrerpolicy="no-referrer"/>
+			}
+		</a>
 	}
 }
 
@@ -103,51 +191,96 @@ templ cdBlock(sec CDSection) {
 	</section>
 }
 
-// cdMostRead §21: 1 büyük + 5 numaralı satır.
-templ cdMostRead(items []CDStory) {
-	if len(items) > 0 {
+// cdIkili §20 + §21: Görüş (25%) ve En Çok Okunan (75%) YAN YANA.
+//
+// CoinDesk ana sayfasında bu iki modül ayrı tam genişlik bloklar değil;
+// tek satırın iki paneli (ölçüldü: 366 + 1074, gap 24). Her panelin
+// `border-top` çizgisi kendi genişliğinde kalıyor — bu yüzden sarmalayıcı
+// değil paneller çizgi taşıyor.
+templ cdIkili(yorum, enCok []CDStory) {
+	if len(yorum) > 0 || len(enCok) > 0 {
 		<section class="cd-mod">
-			@cdSectionHead("En Çok Okunan", "")
-			<div class="cd-most">
-				@cdCard(items[0], false, YuvaEnCokOkunan)
-				<ol class="cd-most__list">
-					for i := 1; i < len(items); i++ {
-						<li class="cd-most__item">
-							<span class="cd-most__rank">{ cdSiraya(i) }</span>
-							<a href={ items[i].Href }>{ items[i].Title }</a>
-						</li>
-					}
-				</ol>
+			<div class="cd-ikili">
+				if len(yorum) > 0 {
+					<div class="cd-ikili__sol">
+						@cdOpinion(yorum)
+					</div>
+				}
+				if len(enCok) > 0 {
+					<div class="cd-ikili__sag">
+						@cdMostRead(enCok)
+					</div>
+				}
 			</div>
 		</section>
 	}
 }
 
-// cdOpinion §20: yazar avatarlı satırlar.
-templ cdOpinion(items []CDStory) {
+// cdMostRead §21 — manşet 5fr + iki sütun küçük kart 7fr (ölçüldü).
+templ cdMostRead(items []CDStory) {
 	if len(items) > 0 {
-		<section class="cd-mod">
-			@cdSectionHead("Görüş", "/opinion")
-			<div class="cd-opinion">
-				for _, s := range items {
-					<div class="cd-opinion__row">
-						if s.Image != "" {
-							if cdKgOlcekli(s.Image) {
-								<img class="cd-opinion__avatar" src={ cdKgSrc(s.Image, YuvaAvatar) }
-									alt="" loading="lazy" referrerpolicy="no-referrer"/>
-							} else {
-								<img class="cd-opinion__avatar" src={ s.Image } alt="" loading="lazy"
-									referrerpolicy="no-referrer"/>
-							}
+		<section class="cd-panel">
+			<h2>En Çok Okunan</h2>
+			<div class="cd-most">
+				<div class="cd-most__kart">
+					@cdCard(items[0], false, YuvaEnCokOkunan)
+				</div>
+				if len(items) > 1 {
+					<ul class="cd-most__liste">
+						for _, s := range items[1:] {
+							<li>
+								@cdCard(s, false, YuvaEnCokOkunan)
+							</li>
 						}
-						<div>
-							<span class="cd-kicker">{ s.Source }</span>
-							<a class="cd-opinion__title" href={ s.Href }>{ s.Title }</a>
-						</div>
-					</div>
+					</ul>
 				}
 			</div>
 		</section>
+	}
+}
+
+// cdOpinion §20 — yazar avatarlı satırlar (ölçüldü: 12/18 yazar, 18/26 başlık).
+templ cdOpinion(items []CDStory) {
+	if len(items) > 0 {
+		<section class="cd-panel">
+			<h2>Görüş</h2>
+			<div class="cd-opinion">
+				for i, s := range items {
+					if i == 0 {
+						<div class="cd-opinion__satir">
+							@cdOpinionMetin(s)
+							@cdOpinionAvatar(s)
+						</div>
+					} else {
+						<div class="cd-opinion__satir cd-opinion__satir--cizgili">
+							@cdOpinionMetin(s)
+							@cdOpinionAvatar(s)
+						</div>
+					}
+				}
+			</div>
+		</section>
+	}
+}
+
+templ cdOpinionMetin(s CDStory) {
+	<div class="cd-opinion__metin">
+		if s.Source != "" {
+			<span class="cd-opinion__yazar">{ s.Source }</span>
+		}
+		<a class="cd-opinion__baslik" href={ s.Href }>{ s.Title }</a>
+	</div>
+}
+
+templ cdOpinionAvatar(s CDStory) {
+	if s.Image != "" {
+		if cdKgOlcekli(s.Image) {
+			<img class="cd-opinion__avatar" src={ cdKgSrc(s.Image, YuvaAvatar) }
+				alt="" loading="lazy" referrerpolicy="no-referrer"/>
+		} else {
+			<img class="cd-opinion__avatar" src={ s.Image } alt="" loading="lazy"
+				referrerpolicy="no-referrer"/>
+		}
 	}
 }
 
@@ -180,16 +313,19 @@ templ CDHome(v CDHomeView) {
 					</div>
 				}
 
-				<!-- §8 manşet bloğu: 1 büyük + 3 yan -->
+				<!-- §8 manşet bloğu — CoinDesk hero'su ÜÇ kolon (spec §7A):
+				     290 sol ray · 608 merkez · 290 sağ ray, kolon arası 80.
+				     Sol ray: "Son Haberler" (başlık + saat, görselsiz).
+				     Sağ ray: bölüm modülleri (video/araştırma/klipler
+				     bizde yok — uydurma basmıyoruz). -->
 				if v.Lead.Href != "" {
 					<section class="cd-mod">
 						<div class="cd-hero">
-							@cdCard(v.Lead, true, YuvaHeroLead)
-							<div class="cd-hero__side">
-								for _, s := range v.Side {
-									@cdCard(s, false, YuvaHeroYan)
-								}
+							@cdHeroSolRay(v.RailLeft)
+							<div class="cd-hero__orta">
+								@cdHeroLead(v.Lead)
 							</div>
+							@cdHeroSagRay(v.RailRight)
 						</div>
 					</section>
 				}
@@ -221,11 +357,8 @@ templ CDHome(v CDHomeView) {
 				<!-- §14 prices -->
 				@cdPriceTable("Kripto Fiyatları", v.Prices)
 
-				<!-- §21 most read -->
-				@cdMostRead(v.MostRead)
-
-				<!-- §20 opinion -->
-				@cdOpinion(v.Opinion)
+				<!-- §20+§21 Görüş (25%) + En Çok Okunan (75%) yan yana -->
+				@cdIkili(v.Opinion, v.MostRead)
 
 				<!-- §22 bölüm blokları -->
 				for _, sec := range v.Sections {

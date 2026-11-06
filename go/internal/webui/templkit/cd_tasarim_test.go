@@ -145,18 +145,26 @@ func TestCDMakaleTipografi(t *testing.T) {
 	assert.Contains(t, css, ".cd-section-title h1 { margin: 0 0 6px; font-size: 36px; line-height: 44px; font-weight: 700; }")
 }
 
-// TestCDModulBasligi: modül başlığı 16/24 w500 ve BÜYÜK HARF DEĞİL.
+// TestCDModulBasligi: modül başlığı **14/21 w500**, altında çizgi YOK.
 //
-// NEDEN TEST: eski sürüm 1.05rem + UPPERCASE + 2 px alt çizgi kullanıyordu;
-// spec §4 "modül başlıklarını küçük tutuyor" diyor. Uppercase geri gelirse
+// NEDEN TEST: iki tur boyunca 16/24 w500 + `border-bottom` + 10 px dolgu
+// kullanıldı. 6 Kasım 2026'da coindesk.com/tr'de dört modül başlığının
+// dördü de `font-sans text-sm font-medium` = 14/21 w500 ölçüldü ve
+// hiçbirinde alt çizgi yoktu. Uppercase ya da çizgi geri gelirse
 // hiyerarşi CoinDesk'ten kopar.
 func TestCDModulBasligi(t *testing.T) {
 	css := cdCSS(t)
 	baslikBlok := css[strings.Index(css, ".cd-section-head h2"):]
 	baslikBlok = baslikBlok[:strings.Index(baslikBlok, "}")]
-	assert.Contains(t, baslikBlok, "font-size: 16px")
+	assert.Contains(t, baslikBlok, "font-size: 14px")
+	assert.Contains(t, baslikBlok, "line-height: 21px")
 	assert.Contains(t, baslikBlok, "font-weight: 500")
 	assert.NotContains(t, baslikBlok, "uppercase", "CoinDesk modül başlığı büyük harf değil")
+
+	// Alt çizgi olmamalı: ölçülen dört başlıkta da `border-bottom: 0`.
+	kapsayici := css[strings.Index(css, ".cd-section-head {"):]
+	kapsayici = kapsayici[:strings.Index(kapsayici, "}")]
+	assert.NotContains(t, kapsayici, "border-bottom", "modül başlığının altında çizgi yok (ölçüldü)")
 }
 
 // TestCDEtiketlerDuz: CoinDesk'te etiketler PILL değil, düz bağlantı.

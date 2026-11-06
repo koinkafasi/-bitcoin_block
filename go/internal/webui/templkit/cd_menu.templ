@@ -2,22 +2,24 @@ package templkit
 
 // CoinDesk mega menüsü — şablon.
 //
-// Veri cd_menu.go'da (ölçüm: COINDESK-SPEC.md §3), görünüm cd-menu.css'te.
+// Veri cd_menu.go'da, görünüm cd-menu.css'te. Ölçüm:
+// docs/COINDESK-TASARIM-SPEC.md §7.2A (4. tur).
 //
-// JS YOK: açılma `:hover` ve `:focus-within` ile çalışır. Böylece
-// klavyeyle sekme atan kullanıcı da menüyü açabilir ve JS kapalıyken
-// bağlantılar yine erişilebilir kalır (başlığın kendisi de bir <a>).
+// JS YOK: açılma `:hover` ve `:focus-within` ile çalışır. CoinDesk
+// `aria-expanded` + JS kullanıyor; bizim yolumuz CSP ve a11y açısından
+// daha iyi (spec §7.2A "bizim üstünlüklerimiz").
 //
-// Mobilde cd-menu.css menüyü gizler; oradaki gezinme hamburger ile
-// çözülür (Faz 2 kapsamı, cd_shell.templ).
+// PANEL YAPISI (ölçülen): başlık satırı (ikon + ad 16/24 w700 + ok) →
+// içerik. İçerik iki tipte: bağlantı listesi (Tip A) veya açıklamalı
+// kart ızgarası (Tip B). Tip B, satırın `Desc` alanı dolduğunda devreye
+// girer — veri hangi tipi gerektiriyorsa şablon ona uyar.
 
 // cdMegaNav üst gezinme + açılır menüler.
-// cd_shell.templ içindeki düz <nav class="cd-nav"> yerine çağrılır.
 templ cdMegaNav(s CDShell) {
 	<nav class="cd-nav cd-nav--mega" aria-label="Ana menü">
 		for _, g := range cdMenuGroups(s) {
 			if cdHasMenu(g) {
-				<div class="cd-nav__grup">
+				<div class={ "cd-nav__grup", cdMenuPanelSinifi(g) }>
 					if cdMenuAktif(s.Nav, g.Href) {
 						<a
 							class="cd-nav__link cd-nav__link--acilir"
@@ -41,23 +43,25 @@ templ cdMegaNav(s CDShell) {
 						</a>
 					}
 					<div class="cd-mega" id={ cdMenuID(g.Label) }>
+						<!-- Panel başlığı: ikon 32×32 + ad 16/24 w700 + ok -->
+						<div class="cd-mega__bas">
+							<span class="cd-mega__ikon" aria-hidden="true">
+								<svg viewBox="0 0 32 32" width="32" height="32" focusable="false">
+									<rect x="4" y="6" width="24" height="2" fill="currentColor"/>
+									<rect x="4" y="15" width="24" height="2" fill="currentColor"/>
+									<rect x="4" y="24" width="16" height="2" fill="currentColor"/>
+								</svg>
+							</span>
+							<span class="cd-mega__ad">{ g.Label }</span>
+							<svg class="cd-mega__ok" viewBox="0 0 9 18" width="9" height="18"
+								aria-hidden="true" focusable="false">
+								<path d="M1 1l7 8-7 8" fill="none" stroke="currentColor"
+									stroke-width="2"/>
+							</svg>
+						</div>
 						<div class="cd-mega__ic">
 							for _, sut := range g.Columns {
-								<ul class="cd-mega__sutun">
-									for _, it := range sut.Items {
-										if it.Kind == "baslik" {
-											<li class="cd-mega__baslik">{ it.Label }</li>
-										} else if it.Kind == "tumu" {
-											<li class="cd-mega__tumu">
-												<a href={ templ.SafeURL(s.LangBase + it.Href) }>{ it.Label }</a>
-											</li>
-										} else {
-											<li>
-												<a href={ templ.SafeURL(s.LangBase + it.Href) }>{ it.Label }</a>
-											</li>
-										}
-									}
-								</ul>
+								@cdMenuSutun(s, sut)
 							}
 						</div>
 					</div>
@@ -67,4 +71,49 @@ templ cdMegaNav(s CDShell) {
 			}
 		}
 	</nav>
+}
+
+// cdMenuSutun tek sütunu basar.
+//
+// İKİ TİP (spec §7.2A):
+//   Tip A — bağlantı listesi: grup başlığı 14/21 w700, satır 14/22 w400,
+//           "tümünü gör" 14/21 w700.
+//   Tip B — açıklamalı kart: 257×96, padding 12/16, r 8; başlık 14/20 w500
+//           + açıklama 12/16 w400 subtle.
+//
+// Tip B, sütundaki satırlardan birinde `Desc` dolduğunda kullanılır:
+// açıklamayı atıp düz liste basmak, ölçülen bilgiyi çöpe atmak olurdu.
+templ cdMenuSutun(s CDShell, sut CDMenuColumn) {
+	if cdSutunKartMi(sut) {
+		<div class="cd-mega__kartlar">
+			for _, it := range sut.Items {
+				if it.Kind == "baslik" {
+					<div class="cd-mega__kart-grup">{ it.Label }</div>
+				} else {
+					<a class="cd-mega__kart" href={ templ.SafeURL(s.LangBase + it.Href) }>
+						<span class="cd-mega__kart-ad">{ it.Label }</span>
+						if it.Desc != "" {
+							<span class="cd-mega__kart-aciklama">{ it.Desc }</span>
+						}
+					</a>
+				}
+			}
+		</div>
+	} else {
+		<ul class="cd-mega__sutun">
+			for _, it := range sut.Items {
+				if it.Kind == "baslik" {
+					<li class="cd-mega__baslik">{ it.Label }</li>
+				} else if it.Kind == "tumu" {
+					<li class="cd-mega__tumu">
+						<a href={ templ.SafeURL(s.LangBase + it.Href) }>{ it.Label }</a>
+					</li>
+				} else {
+					<li>
+						<a href={ templ.SafeURL(s.LangBase + it.Href) }>{ it.Label }</a>
+					</li>
+				}
+			}
+		</ul>
+	}
 }

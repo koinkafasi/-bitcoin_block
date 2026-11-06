@@ -26,10 +26,16 @@ import "strings"
 //	""        normal bağlantı
 //	"baslik"  grup başlığı (tıklanmaz)
 //	"tumu"    "tümünü gör" satırı (ayraçtan sonra, vurgulu)
+//
+// Desc doluysa sütun "açıklamalı kart" tipine geçer (spec §7.2A Tip B:
+// 257×96 kart, 14/20 w500 başlık + 12/16 w400 açıklama). Boşsa düz
+// bağlantı listesi (Tip A) basılır. Tek alanla iki yerleşim: menüye yeni
+// bir "tip" sabiti eklemek yerine VERİ neyi gerektiriyorsa şablon ona uyar.
 type CDMenuItem struct {
 	Label string
 	Href  string
 	Kind  string
+	Desc  string
 }
 
 // CDMenuColumn açılır menüdeki tek sütun.
@@ -78,7 +84,23 @@ var cdMenuSabit = []CDMenuGroup{
 		Label: "Prices", Href: "/price",
 		// Sütunlar handler'da canlı veriyle doldurulur (cdMenuFiyatSutunlari).
 	},
-	{Label: "Research", Href: "/research"},
+	{
+		Label: "Research", Href: "/research",
+		// AÇIKLAMALI KART TİPİ (spec §7.2A Tip B). CoinDesk Research
+		// panelinde kart başlığı 14/20 w500 + tek satır açıklama 12/16
+		// w400. Bizde karşılığı olan gerçek sayfalar bunlar; açıklamalar
+		// sayfaların kendi meta açıklamalarından kısaltıldı.
+		Columns: []CDMenuColumn{
+			{Items: []CDMenuItem{
+				{Label: "Research Hub", Href: "/research",
+					Desc: "Araştırma raporları ve veri analizleri"},
+				{Label: "News Analysis", Href: "/news-analysis",
+					Desc: "Derinlemesine haber analizleri"},
+				{Label: "Focus", Href: "/focus",
+					Desc: "Odak dosyaları ve uzun okumalar"},
+			}},
+		},
+	},
 	{
 		Label: "Sponsored", Href: "/sponsored-content",
 		Columns: []CDMenuColumn{
@@ -88,6 +110,56 @@ var cdMenuSabit = []CDMenuGroup{
 			}},
 		},
 	},
+}
+
+// cdSutunKartMi sütunun açıklamalı kart tipiyle basılacağını söyler.
+//
+// Tek ölçüt: satırlardan birinde Desc dolu mu. Açıklamayı yutup düz liste
+// basmak, ölçülen bilgiyi çöpe atardı; tam tersi, açıklaması olmayan
+// satırı karta çevirmek ise 96 px'lik boş kartlar üretirdi.
+func cdSutunKartMi(sut CDMenuColumn) bool {
+	for _, it := range sut.Items {
+		if strings.TrimSpace(it.Desc) != "" {
+			return true
+		}
+	}
+	return false
+}
+
+// cdMenuPanelSinifi panelin genişlik/hizalama sınıfını üretir.
+//
+// CoinDesk panel genişliğini MENÜ BAŞINA sabitliyor (spec §7.2A):
+// 589 · 728 · 750 · 836 · 960. Genişlik içeriğe göre seçilmiş; bizde
+// karşılığı olan üç kademe var:
+//
+//	589  tek sütunlu liste (Video · Prices · Sponsored)
+//	750  iki sütunlu liste (News — bölümler + canlı etiketler)
+//	836  üç sütunlu açıklamalı kart ızgarası (Research)
+//
+// Sponsored ayrıca SAĞA hizalı: son başlık olduğu için `left: 0` paneli
+// ekrandan taşırıyordu (spec §7.2A istisnası).
+func cdMenuPanelSinifi(g CDMenuGroup) string {
+	sinif := "cd-nav__grup--589"
+	switch {
+	case cdMenuKartVar(g):
+		sinif = "cd-nav__grup--836"
+	case len(g.Columns) > 1:
+		sinif = "cd-nav__grup--750"
+	}
+	if strings.EqualFold(g.Label, "Sponsored") {
+		sinif += " cd-nav__grup--sag"
+	}
+	return sinif
+}
+
+// cdMenuKartVar grubun herhangi bir sütunu kart tipinde mi.
+func cdMenuKartVar(g CDMenuGroup) bool {
+	for _, s := range g.Columns {
+		if cdSutunKartMi(s) {
+			return true
+		}
+	}
+	return false
 }
 
 // cdMenuGroups menüyü, kabuktaki veriyle birleştirir.
