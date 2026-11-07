@@ -2057,6 +2057,137 @@ Uydurma/yer tutucu görsel Open Graph'ta yanlış izlenim verir.
 
 ---
 
+### 11.14 On altıncı tur (klip slider'ı + hesap merkezi + kamu sayfaları) — DURUM
+
+İki kullanıcı isteği: (a) ana sayfadaki video modülü CoinDesk'te slider
+olmalı, bizde "3 tane alt alta" basılıyor; (b) `/hesabim` CoinDesk tasarımına
+geçmeli ve theblock'tan kalan eski tasarım yerleri yeni tasarıma taşınmalı.
+
+#### 11.14.1 Bugünün Klipleri — ölçülenle birebir
+
+**Sorun (ölçüldü):** sağ rayda `.cd-klipler` **1621 px** yükseklikteydi;
+3 adet 9:16 kart alt alta basılıyordu (her kart ~516 + 12 boşluk).
+
+**CoinDesk ölçümü** (coindesk.com, 1920 px, gerçek Chrome, 7 Kasım 2026):
+
+| Öğe | Ölçü |
+|---|---|
+| section `aria-label="Today's Clips"` | 290×566, `gap:12`, 1 px üst çizgi, 16 px üst dolgu |
+| başlık bağı | 107×21, 14/21 w500 |
+| kart | **290×516** = 9/16, köşe 8, zemin `#000` |
+| dikey oklar | **kartın SAĞ kenarında**, 24 px yuvarlak, yarı saydam beyaz çerçeve, dikeyde ortalı |
+| başlık | kartın **ÜSTÜNDE** beyaz overlay (siyah geçişli zemin), 18/24 w500, 3 satır |
+| oynat düğmesi | sol altta 40 px |
+
+**Uygulama:** slider yine **JS'siz** — radyo + `label` deseni (video ve
+araştırma modülleriyle aynı). Yukarı ok = önceki, aşağı ok = sonraki;
+dikey slider yönü CoinDesk'ten alındı.
+
+**Yeni ölçüm (bitcosar):** bölüm **290×566**, kart **290×516** (oran
+1,778), görünen kart sayısı **1**, oklar 24×24 sağ kenarda.
+
+#### 11.14.2 Hesap merkezi (`/hesabim` + 8 sekme)
+
+**Sorun (ölçüldü):** gövde yazı tipi Poppins (179 elemanda), üst çubuk
+`rgb(209,0,21)` (theblock kırmızısı), 12 px köşeli kartlar, kırmızı alt bilgi.
+
+**Tasarım kaynağı — uydurma yok:** CoinDesk'in hesap alanı Auth0
+barındırmalı (`auth.coindesk.com/u/login`) ve girişsiz ölçülemiyor. Bu
+yüzden geometri tahmin edilmedi; sitenin **kendi ölçülmüş jetonları**
+kullanıldı (spec §5, §4). Yapı CoinDesk'in hesap deseniyle aynı:
+sol kenar menü + sağ içerik.
+
+| Öğe | Değer |
+|---|---|
+| ızgara | `240px minmax(0,1fr)`, gap 40 |
+| kenar menü | yapışkan, aktif satır **2 px siyah sol çizgi** |
+| kart | 1 px `#d9d9d9`, köşe 4, gölge yok |
+| başlık | serif 32/40 w700 |
+| ikincil metin | 16/24 `#676767` |
+| birincil düğme | siyah zemin / beyaz metin, köşe 4 |
+| plan rozeti | `#ffd200` zemin, siyah 11/16 büyük harf |
+| koyu tema | zemin `#161616`, topbar `#000000` |
+
+Sekmeler: hub · profil · abonelik · kaydedilenler · yorumlar · takip ·
+bildirimler · rozetler. Tümü `noindex` (hesap sayfaları dizine girmemeli).
+
+**Yeni ölçüm:** 8 sekmede Poppins **0**, `cd-topbar`/`cd-footer` var,
+yatay taşma **0** (1920 px).
+
+#### 11.14.3 Kamu sayfaları — ortak kabuk çevrildi
+
+**Kapsam (19 rota × 2 tema ölçüldü):** `/giris`, `/kayit`, `/sifremi-unuttum`,
+`/abonelik`, `/bulten`, `/yazarlar`, `/arsiv`, `/arama`, `/etkinlikler`,
+`/anketler`, `/hava-durumu`, `/namaz-vakitleri`, `/imsakiye`,
+`/nobetci-eczaneler`, `/borsa`, `/fikstur`, `/astroloji`, `/resmi-ilanlar`,
+`/gazete-mansetleri`, `/sinemalar`, 404.
+
+**Yöntem:** 30 şablonu tek tek yeniden yazmak yerine **ortak kabuk**
+çevrildi (`go/internal/webui/static/cd-public.css`): jetonlar, tipografi,
+üst çubuk, alt bilgi, düğmeler, formlar, kartlar. Sayfa gövdeleri kendi
+sınıflarını koruyor; tek noktada düzeltme → otuz sayfada tutarlılık.
+
+| Öğe | theblock | CoinDesk |
+|---|---|---|
+| marka rengi | `#d10015` kırmızı | siyah `#000` + sarı `#ffd200` vurgu |
+| üst çubuk | kırmızı zemin, beyaz menü | **beyaz**, menü `#262626` (koyuda `#000`/`#f4f4f4`) |
+| gövde zemini | `#f3f3f3` + ağ deseni | **`#ffffff`** düz (koyuda `#161616`) |
+| gövde fontu | Poppins | **Inter** (sans) |
+| başlık fontu | Poppins | **Alegreya** (serif) |
+| köşe | 8 px | **4 px** |
+| gölge | `0 1px 3px` | **yok** (ayırım 1 px çizgi) |
+| alt bilgi | kırmızı şerit + `#18181b` | `#000` şerit + **`#161616`** |
+| logo | metin "the block" | **marka görseli** (1x/2x/3x, iki tema varyantı) |
+
+Giriş/kayıt/şifre sıfırlama sayfaları ayrı kabuk kullanıyor
+(`uye-giris.css`); düzen (iki sütunlu illüstrasyon + form) **korundu**,
+yalnız görsel dil çevrildi (koyu bordo zemin → beyaz, 28 px → 4 px,
+kırmızı → siyah birincil düğme).
+
+#### 11.14.4 Bu turda bulunan GERÇEK hatalar
+
+1. **Döngüsel CSS değişkeni.** `--hp-header-bg: var(--hp-header-bg)` —
+   CSS kendine çözümlenemeyen değişkeni geçersiz sayar; `.header-skin-accent`
+   içindeki kırmızı kazandı (headerBg `rgb(209,0,21)`). Açık değer yazıldı.
+2. **Yükleme sırası.** `cd-public.css` panelin `DesignCSS` `<style>`
+   bloğundan ÖNCE geliyordu; satır içi blok aynı özgüllükte ve SONRA
+   geldiği için jetonları geri yazıyordu. Bağlantı blokların altına taşındı.
+3. **Özgüllük tuzağı (logo, iki yerde).** `.site-header .brand-img img`
+   ve `.auth-brand img` kuralları (0,2,1 / 0,1,1) `display:block` veriyor;
+   tek sınıflı gizleme (0,1,0) kaybediyor → **iki logo yan yana** basıldı.
+   Gizleme kuralları aynı özgüllükle yazıldı.
+4. **Koyu temada kontrast 1:1.** `.abon-toggle-btn.is-active`
+   `background: var(--hp-text)` + `color:#fff`; koyu temada `--hp-text`
+   beyaz olduğu için "Aylık" düğmesi görünmezdi. Jeton ters çevrildi →
+   **21:1** (iki temada da ölçüldü).
+5. **Sabit renk, tema değişince kayboldu.** `.auth-hint` `#cfc8d2`,
+   `.auth-hint__note` `#8f8995` — koyu zemin için seçilmiş açık griler;
+   beyaz zeminde ~1.4:1. Tema jetonuna bağlandı.
+6. **Çift kaçış.** Alt bilgide `"Piyasa &amp; Borsa"` etiketi HTML
+   kaçışıyla birlikte metne yazılmıştı → ekranda `Piyasa &amp; Borsa`.
+   `"Piyasa ve Borsa"` yapıldı.
+7. **Dekoratif başlık emojileri.** `☀ 🕌 📅 🏥 📈 🔮 📍 🔍 📬 🎧` başlık ve
+   menüden kaldırıldı (CoinDesk hiç kullanmıyor). **İşlevsel işaretler
+   (`✓ ✕ ❤`) dokunulmadı** — ilk denemede hepsi silinince
+   `TestAIEditorResultRendersQuoteSources` kırıldı; temizlik
+   `page-title` ve menü çekmecesiyle sınırlandırıldı.
+
+#### 11.14.5 Doğrulama
+
+```
+klip modülü            290×566 bölüm · 290×516 kart (1,778) · görünen 1 · oklar 24×24
+hesap merkezi          8 sekmede Poppins 0 · cd-topbar/cd-footer var · taşma 0
+kamu sayfaları         19 rota × 2 tema: Poppins 0 · taşma 0 · emoji 0
+                       headerBg #fff / #000 · footerBg #161616
+abonelik segment       kontrast 21:1 (açık ve koyu)
+JSON-LD                ana sayfa 1 · bölüm 1 · makale 2 · fiyat 3 · etiket 1 · yazar 1
+taşma                  0 (1920 · 768 · 390)
+Lighthouse masaüstü    100 · 100 · 100 · 100 (LCP 0,7 s, CLS 0,006)
+gofmt · vet · test · build   temiz (HEAD ayrı worktree'de doğrulandı)
+```
+
+---
+
 ## 12. Kopyalanması önerilen sözleşmeler
 
 Ölçüm sırasında CoinDesk'in iyi kararları:
