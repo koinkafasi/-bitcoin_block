@@ -1736,6 +1736,61 @@ sayfasında fiyat tablosu **yok**; bizde var çünkü kullanıcı ilk turda
 canlı piyasa şeridinin yanında tabloyu da istedi. Bu bir eksik değil,
 istenmiş ek modül.
 
+### 11.10 Onikinci tur (modül kaldırma + akış boşluğu) — DURUM
+
+Kullanıcı isteği: Kripto Fiyatları modülünü ve reklam alanını kaldır;
+hero manşeti ile haber akışı arasındaki bitişikliği düzelt.
+
+#### 11.10.1 Kaldırılan modüller
+
+| Modül | Önce | Sonra |
+|---|---|---|
+| Kripto Fiyatları tablosu (§14) | 1464×779, ana sayfanın ortasında | **kaldırıldı** — `cdPriceTable` çağrısı, `Prices` alanı ve `cdFiyatSatirlari` beslemesi söküldü |
+| Reklam bandı (§13) | 1920×302 tam genişlik | **kaldırıldı** |
+
+Sayfa yüksekliği 5341 → **4182 px**. Bu iki modül zaten CoinDesk `/tr`
+ana sayfasında yoktu; kullanıcı ilk turda istediği için duruyorlardı,
+şimdi kaldırıldı.
+
+#### 11.10.2 GERÇEK HATA: manşet akışa yapışıktı
+
+Ölçüm (bizim sayfa): manşet `y=172…742`, akış `y=742…` — **sıfır boşluk**,
+arada çizgi yok. CoinDesk'te ise:
+
+```
+manşet biter (1047) → 16 px → ÇİZGİ (1063) → 16 px → satır (1080)
+→ 86 içerik + 16 alt dolgu → ÇİZGİ (1182) → …
+```
+
+Satır adımı **119 px** = 1 (çizgi) + 16 (üst dolgu) + 86 (içerik) +
+16 (alt dolgu). Üç ayrı neden vardı:
+
+1. **Orta kolonda aralık yoktu.** `.cd-hero__orta` düz bloktu; CoinDesk
+   `flex-col gap-4`. `display:flex; gap:16px` eklendi.
+2. **Çizgi yalnız satır aralarındaydı.** Ayrı bir `.cd-akis__ayirici`
+   div'i ikinci satırdan itibaren basılıyordu; manşetle ilk satır
+   arasında ne çizgi ne boşluk kalıyordu. Çizgi satırın kendi
+   `border-top`'una taşındı — artık her satırın üstünde var.
+3. **Alt dolgu unutulmuştu.** Satır 103 px kalıyordu (86 + 16 + 1);
+   `padding: 16px 0` ile 119 px'e çıktı.
+
+`.cd-basin` üzerindeki `margin-top: 16px` kaldırıldı: orta kolonun `gap`'i
+zaten 16 px veriyor, ikisi birden 32 px yapacaktı.
+
+#### 11.10.3 Doğrulama
+
+```
+orta kolon            gap 16 px, akış ilk satırı manşetten 16 px sonra
+akış satır adımı      119 px (CoinDesk 119) — çizgi + 16 + 86 + 16
+akış ilk satırında    1 px border-top VAR (manşeti ayıran çizgi)
+yatay taşma           0 (1920 ve 390)
+kripto fiyat tablosu  YOK · reklam bandı YOK (masaüstü ve mobilde doğrulandı)
+4xx / konsol          0 / 0
+gofmt · vet · test · build   temiz
+Lighthouse masaüstü   100 · 100 · 100 · 100 (LCP 0,7 s, CLS 0,003)
+Lighthouse mobil      94 · 100 · 100 · 100 (LCP 2,9 s, CLS 0,001)
+```
+
 ---
 
 ## 12. Kopyalanması önerilen sözleşmeler

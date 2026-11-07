@@ -670,6 +670,14 @@ html.cd-js .cd-tema { display: inline-flex; }
   position: relative;
   min-width: 0;
 }
+/* Orta kolon üç modülü 16 px aralıkla dizer (CoinDesk `flex-col gap-4`):
+   manşet · akış · basın bültenleri. Önceki sürümde aralık YOKTU ve akış
+   manşete yapışıyordu. */
+.cd-hero__orta {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
 .cd-hero__orta::before {
   content: "";
   position: absolute;
@@ -822,16 +830,24 @@ html.cd-js .cd-tema { display: inline-flex; }
 /* ---- Orta kolon akışı (ölçüldü: satır 608×119, görsel 152×86) ----
    Satır: solda 16/9 küçük görsel, sağda 20/26 w500 başlık (3 satır) +
    12/18 saat. Satır aralarında 1 px ayırıcı, 16 px dikey boşluk. */
+/* Akış — ÖLÇÜLDÜ (CoinDesk /tr, 7 Kasım 2026):
+     manşet biter (1047) → 16 px → ÇİZGİ (1063) → 16 px → satır içeriği (1080)
+     → 102 → ÇİZGİ (1182) → 16 → …
+   Satır adımı 119 = 1 (çizgi) + 16 (dolgu) + 102 (içerik).
+   İLK SATIRIN DA ÜSTÜNDE ÇİZGİ VAR: manşeti akıştan ayıran çizgi budur.
+   Önceki sürümde çizgi ayrı bir `.cd-akis__ayirici` div'iydi ve YALNIZ
+   satır aralarında vardı: manşetle ilk satır arasında ne boşluk ne çizgi
+   kalıyordu (ikisi de y=742'de bitişikti). */
 .cd-akis { display: flex; flex-direction: column; }
-.cd-akis__ayirici { border-top: 1px solid var(--cd-border); margin: 0 0 16px; }
+/* Satır = 1 px çizgi + 16 üst dolgu + 86 içerik + 16 alt dolgu = 119 px
+   (CoinDesk adımı birebir). Alt dolgu UNUTULMUŞTU; satır 103 px kalıyor ve
+   akış fazla sıkışık görünüyordu. */
 .cd-akis__satir {
   display: flex;
   align-items: flex-start;
   gap: 16px;
-  /* CoinDesk satırı `pb-4`: görselin altında 16 px boşluk, ayırıcı ondan
-     sonra gelir. Ayırıcının üst boşluğu buradan, alt boşluğu kendi
-     `margin-bottom`undan gelir (ölçüldü: satır 608×102). */
-  padding-bottom: 16px;
+  border-top: 1px solid var(--cd-border);
+  padding: 16px 0;
 }
 .cd-akis__gorsel {
   flex: none;
@@ -860,9 +876,8 @@ html.cd-js .cd-tema { display: inline-flex; }
    Etiket 14/21 w500; slayt başlığı 20/26 w500; sponsor 12/18 yeşil
    büyük harf; altta ‹ • • • › gezinme. */
 .cd-basin {
-  /* CoinDesk'te bu modül de `border-top: 1px default` + 16 px üst boşluk
-     taşıyor; orta kolondaki modül aralığı 16 px (ölçüldü). */
-  margin-top: 16px;
+  /* Aralık orta kolonun `gap`'inden gelir (16 px); burada margin YOK,
+     yoksa 32 px olurdu. Alt çizgi 1 px + 16 px dolgu korunuyor. */
   border-top: 1px solid var(--cd-border);
   padding-top: 16px;
 }

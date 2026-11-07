@@ -170,7 +170,6 @@ func (s *Server) handleCDHome(w http.ResponseWriter, r *http.Request) {
 		Videolar:  cdGeciciVideolar(),
 		Arastirma: cdGeciciArastirma(),
 		Klipler:   cdGeciciKlipler(),
-		Prices:    s.cdFiyatSatirlari(r, 10),
 		Sections:  sections,
 		MostRead:  s.cdPopuler(r, 6),
 		Opinion:   s.cdUzmanlar(r, 4),

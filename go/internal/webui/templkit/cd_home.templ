@@ -137,10 +137,7 @@ templ cdHeroLead(s CDStory) {
 templ cdAkis(items []CDStory) {
 	if len(items) > 0 {
 		<div class="cd-akis">
-			for i, s := range items {
-				if i > 0 {
-					<div class="cd-akis__ayirici" aria-hidden="true"></div>
-				}
+			for _, s := range items {
 				<article class="cd-akis__satir">
 					<a class="cd-akis__gorsel" href={ s.Href } tabindex="-1" aria-hidden="true">
 						if cdKgOlcekli(s.Image) {
@@ -665,15 +662,6 @@ templ CDHome(v CDHomeView) {
 						</div>
 					</section>
 				}
-
-				<!-- §13 reklam — TAM GENİŞLİK bant (spec §2.1, §7.3).
-				     İç kapsayıcı YOK: kenardan kenara, padding 32 px 0. -->
-				<section class="cd-tam">
-					@cdAd("Reklam")
-				</section>
-
-				<!-- §14 prices -->
-				@cdPriceTable("Kripto Fiyatları", v.Prices)
 
 				<!-- §20+§21 Görüş (25%) + En Çok Okunan (75%) yan yana -->
 				@cdIkili(v.Opinion, v.MostRead)
