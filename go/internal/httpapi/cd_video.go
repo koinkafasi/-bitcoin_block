@@ -115,6 +115,15 @@ func ytGridHeroHariç(kayitlar []repo.YoutubeKayit, haric string, adet int) []te
 	return out
 }
 
+// ytSonraki oynatıcının bitiş ekranı için "sıradaki" bilgisini doldurur.
+func ytSonraki(h *templkit.CDVideoHero, satirlar []templkit.CDVideoSatir) {
+	if len(satirlar) == 0 {
+		return
+	}
+	h.SonrakiID = satirlar[0].VideoID
+	h.SonrakiBaslik = satirlar[0].Baslik
+}
+
 // ytHero kahraman bloğu üretir.
 func ytHero(k repo.YoutubeKayit, etiket string) templkit.CDVideoHero {
 	spot := strings.TrimSpace(k.Aciklama)
@@ -182,6 +191,8 @@ func (s *Server) handleCDVideos(w http.ResponseWriter, r *http.Request) {
 	havuz = append(havuz, videolar...)
 	havuz = append(havuz, yayinlar...)
 	havuz = append(havuz, shorts...)
+	siradaki := ytSatirlar(havuz, heroID, 6)
+	ytSonraki(&hero, siradaki)
 
 	v := templkit.CDVideoPage{
 		Shell:     s.cdShellCtx(ctx, "videos"),
@@ -191,7 +202,7 @@ func (s *Server) handleCDVideos(w http.ResponseWriter, r *http.Request) {
 		Baslik:    "Videolar",
 		Sekmeler:  s.cdVideoSekmeler("video"),
 		Hero:      hero,
-		Siradaki:  ytSatirlar(havuz, heroID, 6),
+		Siradaki:  siradaki,
 		Videolar:  ytGridHeroHariç(videolar, heroID, 12),
 		Shorts:    ytKutular(shorts),
 		Yayinlar:  ytKutular(yayinlar),
@@ -228,6 +239,8 @@ func (s *Server) handleCDShorts(w http.ResponseWriter, r *http.Request) {
 	havuz := make([]repo.YoutubeKayit, 0, len(shorts)+len(videolar))
 	havuz = append(havuz, shorts...)
 	havuz = append(havuz, videolar...)
+	siradaki := ytSatirlar(havuz, heroID, 6)
+	ytSonraki(&hero, siradaki)
 
 	v := templkit.CDVideoPage{
 		Shell:     s.cdShellCtx(ctx, "videos"),
@@ -237,7 +250,7 @@ func (s *Server) handleCDShorts(w http.ResponseWriter, r *http.Request) {
 		Baslik:    "Shorts",
 		Sekmeler:  s.cdVideoSekmeler("short"),
 		Hero:      hero,
-		Siradaki:  ytSatirlar(havuz, heroID, 6),
+		Siradaki:  siradaki,
 		Videolar:  ytKutular(videolar),
 		Shorts:    ytGridHeroHariç(shorts, heroID, 12),
 		BosMetin:  "Henüz kısa video yayınlanmadı. Kanal yeni bir short yüklediğinde burada görünür.",
@@ -342,6 +355,8 @@ func (s *Server) handleCDVideoWatch(w http.ResponseWriter, r *http.Request) {
 	// "Sıradaki" ve alt ızgara aynı türden gelir.
 	ayni, _ := repo.YoutubeListele(ctx, s.pool, k.Tur, 24)
 	hero := ytHero(*k, videoTurEtiket(k.Tur))
+	siradaki := ytSatirlar(ayni, k.VideoID, 6)
+	ytSonraki(&hero, siradaki)
 
 	var videolar, shorts []repo.YoutubeKayit
 	if ayar.VideoGoster {
@@ -362,7 +377,7 @@ func (s *Server) handleCDVideoWatch(w http.ResponseWriter, r *http.Request) {
 		Sekmeler:  s.cdVideoSekmeler("video"),
 		Video:     hero,
 		Aciklama:  aciklama,
-		Siradaki:  ytSatirlar(ayni, k.VideoID, 6),
+		Siradaki:  siradaki,
 		Videolar:  ytGridHeroHariç(videolar, k.VideoID, 8),
 		Shorts:    ytGridHeroHariç(shorts, k.VideoID, 8),
 		Dikey:     k.Tur == "short",

@@ -200,9 +200,16 @@ func TestCDEtiketlerDuz(t *testing.T) {
 // rayındaki canlı yayın modülü. Hepsi ayrı bir sayfa ailesi; mevcut
 // kurallarla (`.cd-card`, `.cd-ray`) paylaşılamıyor çünkü oynatıcı bandı
 // koyu-fixed renk kullanıyor ve tema dönüşünde değişmiyor.
+//
+// 7 Kasım 2026, on yedinci tur → 128 KB: KENDİ oynatıcı (YouTube'un kontrol
+// çubuğu yerine bizimki). Eklenenler: 16 px dokunma alanlı ilerleme çubuğu
+// (tampon + dolu + tutamaç), 34 px düğme ızgarası, ses kaydırıcısı, hız
+// menüsü, tam ekran sahnesi, bitiş ekranı (karartma + sıradaki video) ve
+// canlı modun kırmızı çubuğu. Hepsi tek bir oynatıcı bileşeni; başka bir
+// sayfayla paylaşılamıyor.
 func TestCDButce(t *testing.T) {
 	css := cdCSS(t)
-	assert.Less(t, len(css), 112*1024, "cd.css bütçe aşıldı: %d bayt", len(css))
+	assert.Less(t, len(css), 128*1024, "cd.css bütçe aşıldı: %d bayt", len(css))
 }
 
 // TestCDModulRitmi: modüller MARGIN YAZMAZ, ritim ebeveynin gap'inden

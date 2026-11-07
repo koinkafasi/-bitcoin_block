@@ -13,35 +13,147 @@ package templkit
 //   • Kart: 16/9 görsel (radius 4) + süre rozeti (siyah, sol alt) +
 //     başlık 16/24 + meta 12/16.
 //
-// OYNATMA: iframe baştan yüklenmez (sayfa ağırlığı + CSP/üçüncü taraf
-// isteği). Kapak + oynat düğmesi basılır; tıklanınca cd-video.js iframe'i
-// yerleştirir. JS yoksa düğme kapak görselindeki bağlantı gibi davranmaz —
-// bu yüzden <a> yerine <button> ve `data-cd-video` kullanılıyor; JS
-// çalışmayan tarayıcıda kullanıcı başlık bağlantısından YouTube'a gider.
+// OYNATMA — KENDİ OYNATICI (7 Kasım 2026, kullanıcı isteği):
+// "CoinDesk gibi gelişmiş profesyonel kendi video playerımız olsun."
+//
+// YouTube'un kendi kontrol çubuğu gösterilmiyor (`controls=0`); video yüzeyi
+// iframe, TÜM kontroller bizim: oynat/duraklat, ilerleme + tampon, ses,
+// hız, tam ekran, klavye kısayolları, bitiş ekranı ve "sıradaki" geçişi.
+// Sürme YouTube IFrame API'sinin postMessage protokolüyle yapılıyor —
+// harici script YÜKLENMEZ, bu yüzden CSP (`script-src 'self'`) gevşetilmedi
+// ve sayfaya üçüncü taraf JS girmiyor. Oynatıcı kodu: static/cd-player.js.
+//
+// OYNATICI BAŞTAN YÜKLENMEZ: kapak görseli + büyük oynat düğmesi basılır;
+// kullanıcı tıklayınca iframe kurulur (sayfa ağırlığı + üçüncü taraf isteği).
+//
+// JS YOKSA: düğme <button> olduğu için hiçbir şey olmaz; kullanıcı başlık
+// bağlantısından YouTube'a gidebilir. Künye bağlantısı (sağ üst "YouTube")
+// her durumda videonun kaynağına götürür — YouTube'un atıf kuralı.
 
-// cdVPlayer büyük oynatıcı (kapak + oynat düğmesi).
+// cdVPlayerSahte video yüzeyini kurar: kapak, büyük oynat, kontrol çubuğu.
 templ cdVPlayer(v CDVideoHero, dikey bool) {
-	<div class={ cdVPlayerSinif(dikey) }>
-		<button class="cd-vplayer__kapak" type="button" data-cd-video={ v.VideoID }
-			data-cd-baslik={ v.Baslik } aria-label={ "Videoyu oynat: " + v.Baslik }>
+	<div class={ cdVPlayerSinif(dikey) } data-cd-player
+		data-video={ v.VideoID } data-baslik={ v.Baslik }
+		data-sonraki={ v.SonrakiID } data-sonraki-baslik={ v.SonrakiBaslik }
+		data-canli="0">
+		<div class="cd-vplayer__sahne">
+			<div class="cd-vplayer__cerceve" data-cd-cerceve></div>
 			if v.Image != "" {
-				<img class="cd-vplayer__gorsel" src={ v.Image } alt="" loading="eager"
-					fetchpriority="high" decoding="async" referrerpolicy="no-referrer"/>
+				<img class="cd-vplayer__kapak" data-cd-kapak src={ v.Image } alt=""
+					loading="eager" fetchpriority="high" decoding="async"
+					referrerpolicy="no-referrer"/>
 			}
-			<span class="cd-vplayer__oynat" aria-hidden="true">
-				<svg viewBox="0 0 24 24" width="26" height="26" fill="currentColor" focusable="false">
-					<path d="M8 5v14l11-7z"></path>
-				</svg>
-			</span>
+			<button class="cd-vplayer__buyuk" type="button" data-cd-buyuk
+				aria-label={ "Videoyu oynat: " + v.Baslik }>
+				<svg viewBox="0 0 24 24" width="30" height="30" fill="currentColor"
+					aria-hidden="true" focusable="false"><path d="M8 5v14l11-7z"></path></svg>
+			</button>
+			<div class="cd-vplayer__bekle" data-cd-bekle hidden aria-hidden="true">
+				<span class="cd-vplayer__halka"></span>
+			</div>
 			if v.Canli {
-				<span class="cd-vplayer__rozet cd-vplayer__rozet--canli">
+				<span class="cd-vplayer__rozet cd-vplayer__rozet--canli" data-cd-canli-rozet>
 					<span class="cd-vplayer__nokta" aria-hidden="true"></span>CANLI
 				</span>
+			} else if v.Sure != "" {
+				<span class="cd-vplayer__rozet" data-cd-rozet>{ v.Sure }</span>
 			}
-			if v.Sure != "" && !v.Canli {
-				<span class="cd-vplayer__rozet">{ v.Sure }</span>
-			}
-		</button>
+			<a class="cd-vplayer__kunye" href={ "https://www.youtube.com/watch?v=" + v.VideoID }
+				target="_blank" rel="noopener noreferrer" tabindex="-1">
+				<svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor"
+					aria-hidden="true" focusable="false">
+					<path d="M23 12s0-3.9-.5-5.8c-.3-1-1.1-1.8-2.1-2.1C18.5 3.6 12 3.6 12 3.6s-6.5 0-8.4.5c-1 .3-1.8 1.1-2.1 2.1C1 8.1 1 12 1 12s0 3.9.5 5.8c.3 1 1.1 1.8 2.1 2.1 1.9.5 8.4.5 8.4.5s6.5 0 8.4-.5c1-.3 1.8-1.1 2.1-2.1.5-1.9.5-5.8.5-5.8zM9.8 15.6V8.4l6.2 3.6-6.2 3.6z"></path>
+				</svg>
+				<span class="cd-visually-hidden">Videoyu YouTube'da aç</span>
+			</a>
+			@cdVPlayerKontrol(v.Canli, false)
+		</div>
+	</div>
+}
+
+// cdVPlayerKontrol oynatıcının kontrol çubuğu.
+//
+// Erişilebilirlik: ilerleme çubuğu `role="slider"` + tabindex; süre canlı
+// bölgede (`aria-live=off` bilinçli — her saniye okutmak ekran okuyucuyu
+// boğar). Düğmelerin adları JS'te duruma göre güncellenir
+// ("Oynat" ↔ "Duraklat").
+templ cdVPlayerKontrol(canli bool, yayin bool) {
+	<div class="cd-vplayer__kontrol" data-cd-kontrol>
+		<div class="cd-vplayer__cizgi" data-cd-cizgi role="slider" tabindex="0"
+			aria-label="Video ilerlemesi" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+			<div class="cd-vplayer__tampon" data-cd-tampon></div>
+			<div class="cd-vplayer__dolu" data-cd-dolu>
+				<span class="cd-vplayer__tutamac" aria-hidden="true"></span>
+			</div>
+		</div>
+		<div class="cd-vplayer__satir">
+			<button class="cd-vplayer__dugme" type="button" data-cd-oynat
+				aria-label="Oynat">
+				<svg class="cd-vplayer__simge cd-vplayer__simge--oynat" viewBox="0 0 24 24"
+					width="20" height="20" fill="currentColor" aria-hidden="true" focusable="false">
+					<path d="M8 5v14l11-7z"></path>
+				</svg>
+				<svg class="cd-vplayer__simge cd-vplayer__simge--duraklat" viewBox="0 0 24 24"
+					width="20" height="20" fill="currentColor" aria-hidden="true" focusable="false"
+					hidden>
+					<path d="M6 5h4v14H6zM14 5h4v14h-4z"></path>
+				</svg>
+			</button>
+			<button class="cd-vplayer__dugme" type="button" data-cd-ses aria-label="Sesi kapat">
+				<svg class="cd-vplayer__simge cd-vplayer__simge--ses" viewBox="0 0 24 24"
+					width="20" height="20" fill="currentColor" aria-hidden="true" focusable="false">
+					<path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3a4.5 4.5 0 0 0-2.5-4v8a4.5 4.5 0 0 0 2.5-4zM14 3.2v2.1a6.8 6.8 0 0 1 0 13.4v2.1a8.9 8.9 0 0 0 0-17.6z"></path>
+				</svg>
+				<svg class="cd-vplayer__simge cd-vplayer__simge--sessiz" viewBox="0 0 24 24"
+					width="20" height="20" fill="currentColor" aria-hidden="true" focusable="false"
+					hidden>
+					<path d="M3 9v6h4l5 5V4L7 9H3zm18.5 3-2.2-2.2-1.4 1.4 2.2 2.2-2.2 2.2 1.4 1.4 2.2-2.2 2.2 2.2 1.4-1.4-2.2-2.2 2.2-2.2-1.4-1.4-2.2 2.2z"></path>
+				</svg>
+			</button>
+			<div class="cd-vplayer__ses-kap">
+				<input class="cd-vplayer__ses-aralik" type="range" data-cd-ses-aralik
+					min="0" max="100" value="100" step="1" aria-label="Ses düzeyi"/>
+			</div>
+			<span class="cd-vplayer__sure" data-cd-sure>
+				<span data-cd-gecen>0:00</span>
+				<span aria-hidden="true"> / </span>
+				<span data-cd-toplam>
+					if yayin {
+						if canli {
+							<span class="cd-vplayer__canli-yazi">CANLI</span>
+						} else {
+							<span class="cd-vplayer__bekleme-yazi">YAYIN YOK</span>
+						}
+					} else {
+						0:00
+					}
+				</span>
+			</span>
+			<div class="cd-vplayer__ara"></div>
+			<div class="cd-vplayer__hiz-kap">
+				<button class="cd-vplayer__dugme cd-vplayer__dugme--metin" type="button"
+					data-cd-hiz aria-haspopup="true" aria-expanded="false"
+					aria-label="Oynatma hızı">1x</button>
+				<div class="cd-vplayer__menu" data-cd-menu hidden>
+					for _, h := range []string{"0.5", "0.75", "1", "1.25", "1.5", "2"} {
+						<button class="cd-vplayer__menu-oge" type="button"
+							data-cd-hiz-sec={ h }>{ h + "x" }</button>
+					}
+				</div>
+			</div>
+			<button class="cd-vplayer__dugme" type="button" data-cd-tam aria-label="Tam ekran">
+				<svg class="cd-vplayer__simge cd-vplayer__simge--tam" viewBox="0 0 24 24"
+					width="20" height="20" fill="currentColor" aria-hidden="true" focusable="false">
+					<path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"></path>
+				</svg>
+				<svg class="cd-vplayer__simge cd-vplayer__simge--tamdan" viewBox="0 0 24 24"
+					width="20" height="20" fill="currentColor" aria-hidden="true" focusable="false"
+					hidden>
+					<path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"></path>
+				</svg>
+			</button>
+		</div>
+		<p class="cd-visually-hidden" data-cd-duyuru aria-live="polite"></p>
 	</div>
 }
 
@@ -49,13 +161,35 @@ templ cdVPlayer(v CDVideoHero, dikey bool) {
 //
 // `live_stream?channel=` kullanılıyor: yayın kimliği değişse de (her gün yeni
 // yayın) doğru akış açılır; video kimliğini saklamak bir sonraki yayında
-// bayat bir kayda götürürdü.
-templ cdVPlayerCanli(kanalID, baslik string) {
-	<div class="cd-vplayer">
-		<iframe class="cd-vplayer__iframe"
-			src={ "https://www.youtube-nocookie.com/embed/live_stream?channel=" + kanalID + "&rel=0" }
-			title={ baslik } loading="lazy" allowfullscreen
-			allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"></iframe>
+// bayat bir kayda götürürdü. Kontroller yine bizim: canlıda ilerleme çubuğu
+// kapalı, süre yerine CANLI yazar.
+templ cdVPlayerCanli(kanalID, baslik string, canli bool) {
+	<div class={ "cd-vplayer" + cdCanliSinif(canli) } data-cd-player data-canli="1" data-kanal={ kanalID }
+		data-veri-canli={ cdBool(canli) } data-video="" data-baslik={ baslik }
+		data-sonraki="" data-sonraki-baslik="">
+		<div class="cd-vplayer__sahne">
+			<div class="cd-vplayer__cerceve" data-cd-cerceve></div>
+			<div class="cd-vplayer__bos" data-cd-bos>
+				<p class="cd-vplayer__bos-yazi">
+					Canlı yayın oynatıcısı hazırlanıyor… Yayın yoksa YouTube
+					çerçevesi bilgi verir.
+				</p>
+			</div>
+			<button class="cd-vplayer__buyuk" type="button" data-cd-buyuk
+				aria-label={ "Canlı yayını başlat: " + baslik }>
+				<svg viewBox="0 0 24 24" width="30" height="30" fill="currentColor"
+					aria-hidden="true" focusable="false"><path d="M8 5v14l11-7z"></path></svg>
+			</button>
+			<div class="cd-vplayer__bekle" data-cd-bekle hidden aria-hidden="true">
+				<span class="cd-vplayer__halka"></span>
+			</div>
+			if canli {
+				<span class="cd-vplayer__rozet cd-vplayer__rozet--canli" data-cd-canli-rozet>
+					<span class="cd-vplayer__nokta" aria-hidden="true"></span>CANLI
+				</span>
+			}
+			@cdVPlayerKontrol(canli, true)
+		</div>
 	</div>
 }
 
@@ -155,7 +289,7 @@ templ CDVideoPageView(v CDVideoPage) {
 						<div class="cd-vband__sol">
 							<p class="cd-vband__etiket">{ v.Baslik }</p>
 							if v.KanalID != "" {
-								@cdVPlayerCanli(v.KanalID, v.Hero.Baslik)
+								@cdVPlayerCanli(v.KanalID, v.Hero.Baslik, v.CanliYayinAktif)
 							} else if v.Hero.VideoID != "" {
 								@cdVPlayer(v.Hero, v.Dikey)
 							}
@@ -207,7 +341,7 @@ templ CDVideoPageView(v CDVideoPage) {
 				</div>
 			</main>
 			@cdFooter(v.Shell)
-			<script src={ "/static/cd-video.js?v=" + cdVarlik() } defer></script>
+			<script src={ "/static/cd-player.js?v=" + cdVarlik() } defer></script>
 		</body>
 	</html>
 }
@@ -270,7 +404,7 @@ templ CDVideoWatchView(v CDVideoWatch) {
 				</div>
 			</main>
 			@cdFooter(v.Shell)
-			<script src={ "/static/cd-video.js?v=" + cdVarlik() } defer></script>
+			<script src={ "/static/cd-player.js?v=" + cdVarlik() } defer></script>
 		</body>
 	</html>
 }

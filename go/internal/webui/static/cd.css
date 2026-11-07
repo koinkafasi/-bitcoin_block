@@ -2769,31 +2769,60 @@ html.dark .cd-google { color: var(--cd-fg); }
   color: #a6a6a6;
 }
 
-/* ---- Oynatıcı ---- */
+/* ---- Oynatıcı (KENDİ OYNATICI, 7 Kasım 2026) ----
+   YouTube'un kontrol çubuğu gösterilmiyor; video yüzeyi iframe, kontroller
+   bizim. Kapak: 16/9 (short'ta 9/16), üstünde büyük oynat düğmesi.
+   Kontrol çubuğu alta bindirilir (siyahtan saydam gradyan), oynarken 2,5 sn
+   hareketsizlikte gizlenir (`.cd-vplayer--sakin`). */
 .cd-vplayer {
   position: relative;
   width: 100%;
   aspect-ratio: 16 / 9;
   background: #000;
   overflow: hidden;
+  color: #fff;
 }
 .cd-vplayer--dikey {
   aspect-ratio: 9 / 16;
   max-width: 420px;
   margin: 0 auto;
 }
+.cd-vplayer:focus { outline: none; }
+.cd-vplayer:focus-visible { outline: 2px solid var(--cd-brand); outline-offset: 2px; }
+.cd-vplayer__sahne { position: absolute; inset: 0; background: #000; }
+.cd-vplayer__cerceve,
+.cd-vplayer__iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+.cd-vplayer__iframe { background: #000; }
 .cd-vplayer__kapak {
-  position: relative;
-  display: block;
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
-  padding: 0;
-  border: 0;
-  background: #000;
-  cursor: pointer;
+  object-fit: cover;
+  display: block;
+  /* YouTube oynatıcısı hazır olana kadar kapak kalır; `hidden` ile
+     kaldırılınca iframe altından çıkar. */
 }
-.cd-vplayer__gorsel { width: 100%; height: 100%; object-fit: cover; display: block; }
-.cd-vplayer__oynat {
+.cd-vplayer--basladi .cd-vplayer__kapak { opacity: 0; pointer-events: none; }
+.cd-vplayer__bos {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: #0b0b0b;
+}
+.cd-vplayer__bos-yazi {
+  margin: 0;
+  max-width: 460px;
+  text-align: center;
+  font-size: 14px;
+  line-height: 22px;
+  color: #a6a6a6;
+}
+/* Büyük oynat düğmesi: 68 px daire, marka sarısı, siyah üçgen. */
+.cd-vplayer__buyuk {
   position: absolute;
   top: 50%;
   left: 50%;
@@ -2803,18 +2832,41 @@ html.dark .cd-google { color: var(--cd-fg); }
   justify-content: center;
   width: 68px;
   height: 68px;
+  padding: 0;
+  border: 0;
   border-radius: 50%;
   background: var(--cd-brand);
   color: #000;
-  transition: transform 0.15s ease;
+  cursor: pointer;
+  transition: transform 0.15s ease, opacity 0.15s ease;
+  z-index: 3;
 }
-.cd-vplayer__oynat svg { margin-left: 2px; }
-.cd-vplayer__kapak:hover .cd-vplayer__oynat,
-.cd-vplayer__kapak:focus-visible .cd-vplayer__oynat { transform: translate(-50%, -50%) scale(1.06); }
+.cd-vplayer__buyuk svg { margin-left: 3px; }
+.cd-vplayer__buyuk:hover,
+.cd-vplayer__buyuk:focus-visible { transform: translate(-50%, -50%) scale(1.07); }
+.cd-vplayer__buyuk:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+.cd-vplayer__bekle {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 2;
+  pointer-events: none;
+}
+.cd-vplayer__halka {
+  display: block;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  border: 3px solid rgba(255, 255, 255, 0.22);
+  border-top-color: var(--cd-brand);
+  animation: cd-vplayer-don 0.9s linear infinite;
+}
+@keyframes cd-vplayer-don { to { transform: rotate(360deg); } }
 .cd-vplayer__rozet {
   position: absolute;
   left: 12px;
-  bottom: 12px;
+  bottom: 72px;
   padding: 2px 8px;
   border-radius: 2px;
   background: rgba(0, 0, 0, 0.8);
@@ -2823,7 +2875,10 @@ html.dark .cd-google { color: var(--cd-fg); }
   line-height: 18px;
   letter-spacing: 0.04em;
   text-transform: uppercase;
+  z-index: 2;
+  transition: opacity 0.2s ease;
 }
+.cd-vplayer--basladi .cd-vplayer__rozet { bottom: 72px; }
 .cd-vplayer__rozet--canli {
   background: #e0245e;
   display: inline-flex;
@@ -2837,13 +2892,244 @@ html.dark .cd-google { color: var(--cd-fg); }
   background: #fff;
   animation: cd-nabiz 1.6s ease-in-out infinite;
 }
-.cd-vplayer__iframe {
+/* Künye: sağ üstte küçük YouTube bağlantısı (atıf). */
+.cd-vplayer__kunye {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 22px;
+  border-radius: 2px;
+  background: rgba(0, 0, 0, 0.66);
+  color: #fff;
+  z-index: 2;
+  opacity: 0.85;
+}
+.cd-vplayer__kunye:hover { opacity: 1; background: rgba(0, 0, 0, 0.85); }
+
+/* ---- Kontrol çubuğu ---- */
+.cd-vplayer__kontrol {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 4;
+  padding: 26px 12px 8px;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.86) 0%, rgba(0, 0, 0, 0.55) 55%, rgba(0, 0, 0, 0) 100%);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+.cd-vplayer--sakin .cd-vplayer__kontrol,
+.cd-vplayer--sakin .cd-vplayer__rozet { opacity: 0; }
+.cd-vplayer--sakin { cursor: none; }
+
+/* İlerleme: 4 px çizgi, üstünde tampon (soluk) ve dolu (marka) katmanı.
+   Dokunma alanı 16 px (görsel 4 px, ::before ile büyütülüyor). */
+.cd-vplayer__cizgi {
+  position: relative;
+  height: 16px;
+  cursor: pointer;
+  touch-action: none;
+}
+.cd-vplayer__cizgi::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 6px;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.28);
+}
+.cd-vplayer__tampon,
+.cd-vplayer__dolu {
+  position: absolute;
+  left: 0;
+  top: 6px;
+  height: 4px;
+  border-radius: 2px;
+  pointer-events: none;
+}
+.cd-vplayer__tampon { background: rgba(255, 255, 255, 0.44); width: 0; }
+.cd-vplayer__dolu { background: var(--cd-brand); width: 0; }
+.cd-vplayer__tutamac {
+  position: absolute;
+  right: -6px;
+  top: -4px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--cd-brand);
+  opacity: 0;
+  transition: opacity 0.12s ease;
+}
+.cd-vplayer__cizgi:hover .cd-vplayer__tutamac,
+.cd-vplayer__cizgi:focus-visible .cd-vplayer__tutamac,
+.cd-vplayer__cizgi:active .cd-vplayer__tutamac { opacity: 1; }
+.cd-vplayer__cizgi:focus-visible { outline: none; }
+.cd-vplayer__cizgi:focus-visible::before { box-shadow: 0 0 0 2px var(--cd-brand); }
+.cd-vplayer--canli .cd-vplayer__cizgi { cursor: default; }
+.cd-vplayer--canli .cd-vplayer__dolu { width: 100% !important; background: #e0245e; }
+.cd-vplayer--canli .cd-vplayer__tutamac { display: none; }
+
+.cd-vplayer__satir {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 2px;
+  color: #fff;
+}
+.cd-vplayer__dugme {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 34px;
+  height: 34px;
+  padding: 0 4px;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: #fff;
+  cursor: pointer;
+}
+.cd-vplayer__dugme:hover { background: rgba(255, 255, 255, 0.16); }
+.cd-vplayer__dugme:focus-visible { outline: 2px solid var(--cd-brand); outline-offset: 1px; }
+.cd-vplayer__dugme--metin {
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  min-width: 40px;
+  color: #fff;
+}
+.cd-vplayer__simge { display: block; }
+.cd-vplayer__simge[hidden] { display: none; }
+.cd-vplayer__sure {
+  font-size: 12px;
+  line-height: 18px;
+  font-variant-numeric: tabular-nums;
+  color: #e6e6e6;
+  padding: 0 4px;
+  white-space: nowrap;
+}
+.cd-vplayer__canli-yazi { color: #ff5c7c; font-weight: 600; letter-spacing: 0.04em; }
+.cd-vplayer__bekleme-yazi { color: #a6a6a6; font-weight: 500; letter-spacing: 0.04em; }
+.cd-vplayer__ara { flex: 1 1 auto; }
+.cd-vplayer__ses-kap { display: flex; align-items: center; }
+.cd-vplayer__ses-aralik {
+  width: 0;
+  opacity: 0;
+  height: 4px;
+  margin: 0;
+  cursor: pointer;
+  accent-color: var(--cd-brand);
+  transition: width 0.18s ease, opacity 0.18s ease, margin 0.18s ease;
+}
+.cd-vplayer__satir:hover .cd-vplayer__ses-aralik,
+.cd-vplayer__ses-aralik:focus-visible { width: 76px; opacity: 1; margin: 0 6px 0 2px; }
+
+/* Hız menüsü */
+.cd-vplayer__hiz-kap { position: relative; }
+.cd-vplayer__menu {
+  position: absolute;
+  right: 0;
+  bottom: 40px;
+  min-width: 84px;
+  padding: 6px 0;
+  border-radius: 6px;
+  background: rgba(18, 18, 18, 0.97);
+  box-shadow: var(--cd-shadow-overlay);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+.cd-vplayer__menu[hidden] { display: none; }
+.cd-vplayer__menu-oge {
   display: block;
   width: 100%;
-  height: 100%;
+  padding: 6px 14px;
   border: 0;
-  background: #000;
+  background: transparent;
+  color: #e6e6e6;
+  font: inherit;
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
 }
+.cd-vplayer__menu-oge:hover { background: rgba(255, 255, 255, 0.14); color: #fff; }
+
+/* Tam ekran: sahne tüm ekranı kaplar, iframe oranı korunur. */
+.cd-vplayer--tam { aspect-ratio: auto; width: 100%; height: 100%; max-width: none; margin: 0; }
+.cd-vplayer--tam .cd-vplayer__sahne { position: absolute; inset: 0; }
+.cd-vplayer--tam .cd-vplayer__kontrol { padding-bottom: 18px; }
+.cd-vplayer--sahte-tam {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  width: 100vw;
+  height: 100vh;
+  aspect-ratio: auto;
+  max-width: none;
+  margin: 0;
+}
+
+/* Bitiş ekranı: karartma + tekrar oynat + sıradaki video (5 sn geri sayım). */
+.cd-vplayer__son {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.82);
+  animation: cd-vplayer-son-gir 0.18s ease-out;
+}
+@keyframes cd-vplayer-son-gir { from { opacity: 0; } to { opacity: 1; } }
+.cd-vplayer__son-ic {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  max-width: 78%;
+  text-align: center;
+}
+.cd-vplayer__son-tekrar {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 4px;
+  background: transparent;
+  color: #fff;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+.cd-vplayer__son-tekrar:hover { background: rgba(255, 255, 255, 0.14); }
+.cd-vplayer__son-sonraki {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  color: #fff;
+  text-align: left;
+}
+.cd-vplayer__son-etiket {
+  font-size: 11px;
+  line-height: 16px;
+  letter-spacing: 0.08em;
+  color: var(--cd-brand);
+}
+.cd-vplayer__son-baslik {
+  font-size: 18px;
+  line-height: 26px;
+  font-weight: 500;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.cd-vplayer__son-sonraki:hover .cd-vplayer__son-baslik { text-decoration: underline; text-underline-offset: 3px; }
+.cd-vplayer__son-sayac { font-size: 12px; line-height: 18px; color: #a6a6a6; }
 
 /* ---- Sıradaki listesi ---- */
 .cd-vband__liste {

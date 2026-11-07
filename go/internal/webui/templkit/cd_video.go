@@ -20,6 +20,11 @@ type CDVideoHero struct {
 	Etiket  string
 	Href    string
 	Canli   bool
+	// SonrakiID/SonrakiBaslik oynatıcının bitiş ekranında "sıradaki video"
+	// olarak gösterilir (5 sn geri sayımlı geçiş). Boşsa yalnız "tekrar
+	// oynat" çıkar.
+	SonrakiID     string
+	SonrakiBaslik string
 }
 
 // CDVideoSatir "Sıradaki" listesinin tek satırı (küçük kapak + başlık).
@@ -143,6 +148,22 @@ func ikiHane(n int) string {
 		return "0" + strconv.Itoa(n)
 	}
 	return strconv.Itoa(n)
+}
+
+// cdCanliSinif canlı yayın varsa çubuğu kırmızı gösteren sınıfı ekler.
+func cdCanliSinif(canli bool) string {
+	if canli {
+		return " cd-vplayer--canli"
+	}
+	return ""
+}
+
+// cdBool bool'u templ özniteliği için metne çevirir.
+func cdBool(b bool) string {
+	if b {
+		return "1"
+	}
+	return "0"
 }
 
 // sayiMetni panelde sayıyı metne çevirir (templ içinde fmt kullanmamak için).
