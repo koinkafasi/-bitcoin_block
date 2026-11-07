@@ -101,13 +101,24 @@ templ cdTopbar(s CDShell) {
 				@cdMegaNav(s)
 				@cdMobilNav(s)
 				<div class="cd-topbar__actions">
-					<a class="cd-ikon-btn" href={ s.SearchHref } aria-label="Ara">
-						<svg viewBox="0 0 24 24" width="20" height="20" fill="none"
-							stroke="currentColor" stroke-width="2" stroke-linecap="round"
-							stroke-linejoin="round" aria-hidden="true" focusable="false">
-							<circle cx="11" cy="11" r="7"></circle>
-							<path d="M20 20l-4.2-4.2"></path>
+					<!-- ARAMA — CoinDesk'te bağlantı değil, HAP biçimli düğme:
+					     200×40, zemin surface-subtle, köşe 9999, 16 px büyüteç +
+					     "Ara" + sağda "/" ipucu (24×24 daire, 1 px çerçeve).
+					     Tıklayınca sayfa değişmez, ARAMA PANELİ açılır (ölçüm
+					     7 Kasım 2026, coindesk.com). -->
+					<!-- Bağlantı olarak yazıldı: JS kapalıysa /arama sayfasına
+					     gider (ilerlemeli geliştirme); JS varsa csp-delegated.js
+					     varsayılanı iptal edip paneli açar. -->
+					<a class="cd-arama-ac" href={ s.SearchHref } data-arama-ac
+						aria-label="Aramayı aç" aria-expanded="false" aria-controls="cd-arama">
+						<svg class="cd-arama-ac__ikon" viewBox="0 0 24 24" width="16" height="16"
+							fill="none" stroke="currentColor" stroke-width="1.5"
+							stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"
+							focusable="false">
+							<path d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"/>
 						</svg>
+						<span class="cd-arama-ac__metin">Ara</span>
+						<span class="cd-arama-ac__ipucu" aria-hidden="true">/</span>
 					</a>
 					<!-- Tema anahtarı. Varsayılan GİZLİ (`display:none`); init
 					     betiği `html.cd-js` ekleyince görünür. JS yoksa ölü
@@ -115,14 +126,30 @@ templ cdTopbar(s CDShell) {
 					     Simge SVG: projede templ dosyalarında emoji YASAK
 					     (emoji_test.go, TestTumTemplDosyalariEmojisiz). -->
 					<button class="cd-tema" type="button" data-tema
-						aria-label="Koyu temaya geç" aria-pressed="false">
-						<!-- Ay simgesi: CoinDesk üst çubuğundaki tema anahtarıyla aynı
-						     görsel dil (ölçüm 7 Kasım 2026). Eski yarım daire okunmuyordu. -->
-						<svg class="cd-tema__ikon" viewBox="0 0 24 24" width="20" height="20"
+						aria-label="Karanlık moda geç" aria-pressed="false">
+						<!-- İKİ İKON DA DOM'DA: açık temada AY, koyu temada GÜNEŞ.
+						     Görünürlüğü tema sınıfı belirliyor (CSS) — JS ile ikon
+						     değiştirmek FOUC ve eksik-durum riski taşıyordu.
+						     İkonlar CoinDesk'in kendi yolları (ölçüm 7 Kasım 2026). -->
+						<svg class="cd-tema__ikon cd-tema__ay" viewBox="0 0 24 24" width="20" height="20"
 							aria-hidden="true" focusable="false" fill="none"
 							stroke="currentColor" stroke-width="2" stroke-linecap="round"
 							stroke-linejoin="round">
 							<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+						</svg>
+						<svg class="cd-tema__ikon cd-tema__gunes" viewBox="0 0 24 24" width="20" height="20"
+							aria-hidden="true" focusable="false" fill="none"
+							stroke="currentColor" stroke-width="2" stroke-linecap="round"
+							stroke-linejoin="round">
+							<circle cx="12" cy="12" r="5"></circle>
+							<line x1="12" y1="1" x2="12" y2="3"></line>
+							<line x1="12" y1="21" x2="12" y2="23"></line>
+							<line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+							<line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+							<line x1="1" y1="12" x2="3" y2="12"></line>
+							<line x1="21" y1="12" x2="23" y2="12"></line>
+							<line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+							<line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
 						</svg>
 					</button>
 					if len(s.Diller) > 1 {
@@ -173,6 +200,89 @@ templ cdTopbar(s CDShell) {
 			</div>
 		</div>
 	</header>
+	@cdAramaPanel(s)
+}
+
+// cdAramaPanel arama paneli — CoinDesk'in komut paleti deseni.
+//
+// ÖLÇÜLDÜ (coindesk.com, 7 Kasım 2026): panel 560 px genişlik, üstten
+// 64 px, köşe 16 px, 1 px çerçeve, `shadow-lg`; başlık 64 px (24 px
+// büyüteç + 16/24 girdi + 32×32 kapat), altında 1 px çizgi; çipler 28 px
+// yükseklik, 9999 px köşe, 6/8 dolgu, 12/16 metin; gövde kaydırılır.
+//
+// JS'SİZ DE ÇALIŞIR: panel `hidden` gelir; form doğrudan
+// `action` ile /arama?q=... adresine gider. Açma/kapama ve çip süzgeci
+// csp-delegated.js'te (CSP 'unsafe-inline' yok).
+//
+// VERİ UYDURULMAZ: gövde yalnız GERÇEK veriyi basar — şeritten gelen
+// fiyatlar ve gezinmedeki bölüm bağlantıları. Veri yoksa grup basılmaz.
+templ cdAramaPanel(s CDShell) {
+	<div class="cd-arama" id="cd-arama" hidden>
+		<div class="cd-arama__perde" data-arama-kapat></div>
+		<section class="cd-arama__panel" role="dialog" aria-modal="true"
+			aria-label="Arama">
+			<form class="cd-arama__form" action={ s.SearchHref } method="get"
+				role="search">
+				<div class="cd-arama__ust">
+					<svg class="cd-arama__buyutec" viewBox="0 0 24 24" width="24" height="24"
+						fill="none" stroke="currentColor" stroke-width="1.5"
+						stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"
+						focusable="false">
+						<path d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"/>
+					</svg>
+					<input class="cd-arama__girdi" type="search" name="q"
+						placeholder="Haber, fiyat veya kategori ara" autocomplete="off"
+						aria-label="Arama metni"/>
+					<button class="cd-arama__kapat" type="button" data-arama-kapat
+						aria-label="Aramayı kapat">
+						<svg viewBox="0 0 24 24" width="24" height="24" fill="none"
+							stroke="currentColor" stroke-width="2" stroke-linecap="round"
+							stroke-linejoin="round" aria-hidden="true" focusable="false">
+							<path d="M6 6l12 12M18 6L6 18"/>
+						</svg>
+					</button>
+				</div>
+				<div class="cd-arama__cipler" role="group" aria-label="Arama türü">
+					<button class="cd-arama__cip cd-arama__cip--aktif" type="button"
+						data-arama-cip="hepsi" aria-pressed="true">Tümü</button>
+					if len(s.Ticker) > 0 {
+						<button class="cd-arama__cip" type="button"
+							data-arama-cip="piyasalar" aria-pressed="false">Piyasalar</button>
+					}
+					if len(s.Nav) > 0 {
+						<button class="cd-arama__cip" type="button"
+							data-arama-cip="bolumler" aria-pressed="false">Bölümler</button>
+					}
+				</div>
+				<div class="cd-arama__govde">
+					if len(s.Ticker) > 0 {
+						<div class="cd-arama__grup" data-arama-grup="piyasalar">
+							<h2 class="cd-arama__baslik">Piyasalar</h2>
+							for _, it := range s.Ticker {
+								<a class="cd-arama__satir" href={ "/price/" + it.Slug }>
+									<span class="cd-arama__simge">{ it.Sym }</span>
+									<span class="cd-arama__fiyat">{ it.Price }</span>
+									if it.Up {
+										<span class="cd-arama__degisim cd-up">{ it.Change }</span>
+									} else {
+										<span class="cd-arama__degisim cd-down">{ it.Change }</span>
+									}
+								</a>
+							}
+						</div>
+					}
+					if len(s.Nav) > 0 {
+						<div class="cd-arama__grup" data-arama-grup="bolumler">
+							<h2 class="cd-arama__baslik">Bölümler</h2>
+							for _, l := range s.Nav {
+								<a class="cd-arama__bolum" href={ l.Href }>{ l.Label }</a>
+							}
+						</div>
+					}
+				</div>
+			</form>
+		</section>
+	</div>
 }
 
 // cdFooter alt bilgi — ölçülen dört bant (spec §7.4).

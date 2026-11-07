@@ -183,17 +183,18 @@ func TestCDEtiketlerDuz(t *testing.T) {
 // TestCDButce: CSS bütçesi. Tasarım sistemi kalınlaştıkça dosya büyür;
 // bütçe aşıldığında bilinçli bir güncelleme gerekir (sessiz kabul yok).
 //
-// Eşik 92 KB (7 Kasım 2026, on dördüncü tur): fiyat şeridi CoinDesk
-// ölçülerine çekildi (kalem arası 1×32 px ayırıcı, renkli yüzde rozeti
-// 22 px, kaydırılmış şeritte sabit 45 px yükseklik), üst çubuk sağ kümesi
-// (36×36 ikon düğmeleri, 75×40 dil kutusu, dil ile "Oturum Aç" arasında
-// 1×40 px ayırıcı) ve koyu tema zeminleri (gövde/şerit #161616, üst çubuk
-// #000000) eklendi. Değerler px olarak yazılı ve her jetonun gerekçesi
-// yorumda duruyor. Gerçek maliyet sıkıştırılmış boyut: bu dosya gzip'te
-// ~13 KB — tek bloklayıcı CSS için kabul edilebilir.
+// Eşik 100 KB (7 Kasım 2026, on beşinci tur): CoinDesk'in arama hapı
+// (200×40, 9999 köşe, "/" ipucu) ve komut paleti paneli (560 px panel,
+// 64 px başlık, 28 px çipler, kaydırılan gövde) eklendi; tema anahtarı
+// iki simgeye (ay/güneş) ayrıldı. Önceki turlarda fiyat şeridi (1×32 px
+// ayırıcı, 22 px rozet, 45 px kaydırılmış satır), üst çubuk sağ kümesi
+// ve koyu tema zeminleri (#161616 gövde/şerit, #000000 üst çubuk) gelmişti.
+// Değerler px olarak yazılı ve her jetonun gerekçesi yorumda duruyor.
+// Gerçek maliyet sıkıştırılmış boyut: bu dosya gzip'te ~14 KB — tek
+// bloklayıcı CSS için kabul edilebilir.
 func TestCDButce(t *testing.T) {
 	css := cdCSS(t)
-	assert.Less(t, len(css), 92*1024, "cd.css bütçe aşıldı: %d bayt", len(css))
+	assert.Less(t, len(css), 100*1024, "cd.css bütçe aşıldı: %d bayt", len(css))
 }
 
 // TestCDModulRitmi: modüller MARGIN YAZMAZ, ritim ebeveynin gap'inden

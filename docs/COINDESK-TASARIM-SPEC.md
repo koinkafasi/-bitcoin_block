@@ -1848,9 +1848,83 @@ gofmt · vet · test · build   temiz
 Lighthouse masaüstü    100 · 100 · 100 · 100 (LCP 0,7 s, CLS 0,005)
 ```
 
-Bilinçli fark: arama ikonu. CoinDesk'in masaüstü üst çubuğunda arama
-düğmesi **0×0** (boş `aria-label="Ara"` yuvası) — kullanıcı istediği
-için bizde 36×36 gerçek düğme var; kutu ölçüsü tema düğmesiyle aynı.
+Bilinçli fark: arama ikonu. CoinDesk'in **Türkçe** masaüstü üst
+çubuğunda arama düğmesi **0×0** (boş `aria-label="Ara"` yuvası); İngilizce
+sayfada ise 200×40 hap var. On beşinci turda İngilizce desen uygulandı —
+bkz. §11.12.
+
+### 11.12 On dördüncü tur (tema simgesi + arama hapı ve paneli) — DURUM
+
+Kullanıcı iki hata bildirdi: (1) açık/koyu tema geçişinde simge
+değişmiyordu, (2) arama kutusu CoinDesk gibi değildi — sayfa değiştirip
+ayrı bir sonuç sayfası açıyordu. İkisi de düzeltildi.
+
+**Referans sayfa:** `coindesk.com/` (İngilizce). `coindesk.com/tr`
+üst çubuğunda arama yuvası boş (0×0); hap + panel deseni İngilizce
+sayfada ölçüldü (7 Kasım 2026, 1920 px).
+
+#### 11.12.1 Tema anahtarı
+
+| Konu | CoinDesk | bitcosar (önce) | Şimdi |
+|---|---|---|---|
+| Açık tema simgesi | **ay** (20×20) | ay | ay (`.cd-tema__ay`) |
+| Koyu tema simgesi | **güneş** (20×20) | ay (değişmiyordu) | güneş (`.cd-tema__gunes`) |
+| Görünürlük | tema sınıfı | JS simge değiştirmiyordu | CSS: `html.dark` ile takas |
+| `aria-label` | "Karanlık moda geç" / "Aydınlık moda geç" | "Koyu/Açık temaya geç" | CoinDesk metinleri |
+
+İki SVG de DOM'da; ilk boyamada doğru simge çizilir (FOUC yok).
+
+#### 11.12.2 Arama hapı — ölçülen değerler
+
+| Konu | CoinDesk | bitcosar |
+|---|---|---|
+| Kutu | **200×40**, köşe 9999 | 200×40, köşe 9999 |
+| Zemin | `#f4f4f4` (surface-subtle) | `--cd-surface-soft` |
+| Dolgu / aralık | `0 10px` / `gap: 4px` | aynı |
+| Büyüteç | 16×16 | 16×16 |
+| Metin | "Search" 14/22 w500 `#676767` | "Ara" 14/22 w500 `--cd-muted` |
+| "/" ipucu | 24×24 daire, 1 px çerçeve, beyaz zemin | aynı |
+| Sağ kenar | 1692 | 1692 |
+| Küme | 533×40 (hap dahil) | 533×40 |
+
+Orta genişlikte (768–1279) hap 40×40 ikon kutusuna iner; mobilde
+(≤767) gizlenir — hamburger panelinde "Ara" bağlantısı var.
+JS kapalıysa hap `/arama` sayfasına gider (bağlantı olarak yazıldı).
+
+#### 11.12.3 Arama paneli — ölçülen değerler
+
+| Konu | CoinDesk | bitcosar |
+|---|---|---|
+| Panel | **560 px**, üstten **64 px**, köşe 16 | aynı |
+| Gölge | `shadow-lg` | `--cd-shadow-overlay` (tasarım kuralı) |
+| Başlık | 64 px: 24 büyüteç + 16/24 girdi + 32×32 kapat | aynı |
+| Alt çizgi | 1 px | `--cd-border` |
+| Çipler | 28 px, 9999 köşe, 12 px yatay dolgu | aynı |
+| Gövde | kaydırılır | `overflow-y: auto` |
+| Perde | `rgba(0,0,0,.5)` | aynı |
+| Davranış | tıkla aç, Esc kapat, Ctrl+K / "/" | aynı + çip süzgeci |
+
+Panel `hidden` gelir; form doğrudan `GET /arama?q=…` adresine gider.
+Açma/kapama, çip süzgeci ve kısayollar `csp-delegated.js`'te
+(CSP `unsafe-inline` yok). Panelde **yalnız gerçek veri** var: şeritten
+gelen 7 fiyat ve gezinmedeki bölüm bağlantıları; haber sonucu verisi
+olmadığı için uydurulmadı.
+
+#### 11.12.4 Doğrulama
+
+```
+yatay taşma            0 (1920 · 768 · 390)
+hap                    200×40, sağ kenar 1692 = Kaydol 1692
+tema simgesi           açık: ay / koyu: güneş (display block/none)
+panel                  560×758, x=680, y=64, radius 16, başlık 64
+form                   GET /arama?q=bitcoin → 200
+Esc / "/" / Ctrl+K     çalışıyor; çip süzgeci grupları gizliyor
+gofmt · vet · test · build   temiz
+Lighthouse masaüstü    100 · 100 · 100 · 100 (LCP 0,7 s, CLS 0,007)
+```
+
+CSS bütçesi 92 → **100 KB** (`TestCDButce`): hap + panel + çift tema
+simgesi eklendi; gzip'te ~14 KB.
 
 ---
 

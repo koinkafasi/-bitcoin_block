@@ -152,8 +152,10 @@
     var dugmeler = document.querySelectorAll('[data-tema]');
     for (var i = 0; i < dugmeler.length; i++) {
       dugmeler[i].setAttribute('aria-pressed', koyu ? 'true' : 'false');
+      // Etiketler CoinDesk'in kendi metinleri (ölçüm 7 Kasım 2026):
+      // açık temada "Karanlık moda geç", koyuda "Aydınlık moda geç".
       dugmeler[i].setAttribute('aria-label',
-        koyu ? 'Açık temaya geç' : 'Koyu temaya geç');
+        koyu ? 'Aydınlık moda geç' : 'Karanlık moda geç');
     }
   }
 
@@ -185,4 +187,64 @@
   }
   kaydiGuncelle();
   window.addEventListener('scroll', kaydiGuncelle, { passive: true });
+
+  // --- data-arama-ac: arama paneli (CoinDesk komut paleti) ---
+  //
+  // CoinDesk'te arama düğmesi sayfa değiştirmez; üstte 560 px'lik bir
+  // panel açar. Panel `hidden` gelir, form doğrudan /arama?q=... adresine
+  // gider (JS kapalıysa da çalışır). Açma/kapama, çip süzgeci ve
+  // "/" · Ctrl+K kısayolları burada — CSP 'unsafe-inline' yok.
+  (function () {
+    var panel = document.getElementById('cd-arama');
+    if (!panel) return;
+    var acDugme = document.querySelector('[data-arama-ac]');
+    var girdi = panel.querySelector('.cd-arama__girdi');
+    var kok = document.documentElement;
+
+    function ac() {
+      panel.hidden = false;
+      kok.classList.add('cd-arama-acik');
+      if (acDugme) acDugme.setAttribute('aria-expanded', 'true');
+      if (girdi) girdi.focus();
+    }
+    function kapat() {
+      panel.hidden = true;
+      kok.classList.remove('cd-arama-acik');
+      if (acDugme) {
+        acDugme.setAttribute('aria-expanded', 'false');
+        acDugme.focus();
+      }
+    }
+
+    document.addEventListener('click', function (e) {
+      var el = e.target;
+      if (!el || !el.closest) return;
+      if (el.closest('[data-arama-ac]')) { e.preventDefault(); ac(); return; }
+      if (el.closest('[data-arama-kapat]')) { e.preventDefault(); kapat(); return; }
+      var cip = el.closest('[data-arama-cip]');
+      if (!cip) return;
+      e.preventDefault();
+      var tur = cip.getAttribute('data-arama-cip');
+      var cipler = panel.querySelectorAll('[data-arama-cip]');
+      for (var i = 0; i < cipler.length; i++) {
+        var aktif = cipler[i] === cip;
+        cipler[i].classList.toggle('cd-arama__cip--aktif', aktif);
+        cipler[i].setAttribute('aria-pressed', aktif ? 'true' : 'false');
+      }
+      var gruplar = panel.querySelectorAll('[data-arama-grup]');
+      for (var j = 0; j < gruplar.length; j++) {
+        gruplar[j].hidden = tur !== 'hepsi' &&
+          gruplar[j].getAttribute('data-arama-grup') !== tur;
+      }
+    }, true);
+
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && !panel.hidden) { kapat(); return; }
+      var ae = document.activeElement;
+      var yaziyor = ae && (/^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName) || ae.isContentEditable);
+      var kisayol = (e.key === '/' && !yaziyor) ||
+        ((e.ctrlKey || e.metaKey) && (e.key === 'k' || e.key === 'K'));
+      if (kisayol) { e.preventDefault(); ac(); }
+    });
+  })();
 })();
