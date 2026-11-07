@@ -2,7 +2,7 @@
 <body>
 {{template "site_header" .}}
 <main class="page"><div class="container narrow">
-  <h1 class="page-title">📬 Bülten</h1>
+  <h1 class="page-title">Bülten</h1>
   {{if .Digest.Done}}
     <div class="card card-pad"><p>{{.Digest.DoneMsg}}</p><p><a class="btn ghost" href="/bulten">Abone ol / çıkış yap</a></p></div>
   {{else}}
@@ -49,7 +49,7 @@
 <main class="page"><div class="container narrow">
   <h1 class="page-title">{{.Digest.Day.Title}}</h1>
   {{if .Digest.Day.Summary}}<p class="muted">{{.Digest.Day.Summary}}</p>{{end}}
-  <p class="small muted">{{len .Digest.Items}} haber · {{.Digest.Day.WordCount}} kelime · <a href="/ping">tüm özetler</a> · <a href="/podcast/{{.Digest.Day.Date.Format "2006-01-02"}}">🎧 sesli</a></p>
+  <p class="small muted">{{len .Digest.Items}} haber · {{.Digest.Day.WordCount}} kelime · <a href="/ping">tüm özetler</a> · <a href="/podcast/{{.Digest.Day.Date.Format "2006-01-02"}}"> sesli</a></p>
   <div class="gap" style="margin-top:14px">
     {{range .Digest.Items}}
     <a class="card card-pad" href="{{$.LangBase}}/{{.DisplaySlug}}-{{.ID}}">
@@ -65,7 +65,7 @@
 <body>
 {{template "site_header" .}}
 <main class="page"><div class="container narrow">
-  <h1 class="page-title">🎧 {{.Digest.Day.Title}}</h1>
+  <h1 class="page-title">{{.Digest.Day.Title}}</h1>
   {{if .Digest.Day.AudioPath}}
   <audio controls preload="none" style="width:100%;margin:14px 0" src="{{.Digest.AudioURL}}"></audio>
   {{else}}
@@ -88,7 +88,7 @@
 <body>
 {{template "site_header" .}}
 <main class="page"><div class="container narrow">
-  <h1 class="page-title"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-news"></use></svg> Günlük Özet Arşivi</h1>
+  <h1 class="page-title"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-news"></use></svg>Günlük Özet Arşivi</h1>
   <div class="gap">
     {{range .Digest.Archive}}
     <a class="card card-pad" href="/ping/{{.Date.Format "2006-01-02"}}">

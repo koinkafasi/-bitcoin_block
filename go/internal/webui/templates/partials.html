@@ -69,6 +69,13 @@
 {{if .SiteBg}}<style>{{.SiteBg}}</style>{{else}}<style>body{background-image:url("{{asset "ana-bg.svg"}}")}</style>{{end}}
 {{if .DesignCSS}}<style>{{.DesignCSS}}</style>{{end}}
 {{if .MenuBgCSS}}<style>{{.MenuBgCSS}}</style>{{end}}
+{{/* Eski (theblock) kabuğunu CoinDesk diline çeviren ortak katman.
+     SIRA KRİTİK: yukarıdaki `DesignCSS` satır içi bir <style> bloğudur ve
+     panelin kaydettiği jetonları (--hp-tema:#d10015, --hp-header-bg kırmızı)
+     tanımlar. Satır içi blok aynı özgüllükte ve SONRA geldiği için ondan
+     önce yüklenen bir dosya kaybeder (ölçüldü, 7 Kasım 2026: üst çubuk
+     rgb(209,0,21) kaldı). Bu yüzden bağlantı BURADA, en sonda. */}}
+<link rel="stylesheet" href="{{asset "cd-public.css"}}">
 <link rel="alternate" type="application/rss+xml" title="{{.SiteName}} RSS" href="{{.LangBase}}/rss.xml">
 <link rel="manifest" href="/manifest.webmanifest">
 {{/* Tek sabit değer koyu renkti; açık temada tarayıcı çubuğu sayfayla
@@ -122,7 +129,7 @@
 <header class="site-header header-model-{{$h.Model}} header-skin-{{$h.Skin}} header-width-{{$h.Width}}{{if not $h.Sticky}} header-not-sticky{{end}}">
   <div class="container">
     <div class="row">
-      {{$b := .Brand}}<a class="brand{{if and $b (eq $b.Mode "image") $b.ImageID}} brand-img{{end}}" href="{{.HomeURL}}">{{if and $b (eq $b.Mode "image") $b.ImageID}}<img src="{{mediaURL $b.ImageID}}" alt="{{.SiteName}}">{{else}}{{if and $b $b.Text}}{{$b.Text}}{{else}}the<b>block</b>{{end}}{{end}}</a>
+      {{$b := .Brand}}<a class="brand brand-img" href="{{.HomeURL}}" aria-label="{{.SiteName}} ana sayfa">{{if and $b (eq $b.Mode "image") $b.ImageID}}<img src="{{mediaURL $b.ImageID}}" alt="{{.SiteName}}">{{else}}<img class="brand-logo brand-logo--koyu" src="/static/img/logo-bitcosar-1x.png" srcset="/static/img/logo-bitcosar-1x.png 1x, /static/img/logo-bitcosar-2x.png 2x, /static/img/logo-bitcosar-3x.png 3x" width="146" height="32" alt="{{.SiteName}}" decoding="async"><img class="brand-logo brand-logo--acik" src="/static/img/logo-bitcosar-acik-1x.png" srcset="/static/img/logo-bitcosar-acik-1x.png 1x, /static/img/logo-bitcosar-acik-2x.png 2x, /static/img/logo-bitcosar-acik-3x.png 3x" width="146" height="32" alt="" aria-hidden="true" decoding="async">{{end}}</a>
       {{if $h.ShowTagline}}<span class="header-tagline">{{if and $b $b.Tagline}}{{$b.Tagline}}{{else}}{{.SiteSlogan}}{{end}}</span>{{end}}
       <nav class="site-nav" aria-label="Ana menü">
         {{if $menu}}
@@ -224,21 +231,21 @@
          (JS/sayaç gerekmez): Akış·Son Dakika·Arşiv·Bülten solda,
          servisler sağda dengelenir. */}}
     <div class="hp-drawer-grid">
-      <a href="{{.LangBase}}/akis">📰 {{.T "footer.akis"}}</a>
+      <a href="{{.LangBase}}/akis"> {{.T "footer.akis"}}</a>
       <a href="{{.LangBase}}/son-dakika">{{.T "breaking"}}</a>
       <a href="{{.LangBase}}/arsiv">{{.T "recent"}}</a>
-      <a href="{{.LangBase}}/bulten">✉ {{.T "footer.bulten"}}</a>
-      <a href="{{.LangBase}}/abonelik">💳 {{.T "subscription"}}</a>
+      <a href="{{.LangBase}}/bulten"> {{.T "footer.bulten"}}</a>
+      <a href="{{.LangBase}}/abonelik"> {{.T "subscription"}}</a>
     </div>
     <div class="hp-drawer-group">{{.T "services"}}</div>
     <div class="hp-drawer-grid">
-      <a href="{{.LangBase}}/hava-durumu">☀ {{.T "footer.hava-durumu"}}</a>
-      <a href="{{.LangBase}}/namaz-vakitleri">🕌 {{.T "footer.namaz-vakitleri"}}</a>
-      <a href="{{.LangBase}}/borsa">📈 {{.T "footer.borsa"}}</a>
-      <a href="{{.LangBase}}/fikstur">⚽ {{.T "footer.fikstur"}}</a>
-      <a href="{{.LangBase}}/astroloji">🔮 {{.T "footer.astroloji"}}</a>
-      <a href="{{.LangBase}}/nobetci-eczaneler">🏥 {{.T "footer.nobetci-eczaneler"}}</a>
-      <a href="{{.LangBase}}/gazete-mansetleri">📰 {{.T "footer.gazete-mansetleri"}}</a>
+      <a href="{{.LangBase}}/hava-durumu"> {{.T "footer.hava-durumu"}}</a>
+      <a href="{{.LangBase}}/namaz-vakitleri"> {{.T "footer.namaz-vakitleri"}}</a>
+      <a href="{{.LangBase}}/borsa"> {{.T "footer.borsa"}}</a>
+      <a href="{{.LangBase}}/fikstur"> {{.T "footer.fikstur"}}</a>
+      <a href="{{.LangBase}}/astroloji"> {{.T "footer.astroloji"}}</a>
+      <a href="{{.LangBase}}/nobetci-eczaneler"> {{.T "footer.nobetci-eczaneler"}}</a>
+      <a href="{{.LangBase}}/gazete-mansetleri"> {{.T "footer.gazete-mansetleri"}}</a>
     </div>
     {{if .MemberStaff}}
     <div class="hp-drawer-group">{{.T "admin_group"}}</div>
@@ -335,7 +342,7 @@
 {{end}}
 
 {{define "foot_brand"}}
-<div class="hp-logo-box"><a class="brand" href="{{.HomeURL}}">{{if and .Brand (eq .Brand.Mode "image") .Brand.ImageID}}<img src="{{mediaURL .Brand.ImageID}}" alt="{{.SiteName}}">{{else}}{{if and .Brand .Brand.Text}}{{.Brand.Text}}{{else}}the<b>block</b>{{end}}{{end}}</a></div>
+<div class="hp-logo-box"><a class="brand" href="{{.HomeURL}}" aria-label="{{.SiteName}} ana sayfa">{{if and .Brand (eq .Brand.Mode "image") .Brand.ImageID}}<img src="{{mediaURL .Brand.ImageID}}" alt="{{.SiteName}}">{{else}}<img class="brand-logo" src="/static/img/logo-bitcosar-acik-2x.png" srcset="/static/img/logo-bitcosar-acik-1x.png 1x, /static/img/logo-bitcosar-acik-2x.png 2x, /static/img/logo-bitcosar-acik-3x.png 3x" width="146" height="32" alt="{{.SiteName}}" decoding="async">{{end}}</a></div>
 {{if .Footer}}{{if .Footer.ShowTagline}}<p class="small muted foot-tagline">{{if and .Brand .Brand.Tagline}}{{.Brand.Tagline}}{{else if .Footer.Tagline}}{{.Footer.Tagline}}{{else}}{{.SiteSlogan}}{{end}}</p>{{end}}{{else}}<p class="small muted foot-tagline">{{if and .Brand .Brand.Tagline}}{{.Brand.Tagline}}{{else}}{{.SiteSlogan}}{{end}}</p>{{end}}
 {{end}}
 

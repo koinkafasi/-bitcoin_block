@@ -31,7 +31,7 @@
 
 <main class="auth-stage" id="main">
   <div class="auth-top">
-    {{$b := .Brand}}<a class="auth-brand" href="{{.HomeURL}}">{{if and $b (eq $b.Mode "image") $b.ImageID}}<img src="{{mediaURL $b.ImageID}}" alt="{{.SiteName}}">{{else}}{{if and $b $b.Text}}{{$b.Text}}{{else}}the<b>block</b>{{end}}{{end}}</a>
+    {{$b := .Brand}}<a class="auth-brand" href="{{.HomeURL}}" aria-label="{{.SiteName}} ana sayfa">{{if and $b (eq $b.Mode "image") $b.ImageID}}<img src="{{mediaURL $b.ImageID}}" alt="{{.SiteName}}">{{else}}<img class="auth-brand__logo auth-brand__logo--koyu" src="/static/img/logo-bitcosar-1x.png" srcset="/static/img/logo-bitcosar-1x.png 1x, /static/img/logo-bitcosar-2x.png 2x, /static/img/logo-bitcosar-3x.png 3x" width="146" height="32" alt="{{.SiteName}}" decoding="async"><img class="auth-brand__logo auth-brand__logo--acik" src="/static/img/logo-bitcosar-acik-1x.png" srcset="/static/img/logo-bitcosar-acik-1x.png 1x, /static/img/logo-bitcosar-acik-2x.png 2x, /static/img/logo-bitcosar-acik-3x.png 3x" width="146" height="32" alt="" aria-hidden="true" decoding="async">{{end}}</a>
     <div class="auth-top-links">
       <span>{{if eq .UyeMode "kayit"}}Üye kaydı{{else if eq .UyeMode "kayit-kapali"}}Üye kaydı{{else if eq .UyeMode "sifremi-unuttum"}}Şifre sıfırlama{{else if eq .UyeMode "sifre-sifirla"}}Şifre sıfırlama{{else if eq .UyeMode "sifre-tamam"}}Şifre sıfırlama{{else if eq .UyeMode "onay"}}E-posta doğrulama{{else}}Üye girişi{{end}}</span>
       <a href="{{.HomeURL}}">Ana sayfa</a>

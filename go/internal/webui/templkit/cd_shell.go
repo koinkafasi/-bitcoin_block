@@ -62,6 +62,9 @@ type CDShell struct {
 	// sayfaları, testler) filtre uygulanmaz ve menü eskisi gibi çalışır.
 	MenuBolumler map[string]bool
 	// Footer sütunları ölçülen yapıya göre sabittir (aşağıda).
+	// BaseURL og:image mutlaklaştırması ve yapısal veri için kök adres
+	// (sayfa görünümlerinden doldurulur; boşsa göreli kalır).
+	BaseURL string
 }
 
 // cdFooterColumns CoinDesk alt bilgi sütunları (ölçüm §3).
@@ -163,6 +166,11 @@ func cdSekmeEtiketi(tab string) string {
 // cdSiraya numarayı 1-tabanlı metne çevirir (0 → "1").
 func cdSiraya(i int) string {
 	return strconv.Itoa(i + 1)
+}
+
+// cdSayiMetni sayacı metne çevirir (hesap menüsü/kutuları).
+func cdSayiMetni(n int) string {
+	return strconv.Itoa(n)
 }
 
 // cdOkumaMetni okuma süresi metni.

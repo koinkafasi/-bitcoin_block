@@ -141,7 +141,7 @@ func (s *Server) handleHesap(w http.ResponseWriter, r *http.Request) {
 	if v := r.URL.Query().Get("ok"); v != "" {
 		h.Info = hesapMesaj(v)
 	}
-	s.hesapRender(w, r, d, "hesap-hub")
+	s.cdHesapRender(w, r, d, h, "hub", "Hesabım", "Hesabınızı, aboneliğinizi ve okuma listenizi yönetin.")
 }
 
 func hesapMesaj(key string) string {
@@ -184,7 +184,7 @@ func (s *Server) handleHesapProfil(w http.ResponseWriter, r *http.Request) {
 		}
 		h.Avatars = append(h.Avatars, hesapAvatar{ID: m.ID, URL: s.mediaThumbURL(&m.ID), Title: m.Title})
 	}
-	s.hesapRender(w, r, d, "hesap-profil")
+	s.cdHesapRender(w, r, d, h, "profil", "Profilim", "Herkese açık bilgileriniz ve sosyal hesaplarınız.")
 }
 
 // POST /hesabim/profil
@@ -377,7 +377,7 @@ func (s *Server) handleHesapAbonelik(w http.ResponseWriter, r *http.Request) {
 	if v := r.URL.Query().Get("ok"); v != "" {
 		h.Info = hesapMesaj(v)
 	}
-	s.hesapRender(w, r, d, "hesap-abonelik")
+	s.cdHesapRender(w, r, d, h, "abonelik", "Aboneliğim", "Plan, ödeme ve yenileme bilgileri.")
 }
 
 // GET /hesabim/yorumlar
@@ -392,7 +392,7 @@ func (s *Server) handleHesapYorumlar(w http.ResponseWriter, r *http.Request) {
 		h.Error = "Yorumlar yüklenemedi."
 	}
 	h.Comments = items
-	s.hesapRender(w, r, d, "hesap-yorumlar")
+	s.cdHesapRender(w, r, d, h, "yorumlar", "Yorumlarım", "Haberlerde yazdığınız yorumlar.")
 }
 
 // POST /hesabim/abonelik/iptal — dönem sonunda iptal (erişim süre sonuna kadar).
@@ -438,7 +438,7 @@ func (s *Server) handleHesapTakip(w http.ResponseWriter, r *http.Request) {
 		h.Error = "Takip listesi yüklenemedi."
 	}
 	h.Follows = list
-	s.hesapRender(w, r, d, "hesap-takip")
+	s.cdHesapRender(w, r, d, h, "takip", "Takip ettiklerim", "Takip ettiğiniz konular ve yazarlar.")
 }
 
 // POST /hesabim/sil — KVKK: hesabı kalıcı siler (şifre onayıyla).
@@ -477,13 +477,13 @@ func (s *Server) hesapHata(w http.ResponseWriter, r *http.Request, tab, msg stri
 		http.Redirect(w, r, "/giris", http.StatusFound)
 		return
 	}
-	name := "hesap-profil"
+	name, baslik, aciklama := "profil", "Profilim", "Herkese açık bilgileriniz ve sosyal hesaplarınız."
 	if tab == "abonelik" {
-		name = "hesap-abonelik"
+		name, baslik, aciklama = "abonelik", "Aboneliğim", "Plan, ödeme ve yenileme bilgileri."
 	}
 	d, h := s.hesapView(r, u, tab)
 	h.Error = msg
-	s.hesapRender(w, r, d, name)
+	s.cdHesapRender(w, r, d, h, name, baslik, aciklama)
 }
 
 // hesapKaydedilenRender /hesabim/kaydedilenler sayfası.
@@ -493,7 +493,7 @@ func (s *Server) hesapKaydedilenRender(w http.ResponseWriter, r *http.Request, u
 		h.Error = "Kaydedilenler yüklenemedi."
 	}
 	h.Bookmarks = items
-	s.hesapRender(w, r, d, "hesap-kaydedilenler")
+	s.cdHesapRender(w, r, d, h, "kaydedilenler", "Kaydedilenler", "Daha sonra okumak için kaydettiğiniz haberler.")
 }
 
 // hesapBildirimRender /hesabim/bildirimler sayfası.
@@ -505,7 +505,7 @@ func (s *Server) hesapBildirimRender(w http.ResponseWriter, r *http.Request, u a
 	_ = repo.MarkNotificationsRead(r.Context(), s.pool, u.ID)
 	h.Notifs = list
 	h.Stats.Unread = 0
-	s.hesapRender(w, r, d, "hesap-bildirimler")
+	s.cdHesapRender(w, r, d, h, "bildirimler", "Bildirimler", "Hesabınızla ilgili son gelişmeler.")
 }
 
 // hesapRozetRender /hesabim/rozetler sayfası.
@@ -518,7 +518,7 @@ func (s *Server) hesapRozetRender(w http.ResponseWriter, r *http.Request, u auth
 	h.Points = pts
 	h.Defs = repo.Achievements()
 	h.Leader = lead
-	s.hesapRender(w, r, d, "hesap-rozetler")
+	s.cdHesapRender(w, r, d, h, "rozetler", "Başarımlar", "Rozetler, puan ve liderlik tablosu.")
 }
 
 // uyeBildirimSayisi header zili için okunmamış sayı (0 = gizle).

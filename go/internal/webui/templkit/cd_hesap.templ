@@ -1,0 +1,407 @@
+package templkit
+
+// Hesap merkezi — CoinDesk tasarımı (yeni kabuk).
+//
+// Ortak yapı: cdTopbar + cdTicker + cd-wrap → iki kolon
+// (240 px kenar menü · içerik). Sekmeye göre gövde değişir.
+// JS yok: takip bırakma ve benzeri eylemler form/POST ile.
+
+templ CDHesap(v CDHesapSayfa) {
+	<!doctype html>
+	<html lang="tr">
+		<head>
+			@cdHead(CDHead{Title: v.Title, Desc: v.Desc, Canonical: v.Canonical,
+				OGType: "website", SiteName: v.Shell.SiteName, RSSFeed: "/rss.xml",
+				NoIndex: true, Locale: "tr", JSONLD: v.JSONLD,
+				BaseURL: v.Shell.BaseURL})
+		</head>
+		<body class="cd">
+			@cdTopbar(v.Shell)
+			@cdTicker(v.Shell)
+			<main class="cd-wrap cd-hesap">
+				<div class="cd-hesap__grid">
+					@cdHesapNav(v)
+					<section class="cd-hesap__govde">
+						@cdHesapFlash(v)
+						if v.Sekme == "hub" {
+							@cdHesapHub(v)
+						} else if v.Sekme == "profil" {
+							@cdHesapProfil(v)
+						} else if v.Sekme == "abonelik" {
+							@cdHesapAbonelik(v)
+						} else if v.Sekme == "yorumlar" {
+							@cdHesapYorumlar(v)
+						} else if v.Sekme == "takip" {
+							@cdHesapTakipListe(v)
+						} else if v.Sekme == "kaydedilenler" {
+							@cdHesapKaydedilenler(v)
+						} else if v.Sekme == "bildirimler" {
+							@cdHesapBildirimler(v)
+						} else if v.Sekme == "rozetler" {
+							@cdHesapRozetler(v)
+						}
+					</section>
+				</div>
+			</main>
+			@cdFooter(v.Shell)
+		</body>
+	</html>
+}
+
+// cdHesapNav kenar menü: üye kimliği + bağlantı grupları.
+templ cdHesapNav(v CDHesapSayfa) {
+	<aside class="cd-hesap__yan" aria-label="Hesap menüsü">
+		<a class="cd-hesap-kisi" href="/hesabim">
+			if v.AvatarURL != "" {
+				<img class="cd-hesap-kisi__avatar" src={ v.AvatarURL } alt=""/>
+			} else {
+				<span class="cd-hesap-kisi__avatar cd-hesap-kisi__harf" aria-hidden="true">{ v.BasHarfler }</span>
+			}
+			<span class="cd-hesap-kisi__metin">
+				<strong>{ v.Ad }</strong>
+				<span>{ v.Eposta }</span>
+			</span>
+		</a>
+
+		<nav class="cd-hesap-menu">
+			<span class="cd-hesap-menu__grup">Hesap</span>
+			for _, n := range v.Nav {
+				if n.Aktif {
+					<a class="cd-hesap-menu__satir cd-hesap-menu__satir--on" href={ n.Href } aria-current="page">
+						<span>{ n.Etiket }</span>
+						if n.Sayi > 0 {
+							<span class={ "cd-hesap-menu__sayi", templ.KV("cd-hesap-menu__sayi--yeni", n.Yeni) }>{ cdSayiMetni(n.Sayi) }</span>
+						}
+					</a>
+				} else {
+					<a class="cd-hesap-menu__satir" href={ n.Href }>
+						<span>{ n.Etiket }</span>
+						if n.Sayi > 0 {
+							<span class={ "cd-hesap-menu__sayi", templ.KV("cd-hesap-menu__sayi--yeni", n.Yeni) }>{ cdSayiMetni(n.Sayi) }</span>
+						}
+					</a>
+				}
+			}
+		</nav>
+
+		<form class="cd-hesap-cikis" method="post" action="/cikis">
+			<button class="cd-btn cd-btn--ghost cd-btn--tam" type="submit">Çıkış yap</button>
+		</form>
+	</aside>
+}
+
+// cdHesapFlash işlem sonrası bildirim şeridi.
+templ cdHesapFlash(v CDHesapSayfa) {
+	if v.FlashMetin != "" {
+		<div class={ "cd-hesap-flash", templ.KV("cd-hesap-flash--hata", v.FlashTur == "hata") } role="status">
+			{ v.FlashMetin }
+		</div>
+	}
+}
+
+// cdHesapHub genel bakış: plan + sayılar + kısayollar.
+templ cdHesapHub(v CDHesapSayfa) {
+	<h1 class="cd-hesap-baslik">Merhaba, { v.Ad }</h1>
+	<p class="cd-hesap-alt">Hesabınızı, aboneliğinizi ve okuma listenizi buradan yönetin.</p>
+
+	if v.UyariMetin != "" {
+		<div class="cd-hesap-uyari">
+			<strong>{ v.UyariMetin }</strong>
+			<form method="post" action="/hesabim/e-posta-gonder">
+				<button class="cd-btn cd-btn--ghost" type="submit">Doğrulama bağlantısı gönder</button>
+			</form>
+		</div>
+	}
+
+	<div class={ "cd-hesap-plan", templ.KV("cd-hesap-plan--premium", v.Premium) }>
+		<div class="cd-hesap-plan__ust">
+			<span class="cd-hesap-plan__rozet">{ v.PlanAd }</span>
+			if v.PlanBitis != "" {
+				<span class="cd-hesap-plan__bitis">Bitiş: { v.PlanBitis }</span>
+			}
+		</div>
+		<p class="cd-hesap-plan__aciklama">{ v.PlanAciklama }</p>
+		<a class="cd-btn" href="/hesabim/abonelik">Aboneliği yönet</a>
+	</div>
+
+	<div class="cd-hesap-kutular">
+		for _, k := range v.Kutular {
+			<a class="cd-hesap-kutu" href={ k.Href }>
+				<strong class="cd-hesap-kutu__sayi">{ k.Sayi }</strong>
+				<span class="cd-hesap-kutu__etiket">{ k.Etiket }</span>
+			</a>
+		}
+	</div>
+
+	if len(v.Kisayollar) > 0 {
+		<div class="cd-hesap-kisayollar">
+			for _, k := range v.Kisayollar {
+				<a class="cd-hesap-kisayol" href={ k.Href }>
+					<strong>{ k.Baslik }</strong>
+					<span>{ k.Aciklama }</span>
+				</a>
+			}
+		</div>
+	}
+}
+
+// cdHesapProfil profil formu + avatar seçici + şifre.
+templ cdHesapProfil(v CDHesapSayfa) {
+	<h1 class="cd-hesap-baslik">Profilim</h1>
+	<p class="cd-hesap-alt">Herkese açık bilgileriniz ve sosyal hesaplarınız.</p>
+
+	<form method="post" action="/hesabim/profil" class="cd-hesap-kart cd-hesap-form">
+		<h2 class="cd-hesap-h2">Genel bilgiler</h2>
+		<div class="cd-alan-izgara">
+			<label class="cd-alan">Ad soyad
+				<input class="cd-girdi" name="name" maxlength="120" required value={ v.Ad }/>
+			</label>
+			<label class="cd-alan">Kullanıcı adı (URL)
+				<input class="cd-girdi" name="slug" maxlength="60" value={ v.Slug } placeholder="ornek-kullanici"/>
+			</label>
+		</div>
+		<label class="cd-alan">Ünvan
+			<input class="cd-girdi" name="title" maxlength="80" value={ v.Unvan } placeholder="örn. Piyasa muhabiri"/>
+		</label>
+		<label class="cd-alan">Biyografi
+			<textarea class="cd-girdi" name="bio" rows="4" maxlength="600"
+				placeholder="Kendinizi kısaca tanıtın">{ v.Biyografi }</textarea>
+		</label>
+		<p class="cd-hesap-not">
+			E-posta: <strong>{ v.Eposta }</strong>
+			<span class={ "cd-hesap-etiket", templ.KV("cd-hesap-etiket--ok", v.EpostaDogrulandi) }>{ cdHesapOnayRozet(v.EpostaDogrulandi) }</span>
+		</p>
+
+		<h2 class="cd-hesap-h2">Sosyal medya</h2>
+		<div class="cd-alan-izgara">
+			for _, s := range v.Sosyal {
+				<label class="cd-alan">{ s.Etiket }
+					<input class="cd-girdi" name={ "s_" + s.Anahtar } value={ s.Deger } placeholder={ s.YerTutucu }/>
+				</label>
+			}
+		</div>
+		<button class="cd-btn" type="submit">Profili kaydet</button>
+	</form>
+
+	<form method="post" action="/hesabim/avatar" class="cd-hesap-kart cd-hesap-form">
+		<h2 class="cd-hesap-h2">Profil fotoğrafı</h2>
+		if len(v.Avatarlar) > 0 {
+			<div class="cd-avatar-izgara">
+				for _, a := range v.Avatarlar {
+					<label class="cd-avatar-sec">
+						<input type="radio" name="media_id" value={ a.ID } checked={ a.Secili }/>
+						<img src={ a.URL } alt={ a.Baslik } loading="lazy"/>
+					</label>
+				}
+			</div>
+			<div class="cd-hesap-dugmeler">
+				<button class="cd-btn" type="submit">Fotoğrafı kaydet</button>
+				<button class="cd-btn cd-btn--ghost" type="submit" name="kaldir" value="1">Fotoğrafı kaldır</button>
+			</div>
+		} else {
+			<p class="cd-hesap-not">Medya kütüphanesinde görsel yok.</p>
+		}
+	</form>
+
+	<form method="post" action="/hesabim/sifre" class="cd-hesap-kart cd-hesap-form">
+		<h2 class="cd-hesap-h2">Şifre değiştir</h2>
+		<label class="cd-alan">Mevcut şifre
+			<input class="cd-girdi" type="password" name="current" autocomplete="current-password" required/>
+		</label>
+		<div class="cd-alan-izgara">
+			<label class="cd-alan">Yeni şifre
+				<input class="cd-girdi" type="password" name="password" minlength="8" autocomplete="new-password" required/>
+			</label>
+			<label class="cd-alan">Yeni şifre (tekrar)
+				<input class="cd-girdi" type="password" name="password2" minlength="8" autocomplete="new-password" required/>
+			</label>
+		</div>
+		<button class="cd-btn" type="submit">Şifremi güncelle</button>
+	</form>
+}
+
+// cdHesapAbonelik plan ve iptal.
+templ cdHesapAbonelik(v CDHesapSayfa) {
+	<h1 class="cd-hesap-baslik">Aboneliğim</h1>
+	<p class="cd-hesap-alt">Plan, ödeme ve yenileme bilgileri.</p>
+
+	if v.AbonelikVar {
+		<div class="cd-hesap-kart">
+			<div class="cd-hesap-plan__ust">
+				<span class="cd-hesap-plan__rozet">{ v.AbonelikAd }</span>
+				if v.AbonelikBitis != "" {
+					<span class="cd-hesap-plan__bitis">Bitiş: { v.AbonelikBitis }</span>
+				}
+			</div>
+			if v.AbonelikDongu != "" {
+				<p class="cd-hesap-not">Fatura dönemi: { v.AbonelikDongu }</p>
+			}
+			if v.IptalTarih != "" {
+				<p class="cd-hesap-not">
+					İptal talebiniz alındı; <strong>{ v.IptalTarih }</strong> tarihine kadar erişiminiz sürer.
+				</p>
+				<form method="post" action="/hesabim/abonelik/iptal" class="cd-hesap-dugmeler">
+					<input type="hidden" name="geri" value="1"/>
+					<button class="cd-btn cd-btn--ghost" type="submit">İptali geri al</button>
+				</form>
+			} else {
+				<form method="post" action="/hesabim/abonelik/iptal" class="cd-hesap-dugmeler"
+					data-confirm="Aboneliğiniz dönem sonunda yenilenmeyecek. Emin misiniz?">
+					<button class="cd-btn cd-btn--ghost" type="submit">Aboneliği iptal et</button>
+				</form>
+			}
+		</div>
+	} else {
+		<div class="cd-hesap-kart">
+			<p class="cd-hesap-not">Etkin aboneliğiniz yok. Premium içeriklerin tamamına erişmek için abone olun.</p>
+			if v.OdemeAcik {
+				<a class="cd-btn" href="/abonelik">Abone ol</a>
+			} else {
+				<a class="cd-btn" href="/abonelik">Planları gör</a>
+			}
+		</div>
+	}
+}
+
+// cdHesapYorumlar yorum listesi.
+templ cdHesapYorumlar(v CDHesapSayfa) {
+	<h1 class="cd-hesap-baslik">Yorumlarım</h1>
+	<p class="cd-hesap-alt">Haberlerde yazdığınız yorumlar.</p>
+	if len(v.Yorumlar) == 0 {
+		<p class="cd-hesap-bos">{ v.BosMetin }</p>
+	} else {
+		<div class="cd-hesap-liste">
+			for _, y := range v.Yorumlar {
+				<article class="cd-hesap-kart cd-hesap-yorum">
+					<div class="cd-hesap-yorum__ust">
+						<a href={ y.Href }>{ y.Baslik }</a>
+						<span>{ y.Tarih }</span>
+					</div>
+					<p>{ y.Metin }</p>
+					<div class="cd-hesap-yorum__alt">
+						if y.Durum != "" {
+							<span class="cd-hesap-etiket">{ y.Durum }</span>
+						}
+						if y.Begeni > 0 {
+							<span class="cd-hesap-etiket">{ cdSayiMetni(y.Begeni) } beğeni</span>
+						}
+					</div>
+				</article>
+			}
+		</div>
+	}
+}
+
+// cdHesapTakipListe takip edilenler.
+templ cdHesapTakipListe(v CDHesapSayfa) {
+	<h1 class="cd-hesap-baslik">Takip ettiklerim</h1>
+	<p class="cd-hesap-alt">Takip ettiğiniz konular ve yazarlar.</p>
+	if len(v.Takip) == 0 {
+		<p class="cd-hesap-bos">{ v.BosMetin }</p>
+	} else {
+		<div class="cd-hesap-liste">
+			for _, t := range v.Takip {
+				<div class="cd-hesap-satir">
+					<span class="cd-hesap-etiket">{ t.Tur }</span>
+					<a class="cd-hesap-satir__bag" href={ t.Href }>{ t.Etiket }</a>
+					<form method="post" action={ "/api/follow/" + t.Tur + "/" + t.Slug }>
+						<button class="cd-btn cd-btn--ghost" type="submit">Takibi bırak</button>
+					</form>
+				</div>
+			}
+		</div>
+	}
+}
+
+// cdHesapKaydedilenler okuma listesi.
+templ cdHesapKaydedilenler(v CDHesapSayfa) {
+	<h1 class="cd-hesap-baslik">Kaydedilenler</h1>
+	<p class="cd-hesap-alt">Daha sonra okumak için kaydettiğiniz haberler.</p>
+	if len(v.Kaydedilenler) == 0 {
+		<p class="cd-hesap-bos">{ v.BosMetin }</p>
+	} else {
+		<div class="cd-hesap-kayitlar">
+			for _, k := range v.Kaydedilenler {
+				<a class="cd-hesap-kayit" href={ k.Href }>
+					if k.Gorsel != "" {
+						<img src={ k.Gorsel } alt="" loading="lazy"/>
+					}
+					<span class="cd-hesap-kayit__metin">
+						<strong>{ k.Baslik }</strong>
+						if k.Spot != "" {
+							<span>{ k.Spot }</span>
+						}
+						if k.Zaman != "" {
+							<span class="cd-hesap-etiket">{ k.Zaman }</span>
+						}
+					</span>
+				</a>
+			}
+		</div>
+	}
+}
+
+// cdHesapBildirimler bildirim listesi.
+templ cdHesapBildirimler(v CDHesapSayfa) {
+	<h1 class="cd-hesap-baslik">Bildirimler</h1>
+	<p class="cd-hesap-alt">Hesabınızla ilgili son gelişmeler.</p>
+	if len(v.Bildirimler) == 0 {
+		<p class="cd-hesap-bos">{ v.BosMetin }</p>
+	} else {
+		<div class="cd-hesap-liste">
+			for _, b := range v.Bildirimler {
+				<article class={ "cd-hesap-kart cd-hesap-bildirim", templ.KV("cd-hesap-bildirim--yeni", b.Okunmadi) }>
+					<div class="cd-hesap-yorum__ust">
+						<span class="cd-hesap-etiket">{ b.Tur }</span>
+						<span>{ b.Zaman }</span>
+					</div>
+					<strong>{ b.Baslik }</strong>
+					if b.Metin != "" {
+						<p>{ b.Metin }</p>
+					}
+					if b.Href != "" {
+						<a class="cd-btn cd-btn--ghost" href={ b.Href }>Görüntüle</a>
+					}
+				</article>
+			}
+		</div>
+	}
+}
+
+// cdHesapRozetler başarımlar + liderlik.
+templ cdHesapRozetler(v CDHesapSayfa) {
+	<h1 class="cd-hesap-baslik">Başarımlar</h1>
+	<p class="cd-hesap-alt">
+		Puan: <strong>{ cdSayiMetni(v.Puan) }</strong> · günlük seri: <strong>{ cdSayiMetni(v.Seri) }</strong> gün
+	</p>
+	if len(v.Rozetler) > 0 {
+		<div class="cd-rozet-izgara">
+			for _, r := range v.Rozetler {
+				<div class={ "cd-rozet", templ.KV("cd-rozet--on", r.Kazanildi) }>
+					<strong>{ r.Ad }</strong>
+					<span>{ r.Aciklama }</span>
+				</div>
+			}
+		</div>
+	}
+	if len(v.Liderlik) > 0 {
+		<h2 class="cd-hesap-h2">Liderlik tablosu</h2>
+		<div class="cd-hesap-kart">
+			<table class="cd-hesap-tablo">
+				<thead>
+					<tr><th>#</th><th>Üye</th><th>Puan</th><th>Seri</th></tr>
+				</thead>
+				<tbody>
+					for _, l := range v.Liderlik {
+						<tr class={ templ.KV("cd-hesap-tablo--ben", l.Ben) }>
+							<td>{ cdSayiMetni(l.Sira) }</td>
+							<td>{ l.Ad }</td>
+							<td>{ cdSayiMetni(l.Puan) }</td>
+							<td>{ cdSayiMetni(l.Seri) }</td>
+						</tr>
+					}
+				</tbody>
+			</table>
+		</div>
+	}
+}

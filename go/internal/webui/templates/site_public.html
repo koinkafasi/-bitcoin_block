@@ -290,7 +290,7 @@
 
   {{if .Article.Locked}}
   <div class="card card-pad art-locked" role="note">
-    <strong style="font-size:1.05rem">🔒 Abonelere Özel</strong>
+    <strong style="font-size:1.05rem">Abonelere Özel</strong>
     <p class="muted small">Bu içeriğin tamamı abonelere açıktır.{{if .Article.RequiredTier}} <b>{{.Article.RequiredTier}}</b> ve üzeri bir paket gerekir.{{end}}</p>
     <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
       <a class="btn" href="{{.LangBase}}/abonelik">Abonelik paketleri</a>
@@ -698,7 +698,7 @@
       <div class="shape"><strong>{{.C.AuthorName}}</strong> <span class="muted small">{{formatTime .C.CreatedAt}}</span></div>
       <p style="margin:.4em 0">{{.C.Body}}</p>
       <div class="yorum-aksiyon" style="display:flex;gap:10px;align-items:center;margin-top:6px">
-        <button type="button" class="yorum-begen" data-id="{{.C.ID}}">❤ <span class="yb-sayi">{{.C.Likes}}</span></button>
+        <button type="button" class="yorum-begen" data-id="{{.C.ID}}"> <span class="yb-sayi">{{.C.Likes}}</span></button>
         {{if $.Article.CanComment}}<button type="button" class="yorum-yanitla" data-target="yorum-form-{{.C.ID}}" aria-expanded="false">Yanıtla</button>{{end}}
       </div>
       {{if $.Article.CanComment}}
@@ -719,7 +719,7 @@
       <div class="shape"><strong>{{.AuthorName}}</strong> <span class="muted small">{{formatTime .CreatedAt}}</span></div>
       <p style="margin:.4em 0">{{.Body}}</p>
       <div style="display:flex;gap:10px;align-items:center;margin-top:6px">
-        <button type="button" class="yorum-begen" data-id="{{.ID}}">❤ <span class="yb-sayi">{{.Likes}}</span></button>
+        <button type="button" class="yorum-begen" data-id="{{.ID}}"> <span class="yb-sayi">{{.Likes}}</span></button>
       </div>
     </div>
     {{end}}
@@ -1442,7 +1442,7 @@
 <body>
 {{template "site_header" .}}
 <main class="page" id="main"><div class="container">
-  <h1 class="page-title">☀ Hava Durumu</h1>
+  <h1 class="page-title">Hava Durumu</h1>
   <div class="grid-2">
     {{range .Hava}}
     <div class="card card-pad" style="display:flex;justify-content:space-between;align-items:center">
@@ -1458,7 +1458,7 @@
 <body>
 {{template "site_header" .}}
 <main class="page" id="main"><div class="container">
-  <h1 class="page-title">🕌 Namaz Vakitleri</h1>
+  <h1 class="page-title">Namaz Vakitleri</h1>
   <div class="grid-2">
     {{range .NamazList}}
     <div class="card card-pad">
@@ -1475,7 +1475,7 @@
 <body>
 {{template "site_header" .}}
 <main class="page" id="main"><div class="container">
-  <h1 class="page-title">📅 İmsakiye (Ankara)</h1>
+  <h1 class="page-title">İmsakiye (Ankara)</h1>
   <table class="table">
     <thead><tr><th>Gün</th><th>İmsak</th><th>Güneş</th><th>Öğle</th><th>İkindi</th><th>Akşam</th><th>Yatsı</th></tr></thead>
     <tbody>
@@ -1492,7 +1492,7 @@
 <body>
 {{template "site_header" .}}
 <main class="page" id="main"><div class="container">
-  <h1 class="page-title">🏥 Nöbetçi Eczaneler {{if and .Eczane.Demo (not .Eczane.Bos)}}<span class="badge" style="background:var(--warn-fill,var(--warn));color:#fff">demo (kaynak bekliyor)</span>{{end}}</h1>
+  <h1 class="page-title">Nöbetçi Eczaneler {{if and .Eczane.Demo (not .Eczane.Bos)}}<span class="badge" style="background:var(--warn-fill,var(--warn));color:#fff">demo (kaynak bekliyor)</span>{{end}}</h1>
   <form method="get" action="{{.LangBase}}/nobetci-eczaneler" style="display:flex;gap:8px;max-width:420px;margin-bottom:16px">
     <select class="input" name="il" style="flex:1">
       {{range .Cities}}<option value="{{.Plaka}}" {{if eq (printf "%d" .Plaka) (printf "%d" $.Eczane.Plaka)}}selected{{end}}>{{.Name}}</option>{{end}}
@@ -1506,7 +1506,7 @@
       <strong>{{.Ad}}</strong>
       <div class="small muted">{{.Ilce}}</div>
       <div class="small muted">{{.Adres}}</div>
-      {{if .Tel}}<div class="small muted">📞 {{.Tel}}</div>{{end}}
+      {{if .Tel}}<div class="small muted"> {{.Tel}}</div>{{end}}
     </div>{{else}}
       {{if .Eczane.Bos}}
       {{if eq .Eczane.Kaynak "ulasilamadi"}}
@@ -1710,7 +1710,7 @@
 <body>
 {{template "site_header" .}}
 <main class="page" id="main"><div class="container">
-  <h1 class="page-title">📈 Piyasa &amp; Borsa {{if .Borsa.Demo}}<span class="badge" style="background:var(--warn-fill,var(--warn));color:#fff">demo</span>{{end}}</h1>
+  <h1 class="page-title">Piyasa &amp; Borsa {{if .Borsa.Demo}}<span class="badge" style="background:var(--warn-fill,var(--warn));color:#fff">demo</span>{{end}}</h1>
   {{if .Borsa.Updated}}<p class="muted small">Son güncelleme: {{.Borsa.Updated.Format "02.01.2006 15:04"}}</p>{{end}}
   <div class="grid-2">
   {{range .Borsa.Rows}}
@@ -1768,9 +1768,9 @@
         </tbody>
       </table>
       <div class="fx-legend">
-        <span><b>O:</b> Oynadığı Maç</span><span><b>G:</b> Galibiyet</span><span><b>B:</b> Beraberlik</span>
-        <span><b>M:</b> Mağlubiyet</span><span><b>A:</b> Attığı Gol</span><span><b>Y:</b> Yediği Gol</span>
-        <span><b>AV:</b> Averaj</span><span><b>P:</b> Puan</span>
+        <span><b>O:</b>Oynadığı Maç</span><span><b>G:</b>Galibiyet</span><span><b>B:</b>Beraberlik</span>
+        <span><b>M:</b>Mağlubiyet</span><span><b>A:</b>Attığı Gol</span><span><b>Y:</b>Yediği Gol</span>
+        <span><b>AV:</b>Averaj</span><span><b>P:</b>Puan</span>
       </div>
     </div>
 
@@ -1816,7 +1816,7 @@
 <body>
 {{template "site_header" .}}
 <main class="page" id="main"><div class="container">
-  <h1 class="page-title">🔮 Günlük Burç Yorumları</h1>
+  <h1 class="page-title">Günlük Burç Yorumları</h1>
   <p class="muted small">{{.Astro.Tarih}} · Bilgilendirme amaçlıdır, eğlence içeriğidir.</p>
   <div class="grid-2">
   {{range .Astro.Burclar}}
@@ -1826,7 +1826,7 @@
         <span class="small muted">{{.Tarih}} · {{.Element}}</span>
       </div>
       <p style="margin:.5em 0">{{.Yorum}}</p>
-      <div class="small muted">🔢 Şanslı sayı: <b>{{.Sayi}}</b> · 🎨 Şanslı renk: <b>{{.Renk}}</b></div>
+      <div class="small muted">Şanslı sayı: <b>{{.Sayi}}</b> ·  Şanslı renk: <b>{{.Renk}}</b></div>
     </div>
   {{end}}
   </div>
@@ -1838,7 +1838,7 @@
 <body>
 {{template "site_header" .}}
 <main class="page" id="main"><div class="container">
-  <h1 class="page-title">📅 Etkinlikler</h1>
+  <h1 class="page-title">Etkinlikler</h1>
   <div class="gap">
   {{range .Etkinlik}}
     <div class="card card-pad" style="border-left:3px solid var(--accent)">
@@ -1846,7 +1846,7 @@
         <strong style="font-size:1.05rem">{{.Title}}</strong>
         <span class="tag">{{eventWhen .StartAt}}</span>
       </div>
-      <div class="small muted">{{.StartAt.Format "02.01.2006 15:04"}}{{if .CategoryName}} · {{.CategoryName}}{{end}}{{if .Location}} · 📍 {{.Location}}{{end}}</div>
+      <div class="small muted">{{.StartAt.Format "02.01.2006 15:04"}}{{if .CategoryName}} · {{.CategoryName}}{{end}}{{if .Location}} ·  {{.Location}}{{end}}</div>
       {{if .Description}}<p style="margin:.5em 0">{{.Description}}</p>{{end}}
       {{if .URL}}<a class="btn small" href="{{.URL}}" target="_blank" rel="noopener">Ayrıntı</a>{{end}}
     </div>
@@ -1875,7 +1875,7 @@
       <a href="?{{.Akis.BaseQS}}aralik=bugun" class="{{if eq .Akis.Range "bugun"}}on{{end}}">Bugün</a>
       <a href="?{{.Akis.BaseQS}}aralik=dun" class="{{if eq .Akis.Range "dun"}}on{{end}}">Dün</a>
       <a href="?{{.Akis.BaseQS}}aralik=hafta" class="{{if eq .Akis.Range "hafta"}}on{{end}}">Bu hafta</a>
-      {{if .Akis.Day}}<a href="?{{.Akis.BaseQS}}" class="on">Tarih: {{.Akis.Day}} ✕</a>{{end}}
+      {{if .Akis.Day}}<a href="?{{.Akis.BaseQS}}" class="on">Tarih: {{.Akis.Day}} </a>{{end}}
     </div>
     <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
       <form method="get" action="{{.LangBase}}/akis" style="display:flex;gap:4px;align-items:center">
@@ -1962,7 +1962,7 @@
 <body>
 {{template "site_header" .}}
 <main class="page" id="main"><div class="container animate-in">
-  <h1 class="page-title">🔍 Arama{{if .Query}}: "{{.Query}}"{{end}}</h1>
+  <h1 class="page-title">Arama{{if .Query}}: "{{.Query}}"{{end}}</h1>
   {{if .Query}}<p class="small muted">{{len .Arama}} sonuç</p>{{end}}
   {{if .Query}}{{template "cat_liste" .}}{{else}}<p class="muted">Arama yapmak için bir sözcük yazın.</p>{{end}}
 </div></main>

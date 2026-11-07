@@ -399,10 +399,20 @@ templ cdArastirmaModul(items []CDArastirma) {
 	}
 }
 
-// cdKlipler "Bugünün Klipleri" — 9/16 dikey video kartı.
+// cdKlipler "Bugünün Klipleri" — TEK 9:16 kart + dikey (yukarı/aşağı) slider.
 //
-// Ölçüldü: 290×516, köşe 8 px, siyah zemin, ortada oynat düğmesi.
-// Bizde klip üretimi yok; kart CoinDesk klipler akışına gider (geçici).
+// ÖLÇÜLDÜ (coindesk.com, 1920 px, 7 Kasım 2026):
+//   • section 290×566: `gap 12` + 1 px üst çizgi + 16 px üst dolgu.
+//   • başlık bağı "Today's Clips →" 107×21, 14/21 w500.
+//   • kart 290×516 = 9/16, köşe 8, zemin #000.
+//   • kartın SAĞ KENARINDA dikey iki ok (yukarı/aşağı), 24 px yuvarlak,
+//     yarı saydam beyaz çerçeve; merkezde.
+//   • başlık kartın ÜSTÜNDE beyaz overlay (siyah geçişli zemin).
+//   • oynat düğmesi sol altta.
+//
+// ÖNCEKİ HATA: 3 klip ALT ALTA basılıyordu (modül 1621 px). CoinDesk tek
+// kart gösteriyor; gezinme dikey oklarla. Slider yine JS'siz: radyo +
+// label deseni (video/araştırma modülleriyle aynı).
 templ cdKlipler(items []CDKlip) {
 	if len(items) > 0 {
 		<section class="cd-ray cd-ray--cizgili cd-klipler">
@@ -410,17 +420,65 @@ templ cdKlipler(items []CDKlip) {
 				Bugünün Klipleri
 				@cdRayOk()
 			</a>
-			for _, k := range items {
-				<a class="cd-klip" href={ k.Href }>
-					<img src={ k.Image } alt={ k.Baslik } loading="lazy" decoding="async"
-						referrerpolicy="no-referrer"/>
-					<span class="cd-klip__oynat" aria-hidden="true">
-						<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
-							<path d="M8 5v14l11-7z"></path>
-						</svg>
-					</span>
-				</a>
+			<!-- Radyolar her durumda basılır: slayt görünürlüğü yalnız
+			     `#cd-klip-N:checked` kuralından gelir. -->
+			for i := range items {
+				if i == 0 {
+					<input class="cd-basin__durum" type="radio" name="cd-klip"
+						id={ "cd-klip-" + cdSiraya(i) } checked
+						aria-label={ "Klip " + cdSiraya(i) }/>
+				} else {
+					<input class="cd-basin__durum" type="radio" name="cd-klip"
+						id={ "cd-klip-" + cdSiraya(i) }
+						aria-label={ "Klip " + cdSiraya(i) }/>
+				}
 			}
+			<div class="cd-klip__kutu">
+				<div class="cd-klip__slaytlar">
+					for _, k := range items {
+						<a class="cd-klip" href={ k.Href }>
+							if k.Image != "" {
+								<img src={ k.Image } alt="" loading="lazy" decoding="async"
+									referrerpolicy="no-referrer"/>
+							}
+							if k.Baslik != "" {
+								<span class="cd-klip__ust">{ k.Baslik }</span>
+							}
+							<span class="cd-klip__oynat" aria-hidden="true">
+								<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+									<path d="M8 5v14l11-7z"></path>
+								</svg>
+							</span>
+						</a>
+					}
+				</div>
+				if len(items) > 1 {
+					<!-- Dikey oklar kartın sağ kenarında: yukarı = önceki,
+					     aşağı = sonraki (CoinDesk dikey slider yönü). -->
+					<div class="cd-klip__oklar">
+						for i := range items {
+							<label class={ "cd-klip__ok cd-klip__durum-" + cdSiraya(i) }
+								for={ "cd-klip-" + cdSiraya(cdBasinGeri(i, len(items))) }>
+								<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+									viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false">
+									<path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6 1.41 1.41z"></path>
+								</svg>
+								<span class="cd-visually-hidden">Önceki klip</span>
+							</label>
+						}
+						for i := range items {
+							<label class={ "cd-klip__ok cd-klip__durum-" + cdSiraya(i) }
+								for={ "cd-klip-" + cdSiraya(cdBasinIleri(i, len(items))) }>
+								<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+									viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false">
+									<path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"></path>
+								</svg>
+								<span class="cd-visually-hidden">Sonraki klip</span>
+							</label>
+						}
+					</div>
+				}
+			</div>
 		</section>
 	}
 }

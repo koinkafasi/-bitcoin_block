@@ -733,3 +733,223 @@ html[data-theme="dark"] .auth__art::before {
   .auth__art { min-height: 470px; }
   .auth__panel { padding-top: 30px; padding-bottom: 30px; }
 }
+
+/* =====================================================================
+   13) ÜYELİK SAYFALARI — CoinDesk diline geçiş (7 Kasım 2026)
+   =====================================================================
+   NEDEN: giriş/kayıt/şifre sıfırlama sayfaları ayrı bir kabuk kullanıyor
+   (uye-giris.css). Bu dosya public_head'ten SONRA yüklendiği için
+   cd-public.css'teki jetonları eziyordu: sayfa koyu bordo zemin
+   (#0d0b0e), kırmızı marka (#d10015), 28 px kart köşesi ve ağır gölge
+   ile açılıyordu. Sitenin geri kalanı CoinDesk tasarımındayken giriş
+   sayfası "başka site" gibi duruyordu.
+
+   YAKLAŞIM: düzeni (iki sütunlu huddle illüstrasyonu + form) KORU —
+   kullanıcı akışı ve karakter animasyonları değişmiyor. Yalnız görsel
+   dil CoinDesk'e çevriliyor: beyaz zemin, 4 px köşe, 1 px çizgi,
+   gölge yok, siyah birincil düğme, Neue Haas/Inter tipografi.
+
+   Bu blok dosyanın SONUNDA olmalı: aynı özgüllükte sonra gelen kazanır.
+   ===================================================================== */
+
+/* ---- Zemin: koyu bordo ışık → düz beyaz (CoinDesk) ---- */
+body.auth-page {
+  --a-bg: #ffffff;
+  --a-bg-2: #ffffff;
+  --a-card: #ffffff;
+  --a-art-1: #f4f4f4;
+  --a-art-2: #ececec;
+  --a-text: #262626;
+  --a-muted: #676767;
+  --a-hair: #d9d9d9;
+  --a-danger: #bb020a;
+  --a-warn: #8a5a00;
+  --a-ok: #218410;
+  --a-ghost: #f4f4f4;
+  --a-ghost-hover: #ececec;
+  --a-red: #000000;
+  --a-red-deep: #262626;
+  --a-ink: #000000;
+  --a-card-r: 4px;
+  --a-shadow: none;
+
+  background-color: #ffffff;
+  color: #262626;
+  font-family: var(--hp-font);
+}
+
+html[data-theme="dark"] body.auth-page {
+  --a-bg: #161616;
+  --a-bg-2: #161616;
+  --a-card: #161616;
+  --a-art-1: #1f1f1f;
+  --a-art-2: #262626;
+  --a-text: #f4f4f4;
+  --a-muted: #a6a6a6;
+  --a-hair: #2e2e2e;
+  --a-danger: #ff6b6b;
+  --a-ok: #4ade80;
+  --a-ghost: #1f1f1f;
+  --a-ghost-hover: #262626;
+  --a-red: #ffffff;
+  --a-red-deep: #d9d9d9;
+  --a-ink: #ffffff;
+
+  background-color: #161616;
+}
+
+/* Koyu bordo ışık katmanı kalkar: CoinDesk düz zemin kullanıyor. */
+.auth-room { display: none; }
+
+/* ---- Üst şerit ---- */
+.auth-stage { padding-top: 24px; }
+.auth-top { padding: 0 0 24px; }
+.auth-brand__logo { display: block; height: 32px; width: auto; }
+
+/* ÖZGÜLLÜK TUZAĞI (7 Kasım 2026): uye-giris.css'te daha yukarıda
+   `.auth-brand img { height: 30px; width: auto; display: block; }`
+   kuralı var (0,1,1). Tek sınıflı `.auth-brand__logo--acik` (0,1,0) onu
+   EZEMİYOR ve iki logo YAN YANA basılıyordu (ölçümde ekran görüntüsünde
+   görüldü). Gizleme kuralları aynı özgüllükte yazılmalı. */
+.auth-brand .auth-brand__logo--acik { display: none; }
+html[data-theme="dark"] .auth-brand .auth-brand__logo--koyu { display: none; }
+html[data-theme="dark"] .auth-brand .auth-brand__logo--acik { display: block; }
+.auth-brand .auth-brand__logo { height: 32px; }
+.auth-brand b { color: inherit; font-weight: inherit; }
+
+.auth-top-links {
+  font-family: var(--hp-font);
+  font-size: 14px;
+  line-height: 21px;
+  color: var(--a-muted);
+}
+.auth-top-links span { color: var(--a-muted); }
+.auth-top-links a {
+  font-size: 14px;
+  line-height: 21px;
+  font-weight: 500;
+  color: var(--a-text);
+  border: 1px solid var(--a-hair);
+  border-radius: var(--hp-radius);
+  padding: 7px 12px;
+}
+.auth-top-links a:hover { background: var(--a-ghost); color: var(--a-text); border-color: var(--a-hair); }
+
+/* ---- Kart: 28 px köşe + ağır gölge → 4 px + 1 px çizgi ---- */
+.auth {
+  border-radius: var(--hp-radius);
+  border: 1px solid var(--a-hair);
+  box-shadow: none;
+  overflow: hidden;
+}
+
+/* İllüstrasyon paneli: gazete dokusu korunur, kırmızı marka kalkar. */
+.auth__art {
+  background: var(--a-art-1);
+  min-height: 600px;
+}
+
+/* CoinDesk'te form paneli zeminden ayrılmıyor; ince ayırıcı yeterli. */
+.auth__panel {
+  border-left: 1px solid var(--a-hair);
+  background: var(--a-card);
+}
+
+/* Kırmızı kalkan ikonu: CoinDesk dilinde nötr. */
+.panel__mark { display: none; }
+
+/* ---- Tipografi ---- */
+.panel__title {
+  font-family: var(--hp-serif);
+  font-size: 32px;
+  line-height: 40px;
+  font-weight: 700;
+  letter-spacing: -0.2px;
+  color: var(--a-text);
+}
+.panel__sub {
+  font-family: var(--hp-font);
+  font-size: 15px;
+  line-height: 22px;
+  color: var(--a-muted);
+}
+
+/* ---- Form alanları ---- */
+.auth-form input[type="text"],
+.auth-form input[type="email"],
+.auth-form input[type="password"],
+.auth-form input[type="search"] {
+  font-family: var(--hp-font);
+  font-size: 14px;
+  line-height: 21px;
+  border: 1px solid var(--a-hair);
+  border-radius: var(--hp-radius);
+  background: var(--a-card);
+  color: var(--a-text);
+  padding: 10px 12px;
+}
+.auth-form input:focus {
+  outline: none;
+  border-color: #000000;
+  box-shadow: none;
+}
+html[data-theme="dark"] .auth-form input:focus { border-color: #ffffff; }
+
+/* ---- Birincil düğme: kırmızı → siyah (CoinDesk), 4 px köşe ---- */
+.auth-form button[type="submit"],
+.auth-form .panel__submit,
+.auth-form .btn {
+  font-family: var(--hp-font);
+  font-size: 14px;
+  line-height: 21px;
+  font-weight: 500;
+  border-radius: var(--hp-radius);
+  background: #000000;
+  border: 1px solid #000000;
+  color: #ffffff;
+  padding: 11px 16px;
+}
+.auth-form button[type="submit"]:hover,
+.auth-form .btn:hover {
+  background: #262626;
+  border-color: #262626;
+  color: #ffffff;
+}
+html[data-theme="dark"] .auth-form button[type="submit"],
+html[data-theme="dark"] .auth-form .btn {
+  background: #ffffff;
+  border-color: #ffffff;
+  color: #000000;
+}
+html[data-theme="dark"] .auth-form button[type="submit"]:hover,
+html[data-theme="dark"] .auth-form .btn:hover {
+  background: #d9d9d9;
+  border-color: #d9d9d9;
+}
+
+/* Bağlantılar (şifremi unuttum, kayıt ol) */
+.auth-form a { color: var(--a-text); text-decoration: underline; text-underline-offset: 3px; }
+.auth-form a:hover { color: #000000; }
+html[data-theme="dark"] .auth-form a:hover { color: #ffffff; }
+
+/* Uyarı kutusu: kırmızı tonları korunur ama 4 px köşe. */
+.auth-alert { border-radius: var(--hp-radius); }
+.panel__ok { border-radius: var(--hp-radius); }
+
+/* ---- Duyarlı ---- */
+@media (max-width: 900px) {
+  .auth__art { display: none; }
+  .auth { grid-template-columns: minmax(0, 1fr); }
+  .auth__panel { border-left: 0; }
+  .panel__title { font-size: 28px; line-height: 36px; }
+}
+
+/* ---- 14) Alt ipucu metni: koyu tema rengi sabitlenmişti ----
+ *
+ * HATA (ölçüldü, 7 Kasım 2026): `.auth-hint` rengi #cfc8d2, `.auth-hint__note`
+ * #8f8995 olarak SABİT yazılmıştı — bunlar koyu zemin için seçilmiş açık
+ * griler. Zemini beyaza çevirince metin neredeyse görünmez kaldı
+ * (kontrast ~1.4:1). Renk artık tema jetonuna bağlı. */
+.auth-hint { color: var(--a-muted); }
+.auth-hint__say { color: var(--a-text); }
+.auth-hint__note { color: var(--a-muted); }
