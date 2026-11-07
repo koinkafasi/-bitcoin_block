@@ -2,6 +2,7 @@ package httpapi
 
 import (
 	"net/http"
+	"strings"
 
 	"theblock/site/internal/repo"
 	"theblock/site/internal/webui/templkit"
@@ -55,14 +56,34 @@ func (s *Server) cdFiyatSatirlari(r *http.Request, adet int) []templkit.CDPriceR
 // Yapı: H1 + açıklama → fiyat tablosu (25 varlık) → bölüm bağlantıları.
 func (s *Server) handleCDPrice(w http.ResponseWriter, r *http.Request) {
 	rows := s.cdFiyatSatirlari(r, 50)
+	base := strings.TrimRight(s.cfg.BaseURL, "/")
+	kanonik := base + "/price"
+
+	// CoinDesk /price: liste sayfası → BreadcrumbList + ItemList
+	// (FinancialProduct). WebSite bloğu da korunuyor (marka/arama kutusu).
+	var ldItems []cdLDItem
+	for _, row := range rows {
+		ldItems = append(ldItems, cdLDItem{Headline: row.Name, URL: base + row.Href})
+	}
+	var ld strings.Builder
+	ld.WriteString(string(siteAdiJSONLD(s.siteName, kanonik)))
+	ld.WriteString(string(breadcrumbScript([]crumb{
+		{Name: s.siteName, URL: base + "/"},
+		{Name: "Fiyatlar", URL: kanonik},
+	})))
+	ld.WriteString(string(cdFiyatListesiJSONLD("Cryptocurrency Market Cap Rankings", ldItems)))
 
 	v := templkit.CDPricePage{
-		Shell:     s.cdShellCtx(r.Context(), "price"),
-		Title:     "Kripto Fiyatları — " + s.siteName,
-		Desc:      "Bitcoin, Ethereum ve önde gelen kripto paraların canlı fiyatları, 24 saatlik değişimleri ve piyasa sıralaması.",
-		Canonical: s.cfg.BaseURL + "/price",
-		Rows:      rows,
-		JSONLD:    string(siteAdiJSONLD(s.siteName, s.cfg.BaseURL+"/price")),
+		Shell:           s.cdShellCtx(r.Context(), "price"),
+		Title:           "Kripto Fiyatları — " + s.siteName,
+		Desc:            "Bitcoin, Ethereum ve önde gelen kripto paraların canlı fiyatları, 24 saatlik değişimleri ve piyasa sıralaması.",
+		Canonical:       kanonik,
+		Rows:            rows,
+		JSONLD:          ld.String(),
+		PageCategory:    "price_page",
+		ContentCategory: "price",
+		Locale:          "tr",
+		BaseURL:         base,
 	}
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.Header().Set("Cache-Control", "public, max-age=60")

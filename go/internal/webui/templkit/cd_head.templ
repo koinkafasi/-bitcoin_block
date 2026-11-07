@@ -6,6 +6,19 @@ package templkit
 // Open Graph, tema rengi, preconnect ve Organization/WebSite JSON-LD.
 // Tekrar eden head bloğu, bir sayfada düzeltmenin diğerlerinde unutulması
 // demekti (theblock'ta yaşandı).
+//
+// 7 Kasım 2026 — CoinDesk kaynak koduyla birebir hizalandı. Referans
+// ölçümü: coindesk.com/ (ana sayfa), /policy (bölüm), /policy/2026/11/06/…
+// (makale), /tag/tokenization (etiket), /author/krisztian-sandor (yazar),
+// /price/bitcoin (varlık). O sayfalarda basılan meta/link seti burada.
+//
+// CoinDesk'ten BİLEREK alınmayanlar (uydurma veri olurdu):
+//   - `fb:app_id`        → Facebook uygulama kimliğimiz yok
+//   - `twitter:site`     → X hesabımız yok
+//   - `apple-itunes-app` → mobil uygulamamız yok
+//   - origin-trial meta'ları → reklam ağı denemeleri, bizde yok
+//   - 15 dilli hreflang  → çevirisi OLMAYAN dil listelenmez (Google
+//     "aynı içerik" cezası); CDHead.Hreflang yalnız gerçek çevirileri taşır.
 
 // cdHead sayfa başı verisi.
 type CDHead struct {
@@ -16,6 +29,8 @@ type CDHead struct {
 	OGType string
 	// Image sosyal paylaşım görseli (mutlak URL, boş olabilir).
 	Image string
+	// ImageAlt og:image:alt / twitter:image:alt (CoinDesk makalede basıyor).
+	ImageAlt string
 	// Hreflang gerçek çeviriler: dil kodu → mutlak URL. Boşsa YALNIZ
 	// x-default basılır. Kural: çevirisi olmayan dil listelenmez
 	// (Google "aynı içerik" cezası).
@@ -29,6 +44,10 @@ type CDHead struct {
 	// JSONLD Go tarafında üretilmiş yapısal veri bloğu (script etiketiyle
 	// birlikte). templ script içeriğini ham saydığı için burada taşınır.
 	JSONLD string
+	// BreadcrumbJSONLD ikinci yapısal veri bloğu (BreadcrumbList). CoinDesk
+	// makalede tek blok basıyor; Google iki ayrı bloğu da kabul ediyor ve
+	// kırıntı yolu SERP'te yolu gösteriyor.
+	BreadcrumbJSONLD string
 	// LCPGorsel varsa <link rel="preload" as="image"> basılır.
 	//
 	// NEDEN: Lighthouse mobil profilinde LCP fazı TTFB + "load delay" +
@@ -37,6 +56,26 @@ type CDHead struct {
 	// ve o sırada 9 alt-katlama görselinin isteğe girmesi. Preload, tarayıcı
 	// preload scanner'ının aynı srcset/sizes'ı CSS'ten ÖNCE görmesini sağlar.
 	LCPGorsel *CDPreload
+	// PageCategory CoinDesk `page_category` değeri: homepage,
+	// section_landing_page, article_page, tag_page, author_page, price_page.
+	PageCategory string
+	// ContentCategory CoinDesk `content_category` değeri: homepage, policy,
+	// tag, author, price …
+	ContentCategory string
+	// Locale içerik dili (`content_language`). Boşsa "tr".
+	Locale string
+	// Metas sayfaya özel ek <meta name content> satırları. CoinDesk makale
+	// sayfasında Arc/Parse.ly analitik setini basıyor; aynı anahtarlar
+	// buradan geçiyor (bkz. cdMakaleMetas).
+	Metas []CDMeta
+	// BaseURL göreli görsel yolunu og:image için mutlaklaştırır.
+	BaseURL string
+}
+
+// CDMeta tek bir `<meta name="…" content="…">` satırı.
+type CDMeta struct {
+	Name    string
+	Content string
 }
 
 // CDPreload önceden yüklenecek görsel (srcset/sizes ile birebir aynı).
@@ -54,6 +93,27 @@ templ cdHead(h CDHead) {
 	<meta name="viewport" content="width=device-width, initial-scale=1"/>
 	<title>{ h.Title }</title>
 	<meta name="description" content={ h.Desc }/>
+	<!-- CoinDesk robot yönergesi: zengin önizleme izinleri AÇIK
+	     (max-image-preview:large). Eksikken Google Haber kartları küçük
+	     görselle çıkıyordu. noindex sayfalarında bunun yerine robots
+	     satırı basılır — ikisi birlikte çelişkili sinyal olurdu. -->
+	if h.NoIndex {
+		<meta name="robots" content="noindex,follow"/>
+	} else {
+		<meta name="googlebot" content="index, follow, max-video-preview:-1, max-image-preview:large, max-snippet:-1"/>
+	}
+	<!-- CoinDesk'in sayfa sınıflandırma seti (ölçüldü: tüm şablonlarda
+	     var). Reklam/analitik hedeflemesinin yanında `page_url` kanonik
+	     adresin ikinci beyanıdır. -->
+	<meta name="page_url" content={ h.Canonical }/>
+	<meta name="media_type" content="html"/>
+	if h.PageCategory != "" {
+		<meta name="page_category" content={ h.PageCategory }/>
+	}
+	if h.ContentCategory != "" {
+		<meta name="content_category" content={ h.ContentCategory }/>
+	}
+	<meta name="content_language" content={ cdDil(h.Locale) }/>
 	<link rel="canonical" href={ h.Canonical }/>
 	<!-- LCP görselini MÜMKÜN OLAN EN ERKEN anda başlat. `imagesrcset` ve
 	     `imagesizes`, <img> ile BİREBİR aynı olmalı; farklı olursa tarayıcı
@@ -66,10 +126,8 @@ templ cdHead(h CDHead) {
 			<link rel="preload" as="image" href={ h.LCPGorsel.Src } fetchpriority="high"/>
 		}
 	}
-	if h.NoIndex {
-		<meta name="robots" content="noindex,follow"/>
-	}
-	<meta name="theme-color" content="#ffffff"/>
+	<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)"/>
+	<meta name="theme-color" content="#161616" media="(prefers-color-scheme: dark)"/>
 
 	<!-- hreflang: yalnız GERÇEK çeviriler + x-default -->
 	for _, dil := range cdDilSirasi {
@@ -80,6 +138,7 @@ templ cdHead(h CDHead) {
 	<link rel="alternate" hreflang="x-default" href={ h.Canonical }/>
 
 	<meta property="og:site_name" content={ h.SiteName }/>
+	<meta property="og:locale" content={ cdOGDil(h.Locale) }/>
 	if h.OGType == "article" {
 		<meta property="og:type" content="article"/>
 	} else {
@@ -89,9 +148,33 @@ templ cdHead(h CDHead) {
 	<meta property="og:description" content={ h.Desc }/>
 	<meta property="og:url" content={ h.Canonical }/>
 	if h.Image != "" {
-		<meta property="og:image" content={ h.Image }/>
+		<meta property="og:image" content={ cdMutlak(h.Image, h.BaseURL) }/>
+		<!-- Ölçü etiketleri: Facebook/X görseli kırpmadan önce boyutu
+		     bilir; eksikse kart düzeni sıçrar (CoinDesk 1200×675 basıyor). -->
+		<meta property="og:image:width" content="1200"/>
+		<meta property="og:image:height" content="675"/>
+		if h.ImageAlt != "" {
+			<meta property="og:image:alt" content={ h.ImageAlt }/>
+		}
 	}
 	<meta name="twitter:card" content="summary_large_image"/>
+	<meta name="twitter:title" content={ h.Title }/>
+	<meta name="twitter:description" content={ h.Desc }/>
+	if h.Image != "" {
+		<meta name="twitter:image" content={ cdMutlak(h.Image, h.BaseURL) }/>
+		if h.ImageAlt != "" {
+			<meta name="twitter:image:alt" content={ h.ImageAlt }/>
+		}
+		<meta name="twitter:image:width" content="1200"/>
+		<meta name="twitter:image:height" content="675"/>
+	}
+
+	<!-- Sayfaya özel makine-okur alanlar (CoinDesk Arc/Parse.ly seti) -->
+	for _, m := range h.Metas {
+		if m.Name != "" && m.Content != "" {
+			<meta name={ m.Name } content={ m.Content }/>
+		}
+	}
 
 	<!-- Görsel CDN'lerine erken bağlantı: LCP'yi ~50-100 ms iyileştirir -->
 	<link rel="preconnect" href="https://cdn.sanity.io" crossorigin="anonymous"/>
@@ -103,15 +186,20 @@ templ cdHead(h CDHead) {
 	     veriliyor: SVG modern tarayıcıda keskin, PNG eski/bot yolunda. -->
 	<link rel="icon" href="/static/icon-192.png" sizes="192x192" type="image/png"/>
 	<link rel="icon" href="/static/favicon.svg" type="image/svg+xml"/>
+	<link rel="icon" href="/static/icon-512.png" sizes="512x512" type="image/png"/>
 	<link rel="apple-touch-icon" href="/static/icon-192.png"/>
 	<link rel="manifest" href="/manifest.webmanifest"/>
+	<!-- WebSub hub: yayın bildirimi (CoinDesk de `rel="hub"` basıyor).
+	     Google/Bing beslemeyi bu uçtan anında öğrenir. -->
+	if h.RSSFeed != "" {
+		<link rel="alternate" type="application/rss+xml" title={ h.SiteName + " RSS" } href={ h.RSSFeed }/>
+		<link rel="self" type="application/rss+xml" href={ h.RSSFeed }/>
+	}
+	<link rel="hub" href="https://pubsubhubbub.appspot.com/"/>
 
 	<link rel="stylesheet" href={ "/static/cd.css?v=" + cdVarlik() }/>
 	<!-- Mega menü: cd.css'in üstüne biner, kendi jetonunu tanımlamaz. -->
 	<link rel="stylesheet" href={ "/static/cd-menu.css?v=" + cdVarlik() }/>
-	if h.RSSFeed != "" {
-		<link rel="alternate" type="application/rss+xml" title={ h.SiteName + " RSS" } href={ h.RSSFeed }/>
-	}
 	<!-- CSP uyumlu delege dinleyiciler (data-* öznitelikleri) -->
 	<script src={ "/static/csp-delegated.js?v=" + cdVarlik() } defer></script>
 	<!-- Tema başlangıcı — BLOKLAYICI ve head'de olmalı: gövde boyanmadan
@@ -137,4 +225,36 @@ templ cdHead(h CDHead) {
 	</script>
 	<!-- Organization + WebSite: templ script içini ham saydığı için Go'da üretilir -->
 	@templ.Raw(h.JSONLD)
+	if h.BreadcrumbJSONLD != "" {
+		@templ.Raw(h.BreadcrumbJSONLD)
+	}
+}
+
+// cdDil içerik dilini normalize eder.
+func cdDil(locale string) string {
+	if locale == "" {
+		return "tr"
+	}
+	return locale
+}
+
+// cdOGDil Open Graph locale biçimi (dil_BÖLGE).
+func cdOGDil(locale string) string {
+	switch cdDil(locale) {
+	case "tr":
+		return "tr_TR"
+	case "en":
+		return "en_US"
+	case "de":
+		return "de_DE"
+	case "es":
+		return "es_ES"
+	case "ru":
+		return "ru_RU"
+	case "fr":
+		return "fr_FR"
+	case "ar":
+		return "ar_AR"
+	}
+	return cdDil(locale)
 }

@@ -30,6 +30,12 @@ type CDListePage struct {
 	BosMetin string
 	// JSONLD Go tarafında üretilmiş yapısal veri.
 	JSONLD string
+	// CoinDesk SEO sınıflandırması (bkz. templkit.CDHead).
+	PageCategory    string
+	ContentCategory string
+	Locale          string
+	// BaseURL og:image mutlaklaştırması için kök adres.
+	BaseURL string
 }
 
 func CDListePageView(v CDListePage) templ.Component {
@@ -59,7 +65,8 @@ func CDListePageView(v CDListePage) templ.Component {
 		}
 		templ_7745c5c3_Err = cdHead(CDHead{Title: v.Title, Desc: v.Desc, Canonical: v.Canonical,
 			OGType: "website", SiteName: v.Shell.SiteName, RSSFeed: "/rss.xml",
-			JSONLD: v.JSONLD}).Render(ctx, templ_7745c5c3_Buffer)
+			JSONLD: v.JSONLD, Locale: v.Locale, PageCategory: v.PageCategory, BaseURL: v.BaseURL,
+			ContentCategory: v.ContentCategory}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -82,7 +89,7 @@ func CDListePageView(v CDListePage) templ.Component {
 		var templ_7745c5c3_Var2 string
 		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(v.Baslik)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_liste.templ`, Line: 40, Col: 19}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_liste.templ`, Line: 47, Col: 19}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
 		if templ_7745c5c3_Err != nil {
@@ -95,7 +102,7 @@ func CDListePageView(v CDListePage) templ.Component {
 		var templ_7745c5c3_Var3 string
 		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(v.Aciklama)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_liste.templ`, Line: 41, Col: 42}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_liste.templ`, Line: 48, Col: 42}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 		if templ_7745c5c3_Err != nil {
@@ -128,7 +135,7 @@ func CDListePageView(v CDListePage) templ.Component {
 			var templ_7745c5c3_Var4 string
 			templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(v.BosMetin)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_liste.templ`, Line: 53, Col: 21}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_liste.templ`, Line: 60, Col: 21}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 			if templ_7745c5c3_Err != nil {
@@ -162,6 +169,12 @@ type CDNewsletterPage struct {
 	Desc      string
 	Canonical string
 	JSONLD    string
+	// CoinDesk SEO sınıflandırması (bkz. templkit.CDHead).
+	PageCategory    string
+	ContentCategory string
+	Locale          string
+	// BaseURL og:image mutlaklaştırması için kök adres.
+	BaseURL string
 }
 
 func CDNewsletterPageView(v CDNewsletterPage) templ.Component {
@@ -191,7 +204,8 @@ func CDNewsletterPageView(v CDNewsletterPage) templ.Component {
 		}
 		templ_7745c5c3_Err = cdHead(CDHead{Title: v.Title, Desc: v.Desc, Canonical: v.Canonical,
 			OGType: "website", SiteName: v.Shell.SiteName, RSSFeed: "/rss.xml",
-			JSONLD: v.JSONLD}).Render(ctx, templ_7745c5c3_Buffer)
+			JSONLD: v.JSONLD, Locale: v.Locale, PageCategory: v.PageCategory, BaseURL: v.BaseURL,
+			ContentCategory: v.ContentCategory}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

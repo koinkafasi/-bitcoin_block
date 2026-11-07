@@ -10,6 +10,11 @@ type CDPricePage struct {
 	Canonical string
 	Rows      []CDPriceRow
 	JSONLD    string
+	BaseURL   string
+	// CoinDesk SEO sınıflandırması (bkz. templkit.CDHead).
+	PageCategory    string
+	ContentCategory string
+	Locale          string
 }
 
 templ CDPricePageView(v CDPricePage) {
@@ -18,7 +23,8 @@ templ CDPricePageView(v CDPricePage) {
 		<head>
 			@cdHead(CDHead{Title: v.Title, Desc: v.Desc, Canonical: v.Canonical,
 				OGType: "website", SiteName: v.Shell.SiteName, RSSFeed: "/rss.xml",
-				JSONLD: v.JSONLD})
+				JSONLD: v.JSONLD, Locale: v.Locale, PageCategory: v.PageCategory,
+				ContentCategory: v.ContentCategory, BaseURL: v.BaseURL})
 		</head>
 		<body class="cd">
 			@cdTopbar(v.Shell)

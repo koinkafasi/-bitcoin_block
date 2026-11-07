@@ -1,0 +1,289 @@
+// YouTube video & canlı yayın yönetim paneli.
+//
+// NEDEN PANEL: kanal, çekme sıklığı ve hangi içeriğin öne çıkacağı kod
+// değiştirmeden yönetilebilmeli. Ayrıca YouTube'un canlı algılaması
+// gecikirse editör bir videoyu elle "canlı" işaretleyebilmeli.
+package templkit
+
+// VideoYayinSatir panel listesinin tek satırı.
+type VideoYayinSatir struct {
+	VideoID  string
+	Tur      string
+	TurAd    string
+	Baslik   string
+	Gorsel   string
+	Sure     string
+	Zaman    string
+	Canli    bool
+	OneCikan bool
+	Gizli    bool
+}
+
+// VideoYayinSekme tür süzgeci.
+type VideoYayinSekme struct {
+	Kod   string
+	Ad    string
+	Adet  int
+	Aktif bool
+}
+
+// VideoYayinView /admin/video-yayin paneli.
+type VideoYayinView struct {
+	FlashKind string
+	FlashText string
+
+	KanalID        string
+	Handle         string
+	Dakika         string
+	Aktif          bool
+	VideoGoster    bool
+	ShortGoster    bool
+	CanliGoster    bool
+	CanliVideoID   string
+	SonCekme       string
+	SonHata        string
+	CanliVar       bool
+	IcerikToplam   int
+	VideoAdet      int
+	ShortAdet      int
+	YayinAdet      int
+	Sekmeler       []VideoYayinSekme
+	Satirlar       []VideoYayinSatir
+	BosMetin       string
+}
+
+// VideoYayinPanel (HTMX hedefi: #video-yayin-panel).
+templ VideoYayinPanel(v VideoYayinView) {
+	<div id="video-yayin-panel">
+		if v.FlashText != "" {
+			<div class={ "flash", v.FlashKind }>{ v.FlashText }</div>
+		}
+		@Yukleniyor("video-yayin-yukleniyor", "İşleniyor…")
+
+		<div class="card card-pad" style="max-width:900px">
+			<h2 style="margin-top:0;font-size:1.1rem">
+				<svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-brand-youtube"></use></svg>
+				YouTube Video &amp; Canlı Yayın
+			</h2>
+			<p class="hint" style="margin-top:0">
+				Kanalın videoları, Shorts'ları ve canlı yayınları periyodik olarak çekilir;
+				<code>/videos</code>, <code>/videos/shorts</code>, <code>/canli-yayin</code> ve ana sayfa
+				modülleri buradan beslenir. YouTube'a yeni bir içerik düştüğünde sayfalar
+				kendiliğinden güncellenir — elle bir şey yapmanız gerekmez.
+			</p>
+
+			<div class="input-row" style="gap:20px;flex-wrap:wrap;margin-bottom:8px">
+				<div class="field" style="min-width:180px">
+					<span class="hint">Durum</span>
+					<strong>
+						if v.Aktif {
+							Çalışıyor
+						} else {
+							Kapalı
+						}
+					</strong>
+				</div>
+				<div class="field" style="min-width:180px">
+					<span class="hint">Son çekme</span>
+					<strong>
+						if v.SonCekme != "" {
+							{ v.SonCekme }
+						} else {
+							Henüz çekilmedi
+						}
+					</strong>
+				</div>
+				<div class="field" style="min-width:240px">
+					<span class="hint">Arşiv</span>
+					<strong>{ "Video " + sayiMetni(v.VideoAdet) + " · Shorts " + sayiMetni(v.ShortAdet) + " · Yayın " + sayiMetni(v.YayinAdet) }</strong>
+				</div>
+				<div class="field" style="min-width:160px">
+					<span class="hint">Canlı yayın</span>
+					<strong>
+						if v.CanliVar {
+							<strong style="color:#e0245e">Yayında</strong>
+						} else {
+							Yayın yok
+						}
+					</strong>
+				</div>
+			</div>
+			if v.SonHata != "" {
+				<div class="flash error" style="margin-bottom:10px">
+					Son çekme hatası: { v.SonHata }
+				</div>
+			}
+
+			<form method="post" action="/admin/video-yayin/ayar"
+				hx-post="/admin/video-yayin/ayar" hx-target="#video-yayin-panel"
+				hx-swap="outerHTML" hx-indicator="#video-yayin-yukleniyor">
+				<div class="grid-2">
+					<div class="field">
+						<label for="vy_kanal">Kanal Kimliği (channelId)</label>
+						<input id="vy_kanal" class="input" name="kanal_id" value={ v.KanalID }
+							placeholder="UCxxxxxxxxxxxxxxxxxxxxxx" spellcheck="false"/>
+						<p class="hint">YouTube kanal adresindeki <code>UC…</code> değeri.</p>
+					</div>
+					<div class="field">
+						<label for="vy_handle">Kanal Adı (@handle)</label>
+						<input id="vy_handle" class="input" name="handle" value={ v.Handle }
+							placeholder="bitcosar" spellcheck="false"/>
+						<p class="hint">Canlı yayınlar ve yayın listesi bu adresten okunur.</p>
+					</div>
+				</div>
+
+				<div class="grid-2">
+					<div class="field">
+						<label for="vy_dakika">Çekme aralığı</label>
+						<select id="vy_dakika" class="input" name="dakika">
+							<option value="5" selected?={ v.Dakika == "5" }>5 dakika</option>
+							<option value="10" selected?={ v.Dakika == "10" }>10 dakika</option>
+							<option value="15" selected?={ v.Dakika == "15" }>15 dakika</option>
+							<option value="30" selected?={ v.Dakika == "30" }>30 dakika</option>
+							<option value="60" selected?={ v.Dakika == "60" }>60 dakika</option>
+						</select>
+						<p class="hint">Sık aralık yeni videoyu daha hızlı yansıtır; YouTube'a daha çok istek gider.</p>
+					</div>
+					<div class="field">
+						<label for="vy_canli_id">Canlı yayın (elle işaretleme)</label>
+						<input id="vy_canli_id" class="input" name="canli_video_id" value={ v.CanliVideoID }
+							placeholder="Video kimliği veya YouTube bağlantısı"/>
+						<p class="hint">Boş bırakılırsa canlı yayın otomatik algılanır. Otomatik algılama
+							gecikirse yayın kimliğini buraya yazın; ana sayfa ve canlı sayfası bunu kullanır.
+							Temizlemek için boş kaydedin.</p>
+					</div>
+				</div>
+
+				<div class="input-row" style="gap:18px;flex-wrap:wrap;align-items:center">
+					<label class="tag" style="cursor:pointer"><input type="checkbox" name="aktif" value="1" checked?={ v.Aktif }/> Otomatik çekme açık</label>
+					<label class="tag" style="cursor:pointer"><input type="checkbox" name="video_goster" value="1" checked?={ v.VideoGoster }/> Videolar</label>
+					<label class="tag" style="cursor:pointer"><input type="checkbox" name="short_goster" value="1" checked?={ v.ShortGoster }/> Shorts</label>
+					<label class="tag" style="cursor:pointer"><input type="checkbox" name="canli_goster" value="1" checked?={ v.CanliGoster }/> Canlı yayın</label>
+				</div>
+
+				<div class="input-row" style="margin-top:14px;gap:10px;flex-wrap:wrap">
+					<button class="btn" type="submit">Ayarları Kaydet</button>
+				</div>
+			</form>
+
+			<form method="post" action="/admin/video-yayin/cek" style="margin-top:10px"
+				hx-post="/admin/video-yayin/cek" hx-target="#video-yayin-panel"
+				hx-swap="outerHTML" hx-indicator="#video-yayin-yukleniyor">
+				<button class="btn ghost" type="submit">Şimdi Çek</button>
+				<span class="hint">Kanalı hemen okur ve arşivi günceller.</span>
+			</form>
+		</div>
+
+		<div class="card card-pad" style="max-width:900px;margin-top:14px">
+			<div class="dash-head">
+				<h2 style="margin:0;font-size:1.05rem">Arşiv</h2>
+			</div>
+			<div class="tabs" style="margin-bottom:10px">
+				for _, s := range v.Sekmeler {
+					if s.Aktif {
+						<a class="active" href={ "/admin/video-yayin?tur=" + s.Kod }>{ s.Ad + " (" + sayiMetni(s.Adet) + ")" }</a>
+					} else {
+						<a href={ "/admin/video-yayin?tur=" + s.Kod }>{ s.Ad + " (" + sayiMetni(s.Adet) + ")" }</a>
+					}
+				}
+			</div>
+			if len(v.Satirlar) > 0 {
+				<div style="overflow-x:auto">
+					<table class="table" style="width:100%">
+						<thead>
+							<tr>
+								<th style="width:86px">Kapak</th>
+								<th>Başlık</th>
+								<th style="width:80px">Tür</th>
+								<th style="width:110px">Durum</th>
+								<th style="width:250px">İşlem</th>
+							</tr>
+						</thead>
+						<tbody>
+							for _, s := range v.Satirlar {
+								<tr>
+									<td>
+										if s.Gorsel != "" {
+											<img src={ s.Gorsel } alt="" width="72" height="41"
+												style="border-radius:4px;object-fit:cover;display:block"
+												loading="lazy" decoding="async" referrerpolicy="no-referrer"/>
+										}
+									</td>
+									<td>
+										<a href={ "/video/" + s.VideoID } target="_blank" rel="noopener">{ s.Baslik }</a>
+										<div class="hint" style="margin-top:2px">
+											{ s.VideoID }
+											if s.Sure != "" {
+												{ " · " + s.Sure }
+											}
+											if s.Zaman != "" {
+												{ " · " + s.Zaman }
+											}
+										</div>
+									</td>
+									<td>{ s.TurAd }</td>
+									<td>
+										if s.Canli {
+											<span class="tag" style="color:#e0245e">CANLI</span>
+										}
+										if s.OneCikan {
+											<span class="tag">Öne çıkan</span>
+										}
+										if s.Gizli {
+											<span class="tag">Gizli</span>
+										}
+									</td>
+									<td>
+										<div class="input-row" style="gap:6px;flex-wrap:wrap">
+											<form method="post" action={ "/admin/video-yayin/" + s.VideoID + "/one_cikan" }
+												hx-post={ "/admin/video-yayin/" + s.VideoID + "/one_cikan" }
+												hx-target="#video-yayin-panel" hx-swap="outerHTML">
+												<button class="btn small ghost" type="submit">
+													if s.OneCikan {
+														Öne çıkarmayı kaldır
+													} else {
+														Öne çıkar
+													}
+												</button>
+											</form>
+											<form method="post" action={ "/admin/video-yayin/" + s.VideoID + "/canli" }
+												hx-post={ "/admin/video-yayin/" + s.VideoID + "/canli" }
+												hx-target="#video-yayin-panel" hx-swap="outerHTML">
+												<button class="btn small ghost" type="submit">
+													if s.Canli {
+														Canlıyı kaldır
+													} else {
+														Canlı işaretle
+													}
+												</button>
+											</form>
+											<form method="post" action={ "/admin/video-yayin/" + s.VideoID + "/gizli" }
+												hx-post={ "/admin/video-yayin/" + s.VideoID + "/gizli" }
+												hx-target="#video-yayin-panel" hx-swap="outerHTML">
+												<button class="btn small ghost" type="submit">
+													if s.Gizli {
+														Göster
+													} else {
+														Gizle
+													}
+												</button>
+											</form>
+											<form method="post" action={ "/admin/video-yayin/" + s.VideoID + "/sil" }
+												hx-post={ "/admin/video-yayin/" + s.VideoID + "/sil" }
+												hx-target="#video-yayin-panel" hx-swap="outerHTML"
+												hx-confirm="Bu kayıt arşivden silinsin mi? YouTube'da duruyorsa sonraki çekmede yeniden eklenir.">
+												<button class="btn small ghost" type="submit">Sil</button>
+											</form>
+										</div>
+									</td>
+								</tr>
+							}
+						</tbody>
+					</table>
+				</div>
+			} else {
+				<p class="hint">{ v.BosMetin }</p>
+			}
+		</div>
+	</div>
+}

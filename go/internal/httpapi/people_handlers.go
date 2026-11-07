@@ -59,5 +59,33 @@ func (s *Server) handlePerson(w http.ResponseWriter, r *http.Request) {
 	d.PersonNextPage = page + 1
 	d.PersonDetail = true
 	d.Canonical = strings.TrimRight(s.absBase(r), "/") + r.URL.Path
+
+	// ---- SEO: CoinDesk yazar sayfası deseni ----
+	// Başlık "{Ad} | {Site} Yazar", açıklama biyografi (yoksa unvan),
+	// OG tipi profile, JSON-LD WebPage + mainEntity.Person.
+	d.MetaTitle = p.Name + " | " + s.siteName + " Yazar"
+	aciklama := strings.TrimSpace(p.Bio)
+	if aciklama == "" {
+		aciklama = strings.TrimSpace(p.Title)
+	}
+	if aciklama == "" {
+		aciklama = p.Name + " — " + s.siteName + " yazar profili ve yazıları."
+	}
+	d.MetaDesc = aciklama
+	d.OGType = "profile"
+	d.Robots = "index,follow"
+	var gorsel string
+	if p.AvatarMediaID != nil {
+		gorsel = strings.TrimRight(s.absBase(r), "/") + s.mediaURL(p.AvatarMediaID)
+	}
+	var sameAs []string
+	for _, v := range p.Socials {
+		if v = strings.TrimSpace(v); v != "" {
+			sameAs = append(sameAs, v)
+		}
+	}
+	d.PageCategory = "author_page"
+	d.ContentCategory = "author"
+	d.PersonJSONLD = cdKisiJSONLD(s.siteName, d.Canonical, p.Name, p.Title, strings.TrimSpace(p.Bio), gorsel, sameAs)
 	s.renderPublic(w, r, "person", d, cacheControlPublic)
 }

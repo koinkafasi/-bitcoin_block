@@ -51,46 +51,109 @@ func orgJSONLD(siteName, base, canonical string) template.HTML {
 	})
 }
 
-// makaleJSONLD NewsArticle + BreadcrumbList.
+// makaleLDGirdi NewsArticle üretimi için girdi.
+type makaleLDGirdi struct {
+	View      templkit.CDArticleView
+	YayinISO  string // datePublished
+	GuncelISO string // dateModified (yoksa YayinISO)
+	ID        string // content_id / identifier
+	YazarSlug string
+	Keywords  []string
+	GorselAlt string
+	// Gorsel og:image / JSON-LD için MUTLAK görsel adresi (göreli
+	// `/kg/...` Open Graph'ta geçersizdir).
+	Gorsel string
+}
+
+// makaleJSONLD NewsArticle — CoinDesk makale sayfasıyla aynı alan seti.
 //
-// BreadcrumbList Google Haber'de SERP yolunu gösterir. `image` zorunlu
-// değil ama Google görsel zengin sonuç için istiyor; varsa eklenir.
-func makaleJSONLD(v templkit.CDArticleView, yayinTarihi string) template.HTML {
+// CoinDesk tek nesne basıyor (@graph YOK) ve şu alanları taşıyor:
+// inLanguage, url, identifier, publisher, headline, abstract,
+// mainEntityOfPage, thumbnailUrl, image, datePublished, dateModified,
+// articleSection, author, keywords.
+//
+// FARK (bilinçli): `author` CoinDesk'te Person + jobTitle + worksFor +
+// description + sameAs + image taşıyor. Bizde yazarın biyografisi/sosyal
+// hesabı veritabanında doğrulanmış alan olarak yoksa yalnız name + url
+// basılır — uydurma jobTitle yazmak E-E-A-T'yi zayıflatır.
+func makaleJSONLD(g makaleLDGirdi) template.HTML {
+	v := g.View
+	yazar := map[string]any{"@type": "Person", "name": v.Author}
+	if g.YazarSlug != "" {
+		yazar["url"] = strings.TrimRight(v.BaseURL, "/") + "/yazar/" + g.YazarSlug
+	}
+
 	makale := map[string]any{
 		"@type":            "NewsArticle",
-		"headline":         v.Headline,
-		"description":      v.Desc,
-		"url":              v.Canonical,
-		"mainEntityOfPage": map[string]any{"@type": "WebPage", "@id": v.Canonical},
-		"articleSection":   v.SectionName,
 		"inLanguage":       "tr",
-		"author":           map[string]any{"@type": "Organization", "name": v.Author},
-		"publisher":        map[string]any{"@type": "Organization", "name": v.Shell.SiteName},
-	}
-	if v.Image != "" {
-		makale["image"] = []string{v.Image}
-	}
-	if yayinTarihi != "" {
-		makale["datePublished"] = yayinTarihi
-		makale["dateModified"] = yayinTarihi
-	}
-
-	kırıntı := map[string]any{
-		"@type": "BreadcrumbList",
-		"itemListElement": []any{
-			map[string]any{"@type": "ListItem", "position": 1, "name": "Ana sayfa", "item": v.BaseURL + "/"},
-			map[string]any{"@type": "ListItem", "position": 2, "name": v.SectionName, "item": v.BaseURL + v.SectionHref},
-			map[string]any{"@type": "ListItem", "position": 3, "name": v.Headline},
+		"url":              v.Canonical,
+		"headline":         v.Headline,
+		"abstract":         v.Desc,
+		"mainEntityOfPage": v.Canonical,
+		"articleSection":   v.SectionName,
+		"author":           []any{yazar},
+		"publisher": map[string]any{
+			"@type": "NewsMediaOrganization",
+			"name":  v.Shell.SiteName,
+			"logo":  "",
+			"url":   strings.TrimRight(v.BaseURL, "/"),
 		},
 	}
+	if g.ID != "" {
+		makale["identifier"] = g.ID
+	}
+	gorsel := g.Gorsel
+	if gorsel == "" {
+		gorsel = v.Image
+	}
+	if gorsel != "" {
+		makale["thumbnailUrl"] = gorsel
+		makale["image"] = map[string]any{"@type": "ImageObject", "url": gorsel}
+	}
+	if g.YayinISO != "" {
+		makale["datePublished"] = g.YayinISO
+		deg := g.GuncelISO
+		if deg == "" {
+			deg = g.YayinISO
+		}
+		makale["dateModified"] = deg
+	}
+	if len(g.Keywords) > 0 {
+		makale["keywords"] = g.Keywords
+	}
 
-	return jsonldScript(map[string]any{
-		"@context": "https://schema.org",
-		"@graph":   []any{makale, kırıntı},
+	makale["@context"] = "http://schema.org"
+	return jsonldScript(makale)
+}
+
+// makaleBreadcrumbJSONLD BreadcrumbList — ayrı blok.
+//
+// CoinDesk makalede kırıntı basmıyor; ama Google SERP yolunu bu blok
+// besliyor ve sayfada GÖRÜNÜR kırıntı yok (kullanıcı isteği) — yapısal
+// veri arka planda kalıyor.
+func makaleBreadcrumbJSONLD(v templkit.CDArticleView) template.HTML {
+	return breadcrumbScript([]crumb{
+		{Name: "Ana sayfa", URL: strings.TrimRight(v.BaseURL, "/") + "/"},
+		{Name: v.SectionName, URL: strings.TrimRight(v.BaseURL, "/") + v.SectionHref},
+		{Name: v.Headline, URL: v.Canonical},
 	})
 }
 
-// siteAdiJSONLD yardımcı: sadece adı olan kurum bloğu (bölüm/etiket sayfaları).
+// breadcrumbScript kırıntı yolunu <script> etiketiyle sarar.
+//
+// NEDEN SARMALAYICI BURADA: templ bir `<script>` etiketinin İÇİNDEKİ
+// ifadeleri çalıştırmıyor, ham metin sayıyor (7 Kasım 2026'da bu tuşla
+// sayfaya literal `@templ.Raw(...)` yazıldı). Bu yüzden script etiketi
+// Go'da kurulur ve templ'e tek parça `templ.Raw` olarak verilir.
+func breadcrumbScript(items []crumb) template.HTML {
+	js := breadcrumbJSONLD(items)
+	if js == "" {
+		return ""
+	}
+	return template.HTML(`<script type="application/ld+json">` + string(js) + `</script>`)
+}
+
+// siteAdiJSONLD yardımcı: sadece adı olan kurum bloğu (liste sayfaları).
 func siteAdiJSONLD(siteName, canonical string) template.HTML {
 	return jsonldScript(map[string]any{
 		"@context": "https://schema.org",

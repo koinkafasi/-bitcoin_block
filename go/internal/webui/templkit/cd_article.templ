@@ -15,8 +15,12 @@ templ CDArticle(v CDArticleView) {
 	<html lang="tr">
 		<head>
 			@cdHead(CDHead{Title: v.Title, Desc: v.Desc, Canonical: v.Canonical,
-				OGType: "article", Image: v.Image, SiteName: v.Shell.SiteName,
-				JSONLD: v.JSONLD})
+				OGType: "article", Image: v.Image, ImageAlt: v.ImageAlt,
+				SiteName: v.Shell.SiteName, Locale: v.Locale,
+				PageCategory: v.PageCategory, ContentCategory: v.ContentCategory,
+				Metas: v.Metas, JSONLD: v.JSONLD,
+				BreadcrumbJSONLD: v.BreadcrumbJSONLD, BaseURL: v.BaseURL,
+				Hreflang: v.Hreflang})
 		</head>
 		<body class="cd">
 			@cdTopbar(v.Shell)

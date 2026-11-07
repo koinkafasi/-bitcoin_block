@@ -24,6 +24,7 @@
 </body></html>{{end}}
 
 {{define "person"}}<!doctype html><html lang="{{.Lang}}" {{if .RTL}}dir="rtl"{{end}} data-theme="{{.Theme}}"><head>{{template "public_head" .}}
+{{if .PersonJSONLD}}<script type="application/ld+json">{{.PersonJSONLD}}</script>{{end}}
 </head>
 <body>
 {{template "site_header" .}}

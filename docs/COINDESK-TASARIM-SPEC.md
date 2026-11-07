@@ -1928,6 +1928,135 @@ simgesi eklendi; gzip'te ~14 KB.
 
 ---
 
+### 11.13 On beşinci tur (SEO katmanı — CoinDesk kaynak koduyla birebir) — DURUM
+
+Kullanıcı isteği: "CoinDesk'in tüm sayfa kaynak kodlarını incele; SEO ile
+ilgili bizim yapmadığımız HER şeyi aynı desen ve yapıda kur."
+
+**Yöntem:** gerçek Chrome (Puppeteer, gerçek UA, 1920 px) ile 7 sayfa tipi
+açıldı, `page.content()` + `document.querySelectorAll('script[type=ld+json]')`
+ile ham kaynak toplandı: ana sayfa, bölüm (`/policy`), makale
+(`/policy/2026/11/06/…`), etiket (`/tag/tokenization`), yazar
+(`/author/krisztian-sandor`), varlık (`/price/bitcoin`), ayrıca
+`/robots.txt`, `/sitemap-index.xml`, `/sitemaps/static-1.xml`,
+`/sitemaps/articles-1.xml`, `/sitemaps/crypto-1.xml`,
+`/arc/outboundfeeds/news-sitemap-index`, `/arc/outboundfeeds/rss`,
+`/manifest.webmanifest`.
+
+#### 11.13.1 Head meta seti (CoinDesk → bizde)
+
+| Alan | CoinDesk | bitcosar |
+|---|---|---|
+| `googlebot` | `index, follow, max-video-preview:-1, max-image-preview:large, max-snippet:-1` | **aynı** (noindex sayfada yerine `robots noindex,follow`) |
+| `page_url` | kanonik adres | **aynı** |
+| `media_type` | `html` | **aynı** |
+| `page_category` | homepage · section_landing_page · article_page · tag_page · author_page · price_page | **aynı** değerler |
+| `content_category` | homepage · policy · market · tag · author · price | **aynı** (bölüm slug'ı) |
+| `content_language` | `en` | `tr` |
+| `og:locale` | `en` | `tr_TR` |
+| `og:image:width/height` | 1200 / 675 | **aynı** |
+| `og:image:alt` · `twitter:image:alt` | var (makale) | **aynı** (görsel kredisi varsa) |
+| `twitter:image:width/height` | 1200 / 675 | **aynı** |
+| `apple-itunes-app` | var | **YOK** — mobil uygulamamız yok (uydurma kimlik yazılmaz) |
+| `fb:app_id` | var | **YOK** — Facebook uygulaması yok |
+| `twitter:site` / `creator` | `@coindesk` | **YOK** — X hesabı yok |
+| `theme-color` | tek değer `rgb(255,255,255)` | iki media sorgusu: açık `#ffffff`, koyu `#161616` |
+| hreflang | 15 dil + x-default | yalnız **gerçek** çeviriler + x-default (şu an tr) |
+| `link rel=hub` | pubsubhubbub | **aynı** |
+| `link rel=self` | RSS | **aynı** |
+| ikonlar | ico + svg + 16/32/48/64/192/512 + 5 apple-touch | 192 + svg + 512 + apple-touch |
+| origin-trial meta'ları | 5 adet (reklam) | **YOK** — reklam ağı yok |
+| Arc/Parse.ly meta seti (makale) | `content_*`, `authors`, `author_1`, `tags`, `tag_N`, `publish_*`, `create_*`, `display_*`, `reg_enabled`, `sponsored`, `featured_media_*`, `language_selection`, `parsely-*` | **aynı anahtarlar**, yalnız dolu olanlar |
+
+#### 11.13.2 JSON-LD — sayfa tipi → tip (ölçüldü)
+
+| Sayfa | CoinDesk | bitcosar |
+|---|---|---|
+| Ana sayfa | JSON-LD **yok** | Organization + WebSite (bilinçli ek: site bağlantıları + arama kutusu) |
+| Bölüm | `CollectionPage` + `mainEntity.ItemList` (11 `NewsArticle`) | **aynı** (11 öğe) |
+| Makale | `NewsArticle` **tek nesne** (`@graph` yok): `inLanguage, url, identifier, publisher, headline, abstract, mainEntityOfPage, thumbnailUrl, image, datePublished, dateModified, articleSection, author[Person], keywords` | **aynı alanlar** + ayrı `BreadcrumbList` bloğu (Google SERP yolu; görünür kırıntı yok) |
+| Etiket | JSON-LD yok | `CollectionPage` (eksik bırakmak yerine doğru tip) |
+| Yazar | `WebPage` + `mainEntity.Person` (`jobTitle, worksFor, description, image, sameAs`) | **aynı** (boş alan basılmaz) |
+| `/price` | — | WebSite + `BreadcrumbList` + `ItemList` |
+| `/price/{coin}` | `[WebPage, FinancialProduct]` + `BreadcrumbList` + `FAQPage` + `ItemList` | **aynı** eksi `FAQPage` (soru-cevap metnimiz yok; uydurma FAQ spam sayılır) ve eksi `Volume-to-Market-Cap Ratio` (hesaplanmıyor) |
+
+Makale `author` bizde `Person{name,url}`; CoinDesk ek olarak `jobTitle`,
+`description`, `image`, `sameAs` basıyor — bu alanlar veritabanında
+doğrulanmış biyografi/sosyal hesap olarak yoksa **basılmaz**.
+
+#### 11.13.3 robots.txt
+
+CoinDesk sırası birebir: genel `Allow: /` + API/dahili/arama yolları kapalı
+→ **AI tarayıcı bloğu** (22 bot; `Allow: /price/` + `Disallow: /`)
+→ sitemap listesi. Bizde kapatılan yollar: `/api/`, `/admin/`,
+`/internal/`, `/hits/`, `/webhooks/`, `/arama?q=`, `/?q=`, `/?s=`,
+`/giris`, `/kayit`, `/arsiv/dizin`, `/gizli-dizin`, `/*/amp`.
+
+#### 11.13.4 Sitemap ailesi
+
+| Yol | İçerik | CoinDesk parametreleri |
+|---|---|---|
+| `/sitemap-index.xml` | `static-1` + `articles-1…N` + `crypto-1` | aynı |
+| `/sitemaps/static-1.xml` | sabit sayfalar + dolu bölümler + dolu kategoriler | `daily` / `1` |
+| `/sitemaps/articles-N.xml` | 1000'lik dilimler | `lastmod` ISO-8601 + `yearly` / `1` |
+| `/sitemaps/crypto-1.xml` | `/price` + her varlık | `hourly` / `1` |
+| `/news-sitemap-index` | haber sitemap indeksi | aynı |
+| `/sitemap-news.xml` | son 48 saat | `lastmod` + `news:news` + `image:image` + CDATA başlık |
+| `/sitemap.xml` | **korundu** (BİK resmî ilanları + hreflang) | — |
+
+`articles-N.xml` içinde hreflang alternates **yok** — CoinDesk kaynak
+dosyasında da yok; sayfa düzeyindeki canonical/x-default doğru adresi veriyor.
+
+#### 11.13.5 RSS 2.0
+
+CoinDesk kanal alanları: `title, link, atom:link self, atom:link hub,
+description, lastBuildDate, language, copyright, generator, ttl=5,
+sy:updatePeriod, sy:updateFrequency, image`. Öğe alanları: CDATA başlık,
+`media:content` (görsel), `guid isPermaLink="false"` (içerik kimliği —
+slug değişse de okuyucu aynı öğeyi tekrar göstermez), `pubDate`,
+CDATA `description`, `dc:creator`, boş `content:encoded` / `dc:description`,
+`category` (bölüm + etiket + `News`). Etiketler **tek sorguda** gelir
+(`repo.EtiketlerCoklu`, `= ANY($1)`).
+
+#### 11.13.6 manifest.webmanifest
+
+`name/short_name` sunucudaki `site_baslik` ayarından **dinamik** okunur
+(iki yerde farklı ad kalmasın); `start_url`, `scope`, 4 ikon (any +
+maskable), `shortcuts` (Son Haberler · Piyasalar · Fiyatlar),
+`theme_color`/`background_color` `#ffffff`, `lang: tr`.
+
+#### 11.13.7 Doğrulama (7 Kasım 2026, gerçek sunucu)
+
+```
+JSON-LD blok sayısı     makale 2 (NewsArticle + BreadcrumbList)
+                        bölüm 1 (CollectionPage)
+                        fiyat 3 (WebSite + Breadcrumb + ItemList)
+                        varlık 3 ([WebPage,FinancialProduct] + Breadcrumb + ItemList)
+                        etiket 1 (CollectionPage) · yazar 1 (WebPage/Person)
+page_category           homepage · section_landing_page · article_page
+                        tag_page · price_page (ölçüldü)
+og:locale               tr_TR (tüm tiplerde)
+og:image                MUTLAK (https://…/kg/…); önceden göreliydi → X/Facebook
+                        kartı görselsiz çıkıyordu. JSON-LD thumbnailUrl de mutlak.
+og:image:width/height   1200 / 675
+hreflang (makale)       tr + gerçek çeviri (en) + x-default; çeviri yoksa yalnız x-default
+robots.txt              200; 22 AI botu + 4 sitemap satırı
+sitemap-index           200; static-1 + articles-1 + crypto-1 (133 TR içerik)
+news-sitemap-index      200; → /sitemap-news.xml
+sitemap-news            lastmod + CDATA + image:loc (mutlak)
+rss                     dc:creator + media:content + guid + category + ttl
+manifest                name/short_name = BitCoŞaR
+yatay taşma             0 (1920 · 768 · 390; 6 sayfa tipi)
+Lighthouse masaüstü     performance/accessibility/best-practices/seo = 100
+gofmt · vet · build     temiz
+```
+
+**Kapak görseli kuralı:** `image_url` (kaynağın görseli) → yoksa
+`cover_media_id` (editörün yüklediği kapak) → yoksa **görsel basılmaz**.
+Uydurma/yer tutucu görsel Open Graph'ta yanlış izlenim verir.
+
+---
+
 ## 12. Kopyalanması önerilen sözleşmeler
 
 Ölçüm sırasında CoinDesk'in iyi kararları:

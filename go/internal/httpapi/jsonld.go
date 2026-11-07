@@ -82,26 +82,9 @@ func orStrAny(a *string, b string) string {
 	return b
 }
 
-// newsSitemap son 48 saatteki yayınlarla Google News sitemap üretir.
-func (s *Server) newsSitemap(abs string, items []repo.Content) string {
-	var sb strings.Builder
-	sb.WriteString(`<?xml version="1.0" encoding="UTF-8"?>` + "\n")
-	sb.WriteString(`<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:news="http://www.google.com/schemas/sitemap-news/0.9">`)
-	cut := time.Now().Add(-48 * time.Hour)
-	for _, it := range items {
-		if it.PublishedAt == nil || it.PublishedAt.Before(cut) {
-			continue
-		}
-		loc := abs + makaleURL(it)
-		sb.WriteString("<url><loc>" + htmlEscape(loc) + "</loc><news:news>")
-		sb.WriteString("<news:publication><news:name>" + htmlEscape(s.siteName) + "</news:name><news:language>" + htmlEscape(it.Locale) + "</news:language></news:publication>")
-		sb.WriteString("<news:publication_date>" + it.PublishedAt.UTC().Format(time.RFC3339) + "</news:publication_date>")
-		sb.WriteString("<news:title>" + htmlEscape(it.Title) + "</news:title>")
-		sb.WriteString("</news:news></url>")
-	}
-	sb.WriteString("</urlset>")
-	return sb.String()
-}
+// newsSitemap taşındı: cd_sitemaps.go (CoinDesk biçimi: lastmod +
+// image:image + CDATA başlık). Burada bırakılan kopya derleme hatası
+// veriyordu.
 
 // sitemapLangRefs çeviri köklerini gruplar (hreflang üretimi için).
 func sitemapLangRefs(refs []repo.LangRef) map[int64][]repo.LangRef {

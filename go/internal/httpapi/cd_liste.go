@@ -16,19 +16,10 @@ import (
 // sayfalarla doldurur; içerik yoksa sayfa dürüst boş durum gösterir
 // (uydurma kart yok).
 //
-// /videos            — tür "video"
+// /videos artık YouTube kanalından besleniyor — handler cd_video.go'da.
 // /podcasts          — tür "podcast"
 // /sponsored-content — tür "sponsorlu"
 // /newsletters       — bülten listesi + kayıt
-
-// handleCDVideos /videos
-func (s *Server) handleCDVideos(w http.ResponseWriter, r *http.Request) {
-	s.cdTurListesi(w, r, "video", templkit.CDListePage{
-		Baslik:   "Videolar",
-		Aciklama: "Kripto piyasasından video haberler, röportajlar ve piyasa değerlendirmeleri.",
-		BosMetin: "Henüz video yayınlanmadı. Video içerikleri editör tarafından eklendikçe burada listelenir.",
-	})
-}
 
 // handleCDPodcasts /podcasts
 func (s *Server) handleCDPodcasts(w http.ResponseWriter, r *http.Request) {
@@ -63,8 +54,16 @@ func (s *Server) cdTurListesi(w http.ResponseWriter, r *http.Request, tur string
 		s.logger.Warn("cd tur listesi", "tur", tur, "error", err)
 	}
 	simdi := time.Now()
-	for _, c := range items {
+	var ldItems []cdLDItem
+	for i, c := range items {
 		v.Stories = append(v.Stories, cdStoryCevir(c, simdi))
+		if i < 11 {
+			it := cdLDItem{Headline: c.Title, URL: s.absBase(r) + makaleURL(c), Author: c.AuthorName}
+			if c.PublishedAt != nil {
+				it.Published = c.PublishedAt.UTC().Format(time.RFC3339)
+			}
+			ldItems = append(ldItems, it)
+		}
 	}
 
 	yol := "/" + strings.TrimPrefix(tur, "")
@@ -80,7 +79,12 @@ func (s *Server) cdTurListesi(w http.ResponseWriter, r *http.Request, tur string
 	v.Title = v.Baslik + " — " + s.siteName
 	v.Desc = v.Aciklama
 	v.Canonical = s.cfg.BaseURL + yol
-	v.JSONLD = string(siteAdiJSONLD(s.siteName, v.Canonical))
+	// CoinDesk video/podcast/sponsorlu sayfaları CollectionPage basıyor.
+	v.JSONLD = string(cdCollectionJSONLD(s.siteName, strings.TrimRight(s.cfg.BaseURL, "/"), v.Baslik, v.Canonical, ldItems))
+	v.PageCategory = "section_landing_page"
+	v.ContentCategory = strings.TrimPrefix(yol, "/")
+	v.Locale = "tr"
+	v.BaseURL = strings.TrimRight(s.cfg.BaseURL, "/")
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.Header().Set("Cache-Control", cacheControlPublic)
@@ -93,10 +97,14 @@ func (s *Server) cdTurListesi(w http.ResponseWriter, r *http.Request, tur string
 func (s *Server) handleCDNewsletters(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	v := templkit.CDNewsletterPage{
-		Shell:     s.cdShellCtx(ctx, "newsletters"),
-		Title:     "Bültenler — " + s.siteName,
-		Desc:      "Günün kripto haberleri ve piyasa özeti e-postanızda. Ücretsiz abone olun.",
-		Canonical: s.cfg.BaseURL + "/newsletters",
+		Shell:           s.cdShellCtx(ctx, "newsletters"),
+		Title:           "Bültenler — " + s.siteName,
+		Desc:            "Günün kripto haberleri ve piyasa özeti e-postanızda. Ücretsiz abone olun.",
+		Canonical:       s.cfg.BaseURL + "/newsletters",
+		PageCategory:    "section_landing_page",
+		ContentCategory: "newsletters",
+		Locale:          "tr",
+		BaseURL:         strings.TrimRight(s.cfg.BaseURL, "/"),
 	}
 	v.JSONLD = string(siteAdiJSONLD(s.siteName, v.Canonical))
 

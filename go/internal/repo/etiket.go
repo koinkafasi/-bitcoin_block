@@ -91,6 +91,36 @@ func IcerikEtiketleri(ctx context.Context, pool DB, contentID int64) ([]Etiket, 
 	return out, rows.Err()
 }
 
+// EtiketlerCoklu birden çok içeriğin etiketlerini tek sorguda döndürür
+// (içerik kimliği → etiketler).
+//
+// NEDEN: RSS beslemesi 50 öğe basıyor; öğe başına ayrı sorgu 50 gidiş-dönüş
+// demekti. Bu sürüm tek `= ANY($1)` sorgusu kullanır.
+func EtiketlerCoklu(ctx context.Context, pool DB, contentIDs []int64) (map[int64][]Etiket, error) {
+	out := make(map[int64][]Etiket, len(contentIDs))
+	if len(contentIDs) == 0 {
+		return out, nil
+	}
+	rows, err := pool.Query(ctx, `
+		SELECT ct.content_id, t.name, t.slug FROM content_tags ct
+		JOIN tags t ON t.id = ct.tag_id
+		WHERE ct.content_id = ANY($1)
+		ORDER BY ct.content_id, t.name`, contentIDs)
+	if err != nil {
+		return out, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var id int64
+		var e Etiket
+		if err := rows.Scan(&id, &e.Ad, &e.Slug); err != nil {
+			return out, err
+		}
+		out[id] = append(out[id], e)
+	}
+	return out, rows.Err()
+}
+
 // PopulerEtiketler içeriği olan etiketleri, içerik sayısına göre döndürür.
 //
 // NEDEN "içeriği olan": mega menüdeki etiket bağlantıları buradan beslenir.

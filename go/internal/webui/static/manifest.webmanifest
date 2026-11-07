@@ -1,16 +1,16 @@
 {
-  "name": "theblock.com.tr",
-  "short_name": "theblock",
-  "description": "AI destekli, çok dilli haber platformu — hava durumu, namaz vakitleri, eczane, gündem ve günlük özet.",
+  "name": "BitCoŞaR",
+  "short_name": "BitCoŞaR",
+  "description": "Bitcoin, Ethereum ve kripto piyasalarından son haberler, analizler ve canlı fiyatlar.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait-primary",
-  "background_color": "#0b0e14",
-  "theme_color": "#121212",
+  "background_color": "#ffffff",
+  "theme_color": "#ffffff",
   "lang": "tr",
   "dir": "ltr",
-  "categories": ["news", "magazines", "weather"],
+  "categories": ["news", "finance", "magazines"],
   "icons": [
     { "src": "/static/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
     { "src": "/static/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
@@ -18,8 +18,8 @@
     { "src": "/static/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
   ],
   "shortcuts": [
-    { "name": "Son Dakika", "url": "/son-dakika" },
-    { "name": "Hava Durumu", "url": "/hava-durumu" },
-    { "name": "Günlük Özet", "url": "/ping" }
+    { "name": "Son Haberler", "url": "/latest-crypto-news" },
+    { "name": "Piyasalar", "url": "/markets" },
+    { "name": "Fiyatlar", "url": "/price" }
   ]
 }

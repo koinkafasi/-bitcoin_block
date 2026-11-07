@@ -39,20 +39,35 @@ func (s *Server) handleCDTag(w http.ResponseWriter, r *http.Request) {
 
 	simdi := time.Now()
 	var kartlar []templkit.CDStory
-	for _, c := range items {
+	var ldItems []cdLDItem
+	for i, c := range items {
 		kartlar = append(kartlar, cdStoryCevir(c, simdi))
+		if i < 11 {
+			it := cdLDItem{Headline: c.Title, URL: s.absBase(r) + makaleURL(c), Author: c.AuthorName}
+			if c.PublishedAt != nil {
+				it.Published = c.PublishedAt.UTC().Format(time.RFC3339)
+			}
+			ldItems = append(ldItems, it)
+		}
 	}
 
+	kanonik := s.cfg.BaseURL + "/tag/" + slug
 	v := templkit.CDSectionPage{
 		Shell:     s.cdShellCtx(ctx, ""),
 		Title:     "#" + ad + " — " + s.siteName,
 		Desc:      ad + " etiketli son kripto haberleri ve analizler.",
-		Canonical: s.cfg.BaseURL + "/tag/" + slug,
+		Canonical: kanonik,
 		Section:   "#" + ad,
 		Href:      "/tag/" + slug,
 		Page:      sayfa,
 		Stories:   kartlar,
-		JSONLD:    string(siteAdiJSONLD(s.siteName, s.cfg.BaseURL+"/tag/"+slug)),
+		// CoinDesk etiket sayfasında JSON-LD basmıyor; biz CollectionPage
+		// basıyoruz (Google'ın koleksiyon sayfası için doğru tipi).
+		JSONLD:          string(cdCollectionJSONLD(s.siteName, strings.TrimRight(s.cfg.BaseURL, "/"), ad, kanonik, ldItems)),
+		PageCategory:    "tag_page",
+		ContentCategory: "tag",
+		Locale:          "tr",
+		BaseURL:         strings.TrimRight(s.cfg.BaseURL, "/"),
 	}
 	if len(kartlar) > 0 {
 		v.Lead = kartlar[0]
@@ -119,20 +134,44 @@ func (s *Server) handleCDCoin(w http.ResponseWriter, r *http.Request) {
 	slug := repo.CoinSlug(bulunan.Name)
 	sym := bulunan.Sym
 	kanonik := s.cfg.BaseURL + "/price/" + slug
+	base := strings.TrimRight(s.cfg.BaseURL, "/")
+	fiyatMetin := repo.FiyatBicim(bulunan.Price)
+	degisimMetin := repo.DegisimBicim(bulunan.Change)
+	digerleri := s.cdFiyatSatirlari(r, 12)
+
+	// CoinDesk /price/{coin} yapısı: WebPage+FinancialProduct, BreadcrumbList,
+	// ItemList. FAQPage BİLİNÇLİ OLARAK YOK: soru-cevap metnimiz yok,
+	// uydurulmuş FAQ Google'ın spam politikasına girer.
+	var ldItems []cdLDItem
+	for _, row := range digerleri {
+		ldItems = append(ldItems, cdLDItem{Headline: row.Name, URL: base + row.Href})
+	}
+	var ld strings.Builder
+	ld.WriteString(string(cdCoinJSONLD(s.siteName, kanonik, bulunan.Name, sym, fiyatMetin, degisimMetin)))
+	ld.WriteString(string(breadcrumbScript([]crumb{
+		{Name: s.siteName, URL: base + "/"},
+		{Name: "Fiyatlar", URL: base + "/price"},
+		{Name: bulunan.Name, URL: kanonik},
+	})))
+	ld.WriteString(string(cdFiyatListesiJSONLD("Cryptocurrency Market Cap Rankings", ldItems)))
 
 	v := templkit.CDCoinPage{
-		Shell:     s.cdShellCtx(r.Context(), "price"),
-		Title:     bulunan.Name + " (" + sym + ") Fiyatı — " + s.siteName,
-		Desc:      bulunan.Name + " canlı fiyatı, 24 saatlik değişimi ve piyasa sıralaması.",
-		Canonical: kanonik,
-		Sym:       sym,
-		Name:      bulunan.Name,
-		Rank:      bulunan.Rank,
-		Price:     repo.FiyatBicim(bulunan.Price),
-		Change:    repo.DegisimBicim(bulunan.Change),
-		Up:        bulunan.Change >= 0,
-		Others:    s.cdFiyatSatirlari(r, 12),
-		JSONLD:    string(siteAdiJSONLD(s.siteName, kanonik)),
+		Shell:           s.cdShellCtx(r.Context(), "price"),
+		Title:           bulunan.Name + " (" + sym + ") Fiyatı — " + s.siteName,
+		Desc:            bulunan.Name + " canlı fiyatı, 24 saatlik değişimi ve piyasa sıralaması.",
+		Canonical:       kanonik,
+		Sym:             sym,
+		Name:            bulunan.Name,
+		Rank:            bulunan.Rank,
+		Price:           fiyatMetin,
+		Change:          degisimMetin,
+		Up:              bulunan.Change >= 0,
+		Others:          digerleri,
+		JSONLD:          ld.String(),
+		PageCategory:    "price_page",
+		ContentCategory: "price",
+		Locale:          "tr",
+		BaseURL:         base,
 	}
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.Header().Set("Cache-Control", "public, max-age=60")

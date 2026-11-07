@@ -167,9 +167,10 @@ func (s *Server) handleCDHome(w http.ResponseWriter, r *http.Request) {
 		TekGorsel: tekGorsel,
 		Akis:      akis,
 		Basin:     cdGeciciBasin(),
-		Videolar:  cdGeciciVideolar(),
+		Videolar:  s.cdYoutubeVideolar(r, 3),
 		Arastirma: cdGeciciArastirma(),
-		Klipler:   cdGeciciKlipler(),
+		Klipler:   s.cdYoutubeKlipler(r, 3),
+		Canli:     s.cdYoutubeCanli(r),
 		Sections:  sections,
 		MostRead:  s.cdPopuler(r, 6),
 		Opinion:   s.cdUzmanlar(r, 4),
@@ -178,6 +179,11 @@ func (s *Server) handleCDHome(w http.ResponseWriter, r *http.Request) {
 		// Google'da "aynı içerik" cezası riski).
 		Hreflang: map[string]string{"tr": s.cfg.BaseURL + "/"},
 		JSONLD:   string(orgJSONLD(s.siteName, strings.TrimRight(s.cfg.BaseURL, "/"), s.cfg.BaseURL+r.URL.Path)),
+		// CoinDesk ana sayfa sınıflandırması.
+		PageCategory:    "homepage",
+		ContentCategory: "homepage",
+		Locale:          "tr",
+		BaseURL:         strings.TrimRight(s.cfg.BaseURL, "/"),
 	}
 	// Fiyat şeridi (§3) — veri yoksa boş kalır, şablon basmaz.
 	d.Shell.Ticker = s.cdTickerDoldur(r)

@@ -1416,44 +1416,6 @@ func (s *Server) handleHit(w http.ResponseWriter, r *http.Request) {
 
 // ---- feed / sitemap / robots ----
 
-func (s *Server) handleFeed(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-	locale := langOf(r, s)
-	site := s.siteByDomain(ctx, r.Host)
-	abs := strings.TrimRight(s.absBase(r), "/")
-	slug := strings.TrimSpace(r.URL.Query().Get("kategori"))
-	if slug == "" {
-		slug = strings.TrimSpace(r.URL.Query().Get("category"))
-	}
-
-	title, link, desc := s.siteName, abs+homeURL(locale), s.siteName+" son haberler"
-	var items []repo.Content
-	if slug != "" {
-		var cat *repo.Category
-		cats := s.cachedCategories(ctx, site.ID)
-		for i := range cats {
-			if cats[i].Slug == slug && cats[i].Status == "yayinda" {
-				cat = &cats[i]
-				break
-			}
-		}
-		if cat == nil {
-			http.NotFound(w, r)
-			return
-		}
-		items, _ = repo.PublishedBySlug(ctx, s.pool, site.ID, slug, locale, 50)
-		title = cat.Name + " — " + s.siteName
-		link = abs + s.langBase(locale) + "/kategori/" + slug
-		desc = cat.Name + " kategorisindeki son haberler"
-	} else {
-		items, _ = repo.RecentPublished(ctx, s.pool, site.ID, locale, 50)
-	}
-
-	w.Header().Set("Content-Type", "application/rss+xml; charset=utf-8")
-	w.Header().Set("Cache-Control", cacheControlPublic)
-	w.Write([]byte(rssXML(title, link, desc, abs, items)))
-}
-
 // googleSourceURL Google News'te siteyi "kaynak" ekleme bağlantısını üretir:
 // https://www.google.com/preferences/source?q=<domain>
 //
@@ -1587,18 +1549,47 @@ func (s *Server) handleSitemapNews(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(s.newsSitemap(abs, items)))
 }
 
+// handleRobots /robots.txt — CoinDesk yapısı.
+//
+// KAYNAK (ölçüldü, 7 Kasım 2026): genel kurallar (API/dahili yollar kapalı,
+// arama parametreleri kapalı), ardından AI tarayıcıları için "yalnız fiyat
+// sayfaları" bloğu, en sonda sitemap listesi.
+//
+// NEDEN AI BLOĞU: CoinDesk içerik lisansı gereği AI tarayıcılarına yalnız
+// fiyat sayfalarını açıyor. Toplayıcı site olarak aynı politikayı
+// uyguluyoruz — atıf vermeyen model eğitimi trafiği sunucu maliyeti.
 func (s *Server) handleRobots(w http.ResponseWriter, r *http.Request) {
 	abs := s.absBase(r)
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	w.Header().Set("Cache-Control", cacheControlPublic)
-	w.Write([]byte("User-agent: *\nAllow: /\n" +
-		"Disallow: /arsiv/dizin\n" +
-		"Disallow: /gizli-dizin\n" +
-		"User-agent: GPTBot\nDisallow: /\n" +
-		"User-agent: ClaudeBot\nDisallow: /\n" +
-		"User-agent: Google-Extended\nDisallow: /\n" +
-		"Sitemap: " + abs + "/sitemap.xml\n" +
-		"Sitemap: " + abs + "/sitemap-news.xml\n"))
+
+	var sb strings.Builder
+	sb.WriteString("User-agent: *\nAllow: /\n")
+	for _, yol := range []string{
+		"/api/", "/admin/", "/internal/", "/hits/", "/webhooks/",
+		"/arama?q=", "/?q=", "/?s=", "/giris", "/kayit", "/admin/giris",
+		"/arsiv/dizin", "/gizli-dizin", "/*/amp",
+	} {
+		sb.WriteString("Disallow: " + yol + "\n")
+	}
+
+	sb.WriteString("\n# AI tarayıcıları — yalnız fiyat sayfaları\n")
+	for _, bot := range []string{
+		"Amazonbot", "anthropic-ai", "Applebot-Extended", "Bytespider",
+		"CCBot", "ClaudeBot", "Claude-Web", "cohere-ai", "DataForSeoBot",
+		"Diffbot", "FacebookBot", "FriendlyCrawler", "Google-Extended",
+		"GPTBot", "Meta-ExternalAgent", "meta-externalagent", "omgili",
+		"omgilibot", "PerplexityBot", "Quora-Bot", "Scrapy", "TurnitinBot",
+	} {
+		sb.WriteString("\nUser-agent: " + bot + "\nAllow: /price/\nDisallow: /\n")
+	}
+
+	sb.WriteString("\n# Sitemap indeksleri\n")
+	sb.WriteString("Sitemap: " + abs + "/sitemap-index.xml\n")
+	sb.WriteString("Sitemap: " + abs + "/news-sitemap-index\n")
+	sb.WriteString("Sitemap: " + abs + "/sitemap-news.xml\n")
+	sb.WriteString("Sitemap: " + abs + "/sitemap.xml\n")
+	_, _ = w.Write([]byte(sb.String()))
 }
 
 func (s *Server) handleAdsTxt(w http.ResponseWriter, r *http.Request) {
@@ -2049,6 +2040,19 @@ func (s *Server) handleManifest(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 		return
 	}
+	// Marka alanları sunucudaki ayarlardan gelir: ad değişince manifest
+	// de değişir, iki yerde farklı isim kalması (PWA kurulumunda eski ad)
+	// önlenir.
+	var m map[string]any
+	if json.Unmarshal(b, &m) == nil {
+		m["name"] = s.siteName
+		m["short_name"] = s.siteName
+		m["start_url"] = "/"
+		m["scope"] = "/"
+		if nb, err := json.Marshal(m); err == nil {
+			b = nb
+		}
+	}
 	w.Header().Set("Content-Type", "application/manifest+json; charset=utf-8")
 	w.Header().Set("Cache-Control", "public, max-age=3600")
 	_, _ = w.Write(b)
@@ -2092,28 +2096,6 @@ func themeFromReq(r *http.Request) string {
 func homeTitle(site, locale string) string {
 	_ = locale
 	return site
-}
-
-// rssXML basit RSS 2.0 üretir.
-func rssXML(channelTitle, channelLink, channelDesc, siteBase string, items []repo.Content) string {
-	siteBase = strings.TrimRight(siteBase, "/")
-	var sb strings.Builder
-	sb.WriteString(`<?xml version="1.0" encoding="UTF-8"?>` + "\n")
-	sb.WriteString(`<rss version="2.0"><channel><title>` + html.EscapeString(channelTitle) + `</title><link>` + html.EscapeString(channelLink) + `</link><description>` + html.EscapeString(channelDesc) + `</description>`)
-	for _, it := range items {
-		u := siteBase + publicArticleURL(it.Locale, it.DisplaySlug(), it.ID)
-		sb.WriteString("<item><title>" + html.EscapeString(it.Title) + "</title>")
-		sb.WriteString("<link>" + html.EscapeString(u) + "</link>")
-		if it.Spot != "" {
-			sb.WriteString("<description>" + html.EscapeString(it.Spot) + "</description>")
-		}
-		if it.PublishedAt != nil {
-			sb.WriteString("<pubDate>" + it.PublishedAt.UTC().Format("Mon, 02 Jan 2006 15:04:05 GMT") + "</pubDate>")
-		}
-		sb.WriteString("<guid>" + html.EscapeString(u) + "</guid></item>")
-	}
-	sb.WriteString("</channel></rss>")
-	return sb.String()
 }
 
 func mimeByExt(path string) string {

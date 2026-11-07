@@ -62,7 +62,7 @@ func (s *Server) handleCDArticle(w http.ResponseWriter, r *http.Request, lang, s
 		Headline:    c.Title,
 		Spot:        c.Spot,
 		BodyHTML:    string(s.blocksToHTML(c.Detail, nil)),
-		Image:       c.ImageURL,
+		Image:       cdMakaleGorsel(c, s),
 		BaseURL:     strings.TrimRight(s.cfg.BaseURL, "/"),
 	}
 	if c.AuthorName != "" {
@@ -141,8 +141,68 @@ func (s *Server) handleCDArticle(w http.ResponseWriter, r *http.Request, lang, s
 		}
 	}
 
-	// NewsArticle + BreadcrumbList (Go tarafında; templ script içini ham sayar).
-	v.JSONLD = string(makaleJSONLD(v, makaleYayinISO(c)))
+	// NewsArticle (CoinDesk alan seti) + ayrı BreadcrumbList bloğu.
+	// Go tarafında üretiliyor; templ `<script>` içini ham sayar.
+	var yazarSlug string
+	if c.AuthorID > 0 {
+		if ref, err := repo.PersonRefByID(ctx, s.pool, c.AuthorID); err == nil {
+			yazarSlug = ref.Slug
+			// Yazar adı CoinDesk'te yazar sayfasına bağlanır (spec §10.2).
+			v.AuthorURL = "/yazar/" + ref.Slug
+		}
+	}
+	var anahtar []string
+	for _, e := range v.Tags {
+		anahtar = append(anahtar, e.Ad)
+	}
+	yayinISO := makaleYayinISO(c)
+	guncelISO := yayinISO
+	if !c.UpdatedAt.IsZero() {
+		guncelISO = c.UpdatedAt.UTC().Format("2006-01-02T15:04:05Z")
+	}
+	v.JSONLD = string(makaleJSONLD(makaleLDGirdi{
+		View: v, YayinISO: yayinISO, GuncelISO: guncelISO,
+		ID: itoa64(c.ID), YazarSlug: yazarSlug, Keywords: anahtar,
+		GorselAlt: v.ImageCredit,
+		Gorsel:    s.mutlakGorsel(strings.TrimRight(s.cfg.BaseURL, "/"), v.Image),
+	}))
+	v.BreadcrumbJSONLD = string(makaleBreadcrumbJSONLD(v))
+
+	// CoinDesk makale meta seti (Arc/Parse.ly). Yalnız gerçek veri.
+	v.Metas = cdMakaleMetas(s.siteName, makaleMetaGirdi{
+		ID:         itoa64(c.ID),
+		Baslik:     c.Title,
+		Bolum:      bolumAd,
+		BolumSlug:  bolumSlug,
+		Yazar:      v.Author,
+		YazarSlug:  yazarSlug,
+		Kanonik:    v.Canonical,
+		Gorsel:     s.mutlakGorsel(strings.TrimRight(s.cfg.BaseURL, "/"), c.ImageURL),
+		YayinISO:   yayinISO,
+		YayinTarih: yayinTarihKisa(c),
+		YayinSaat:  yayinSaatKisa(c),
+		Etiketler:  anahtar,
+	})
+	// hreflang: yalnız GERÇEK çeviriler. /en/... adresleri theblock
+	// şablonuyla servis ediliyor; adres biçimi publicArticleURL'den gelir.
+	// Çeviri yoksa yalnız x-default basılır (cdHead kuralı).
+	diller := map[string]string{"tr": v.Canonical}
+	if trs, err := repo.TranslationsOf(ctx, s.pool, c.TranslationRootID()); err == nil {
+		for _, t := range trs {
+			if t.ID == c.ID || t.Status != "yayinda" || t.Locale == "tr" {
+				continue
+			}
+			diller[t.Locale] = strings.TrimRight(s.cfg.BaseURL, "/") +
+				publicArticleURL(t.Locale, t.DisplaySlug(), t.ID)
+		}
+	}
+	if len(diller) > 1 {
+		v.Hreflang = diller
+	}
+	v.PageCategory = "article_page"
+	v.ContentCategory = bolumSlug
+	v.Locale = "tr"
+	v.ImageAlt = v.ImageCredit
 
 	// Paylaşım bağlantıları: mutlak adres + başlık (URL-encoded).
 	v.ShareURL = v.Canonical
@@ -188,6 +248,35 @@ func cdOkumaDakika(spot, govde string) int {
 		return 1
 	}
 	return d
+}
+
+// cdMakaleGorsel makalenin kapak görseli: kaynağın görseli varsa o,
+// yoksa editörün yüklediği kapak (cover_media_id). İkisi de yoksa boş —
+// uydurma görsel basılmaz.
+func cdMakaleGorsel(c repo.Content, s *Server) string {
+	if strings.TrimSpace(c.ImageURL) != "" {
+		return c.ImageURL
+	}
+	if c.CoverMediaID != nil && *c.CoverMediaID > 0 {
+		return s.mediaURL(c.CoverMediaID)
+	}
+	return ""
+}
+
+// yayinTarihKisa CoinDesk `create_date` biçimi (YYYYMMDD).
+func yayinTarihKisa(c repo.Content) string {
+	if c.PublishedAt == nil {
+		return ""
+	}
+	return c.PublishedAt.Format("20060102")
+}
+
+// yayinSaatKisa CoinDesk `create_time` biçimi (HH:MM, yerel saat).
+func yayinSaatKisa(c repo.Content) string {
+	if c.PublishedAt == nil {
+		return ""
+	}
+	return c.PublishedAt.Format("15:04")
 }
 
 // kirpRune metni rune sınırında kırpar (UTF-8 bozulmasın).

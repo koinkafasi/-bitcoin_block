@@ -687,6 +687,8 @@ templ CDHome(v CDHomeView) {
 			@cdHead(CDHead{Title: v.Title, Desc: v.Desc, Canonical: v.Canonical,
 				OGType: "website", Image: v.Lead.Image, Hreflang: v.Hreflang,
 				SiteName: v.Shell.SiteName, RSSFeed: "/rss.xml", JSONLD: v.JSONLD,
+				Locale: v.Locale, PageCategory: v.PageCategory, BaseURL: v.BaseURL,
+				ContentCategory: v.ContentCategory,
 				LCPGorsel: cdLCPOnYukle(v.Lead)})
 		</head>
 		<body class="cd">
@@ -705,6 +707,7 @@ templ CDHome(v CDHomeView) {
 					<section class="cd-mod cd-mod--cizgisiz">
 						<div class="cd-hero">
 							<aside class="cd-hero__sol">
+								@cdCanliModul(v.Canli)
 								@cdHeroSolRay(v.RailLeft)
 								if v.Dusunce != nil {
 									@cdDusunceModul(*v.Dusunce)

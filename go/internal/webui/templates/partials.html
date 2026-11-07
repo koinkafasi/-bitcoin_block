@@ -2,6 +2,7 @@
 <title>{{.MetaTitle}}</title>
 <meta name="description" content="{{.MetaDesc}}">
 <meta name="robots" content="{{.Robots}}">
+{{if .PageCategory}}<meta name="page_url" content="{{.Canonical}}"><meta name="media_type" content="html"><meta name="page_category" content="{{.PageCategory}}">{{if .ContentCategory}}<meta name="content_category" content="{{.ContentCategory}}">{{end}}<meta name="content_language" content="{{.Lang}}">{{end}}
 {{/* Search Console site doğrulaması (panel: Ayarlar → Google Site Doğrulama).
      Boşsa hiç basılmaz; değer sunucuda biçim denetiminden geçer. */}}
 {{if .GVerification}}<meta name="google-site-verification" content="{{.GVerification}}">{{end}}

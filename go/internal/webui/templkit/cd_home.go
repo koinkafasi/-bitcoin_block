@@ -127,16 +127,25 @@ type CDHomeView struct {
 	Videolar  []CDVideo
 	Arastirma []CDArastirma
 	Klipler   []CDKlip
-	MostRead  []CDStory    // §21 — 1 büyük + 5 satır
-	Opinion   []CDUzman    // §20 — uzman adı + unvan + avatar
-	Prices    []CDPriceRow // §14
-	Sections  []CDSection
+	// Canli sol kolonun EN ÜSTÜNDEKİ canlı yayın modülü (Son Haberler'in
+	// üstünde). VideoID boşsa modül basılmaz.
+	Canli    CDCanli
+	MostRead []CDStory    // §21 — 1 büyük + 5 satır
+	Opinion  []CDUzman    // §20 — uzman adı + unvan + avatar
+	Prices   []CDPriceRow // §14
+	Sections []CDSection
 	// Hreflang gerçek çeviriler (dil → mutlak URL). Yalnız çevirisi
 	// olanlar; boşsa x-default basılır.
 	Hreflang map[string]string
 	// JSONLD Go tarafında üretilmiş yapısal veri (script etiketiyle).
 	// templ `<script>` içeriğini ham saydığı için burada taşınır.
 	JSONLD string
+	// CoinDesk SEO sınıflandırması (bkz. templkit.CDHead).
+	PageCategory    string
+	ContentCategory string
+	Locale          string
+	// BaseURL og:image mutlaklaştırması için kök adres.
+	BaseURL string
 }
 
 // CDArticleView makale sayfası (§7).
@@ -183,6 +192,17 @@ type CDArticleView struct {
 	BaseURL string
 	// JSONLD Go tarafında üretilmiş NewsArticle + BreadcrumbList.
 	JSONLD string
+	// BreadcrumbJSONLD ikinci yapısal veri bloğu (BreadcrumbList).
+	BreadcrumbJSONLD string
+	// Hreflang gerçek çeviriler (dil → mutlak URL).
+	Hreflang map[string]string
+	// PageCategory/ContentCategory/Locale/ImageAlt/Metas: head'e geçen
+	// CoinDesk SEO alanları (bkz. templkit.CDHead).
+	PageCategory    string
+	ContentCategory string
+	Locale          string
+	ImageAlt        string
+	Metas           []CDMeta
 	// ShareURL paylaşım bağlantıları için mutlak adres.
 	ShareURL string
 	// ShareX / ShareWhatsApp / ShareLinkedIn hazır paylaşım adresleri.
@@ -214,6 +234,12 @@ type CDSectionPage struct {
 	NextHref  string
 	// JSONLD Go tarafında üretilmiş yapısal veri.
 	JSONLD string
+	// CoinDesk SEO sınıflandırması (bkz. templkit.CDHead).
+	PageCategory    string
+	ContentCategory string
+	Locale          string
+	// BaseURL og:image mutlaklaştırması için kök adres.
+	BaseURL string
 }
 
 // cdBasinGeri / cdBasinIleri JS'siz slider'ın halka gezinmesi.

@@ -55,27 +55,33 @@ type tmplData struct {
 	OGImageGenis bool
 	// BreadcrumbJSONLD sayfa tipine göre kırıntı yolu yapısal verisi.
 	BreadcrumbJSONLD template.JS
-	Theme            string
-	Year             string
-	RTL              bool
-	Locales          []i18n.Locale
-	NavCategories    []repo.Category
-	Menu             []MenuRow
-	MenuDesign       string
-	CatNavDesign     string
-	MenuBgCSS        template.CSS
-	MenuEdit         *menuEditData
-	RSSList          *rssListData
-	AISource         *aiSourceData
-	TabCatsEdit      *tabCatsEditData
-	Header           *HeaderConfig
-	HeaderEdit       *headerEditData
-	Footer           *FooterConfig
-	FooterEdit       *footerEditData
-	Brand            *BrandConfig
-	BrandEdit        *brandEditData
-	SiteBg           template.CSS // public body arka planı (boşsa varsayılan ana-bg.svg)
-	DesignCSS        template.CSS // public ölçü/kenarlık token'ları (:root)
+	// PersonJSONLD /yazar/{slug} WebPage+Person yapısal verisi (CoinDesk).
+	PersonJSONLD template.JS
+	// PageCategory/ContentCategory: CoinDesk sayfa sınıflandırması. Boşsa
+	// hiç basılmaz (theblock şablonları bu alanları kullanmıyor).
+	PageCategory    string
+	ContentCategory string
+	Theme           string
+	Year            string
+	RTL             bool
+	Locales         []i18n.Locale
+	NavCategories   []repo.Category
+	Menu            []MenuRow
+	MenuDesign      string
+	CatNavDesign    string
+	MenuBgCSS       template.CSS
+	MenuEdit        *menuEditData
+	RSSList         *rssListData
+	AISource        *aiSourceData
+	TabCatsEdit     *tabCatsEditData
+	Header          *HeaderConfig
+	HeaderEdit      *headerEditData
+	Footer          *FooterConfig
+	FooterEdit      *footerEditData
+	Brand           *BrandConfig
+	BrandEdit       *brandEditData
+	SiteBg          template.CSS // public body arka planı (boşsa varsayılan ana-bg.svg)
+	DesignCSS       template.CSS // public ölçü/kenarlık token'ları (:root)
 	// GA4Measurement doğrulanmış GA4 ölçüm kimliğidir (G-XXXX). Boşsa public
 	// sayfa hiçbir üçüncü taraf izleme kodu basmaz — bkz. ga4.go.
 	GA4Measurement string

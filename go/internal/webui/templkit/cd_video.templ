@@ -1,0 +1,314 @@
+package templkit
+
+// YouTube video sayfaları — CoinDesk /videos ve /videos/shorts ölçüsüyle.
+//
+// ÖLÇÜLEN (coindesk.com/videos, 1440 px, 7 Kasım 2026):
+//   • Üst bant tam genişlik SİYAH (#000), dikey dolgu 32.
+//   • İçinde iki kolon: büyük oynatıcı (937×527 = 16/9) + 24 boşluk +
+//     "Up Next" listesi (416 sabit). Liste 1284 px altında gizlenir.
+//   • Oynatıcının ALTINDA başlık 36/44 w500 ortalı beyaz, spot 18/24
+//     ortalı #a6a6a6, meta 12/16 ortalı.
+//   • Bölüm başlığı: 1 px #585858 üst çizgi + 24 dolgu + 16/32 w500 BÜYÜK
+//     HARF #949494; ardından 4 kolonlu ızgara (327 kart, gap 24).
+//   • Kart: 16/9 görsel (radius 4) + süre rozeti (siyah, sol alt) +
+//     başlık 16/24 + meta 12/16.
+//
+// OYNATMA: iframe baştan yüklenmez (sayfa ağırlığı + CSP/üçüncü taraf
+// isteği). Kapak + oynat düğmesi basılır; tıklanınca cd-video.js iframe'i
+// yerleştirir. JS yoksa düğme kapak görselindeki bağlantı gibi davranmaz —
+// bu yüzden <a> yerine <button> ve `data-cd-video` kullanılıyor; JS
+// çalışmayan tarayıcıda kullanıcı başlık bağlantısından YouTube'a gider.
+
+// cdVPlayer büyük oynatıcı (kapak + oynat düğmesi).
+templ cdVPlayer(v CDVideoHero, dikey bool) {
+	<div class={ cdVPlayerSinif(dikey) }>
+		<button class="cd-vplayer__kapak" type="button" data-cd-video={ v.VideoID }
+			data-cd-baslik={ v.Baslik } aria-label={ "Videoyu oynat: " + v.Baslik }>
+			if v.Image != "" {
+				<img class="cd-vplayer__gorsel" src={ v.Image } alt="" loading="eager"
+					fetchpriority="high" decoding="async" referrerpolicy="no-referrer"/>
+			}
+			<span class="cd-vplayer__oynat" aria-hidden="true">
+				<svg viewBox="0 0 24 24" width="26" height="26" fill="currentColor" focusable="false">
+					<path d="M8 5v14l11-7z"></path>
+				</svg>
+			</span>
+			if v.Canli {
+				<span class="cd-vplayer__rozet cd-vplayer__rozet--canli">
+					<span class="cd-vplayer__nokta" aria-hidden="true"></span>CANLI
+				</span>
+			}
+			if v.Sure != "" && !v.Canli {
+				<span class="cd-vplayer__rozet">{ v.Sure }</span>
+			}
+		</button>
+	</div>
+}
+
+// cdVPlayerCanli kanalın O ANKİ canlı yayınına bağlanan oynatıcı.
+//
+// `live_stream?channel=` kullanılıyor: yayın kimliği değişse de (her gün yeni
+// yayın) doğru akış açılır; video kimliğini saklamak bir sonraki yayında
+// bayat bir kayda götürürdü.
+templ cdVPlayerCanli(kanalID, baslik string) {
+	<div class="cd-vplayer">
+		<iframe class="cd-vplayer__iframe"
+			src={ "https://www.youtube-nocookie.com/embed/live_stream?channel=" + kanalID + "&rel=0" }
+			title={ baslik } loading="lazy" allowfullscreen
+			allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"></iframe>
+	</div>
+}
+
+// cdVSatir "Sıradaki" satırı: solda 142×80 kapak, sağda başlık.
+templ cdVSatir(s CDVideoSatir) {
+	<a class="cd-vsatir" href={ s.Href }>
+		<span class="cd-vsatir__gorsel">
+			if s.Image != "" {
+				<img src={ s.Image } alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer"/>
+			}
+			if s.Sure != "" && !s.Canli {
+				<span class="cd-vsatir__sure">{ s.Sure }</span>
+			}
+			if s.Canli {
+				<span class="cd-vsatir__canli">CANLI</span>
+			}
+		</span>
+		<span class="cd-vsatir__metin">
+			<span class="cd-vsatir__baslik">{ s.Baslik }</span>
+			if s.Zaman != "" {
+				<span class="cd-vsatir__zaman">{ s.Zaman }</span>
+			}
+		</span>
+	</a>
+}
+
+// cdVKart ızgara kartı (16/9 veya 9/16).
+templ cdVKart(k CDVideoKutu) {
+	<article class={ cdVKartSinif(k.Dikey) }>
+		<a class="cd-vkart__gorsel" href={ k.Href } tabindex="-1" aria-hidden="true">
+			if k.Image != "" {
+				<img src={ k.Image } alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer"/>
+			}
+			if k.Sure != "" && !k.Canli {
+				<span class="cd-vkart__sure">{ k.Sure }</span>
+			}
+			if k.Canli {
+				<span class="cd-vkart__canli">CANLI</span>
+			}
+			<span class="cd-vkart__oynat" aria-hidden="true">
+				<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" focusable="false">
+					<path d="M8 5v14l11-7z"></path>
+				</svg>
+			</span>
+		</a>
+		<a class="cd-vkart__baslik" href={ k.Href }>{ k.Baslik }</a>
+		if k.Zaman != "" {
+			<time class="cd-vkart__zaman">{ k.Zaman }</time>
+		}
+	</article>
+}
+
+// cdVBaslik bölüm başlığı (üst çizgi + büyük harf).
+templ cdVBaslik(metin string) {
+	<h2 class="cd-vbolum__bas">{ metin }</h2>
+}
+
+// cdVSekmeler video üst gezinmesi (Videolar · Shorts · Canlı Yayın).
+templ cdVSekmeler(sekmeler []CDVideoSekme) {
+	if len(sekmeler) > 0 {
+		<nav class="cd-vsekmeler" aria-label="Video bölümleri">
+			for _, s := range sekmeler {
+				if s.Aktif {
+					<a class="cd-vsekme cd-vsekme--aktif" href={ s.Href } aria-current="page">{ s.Label }</a>
+				} else {
+					<a class="cd-vsekme" href={ s.Href }>{ s.Label }</a>
+				}
+			}
+		</nav>
+	}
+}
+
+// cdVIzgara kutu ızgarası.
+templ cdVIzgara(kutular []CDVideoKutu, dikey bool) {
+	<div class="cd-vizgara">
+		for _, k := range kutular {
+			@cdVKart(k)
+		}
+	</div>
+}
+
+// CDVideoPageView /videos · /videos/shorts · /canli-yayin.
+templ CDVideoPageView(v CDVideoPage) {
+	<!doctype html>
+	<html lang="tr">
+		<head>
+			@cdHead(CDHead{Title: v.Title, Desc: v.Desc, Canonical: v.Canonical,
+				OGType: "website", Image: v.Hero.Image, SiteName: v.Shell.SiteName,
+				RSSFeed: "/rss.xml", JSONLD: v.JSONLD})
+		</head>
+		<body class="cd">
+			@cdTopbar(v.Shell)
+			@cdTicker(v.Shell)
+			<main class="cd-main">
+				<section class="cd-vband">
+					<div class="cd-wrap cd-vband__ic">
+						<div class="cd-vband__sol">
+							<p class="cd-vband__etiket">{ v.Baslik }</p>
+							if v.KanalID != "" {
+								@cdVPlayerCanli(v.KanalID, v.Hero.Baslik)
+							} else if v.Hero.VideoID != "" {
+								@cdVPlayer(v.Hero, v.Dikey)
+							}
+							if v.Hero.Baslik != "" {
+								<h1 class="cd-vband__baslik">{ v.Hero.Baslik }</h1>
+							}
+							if v.Hero.Spot != "" {
+								<p class="cd-vband__spot">{ v.Hero.Spot }</p>
+							}
+							if v.Hero.Zaman != "" {
+								<p class="cd-vband__meta">{ v.Hero.Zaman }</p>
+							}
+						</div>
+						if len(v.Siradaki) > 0 {
+							<aside class="cd-vband__sag">
+								<p class="cd-vband__etiket">Sıradaki</p>
+								<div class="cd-vband__liste">
+									for _, s := range v.Siradaki {
+										@cdVSatir(s)
+									}
+								</div>
+							</aside>
+						}
+					</div>
+				</section>
+				<div class="cd-wrap cd-vgovde">
+					@cdVSekmeler(v.Sekmeler)
+					if len(v.Videolar) > 0 {
+						<section class="cd-vbolum">
+							@cdVBaslik("Son Videolar")
+							@cdVIzgara(v.Videolar, false)
+						</section>
+					}
+					if len(v.Shorts) > 0 {
+						<section class="cd-vbolum">
+							@cdVBaslik("Shorts")
+							@cdVIzgara(v.Shorts, true)
+						</section>
+					}
+					if len(v.Yayinlar) > 0 {
+						<section class="cd-vbolum">
+							@cdVBaslik("Canlı Yayınlar")
+							@cdVIzgara(v.Yayinlar, false)
+						</section>
+					}
+					if len(v.Videolar) == 0 && len(v.Shorts) == 0 && len(v.Yayinlar) == 0 && v.Hero.VideoID == "" {
+						<div class="cd-bos"><p>{ v.BosMetin }</p></div>
+					}
+				</div>
+			</main>
+			@cdFooter(v.Shell)
+			<script src={ "/static/cd-video.js?v=" + cdVarlik() } defer></script>
+		</body>
+	</html>
+}
+
+// CDVideoWatchView tek video sayfası.
+templ CDVideoWatchView(v CDVideoWatch) {
+	<!doctype html>
+	<html lang="tr">
+		<head>
+			@cdHead(CDHead{Title: v.Title, Desc: v.Desc, Canonical: v.Canonical,
+				OGType: "video.other", Image: v.Video.Image, SiteName: v.Shell.SiteName,
+				RSSFeed: "/rss.xml", JSONLD: v.JSONLD})
+		</head>
+		<body class="cd">
+			@cdTopbar(v.Shell)
+			@cdTicker(v.Shell)
+			<main class="cd-main">
+				<section class="cd-vband">
+					<div class="cd-wrap cd-vband__ic">
+						<div class="cd-vband__sol">
+							<p class="cd-vband__etiket">{ v.Video.Etiket }</p>
+							@cdVPlayer(v.Video, v.Dikey)
+							<h1 class="cd-vband__baslik">{ v.Video.Baslik }</h1>
+							if v.Video.Zaman != "" {
+								<p class="cd-vband__meta">{ v.Video.Zaman }</p>
+							}
+						</div>
+						if len(v.Siradaki) > 0 {
+							<aside class="cd-vband__sag">
+								<p class="cd-vband__etiket">Sıradaki</p>
+								<div class="cd-vband__liste">
+									for _, s := range v.Siradaki {
+										@cdVSatir(s)
+									}
+								</div>
+							</aside>
+						}
+					</div>
+				</section>
+				<div class="cd-wrap cd-vgovde">
+					@cdVSekmeler(v.Sekmeler)
+					if v.Aciklama != "" {
+						<section class="cd-vbolum">
+							@cdVBaslik("Açıklama")
+							<p class="cd-vaciklama">{ v.Aciklama }</p>
+						</section>
+					}
+					if len(v.Videolar) > 0 {
+						<section class="cd-vbolum">
+							@cdVBaslik("Son Videolar")
+							@cdVIzgara(v.Videolar, false)
+						</section>
+					}
+					if len(v.Shorts) > 0 {
+						<section class="cd-vbolum">
+							@cdVBaslik("Shorts")
+							@cdVIzgara(v.Shorts, true)
+						</section>
+					}
+				</div>
+			</main>
+			@cdFooter(v.Shell)
+			<script src={ "/static/cd-video.js?v=" + cdVarlik() } defer></script>
+		</body>
+	</html>
+}
+
+// cdCanliModul ana sayfa SOL KOLONU — "Son Haberler"in ÜSTÜNDE.
+//
+// CoinDesk sol rayındaki canlı blog kartıyla aynı geometri: 290 genişlik,
+// 16/9 kapak, üstünde CANLI rozeti, altında başlık 16/24 w500 + zaman
+// 12/18. Modül çizgisiz (sol kolonun ilk öğesi).
+templ cdCanliModul(c CDCanli) {
+	if c.VideoID != "" || c.Href != "" {
+		<section class="cd-ray cd-canli">
+			<a class="cd-ray__bas" href={ c.Href }>
+				Canlı Yayın
+				@cdRayOk()
+			</a>
+			<a class="cd-canli__gorsel" href={ c.Href } tabindex="-1" aria-hidden="true">
+				if c.Image != "" {
+					<img src={ c.Image } alt="" loading="eager" fetchpriority="high"
+						decoding="async" referrerpolicy="no-referrer"/>
+				}
+				if c.Canli {
+					<span class="cd-canli__rozet cd-canli__rozet--canli">
+						<span class="cd-canli__nokta" aria-hidden="true"></span>CANLI
+					</span>
+				} else {
+					<span class="cd-canli__rozet">SON YAYIN</span>
+				}
+				<span class="cd-canli__oynat" aria-hidden="true">
+					<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" focusable="false">
+						<path d="M8 5v14l11-7z"></path>
+					</svg>
+				</span>
+			</a>
+			<a class="cd-canli__baslik" href={ c.Href }>{ c.Baslik }</a>
+			if c.Zaman != "" {
+				<time class="cd-ray__saat">{ c.Zaman }</time>
+			}
+		</section>
+	}
+}

@@ -275,6 +275,10 @@ func (s *Server) routes() {
 	// Mega menünün bağlandığı ek sayfalar (hepsi gerçek; boşsa dürüst
 	// boş durum basar). Ölçüm: bu dört yol menüde 404 veriyordu.
 	s.mux.HandleFunc("GET /videos", s.handleCDVideos)
+	s.mux.HandleFunc("GET /videos/shorts", s.handleCDShorts)
+	s.mux.HandleFunc("GET /video/{id}", s.handleCDVideoWatch)
+	// Canlı yayın sayfası (YouTube kanalına bağlanır, bkz. cd_video.go).
+	s.mux.HandleFunc("GET /canli-yayin", s.handleCDCanli)
 	s.mux.HandleFunc("GET /podcasts", s.handleCDPodcasts)
 	s.mux.HandleFunc("GET /sponsored-content", s.handleCDSponsored)
 	s.mux.HandleFunc("GET /newsletters", s.handleCDNewsletters)
@@ -308,6 +312,15 @@ func (s *Server) routes() {
 	s.mux.HandleFunc("GET /ads.txt", s.handleAdsTxt)
 	s.mux.HandleFunc("GET /sitemap.xml", s.handleSitemap)
 	s.mux.HandleFunc("GET /sitemap-news.xml", s.handleSitemapNews)
+	// CoinDesk'in BÖLÜNMÜŞ sitemap ailesi (7 Kasım 2026): indeks + sabit
+	// sayfalar + haber dilimleri + fiyat sayfaları. Tek dosyalık
+	// /sitemap.xml yukarıda korunuyor (BİK resmî ilanları orada).
+	s.mux.HandleFunc("GET /sitemap-index.xml", s.handleSitemapIndex)
+	// Go mux joker'i segment ORTASINDA kabul etmiyor (`articles-{n}.xml`
+	// panikliyor); tek joker alınıp dosya adı handler'da çözülüyor.
+	s.mux.HandleFunc("GET /sitemaps/{dosya}", s.handleSitemapsDosya)
+	// Haber sitemap indeksi (CoinDesk: /arc/outboundfeeds/news-sitemap-index).
+	s.mux.HandleFunc("GET /news-sitemap-index", s.handleNewsSitemapIndex)
 	s.mux.HandleFunc("GET /rss.xml", s.handleFeed)
 	s.mux.HandleFunc("GET /rss", s.handleFeed)
 	s.mux.HandleFunc("GET /rss-listesi", s.handleRSSList)
@@ -503,6 +516,12 @@ func (s *Server) routes() {
 		{"POST", "/admin/footer/kaydet", s.handleFooterSave},
 		{"GET", "/admin/marka", s.handleBrandGet},
 		{"POST", "/admin/marka/kaydet", s.handleBrandSave},
+		// YouTube video & canlı yayın yönetimi (kanal, aralık, öne çıkan,
+		// canlı işareti). Sayfalar: /videos · /videos/shorts · /canli-yayin.
+		{"GET", "/admin/video-yayin", s.handleVideoYayinGet},
+		{"POST", "/admin/video-yayin/ayar", s.handleVideoYayinAyar},
+		{"POST", "/admin/video-yayin/cek", s.handleVideoYayinCek},
+		{"POST", "/admin/video-yayin/{id}/{islem}", s.handleVideoYayinIslem},
 		{"GET", "/admin/geri-bildirim", s.handleFeedbackQueue},
 		{"POST", "/admin/geri-bildirim/{id}", s.handleFeedbackResolve},
 		{"GET", "/admin/mahrecler", s.handleMahretsGet},

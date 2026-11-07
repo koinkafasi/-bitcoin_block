@@ -192,9 +192,17 @@ func TestCDEtiketlerDuz(t *testing.T) {
 // Değerler px olarak yazılı ve her jetonun gerekçesi yorumda duruyor.
 // Gerçek maliyet sıkıştırılmış boyut: bu dosya gzip'te ~14 KB — tek
 // bloklayıcı CSS için kabul edilebilir.
+//
+// 7 Kasım 2026, on altıncı tur → 112 KB: YouTube video ailesi eklendi
+// (coindesk.com/videos ve /videos/shorts ölçümü): siyah üst bant, 16/9
+// oynatıcı + kapak/oynat katmanı, 142×80 "Sıradaki" satırları, 4 kolonlu
+// ızgara + süre/rozet katmanları, 9/16 short kartları ve ana sayfa sol
+// rayındaki canlı yayın modülü. Hepsi ayrı bir sayfa ailesi; mevcut
+// kurallarla (`.cd-card`, `.cd-ray`) paylaşılamıyor çünkü oynatıcı bandı
+// koyu-fixed renk kullanıyor ve tema dönüşünde değişmiyor.
 func TestCDButce(t *testing.T) {
 	css := cdCSS(t)
-	assert.Less(t, len(css), 100*1024, "cd.css bütçe aşıldı: %d bayt", len(css))
+	assert.Less(t, len(css), 112*1024, "cd.css bütçe aşıldı: %d bayt", len(css))
 }
 
 // TestCDModulRitmi: modüller MARGIN YAZMAZ, ritim ebeveynin gap'inden

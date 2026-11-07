@@ -80,19 +80,34 @@ func (s *Server) handleCDSection(w http.ResponseWriter, r *http.Request, slug st
 
 	simdi := time.Now()
 	var kartlar []templkit.CDStory
-	for _, c := range items {
+	var ldItems []cdLDItem
+	for i, c := range items {
 		kartlar = append(kartlar, cdStoryCevir(c, simdi))
+		if i < 11 {
+			// CoinDesk CollectionPage ItemList: 11 en yeni haber.
+			it := cdLDItem{Headline: c.Title, URL: s.absBase(r) + makaleURL(c), Author: c.AuthorName}
+			if c.PublishedAt != nil {
+				it.Published = c.PublishedAt.UTC().Format(time.RFC3339)
+			}
+			ldItems = append(ldItems, it)
+		}
 	}
 
+	kanonik := s.cfg.BaseURL + "/" + slug
 	v := templkit.CDSectionPage{
 		Shell:     s.cdShellCtx(r.Context(), slug),
 		Title:     meta.Ad + " — " + s.siteName,
 		Desc:      meta.Aciklama,
-		Canonical: s.cfg.BaseURL + "/" + slug,
+		Canonical: kanonik,
 		Section:   meta.Ad,
 		Href:      "/" + slug,
 		Page:      sayfa,
-		JSONLD:    string(siteAdiJSONLD(s.siteName, s.cfg.BaseURL+"/"+slug)),
+		// CoinDesk bölüm sayfası: CollectionPage + mainEntity.ItemList.
+		JSONLD:          string(cdCollectionJSONLD(s.siteName, strings.TrimRight(s.cfg.BaseURL, "/"), meta.Ad, kanonik, ldItems)),
+		PageCategory:    "section_landing_page",
+		ContentCategory: slug,
+		Locale:          "tr",
+		BaseURL:         strings.TrimRight(s.cfg.BaseURL, "/"),
 	}
 	if len(kartlar) > 0 {
 		v.Lead = kartlar[0]

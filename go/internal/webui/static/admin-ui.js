@@ -495,8 +495,8 @@
     var WS = [
       { id: 'pano', label: 'Pano', match: [/^\/admin$/], items: [['Pano', '/admin']] },
       { id: 'icerik', label: 'İçerik',
-        match: [/^\/admin\/icerikler(\/|$)/, /^\/admin\/kategoriler(\/|$)/, /^\/admin\/etiketler(\/|$)/, /^\/admin\/ceviriler(\/|$)/, /^\/admin\/sinemalar(\/|$)/, /^\/admin\/resmi-ilanlar(\/|$)/],
-        items: [['İçerikler', '/admin/icerikler'], ['Yeni İçerik', '/admin/icerikler/yeni'], ['Kategoriler', '/admin/kategoriler'], ['Etiketler', '/admin/etiketler'], ['Çeviriler', '/admin/ceviriler'], ['Sinemalar', '/admin/sinemalar'], ['Resmi İlanlar', '/admin/resmi-ilanlar']],
+        match: [/^\/admin\/icerikler(\/|$)/, /^\/admin\/kategoriler(\/|$)/, /^\/admin\/etiketler(\/|$)/, /^\/admin\/ceviriler(\/|$)/, /^\/admin\/sinemalar(\/|$)/, /^\/admin\/resmi-ilanlar(\/|$)/, /^\/admin\/video-yayin(\/|$)/],
+        items: [['İçerikler', '/admin/icerikler'], ['Yeni İçerik', '/admin/icerikler/yeni'], ['Video & Canlı', '/admin/video-yayin'], ['Kategoriler', '/admin/kategoriler'], ['Etiketler', '/admin/etiketler'], ['Çeviriler', '/admin/ceviriler'], ['Sinemalar', '/admin/sinemalar'], ['Resmi İlanlar', '/admin/resmi-ilanlar']],
         action: { label: '＋ Yeni İçerik', href: '/admin/icerikler/yeni', hide: ['/admin/icerikler/yeni'] } },
       { id: 'medya', label: 'Medya', match: [/^\/admin\/dosyalar(\/|$)/], items: [['Medya', '/admin/dosyalar']] },
       { id: 'tasarim', label: 'Site & Tasarım',

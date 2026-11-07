@@ -22,6 +22,12 @@ type CDListePage struct {
 	BosMetin string
 	// JSONLD Go tarafında üretilmiş yapısal veri.
 	JSONLD string
+	// CoinDesk SEO sınıflandırması (bkz. templkit.CDHead).
+	PageCategory    string
+	ContentCategory string
+	Locale          string
+	// BaseURL og:image mutlaklaştırması için kök adres.
+	BaseURL string
 }
 
 templ CDListePageView(v CDListePage) {
@@ -30,7 +36,8 @@ templ CDListePageView(v CDListePage) {
 		<head>
 			@cdHead(CDHead{Title: v.Title, Desc: v.Desc, Canonical: v.Canonical,
 				OGType: "website", SiteName: v.Shell.SiteName, RSSFeed: "/rss.xml",
-				JSONLD: v.JSONLD})
+				JSONLD: v.JSONLD, Locale: v.Locale, PageCategory: v.PageCategory, BaseURL: v.BaseURL,
+				ContentCategory: v.ContentCategory})
 		</head>
 		<body class="cd">
 			@cdTopbar(v.Shell)
@@ -66,6 +73,12 @@ type CDNewsletterPage struct {
 	Desc      string
 	Canonical string
 	JSONLD    string
+	// CoinDesk SEO sınıflandırması (bkz. templkit.CDHead).
+	PageCategory    string
+	ContentCategory string
+	Locale          string
+	// BaseURL og:image mutlaklaştırması için kök adres.
+	BaseURL string
 }
 
 templ CDNewsletterPageView(v CDNewsletterPage) {
@@ -74,7 +87,8 @@ templ CDNewsletterPageView(v CDNewsletterPage) {
 		<head>
 			@cdHead(CDHead{Title: v.Title, Desc: v.Desc, Canonical: v.Canonical,
 				OGType: "website", SiteName: v.Shell.SiteName, RSSFeed: "/rss.xml",
-				JSONLD: v.JSONLD})
+				JSONLD: v.JSONLD, Locale: v.Locale, PageCategory: v.PageCategory, BaseURL: v.BaseURL,
+				ContentCategory: v.ContentCategory})
 		</head>
 		<body class="cd">
 			@cdTopbar(v.Shell)

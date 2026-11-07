@@ -94,6 +94,10 @@ func main() {
 	go scheduler.RunTrendScore(workerCtx, pool, logger, 15*time.Minute)
 	go scheduler.RunIcerikSkor(workerCtx, pool, logger, 15*time.Minute)
 	go scheduler.RunAISource(workerCtx, pool, logger, 15*time.Minute)
+	// YouTube video arşivi: kanal RSS'i + /streams + /live periyodik çekilir
+	// (aralık panelden: settings/youtube.dakika). /videos, /videos/shorts,
+	// /canli-yayin ve ana sayfa modülleri bu tablodan beslenir.
+	go scheduler.RunYoutube(workerCtx, pool, logger, time.Minute)
 	// Faz 189: İngilizce içerik. Türkçe yayımlanmış haberler AI ile
 	// çevrilip ayrı `contents` satırı olarak yazılır (locale='en',
 	// translation_of=kaynak). /en bölümleri gerçek İngilizce içerikle dolar.

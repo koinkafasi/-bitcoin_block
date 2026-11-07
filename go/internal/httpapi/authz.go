@@ -55,6 +55,7 @@ var adminEditorPrefixes = []string{
 	"/admin/reklam-yerleri",
 	"/admin/tasarim",
 	"/admin/marka",
+	"/admin/video-yayin",
 	"/admin/gorunum",
 	"/admin/header",
 	"/admin/footer",
