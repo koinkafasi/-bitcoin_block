@@ -1057,74 +1057,72 @@ func cdVideoModul(items []CDVideo) templ.Component {
 		}
 		ctx = templ.ClearChildren(ctx)
 		if len(items) > 0 {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 87, "<section class=\"cd-ray cd-video\"><h2 class=\"cd-ray__duz\">Bugünün Videoları</h2>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 87, "<section class=\"cd-ray cd-video\"><h2 class=\"cd-ray__duz\">Bugünün Videoları</h2><!-- Radyo düğmeleri TEK VİDEODA DA basılır: slayt görünürlüğü\n\t\t\t     yalnız `#cd-video-N:checked` kuralından geliyor. Kural\n\t\t\t     `len(items) > 1` iken basıldığında, tek video girdisinde\n\t\t\t     hiçbir slayt görünmüyor ve modül 360 px yerine 94 px'e\n\t\t\t     çöküyordu (gerçek veriyle ölçüldü, 7 Kasım 2026). -->")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			if len(items) > 1 {
-				for i := range items {
-					if i == 0 {
-						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 88, "<input class=\"cd-basin__durum\" type=\"radio\" name=\"cd-video\" id=\"")
-						if templ_7745c5c3_Err != nil {
-							return templ_7745c5c3_Err
-						}
-						var templ_7745c5c3_Var53 string
-						templ_7745c5c3_Var53, templ_7745c5c3_Err = templ.ResolveAttributeValue("cd-video-" + cdSiraya(i))
-						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 248, Col: 37}
-						}
-						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var53)
-						if templ_7745c5c3_Err != nil {
-							return templ_7745c5c3_Err
-						}
-						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 89, "\" checked aria-label=\"")
-						if templ_7745c5c3_Err != nil {
-							return templ_7745c5c3_Err
-						}
-						var templ_7745c5c3_Var54 string
-						templ_7745c5c3_Var54, templ_7745c5c3_Err = templ.ResolveAttributeValue("Video " + cdSiraya(i))
-						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 249, Col: 42}
-						}
-						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var54)
-						if templ_7745c5c3_Err != nil {
-							return templ_7745c5c3_Err
-						}
-						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 90, "\">")
-						if templ_7745c5c3_Err != nil {
-							return templ_7745c5c3_Err
-						}
-					} else {
-						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 91, "<input class=\"cd-basin__durum\" type=\"radio\" name=\"cd-video\" id=\"")
-						if templ_7745c5c3_Err != nil {
-							return templ_7745c5c3_Err
-						}
-						var templ_7745c5c3_Var55 string
-						templ_7745c5c3_Var55, templ_7745c5c3_Err = templ.ResolveAttributeValue("cd-video-" + cdSiraya(i))
-						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 252, Col: 37}
-						}
-						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var55)
-						if templ_7745c5c3_Err != nil {
-							return templ_7745c5c3_Err
-						}
-						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 92, "\" aria-label=\"")
-						if templ_7745c5c3_Err != nil {
-							return templ_7745c5c3_Err
-						}
-						var templ_7745c5c3_Var56 string
-						templ_7745c5c3_Var56, templ_7745c5c3_Err = templ.ResolveAttributeValue("Video " + cdSiraya(i))
-						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 253, Col: 42}
-						}
-						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var56)
-						if templ_7745c5c3_Err != nil {
-							return templ_7745c5c3_Err
-						}
-						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 93, "\">")
-						if templ_7745c5c3_Err != nil {
-							return templ_7745c5c3_Err
-						}
+			for i := range items {
+				if i == 0 {
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 88, "<input class=\"cd-basin__durum\" type=\"radio\" name=\"cd-video\" id=\"")
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					var templ_7745c5c3_Var53 string
+					templ_7745c5c3_Var53, templ_7745c5c3_Err = templ.ResolveAttributeValue("cd-video-" + cdSiraya(i))
+					if templ_7745c5c3_Err != nil {
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 252, Col: 36}
+					}
+					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var53)
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 89, "\" checked aria-label=\"")
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					var templ_7745c5c3_Var54 string
+					templ_7745c5c3_Var54, templ_7745c5c3_Err = templ.ResolveAttributeValue("Video " + cdSiraya(i))
+					if templ_7745c5c3_Err != nil {
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 253, Col: 41}
+					}
+					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var54)
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 90, "\">")
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+				} else {
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 91, "<input class=\"cd-basin__durum\" type=\"radio\" name=\"cd-video\" id=\"")
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					var templ_7745c5c3_Var55 string
+					templ_7745c5c3_Var55, templ_7745c5c3_Err = templ.ResolveAttributeValue("cd-video-" + cdSiraya(i))
+					if templ_7745c5c3_Err != nil {
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 256, Col: 36}
+					}
+					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var55)
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 92, "\" aria-label=\"")
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					var templ_7745c5c3_Var56 string
+					templ_7745c5c3_Var56, templ_7745c5c3_Err = templ.ResolveAttributeValue("Video " + cdSiraya(i))
+					if templ_7745c5c3_Err != nil {
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 257, Col: 41}
+					}
+					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var56)
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 93, "\">")
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
 					}
 				}
 			}
@@ -1140,7 +1138,7 @@ func cdVideoModul(items []CDVideo) templ.Component {
 				var templ_7745c5c3_Var57 templ.SafeURL
 				templ_7745c5c3_Var57, templ_7745c5c3_Err = templ.JoinURLErrs(v.Href)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 261, Col: 48}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 264, Col: 48}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var57))
 				if templ_7745c5c3_Err != nil {
@@ -1153,7 +1151,7 @@ func cdVideoModul(items []CDVideo) templ.Component {
 				var templ_7745c5c3_Var58 string
 				templ_7745c5c3_Var58, templ_7745c5c3_Err = templ.ResolveAttributeValue(v.Image)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 262, Col: 26}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 265, Col: 26}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var58)
 				if templ_7745c5c3_Err != nil {
@@ -1171,7 +1169,7 @@ func cdVideoModul(items []CDVideo) templ.Component {
 					var templ_7745c5c3_Var59 string
 					templ_7745c5c3_Var59, templ_7745c5c3_Err = templ.JoinStringErrs(v.Sure)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 265, Col: 46}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 268, Col: 46}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var59))
 					if templ_7745c5c3_Err != nil {
@@ -1194,7 +1192,7 @@ func cdVideoModul(items []CDVideo) templ.Component {
 					var templ_7745c5c3_Var60 string
 					templ_7745c5c3_Var60, templ_7745c5c3_Err = templ.JoinStringErrs(v.Etiket)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 270, Col: 50}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 273, Col: 50}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var60))
 					if templ_7745c5c3_Err != nil {
@@ -1212,7 +1210,7 @@ func cdVideoModul(items []CDVideo) templ.Component {
 				var templ_7745c5c3_Var61 templ.SafeURL
 				templ_7745c5c3_Var61, templ_7745c5c3_Err = templ.JoinURLErrs(v.Href)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 272, Col: 49}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 275, Col: 49}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var61))
 				if templ_7745c5c3_Err != nil {
@@ -1225,7 +1223,7 @@ func cdVideoModul(items []CDVideo) templ.Component {
 				var templ_7745c5c3_Var62 string
 				templ_7745c5c3_Var62, templ_7745c5c3_Err = templ.JoinStringErrs(v.Baslik)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 272, Col: 62}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 275, Col: 62}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var62))
 				if templ_7745c5c3_Err != nil {
@@ -1271,7 +1269,7 @@ func cdVideoModul(items []CDVideo) templ.Component {
 					var templ_7745c5c3_Var65 string
 					templ_7745c5c3_Var65, templ_7745c5c3_Err = templ.ResolveAttributeValue("cd-video-" + cdSiraya(cdBasinGeri(i, len(items))))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 283, Col: 64}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 286, Col: 64}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var65)
 					if templ_7745c5c3_Err != nil {
@@ -1308,7 +1306,7 @@ func cdVideoModul(items []CDVideo) templ.Component {
 					var templ_7745c5c3_Var68 string
 					templ_7745c5c3_Var68, templ_7745c5c3_Err = templ.ResolveAttributeValue("cd-video-" + cdSiraya(cdBasinIleri(i, len(items))))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 293, Col: 65}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 296, Col: 65}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var68)
 					if templ_7745c5c3_Err != nil {
@@ -1365,74 +1363,72 @@ func cdArastirmaModul(items []CDArastirma) templ.Component {
 		}
 		ctx = templ.ClearChildren(ctx)
 		if len(items) > 0 {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 116, "<section class=\"cd-ray cd-ray--cizgili cd-arastirma\"><h2 class=\"cd-ray__duz\">Öne Çıkan Araştırma</h2>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 116, "<section class=\"cd-ray cd-ray--cizgili cd-arastirma\"><h2 class=\"cd-ray__duz\">Öne Çıkan Araştırma</h2><!-- Tek kartta da radyo basılır — gerekçe cdVideoModul'de. -->")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			if len(items) > 1 {
-				for i := range items {
-					if i == 0 {
-						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 117, "<input class=\"cd-basin__durum\" type=\"radio\" name=\"cd-arastirma\" id=\"")
-						if templ_7745c5c3_Err != nil {
-							return templ_7745c5c3_Err
-						}
-						var templ_7745c5c3_Var70 string
-						templ_7745c5c3_Var70, templ_7745c5c3_Err = templ.ResolveAttributeValue("cd-arastirma-" + cdSiraya(i))
-						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 327, Col: 41}
-						}
-						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var70)
-						if templ_7745c5c3_Err != nil {
-							return templ_7745c5c3_Err
-						}
-						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 118, "\" checked aria-label=\"")
-						if templ_7745c5c3_Err != nil {
-							return templ_7745c5c3_Err
-						}
-						var templ_7745c5c3_Var71 string
-						templ_7745c5c3_Var71, templ_7745c5c3_Err = templ.ResolveAttributeValue("Araştırma " + cdSiraya(i))
-						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 328, Col: 48}
-						}
-						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var71)
-						if templ_7745c5c3_Err != nil {
-							return templ_7745c5c3_Err
-						}
-						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 119, "\">")
-						if templ_7745c5c3_Err != nil {
-							return templ_7745c5c3_Err
-						}
-					} else {
-						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 120, "<input class=\"cd-basin__durum\" type=\"radio\" name=\"cd-arastirma\" id=\"")
-						if templ_7745c5c3_Err != nil {
-							return templ_7745c5c3_Err
-						}
-						var templ_7745c5c3_Var72 string
-						templ_7745c5c3_Var72, templ_7745c5c3_Err = templ.ResolveAttributeValue("cd-arastirma-" + cdSiraya(i))
-						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 331, Col: 41}
-						}
-						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var72)
-						if templ_7745c5c3_Err != nil {
-							return templ_7745c5c3_Err
-						}
-						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 121, "\" aria-label=\"")
-						if templ_7745c5c3_Err != nil {
-							return templ_7745c5c3_Err
-						}
-						var templ_7745c5c3_Var73 string
-						templ_7745c5c3_Var73, templ_7745c5c3_Err = templ.ResolveAttributeValue("Araştırma " + cdSiraya(i))
-						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 332, Col: 48}
-						}
-						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var73)
-						if templ_7745c5c3_Err != nil {
-							return templ_7745c5c3_Err
-						}
-						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 122, "\">")
-						if templ_7745c5c3_Err != nil {
-							return templ_7745c5c3_Err
-						}
+			for i := range items {
+				if i == 0 {
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 117, "<input class=\"cd-basin__durum\" type=\"radio\" name=\"cd-arastirma\" id=\"")
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					var templ_7745c5c3_Var70 string
+					templ_7745c5c3_Var70, templ_7745c5c3_Err = templ.ResolveAttributeValue("cd-arastirma-" + cdSiraya(i))
+					if templ_7745c5c3_Err != nil {
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 330, Col: 40}
+					}
+					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var70)
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 118, "\" checked aria-label=\"")
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					var templ_7745c5c3_Var71 string
+					templ_7745c5c3_Var71, templ_7745c5c3_Err = templ.ResolveAttributeValue("Araştırma " + cdSiraya(i))
+					if templ_7745c5c3_Err != nil {
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 331, Col: 47}
+					}
+					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var71)
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 119, "\">")
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+				} else {
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 120, "<input class=\"cd-basin__durum\" type=\"radio\" name=\"cd-arastirma\" id=\"")
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					var templ_7745c5c3_Var72 string
+					templ_7745c5c3_Var72, templ_7745c5c3_Err = templ.ResolveAttributeValue("cd-arastirma-" + cdSiraya(i))
+					if templ_7745c5c3_Err != nil {
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 334, Col: 40}
+					}
+					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var72)
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 121, "\" aria-label=\"")
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					var templ_7745c5c3_Var73 string
+					templ_7745c5c3_Var73, templ_7745c5c3_Err = templ.ResolveAttributeValue("Araştırma " + cdSiraya(i))
+					if templ_7745c5c3_Err != nil {
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 335, Col: 47}
+					}
+					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var73)
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 122, "\">")
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
 					}
 				}
 			}
@@ -1458,7 +1454,7 @@ func cdArastirmaModul(items []CDArastirma) templ.Component {
 						var templ_7745c5c3_Var74 string
 						templ_7745c5c3_Var74, templ_7745c5c3_Err = templ.JoinStringErrs(a.Metrik)
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 344, Col: 61}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 346, Col: 61}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var74))
 						if templ_7745c5c3_Err != nil {
@@ -1477,7 +1473,7 @@ func cdArastirmaModul(items []CDArastirma) templ.Component {
 						var templ_7745c5c3_Var75 string
 						templ_7745c5c3_Var75, templ_7745c5c3_Err = templ.JoinStringErrs(a.Baslik)
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 347, Col: 62}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 349, Col: 62}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var75))
 						if templ_7745c5c3_Err != nil {
@@ -1501,7 +1497,7 @@ func cdArastirmaModul(items []CDArastirma) templ.Component {
 					var templ_7745c5c3_Var76 string
 					templ_7745c5c3_Var76, templ_7745c5c3_Err = templ.JoinStringErrs(a.Aciklama)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 353, Col: 54}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 355, Col: 54}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var76))
 					if templ_7745c5c3_Err != nil {
@@ -1524,7 +1520,7 @@ func cdArastirmaModul(items []CDArastirma) templ.Component {
 					var templ_7745c5c3_Var77 templ.SafeURL
 					templ_7745c5c3_Var77, templ_7745c5c3_Err = templ.JoinURLErrs(a.Href)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 357, Col: 51}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 359, Col: 51}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var77))
 					if templ_7745c5c3_Err != nil {
@@ -1537,7 +1533,7 @@ func cdArastirmaModul(items []CDArastirma) templ.Component {
 					var templ_7745c5c3_Var78 string
 					templ_7745c5c3_Var78, templ_7745c5c3_Err = templ.JoinStringErrs(a.Rapor)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 357, Col: 63}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 359, Col: 63}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var78))
 					if templ_7745c5c3_Err != nil {
@@ -1561,7 +1557,7 @@ func cdArastirmaModul(items []CDArastirma) templ.Component {
 						var templ_7745c5c3_Var79 string
 						templ_7745c5c3_Var79, templ_7745c5c3_Err = templ.JoinStringErrs(e)
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 362, Col: 16}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 364, Col: 16}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var79))
 						if templ_7745c5c3_Err != nil {
@@ -1617,7 +1613,7 @@ func cdArastirmaModul(items []CDArastirma) templ.Component {
 					var templ_7745c5c3_Var82 string
 					templ_7745c5c3_Var82, templ_7745c5c3_Err = templ.ResolveAttributeValue("cd-arastirma-" + cdSiraya(cdBasinGeri(i, len(items))))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 374, Col: 68}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 376, Col: 68}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var82)
 					if templ_7745c5c3_Err != nil {
@@ -1654,7 +1650,7 @@ func cdArastirmaModul(items []CDArastirma) templ.Component {
 					var templ_7745c5c3_Var85 string
 					templ_7745c5c3_Var85, templ_7745c5c3_Err = templ.ResolveAttributeValue("cd-arastirma-" + cdSiraya(cdBasinIleri(i, len(items))))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 384, Col: 69}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 386, Col: 69}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var85)
 					if templ_7745c5c3_Err != nil {
@@ -1725,7 +1721,7 @@ func cdKlipler(items []CDKlip) templ.Component {
 				var templ_7745c5c3_Var87 templ.SafeURL
 				templ_7745c5c3_Var87, templ_7745c5c3_Err = templ.JoinURLErrs(k.Href)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 412, Col: 36}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 414, Col: 36}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var87))
 				if templ_7745c5c3_Err != nil {
@@ -1738,7 +1734,7 @@ func cdKlipler(items []CDKlip) templ.Component {
 				var templ_7745c5c3_Var88 string
 				templ_7745c5c3_Var88, templ_7745c5c3_Err = templ.ResolveAttributeValue(k.Image)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 413, Col: 23}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 415, Col: 23}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var88)
 				if templ_7745c5c3_Err != nil {
@@ -1751,7 +1747,7 @@ func cdKlipler(items []CDKlip) templ.Component {
 				var templ_7745c5c3_Var89 string
 				templ_7745c5c3_Var89, templ_7745c5c3_Err = templ.ResolveAttributeValue(k.Baslik)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 413, Col: 40}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 415, Col: 40}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var89)
 				if templ_7745c5c3_Err != nil {
@@ -1854,7 +1850,7 @@ func cdCardGorsel(s CDStory, yuva CDYuva) templ.Component {
 			var templ_7745c5c3_Var92 templ.SafeURL
 			templ_7745c5c3_Var92, templ_7745c5c3_Err = templ.JoinURLErrs(s.Href)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 442, Col: 41}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 444, Col: 41}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var92))
 			if templ_7745c5c3_Err != nil {
@@ -1872,7 +1868,7 @@ func cdCardGorsel(s CDStory, yuva CDYuva) templ.Component {
 				var templ_7745c5c3_Var93 string
 				templ_7745c5c3_Var93, templ_7745c5c3_Err = templ.ResolveAttributeValue(cdKgSrc(s.Image, yuva))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 444, Col: 37}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 446, Col: 37}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var93)
 				if templ_7745c5c3_Err != nil {
@@ -1885,7 +1881,7 @@ func cdCardGorsel(s CDStory, yuva CDYuva) templ.Component {
 				var templ_7745c5c3_Var94 string
 				templ_7745c5c3_Var94, templ_7745c5c3_Err = templ.ResolveAttributeValue(cdKgSrcset(s.Image, yuva))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 444, Col: 74}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 446, Col: 74}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var94)
 				if templ_7745c5c3_Err != nil {
@@ -1898,7 +1894,7 @@ func cdCardGorsel(s CDStory, yuva CDYuva) templ.Component {
 				var templ_7745c5c3_Var95 string
 				templ_7745c5c3_Var95, templ_7745c5c3_Err = templ.ResolveAttributeValue(cdKgSizes(yuva))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 445, Col: 28}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 447, Col: 28}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var95)
 				if templ_7745c5c3_Err != nil {
@@ -1916,7 +1912,7 @@ func cdCardGorsel(s CDStory, yuva CDYuva) templ.Component {
 				var templ_7745c5c3_Var96 string
 				templ_7745c5c3_Var96, templ_7745c5c3_Err = templ.ResolveAttributeValue(s.Image)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 448, Col: 22}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 450, Col: 22}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var96)
 				if templ_7745c5c3_Err != nil {
@@ -1965,7 +1961,7 @@ func cdCardBody(s CDStory, yuva CDYuva) templ.Component {
 			var templ_7745c5c3_Var98 templ.SafeURL
 			templ_7745c5c3_Var98, templ_7745c5c3_Err = templ.JoinURLErrs(s.Href)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 457, Col: 41}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 459, Col: 41}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var98))
 			if templ_7745c5c3_Err != nil {
@@ -1983,7 +1979,7 @@ func cdCardBody(s CDStory, yuva CDYuva) templ.Component {
 				var templ_7745c5c3_Var99 string
 				templ_7745c5c3_Var99, templ_7745c5c3_Err = templ.ResolveAttributeValue(cdKgSrc(s.Image, yuva))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 463, Col: 37}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 465, Col: 37}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var99)
 				if templ_7745c5c3_Err != nil {
@@ -1996,7 +1992,7 @@ func cdCardBody(s CDStory, yuva CDYuva) templ.Component {
 				var templ_7745c5c3_Var100 string
 				templ_7745c5c3_Var100, templ_7745c5c3_Err = templ.ResolveAttributeValue(cdKgSrcset(s.Image, yuva))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 463, Col: 74}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 465, Col: 74}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var100)
 				if templ_7745c5c3_Err != nil {
@@ -2009,7 +2005,7 @@ func cdCardBody(s CDStory, yuva CDYuva) templ.Component {
 				var templ_7745c5c3_Var101 string
 				templ_7745c5c3_Var101, templ_7745c5c3_Err = templ.ResolveAttributeValue(cdKgSizes(yuva))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 464, Col: 28}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 466, Col: 28}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var101)
 				if templ_7745c5c3_Err != nil {
@@ -2027,7 +2023,7 @@ func cdCardBody(s CDStory, yuva CDYuva) templ.Component {
 				var templ_7745c5c3_Var102 string
 				templ_7745c5c3_Var102, templ_7745c5c3_Err = templ.ResolveAttributeValue(s.Image)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 467, Col: 22}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 469, Col: 22}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var102)
 				if templ_7745c5c3_Err != nil {
@@ -2051,7 +2047,7 @@ func cdCardBody(s CDStory, yuva CDYuva) templ.Component {
 			var templ_7745c5c3_Var103 string
 			templ_7745c5c3_Var103, templ_7745c5c3_Err = templ.JoinStringErrs(s.Kicker)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 473, Col: 36}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 475, Col: 36}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var103))
 			if templ_7745c5c3_Err != nil {
@@ -2069,7 +2065,7 @@ func cdCardBody(s CDStory, yuva CDYuva) templ.Component {
 		var templ_7745c5c3_Var104 templ.SafeURL
 		templ_7745c5c3_Var104, templ_7745c5c3_Err = templ.JoinURLErrs(s.Href)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 475, Col: 44}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 477, Col: 44}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var104))
 		if templ_7745c5c3_Err != nil {
@@ -2082,7 +2078,7 @@ func cdCardBody(s CDStory, yuva CDYuva) templ.Component {
 		var templ_7745c5c3_Var105 string
 		templ_7745c5c3_Var105, templ_7745c5c3_Err = templ.JoinStringErrs(s.Title)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 475, Col: 56}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 477, Col: 56}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var105))
 		if templ_7745c5c3_Err != nil {
@@ -2100,7 +2096,7 @@ func cdCardBody(s CDStory, yuva CDYuva) templ.Component {
 			var templ_7745c5c3_Var106 string
 			templ_7745c5c3_Var106, templ_7745c5c3_Err = templ.JoinStringErrs(s.Spot)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 477, Col: 35}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 479, Col: 35}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var106))
 			if templ_7745c5c3_Err != nil {
@@ -2152,7 +2148,7 @@ func cdMeta(s CDStory) templ.Component {
 			var templ_7745c5c3_Var108 string
 			templ_7745c5c3_Var108, templ_7745c5c3_Err = templ.JoinStringErrs(s.Time)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 485, Col: 17}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 487, Col: 17}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var108))
 			if templ_7745c5c3_Err != nil {
@@ -2182,7 +2178,7 @@ func cdMeta(s CDStory) templ.Component {
 				var templ_7745c5c3_Var109 templ.SafeURL
 				templ_7745c5c3_Var109, templ_7745c5c3_Err = templ.JoinURLErrs(s.SourceURL)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 492, Col: 25}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 494, Col: 25}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var109))
 				if templ_7745c5c3_Err != nil {
@@ -2195,7 +2191,7 @@ func cdMeta(s CDStory) templ.Component {
 				var templ_7745c5c3_Var110 string
 				templ_7745c5c3_Var110, templ_7745c5c3_Err = templ.JoinStringErrs(s.Source)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 492, Col: 78}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 494, Col: 78}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var110))
 				if templ_7745c5c3_Err != nil {
@@ -2213,7 +2209,7 @@ func cdMeta(s CDStory) templ.Component {
 				var templ_7745c5c3_Var111 string
 				templ_7745c5c3_Var111, templ_7745c5c3_Err = templ.JoinStringErrs(s.Source)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 494, Col: 20}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 496, Col: 20}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var111))
 				if templ_7745c5c3_Err != nil {
@@ -2316,7 +2312,7 @@ func cdBlokHucre(sec CDSection) templ.Component {
 		var templ_7745c5c3_Var114 templ.SafeURL
 		templ_7745c5c3_Var114, templ_7745c5c3_Err = templ.JoinURLErrs(sec.Href)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 526, Col: 41}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 528, Col: 41}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var114))
 		if templ_7745c5c3_Err != nil {
@@ -2329,7 +2325,7 @@ func cdBlokHucre(sec CDSection) templ.Component {
 		var templ_7745c5c3_Var115 string
 		templ_7745c5c3_Var115, templ_7745c5c3_Err = templ.JoinStringErrs(sec.Title)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 527, Col: 14}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 529, Col: 14}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var115))
 		if templ_7745c5c3_Err != nil {
@@ -2347,7 +2343,7 @@ func cdBlokHucre(sec CDSection) templ.Component {
 			var templ_7745c5c3_Var116 templ.SafeURL
 			templ_7745c5c3_Var116, templ_7745c5c3_Err = templ.JoinURLErrs(sec.Lead.Href)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 535, Col: 52}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 537, Col: 52}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var116))
 			if templ_7745c5c3_Err != nil {
@@ -2365,7 +2361,7 @@ func cdBlokHucre(sec CDSection) templ.Component {
 				var templ_7745c5c3_Var117 string
 				templ_7745c5c3_Var117, templ_7745c5c3_Err = templ.ResolveAttributeValue(cdKgSrc(sec.Lead.Image, YuvaBlokLead))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 537, Col: 55}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 539, Col: 55}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var117)
 				if templ_7745c5c3_Err != nil {
@@ -2378,7 +2374,7 @@ func cdBlokHucre(sec CDSection) templ.Component {
 				var templ_7745c5c3_Var118 string
 				templ_7745c5c3_Var118, templ_7745c5c3_Err = templ.ResolveAttributeValue(cdKgSrcset(sec.Lead.Image, YuvaBlokLead))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 537, Col: 107}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 539, Col: 107}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var118)
 				if templ_7745c5c3_Err != nil {
@@ -2391,7 +2387,7 @@ func cdBlokHucre(sec CDSection) templ.Component {
 				var templ_7745c5c3_Var119 string
 				templ_7745c5c3_Var119, templ_7745c5c3_Err = templ.ResolveAttributeValue(cdKgSizes(YuvaBlokLead))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 538, Col: 39}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 540, Col: 39}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var119)
 				if templ_7745c5c3_Err != nil {
@@ -2409,7 +2405,7 @@ func cdBlokHucre(sec CDSection) templ.Component {
 				var templ_7745c5c3_Var120 string
 				templ_7745c5c3_Var120, templ_7745c5c3_Err = templ.ResolveAttributeValue(sec.Lead.Image)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 541, Col: 32}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 543, Col: 32}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var120)
 				if templ_7745c5c3_Err != nil {
@@ -2432,7 +2428,7 @@ func cdBlokHucre(sec CDSection) templ.Component {
 		var templ_7745c5c3_Var121 templ.SafeURL
 		templ_7745c5c3_Var121, templ_7745c5c3_Err = templ.JoinURLErrs(sec.Lead.Href)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 546, Col: 51}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 548, Col: 51}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var121))
 		if templ_7745c5c3_Err != nil {
@@ -2445,7 +2441,7 @@ func cdBlokHucre(sec CDSection) templ.Component {
 		var templ_7745c5c3_Var122 string
 		templ_7745c5c3_Var122, templ_7745c5c3_Err = templ.JoinStringErrs(sec.Lead.Title)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 546, Col: 70}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 548, Col: 70}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var122))
 		if templ_7745c5c3_Err != nil {
@@ -2463,7 +2459,7 @@ func cdBlokHucre(sec CDSection) templ.Component {
 			var templ_7745c5c3_Var123 string
 			templ_7745c5c3_Var123, templ_7745c5c3_Err = templ.JoinStringErrs(sec.Lead.Time)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 548, Col: 49}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 550, Col: 49}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var123))
 			if templ_7745c5c3_Err != nil {
@@ -2496,7 +2492,7 @@ func cdBlokHucre(sec CDSection) templ.Component {
 			var templ_7745c5c3_Var124 templ.SafeURL
 			templ_7745c5c3_Var124, templ_7745c5c3_Err = templ.JoinURLErrs(s.Href)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 557, Col: 46}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 559, Col: 46}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var124))
 			if templ_7745c5c3_Err != nil {
@@ -2509,7 +2505,7 @@ func cdBlokHucre(sec CDSection) templ.Component {
 			var templ_7745c5c3_Var125 string
 			templ_7745c5c3_Var125, templ_7745c5c3_Err = templ.JoinStringErrs(s.Title)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 557, Col: 58}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 559, Col: 58}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var125))
 			if templ_7745c5c3_Err != nil {
@@ -2527,7 +2523,7 @@ func cdBlokHucre(sec CDSection) templ.Component {
 				var templ_7745c5c3_Var126 string
 				templ_7745c5c3_Var126, templ_7745c5c3_Err = templ.JoinStringErrs(s.Time)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 560, Col: 22}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 562, Col: 22}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var126))
 				if templ_7745c5c3_Err != nil {
@@ -2687,7 +2683,7 @@ func cdMostRead(items []CDStory) templ.Component {
 					var templ_7745c5c3_Var129 templ.SafeURL
 					templ_7745c5c3_Var129, templ_7745c5c3_Err = templ.JoinURLErrs(s.Href)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 627, Col: 48}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 629, Col: 48}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var129))
 					if templ_7745c5c3_Err != nil {
@@ -2700,7 +2696,7 @@ func cdMostRead(items []CDStory) templ.Component {
 					var templ_7745c5c3_Var130 string
 					templ_7745c5c3_Var130, templ_7745c5c3_Err = templ.JoinStringErrs(s.Title)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 627, Col: 60}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 629, Col: 60}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var130))
 					if templ_7745c5c3_Err != nil {
@@ -2718,7 +2714,7 @@ func cdMostRead(items []CDStory) templ.Component {
 						var templ_7745c5c3_Var131 string
 						templ_7745c5c3_Var131, templ_7745c5c3_Err = templ.JoinStringErrs(s.Time)
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 629, Col: 45}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 631, Col: 45}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var131))
 						if templ_7745c5c3_Err != nil {
@@ -2857,7 +2853,7 @@ func cdUzmanMetin(u CDUzman) templ.Component {
 			var templ_7745c5c3_Var134 string
 			templ_7745c5c3_Var134, templ_7745c5c3_Err = templ.JoinStringErrs(u.Ad)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 670, Col: 41}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 672, Col: 41}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var134))
 			if templ_7745c5c3_Err != nil {
@@ -2875,7 +2871,7 @@ func cdUzmanMetin(u CDUzman) templ.Component {
 		var templ_7745c5c3_Var135 templ.SafeURL
 		templ_7745c5c3_Var135, templ_7745c5c3_Err = templ.JoinURLErrs(u.Href)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 672, Col: 45}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 674, Col: 45}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var135))
 		if templ_7745c5c3_Err != nil {
@@ -2888,7 +2884,7 @@ func cdUzmanMetin(u CDUzman) templ.Component {
 		var templ_7745c5c3_Var136 string
 		templ_7745c5c3_Var136, templ_7745c5c3_Err = templ.JoinStringErrs(u.Makale)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 672, Col: 58}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 674, Col: 58}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var136))
 		if templ_7745c5c3_Err != nil {
@@ -2931,7 +2927,7 @@ func cdUzmanAvatar(u CDUzman) templ.Component {
 			var templ_7745c5c3_Var138 string
 			templ_7745c5c3_Var138, templ_7745c5c3_Err = templ.ResolveAttributeValue(u.Avatar)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 678, Col: 48}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 680, Col: 48}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var138)
 			if templ_7745c5c3_Err != nil {
@@ -3167,7 +3163,7 @@ func cdPriceTable(baslik string, rows []CDPriceRow) templ.Component {
 				var templ_7745c5c3_Var142 string
 				templ_7745c5c3_Var142, templ_7745c5c3_Err = templ.JoinStringErrs(cdSiraya(r.Rank))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 787, Col: 28}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 789, Col: 28}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var142))
 				if templ_7745c5c3_Err != nil {
@@ -3180,7 +3176,7 @@ func cdPriceTable(baslik string, rows []CDPriceRow) templ.Component {
 				var templ_7745c5c3_Var143 templ.SafeURL
 				templ_7745c5c3_Var143, templ_7745c5c3_Err = templ.JoinURLErrs(r.Href)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 789, Col: 23}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 791, Col: 23}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var143))
 				if templ_7745c5c3_Err != nil {
@@ -3193,7 +3189,7 @@ func cdPriceTable(baslik string, rows []CDPriceRow) templ.Component {
 				var templ_7745c5c3_Var144 string
 				templ_7745c5c3_Var144, templ_7745c5c3_Err = templ.JoinStringErrs(r.Sym)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 790, Col: 23}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 792, Col: 23}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var144))
 				if templ_7745c5c3_Err != nil {
@@ -3206,7 +3202,7 @@ func cdPriceTable(baslik string, rows []CDPriceRow) templ.Component {
 				var templ_7745c5c3_Var145 string
 				templ_7745c5c3_Var145, templ_7745c5c3_Err = templ.JoinStringErrs(r.Name)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 791, Col: 45}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 793, Col: 45}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var145))
 				if templ_7745c5c3_Err != nil {
@@ -3219,7 +3215,7 @@ func cdPriceTable(baslik string, rows []CDPriceRow) templ.Component {
 				var templ_7745c5c3_Var146 string
 				templ_7745c5c3_Var146, templ_7745c5c3_Err = templ.JoinStringErrs(r.Price)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 794, Col: 31}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 796, Col: 31}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var146))
 				if templ_7745c5c3_Err != nil {
@@ -3237,7 +3233,7 @@ func cdPriceTable(baslik string, rows []CDPriceRow) templ.Component {
 					var templ_7745c5c3_Var147 string
 					templ_7745c5c3_Var147, templ_7745c5c3_Err = templ.JoinStringErrs(r.Change)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 797, Col: 38}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 799, Col: 38}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var147))
 					if templ_7745c5c3_Err != nil {
@@ -3255,7 +3251,7 @@ func cdPriceTable(baslik string, rows []CDPriceRow) templ.Component {
 					var templ_7745c5c3_Var148 string
 					templ_7745c5c3_Var148, templ_7745c5c3_Err = templ.JoinStringErrs(r.Change)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 799, Col: 40}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_home.templ`, Line: 801, Col: 40}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var148))
 					if templ_7745c5c3_Err != nil {

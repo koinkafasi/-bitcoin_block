@@ -241,17 +241,20 @@ templ cdVideoModul(items []CDVideo) {
 	if len(items) > 0 {
 		<section class="cd-ray cd-video">
 			<h2 class="cd-ray__duz">Bugünün Videoları</h2>
-			if len(items) > 1 {
-				for i := range items {
-					if i == 0 {
-						<input class="cd-basin__durum" type="radio" name="cd-video"
-							id={ "cd-video-" + cdSiraya(i) } checked
-							aria-label={ "Video " + cdSiraya(i) }/>
-					} else {
-						<input class="cd-basin__durum" type="radio" name="cd-video"
-							id={ "cd-video-" + cdSiraya(i) }
-							aria-label={ "Video " + cdSiraya(i) }/>
-					}
+			<!-- Radyo düğmeleri TEK VİDEODA DA basılır: slayt görünürlüğü
+			     yalnız `#cd-video-N:checked` kuralından geliyor. Kural
+			     `len(items) > 1` iken basıldığında, tek video girdisinde
+			     hiçbir slayt görünmüyor ve modül 360 px yerine 94 px'e
+			     çöküyordu (gerçek veriyle ölçüldü, 7 Kasım 2026). -->
+			for i := range items {
+				if i == 0 {
+					<input class="cd-basin__durum" type="radio" name="cd-video"
+						id={ "cd-video-" + cdSiraya(i) } checked
+						aria-label={ "Video " + cdSiraya(i) }/>
+				} else {
+					<input class="cd-basin__durum" type="radio" name="cd-video"
+						id={ "cd-video-" + cdSiraya(i) }
+						aria-label={ "Video " + cdSiraya(i) }/>
 				}
 			}
 			<div class="cd-video__kutu">
@@ -320,17 +323,16 @@ templ cdArastirmaModul(items []CDArastirma) {
 	if len(items) > 0 {
 		<section class="cd-ray cd-ray--cizgili cd-arastirma">
 			<h2 class="cd-ray__duz">Öne Çıkan Araştırma</h2>
-			if len(items) > 1 {
-				for i := range items {
-					if i == 0 {
-						<input class="cd-basin__durum" type="radio" name="cd-arastirma"
-							id={ "cd-arastirma-" + cdSiraya(i) } checked
-							aria-label={ "Araştırma " + cdSiraya(i) }/>
-					} else {
-						<input class="cd-basin__durum" type="radio" name="cd-arastirma"
-							id={ "cd-arastirma-" + cdSiraya(i) }
-							aria-label={ "Araştırma " + cdSiraya(i) }/>
-					}
+			<!-- Tek kartta da radyo basılır — gerekçe cdVideoModul'de. -->
+			for i := range items {
+				if i == 0 {
+					<input class="cd-basin__durum" type="radio" name="cd-arastirma"
+						id={ "cd-arastirma-" + cdSiraya(i) } checked
+						aria-label={ "Araştırma " + cdSiraya(i) }/>
+				} else {
+					<input class="cd-basin__durum" type="radio" name="cd-arastirma"
+						id={ "cd-arastirma-" + cdSiraya(i) }
+						aria-label={ "Araştırma " + cdSiraya(i) }/>
 				}
 			}
 			<div class="cd-arastirma__slaytlar">
