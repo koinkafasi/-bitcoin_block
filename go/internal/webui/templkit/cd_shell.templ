@@ -22,11 +22,20 @@ package templkit
 //
 // `alt` site adını taşır (ekran okuyucu ve bağlantı metni); dekoratif
 // sayılmaz çünkü ana sayfaya giden tek marka bağlantısıdır.
+// İKİ VARYANT: markanın alt yazısı ("paranın geleceği") kaynakta BEYAZ.
+// Açık temada beyaz zemin üzerinde görünmez olurdu; bu yüzden açık tema
+// için alt yazısı koyu renge çevrilmiş ayrı bir dosya kümesi var. İkisi
+// de aynı ölçü/oran; hangisinin görüneceğini TEMA belirliyor (CSS).
+// `alt` yalnız birinde dolu olur — ekran okuyucu logoyu iki kez okumasın
+// diye ikinci görsel `alt=""` + `aria-hidden`.
 templ cdLogoMark(siteName string) {
 	<a class="cd-logo" href="/" aria-label={ siteName + " ana sayfa" }>
-		<img class="cd-logo__img" src="/static/img/logo-bitcosar-2x.png"
+		<img class="cd-logo__img cd-logo__img--koyu" src="/static/img/logo-bitcosar-2x.png"
 			srcset="/static/img/logo-bitcosar-1x.png 1x, /static/img/logo-bitcosar-2x.png 2x, /static/img/logo-bitcosar-3x.png 3x"
 			width="146" height="32" alt={ siteName } decoding="async"/>
+		<img class="cd-logo__img cd-logo__img--acik" src="/static/img/logo-bitcosar-acik-2x.png"
+			srcset="/static/img/logo-bitcosar-acik-1x.png 1x, /static/img/logo-bitcosar-acik-2x.png 2x, /static/img/logo-bitcosar-acik-3x.png 3x"
+			width="146" height="32" alt="" aria-hidden="true" decoding="async"/>
 	</a>
 }
 
@@ -59,12 +68,17 @@ templ cdTicker(s CDShell) {
 				for _, it := range s.Ticker {
 					<a class="cd-ticker__item" href={ "/price/" + it.Slug }>
 						<span class="cd-ticker__sym">{ it.Sym }</span>
-						<span class="cd-ticker__px">{ it.Price }</span>
-						if it.Up {
-							<span class="cd-up">{ it.Change }</span>
-						} else {
-							<span class="cd-down">{ it.Change }</span>
-						}
+						<!-- Fiyat + yüzde TEK SATIRDA (CoinDesk ölçümü: sembol
+						     üstte, altında "$x.xxx +0.05%"). Üç ayrı flex çocuğu
+						     olsaydı üç satır olurdu. -->
+						<span class="cd-ticker__alt">
+							<span class="cd-ticker__px">{ it.Price }</span>
+							if it.Up {
+								<span class="cd-up">{ it.Change }</span>
+							} else {
+								<span class="cd-down">{ it.Change }</span>
+							}
+						</span>
 					</a>
 				}
 			</div>

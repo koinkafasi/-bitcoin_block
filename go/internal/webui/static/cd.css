@@ -457,6 +457,17 @@ a.cd-ticker__tab[aria-selected="true"] { color: var(--cd-fg-strong); }
    iç boşluk 4/8; sembol 12/18 w500, fiyat 14/21 w400, yüzde rozeti
    12/18 w400 renkli zeminli. Öğeler arasında ÇİZGİ YOK (önceki sürüm
    border-left kullanıyordu; CoinDesk'te ayrıcı yok). */
+/* ---- Şerit öğesi — ÖLÇÜLDÜ (CoinDesk /tr, 7 Kasım 2026) ----
+   ÜST (scrollY 0): öğe 165×50, iki satır, kalem arası **28 px**
+   ALT (kaydırınca): öğe ~196×?, TEK satır, kalem arası **25 px**
+
+   ÖNCEKİ HATALAR (ölçümle):
+     · kalem arası 13-15 px'ti (CoinDesk 28) — öğeler birbirine yapışıktı
+     · yüzde İLK GÖRÜNÜMDE gizliydi; CoinDesk'te baştan görünür ve renkli
+     · yüzdeye renkli ZEMİN eklenmişti; CoinDesk'te zemin YOK, yalnız renkli
+       metin (bg şeffaf, radius 0, padding 0)
+     · kalem genişliği 91 px (CoinDesk 165) — yüzde gizli olduğu için dar
+*/
 .cd-ticker__item {
   display: inline-flex;
   flex-direction: column;
@@ -465,33 +476,41 @@ a.cd-ticker__tab[aria-selected="true"] { color: var(--cd-fg-strong); }
   padding: 4px 8px;
   border-radius: var(--cd-radius);
   line-height: 18px;
+  /* Öğeler arası 28 px boşluk: padding 8+8 zaten var, kalanı `margin`. */
+  margin-right: 12px;
 }
-.cd-ticker__item + .cd-ticker__item { margin-left: 14px; }
 .cd-ticker__sym { font-size: 12px; line-height: 18px; font-weight: 500; }
+/* Fiyat + yüzde ALT SATIRDA yan yana (CoinDesk: ikisi tek satırda). */
 .cd-ticker__px { font-size: 14px; line-height: 21px; color: var(--cd-fg); }
-/* Sade görünüm: yüzde gizli. */
+/* YÜZDE HER ZAMAN GÖRÜNÜR ve renkli — zemin/çerçeve YOK.
+   `.cd-up`/`.cd-down` rengi alttaki genel kurallardan gelir. */
 .cd-ticker__item .cd-up,
-.cd-ticker__item .cd-down { display: none; font-size: 12px; line-height: 18px; }
+.cd-ticker__item .cd-down {
+  display: inline;
+  font-size: 12px;
+  line-height: 18px;
+  background: none;
+  padding: 0;
+  border-radius: 0;
+  white-space: nowrap;
+}
+/* Fiyat + yüzde aynı satırda dursun: ikisi de ikinci flex çocuğu olarak
+   yan yana gelir. `cd-ticker__px` ile yüzde arasında 6 px. */
+.cd-ticker__item .cd-up,
+.cd-ticker__item .cd-down { margin-left: 6px; }
 
-/* Kaydırılmış (sticky menü aktif): TEK SATIR + değişim görünür.
-   Ölçüldü (scrollY 1500): öğe 196×32, flex-direction row, gap 8. */
+/* Kaydırılmış durum: TEK SATIR (sembol · fiyat · yüzde), aralık 25 px.
+   CoinDesk ölçümü: serit yüksekliği 66 → 45 px'e iner. */
 html.cd-kaydi .cd-ticker__item {
   flex-direction: row;
   align-items: baseline;
   gap: 8px;
+  margin-right: 9px;
 }
-/* Değişim rozeti: CoinDesk'te renkli zemin + 4 px köşe (yükseliş
-   #e5ffe0, düşüş #ffe5e5). Yalnız renkli metin değil. */
 html.cd-kaydi .cd-ticker__item .cd-up,
-html.cd-kaydi .cd-ticker__item .cd-down {
-  display: inline-block;
-  padding: 0 4px;
-  border-radius: var(--cd-radius);
-  font-size: 12px;
-  line-height: 18px;
-}
-html.cd-kaydi .cd-ticker__item .cd-up { background: var(--cd-up-bg); }
-html.cd-kaydi .cd-ticker__item .cd-down { background: var(--cd-down-bg); }
+html.cd-kaydi .cd-ticker__item .cd-down { margin-left: 0; }
+/* Kaydırılmış durumda şerit yüksekliği 45 px (66 değil). */
+html.cd-kaydi .cd-ticker__inner { padding: 6px 0; min-height: 45px; }
 .cd-up { color: var(--cd-up); }
 .cd-down { color: var(--cd-down); }
 
@@ -500,36 +519,23 @@ html.cd-kaydi .cd-ticker__item .cd-down { background: var(--cd-down-bg); }
   position: sticky;
   top: 0;
   z-index: 40;
-  /* KOYU ÜST ÇUBUK (kullanıcı isteği, 7 Kasım 2026: #0a0b0e).
-     Sabit renk — `--cd-bg` gibi temayla DÖNMEZ: kullanıcı bu bandın her
-     iki temada da aynı koyu tonda kalmasını istedi. Zemin koyu olduğu için
-     içindeki metin/ikon renkleri aşağıda AÇIK renge sabitleniyor. */
-  border-bottom: 1px solid #1f2127;
-  background: #0a0b0e;
-  color: #f5f5f5;
+  /* ÜST ÇUBUK TEMAYLA DÖNER (kullanıcı isteği, 7 Kasım 2026).
+     Açık temada beyaz, koyu temada #0a0b0e. Renkleri SABİTLEMEK hataydı:
+     açık moda geçince üst çubuk koyu kalıyor, site ile uyumsuz görünüyordu.
+
+     İçerik renkleri de ARTIK JETON KULLANIYOR; sabit açık tonlar yalnız
+     KOYU zemine göre yazılmıştı ve açık temada okunmuyordu. */
+  border-bottom: 1px solid var(--cd-border);
+  background: var(--cd-bg);
+  color: var(--cd-fg);
 }
-/* Koyu zemin üzerinde okunabilirlik: logo, gezinme, arama, tema, dil ve
-   "Oturum Aç" açık renk. `.cd a { color: inherit }` özgüllüğü nedeniyle
-   bağlantılar için ayrıca `a.` öneki gerekiyor. */
-.cd-topbar .cd-logo { color: #ffffff; }
-.cd-topbar .cd-nav__link,
-.cd-topbar a.cd-nav__link { color: #e8e8e8; }
-.cd-topbar .cd-nav__link:hover { background: rgba(255, 255, 255, 0.1); }
-.cd-topbar .cd-ikon-btn,
-.cd-topbar .cd-tema,
-.cd-topbar a.cd-btn--ghost { color: #f5f5f5; }
-.cd-topbar .cd-ikon-btn:hover,
-.cd-topbar .cd-tema:hover { background: rgba(255, 255, 255, 0.1); }
-.cd-topbar .cd-btn--ghost { border-color: rgba(255, 255, 255, 0.28); }
-.cd-topbar .cd-lang__tek { color: #b9b9b9; }
+.cd-topbar .cd-nav__link:hover { background: var(--cd-surface-soft); }
+/* Dil seçici: çerçeve ve zemin jetondan (açık temada da doğru). */
 .cd-topbar .cd-lang__sec {
-  background: transparent;
-  border-color: rgba(255, 255, 255, 0.28);
-  color: #f5f5f5;
+  background: var(--cd-bg);
+  border-color: var(--cd-border-strong);
+  color: var(--cd-fg);
 }
-/* "Kaydol" marka sarısı hem zeminde hem yazıda korunur (koyu üst çubukta
-   da yüksek kontrast). */
-.cd-topbar a.cd-btn--kayit { color: var(--cd-dark); }
 .cd-topbar__inner {
   display: flex;
   align-items: center;
@@ -549,6 +555,27 @@ html.cd-kaydi .cd-ticker__item .cd-down { background: var(--cd-down-bg); }
   display: block;
   width: 146px;
   height: 32px;
+}
+/* İki varyant: koyu tema için beyaz alt yazılı, açık tema için koyu
+   alt yazılı dosya. Yalnız BİRİ görünür.
+   VARSAYILAN = KOYU VARYANT; açık tema sınıfı gelince diğeri devreye girer.
+
+   ÖZGÜLLÜK TUZAĞI (aynı hata ikinci kez): `.cd img { display: block }`
+   kuralı (0,1,1) tek sınıflı seçiciden (0,1,0) GÜÇLÜ olduğu için
+   `display:none` eziliyordu ve iki logo ÜST ÜSTE biniyordu. Bu yüzden
+   seçiciler `.cd-logo` atasıyla yazılı (0,2,0 / 0,2,1) — her iki temada
+   da `.cd img`'i yener. Bu dosyada daha önce `.cd a` / `.cd-btn` renginde
+   de aynı tuzak yaşandı; `.cd <öğe>` kuralı olan her yerde özgüllük
+   kontrol edilmeli. */
+.cd-logo .cd-logo__img--koyu { display: block; }
+.cd-logo .cd-logo__img--acik { display: none; }
+
+html.light .cd-logo .cd-logo__img--koyu { display: none; }
+html.light .cd-logo .cd-logo__img--acik { display: block; }
+
+@media (prefers-color-scheme: light) {
+  :root:not(.light):not(.dark) .cd-logo .cd-logo__img--koyu { display: none; }
+  :root:not(.light):not(.dark) .cd-logo .cd-logo__img--acik { display: block; }
 }
 /* Mobilde başlık alanı dar: logo 118×26'ya iner (oran korunur). */
 @media (max-width: 767px) {
@@ -1499,6 +1526,39 @@ html.cd-js .cd-tema { display: inline-flex; }
 }
 .cd-pill:hover { background: var(--cd-surface-soft); text-decoration: none; }
 .cd-pill--duz { padding: 4px 16px; }
+
+/* ---- "Preferred on Google" hapı ----
+ * ÖLÇÜLDÜ (CoinDesk /tr makale, 7 Kasım 2026): 319×32, radius 9999,
+ * 1 px #d9d9d9 çerçeve, dolgu 4×12, içerik aralığı 8 px, 14/22 w400.
+ * Satırda SAĞA yaslı (`margin-left:auto`), "Paylaş" ile aynı hizada.
+ * CoinDesk `hidden lg:inline-flex` kullanıyor: <1024 px'te gizli, çünkü
+ * dar ekranda eylem şeridi taşıyor. Aynı eşiği uyguluyoruz. */
+.cd-google {
+  display: none;
+  margin-left: auto;
+  gap: 8px;
+  border-radius: 9999px;
+  border: 1px solid var(--cd-border);
+  background: transparent;
+  color: var(--cd-fg);
+  font-size: 14px;
+  line-height: 22px;
+  font-weight: 400;
+  padding: 4px 12px;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.cd-google:hover { background: var(--cd-surface-soft); text-decoration: none; }
+/* Logo (83×16) + metin aynı satırda; metin taşmasın. */
+.cd-google__logo { display: block; flex: none; width: 83px; height: 16px; }
+.cd-google__metin { white-space: nowrap; }
+@media (min-width: 1024px) {
+  .cd-google { display: inline-flex; align-items: center; }
+}
+/* Koyu temada CoinDesk logosunun "CoinDesk" yazısı `currentColor` ile
+   geliyor; koyu zeminde okunur kalması için açık renge çekilir. Sarı
+   kare işaret ve "Google" renkleri SVG içinde sabit. */
+html.dark .cd-google { color: var(--cd-fg); }
 /* Paylaş düğmesi: `button` görünümlü ama gerçek bağlantı DEĞİL —
    JS'siz çalışması için <details> paneliyle açılıyor (aşağıda). */
 .cd-paylas { position: relative; }

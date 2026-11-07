@@ -22,11 +22,6 @@ templ CDArticle(v CDArticleView) {
 			@cdTopbar(v.Shell)
 			@cdTicker(v.Shell)
 			<main class="cd-wrap cd-main">
-				<nav class="cd-crumbs" aria-label="Konum">
-					<a href="/">Ana sayfa</a>
-					<span>/</span>
-					<a href={ v.SectionHref }>{ v.SectionName }</a>
-				</nav>
 				<article class="cd-article">
 					<span class="cd-kicker">{ v.Kicker }</span>
 					<h1>{ v.Headline }</h1>
@@ -76,6 +71,19 @@ templ CDArticle(v CDArticleView) {
 								<a href={ templ.SafeURL(v.ShareLinkedIn) } rel="nofollow noopener" target="_blank">LinkedIn'de paylaş</a>
 							</div>
 						</details>
+						<!-- "Preferred on Google" — CoinDesk makale sayfasındaki
+						     hap düğme (ölçüm 7 Kasım 2026: 319×32, radius 9999,
+						     1 px #d9d9d9, pad 4×12, satıra SAĞA yaslı).
+						     Yalnız ≥1024 px'te görünür (CoinDesk `hidden
+						     lg:inline-flex`): dar ekranda satır taşıyordu. -->
+						<a class="cd-pill cd-google"
+							href="https://www.google.com/preferences/source?q=bitcosar.com"
+							rel="noopener" target="_blank"
+							aria-label="Google'da bizi tercih edin">
+							<img class="cd-google__logo" src="/static/img/google-preferred.svg"
+								width="83" height="16" alt="" loading="lazy" decoding="async"/>
+							<span class="cd-google__metin">'ı Google'da tercih edilen yap</span>
+						</a>
 					</div>
 
 					if v.Image != "" {
