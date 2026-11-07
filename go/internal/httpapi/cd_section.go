@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"theblock/site/internal/i18n"
 	"theblock/site/internal/repo"
 	"theblock/site/internal/webui/templkit"
 )
@@ -22,16 +23,16 @@ import (
 
 // cdSectionMeta bölüm tanımı (slug → ad + açıklama).
 var cdSectionMeta = map[string]struct{ Ad, Aciklama string }{
-	"markets":            {"Markets", "Kripto piyasaları: fiyat hareketleri, likidite, türevler ve kurumsal akış."},
-	"business":           {"Finance", "Borsalar, kripto şirketleri, bankalar, ödeme ve kurumsal benimseme."},
-	"tech":               {"Tech", "Protokoller, ölçekleme, güvenlik açıkları ve altyapı gelişmeleri."},
-	"policy":             {"Policy", "Düzenleme, yasa teklifleri, mahkemeler ve kamu kurumları."},
-	"opinion":            {"Opinion", "Sektörden görüşler ve analizler."},
-	"news-analysis":      {"News Analysis", "Derinlemesine haber analizleri."},
-	"latest-crypto-news": {"Latest News", "En son kripto haberleri, dakika dakika."},
-	"focus":              {"Focus", "Odak dosyaları ve uzun okumalar."},
-	"research":           {"Research", "Araştırma raporları ve veri analizleri."},
-	"press-release":      {"Press Releases", "Basın bültenleri."},
+	"markets":            {"Piyasalar", "Kripto piyasaları: fiyat hareketleri, likidite, türevler ve kurumsal akış."},
+	"business":           {"Finans", "Borsalar, kripto şirketleri, bankalar, ödeme ve kurumsal benimseme."},
+	"tech":               {"Teknoloji", "Protokoller, ölçekleme, güvenlik açıkları ve altyapı gelişmeleri."},
+	"policy":             {"Politika", "Düzenleme, yasa teklifleri, mahkemeler ve kamu kurumları."},
+	"opinion":            {"Görüş", "Sektörden görüşler ve analizler."},
+	"news-analysis":      {"Haber Analizi", "Derinlemesine haber analizleri."},
+	"latest-crypto-news": {"Son Haberler", "En son kripto haberleri, dakika dakika."},
+	"focus":              {"Odak", "Odak dosyaları ve uzun okumalar."},
+	"research":           {"Araştırma", "Araştırma raporları ve veri analizleri."},
+	"press-release":      {"Basın Bültenleri", "Basın bültenleri."},
 }
 
 // cdBolumHandler tek bir bölümün handler'ını üretir.
@@ -152,10 +153,10 @@ func (s *Server) cdShell(aktif string) templkit.CDShell {
 func (s *Server) cdShellCtx(ctx context.Context, aktif string) templkit.CDShell {
 	nav := []templkit.CDNavLink{
 		{Label: "Son Haberler", Href: "/latest-crypto-news"},
-		{Label: "Markets", Href: "/markets"},
-		{Label: "Finance", Href: "/business"},
-		{Label: "Tech", Href: "/tech"},
-		{Label: "Policy", Href: "/policy"},
+		{Label: "Piyasalar", Href: "/markets"},
+		{Label: "Finans", Href: "/business"},
+		{Label: "Teknoloji", Href: "/tech"},
+		{Label: "Politika", Href: "/policy"},
 		{Label: "Görüş", Href: "/opinion"},
 		{Label: "Fiyatlar", Href: "/price"},
 		{Label: "Video", Href: "/videos"},
@@ -270,7 +271,7 @@ func cdStoryCevir(c repo.Content, simdi time.Time) templkit.CDStory {
 		st.SourceURL = *c.SourceURL
 	}
 	if c.CategoryName != nil {
-		st.Kicker = strings.ToUpper(*c.CategoryName)
+		st.Kicker = i18n.BuyukHarf(*c.CategoryName)
 	}
 	return st
 }

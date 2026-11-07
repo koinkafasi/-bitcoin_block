@@ -58,16 +58,16 @@ type CDMenuGroup struct {
 // ABD hisse fiyatları da çıkarıldı: veri kaynağı bağlanmadı.
 var cdMenuSabit = []CDMenuGroup{
 	{
-		Label: "News", Href: "/latest-crypto-news",
+		Label: "Haberler", Href: "/latest-crypto-news",
 		Columns: []CDMenuColumn{
 			{Items: []CDMenuItem{
-				{Label: "Latest Crypto News", Href: "/latest-crypto-news"},
-				{Label: "Markets", Href: "/markets"},
-				{Label: "Finance", Href: "/business"},
-				{Label: "Tech", Href: "/tech"},
-				{Label: "Policy", Href: "/policy"},
-				{Label: "Focus", Href: "/focus"},
-				{Label: "Opinion", Href: "/opinion"},
+				{Label: "Son Kripto Haberleri", Href: "/latest-crypto-news"},
+				{Label: "Piyasalar", Href: "/markets"},
+				{Label: "Finans", Href: "/business"},
+				{Label: "Teknoloji", Href: "/tech"},
+				{Label: "Politika", Href: "/policy"},
+				{Label: "Odak", Href: "/focus"},
+				{Label: "Görüş", Href: "/opinion"},
 			}},
 		},
 	},
@@ -75,26 +75,26 @@ var cdMenuSabit = []CDMenuGroup{
 		Label: "Video", Href: "/videos",
 		Columns: []CDMenuColumn{
 			{Items: []CDMenuItem{
-				{Label: "Videos", Href: "/videos"},
-				{Label: "Podcasts", Href: "/podcasts"},
+				{Label: "Videolar", Href: "/videos"},
+				{Label: "Podcastlar", Href: "/podcasts"},
 			}},
 		},
 	},
 	{
-		Label: "Prices", Href: "/price",
+		Label: "Fiyatlar", Href: "/price",
 		// Sütunlar handler'da canlı veriyle doldurulur (cdMenuFiyatSutunlari).
 	},
 	{
-		Label: "Research", Href: "/research",
+		Label: "Araştırma", Href: "/research",
 		// AÇIKLAMALI KART TİPİ (spec §7.2A Tip B). CoinDesk Research
 		// panelinde kart başlığı 14/20 w500 + tek satır açıklama 12/16
 		// w400. Bizde karşılığı olan gerçek sayfalar bunlar; açıklamalar
 		// sayfaların kendi meta açıklamalarından kısaltıldı.
 		Columns: []CDMenuColumn{
 			{Items: []CDMenuItem{
-				{Label: "Research Hub", Href: "/research",
+				{Label: "Araştırma Merkezi", Href: "/research",
 					Desc: "Araştırma raporları ve veri analizleri"},
-				{Label: "News Analysis", Href: "/news-analysis",
+				{Label: "Haber Analizi", Href: "/news-analysis",
 					Desc: "Derinlemesine haber analizleri"},
 				{Label: "Focus", Href: "/focus",
 					Desc: "Odak dosyaları ve uzun okumalar"},
@@ -102,11 +102,11 @@ var cdMenuSabit = []CDMenuGroup{
 		},
 	},
 	{
-		Label: "Sponsored", Href: "/sponsored-content",
+		Label: "Sponsorlu", Href: "/sponsored-content",
 		Columns: []CDMenuColumn{
 			{Items: []CDMenuItem{
-				{Label: "Thought Leadership", Href: "/sponsored-content"},
-				{Label: "Press Releases", Href: "/press-release"},
+				{Label: "Düşünce Liderliği", Href: "/sponsored-content"},
+				{Label: "Basın Bültenleri", Href: "/press-release"},
 			}},
 		},
 	},
@@ -175,28 +175,28 @@ func cdMenuGroups(s CDShell) []CDMenuGroup {
 	out := make([]CDMenuGroup, 0, len(cdMenuSabit)+1)
 	for _, g := range cdMenuSabit {
 		// Prices grubu: canlı coinler.
-		if g.Label == "Prices" {
+		if g.Href == "/price" {
 			if len(s.MenuCoins) == 0 {
 				// Fiyat servisi yanıt vermediyse menü yine çalışsın:
 				// yalnız "tüm fiyatlar" satırı.
 				g.Columns = []CDMenuColumn{{Items: []CDMenuItem{
-					{Label: "Latest Crypto Prices", Kind: "baslik"},
-					{Label: "See all crypto prices", Href: "/price", Kind: "tumu"},
+					{Label: "Son Kripto Fiyatları", Kind: "baslik"},
+					{Label: "Tüm kripto fiyatlarını gör", Href: "/price", Kind: "tumu"},
 				}}}
 			} else {
-				items := []CDMenuItem{{Label: "Latest Crypto Prices", Kind: "baslik"}}
+				items := []CDMenuItem{{Label: "Son Kripto Fiyatları", Kind: "baslik"}}
 				items = append(items, s.MenuCoins...)
-				items = append(items, CDMenuItem{Label: "See all crypto prices", Href: "/price", Kind: "tumu"})
+				items = append(items, CDMenuItem{Label: "Tüm kripto fiyatlarını gör", Href: "/price", Kind: "tumu"})
 				g.Columns = []CDMenuColumn{{Items: items}}
 			}
 		}
 		// News grubuna etiket sütunu eklenir (içeriği olan etiketler).
-		if g.Label == "News" && len(s.MenuTags) > 0 {
-			tagItems := []CDMenuItem{{Label: "Crypto News", Kind: "baslik"}}
+		if g.Href == "/latest-crypto-news" && len(s.MenuTags) > 0 {
+			tagItems := []CDMenuItem{{Label: "Kripto Haberleri", Kind: "baslik"}}
 			tagItems = append(tagItems, s.MenuTags...)
 			tagItems = append(tagItems,
-				CDMenuItem{Label: "News Analysis", Href: "/news-analysis"},
-				CDMenuItem{Label: "Press Releases", Href: "/press-release"},
+				CDMenuItem{Label: "Haber Analizi", Href: "/news-analysis"},
+				CDMenuItem{Label: "Basın Bültenleri", Href: "/press-release"},
 			)
 			g.Columns = append(g.Columns, CDMenuColumn{Items: tagItems})
 		}

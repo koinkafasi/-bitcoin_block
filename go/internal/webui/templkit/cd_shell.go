@@ -65,44 +65,85 @@ type CDShell struct {
 }
 
 // cdFooterColumns CoinDesk alt bilgi sütunları (ölçüm §3).
-var cdFooterColumns = []struct {
-	Title string
-	Links [][2]string // {etiket, yol}
-}{
-	{"Haberler", [][2]string{
-		{"Son Haberler", "/latest-crypto-news"},
-		{"Markets", "/markets"},
-		{"Finance", "/business"},
-		{"Tech", "/tech"},
-		{"Policy", "/policy"},
-		{"Focus", "/focus"},
+//
+// YAPI (CoinDesk /tr, 7 Kasım 2026): DÖRT sütun (her biri 237 px, gap 24),
+// her sütunda 2-3 BÖLÜM başlığı ÜST ÜSTE. Başlık 14/22 w500 `capitalize`,
+// bağlantı 12/16 w400 sönük, bölümler arası 38 px.
+//
+// BAĞLANTILAR DOĞRULANDI (curl, 7 Kasım 2026): her yol 200 döndü. Ölü
+// olanlar (blog · erisilebilirlik · reklam · site-haritasi · index · api ·
+// web-seminerleri) LİSTEYE ALINMADI — alt bilgi 404 vermemeli.
+//
+// SÜZGEÇ KALDIRILDI: önceki sürüm `MenuBolumler` ile satır eliyordu, ama o
+// harita yalnız İÇERİK bölümlerini sayıyor; /hakkimizda gibi statik
+// sayfalar haritada olmadığı için alt bilgi 942 px yerine 497 px'e
+// düşüyordu ve sütunlar seyreliyordu. Liste artık elle doğrulanmış.
+var cdFooterColumns = []cdFooterBolum{
+	{Title: "Hakkımızda", Links: [][2]string{
+		{"Hakkımızda", "/hakkimizda"},
+		{"Kariyer", "/kariyer"},
 	}},
-	{"Piyasalar", [][2]string{
+	{Title: "İletişim", Links: [][2]string{
+		{"Bize Ulaşın", "/iletisim"},
+		{"Gizlilik", "/gizlilik-politikasi"},
+		{"Kullanım Koşulları", "/kullanim-kosullari"},
+	}},
+	{Title: "Newsletters", Links: [][2]string{
+		{"Bültenler", "/newsletters"},
+	}},
+	{Title: "Haberler", Links: [][2]string{
+		{"Son Haberler", "/latest-crypto-news"},
+		{"Piyasalar", "/markets"},
+		{"Finans", "/business"},
+		{"Teknoloji", "/tech"},
+		{"Politika", "/policy"},
+		{"Haber Analizi", "/news-analysis"},
+	}},
+	{Title: "Videolar", Links: [][2]string{
+		{"Video", "/videos"},
+	}},
+	{Title: "Podcasts", Links: [][2]string{
+		{"Podcastlar", "/podcasts"},
+	}},
+	{Title: "Kripto paralar", Links: [][2]string{
 		{"Tüm fiyatlar", "/price"},
 		{"Bitcoin (BTC)", "/price/bitcoin"},
 		{"Ethereum (ETH)", "/price/ethereum"},
 		{"XRP", "/price/xrp"},
 		{"Solana (SOL)", "/price/solana"},
 	}},
-	{"Görüş & Analiz", [][2]string{
-		{"Görüş", "/opinion"},
-		{"Analiz", "/news-analysis"},
-		{"Araştırma", "/research"},
+	{Title: "Veri ve Endeksler", Links: [][2]string{
+		{"Piyasa Verileri", "/price"},
+	}},
+	{Title: "Fikir Birliği", Links: [][2]string{
+		{"Etkinlikler", "/etkinlikler"},
+	}},
+	{Title: "Sponsorlu", Links: [][2]string{
+		{"Düşünce Liderliği", "/sponsored-content"},
 		{"Basın Bültenleri", "/press-release"},
 	}},
-	{"Medya", [][2]string{
-		{"Video", "/videos"},
-		{"Podcast", "/podcasts"},
-		{"Bültenler", "/newsletters"},
-		{"RSS", "/rss.xml"},
+	{Title: "Araştırma", Links: [][2]string{
+		{"Araştırma Merkezi", "/research"},
+		{"Görüş", "/opinion"},
+		{"Odak", "/focus"},
 	}},
-	{"Kurumsal", [][2]string{
-		{"Hakkımızda", "/hakkimizda"},
-		{"İletişim", "/iletisim"},
-		{"Gizlilik", "/gizlilik-politikasi"},
-		{"Kullanım Koşulları", "/kullanim-kosullari"},
-		{"Çerez Politikası", "/cerez-politikasi"},
-	}},
+}
+
+// cdFooterSutunlari bölümleri DÖRT sütuna sırayla dağıtır (CoinDesk
+// `grid-cols-4`). Sıra korunur; sütun yükseklikleri dengeli kalır.
+func cdFooterSutunlari(s CDShell) [][]cdFooterBolum {
+	const sutunSayisi = 4
+	out := make([][]cdFooterBolum, sutunSayisi)
+	for i, b := range cdFooterColumns {
+		out[i%sutunSayisi] = append(out[i%sutunSayisi], b)
+	}
+	return out
+}
+
+// cdFooterBolum alt bilgide tek başlık + bağlantıları.
+type cdFooterBolum struct {
+	Title string
+	Links [][2]string
 }
 
 // cdFooterSutunlari alt bilgi sütunlarını döndürür; içeriği olmayan bölüm
@@ -111,42 +152,12 @@ var cdFooterColumns = []struct {
 // NEDEN: alt bilgi de bir gezinmedir. Ölçüm (6 Kasım 2026): Focus · Video ·
 // Podcast · Analiz · Basın Bültenleri bölümlerinde yayında içerik yoktu,
 // ama alt bilgi beş ölü bağlantı veriyordu. Kural mega menüyle aynı:
-// `MenuBolumler` doluysa yalnız içeriği olan bölüm basılır. Hiç satırı
-// kalmayan sütun (ör. Medya) başlığıyla birlikte düşer — boş başlık
-// göstermek "burada bir şey olmalıydı" hissi verir.
-func cdFooterSutunlari(s CDShell) []struct {
-	Title string
-	Links [][2]string
-} {
-	out := make([]struct {
-		Title string
-		Links [][2]string
-	}, 0, len(cdFooterColumns))
-	for _, sut := range cdFooterColumns {
-		var links [][2]string
-		for _, l := range sut.Links {
-			if !cdBolumVar(s, l[1]) && cdBolumYoluMu(l[1]) {
-				continue
-			}
-			links = append(links, l)
-		}
-		if len(links) == 0 {
-			continue
-		}
-		out = append(out, struct {
-			Title string
-			Links [][2]string
-		}{Title: sut.Title, Links: links})
-	}
-	return out
-}
-
 // CDSekme etiketi: "markets" → "Markets Live".
 func cdSekmeEtiketi(tab string) string {
 	if tab == "stocks" {
-		return "Crypto Stocks"
+		return "Hisse Senetleri"
 	}
-	return "Markets Live"
+	return "Canlı Piyasalar"
 }
 
 // cdSiraya numarayı 1-tabanlı metne çevirir (0 → "1").

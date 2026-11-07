@@ -7,6 +7,7 @@ import (
 	"time"
 	"unicode/utf8"
 
+	"theblock/site/internal/i18n"
 	"theblock/site/internal/repo"
 	"theblock/site/internal/webui/templkit"
 )
@@ -42,7 +43,7 @@ func (s *Server) handleCDArticle(w http.ResponseWriter, r *http.Request, lang, s
 
 	_ = repo.IncrementHit(ctx, s.pool, c.ID)
 
-	bolumAd, bolumSlug := "Markets", "markets"
+	bolumAd, bolumSlug := "Piyasalar", "markets"
 	if c.CategoryName != nil && *c.CategoryName != "" {
 		bolumAd = *c.CategoryName
 	}
@@ -55,7 +56,7 @@ func (s *Server) handleCDArticle(w http.ResponseWriter, r *http.Request, lang, s
 		Title:       cdMakaleBaslik(c),
 		Desc:        cdMakaleAciklama(c),
 		Canonical:   s.cfg.BaseURL + makaleURL(c),
-		Kicker:      strings.ToUpper(bolumAd),
+		Kicker:      i18n.BuyukHarf(bolumAd),
 		SectionName: bolumAd,
 		SectionHref: "/" + bolumSlug,
 		Headline:    c.Title,

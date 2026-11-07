@@ -75,7 +75,7 @@ templ cdDusunceModul(d CDDusunce) {
 			}
 			<a class="cd-dusunce__baslik" href={ d.Href }>{ d.Baslik }</a>
 			if d.Sponsor != "" {
-				<span class="cd-dusunce__sponsor">Sponsorlu: { d.Sponsor }</span>
+				<span class="cd-dusunce__sponsor">Sponsor { d.Sponsor }</span>
 			}
 		</article>
 	</section>
@@ -190,7 +190,7 @@ templ cdBasinSlider(items []CDBasin) {
 						<article class="cd-basin__slayt">
 							<a class="cd-basin__baslik" href={ b.Href }>{ b.Baslik }</a>
 							if b.Sponsor != "" {
-								<span class="cd-basin__sponsor">Sponsorlu: { b.Sponsor }</span>
+								<span class="cd-basin__sponsor">Sponsor { b.Sponsor }</span>
 							}
 						</article>
 					}
@@ -298,7 +298,7 @@ templ cdVideoModul(items []CDVideo) {
 						}
 					</div>
 				}
-				<a class="cd-btn cd-btn--ghost" href="/videos">Daha fazla</a>
+				<a class="cd-btn cd-btn--ghost" href="/videos">Daha Fazlasını Keşfet</a>
 			</div>
 		</section>
 	}
@@ -343,7 +343,7 @@ templ cdArastirmaModul(a *CDArastirma) {
 				}
 			</div>
 			<div class="cd-video__alt">
-				<a class="cd-btn cd-btn--ghost" href="/research">Daha fazla</a>
+				<a class="cd-btn cd-btn--ghost" href="/research">Daha Fazlasını Keşfet</a>
 			</div>
 		</section>
 	}
@@ -545,6 +545,12 @@ templ cdIkili(yorum []CDUzman, enCok []CDStory) {
 }
 
 // cdMostRead §21 — manşet 5fr + iki sütun küçük kart 7fr (ölçüldü).
+//
+// ÖLÇÜM (CoinDesk /tr, 7 Kasım 2026): sol manşet GÖRSELLİ (428×240) ve
+// spot'lu (16/24, 4 satır kırpma); sağdaki yedi küçük kart GÖRSELSİZ ve
+// SPOTSUZ — yalnız başlık 20/26 w500 + saat 14/21, kart içi aralık 8 px.
+// Önceki sürüm küçük kartlarda da görsel + spot basıyordu; modül 1191 px
+// çıkıyordu, CoinDesk'te 561 px.
 templ cdMostRead(items []CDStory) {
 	if len(items) > 0 {
 		<section class="cd-panel">
@@ -556,8 +562,11 @@ templ cdMostRead(items []CDStory) {
 				if len(items) > 1 {
 					<ul class="cd-most__liste">
 						for _, s := range items[1:] {
-							<li>
-								@cdCard(s, false, YuvaEnCokOkunan)
+							<li class="cd-most__oge">
+								<a class="cd-most__baslik" href={ s.Href }>{ s.Title }</a>
+								if s.Time != "" {
+									<time class="cd-most__saat">{ s.Time }</time>
+								}
 							</li>
 						}
 					</ul>

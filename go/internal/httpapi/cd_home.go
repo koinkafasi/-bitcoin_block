@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"theblock/site/internal/i18n"
 	"theblock/site/internal/repo"
 	"theblock/site/internal/webui/templkit"
 )
@@ -53,7 +54,7 @@ func (s *Server) handleCDHome(w http.ResponseWriter, r *http.Request) {
 			st.SourceURL = *c.SourceURL
 		}
 		if c.CategoryName != nil {
-			st.Kicker = strings.ToUpper(*c.CategoryName)
+			st.Kicker = i18n.BuyukHarf(*c.CategoryName)
 		}
 		return st
 	}
@@ -130,10 +131,10 @@ func (s *Server) handleCDHome(w http.ResponseWriter, r *http.Request) {
 	// §22 bölüm blokları — CoinDesk 2×2 sırası: Piyasalar · Politika ·
 	// Teknoloji · Finans (ölçüldü). Hücre başına 1 görselli + 3 satır.
 	bolumler := []cdBolum{
-		{"Markets", "markets"},
-		{"Policy", "policy"},
-		{"Tech", "tech"},
-		{"Finance", "business"},
+		{"Piyasalar", "markets"},
+		{"Politika", "policy"},
+		{"Teknoloji", "tech"},
+		{"Finans", "business"},
 	}
 	var sections []templkit.CDSection
 	for _, b := range bolumler {

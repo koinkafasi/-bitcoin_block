@@ -1665,6 +1665,77 @@ Aynı profilde LCP görseli 94 KB JPEG (960w). Gerçek tarayıcıda (kısıtlama
 yok) LCP 0,86 s masaüstü / 0,08 s mobil. JPEG kalitesini düşürmek
 (q82 → q78) tasarım sadakatini bozacağı için yapılmadı.
 
+### 11.9 Onbirinci tur (`/tr` fark taraması — dil ve yapı) — DURUM
+
+Kullanıcı "coindesk.com/tr ile kalan farklar" dedi; 1920 px'te iki sayfa
+yan yana ölçüldü (7 Kasım 2026, gerçek Chrome).
+
+#### 11.9.1 EN BÜYÜK HATA: arayüz İngilizceydi
+
+Türkçe sitede gezinme, bölüm adları, menü ve alt bilgi **İngilizce**
+görünüyordu: "News · Prices · Research", "Markets · Policy · Tech ·
+Finance", "POLICY" kicker'ı. CoinDesk `/tr` ise "Haberler · Fiyatlar ·
+Araştırma", "Piyasalar · Politika · Teknoloji · Finans" kullanıyor.
+
+Kök neden **veritabanı**: `categories.name` alanı 16–30 arası kayıtlarda
+İngilizceydi ve bu ad hem bölüm bloğuna, hem makale kicker'ına, hem menüye
+yayılıyordu. Migration `0121` adları Türkçeleştirdi (**slug'lar
+değişmedi** — adresler kanonik ve indekslenmiş). Ayrıca kodda sabit yazılı
+etiketler de çevrildi.
+
+#### 11.9.2 İKİNCİ GERÇEK HATA: Türkçe büyük harf
+
+Bölüm kicker'ı `strings.ToUpper` ile büyütülüyordu; Go yerel ayar bilmediği
+için **"POLITIKA"** çıkıyordu (olması gereken "POLİTİKA" — `i → İ`,
+`ı → I`). `i18n.BuyukHarf` eklendi; üç çağrı yeri ona bağlandı.
+
+#### 11.9.3 Ölçülen yapısal farklar
+
+| Konu | CoinDesk `/tr` | bitcosar (önce) | Düzeltme |
+|---|---|---|---|
+| "Canlı Piyasalar" etiketi | **10/15** w500, 82×15, büyük harf DEĞİL | 12/16 + uppercase + 0.4 px, 144×50 | 10/15, uppercase kaldırıldı |
+| Canlı noktası | 8 px nokta + 21 px yarı saydam halka | yalnız 8 px nokta | `::after` halka eklendi |
+| Ticker sekmesi | kap **gri** zemin + aktif sekme **beyaz** | tersi (aktif gri, kap saydam) | ölçüme çevrildi |
+| Ticker öğesi | sembol 12/18, fiyat 14/21, **yüzde rozeti renkli zeminli**, öğeler arası çizgi YOK | köşe yok, `border-left` çizgi, rozetsiz | rozet `--cd-up-bg`/`--cd-down-bg`, çizgi kaldırıldı |
+| Sekme etiketi | "Hisse Senetleri" | "Hisse" | düzeltildi |
+| Modül düğmesi | "Daha Fazlasını Keşfet" | "Daha fazla" | düzeltildi |
+| Sponsor satırı | "Sponsor Hex Trust" | "Sponsorlu: Hex Trust" | iki nokta + "lu" kaldırıldı |
+| Üst çubuk düğmeleri | arama ikonu · ay (tema) · TR · **Oturum Aç** · **Kaydol** (sarı) | "Ara" metni · yarım daire · Giriş · siyah "Ücretsiz üye ol" | ikon · ay SVG · Oturum Aç · `--cd-brand` sarı |
+| **En Çok Okunan** | sol manşet görselli+spotlu; **sağdaki yedi kart GÖRSELSİZ ve SPOTSUZ** (yalnız 20/26 başlık + 14/21 saat) | küçük kartlarda da görsel + spot → modül **1191 px** | küçük kartlar düz başlık+saat → **470 px** (CoinDesk 561) |
+| **Alt bilgi** | **4 sütun**, her sütunda **2–3 bölüm üst üste** (toplam 12 başlık), 942 px | 5 sütun × tek bölüm, 497 px | 4 sütun × çok bölüm, 11 başlık |
+| Alt bilgi yasal satırı | solda 10/16 bağlantılar + **sağda 8 sosyal ikon** | yalnız bağlantılar, ikon yok | X · Facebook · LinkedIn · RSS · Instagram · YouTube · Telegram |
+| Reklam bandı | dış 366 px (32 dikey dolgu), iç 302 px `#f4f4f4` | 250 px kesikli çerçeve | 302 px, zemin dolgusu, çerçevesiz |
+
+#### 11.9.4 Alt bilgi süzgeci kaldırıldı — gerçek hata
+
+Alt bilgi satırları `MenuBolumler` haritasıyla süzülüyordu; o harita yalnız
+**içeriği olan** bölümleri sayıyor. `/hakkimizda`, `/kariyer`, `/iletisim`
+gibi **statik sayfalar** haritada olmadığı için elendi: alt bilgi 942 px
+yerine 497 px'e düşüyor, sütunlar seyreltik kalıyordu. Liste artık elle
+doğrulanmış — 31 rotanın hepsi `curl` ile **200** döndüğü kontrol edildi;
+ölü olan 7 yol (blog · erisilebilirlik · reklam · site-haritasi · index ·
+api · web-seminerleri) listeye **alınmadı**.
+
+#### 11.9.5 Ölçüm sonrası
+
+```
+yatay taşma            0 (1920 ve 390)
+sayfa yüksekliği       5341 px (CoinDesk /tr: 5469)
+sütun yapısı           3 kolon korunuyor (290 + 608 + 290, gap 80)
+modül geometrisi       Düşünce 306 · Video 360 · Araştırma 503 ·
+                       Klipler 566 · Basın 181 — hepsi CoinDesk ile aynı
+alt bilgi              4 sütun, 11 bölüm başlığı
+4xx / konsol           0 / 0
+gofmt · vet · test · build   temiz
+Lighthouse masaüstü    100 · 100 · 100 · 100 (LCP 0,7 s, CLS 0,001)
+Lighthouse mobil       95 · 100 · 100 · 100 (LCP 2,9 s, CLS 0,001)
+```
+
+Kalan bilinçli fark: "Kripto Fiyatları" tablosu. CoinDesk `/tr` ana
+sayfasında fiyat tablosu **yok**; bizde var çünkü kullanıcı ilk turda
+canlı piyasa şeridinin yanında tabloyu da istedi. Bu bir eksik değil,
+istenmiş ek modül.
+
 ---
 
 ## 12. Kopyalanması önerilen sözleşmeler

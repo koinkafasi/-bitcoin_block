@@ -92,13 +92,13 @@ func TestCDMenuVeriYoksaSutunBasilmaz(t *testing.T) {
 		if g.Label == "News" {
 			assert.Len(t, g.Columns, 1, "etiket verisi yokken News tek sütun olmalı")
 		}
-		if g.Label == "Prices" {
+		if g.Href == "/price" {
 			require.Len(t, g.Columns, 1)
 			var etiketler []string
 			for _, it := range g.Columns[0].Items {
 				etiketler = append(etiketler, it.Label)
 			}
-			assert.Contains(t, etiketler, "See all crypto prices",
+			assert.Contains(t, etiketler, "Tüm kripto fiyatlarını gör",
 				"fiyat verisi yokken yine de 'tümü' satırı olmalı")
 		}
 	}
@@ -116,12 +116,15 @@ func TestCDMenuVeriVarsaEklenir(t *testing.T) {
 		},
 	}
 	gruplar := cdMenuGroups(dolu)
+	// Href ile eşleşiyoruz: etiketler Türkçeleştirildi (News → Haberler,
+	// Prices → Fiyatlar) ama ADRESLER kanonik ve sabit. Etikete bağlı test
+	// her çeviride kırılırdı.
 	var news, prices *CDMenuGroup
 	for i := range gruplar {
-		switch gruplar[i].Label {
-		case "News":
+		switch gruplar[i].Href {
+		case "/latest-crypto-news":
 			news = &gruplar[i]
-		case "Prices":
+		case "/price":
 			prices = &gruplar[i]
 		}
 	}

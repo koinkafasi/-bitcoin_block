@@ -85,6 +85,9 @@
   /* ---- finans ---- */
   --cd-up: #218410;              /* text-pos (açık tema) */
   --cd-down: #bb020a;            /* text-neg (açık tema) */
+  /* Yüzde rozeti zeminleri (CoinDesk'te ölçüldü: #e5ffe0 / #ffe5e5). */
+  --cd-up-bg: #e5ffe0;
+  --cd-down-bg: #ffe5e5;
 
   /* ---- marka: temayla DÖNMEZ ---- */
   --cd-brand: #ffd200;           /* bg-surface-brand-fixed */
@@ -180,6 +183,8 @@
     --cd-border-disable: #0f0f0f;
     --cd-up: #18e589;
     --cd-down: #ff454d;
+    --cd-up-bg: #10301c;
+    --cd-down-bg: #3a1214;
   }
 }
 
@@ -198,6 +203,8 @@ html.dark {
   --cd-border-disable: #0f0f0f;
   --cd-up: #18e589;
   --cd-down: #ff454d;
+  --cd-up-bg: #10301c;
+  --cd-down-bg: #3a1214;
   color-scheme: dark;
 }
 
@@ -350,31 +357,60 @@ html { overflow-x: clip; }
 }
 .cd-ticker__inner::-webkit-scrollbar { display: none; }
 
-/* "Canlı Piyasalar" — DÜĞME DEĞİL, metin etiket + yeşil canlı noktası. */
+/* "Canlı Piyasalar" — DÜĞME DEĞİL, metin etiket + yeşil canlı noktası.
+   ÖLÇÜLDÜ (CoinDesk /tr, 7 Kasım 2026): 10/15 w500, BÜYÜK HARF DEĞİL,
+   82×15. Önceki sürüm 12/16 + uppercase + 0.4 px aralık kullanıyordu:
+   etiket 144×50 yer kaplıyordu, CoinDesk'te 82×15. */
 .cd-ticker__canli {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  align-self: center;   /* şerit yüksekliğine UZAMASIN (ölçüldü: 82×15) */
+  gap: 6px;
   flex: none;
   padding: 0 16px 0 0;
-  font-size: 12px;
-  line-height: 16px;
+  font-size: 10px;
+  line-height: 15px;
   font-weight: 500;
-  letter-spacing: 0.4px;
-  text-transform: uppercase;
   color: var(--cd-fg);
 }
+/* Nokta + halka: CoinDesk'te 8 px nokta, çevresinde 21 px yarı saydam
+   halka (canlı yayın "nabız" deseni). Halka animasyonsuz — prefers-reduced
+   -motion'da da aynı görünür. */
 .cd-ticker__nokta {
+  position: relative;
   width: 8px;
   height: 8px;
   border-radius: 9999px;
   background: var(--cd-up);
   flex: none;
 }
+.cd-ticker__nokta::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 21px;
+  height: 21px;
+  transform: translate(-50%, -50%);
+  border-radius: 9999px;
+  background: var(--cd-up);
+  opacity: 0.18;
+}
 
-.cd-ticker__tabs { display: flex; align-items: center; gap: 6px; flex: none; padding-right: 16px; }
-/* Sekme 12/16 w500; aktif zemin surface-default, pasif saydam (ölçüldü).
-   `aria-selected` YOK — aktiflik ağırlık + zeminle anlatılıyor. */
+/* Sekme kabı: gri zemin (surface-subtle) + 6 px köşe + 4 px dolgu;
+   AKTİF sekme BEYAZ, pasif saydam. Önceki sürüm TERSİNİ yapıyordu
+   (aktif gri, kap saydam) — ölçümle düzeltildi. */
+.cd-ticker__tabs {
+  display: flex;
+  align-items: center;
+  align-self: center;   /* kapsayıcı 36 px (ölçüldü), 50 px değil */
+  gap: 0;
+  flex: none;
+  margin-right: 16px;
+  padding: 4px;
+  border-radius: 6px;
+  background: var(--cd-surface-soft);
+}
 .cd-ticker__tab {
   font-size: 12px;
   line-height: 16px;
@@ -385,28 +421,35 @@ html { overflow-x: clip; }
   color: var(--cd-muted);
   background: transparent;
   cursor: pointer;
+  white-space: nowrap;
 }
 .cd-ticker__tab[aria-selected="true"] {
   font-weight: 500;
-  background: var(--cd-surface-soft);
-  color: var(--cd-fg);
+  background: var(--cd-bg);
+  color: var(--cd-fg-strong);
 }
+/* `.cd a { color: inherit }` (0,1,1) sekme rengini eziyordu; pasif sekme
+   #676767 olması gerekirken #262626 çıkıyordu (ölçüm 7 Kasım 2026). */
+a.cd-ticker__tab { color: var(--cd-muted); }
+a.cd-ticker__tab[aria-selected="true"] { color: var(--cd-fg-strong); }
 
-/* Öğe: sayfa başında İKİ SATIR (sembol üstte, fiyat altta), değişim gizli.
-   Ölçüldü (CoinDesk, scrollY 0): öğe 157×50, flex-direction column, gap 2. */
+/* Öğe: sayfa başında İKİ SATIR (sembol üstte, fiyat+değişim altta),
+   değişim GİZLİ. Ölçüldü (CoinDesk /tr): öğe 157×50, köşe 4 px,
+   iç boşluk 4/8; sembol 12/18 w500, fiyat 14/21 w400, yüzde rozeti
+   12/18 w400 renkli zeminli. Öğeler arasında ÇİZGİ YOK (önceki sürüm
+   border-left kullanıyordu; CoinDesk'te ayrıcı yok). */
 .cd-ticker__item {
   display: inline-flex;
   flex-direction: column;
   align-items: flex-start;
   gap: 2px;
-  padding: 4px 12px;
-  font-size: 14px;
+  padding: 4px 8px;
+  border-radius: var(--cd-radius);
   line-height: 18px;
-  border-left: 1px solid var(--cd-border);
 }
-.cd-ticker__item:first-of-type { border-left: 0; }
-.cd-ticker__sym { font-weight: 500; }
-.cd-ticker__px { color: var(--cd-muted); }
+.cd-ticker__item + .cd-ticker__item { margin-left: 14px; }
+.cd-ticker__sym { font-size: 12px; line-height: 18px; font-weight: 500; }
+.cd-ticker__px { font-size: 14px; line-height: 21px; color: var(--cd-fg); }
 /* Sade görünüm: yüzde gizli. */
 .cd-ticker__item .cd-up,
 .cd-ticker__item .cd-down { display: none; font-size: 12px; line-height: 18px; }
@@ -418,8 +461,18 @@ html.cd-kaydi .cd-ticker__item {
   align-items: baseline;
   gap: 8px;
 }
+/* Değişim rozeti: CoinDesk'te renkli zemin + 4 px köşe (yükseliş
+   #e5ffe0, düşüş #ffe5e5). Yalnız renkli metin değil. */
 html.cd-kaydi .cd-ticker__item .cd-up,
-html.cd-kaydi .cd-ticker__item .cd-down { display: inline; }
+html.cd-kaydi .cd-ticker__item .cd-down {
+  display: inline-block;
+  padding: 0 4px;
+  border-radius: var(--cd-radius);
+  font-size: 12px;
+  line-height: 18px;
+}
+html.cd-kaydi .cd-ticker__item .cd-up { background: var(--cd-up-bg); }
+html.cd-kaydi .cd-ticker__item .cd-down { background: var(--cd-down-bg); }
 .cd-up { color: var(--cd-up); }
 .cd-down { color: var(--cd-down); }
 
@@ -489,6 +542,14 @@ html.cd-kaydi .cd-ticker__item .cd-down { display: inline; }
   cursor: pointer;
 }
 .cd-btn--ghost { background: transparent; color: var(--cd-fg); border-color: var(--cd-border-strong); }
+/* Kaydol düğmesi — CoinDesk'te MARKA SARISI zemin + koyu metin
+   (ölçüldü: /tr, 7 Kasım 2026). Siyah birincil düğme sadakatsizdi.
+   `--cd-brand` temayla DÖNMEZ, bu yüzden metin de sabit koyu renk. */
+.cd-btn--kayit {
+  background: var(--cd-brand);
+  border-color: var(--cd-brand);
+  color: var(--cd-dark);
+}
 .cd-btn--link { background: none; border: 0; padding: 0; color: var(--cd-fg); text-decoration: underline; }
 /* GERÇEK HATA (7 Kasım 2026, Lighthouse masaüstü a11y 97 → bulundu):
    `.cd a { color: inherit }` özgüllüğü (0,1,1), `.cd-btn`'inkinden (0,1,0)
@@ -498,6 +559,20 @@ html.cd-kaydi .cd-ticker__item .cd-down { display: inline; }
    ≤767 px'te gizli. Bağlantı düğmeleri için renk burada sabitleniyor. */
 a.cd-btn { color: var(--cd-bg); }
 a.cd-btn--ghost { color: var(--cd-fg); }
+a.cd-btn--kayit { color: var(--cd-dark); }
+
+/* Üst çubuk ikon düğmesi (arama): CoinDesk'te metin düğme yok, 32 px
+   yuvarlak ikon var. Çerçevesiz, sönük renk, hover'da zemin. */
+.cd-ikon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 9999px;
+  color: var(--cd-fg);
+}
+.cd-ikon-btn:hover { background: var(--cd-surface-soft); text-decoration: none; }
 
 /* Tema anahtarı — JS varsa görünür (JS yoksa ölü düğme göstermeyiz). */
 .cd-tema {
@@ -1496,11 +1571,15 @@ html.cd-js .cd-tema { display: inline-flex; }
   color: var(--cd-fg-strong);
 }
 .cd-footer__logo span { color: var(--cd-brand); }
+/* DÖRT sütun, her sütunda 2-3 bölüm ÜST ÜSTE (CoinDesk ölçümü:
+   237 px sütun, 24 gap, bölümler arası 38 px). Önceki sürüm 5 sütundu. */
 .cd-footer__cols {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 24px;
 }
+.cd-footer__sutun { display: flex; flex-direction: column; gap: 38px; min-width: 0; }
+.cd-footer__bolum { display: flex; flex-direction: column; }
 .cd-footer h3 {
   font-size: 14px;
   line-height: 22px;
@@ -1509,10 +1588,10 @@ html.cd-js .cd-tema { display: inline-flex; }
   text-transform: capitalize;
   color: var(--cd-fg-strong);
   font-weight: 500;
-  margin: 0 0 8px;
+  margin: 0 0 16px;
 }
 /* Sütunlar EŞİT UZUNLUKTA DEĞİL: içerik kadar (ölçüldü: 46 vs 25 bağlantı). */
-.cd-footer ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+.cd-footer ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 9px; }
 .cd-footer a { font-size: 12px; line-height: 16px; font-weight: 400; color: var(--cd-muted); }
 .cd-footer hr {
   border: 0;
@@ -1520,15 +1599,38 @@ html.cd-js .cd-tema { display: inline-flex; }
   margin: 0;
   width: 100%;
 }
+/* Yasal satır: solda bağlantılar (10/16 — CoinDesk ölçümü), sağda sosyal
+   ikonlar. Önceki sürüm yalnız bağlantı basıyordu ve 12/16 kullanıyordu. */
 .cd-footer__yasal {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px 24px;
+  gap: 16px 24px;
+  align-items: center;
   justify-content: space-between;
-  font-size: 12px;
+  font-size: 10px;
   line-height: 16px;
   color: var(--cd-muted);
 }
+.cd-footer__yasal-sol {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px 24px;
+  align-items: center;
+}
+.cd-footer__sosyal {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.cd-footer__sosyal a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  color: var(--cd-fg);
+}
+.cd-footer__sosyal a:hover { color: var(--cd-muted); }
 .cd-footer__alt {
   display: flex;
   flex-direction: column;
@@ -1691,8 +1793,17 @@ html.cd-js .cd-tema { display: inline-flex; }
 .cd-most__kart { min-width: 0; }
 /* Manşet kart bu blokta 428 px geniş: başlık 28/36 w500 (ölçüldü). */
 .cd-most__kart .cd-card__title { font-size: 28px; line-height: 36px; }
-/* Manşette spot 16/24 (ölçüldü: `text-base text-subtle`). */
-.cd-most__kart .cd-card__spot { font-size: 16px; line-height: 24px; }
+/* Manşette spot 16/24 ve 4 SATIRLA kırpılır (ölçüldü: `line-clamp-4`). */
+.cd-most__kart .cd-card__spot {
+  font-size: 16px;
+  line-height: 24px;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+/* Manşet kart içi aralık 12 px (ölçüldü; küçük kartlarda 8). */
+.cd-most__kart .cd-card { gap: 12px; }
 .cd-most__liste {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1701,8 +1812,24 @@ html.cd-js .cd-tema { display: inline-flex; }
   padding: 0;
   list-style: none;
 }
-/* Küçük kart başlığı 18/26 w500 (ölçüldü). */
-.cd-most__liste .cd-card__title { font-size: 18px; line-height: 26px; }
+/* Sağdaki küçük kartlar GÖRSELSİZ ve SPOTSUZ: 291 px genişlikte yalnız
+   başlık 20/26 w500 + saat 14/21, kart içi aralık 8 px (ölçüldü
+   CoinDesk /tr, 7 Kasım 2026). */
+.cd-most__oge {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+.cd-most__baslik {
+  font-family: var(--cd-serif);
+  font-size: 20px;
+  line-height: 26px;
+  font-weight: 500;
+  color: var(--cd-fg);
+}
+.cd-most__baslik:hover { text-decoration: underline; text-underline-offset: 3px; }
+.cd-most__saat { font-size: 14px; line-height: 21px; color: var(--cd-muted); }
 
 /* ---------------------------------------------------------------- görüş (§20) */
 /* ÖLÇÜLDÜ: her satır `flex items-start justify-between gap-2` (8 px),
@@ -1853,13 +1980,17 @@ html.cd-js .cd-tema { display: inline-flex; }
 }
 
 /* Reklam yuvası: düzen kayması olmasın diye yükseklik ayrılır (CLS). */
+/* Reklam yuvası. CoinDesk ölçümü (7 Kasım 2026): dış bant 1920×366 with
+   32 px dikey dolgu; İÇ kutu 1920×302, zemin #f4f4f4, 12 px dikey dolgu.
+   Etiket "REKLAM" 10 px, ortalanmış, sönük. */
 .cd-ad {
-  min-height: 250px;
+  min-height: 302px;
   display: grid;
   place-items: center;
-  border: 1px dashed var(--cd-border-strong);
+  border: 0;
+  background: var(--cd-surface-soft);
   color: var(--cd-muted);
-  font-size: 12px;
+  font-size: 10px;
   line-height: 16px;
   letter-spacing: 0.4px;
   text-transform: uppercase;
@@ -1883,7 +2014,7 @@ html.cd-js .cd-tema { display: inline-flex; }
 
 @media (max-width: 1024px) {
   .cd-grid--4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .cd-footer__cols { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .cd-footer__cols { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .cd-most { grid-template-columns: 1fr; }
   .cd-news { grid-template-columns: 1fr; }
   .cd-news__form { flex-wrap: wrap; }
