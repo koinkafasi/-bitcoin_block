@@ -66,6 +66,10 @@
 :root {
   /* ---- zemin katmanları ---- */
   --cd-bg: #ffffff;              /* surface-default — gövde zemini */
+  /* ÜST ÇUBUK ZEMİNİ AYRI JETON (kullanıcı isteği, 7 Kasım 2026):
+     açık temada beyaz, koyu temada SİYAH (#000000). Gövde zemini koyu
+     temada #161616 olduğu için üst çubuk artık ondan AYRIŞIYOR. */
+  --cd-topbar-bg: #ffffff;
   --cd-surface-soft: #f4f4f4;    /* surface-subtle — kart/blok (en sık) */
   --cd-surface-alt: #f4f4f4;     /* geriye dönük ad; aynı katman */
   --cd-surface-action: #d9d9d9;  /* surface-action — etkileşim zemini */
@@ -169,7 +173,8 @@
  * işletim sistemi koyu diye geri alınmaz. */
 @media (prefers-color-scheme: dark) {
   :root:not(.light):not(.dark) {
-    --cd-bg: #0a0b0e;
+    --cd-bg: #161616;
+    --cd-topbar-bg: #000000;
     --cd-surface-soft: #262626;
     --cd-surface-alt: #262626;
     --cd-surface-action: #262626;
@@ -189,7 +194,8 @@
 }
 
 html.dark {
-  --cd-bg: #0a0b0e;
+  --cd-bg: #161616;
+  --cd-topbar-bg: #000000;
   --cd-surface-soft: #262626;
   --cd-surface-alt: #262626;
   --cd-surface-action: #262626;
@@ -360,14 +366,26 @@ html { overflow-x: clip; }
   position: sticky;
   top: var(--cd-header-h);
   z-index: 30;
+  /* Şerit zemini KOYU TEMADA #161616 (kullanıcı isteği, 7 Kasım 2026).
+     Gövde jetonuyla aynı; ayrı yazılması ileride gövde rengi değişirse
+     şeridin kazara başka renge dönmesini engelliyor. */
   background: var(--cd-bg);
   border-bottom: 1px solid var(--cd-border);
   font-variant-numeric: tabular-nums;
 }
+html.dark .cd-ticker { background: #161616; }
+@media (prefers-color-scheme: dark) {
+  :root:not(.light):not(.dark) .cd-ticker { background: #161616; }
+}
+/* ÖLÇÜLDÜ (CoinDesk /tr, 7 Kasım 2026): kapsayıcı `justify-between` +
+   `gap: 12px`. Yedi kalem sağdaki "Kaydol" düğmesinin bittiği hizaya kadar
+   (x=1692) YAYILIYOR. Önceki sürüm `gap: 0` + `margin-right` kullanıyordu:
+   kalemler sola yığılıp x=1449'da bitiyordu. */
 .cd-ticker__inner {
   display: flex;
   align-items: stretch;
-  gap: 0;
+  justify-content: space-between;
+  gap: 12px;
   overflow-x: auto;
   scrollbar-width: none;
   min-height: var(--cd-ticker-h);
@@ -472,45 +490,83 @@ a.cd-ticker__tab[aria-selected="true"] { color: var(--cd-fg-strong); }
   display: inline-flex;
   flex-direction: column;
   align-items: flex-start;
+  justify-content: center;
   gap: 2px;
   padding: 4px 8px;
   border-radius: var(--cd-radius);
   line-height: 18px;
-  /* Öğeler arası 28 px boşluk: padding 8+8 zaten var, kalanı `margin`. */
-  margin-right: 12px;
+  flex: none;
+  color: var(--cd-fg);
+  /* HOVER: CoinDesk kalemde zemin değişimi kullanıyor (çerçeve değil). */
+  transition: background-color 120ms ease;
 }
+.cd-ticker__item:hover { background: var(--cd-surface-soft); text-decoration: none; }
+
+/* AYIRICI ÇİZGİ — CoinDesk'te kalemler arasında 1×32 px dikey çizgi var
+   (`<div role="separator" aria-orientation="vertical">`, border-l
+   border-default). Önceki sürümde çizgi yoktu, `margin-right` vardı. */
+.cd-ticker__ayirici {
+  flex: none;
+  align-self: center;
+  width: 1px;
+  height: 32px;
+  border-left: 1px solid var(--cd-border);
+}
+/* Sembol satırı: 12/18 w500 (CoinDesk `text-xs font-medium`). */
 .cd-ticker__sym { font-size: 12px; line-height: 18px; font-weight: 500; }
-/* Fiyat + yüzde ALT SATIRDA yan yana (CoinDesk: ikisi tek satırda). */
-.cd-ticker__px { font-size: 14px; line-height: 21px; color: var(--cd-fg); }
-/* YÜZDE HER ZAMAN GÖRÜNÜR ve renkli — zemin/çerçeve YOK.
-   `.cd-up`/`.cd-down` rengi alttaki genel kurallardan gelir. */
-.cd-ticker__item .cd-up,
-.cd-ticker__item .cd-down {
-  display: inline;
-  font-size: 12px;
-  line-height: 18px;
-  background: none;
-  padding: 0;
-  border-radius: 0;
+
+/* Fiyat + yüzde AYNI SATIRDA: flex, aralık 8 px (CoinDesk `gap-2`). */
+.cd-ticker__alt {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   white-space: nowrap;
 }
-/* Fiyat + yüzde aynı satırda dursun: ikisi de ikinci flex çocuğu olarak
-   yan yana gelir. `cd-ticker__px` ile yüzde arasında 6 px. */
-.cd-ticker__item .cd-up,
-.cd-ticker__item .cd-down { margin-left: 6px; }
+.cd-ticker__px { font-size: 14px; line-height: 21px; color: var(--cd-fg); }
 
-/* Kaydırılmış durum: TEK SATIR (sembol · fiyat · yüzde), aralık 25 px.
-   CoinDesk ölçümü: serit yüksekliği 66 → 45 px'e iner. */
+/* YÜZDE ROZETİ — ÖLÇÜLDÜ (CoinDesk /tr, 7 Kasım 2026):
+     60×22, yükseklik 22 (12/18 metin + 0 6 px dolgu), radius 4 px,
+     RENKLİ ZEMİN (yükseliş #e5ffe0, düşüş #ffe5e5), renkli metin,
+     `display:flex`, İLK GÖRÜNÜMDEN itibaren görünür.
+   Önceki sürümde rozet yalnız kaydırınca çıkıyordu ve ZEMİNSİZDİ;
+   "renk çerçeveli alanlar eksik" geri bildirimi bunu işaret ediyordu. */
+.cd-ticker__item .cd-up,
+.cd-ticker__item .cd-down {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 22px;
+  padding: 0 6px;
+  border-radius: var(--cd-radius);
+  font-size: 12px;
+  line-height: 18px;
+  font-weight: 400;
+  white-space: nowrap;
+}
+.cd-ticker__item .cd-up { background: var(--cd-up-bg); color: var(--cd-up); }
+.cd-ticker__item .cd-down { background: var(--cd-down-bg); color: var(--cd-down); }
+
+/* Kaydırılmış durum: TEK SATIR (sembol · fiyat · rozet).
+   CoinDesk ölçümü (7 Kasım 2026, scrollY 700):
+     dış şerit 46 px (45 + 1 px çizgi) · iç satır 45 px, dolgu 6 px,
+     kalem 32 px, rozet 22 px.
+   ÖNCEKİ HATA: yalnız `min-height: 45px` verilmişti ve `align-items:
+   stretch` kalemleri 36 px'e ŞİŞİRİYORDU (şerit 49 px çıkıyordu).
+   CoinDesk satıra SABİT 45 px yükseklik verip çocukları `center` ile
+   hizalıyor; kalem de 32 px'te kalıyor. */
 html.cd-kaydi .cd-ticker__item {
   flex-direction: row;
-  align-items: baseline;
+  align-items: center;
   gap: 8px;
-  margin-right: 9px;
+  min-height: 32px;
 }
-html.cd-kaydi .cd-ticker__item .cd-up,
-html.cd-kaydi .cd-ticker__item .cd-down { margin-left: 0; }
-/* Kaydırılmış durumda şerit yüksekliği 45 px (66 değil). */
-html.cd-kaydi .cd-ticker__inner { padding: 6px 0; min-height: 45px; }
+html.cd-kaydi .cd-ticker__alt { gap: 8px; }
+html.cd-kaydi .cd-ticker__inner {
+  padding: 6px 0;
+  height: 45px;
+  min-height: 45px;
+  align-items: center;
+}
 .cd-up { color: var(--cd-up); }
 .cd-down { color: var(--cd-down); }
 
@@ -526,7 +582,7 @@ html.cd-kaydi .cd-ticker__inner { padding: 6px 0; min-height: 45px; }
      İçerik renkleri de ARTIK JETON KULLANIYOR; sabit açık tonlar yalnız
      KOYU zemine göre yazılmıştı ve açık temada okunmuyordu. */
   border-bottom: 1px solid var(--cd-border);
-  background: var(--cd-bg);
+  background: var(--cd-topbar-bg);
   color: var(--cd-fg);
 }
 .cd-topbar .cd-nav__link:hover { background: var(--cd-surface-soft); }
@@ -607,7 +663,9 @@ html.light .cd-logo .cd-logo__img--acik { display: block; }
    zemin tonu + `aria-current` yeterli (ekran okuyucu zaten okuyor). */
 .cd-nav__link[aria-current="page"] { background: var(--cd-surface-soft); }
 
-.cd-topbar__actions { display: flex; align-items: center; gap: 12px; }
+/* ÖLÇÜLDÜ (CoinDesk /tr, 7 Kasım 2026): sağ küme 334×40, `gap: 8px`.
+   Önceki sürüm 12 px aralık ve 38 px yükseklik kullanıyordu. */
+.cd-topbar__actions { display: flex; align-items: center; gap: 8px; height: 40px; }
 .cd-btn {
   display: inline-flex;
   align-items: center;
@@ -642,33 +700,74 @@ a.cd-btn { color: var(--cd-bg); }
 a.cd-btn--ghost { color: var(--cd-fg); }
 a.cd-btn--kayit { color: var(--cd-dark); }
 
+/* ÜST ÇUBUK DÜĞMELERİ — CoinDesk ölçümü:
+     "Oturum Aç" 104×40, "Kaydol" 77×40; ikisi de dolgu 0 16, radius 4,
+     14/21 w500. Oturum şeffaf + hover'da surface-soft; Kaydol marka sarısı
+     (#ffd200) + siyah metin + hover'da opacity .9.
+   Global `.cd-btn` 8px 14px dolgu ve 20 px satır yüksekliği kullanıyor;
+   üst çubukta bunlar 40 px yüksekliği tutturamıyordu. */
+.cd-topbar__actions .cd-btn {
+  height: 40px;
+  padding: 0 16px;
+  font-size: 14px;
+  line-height: 21px;
+  font-weight: 500;
+  border: 0;
+  border-radius: var(--cd-radius);
+  transition: background-color 120ms ease, opacity 120ms ease;
+}
+.cd-topbar__actions .cd-btn--ghost { background: transparent; color: var(--cd-fg); }
+.cd-topbar__actions .cd-btn--ghost:hover {
+  background: var(--cd-surface-soft);
+  text-decoration: none;
+}
+/* Dil ile "Oturum Aç" arasındaki DİKEY AYIRICI — CoinDesk ölçümü:
+   1×40 px, `#d9d9d9` (açık) / tema kenarlık rengi (koyu), `role="separator"`.
+   Kapsayıcının 8 px'lik `gap`i iki yanında boşluk bırakıyor. */
+.cd-topbar__ayirici {
+  flex: none;
+  width: 1px;
+  height: 40px;
+  background: var(--cd-border);
+}
+.cd-topbar__actions .cd-btn--kayit { background: var(--cd-brand); color: var(--cd-dark); }
+.cd-topbar__actions .cd-btn--kayit:hover { opacity: 0.9; text-decoration: none; }
+
 /* Üst çubuk ikon düğmesi (arama): CoinDesk'te metin düğme yok, 32 px
    yuvarlak ikon var. Çerçevesiz, sönük renk, hover'da zemin. */
+/* İkon düğmesi (arama) — CoinDesk tema düğmesiyle AYNI kutu:
+   36×36, radius 6 px, dolgu 8 px, 20×20 ikon, hover'da surface-soft.
+   Önceki sürüm 32×32 + tam yuvarlaktı (9999px). */
 .cd-ikon-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
-  border-radius: 9999px;
+  width: 36px;
+  height: 36px;
+  padding: 8px;
+  border-radius: 6px;
   color: var(--cd-fg);
+  transition: background-color 120ms ease;
 }
 .cd-ikon-btn:hover { background: var(--cd-surface-soft); text-decoration: none; }
 
 /* Tema anahtarı — JS varsa görünür (JS yoksa ölü düğme göstermeyiz). */
+/* Tema anahtarı — CoinDesk ölçümü: 36×36, radius 6 px, dolgu 8 px,
+   20×20 ay ikonu, ÇERÇEVESİZ, hover'da surface-soft. Önceki sürüm
+   32×32 + tam yuvarlak + 1 px çerçeve kullanıyordu. */
 .cd-tema {
   display: none;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
-  font-size: 16px;
-  line-height: 1;
-  border: 1px solid var(--cd-border-strong);
-  border-radius: 9999px;
+  width: 36px;
+  height: 36px;
+  padding: 8px;
+  border: 0;
+  border-radius: 6px;
   background: transparent;
   color: var(--cd-fg);
   cursor: pointer;
+  transition: background-color 120ms ease;
 }
 html.cd-js .cd-tema { display: inline-flex; }
 .cd-tema:hover { background: var(--cd-surface-soft); }
@@ -2255,7 +2354,19 @@ html.dark .cd-google { color: var(--cd-fg); }
 .cd-coin-price strong { font-size: 36px; line-height: 38px; font-weight: 500; letter-spacing: -0.02em; }
 
 /* ---------------------------------------------------------------- dil seçici */
-.cd-lang { display: inline-flex; align-items: center; }
+/* Dil seçici — CoinDesk ölçümü: 75×40 kutu, iç dolgu 0 16, radius 4 px,
+   hover'da surface-soft; içerik: 20×20 küre ikonu + "TR" (uppercase,
+   14/22 w500), aralık 4 px. */
+.cd-lang {
+  display: inline-flex;
+  align-items: center;
+  height: 40px;
+  padding: 0 16px;
+  border-radius: var(--cd-radius);
+  transition: background-color 120ms ease;
+}
+.cd-lang:hover { background: var(--cd-surface-soft); }
+.cd-lang__ikon { display: block; flex: none; width: 20px; height: 20px; }
 .cd-lang__sec {
   font: inherit;
   font-size: 12px;
@@ -2270,14 +2381,27 @@ html.dark .cd-google { color: var(--cd-fg); }
   color: var(--cd-fg);
   cursor: pointer;
 }
+/* Tek dil etiketi — CoinDesk'teki dil kutusunun BİREBİR ölçüsü:
+   75×40, iç dolgu 0 16, radius 4, küre ikonu 20×20 + kod arası 4 px,
+   hover'da surface-soft. Önceki sürüm çıplak 42×22 metindi: kutu yoktu,
+   bu yüzden sağ küme CoinDesk'ten dar duruyordu. */
 .cd-lang__tek {
-  font-size: 12px;
-  line-height: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  height: 40px;
+  padding: 0 16px;
+  border-radius: var(--cd-radius);
+  font-size: 14px;
+  line-height: 22px;
   font-weight: 500;
   text-transform: uppercase;
-  letter-spacing: 0.4px;
-  color: var(--cd-muted);
+  letter-spacing: normal;
+  color: var(--cd-fg-strong);
+  transition: background-color 120ms ease;
 }
+.cd-lang__tek:hover { background: var(--cd-surface-soft); }
 .cd-visually-hidden {
   position: absolute;
   width: 1px; height: 1px;

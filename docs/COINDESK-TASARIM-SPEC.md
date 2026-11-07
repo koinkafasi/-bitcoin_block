@@ -1791,6 +1791,67 @@ Lighthouse masaüstü   100 · 100 · 100 · 100 (LCP 0,7 s, CLS 0,003)
 Lighthouse mobil      94 · 100 · 100 · 100 (LCP 2,9 s, CLS 0,001)
 ```
 
+### 11.11 Onüçüncü tur (fiyat şeridi + üst çubuk + koyu tema zeminleri) — DURUM
+
+Kullanıcı üç şey istedi: fiyat şeridi CoinDesk gibi olsun (hover, renkli
+yüzde rozetleri, ayırıcılar, Kaydol hizası, kaydırma yüksekliği, alt
+bilgide kalma), üst çubuk sağ kümesi birebir olsun (Kaydol · Oturum Aç ·
+dil · tema · arama, aralarında çizgi) ve koyu tema zeminleri düzelsin.
+
+#### 11.11.1 Fiyat şeridi — ölçülen değerler (CoinDesk `/tr`, 1920 px)
+
+| Konu | CoinDesk | bitcosar (önce) | Şimdi |
+|---|---|---|---|
+| Kapsayıcı | `justify-between` + `gap: 12px`, 1191×50 | `gap: 0` + `margin-right` | `justify-between` + `gap: 12px` |
+| Kalem arası | **1×32 px dikey çizgi** (`role="separator"`, `border-default`) | yok, yalnız boşluk | `.cd-ticker__ayirici` 1×32 `#d9d9d9` |
+| Yüzde rozeti | 60×22, radius 4, `padding: 0 6px`, **renkli zemin** (`#ffe5e5` / `#e5ffe0`) | zeminsiz, 18 px | `min-height: 22px` + renkli zemin |
+| Kalem | 157×50, `padding: 4px 8px`, radius 4 | 152×50 | 157×50 |
+| Sağ hiza | son kalem sağ kenarı **1692 = Kaydol sağ kenarı** | 1449 | **1692 = 1692** |
+| Kaydırılmış şerit | 46 px (45 + 1 çizgi), kalem **32 px**, satıra SABİT 45 px | 49 px, kalem 36 px (esniyordu) | 46 px, kalem 32 px |
+| Alt bilgide | şerit görünür kalır (`position: sticky`) | kayboluyordu | kalıyor (y=73, en altta doğrulandı) |
+| Hover | kalemde zemin değişimi (çerçeve değil) | yok | `--cd-surface-soft`, 120 ms |
+
+Kaydırılmış yükseklik hatasının kökü: satıra yalnız `min-height: 45px`
+verilmişti ve `align-items: stretch` kalemleri 36 px'e şişiriyordu.
+CoinDesk satıra **sabit 45 px** verip çocukları `center` ile hizalıyor.
+
+#### 11.11.2 Üst çubuk sağ kümesi — ölçülen değerler
+
+| Öğe | CoinDesk | bitcosar |
+|---|---|---|
+| Küme | 334×40, `gap: 8px` | 369×40 (arama ikonu fazla), `gap: 8px` |
+| Arama / tema düğmesi | 36×36, radius 6, `padding: 8px`, ikon 20×20 | 36×36, radius 6, `padding: 8px`, ikon 20×20 |
+| Dil kutusu | 75×40, `padding: 0 16px`, küre 20×20 + kod, `gap: 4px` | 74×40, aynı |
+| Dil ↔ Oturum çizgisi | **1×40 px `#d9d9d9`**, `role="separator"` | 1×40, aynı |
+| Oturum Aç | 104×40, `padding: 0 16px`, 14/21 w500, şeffaf | 104×40, aynı |
+| Kaydol | 77×40, `#ffd200`, siyah metin, hover `opacity: .9` | 78×40, aynı |
+| Sağ kenar | 1692 | 1692 |
+
+#### 11.11.3 Koyu tema zeminleri
+
+| Yüzey | Önce | Şimdi |
+|---|---|---|
+| Gövde (`.cd`) | `#0a0b0e` | **`#161616`** (spec §3 `bg-surface-default`) |
+| Fiyat şeridi | `#0a0b0e` | **`#161616`** (ayrı jeton, gövdeden bağımsız) |
+| Üst çubuk | `#0a0b0e` | **`#000000`** (`--cd-topbar-bg`, açık temada `#ffffff`) |
+| Mega menü | açık tema jetonları | değişmedi — koyu temada **açık** kalıyor |
+
+#### 11.11.4 Doğrulama
+
+```
+yatay taşma            0 (1920 · 768 · 390)
+şerit yüksekliği       67 px üstte / 46 px kaydırılmış (CoinDesk 67 / 46)
+rozet                  22 px, zeminli (açık #ffe5e5, koyu #3a1214)
+son kalem sağ kenarı   1692 = Kaydol sağ kenarı 1692
+üst çubuk              tema ile dönüyor (açık #fff, koyu #000)
+gofmt · vet · test · build   temiz
+Lighthouse masaüstü    100 · 100 · 100 · 100 (LCP 0,7 s, CLS 0,005)
+```
+
+Bilinçli fark: arama ikonu. CoinDesk'in masaüstü üst çubuğunda arama
+düğmesi **0×0** (boş `aria-label="Ara"` yuvası) — kullanıcı istediği
+için bizde 36×36 gerçek düğme var; kutu ölçüsü tema düğmesiyle aynı.
+
 ---
 
 ## 12. Kopyalanması önerilen sözleşmeler

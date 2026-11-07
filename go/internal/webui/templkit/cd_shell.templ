@@ -65,7 +65,13 @@ templ cdTicker(s CDShell) {
 						<a class="cd-ticker__tab" role="tab" aria-selected="false" href="?serit=stocks">Hisse Senetleri</a>
 					}
 				</div>
-				for _, it := range s.Ticker {
+				for i, it := range s.Ticker {
+					if i > 0 {
+						<!-- Kalemler arası dikey ayırıcı — CoinDesk'te
+						     1×32 px `role="separator"` (ölçüldü). -->
+						<div class="cd-ticker__ayirici" role="separator"
+							aria-orientation="vertical"></div>
+					}
 					<a class="cd-ticker__item" href={ "/price/" + it.Slug }>
 						<span class="cd-ticker__sym">{ it.Sym }</span>
 						<!-- Fiyat + yüzde TEK SATIRDA (CoinDesk ölçümü: sembol
@@ -96,8 +102,9 @@ templ cdTopbar(s CDShell) {
 				@cdMobilNav(s)
 				<div class="cd-topbar__actions">
 					<a class="cd-ikon-btn" href={ s.SearchHref } aria-label="Ara">
-						<svg viewBox="0 0 24 24" width="18" height="18" fill="none"
-							stroke="currentColor" stroke-width="2" aria-hidden="true" focusable="false">
+						<svg viewBox="0 0 24 24" width="20" height="20" fill="none"
+							stroke="currentColor" stroke-width="2" stroke-linecap="round"
+							stroke-linejoin="round" aria-hidden="true" focusable="false">
 							<circle cx="11" cy="11" r="7"></circle>
 							<path d="M20 20l-4.2-4.2"></path>
 						</svg>
@@ -111,11 +118,11 @@ templ cdTopbar(s CDShell) {
 						aria-label="Koyu temaya geç" aria-pressed="false">
 						<!-- Ay simgesi: CoinDesk üst çubuğundaki tema anahtarıyla aynı
 						     görsel dil (ölçüm 7 Kasım 2026). Eski yarım daire okunmuyordu. -->
-						<svg class="cd-tema__ikon" viewBox="0 0 24 24" width="18" height="18"
+						<svg class="cd-tema__ikon" viewBox="0 0 24 24" width="20" height="20"
 							aria-hidden="true" focusable="false" fill="none"
-							stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+							stroke="currentColor" stroke-width="2" stroke-linecap="round"
 							stroke-linejoin="round">
-							<path d="M20.5 14.5A8.5 8.5 0 019.5 3.5a8.5 8.5 0 1011 11z"/>
+							<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
 						</svg>
 					</button>
 					if len(s.Diller) > 1 {
@@ -134,9 +141,27 @@ templ cdTopbar(s CDShell) {
 							</select>
 						</label>
 					} else {
+						/* Tek dil: seçici yerine ETİKET. CoinDesk'te de aynı
+						   kutu (75×40, küre ikonu + kod) ama tıklanmıyor. */
 						for _, d := range s.Diller {
-							<span class="cd-lang__tek" aria-label="Dil">{ d.Kod }</span>
+							<span class="cd-lang__tek" aria-label="Dil">
+								<svg class="cd-lang__ikon" viewBox="0 0 24 24" fill="none"
+									stroke="currentColor" stroke-width="1.6" aria-hidden="true"
+									focusable="false">
+									<circle cx="12" cy="12" r="9"></circle>
+									<path d="M3 12h18"></path>
+									<path d="M12 3c2.5 2.6 3.9 5.7 3.9 9s-1.4 6.4-3.9 9c-2.5-2.6-3.9-5.7-3.9-9S9.5 5.6 12 3z"></path>
+								</svg>
+								{ d.Kod }
+							</span>
 						}
+					}
+					<!-- Dil ile "Oturum Aç" arasındaki DİKEY AYIRICI — CoinDesk
+					     ölçümü (7 Kasım 2026): 1×40 px, `#d9d9d9`, `role="separator"`.
+					     İki yanında 8 px boşluk var (kapsayıcı gap'i). -->
+					if len(s.Diller) > 0 && s.LoginHref != "" {
+						<div class="cd-topbar__ayirici" role="separator"
+							aria-orientation="vertical"></div>
 					}
 					if s.LoginHref != "" {
 						<a class="cd-btn cd-btn--ghost" href={ s.LoginHref }>Oturum Aç</a>
