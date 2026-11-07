@@ -29,6 +29,7 @@ func TestCDVPlayerKontrolleri(t *testing.T) {
 		`data-cd-oynat`, `data-cd-ses`, `data-cd-ses-aralik`,
 		`data-cd-hiz`, `data-cd-hiz-sec="1.5"`, `data-cd-tam`,
 		`role="slider"`, `aria-label="Video ilerlemesi"`,
+		`data-cd-katman`,
 		`data-cd-duyuru`, `aria-live="polite"`,
 		"www.youtube.com/watch?v=8oVvSLjkMv8",
 	} {
@@ -45,6 +46,12 @@ func TestCDVPlayerKontrolleri(t *testing.T) {
 	// (bkz. cd-player.js başlığı — "ortada play simgesi kalıyor" hatası).
 	if !strings.Contains(out, "data-cd-kapak") || !strings.Contains(out, "data-cd-buyuk") {
 		t.Error("kapak ve büyük oynat düğmesi birlikte basılmalı")
+	}
+	// Şeffaf etkileşim katmanı: iframe yüzeyi kapladığı için fare olayları
+	// dış belgeye ulaşmıyor; katman olmadan kontrol çubuğu bir kez
+	// gizlendikten sonra geri gelmiyor (ölçüldü, 8 Kasım 2026).
+	if !strings.Contains(out, "data-cd-katman") {
+		t.Error("etkileşim katmanı (data-cd-katman) basılmalı")
 	}
 }
 

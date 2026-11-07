@@ -38,6 +38,13 @@ templ cdVPlayer(v CDVideoHero, dikey bool) {
 		data-canli="0">
 		<div class="cd-vplayer__sahne">
 			<div class="cd-vplayer__cerceve" data-cd-cerceve></div>
+			<!-- Şeffaf etkileşim katmanı: iframe yüzeyin TAMAMINI kapladığı
+			     için fare olayları (pointermove/click) dış belgeye ulaşmıyor;
+			     bu yüzden kontrol çubuğu bir kez gizlendikten sonra geri
+			     gelmiyor ve kullanıcı videoyu duraklatamıyordu (ölçüldü,
+			     8 Kasım 2026). Katman iframe'in üstünde durur, tıklamayı ve
+			     fare hareketini biz yakalarız. -->
+			<div class="cd-vplayer__katman" data-cd-katman aria-hidden="true"></div>
 			if v.Image != "" {
 				<img class="cd-vplayer__kapak" data-cd-kapak src={ v.Image } alt=""
 					loading="eager" fetchpriority="high" decoding="async"
@@ -169,6 +176,7 @@ templ cdVPlayerCanli(kanalID, baslik string, canli bool) {
 		data-sonraki="" data-sonraki-baslik="">
 		<div class="cd-vplayer__sahne">
 			<div class="cd-vplayer__cerceve" data-cd-cerceve></div>
+			<div class="cd-vplayer__katman" data-cd-katman aria-hidden="true"></div>
 			<div class="cd-vplayer__bos" data-cd-bos>
 				<p class="cd-vplayer__bos-yazi">
 					Canlı yayın oynatıcısı hazırlanıyor… Yayın yoksa YouTube

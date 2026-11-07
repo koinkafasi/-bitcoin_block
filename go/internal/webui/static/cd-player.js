@@ -53,6 +53,7 @@
     this.sonrakiBaslik = kok.getAttribute('data-sonraki-baslik') || '';
 
     this.sahne = kok.querySelector('.cd-vplayer__sahne');
+    this.katman = kok.querySelector('[data-cd-katman]');
     this.cerceve = kok.querySelector('[data-cd-cerceve]');
     this.kapak = kok.querySelector('[data-cd-kapak]');
     this.bos = kok.querySelector('[data-cd-bos]');
@@ -151,9 +152,15 @@
       else if (k === 'f' || k === 'F') { self.tamEkranDegistir(); e.preventDefault(); }
     });
 
-    /* Kontrol çubuğu: 2,5 sn hareketsizlikte gizlen (oynarken). */
-    this.sahne.addEventListener('pointermove', function () { self.kontrolGoster(); });
-    this.sahne.addEventListener('pointerleave', function () {
+    /* Kontrol çubuğu: 2,5 sn hareketsizlikte gizlen (oynarken).
+     * DİNLEYİCİ KATMANDA: iframe yüzeyin tamamını kapladığı için sahne
+     * olayları YouTube belgesinde kalıyordu; çubuk bir kez gizlenince bir
+     * daha geri gelmiyordu (ölçüldü, 8 Kasım 2026). */
+    var hedef = this.katman || this.sahne;
+    hedef.addEventListener('pointermove', function () { self.kontrolGoster(); });
+    hedef.addEventListener('pointerdown', function () { self.kontrolGoster(); });
+    hedef.addEventListener('pointerenter', function () { self.kontrolGoster(); });
+    hedef.addEventListener('pointerleave', function () {
       if (self.oynuyor) self.kok.classList.add('cd-vplayer--sakin');
     });
     this.sahne.addEventListener('click', function (e) {
@@ -172,6 +179,15 @@
     });
 
     window.addEventListener('message', function (e) { self.mesaj(e); });
+
+    /* Sekme/uygulama geri geldiğinde durumu tazele: arka planda YouTube
+       duraklatabiliyor ve playerState mesajı gelmeyebiliyor; o zaman bekleme
+       katmanı ya da "oynuyor" durumu bayat kalıyordu. */
+    document.addEventListener('visibilitychange', function () {
+      if (document.hidden || !self.hazir) return;
+      self.komut('getPlayerState');
+      if (self.oynuyor) self.kontrolGoster();
+    });
     document.addEventListener('click', function (e) {
       if (!self.kok.contains(e.target)) self.menuDegistir(false);
     });
@@ -193,7 +209,8 @@
   Oynatici.prototype.kaynak = function (sessiz) {
     var temel = 'https://www.youtube-nocookie.com/embed/';
     var ortak = 'autoplay=1&controls=0&enablejsapi=1&rel=0&modestbranding=1' +
-      '&playsinline=1&iv_load_policy=3&fs=0&origin=' + encodeURIComponent(location.origin);
+      '&playsinline=1&iv_load_policy=3&fs=0&cc_load_policy=0' +
+      '&origin=' + encodeURIComponent(location.origin);
     if (sessiz) ortak = 'mute=1&' + ortak;
     if (this.canli) {
       return temel + 'live_stream?channel=' + encodeURIComponent(this.kanal) + '&' + ortak;
@@ -205,15 +222,11 @@
      Oynatma başladıktan sonra çağrılır; sesli açılışta yalnız düzeyi yazar. */
   Oynatici.prototype.sesiGeriAc = function () {
     if (this._sesAcildi) return;
+    /* Yalnız ses düzeyini yaz. `unMute` BİLİNÇLİ OLARAK YOK: çapraz kaynak
+       iframe'de otomatik ses açma çağrısı kullanıcı hareketi sayılmadığı için
+       Chrome oynatmayı duraklatıyor (ölçüldü, 7 Kasım 2026). Sessiz başlatmada
+       ses "Sesi aç" çipiyle, GERÇEK dokunuşla geri gelir. */
     this.komut('setVolume', [this.sessiz ? 0 : this.ses]);
-    /* Yalnız SESSİZ başlatıldıysa sesi açmayı dene; sesli açılışta gereksiz.
-       Tarayıcı izin vermezse oynatma durur → `durum(2)` çipi tekrar gösterir;
-       kullanıcı çipe basınca gerçek dokunuşla ses açılır. */
-    if (this.sessizBasladi && !this.sessiz && this.ses > 0) {
-      this.komut('unMute');
-      this.komut('setVolume', [this.ses]);
-      this._otomatikSesZaman = Date.now();
-    }
     this._sesAcildi = true;
   };
 
@@ -312,6 +325,13 @@
     }
     else if (s === 2 || s === 5 || s === -1) {
       this.oynuyor = false;
+      /* Duraklatıldı / dış nedenle durdu (sekme değişimi, mobil döndürme,
+         tam ekran geçişi): bekleme katmanı ve "oynuyor" durumu TEMİZLENİR.
+         Aksi hâlde karartma ekranda asılı kalıyor ve kapak gizli olduğu için
+         ortada YouTube poster'ı görünüyordu (ölçüldü, 8 Kasım 2026). */
+      this.kok.classList.remove('cd-vplayer--bekliyor');
+      this.kok.classList.remove('cd-vplayer--oynuyor');
+      if (this.bekle) this.bekle.hidden = true;
       /* Duraklatıldı: YouTube kendi poster'ını gösterebilir. Onun yerine
          BİZİM oynat düğmemiz merkezde dursun (aynı görünüm, tutarlı marka). */
       if (this._oynadi && this.buyuk && !this.canli) {
@@ -320,18 +340,9 @@
         this.buyuk.hidden = false;
         this.buyuk.setAttribute('aria-label', 'Oynat');
       }
-      /* Bazı tarayıcılar otomatik ses açmayı "hareketsiz" sayıp oynatmayı
-         duraklatıyor. O zaman: (1) videoyu hemen yeniden başlat (görüntü
-         aksamasın), (2) sesi tek dokunuşla açmak için çipi göster. */
-      if (this.sessizBasladi && !this._kullaniciSesiKapatti &&
-          this._otomatikSesZaman && Date.now() - this._otomatikSesZaman < 1200) {
-        this._otomatikSesZaman = 0;
-        this.komut('playVideo');
-        this.oynuyor = true;
-        this.sesCipiGoster();
-      } else if (this.sessizBasladi && !this._kullaniciSesiKapatti) {
-        this.sesCipiGoster();
-      }
+      /* Sessiz başlatıldıysa çip görünür kalmalı (ses hâlâ kapalı).
+         Kullanıcı sesi kendi kapattıysa çip çıkarılmaz. */
+      if (this.sessizBasladi && !this._kullaniciSesiKapatti) this.sesCipiGoster();
     }
     else if (s === 0) { this.oynuyor = false; this.bitis(); }
     else if (s === 3) { if (this.bekle) this.bekle.hidden = false; }
@@ -437,7 +448,13 @@
     if (this.bekle) this.bekle.hidden = true;
     if (this.bos) this.bos.hidden = true;
     if (this.buyuk) this.buyuk.setAttribute('aria-label', 'Duraklat');
-    this.sesCipiGizle();
+    /* Sesli açılışta çip gerekmez; sessiz başlatmada ses hâlâ kapalı
+       olduğu için çip GÖRÜNÜR olmalı. */
+    if (this.sessizBasladi && !this._kullaniciSesiKapatti && !this.sessiz && this.ses > 0) {
+      this.sesCipiGoster();
+    } else {
+      this.sesCipiGizle();
+    }
   };
 
   /* kapakGeriGetir: hiçbir şekilde oynamadıysa bizim düğmemiz geri gelir. */
@@ -485,6 +502,7 @@
   /* sesiAc: GERÇEK kullanıcı dokunuşuyla sesi açar.
    * Bu dokunuş tarayıcı için geçerli bir harekettir; ses açma izni verilir. */
   Oynatici.prototype.sesiAc = function () {
+    this._kullaniciSesiKapatti = false;
     this.sessiz = false;
     if (this.ses === 0) this.ses = 100;
     this.komut('unMute');

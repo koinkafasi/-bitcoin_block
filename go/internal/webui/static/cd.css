@@ -3000,6 +3000,27 @@ html.dark .cd-google { color: var(--cd-fg); }
 }
 .cd-vplayer__kunye:hover { opacity: 1; background: rgba(0, 0, 0, 0.85); }
 
+/* Şeffaf etkileşim katmanı — iframe'in ÜSTÜNDE.
+   NEDEN: iframe yüzeyin tamamını kapladığı için pointermove/click olayları
+   dış belgeye ulaşmıyor; kontrol çubuğu bir kez gizlendikten sonra geri
+   gelmiyordu. Katman olayları yakalar, tıklama oynat/duraklat olarak
+   yorumlanır. z-index: iframe 0 · kapak 1 · katman 2 · büyük düğme/çip 3 ·
+   kontrol çubuğu 4 · bitiş ekranı 5. */
+.cd-vplayer__katman {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  cursor: pointer;
+}
+/* Kontrol çubuğu ve düğmeler katmanın ÜSTÜNDE kalmalı (tıklanabilir). */
+.cd-vplayer__buyuk,
+.cd-vplayer__bekle,
+.cd-vplayer__rozet,
+.cd-vplayer__kunye,
+.cd-vplayer__ses-cip { z-index: 6; }
+/* Bitiş ekranı en üstte. */
+.cd-vplayer__son { z-index: 7; }
+
 /* Bekleme: kapak görünür kalır, üstüne hafif karartma + dönen halka. */
 .cd-vplayer--bekliyor .cd-vplayer__sahne::after {
   content: "";
@@ -3032,6 +3053,12 @@ html.dark .cd-google { color: var(--cd-fg); }
   cursor: pointer;
 }
 .cd-vplayer__ses-cip[hidden] { display: none; }
+
+/* `hidden` HER ZAMAN kazansın. `.cd-vplayer__buyuk { display: flex }` gibi
+   kurallar HTML `hidden` özniteliğini eziyor; sonuç: video oynarken bile
+   ortada sarı oynat düğmesi kalıyordu (kullanıcı bildirimi: "ortada play
+   simgesi kalıyor"). Bu kural oynatıcı içindeki tüm gizlemeleri kesinleştirir. */
+.cd-vplayer [hidden] { display: none !important; }
 .cd-vplayer__ses-cip:hover { background: rgba(0, 0, 0, 0.9); border-color: #fff; }
 .cd-vplayer__ses-cip:focus-visible { outline: 2px solid var(--cd-brand); outline-offset: 2px; }
 
@@ -3041,7 +3068,7 @@ html.dark .cd-google { color: var(--cd-fg); }
   left: 0;
   right: 0;
   bottom: 0;
-  z-index: 4;
+  z-index: 8;
   padding: 26px 12px 8px;
   background: linear-gradient(to top, rgba(0, 0, 0, 0.86) 0%, rgba(0, 0, 0, 0.55) 55%, rgba(0, 0, 0, 0) 100%);
   transition: opacity 0.2s ease, transform 0.2s ease;
