@@ -47,6 +47,11 @@
     0 4px 6px -2px rgba(10, 10, 10, 0.03),
     0 12px 16px -4px rgba(10, 10, 10, 0.08);
   padding: 20px 24px;
+  /* Rengi ÜST ÇUBUKTAN DEVRALMASIN: topbar `color: #f5f5f5` taşıyor
+     (koyu zemin için). Panel kendi (açık) zemininde açıldığı için bu
+     devralma, rengi açıkça yazılmamış her metni beyaz-üstü-beyaz yapar.
+     Jeton tabanlı renk hem açık hem koyu temada doğru. */
+  color: var(--cd-fg);
 
   /* Kapalıyken DOM'da kalır ama ekran okuyucuya ve fareye kapalı. */
   visibility: hidden;
@@ -56,6 +61,39 @@
      transform/opacity geçişi YOK. Panelin anında açılması, fareyle
      gezinen kullanıcı için "menü nerede" belirsizliği bırakmıyor. */
 }
+/* ---- KOYU TEMADA MEGA MENÜ AÇIK KALIR (kullanıcı isteği, 7 Kasım 2026) ----
+ *
+ * Panel her zaman "normal light mod" görünümünde: beyaz zemin, koyu metin.
+ * NEDEN JETON YENİDEN TANIMI: menü içindeki her öğe (panel başlığı, sütun
+ * satırları, açıklamalı kartlar, canlı fiyat satırları, "tümü" bağlantısı)
+ * rengini `--cd-*` jetonlarından alıyor. Jetonları PANEL kapsamında açık
+ * tema değerlerine sabitlemek tek yerden tüm ağacı çevirir; her seçiciyi
+ * ayrı ayrı ezmek 12+ kural gerektirir ve biri unutulduğunda panelde
+ * okunmayan satır kalır.
+ *
+ * `color-scheme: light` paneldeki yerel form denetimlerini de açık temaya
+ * çeker. Gölge jetonu DEĞİŞMEZ: panel koyu sayfanın üstünde yüzerken
+ * yükselti algısı korunur. */
+/* Panelde yalnız GERÇEKTEN kullanılan jetonlar açık temaya sabitleniyor.
+   Menüde `--cd-surface-alt/--cd-surface-disable/--cd-border-strong/
+   --cd-border-disable` kullanılmıyor; onları da yazmak ölü ağırlıktı. */
+html.dark .cd-mega,
+:root:not(.light):not(.dark) .cd-mega {
+  --cd-bg: #ffffff;
+  --cd-surface-soft: #f4f4f4;
+  --cd-surface-action: #d9d9d9;
+  --cd-fg: #262626;
+  --cd-fg-strong: #000000;
+  --cd-muted: #676767;
+  --cd-muted-strong: #4d4d4d;
+  --cd-border: #d9d9d9;
+  --cd-up: #218410;
+  --cd-down: #bb020a;
+  --cd-up-bg: #e5ffe0;
+  --cd-down-bg: #ffe5e5;
+  color-scheme: light;
+}
+
 .cd-nav__grup:hover > .cd-mega,
 .cd-nav__grup:focus-within > .cd-mega {
   visibility: visible;

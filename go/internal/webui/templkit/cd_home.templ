@@ -118,12 +118,13 @@ templ cdTekGorsel(s CDStory) {
 // üstte (290×163 görsel + 290×81 metin), manşette altta (608×237 metin +
 // 608×342 görsel). Tek `cdCard` içinde `lead` bayrağıyla dallandırmak
 // iki farklı DOM sırası üretiyordu; burada niyet adıyla yazılı.
+//
+// KICKER YOK (kullanıcı isteği, 7 Kasım 2026): manşetin üstünde kategori
+// etiketi ("POLİTİKA" vb.) basılmıyor. Kartlarda (cdCardBody) kicker
+// KALIYOR — kaldırma yalnız hero manşete ait.
 templ cdHeroLead(s CDStory) {
 	<article class="cd-hero-lead">
 		<div class="cd-hero-lead__metin">
-			if s.Kicker != "" {
-				<span class="cd-kicker">{ s.Kicker }</span>
-			}
 			<h2 class="cd-hero-lead__baslik"><a href={ s.Href }>{ s.Title }</a></h2>
 			if s.Spot != "" {
 				<p class="cd-card__spot">{ s.Spot }</p>

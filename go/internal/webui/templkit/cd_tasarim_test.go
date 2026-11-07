@@ -183,14 +183,14 @@ func TestCDEtiketlerDuz(t *testing.T) {
 // TestCDButce: CSS bütçesi. Tasarım sistemi kalınlaştıkça dosya büyür;
 // bütçe aşıldığında bilinçli bir güncelleme gerekir (sessiz kabul yok).
 //
-// Eşik 80 KB (7 Kasım 2026, dokuzuncu tur): sağ/sol ray modülleri
-// (video, araştırma, klipler, düşünce, tek görsel, basın slider, akış)
-// ve iki fontlu tipografi sistemi eklendi. Değerler px olarak yazılı ve
-// her jetonun gerekçesi yorumda duruyor. Gerçek maliyet sıkıştırılmış
-// boyut: bu dosya gzip'te ~12 KB — tek bloklayıcı CSS için kabul edilebilir.
+// Eşik 88 KB (7 Kasım 2026, on üçüncü tur): gorsel marka logosu, koyu
+// tema zemini + 180 ms renk geçişi, iki dikey hero ayırıcısı ve mega menünün
+// koyu temada açık kalması eklendi. Değerler px olarak yazılı ve her jetonun
+// gerekçesi yorumda duruyor. Gerçek maliyet sıkıştırılmış boyut: bu dosya
+// gzip'te ~13 KB — tek bloklayıcı CSS için kabul edilebilir.
 func TestCDButce(t *testing.T) {
 	css := cdCSS(t)
-	assert.Less(t, len(css), 80*1024, "cd.css bütçe aşıldı: %d bayt", len(css))
+	assert.Less(t, len(css), 88*1024, "cd.css bütçe aşıldı: %d bayt", len(css))
 }
 
 // TestCDModulRitmi: modüller MARGIN YAZMAZ, ritim ebeveynin gap'inden

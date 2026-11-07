@@ -169,7 +169,7 @@
  * işletim sistemi koyu diye geri alınmaz. */
 @media (prefers-color-scheme: dark) {
   :root:not(.light):not(.dark) {
-    --cd-bg: #161616;
+    --cd-bg: #0a0b0e;
     --cd-surface-soft: #262626;
     --cd-surface-alt: #262626;
     --cd-surface-action: #262626;
@@ -189,7 +189,7 @@
 }
 
 html.dark {
-  --cd-bg: #161616;
+  --cd-bg: #0a0b0e;
   --cd-surface-soft: #262626;
   --cd-surface-alt: #262626;
   --cd-surface-action: #262626;
@@ -209,6 +209,25 @@ html.dark {
 }
 
 html.light { color-scheme: light; }
+
+/* ---- tema geçiş efekti ----
+ * Koyu/açık tema anahtarına basınca renkler ANİ değişmesin (kullanıcı
+ * isteği). Yalnız RENK özellikleri geçişe açık: `background-color`,
+ * `border-color`, `color`, `fill`, `stroke`. Layout özellikleri (ölçü,
+ * konum) geçişe DAHİL DEĞİL — geçiş sırasında yeniden düzen hesabı
+ * yapılmaz ve CLS üretilmez.
+ *
+ * `prefers-reduced-motion: reduce` bloğu en sonda `transition: none
+ * !important` uyguluyor; hareket hassasiyeti olan kullanıcıda geçiş
+ * kapalı kalır (WCAG 2.3.3). */
+.cd,
+.cd *,
+.cd *::before,
+.cd *::after {
+  transition-property: background-color, border-color, color, fill, stroke;
+  transition-duration: 180ms;
+  transition-timing-function: ease;
+}
 
 /* Çıpa kaydırması: sticky iki katman sayfa içi bağlantıyı başlığın altına
    gizlemesin. */
@@ -691,7 +710,12 @@ html.cd-js .cd-tema { display: inline-flex; }
   column-gap: 80px;
   row-gap: 24px;
   justify-content: center;
-  align-items: start;
+  /* `stretch`: dikey ayırıcılar kolon boyuna değil HERO boyuna uzansın.
+     CoinDesk'te iki çizgi de aynı yükseklikte (1826 px). `start` ile
+     çizgi yalnız kendi kolonunun içeriği kadar kalıyordu ve sağ rayın
+     çizgisi kısa görünüyordu. Kolonların içeriği üstte kaldığı için
+     görsel fark yaratmaz. */
+  align-items: stretch;
   /* ÖLÇÜLDÜ (coindesk.com/tr): hero `padding: 32px 0` — alt boşluk da 32.
      Önceki 16 px, promo şeridinin kaldırılmasıyla ortaya çıkan sapmaydı. */
   padding: 32px 0;
@@ -713,7 +737,14 @@ html.cd-js .cd-tema { display: inline-flex; }
   flex-direction: column;
   gap: 16px;
 }
-.cd-hero__orta::before {
+/* İKİ dikey ayırıcı — ÖLÇÜLDÜ (CoinDesk /tr, 7 Kasım 2026):
+     · orta kolonun solunda  (left:-40px → 80 px boşluğun ortası)
+     · sağ kolonun  solunda  (left:-40px → aynı kural)
+   İkisi de 1 px, `--cd-border`, ve AYNI yükseklikte (CoinDesk: 1826 px,
+   hero'nun tamamı). Önceki sürümde yalnız orta kolonunki vardı; sağ ray
+   çizgisiz kalıyordu ve iki kolon arasında ayırıcı görünmüyordu. */
+.cd-hero__orta::before,
+.cd-hero__sag::before {
   content: "";
   position: absolute;
   width: 1px;
