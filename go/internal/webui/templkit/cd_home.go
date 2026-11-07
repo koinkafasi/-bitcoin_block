@@ -125,7 +125,7 @@ type CDHomeView struct {
 	Basin []CDBasin
 	// §7A sağ ray: video · araştırma · klipler (1284 altında gizli).
 	Videolar  []CDVideo
-	Arastirma *CDArastirma
+	Arastirma []CDArastirma
 	Klipler   []CDKlip
 	MostRead  []CDStory    // §21 — 1 büyük + 5 satır
 	Opinion   []CDUzman    // §20 — uzman adı + unvan + avatar

@@ -481,9 +481,36 @@ html.cd-kaydi .cd-ticker__item .cd-down { background: var(--cd-down-bg); }
   position: sticky;
   top: 0;
   z-index: 40;
-  border-bottom: 1px solid var(--cd-border);
-  background: var(--cd-bg);
+  /* KOYU ÜST ÇUBUK (kullanıcı isteği, 7 Kasım 2026: #0a0b0e).
+     Sabit renk — `--cd-bg` gibi temayla DÖNMEZ: kullanıcı bu bandın her
+     iki temada da aynı koyu tonda kalmasını istedi. Zemin koyu olduğu için
+     içindeki metin/ikon renkleri aşağıda AÇIK renge sabitleniyor. */
+  border-bottom: 1px solid #1f2127;
+  background: #0a0b0e;
+  color: #f5f5f5;
 }
+/* Koyu zemin üzerinde okunabilirlik: logo, gezinme, arama, tema, dil ve
+   "Oturum Aç" açık renk. `.cd a { color: inherit }` özgüllüğü nedeniyle
+   bağlantılar için ayrıca `a.` öneki gerekiyor. */
+.cd-topbar .cd-logo { color: #ffffff; }
+.cd-topbar .cd-nav__link,
+.cd-topbar a.cd-nav__link { color: #e8e8e8; }
+.cd-topbar .cd-nav__link:hover { background: rgba(255, 255, 255, 0.1); }
+.cd-topbar .cd-ikon-btn,
+.cd-topbar .cd-tema,
+.cd-topbar a.cd-btn--ghost { color: #f5f5f5; }
+.cd-topbar .cd-ikon-btn:hover,
+.cd-topbar .cd-tema:hover { background: rgba(255, 255, 255, 0.1); }
+.cd-topbar .cd-btn--ghost { border-color: rgba(255, 255, 255, 0.28); }
+.cd-topbar .cd-lang__tek { color: #b9b9b9; }
+.cd-topbar .cd-lang__sec {
+  background: transparent;
+  border-color: rgba(255, 255, 255, 0.28);
+  color: #f5f5f5;
+}
+/* "Kaydol" marka sarısı hem zeminde hem yazıda korunur (koyu üst çubukta
+   da yüksek kontrast). */
+.cd-topbar a.cd-btn--kayit { color: var(--cd-dark); }
 .cd-topbar__inner {
   display: flex;
   align-items: center;
@@ -491,15 +518,23 @@ html.cd-kaydi .cd-ticker__item .cd-down { background: var(--cd-down-bg); }
   gap: 20px;
   height: calc(var(--cd-header-h) - 1px); /* + 1 px çizgi = 73 */
 }
+/* Görsel logo: yükseklik 32 px, genişlik ölçeklenir (965×211 → 146×32).
+   `img` blok olarak hizalanır; üst çubuk flex olduğu için dikey ortalama
+   `.cd-logo` üzerinden gelir. */
 .cd-logo {
-  font-size: 24px;
-  line-height: 32px;
-  font-weight: 700;
-  letter-spacing: -0.03em;
-  color: var(--cd-fg-strong);
+  display: inline-flex;
+  align-items: center;
+  flex: none;
 }
-.cd-logo span { color: var(--cd-brand); }
-
+.cd-logo__img {
+  display: block;
+  width: 146px;
+  height: 32px;
+}
+/* Mobilde başlık alanı dar: logo 118×26'ya iner (oran korunur). */
+@media (max-width: 767px) {
+  .cd-logo__img { width: 118px; height: 26px; }
+}
 /* Gezinme: 16/24 w400 (ölçüldü: 7 öğe, 16 px). */
 /* Gezinme: öğe arası gap 4 px, her öğe 40 px iç yükseklik, padding 0 16 px,
    yarıçap 4 px, saydam zemin + hover'da surface-subtle (spec §7.2A —
@@ -1041,10 +1076,11 @@ html.cd-js .cd-tema { display: inline-flex; }
 .cd-video__alt {
   display: flex;
   align-items: center;
-  /* CoinDesk'te slayt okları solda, "Explore More" düğmesi SAĞDA
-     (ölçüm: x=1519, modül 1344–1634). Oklar JS'siz sürümde yok; düğme
-     tek başına sağa yaslanıyor. */
-  justify-content: flex-end;
+  /* CoinDesk ölçümü (7 Kasım 2026): HER İKİ modülde de navigasyon
+     `justify-content: space-between` — oklar SOLDA, "Daha Fazlasını
+     Keşfet" SAĞDA. Önceki sürüm `flex-end` kullanıyordu ve oklar sağa
+     yapışıyordu; ayrıca Öne Çıkan Araştırma'da ok hiç yoktu. */
+  justify-content: space-between;
   gap: 8px;
 }
 /* "Daha fazla" — CoinDesk Explore More: 14/21 w500, pad 8×12, 1 px
@@ -1137,6 +1173,14 @@ html.cd-js .cd-tema { display: inline-flex; }
   -webkit-box-decoration-break: clone;
   box-decoration-break: clone;
 }
+/* Sayı "50.8%" — CoinDesk'in BİREBİR değerleri (ölçüldü):
+     56/56 w500, letter-spacing -1px, renk #000 (text-strong).
+   NOT: Bir ara sarı bant genişliğini eşitlemek için letter-spacing +1,2 px
+   yapılmıştı; bu yazıyı GÖZLE GÖRÜLÜR şekilde gevşetiyor ve CoinDesk'ten
+   uzaklaştırıyordu (kullanıcı bildirdi). Genişlik farkı FONT İKAMESİNDEN
+   gelir (Inter rakamları Neue Haas'tan geniş) — harf aralığıyla düzeltilmez,
+   yoksa tipografi yanlış olur. Sarı bandın geometrisi (y, yükseklik, renk)
+   zaten birebir aynı. */
 .cd-arastirma__metrik-sayi {
   font-family: var(--cd-font);
   font-size: 56px;
@@ -1152,10 +1196,10 @@ html.cd-js .cd-tema { display: inline-flex; }
   font-size: 18px;
   line-height: 26px;
   font-weight: 500;
-  /* Metrik telafisi: Inter, Neue Haas'tan ~%2 geniş. 26 karakterlik birim
-     CoinDesk'te 255 px (256'ya sığıyor); Inter'de ~260 px olup ikinci
-     satıra taşıyordu. -0.012em tek satıra indiriyor. */
-  letter-spacing: -0.012em;
+  /* CoinDesk'te `letter-spacing: normal` — BİREBİR. (Bir ara 0.007em
+     eklenmişti; genişlik farkı font ikamesinden gelir, harf aralığıyla
+     telafi etmek tipografiyi bozar.) */
+  letter-spacing: normal;
   color: var(--cd-fg-strong);
   overflow-wrap: anywhere;
   word-spacing: 0;
@@ -1201,6 +1245,32 @@ html.cd-js .cd-tema { display: inline-flex; }
 /* Araştırma modülünün alt bağlantısı: modül aralığı 20 px, ayrıca
    margin eklenmez. */
 .cd-arastirma .cd-video__alt { margin-top: 0; }
+
+/* Araştırma slaytları — video modülüyle AYNI radyo deseni (JS'siz).
+   Radyolar `.cd-basin__durum` (görünmez ama klavyeyle erişilebilir);
+   `.cd-arastirma__slaytlar` çocukları sırayla gösterilir. */
+.cd-arastirma__slaytlar { position: relative; }
+.cd-arastirma__slaytlar > .cd-arastirma__kart { display: none; }
+#cd-arastirma-1:checked ~ .cd-arastirma__slaytlar > .cd-arastirma__kart:nth-child(1),
+#cd-arastirma-2:checked ~ .cd-arastirma__slaytlar > .cd-arastirma__kart:nth-child(2),
+#cd-arastirma-3:checked ~ .cd-arastirma__slaytlar > .cd-arastirma__kart:nth-child(3),
+#cd-arastirma-4:checked ~ .cd-arastirma__slaytlar > .cd-arastirma__kart:nth-child(4),
+#cd-arastirma-5:checked ~ .cd-arastirma__slaytlar > .cd-arastirma__kart:nth-child(5),
+#cd-arastirma-6:checked ~ .cd-arastirma__slaytlar > .cd-arastirma__kart:nth-child(6),
+#cd-arastirma-7:checked ~ .cd-arastirma__slaytlar > .cd-arastirma__kart:nth-child(7),
+#cd-arastirma-8:checked ~ .cd-arastirma__slaytlar > .cd-arastirma__kart:nth-child(8) { display: flex; }
+/* Oklar yalnız AKTİF slaytta görünür (video modülüyle aynı desen). */
+.cd-arastirma__durum-1, .cd-arastirma__durum-2, .cd-arastirma__durum-3,
+.cd-arastirma__durum-4, .cd-arastirma__durum-5, .cd-arastirma__durum-6,
+.cd-arastirma__durum-7, .cd-arastirma__durum-8 { display: none; }
+#cd-arastirma-1:checked ~ .cd-video__alt .cd-arastirma__durum-1,
+#cd-arastirma-2:checked ~ .cd-video__alt .cd-arastirma__durum-2,
+#cd-arastirma-3:checked ~ .cd-video__alt .cd-arastirma__durum-3,
+#cd-arastirma-4:checked ~ .cd-video__alt .cd-arastirma__durum-4,
+#cd-arastirma-5:checked ~ .cd-video__alt .cd-arastirma__durum-5,
+#cd-arastirma-6:checked ~ .cd-video__alt .cd-arastirma__durum-6,
+#cd-arastirma-7:checked ~ .cd-video__alt .cd-arastirma__durum-7,
+#cd-arastirma-8:checked ~ .cd-video__alt .cd-arastirma__durum-8 { display: inline-flex; align-items: center; }
 
 /* ---- Sağ ray: Bugünün Klipleri (ölçüldü 290×516) ----
    9/16 dikey kart, 8 px köşe, siyah zemin, ortada oynat düğmesi. */

@@ -10,10 +10,23 @@ package templkit
 // erişimi ve iki dallı if kullanılır — templ'in koşullu öznitelik sözdizimi
 // sürümden sürüme değişiyor, dallar her sürümde çalışır.
 
-// cdLogoMark "bitcosar" logosu: son nokta mavi (CoinDesk vurgu rengi).
+// cdLogoMark site logosu — GÖRSEL (marka dosyası).
+//
+// ÖNCE metin olarak çiziliyordu ("BitCoŞaR." + sarı nokta). Kullanıcı
+// marka logosunu verdi (965×211, sarı "BİTCOŞAR" + beyaz "paranın
+// geleceği" alt yazısı) ve logonun yerine konmasını istedi.
+//
+// ÖLÇEKLENEBİLİRLİK: üç kademe `srcset` (1x/2x/3x) + sabit `width`/`height`
+// → CLS YOK. Görsel, üst çubuğun KENDİ zeminine (koyu #0a0b0e) göre
+// hazırlandı: sarı harfler + beyaz alt yazı, şeffaf zemin.
+//
+// `alt` site adını taşır (ekran okuyucu ve bağlantı metni); dekoratif
+// sayılmaz çünkü ana sayfaya giden tek marka bağlantısıdır.
 templ cdLogoMark(siteName string) {
-	<a class="cd-logo" href="/">
-		{ siteName }<span>.</span>
+	<a class="cd-logo" href="/" aria-label={ siteName + " ana sayfa" }>
+		<img class="cd-logo__img" src="/static/img/logo-bitcosar-2x.png"
+			srcset="/static/img/logo-bitcosar-1x.png 1x, /static/img/logo-bitcosar-2x.png 2x, /static/img/logo-bitcosar-3x.png 3x"
+			width="146" height="32" alt={ siteName } decoding="async"/>
 	</a>
 }
 

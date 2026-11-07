@@ -47,16 +47,35 @@ func cdGeciciVideolar() []templkit.CDVideo {
 	}
 }
 
-func cdGeciciArastirma() *templkit.CDArastirma {
-	return &templkit.CDArastirma{
-		Metrik:   "50.8%",
-		Baslik:   "APAC-to-APAC corridor share",
-		Aciklama: "Share of tracked stablecoin corridor volume that stayed within Asia-Pacific",
-		Rapor:    "Global Markets, Asian Flows: Stablecoins and Tokenized Assets in 2026",
-		Etiketler: []string{
-			"RWA", "Macro & Market Trends", "Stablecoins",
+// cdGeciciArastirma Öne Çıkan Araştırma kartları (GERÇEK CoinDesk verisi).
+//
+// NEDEN İKİ KART: CoinDesk bu modülü SLAYTLI gösteriyor — sağ altta iki ok
+// (önceki/sonraki) var, ölçüldü 7 Kasım 2026. Tek kartla oklar işlevsiz
+// kalırdı; kullanıcı iki modülün navigasyonunun AYNI konumda olmasını
+// istedi. Veriler CoinDesk'in kendi araştırma modülünden alındı (geçici,
+// kaynak bağlantısı görünür).
+func cdGeciciArastirma() []templkit.CDArastirma {
+	return []templkit.CDArastirma{
+		{
+			Metrik:   "50.8%",
+			Baslik:   "APAC-to-APAC corridor share",
+			Aciklama: "Share of tracked stablecoin corridor volume that stayed within Asia-Pacific",
+			Rapor:    "Global Markets, Asian Flows: Stablecoins and Tokenized Assets in 2026",
+			Etiketler: []string{
+				"RWA", "Macro & Market Trends", "Stablecoins",
+			},
+			Href: "https://www.coindesk.com/research/global-markets-asian-flows-stablecoins-and-tokenized-assets-in-2026",
 		},
-		Href: "https://www.coindesk.com/research/global-markets-asian-flows-stablecoins-and-tokenized-assets-in-2026",
+		{
+			Metrik:   "3x Faster",
+			Baslik:   "Zcash blok süresi 75 sn'den 25 sn'ye indi",
+			Aciklama: "NU7 yükseltmesiyle Zcash blok hedefi 25 saniyeye düştü; özel ödemeler hızlanıyor.",
+			Rapor:    "Zcash's NU7 Upgrade Goes Live as Developers Launch Quantum-Resistance Effort",
+			Etiketler: []string{
+				"Layer 1 Blockchains", "Macro & Market Trends",
+			},
+			Href: "https://www.coindesk.com/research",
+		},
 	}
 }
 

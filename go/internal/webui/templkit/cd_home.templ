@@ -30,13 +30,17 @@ templ cdRayOk() {
 
 // cdHeroSolRay sol ray — CoinDesk "Son Haberler" modülü (ölçüldü 290×575).
 //
-// Anatomi (birebir): `border-top: 1px solid border-strong` + `padding-top: 16px`,
-// başlık bağlantısı 14/21 w500 `padding-bottom: 16px`, ardından beş satır:
-// başlık 16/24 w500 (3 satırla sınırlı) + saat 12/18 w400 sönük.
-// Görsel YOK — ölçümde bu modülde hiç görsel yok.
+// Anatomi (birebir): başlık bağlantısı 14/21 w500 `padding-bottom: 16px`,
+// ardından beş satır: başlık 16/24 w500 (3 satırla sınırlı) + saat 12/18
+// w400 sönük. Görsel YOK — ölçümde bu modülde hiç görsel yok.
+//
+// ÇİZGİ YOK: sol kolonun İLK modülü. Ölçüm (CoinDesk /tr, 7 Kasım 2026):
+// sol kolonun ilk öğesi "Son Haberler" `bt=0px`, altındaki Düşünce
+// Liderliği `bt=1px`. Bu modül `cd-ray--cizgili` kullandığı için sayfanın
+// en üstünde, sol ray genişliğinde TEK BAŞINA duran bir çizgi oluşuyordu.
 templ cdHeroSolRay(items []CDStory) {
 	if len(items) > 0 {
-		<section class="cd-ray cd-ray--cizgili">
+		<section class="cd-ray">
 			<a class="cd-ray__bas" href="/latest-crypto-news">
 				Son Haberler
 				@cdRayOk()
@@ -301,45 +305,91 @@ templ cdVideoModul(items []CDVideo) {
 	}
 }
 
-// cdArastirmaModul "Öne Çıkan Araştırma" — metrik kartı.
+// cdArastirmaModul "Öne Çıkan Araştırma" — metrik kartı, JS'siz slayt.
 //
-// Ölçüldü: kart 290×386; dev metrik (50.8%) sarı vurgulu, altında
-// sarı zeminli başlık, açıklama 16/24, ayırıcı, rapor adı ve etiket
-// pill'leri. Veri gerçek CoinDesk araştırması (geçici).
-templ cdArastirmaModul(a *CDArastirma) {
-	if a != nil {
+// Ölçüldü (CoinDesk /tr, 7 Kasım 2026): kart 290×386; dev metrik sarı
+// bantlı, altında sarı zeminli birim, açıklama 16/23 w500, ayırıcı,
+// rapor adı (serif 16/22) ve 11/16 etiket çipleri.
+//
+// NAVİGASYON: modülün altında İKİ OK solda + "Daha Fazlasını Keşfet"
+// sağda (`justify-content: space-between`). Bu yüzden modül SLAYTILI:
+// tek kartla oklar işlevsiz kalırdı ve Bugünün Videoları'nın navigasyonuyla
+// hizası tutmazdı (kullanıcı bildirdi).
+templ cdArastirmaModul(items []CDArastirma) {
+	if len(items) > 0 {
 		<section class="cd-ray cd-ray--cizgili cd-arastirma">
 			<h2 class="cd-ray__duz">Öne Çıkan Araştırma</h2>
-			<div class="cd-arastirma__kart">
-				<div class="cd-arastirma__ust">
-					if a.Metrik != "" || a.Baslik != "" {
-						<div class="cd-arastirma__metrik-kap">
-							<span class="cd-arastirma__metrik">
-								if a.Metrik != "" {
-									<span class="cd-arastirma__metrik-sayi">{ a.Metrik }</span>
-								}
-								if a.Baslik != "" {
-									<span class="cd-arastirma__metrik-birim">{ a.Baslik }</span>
-								}
-							</span>
-						</div>
+			if len(items) > 1 {
+				for i := range items {
+					if i == 0 {
+						<input class="cd-basin__durum" type="radio" name="cd-arastirma"
+							id={ "cd-arastirma-" + cdSiraya(i) } checked
+							aria-label={ "Araştırma " + cdSiraya(i) }/>
+					} else {
+						<input class="cd-basin__durum" type="radio" name="cd-arastirma"
+							id={ "cd-arastirma-" + cdSiraya(i) }
+							aria-label={ "Araştırma " + cdSiraya(i) }/>
 					}
-					if a.Aciklama != "" {
-						<p class="cd-arastirma__aciklama">{ a.Aciklama }</p>
-					}
-				</div>
-				if a.Rapor != "" {
-					<a class="cd-arastirma__rapor" href={ a.Href }>{ a.Rapor }</a>
 				}
-				if len(a.Etiketler) > 0 {
-					<ul class="cd-arastirma__etiketler">
-						for _, e := range a.Etiketler {
-							<li>{ e }</li>
+			}
+			<div class="cd-arastirma__slaytlar">
+				for _, a := range items {
+					<div class="cd-arastirma__kart">
+						<div class="cd-arastirma__ust">
+							if a.Metrik != "" || a.Baslik != "" {
+								<div class="cd-arastirma__metrik-kap">
+									<span class="cd-arastirma__metrik">
+										if a.Metrik != "" {
+											<span class="cd-arastirma__metrik-sayi">{ a.Metrik }</span>
+										}
+										if a.Baslik != "" {
+											<span class="cd-arastirma__metrik-birim">{ a.Baslik }</span>
+										}
+									</span>
+								</div>
+							}
+							if a.Aciklama != "" {
+								<p class="cd-arastirma__aciklama">{ a.Aciklama }</p>
+							}
+						</div>
+						if a.Rapor != "" {
+							<a class="cd-arastirma__rapor" href={ a.Href }>{ a.Rapor }</a>
 						}
-					</ul>
+						if len(a.Etiketler) > 0 {
+							<ul class="cd-arastirma__etiketler">
+								for _, e := range a.Etiketler {
+									<li>{ e }</li>
+								}
+							</ul>
+						}
+					</div>
 				}
 			</div>
 			<div class="cd-video__alt">
+				if len(items) > 1 {
+					<div class="cd-video__oklar">
+						for i := range items {
+							<label class={ "cd-video__ok cd-video__ok--geri cd-arastirma__durum-" + cdSiraya(i) }
+								for={ "cd-arastirma-" + cdSiraya(cdBasinGeri(i, len(items))) }>
+								<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+									viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false">
+									<path d="M15.41 16.59L10.83 12l4.58-4.59L14 6l-6 6 6 6 1.41-1.41z"></path>
+								</svg>
+								<span class="cd-visually-hidden">Önceki araştırma</span>
+							</label>
+						}
+						for i := range items {
+							<label class={ "cd-video__ok cd-video__ok--ileri cd-arastirma__durum-" + cdSiraya(i) }
+								for={ "cd-arastirma-" + cdSiraya(cdBasinIleri(i, len(items))) }>
+								<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+									viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false">
+									<path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"></path>
+								</svg>
+								<span class="cd-visually-hidden">Sonraki araştırma</span>
+							</label>
+						}
+					</div>
+				}
 				<a class="cd-btn cd-btn--ghost" href="/research">Daha Fazlasını Keşfet</a>
 			</div>
 		</section>
@@ -522,9 +572,22 @@ templ cdBlokHucre(sec CDSection) {
 // tek satırın iki paneli (ölçüldü: 366 + 1074, gap 24). Her panelin
 // `border-top` çizgisi kendi genişliğinde kalıyor — bu yüzden sarmalayıcı
 // değil paneller çizgi taşıyor.
+// cdIkili §20 + §21: Görüş (25%) ve En Çok Okunan (75%) YAN YANA.
+//
+// CoinDesk ana sayfasında bu iki modül ayrı tam genişlik bloklar değil;
+// tek satırın iki paneli (ölçüldü: 366 + 1074, gap 24). Her panelin
+// `border-top` çizgisi kendi genişliğinde kalıyor — bu yüzden sarmalayıcı
+// değil paneller çizgi taşıyor.
+//
+// SARMAYICI `cd-mod--cizgisiz` OLMAK ZORUNDA: ölçüm (CoinDesk /tr,
+// 7 Kasım 2026) bu satırda İKİ çizgi gösterdi, her biri kendi panelinin
+// genişliğinde (Görüş 366 px, En Çok Okunan 1074 px, aralarında 24 px
+// boşluk). Panellerin kendi 1 px çizgisine ek olarak `.cd-mod` sarmalayıcısı
+// TAM GENİŞLİKTE (1464) üçüncü bir çizgi basıyordu; Görüş'ün üstünde tek
+// parça uzun bir çizgi görünüyordu.
 templ cdIkili(yorum []CDUzman, enCok []CDStory) {
 	if len(yorum) > 0 || len(enCok) > 0 {
-		<section class="cd-mod">
+		<section class="cd-mod cd-mod--cizgisiz">
 			<div class="cd-ikili">
 				if len(yorum) > 0 {
 					<div class="cd-ikili__sol">
