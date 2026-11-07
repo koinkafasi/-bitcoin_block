@@ -207,9 +207,14 @@ func TestCDEtiketlerDuz(t *testing.T) {
 // menüsü, tam ekran sahnesi, bitiş ekranı (karartma + sıradaki video) ve
 // canlı modun kırmızı çubuğu. Hepsi tek bir oynatıcı bileşeni; başka bir
 // sayfayla paylaşılamıyor.
+//
+// On sekizinci tur → 136 KB: oynatıcının güvenilirlik katmanı. Kapak ancak
+// video GERÇEKTEN oynarken kalkıyor (oynatma engellenince YouTube poster'ı
+// görünüyordu), bekleme karartması ve sessiz başlatmada "Sesi aç" çipi
+// eklendi. Ölçüldü: 132.270 bayt; gzip'te ~19 KB.
 func TestCDButce(t *testing.T) {
 	css := cdCSS(t)
-	assert.Less(t, len(css), 128*1024, "cd.css bütçe aşıldı: %d bayt", len(css))
+	assert.Less(t, len(css), 136*1024, "cd.css bütçe aşıldı: %d bayt", len(css))
 }
 
 // TestCDModulRitmi: modüller MARGIN YAZMAZ, ritim ebeveynin gap'inden

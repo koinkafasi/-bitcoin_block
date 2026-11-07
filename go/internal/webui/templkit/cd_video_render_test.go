@@ -40,6 +40,12 @@ func TestCDVPlayerKontrolleri(t *testing.T) {
 	if strings.Contains(out, "<iframe") {
 		t.Error("iframe baştan basılmamalı — kapak + oynat düğmesi beklenir")
 	}
+	// Kapak ve büyük düğme AYNI ANDA basılır ve iframe'in üstünde durur:
+	// oynatma engellenirse YouTube'un poster'ı değil bizim düğmemiz görünür
+	// (bkz. cd-player.js başlığı — "ortada play simgesi kalıyor" hatası).
+	if !strings.Contains(out, "data-cd-kapak") || !strings.Contains(out, "data-cd-buyuk") {
+		t.Error("kapak ve büyük oynat düğmesi birlikte basılmalı")
+	}
 }
 
 // TestCDVPlayerDikey: short videosunda dikey sınıf uygulanır (9:16).

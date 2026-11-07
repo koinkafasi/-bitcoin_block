@@ -2803,7 +2803,12 @@ html.dark .cd-google { color: var(--cd-fg); }
   /* YouTube oynatıcısı hazır olana kadar kapak kalır; `hidden` ile
      kaldırılınca iframe altından çıkar. */
 }
-.cd-vplayer--basladi .cd-vplayer__kapak { opacity: 0; pointer-events: none; }
+.cd-vplayer__kapak { transition: opacity 0.2s ease; }
+/* Kapak YALNIZ video gerçekten oynarken kalkar. `--basladi` yeterli değil:
+   oynatma engellenirse YouTube kendi poster'ını (ortada play simgesi)
+   gösteriyordu — bildirilen hata. */
+.cd-vplayer--oynuyor .cd-vplayer__kapak { opacity: 0; pointer-events: none; }
+.cd-vplayer--gecikti .cd-vplayer__kapak { opacity: 1; }
 .cd-vplayer__bos {
   position: absolute;
   inset: 0;
@@ -2909,6 +2914,41 @@ html.dark .cd-google { color: var(--cd-fg); }
   opacity: 0.85;
 }
 .cd-vplayer__kunye:hover { opacity: 1; background: rgba(0, 0, 0, 0.85); }
+
+/* Bekleme: kapak görünür kalır, üstüne hafif karartma + dönen halka. */
+.cd-vplayer--bekliyor .cd-vplayer__sahne::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: rgba(0, 0, 0, 0.18);
+  pointer-events: none;
+}
+.cd-vplayer__bekle { z-index: 3; }
+
+/* Sessiz başlatma çipi: sessiz autoplay devreye girdiğinde sesi tek
+   dokunuşla açmak için. Gerçek dokunuş olduğu için tarayıcı sesi verir. */
+.cd-vplayer__ses-cip {
+  position: absolute;
+  left: 12px;
+  bottom: 76px;
+  z-index: 6;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.78);
+  color: #fff;
+  font: inherit;
+  font-size: 13px;
+  line-height: 18px;
+  cursor: pointer;
+}
+.cd-vplayer__ses-cip[hidden] { display: none; }
+.cd-vplayer__ses-cip:hover { background: rgba(0, 0, 0, 0.9); border-color: #fff; }
+.cd-vplayer__ses-cip:focus-visible { outline: 2px solid var(--cd-brand); outline-offset: 2px; }
 
 /* ---- Kontrol çubuğu ---- */
 .cd-vplayer__kontrol {

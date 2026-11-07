@@ -811,14 +811,37 @@ func (s *Server) handleHealth(w http.ResponseWriter, r *http.Request) {
 // Kullanılanlar açık bırakılır:
 //   - microphone: dikte özelliği Web Speech API kullanıyor
 //     (static/editor.js, static/app.js)
-//   - autoplay / picture-in-picture / fullscreen: ses ve video oynatıcı
+//   - autoplay / picture-in-picture / fullscreen / encrypted-media: kendi video
+//     oynatıcımız (static/cd-player.js) ve YouTube çerçevesi
 //
 // Kullanılmayanlar kapatılır: konum, kamera, ödeme API'si, USB, hareket
 // sensörleri. Kodda geolocation ve getUserMedia hiç geçmiyor.
-const permissionsPolicy = "accelerometer=(), autoplay=(self), camera=(), " +
-	"display-capture=(), encrypted-media=(), fullscreen=(self), geolocation=(), " +
-	"gyroscope=(), magnetometer=(), microphone=(self), midi=(), payment=(), " +
-	"picture-in-picture=(self), usb=(), xr-spatial-tracking=()"
+//
+// ---- YouTube çerçevesi (7 Kasım 2026 — GERÇEK HATA) ----
+// Önceki değer `autoplay=(self)` idi: yalnız BİZİM origin'imiz otomatik
+// oynatabiliyordu, çapraz kaynak çerçeve (youtube-nocookie.com) izin
+// ALMIYORDU. Sonuç sahada şöyle görünüyordu: kullanıcı oynat düğmesine
+// basıyor, YouTube çerçevesi otomatik oynatamıyor, kendi "play" poster'ında
+// kalıyor; video ancak çerçevenin İÇİNE ikinci kez tıklanınca başlıyordu
+// ("birden fazla tıklamadan oynamıyor, ortada play simgesi kalıyor").
+// Aynı kök neden iki belirti daha üretiyordu: `fullscreen=(self)` yüzünden
+// çerçeve tam ekran isteyemiyor, `picture-in-picture=(self)` yüzünden
+// konsola sürekli "Permissions policy violation" düşüyordu.
+//
+// ÇÖZÜM: izin listesine YouTube origin'leri EKLENDİ (self korunuyor).
+// `encrypted-media` da açıldı: YouTube bazı içerikleri EME ile sunuyor ve
+// kapalıyken oynatma sessizce düşebiliyor.
+//
+// GÜVENLİK NOTU: bu izinler yalnız bu origin'lere verilir; rastgele bir
+// üçüncü taraf çerçevesi otomatik oynatma/tam ekran yetkisi almaz.
+const permissionsPolicy = "accelerometer=(), " +
+	"autoplay=(self \"https://www.youtube.com\" \"https://www.youtube-nocookie.com\"), " +
+	"camera=(), display-capture=(), " +
+	"encrypted-media=(self \"https://www.youtube.com\" \"https://www.youtube-nocookie.com\"), " +
+	"fullscreen=(self \"https://www.youtube.com\" \"https://www.youtube-nocookie.com\"), " +
+	"geolocation=(), gyroscope=(), magnetometer=(), microphone=(self), midi=(), payment=(), " +
+	"picture-in-picture=(self \"https://www.youtube.com\" \"https://www.youtube-nocookie.com\"), " +
+	"usb=(), xr-spatial-tracking=()"
 
 func (s *Server) withSecurityHeaders(next http.Handler) http.Handler {
 	// CSP burada HTML için AYARLANMAZ: politikadaki satır içi script

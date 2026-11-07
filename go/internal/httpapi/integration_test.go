@@ -140,6 +140,16 @@ func TestSecurityHeaders(t *testing.T) {
 	// mikrofon kapatılırsa o özellik ölür.
 	assert.Contains(t, pp, "microphone=(self)", "dikte için mikrofon açık kalmalı")
 
+	// YouTube çerçevesi (7 Kasım 2026 — gerçek hata): `autoplay=(self)` çapraz
+	// kaynak çerçeveye otomatik oynatma izni vermiyordu; kullanıcı oynat
+	// düğmesine basıyor, YouTube poster'ında kalıyor ve ikinci tıklama
+	// gerekiyordu. Bu regresyon sessizce geri gelmesin.
+	for _, yetenek := range []string{"autoplay", "fullscreen", "picture-in-picture", "encrypted-media"} {
+		if !strings.Contains(pp, yetenek+"=(self \"https://www.youtube.com\"") {
+			t.Errorf("Permissions-Policy %s için YouTube izni yok: %s", yetenek, pp)
+		}
+	}
+
 	// CSP artık ZORUNLU kipte ve HASH tabanlı. script-src 'unsafe-inline'
 	// İÇERMEZ: satır içi <script> etiketleri sayfanın kendi baytlarından
 	// hesaplanan sha256 hash'leriyle izinlenir (nonce değil — herkese açık

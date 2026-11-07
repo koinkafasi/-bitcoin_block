@@ -190,10 +190,11 @@
    *
    * `unMute` çağrısı yine de duruyor (sesiGeriAc): kullanıcı daha önce
    * sessize aldıysa durumu korur; sesli açılışta etkisizdir. */
-  Oynatici.prototype.kaynak = function () {
+  Oynatici.prototype.kaynak = function (sessiz) {
     var temel = 'https://www.youtube-nocookie.com/embed/';
     var ortak = 'autoplay=1&controls=0&enablejsapi=1&rel=0&modestbranding=1' +
       '&playsinline=1&iv_load_policy=3&fs=0&origin=' + encodeURIComponent(location.origin);
+    if (sessiz) ortak = 'mute=1&' + ortak;
     if (this.canli) {
       return temel + 'live_stream?channel=' + encodeURIComponent(this.kanal) + '&' + ortak;
     }
@@ -204,8 +205,16 @@
      Oynatma başladıktan sonra çağrılır; sesli açılışta yalnız düzeyi yazar. */
   Oynatici.prototype.sesiGeriAc = function () {
     if (this._sesAcildi) return;
-    this._sesAcildi = true;
     this.komut('setVolume', [this.sessiz ? 0 : this.ses]);
+    /* Yalnız SESSİZ başlatıldıysa sesi açmayı dene; sesli açılışta gereksiz.
+       Tarayıcı izin vermezse oynatma durur → `durum(2)` çipi tekrar gösterir;
+       kullanıcı çipe basınca gerçek dokunuşla ses açılır. */
+    if (this.sessizBasladi && !this.sessiz && this.ses > 0) {
+      this.komut('unMute');
+      this.komut('setVolume', [this.ses]);
+      this._otomatikSesZaman = Date.now();
+    }
+    this._sesAcildi = true;
   };
 
   /* cerceveYenile mevcut iframe'i kaldırır; bir sonraki cerceveKur() taze
@@ -220,12 +229,13 @@
     this._sesAcildi = false;
   };
 
-  Oynatici.prototype.cerceveKur = function () {
+  Oynatici.prototype.cerceveKur = function (sessiz) {
     if (this.cerceveHazir) return;
     this.cerceveHazir = true;
     var f = document.createElement('iframe');
     f.className = 'cd-vplayer__iframe';
-    f.src = this.kaynak();
+    this.sessizBasladi = !!sessiz;
+    f.src = this.kaynak(!!sessiz);
     f.title = this.baslik;
     f.setAttribute('frameborder', '0');
     f.setAttribute('allow',
@@ -295,11 +305,34 @@
     if (s === 1) {
       this.oynuyor = true;
       this.basladi = true;
-      this._oynadi = true;
-      /* Gerçek oynama başladı: sessiz açılışın ardından sesi geri ver. */
+      /* Kapak BURADA kalkar (poster görünmesin). Sessiz açılışın ardından
+         sesi geri vermeyi de burada deneriz; tarayıcı reddederse çip kalır. */
+      this.oynamaBasladi();
       this.sesiGeriAc();
     }
-    else if (s === 2 || s === 5 || s === -1) { this.oynuyor = false; }
+    else if (s === 2 || s === 5 || s === -1) {
+      this.oynuyor = false;
+      /* Duraklatıldı: YouTube kendi poster'ını gösterebilir. Onun yerine
+         BİZİM oynat düğmemiz merkezde dursun (aynı görünüm, tutarlı marka). */
+      if (this._oynadi && this.buyuk && !this.canli) {
+        /* Duraklatılmış kare görünsün; YouTube'un play poster'ı değil,
+           BİZİM oynat düğmemiz ortada dursun. */
+        this.buyuk.hidden = false;
+        this.buyuk.setAttribute('aria-label', 'Oynat');
+      }
+      /* Bazı tarayıcılar otomatik ses açmayı "hareketsiz" sayıp oynatmayı
+         duraklatıyor. O zaman: (1) videoyu hemen yeniden başlat (görüntü
+         aksamasın), (2) sesi tek dokunuşla açmak için çipi göster. */
+      if (this.sessizBasladi && !this._kullaniciSesiKapatti &&
+          this._otomatikSesZaman && Date.now() - this._otomatikSesZaman < 1200) {
+        this._otomatikSesZaman = 0;
+        this.komut('playVideo');
+        this.oynuyor = true;
+        this.sesCipiGoster();
+      } else if (this.sessizBasladi && !this._kullaniciSesiKapatti) {
+        this.sesCipiGoster();
+      }
+    }
     else if (s === 0) { this.oynuyor = false; this.bitis(); }
     else if (s === 3) { if (this.bekle) this.bekle.hidden = false; }
     this.dugmeDurumlari();
@@ -318,57 +351,163 @@
   };
 
   /* ---- eylemler ---- */
+
+  /* baslat: oynatıcıyı kurar ve oynatmayı başlatır.
+   *
+   * KATMANLI GÜVENCE (7 Kasım 2026 — "birden fazla tıklamadan oynamıyor,
+   * ortada play simgesi kalıyor" hatası):
+   *   1. iframe SESLİ autoplay ile kurulur. Sunucu artık
+   *      `Permissions-Policy: autoplay=(self https://www.youtube.com …)`
+   *      gönderdiği için bu gerçek tarayıcılarda da çalışır (kök neden buydu).
+   *   2. 1,2 sn içinde oynama başlamazsa iframe SESSİZ (`mute=1`) yeniden
+   *      kurulur — sessiz autoplay her tarayıcıda serbesttir, video kesin
+   *      başlar; ses "Sesi aç" çipinden geri gelir.
+   *   3. Yine başlamazsa kapağımız ve büyük oynat düğmemiz geri gelir;
+   *      kullanıcı asla YouTube'un çıplak poster'ıyla baş başa kalmaz
+   *      (kapak `--oynuyor` sınıfı gelene kadar KALKMAZ).
+   */
   Oynatici.prototype.baslat = function () {
-    /* İKİNCİ TIKLAMA: ilk denemede video hiç oynamadıysa (tarayıcı sesli
-       otomatik oynatmayı engelledi) iframe'i SIFIRDAN kur. Taze iframe
-       kullanıcı hareketinin içinde oluşturulduğu için oynatma izni alma
-       şansı, hazır iframe'e postMessage göndermekten yüksektir. */
-    if (this.basladi && !this._oynadi) this.cerceveYenile();
-    this.cerceveKur();
-    if (this.kapak) this.kapak.hidden = true;
-    if (this.bos) this.bos.hidden = true;
-    if (this.buyuk) this.buyuk.hidden = true;
-    if (this.bekle) this.bekle.hidden = false;
-    this.kok.classList.remove('cd-vplayer--gecikti');
-    this.kok.classList.add('cd-vplayer--basladi');
-    this.oynuyor = true;
-    this.basladi = true;
-    this.dugmeDurumlari();
-    this.komut('playVideo');
-    /* YouTube komutları ready öncesi yutulabilir: kısa aralıklarla yinele.
-       ISRAR ŞART: tek deneme kaybolursa oynatıcı duraklamış poster'da kalır
-       ve kullanıcı ikinci kez basmak zorunda kalır (bildirilen hata). */
     var self = this;
-    [200, 500, 1000, 1800, 2600, 4000].forEach(function (ms) {
+
+    /* İkinci tıklama: önceki denemede hiç oynamadıysa temiz sayfa. */
+    if (this.basladi && !this._oynadi) {
+      this.cerceveYenile();
+      this.sessizDenendi = false;
+    }
+
+    /* Sesli deneme hakkı bittiyse (ya da kullanıcı sesi kapattıysa) sessiz kur. */
+    var sessiz = this.sessizDenendi === true || this.sessiz === true || this.ses === 0;
+    this.cerceveKur(sessiz);
+
+    if (this.bos) this.bos.hidden = true;
+    /* KAPAK KALKMAZ: yalnız bekleme göstergesi ve karartma katmanı gelir.
+       YouTube poster'ı araya girse bile üstte kaldığımız için kullanıcı
+       "ortada play simgesi" görmez (bildirilen hata). */
+    this.kok.classList.add('cd-vplayer--bekliyor', 'cd-vplayer--basladi');
+    this._baslamaZaman = Date.now();
+    if (this.bekle) this.bekle.hidden = false;
+    if (this.buyuk) this.buyuk.hidden = true;
+    this.kok.classList.remove('cd-vplayer--gecikti');
+    this.basladi = true;
+    this.oynuyor = true;
+    this.dugmeDurumlari();
+
+    this.komut('playVideo');
+    /* YouTube komutları ready öncesi yutulabilir: artan aralıklarla yinele. */
+    [150, 400, 800, 1400, 2200, 3200].forEach(function (ms) {
       setTimeout(function () {
-        if (!self.basladi || (!self.oynuyor && self.an < 0.5)) self.komut('playVideo');
+        if (!self._oynadi) self.komut('playVideo');
       }, ms);
     });
+
     if (this.kok.scrollIntoView && this.kok.getBoundingClientRect().top < 0) {
       this.kok.scrollIntoView({ block: 'center', behavior: 'smooth' });
     }
-    this.kontrolGoster();
 
-    /* GÖZCÜ: 4,5 sn içinde video hiç oynamadıysa (otomatik oynatma yine de
-       engellendi — ör. iOS güç tasarrufu) kapağı ve büyük düğmeyi geri
-       getir. Böylece kullanıcı YouTube'un kendi poster'ındaki düğmeyi
-       aramak yerine BİZİM düğmemize basar; ikinci tıklama doğrudan
-       kullanıcı hareketi olduğu için oynatma kesin başlar. */
+    /* 1.2 sn: hâlâ oynamadıysa SESSİZ moda geç (evrensel çözüm). */
     setTimeout(function () {
-      if (self.basladi && !self._oynadi) {
-        if (self.kapak) self.kapak.hidden = false;
-        if (self.buyuk) self.buyuk.hidden = false;
-        if (self.bekle) self.bekle.hidden = true;
-        self.kok.classList.remove('cd-vplayer--basladi');
-        self.kok.classList.add('cd-vplayer--gecikti');
-      }
-    }, 4500);
+      if (self._oynadi || self.sessizBasladi) return;
+      self.sessizDenendi = true;
+      self.cerceveYenile();
+      self.cerceveKur(true);
+      self.komut('playVideo');
+      [200, 600, 1200, 2200].forEach(function (ms) {
+        setTimeout(function () { if (!self._oynadi) self.komut('playVideo'); }, ms);
+      });
+      self.sesCipiGoster();
+    }, 1200);
+
+    /* 5 sn: hâlâ oynamadıysa kapağı ve düğmeyi geri getir. */
+    setTimeout(function () {
+      if (self._oynadi) return;
+      self.kapakGeriGetir();
+    }, 5200);
+
+    this.kontrolGoster();
+  };
+
+  /* oynamaBasladi: video GERÇEKTEN oynuyor (playerState 1).
+   * Kapak ancak burada kalkar — poster/play simgesi görünmez. */
+  Oynatici.prototype.oynamaBasladi = function () {
+    this._oynadi = true;
+    this.kok.classList.remove('cd-vplayer--bekliyor', 'cd-vplayer--gecikti');
+    this.kok.classList.add('cd-vplayer--oynuyor');
+    if (this.kapak) this.kapak.hidden = true;
+    if (this.buyuk) this.buyuk.hidden = true;
+    if (this.bekle) this.bekle.hidden = true;
+    if (this.bos) this.bos.hidden = true;
+    if (this.buyuk) this.buyuk.setAttribute('aria-label', 'Duraklat');
+    this.sesCipiGizle();
+  };
+
+  /* kapakGeriGetir: hiçbir şekilde oynamadıysa bizim düğmemiz geri gelir. */
+  Oynatici.prototype.kapakGeriGetir = function () {
+    this.kok.classList.remove('cd-vplayer--bekliyor', 'cd-vplayer--oynuyor');
+    this.kok.classList.add('cd-vplayer--gecikti');
+    if (this.kapak) this.kapak.hidden = false;
+    if (this.buyuk) this.buyuk.hidden = false;
+    if (this.bekle) this.bekle.hidden = true;
+    this.cizgiMesaj('Oynatmak için tekrar dokunun');
+  };
+
+  Oynatici.prototype.cizgiMesaj = function (metin) {
+    if (this.duyuru) this.duyuru.textContent = metin;
+    if (this.kontrol) this.kontrol.setAttribute('data-mesaj', metin);
+  };
+
+  /* sesCipiGoster/Gizle: sessiz başlatıldığında "Sesi aç" düğmesi.
+   * Sessiz autoplay evrensel çözüm; ses tek dokunuşla geri gelir. */
+  Oynatici.prototype.sesCipiGoster = function () {
+    if (this.sessiz || this.ses === 0) return;
+    var cip = this.kok.querySelector('[data-cd-ses-cip]');
+    if (!cip) {
+      cip = document.createElement('button');
+      cip.type = 'button';
+      cip.className = 'cd-vplayer__ses-cip';
+      cip.setAttribute('data-cd-ses-cip', '');
+      cip.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true">' +
+        '<path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3a4.5 4.5 0 0 0-2.5-4v8a4.5 4.5 0 0 0 2.5-4zM14 3.2v2.1a6.8 6.8 0 0 1 0 13.4v2.1a8.9 8.9 0 0 0 0-17.6z"/></svg> Sesi aç';
+      var self = this;
+      cip.addEventListener('click', function (e) {
+        e.stopPropagation();
+        self.sesiAc();
+      });
+      this.sahne.appendChild(cip);
+    }
+    cip.hidden = false;
+  };
+
+  Oynatici.prototype.sesCipiGizle = function () {
+    var cip = this.kok.querySelector('[data-cd-ses-cip]');
+    if (cip) cip.hidden = true;
+  };
+
+  /* sesiAc: GERÇEK kullanıcı dokunuşuyla sesi açar.
+   * Bu dokunuş tarayıcı için geçerli bir harekettir; ses açma izni verilir. */
+  Oynatici.prototype.sesiAc = function () {
+    this.sessiz = false;
+    if (this.ses === 0) this.ses = 100;
+    this.komut('unMute');
+    this.komut('setVolume', [this.ses]);
+    this.sesCipiGizle();
+    this.dugmeDurumlari();
+    this.duyur('Ses açıldı');
   };
 
   Oynatici.prototype.oynatDegistir = function () {
-    if (!this.basladi) { this.baslat(); return; }
-    if (this.oynuyor) { this.komut('pauseVideo'); this.oynuyor = false; }
-    else { this.komut('playVideo'); this.oynuyor = true; }
+    if (!this.basladi || !this._oynadi) { this.baslat(); return; }
+    if (this.oynuyor) {
+      this.komut('pauseVideo');
+      this.oynuyor = false;
+    } else {
+      this.komut('playVideo');
+      this.oynuyor = true;
+      /* Duraklatılmış (ya da bitmiş) videoda kapak gizli kalmalı; ama
+         poster'a dönülmüşse kapağı biz gösterelim. */
+      this.kok.classList.add('cd-vplayer--oynuyor');
+      if (this.kapak) this.kapak.hidden = true;
+      if (this.buyuk) this.buyuk.hidden = true;
+    }
     this.dugmeDurumlari();
   };
 
@@ -411,6 +550,7 @@
   };
 
   Oynatici.prototype.sessizDegistir = function () {
+    this._kullaniciSesiKapatti = !(this.sessiz || this.ses === 0) ? true : false;
     if (this.sessiz || this.ses === 0) {
       this.sessiz = false;
       if (this.ses === 0) this.ses = 100;
