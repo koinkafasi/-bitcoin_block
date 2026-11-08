@@ -79,6 +79,14 @@ type Server struct {
 	// sistemsel üretim (blok kapak şablonu — Faz 3) için kullanılacak kullanıcı
 	sysMu     sync.Mutex
 	sysUserID int64
+
+	// CD (CoinDesk) yüzeyinin süreç içi önbellekleri. TTL `cdCacheTTL`.
+	// Kabuk verisi her sayfada aynı; liste verisi ise aynı sayfa adresine
+	// gelen eşzamanlı isteklerde aynı. HTTP yanıtı zaten s-maxage=300 ile
+	// önbellekte; bu katman yalnız DB'yi korur.
+	cdShellCache *ttlcache[cdShellData]
+	cdHomeCache  *ttlcache[[]repo.Content]
+	cdListeCache *ttlcache[cdListeSonuc]
 }
 
 // siteIDFromCtx bağlamdan site kimliğini döndürür (yoksa 1).
@@ -118,6 +126,10 @@ func NewServerApp(cfg config.Config, logger *slog.Logger, pool *pgxpool.Pool, bu
 		blockCache: map[string]bool{},
 		siteCache:  map[string]siteEntry{},
 		assetVer:   strconv.FormatInt(time.Now().Unix(), 36),
+
+		cdShellCache: newTTLCache[cdShellData](cdCacheTTL),
+		cdHomeCache:  newTTLCache[[]repo.Content](cdCacheTTL),
+		cdListeCache: newTTLCache[cdListeSonuc](cdCacheTTL),
 	}
 	s.siteName = s.initialSiteName()
 	// Statik varlık sürümünü templkit'e de ver: cd_head.templ `?v=` ile

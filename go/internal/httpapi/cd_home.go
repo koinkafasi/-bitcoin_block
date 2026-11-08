@@ -23,18 +23,7 @@ import (
 func (s *Server) handleCDHome(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	items, _, err := repo.ListContents(ctx, s.pool, repo.ListFilter{
-		Status:         "yayinda",
-		SiteID:         1,
-		Locale:         "tr",
-		Page:           1,
-		PerPage:        60,
-		ExcludeGallery: true,
-	})
-	if err != nil {
-		// Boş site 500 dönmez: hata loglanır, iskelet basılır.
-		s.logger.Warn("cd ana sayfa: içerik listesi", "error", err)
-	}
+	items := s.cdHomeIcerikleri(ctx)
 
 	simdi := time.Now()
 	cevir := func(c repo.Content) templkit.CDStory {

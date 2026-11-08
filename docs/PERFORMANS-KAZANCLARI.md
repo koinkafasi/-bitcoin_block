@@ -12,51 +12,46 @@ Aşağıdaki her sayı bu makinede ölçüldü.
 
 Aynı yük testi (50 eşzamanlı istemci × 10 sn, 6 sayfa, aynı betik):
 
-| Metrik | Önce | Sonra | Fark |
-|---|---|---|---|
-| Toplam istek | 4.347 | **18.099** | **4,2×** |
-| Saniyedeki istek (rps) | 435 | **1.810** | **4,2×** |
-| p50 gecikme | 96 ms | **25 ms** | **3,8× daha hızlı** |
-| p90 | 182 ms | **41 ms** | 4,4× |
-| p95 | 211 ms | **51 ms** | 4,1× |
-| p99 | 270 ms | **59 ms** | 4,6× |
-| max | 382 ms | **95 ms** | 4,0× |
-| Hata | 0 | **0** | — |
+| Metrik | Önce | 1. tur | 2. tur | **3. tur** |
+|---|---|---|---|---|
+| rps | 435 | 1.810 | 1.515 | **1.945** |
+| p50 | 96 ms | 25 ms | 30 ms | **24 ms** |
+| p95 | 211 ms | 51 ms | 57 ms | **45 ms** |
+| p99 | 270 ms | 59 ms | 72 ms | **57 ms** |
+| Hata | 0 | 0 | 0 | **0** |
 
-> **Ölçüm varyansı:** aynı betikle tekrar koşulduğunda 1.630 rps / p50 28 ms
-> ölçüldü (arka planda başka bir iş koşuyordu). Yani kazanç 4,2× değil
-> **en az 3,7×** diye okunmalı; her koşuda bir önceki servisin GC/bağlantı
-> durumu sonucu birkaç puan oynatıyor. Karşılaştırmalı sonuçlar (önce/sonra)
-> aynı oturumda art arda alındı.
+> Turlar arasında ölçüm koşulları değişti (2. turda arka planda başka iş
+> vardı, ayrıca çalışma ağacına başka bir geliştirme girdi). Bu yüzden
+> "1. tur" ile "3. tur"u doğrudan kıyaslamak yerine her turun kendi
+> **önce/sonra** ölçümü esas alınmalı.
 
-Sayfa bazında (yük altında, p50):
+Ana sayfa, aynı yük altında (p50): **191 ms → 51 ms → 52 ms → 35 ms**.
 
-| Sayfa | Önce | Sonra |
+Sayfa bazında (3. tur, yük altında, p50):
+
+| Sayfa | Önce | 3. tur |
 |---|---|---|
-| `/` (ana sayfa) | 191 ms | **51 ms** |
-| `/price` | 163 ms | **21 ms** |
-| `/markets` | 87 ms | **26 ms** |
-| `/videos` | 95 ms | **33 ms** |
-| `/canli-yayin` | 91 ms | **21 ms** |
-| `/business` | 87 ms | **26 ms** |
+| `/` (ana sayfa) | 191 ms | **35 ms** |
+| `/price` | 163 ms | **25 ms** |
+| `/markets` | 87 ms | **23 ms** |
+| `/videos` | 95 ms | **28 ms** |
+| `/canli-yayin` | 91 ms | **22 ms** |
+| `/business` | 87 ms | **18 ms** |
 
-Tek istek (boşta, `curl`): ana sayfa **26 ms → 12 ms**; istek içi
-paralelleştirmeden sonra **9 ms** (bkz. §2.6).
-
-> **Not:** 8 Kasım 2026'dan sonra çalışma ağacında başka bir geliştirme
-> (piyasa şeridinin tüm sayfalara taşınması) devreye girdi ve tüm CD
-> sayfalarına bir fiyat okuması ekledi. Yukarıdaki tablo o değişiklikten
-> ÖNCE, aynı oturumda art arda alınmış ölçümdür.
+Tek istek (boşta, `curl`): ana sayfa **26 ms → 9 ms**.
 
 ### Bellek
 
 | | Önce | Sonra |
 |---|---|---|
-| Boşta RSS | 34,6 MB | **29–32 MB** |
-| Yük altında tepe | 44,4 MB | 50,9 MB |
+| Boşta RSS | 34,6 MB | **29–33 MB** |
+| Yük altında tepe | 44,4 MB | 55–74 MB |
 
-Tepe değer yükseldi çünkü **aynı 10 saniyede 4,2 kat fazla istek** işlendi
+Tepe değer yükseldi çünkü **aynı 10 saniyede 4 kat fazla istek** işlendi
 (uçuştaki istek sayısı arttı). İstek başına maliyet düştü; boşta RSS de azaldı.
+3. turdaki 73,8 MB tepe, önbelleğin ilk dolduğu anda 50 eşzamanlı isteğin
+aynı veriyi beklerken tuttuğu ara belleğe denk geliyor; GOMEMLIMIT (256MiB)
+bu türden bir sıçramanın üstünde duruyor.
 
 ---
 
@@ -179,6 +174,45 @@ değişen statik varlık sürümü (`?v=...`). Paralelleştirme çıktıyı değ
 
 `go test -race` ile de doğrulandı (eşzamanlı okumalar veri yarışı üretmiyor).
 
+### 2.7 CD yüzeyine 10 sn'lik süreç içi önbellek + singleflight
+
+Profil ve `pg_stat_user_tables` sayımı, asıl kalan maliyetin **aynı veriyi
+tekrar tekrar okumak** olduğunu gösterdi. Ölçüm (10 istek başına `contents`
+tablosu taraması):
+
+| | Önce | Sonra |
+|---|---|---|
+| Ana sayfa | **34 tarama/istek** | **4** |
+| `/markets` | **35 tarama/istek** | **~0** |
+
+İki katman eklendi (`internal/httpapi/ttlcache.go`):
+
+1. **`ttlcache[T]`** — jenerik, TTL'li, süreç içi önbellek.
+2. **Singleflight** — aynı anahtar için eşzamanlı çağrılar **tek** yükleme
+   yapar, diğerleri onu bekler. 50 eşzamanlı yükte önbellek boşken oluşan
+   sürü (thundering herd) tam olarak yük testinde görülen şeydi.
+
+Önbelleğe alınanlar:
+- **Kabuk verisi** (popüler etiketler + menü coinleri + bölüm doluluğu):
+  her CD sayfasında aynı, istekten bağımsız. Üç okuma ayrıca kendi içinde
+  paralel çalışıyor (önbellek boşken 3 sıralı tur yerine 1 tur).
+- **Ana sayfa içerik listesi** (60 satır).
+- **Bölüm listeleri** (bölüm + sayfa anahtarıyla).
+
+**Tazelik:** HTTP yanıtı zaten `max-age=60, s-maxage=300`. 10 sn'lik süreç içi
+katman kullanıcıya görünen tazeliği değiştirmez. Panelden yapılan
+ayar/içerik değişiklikleri `invalidateContentCache()` ile anında yansır.
+
+**Hata davranışı:** başarısız yükleme (ok=false) **önbelleğe yazılmaz** —
+geçici bir DB hatası 10 sn boyunca boş sayfa olarak donmaz, sonraki istek
+yeniden dener. Testle korunuyor.
+
+**İptal:** bekleyen bir çağıranın bağlamı iptal olursa beklemeden döner;
+terk edilmiş istek, yavaş sorgu bitene kadar goroutine tutmaz. Testle korunuyor.
+
+**Doğrulama:** soğuk (önbellek boş) ve sıcak (önbellekten) yanıtlar 5 sayfada
+**bayt bayt aynı** — önbellek render çıktısını değiştirmiyor.
+
 ---
 
 ## 3. Eklenen testler
@@ -192,13 +226,20 @@ değişen statik varlık sürümü (`?v=...`). Paralelleştirme çıktıyı değ
 | `TestImageSvcKapaliVarsayilan` | adres yoksa hiçbir şey değişmez |
 | `TestGetSettingsTextSarmaliCozer` | jsonb sarmalı çözülür (`"x"` → `x`) |
 | `TestGetSettingsTextTekSorgu` | N+1 geri gelmez (tek sorgu) |
-| `BenchmarkResizeToWidth*`, `BenchmarkCreateThumb*` | kazanç ölçülebilir kalır |
+| `TestTTLCacheHitYukleyiciyiTekrarCagirmaz` | taze değer varken DB'ye gidilmez |
+| `TestTTLCacheSuresiDoluncaYenidenYukler` | TTL geçince tazelenir |
+| `TestTTLCacheBasarisizSonucOnbellegeYazilmaz` | DB hatası 10 sn donmaz |
+| `TestTTLCacheSingleflight` | 20 eşzamanlı çağrı = 1 yükleme |
+| `TestTTLCacheIptalBeklemeyiBiraktirir` | iptal edilen istek beklemede kalmaz |
+| `BenchmarkResizeToWidth*`, `BenchmarkCreateThumb*` | görsel kazancı ölçülebilir kalır |
 | `BenchmarkRenderDesign` | manşet raster'ının maliyeti (10,1 ms) takip edilir |
 
 Tüm paket testleri geçiyor: `go test -short ./...` → 23 paket **ok**,
 `go test -race` (httpapi/repo/youtube/platform) temiz, `gofmt -l .` boş,
 `go vet ./...` temiz.
-Ek olarak eski sürümle **HTML karşılaştırması** yapıldı: 5 sayfa bayt bayt aynı.
+Ek olarak eski sürümle **HTML karşılaştırması** yapıldı: kabuk değişiklikleri
+(piyasa şeridi, arama çipleri) başka bir geliştirmeden geliyor; benim
+değişikliklerim bunların dışında çıktıyı değiştirmedi.
 
 ---
 
@@ -211,16 +252,18 @@ limit aşımı GC'ye değil **OOMKill**'e gidiyordu. Normal kullanımın çok
 
 ## 5. Sırada ne var (ölçümle doğrulanmış adaylar)
 
-1. **50 eşzamanlı yükte darboğaz bağlantı havuzu.** Ana sayfa isteği ~20 sorgu
-   çalıştırıyor; en büyük kazanç artık sorgu sayısını düşürmek:
-   - Ana sayfadaki bağımsız okumalar tek `pgx.Batch`'e indirilebilir; havuz
-     turu 20'den 2-3'e iner, bu da 50-eşzamanlı p50'yi doğrudan düşürür.
-     (Paralelleştirme tur *derinliğini* düşürdü, tur *sayısını* değil.)
-   - `/price` istek başına **3,35 transaction**.
+1. **Şablon render'ı artık listenin başında.** Sorgu sayısı düştükten sonra
+   ana sayfada kalan sürenin büyük kısmı templ render + CSP hash üretimi.
+   Profilde `indexFold` (CSP taraması) tek başına ~%9 CPU alıyor.
+   Ölçülebilir aday: CSP hash'lerini gövde başına **bir kez** üretmek yerine
+   yanıtla birlikte önbelleğe almak (aynı HTML → aynı hash).
 2. **`/media/thumb` ve `/media/variant`**: ilk istekte üretiliyor, sonra
    diskten. Medya tablosu şu an boş; içerik dolduğunda `image-svc`
    kazancı (1,8×) doğrudan kullanıcıya yansıyacak.
-3. **`platform/render.go`** (583 satır, JSON tasarım → JPEG): ölçüldü
+3. **`pgx.Batch`**: ana sayfada hâlâ ~20 ayrı sorgu var (artık önbellekli,
+   ama önbellek boşken hepsi tek turda uçuyor). Tek batch'e indirmek soğuk
+   isteği kısaltır; sıcak yolda etkisi yok.
+4. **`platform/render.go`** (583 satır, JSON tasarım → JPEG): ölçüldü
    **10,1 ms/raster**, ama **sıcak yolda değil** (kapak/manşet üretimi, panel
    ve arka plan işleri). Rust'a taşımak için uygun bir öğrenme parçası;
    performans gerekçesi zayıf. Karar: ihtiyaç doğunca.
@@ -245,6 +288,12 @@ python3 /mnt/c/Users/alper/AppData/Local/Temp/opencode/lowload.py
 
 # görsel regresyon: eski commit'i ayrı portta çalıştırıp HTML diff
 bash /mnt/c/Users/alper/AppData/Local/Temp/opencode/diffhtml.sh
+
+# önbellek doğrulaması: soğuk (önbellek boş) = sıcak (önbellekten)
+bash /mnt/c/Users/alper/AppData/Local/Temp/opencode/cacheverify.sh
+
+# contents tablosu tarama sayısı (istek başına DB yükü)
+bash /mnt/c/Users/alper/AppData/Local/Temp/opencode/scans.sh
 
 # profil
 curl -sS -o /tmp/cpu.pprof "http://127.0.0.1:6060/debug/pprof/profile?seconds=8"

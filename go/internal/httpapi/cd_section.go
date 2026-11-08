@@ -58,25 +58,9 @@ func (s *Server) handleCDSection(w http.ResponseWriter, r *http.Request, slug st
 	}
 	const perPage = 24
 
-	f := repo.ListFilter{
-		Status:         "yayinda",
-		SiteID:         1,
-		Locale:         "tr",
-		Page:           sayfa,
-		PerPage:        perPage,
-		ExcludeGallery: true,
-	}
-	// "latest-crypto-news" tüm bölümleri kapsar; diğerleri kategoriye süzülür.
-	if slug != "latest-crypto-news" {
-		if id := s.kategoriID(r.Context(), slug); id > 0 {
-			f.CategoryID = id
-		}
-	}
-
-	items, toplam, err := repo.ListContents(r.Context(), s.pool, f)
-	if err != nil {
-		s.logger.Warn("cd bölüm: liste", "bolum", slug, "error", err)
-	}
+	// Liste önbellekten (10 sn). Hata durumunda boş liste + 0 toplam döner;
+	// sayfa iskeleti yine basılır (eskiden de öyleydi).
+	items, toplam := s.cdListeIcerikleri(r.Context(), slug, sayfa)
 
 	simdi := time.Now()
 	var kartlar []templkit.CDStory
@@ -194,10 +178,16 @@ func (s *Server) cdShellCtx(ctx context.Context, aktif string) templkit.CDShell 
 		Diller: []templkit.CDDil{{Kod: "tr", Ad: "Türkçe", Aktif: true}},
 	}
 
+	// Kabuk verisi: etiketler + menü coinleri + bölüm doluluğu.
+	// Üçü de istekten bağımsız ve her sayfada aynı → 10 sn önbellek +
+	// singleflight (bkz. cd_cache.go). Tek tek sorgulamak istek başına
+	// 3 tur ekliyordu.
+	kabuk := s.cdShellVeri(ctx)
+
 	// Etiket sütunu: yalnız İÇERİĞİ OLAN etiketler. Boş etiket sayfasına
 	// bağlantı vermek 404'e götürür (ölçüm: /tag/xrp 404 idi).
-	if etiketler, err := repo.PopulerEtiketler(ctx, s.pool, 6); err == nil {
-		for _, e := range etiketler {
+	{
+		for _, e := range kabuk.Tags {
 			ad := etiketMenuAdi(e.Ad)
 			// Sütun başlığı zaten "Crypto News": adı yalnız "News"/"Haber"
 			// olan genel etiket satırı bilgi katmıyor (ölçüm: menüde
@@ -216,7 +206,7 @@ func (s *Server) cdShellCtx(ctx context.Context, aktif string) templkit.CDShell 
 	}
 
 	// Fiyat sütunu: canlı ilk 5 coin.
-	for i, f := range repo.Fiyatlar(ctx, s.pool) {
+	for i, f := range kabuk.Coins {
 		if i >= 5 {
 			break
 		}
@@ -229,8 +219,9 @@ func (s *Server) cdShellCtx(ctx context.Context, aktif string) templkit.CDShell 
 	// Bölüm doluluğu: menüye yalnız YAYINDA İÇERİĞİ OLAN bölüm yazılır.
 	// Ölçüm (6 Kasım 2026): Focus · Videos · Podcasts · News Analysis ·
 	// Press Releases bölümlerinde 0 içerik vardı; menü beş ölü bağlantı
-	// veriyordu. Sorgu başarısız olursa harita boş kalır ve filtre uygulanmaz.
-	if dolu, err := repo.DoluBolumler(ctx, s.pool, 1); err == nil {
+	// veriyordu. Sorgu başarısızsa harita boş kalır ve filtre uygulanmaz.
+	if kabuk.DoluOk {
+		dolu := kabuk.Dolu
 		sh.MenuBolumler = dolu
 		// Üst gezinme de aynı kurala uyar: "Video" yayında videosu yokken
 		// basılmaz. /latest-crypto-news ve /price gibi liste sayfaları
