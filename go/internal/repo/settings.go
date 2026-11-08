@@ -87,6 +87,25 @@ func GetSettings(ctx context.Context, pool DB, section string) (map[string][]byt
 	return out, rows.Err()
 }
 
+// GetSettingsText bir bölümün tüm anahtarlarını, saklanan JSON sarmalı
+// çözülmüş METİN olarak döndürür.
+//
+// NEDEN: GetSettings ham jsonb değerini verir (kaydederken json.Marshal ile
+// sarmalandığı için `"bitcosar"` gibi tırnaklı gelir). Tek tek GetSetting
+// çağıran kod settingText ile bunu çözüyordu; tek sorguya geçen çağıranlar
+// aynı çözümü tekrar yazmasın diye burada yapılır.
+func GetSettingsText(ctx context.Context, pool DB, section string) (map[string]string, error) {
+	raw, err := GetSettings(ctx, pool, section)
+	if err != nil {
+		return nil, err
+	}
+	out := make(map[string]string, len(raw))
+	for k, v := range raw {
+		out[k] = string(settingText(v))
+	}
+	return out, nil
+}
+
 // ---- audit log ----
 
 // LogRow panel işlem kaydıdır.

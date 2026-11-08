@@ -111,6 +111,7 @@ fn process(stream: &mut TcpStream, target: &str, body: &[u8]) -> std::io::Result
     let mut ratio = 16.0f64 / 9.0f64;
     let mut width = 1200usize;
     let mut format = "jpeg";
+    let mut quality = 85u8;
     for pair in q.split('&') {
         if pair.is_empty() {
             continue;
@@ -128,6 +129,13 @@ fn process(stream: &mut TcpStream, target: &str, body: &[u8]) -> std::io::Result
                 }
             }
             "format" => format = v,
+            // Go tarafı yerel yolda q=82 kullanıyor; çıktı boyutu ve kalite
+            // birebir aynı kalsın diye çağıran kaliteyi geçebilir.
+            "quality" => {
+                if let Ok(u) = v.parse::<u8>() {
+                    quality = u.clamp(1, 100);
+                }
+            }
             _ => {}
         }
     }
@@ -159,10 +167,13 @@ fn process(stream: &mut TcpStream, target: &str, body: &[u8]) -> std::io::Result
     };
 
     let out = if width > 0 && width != crop.width() as usize {
+        // CatmullRom: Go tarafındaki xdraw.CatmullRom ile aynı çekirdek.
+        // Triangle (bilinear) daha yumuşak sonuç veriyor ve küçültmede
+        // srcset varyantları arasında görünür keskinlik farkı yaratıyordu.
         crop.resize(
             width as u32,
             (width as f64 / ratio) as u32,
-            image::imageops::FilterType::Triangle,
+            image::imageops::FilterType::CatmullRom,
         )
     } else {
         crop
@@ -189,7 +200,7 @@ fn process(stream: &mut TcpStream, target: &str, body: &[u8]) -> std::io::Result
         }
         _ => {
             let mut buf = Vec::new();
-            let mut enc = image::codecs::jpeg::JpegEncoder::new_with_quality(&mut buf, 85);
+            let mut enc = image::codecs::jpeg::JpegEncoder::new_with_quality(&mut buf, quality);
             if enc.encode_image(&out).is_ok() {
                 respond(stream, 200, "image/jpeg", &buf)
             } else {

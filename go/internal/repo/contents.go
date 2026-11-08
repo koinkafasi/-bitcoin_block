@@ -892,33 +892,48 @@ func HomeHighlights(ctx context.Context, pool *pgxpool.Pool, siteID int64, local
 	if err := run("is_am", leadLimit); err != nil {
 		return nil, err
 	}
-	rec, err := RecentPublished(ctx, pool, siteID, locale, recentLimit)
+	rec, err := recentPublishedHome(ctx, pool, siteID, locale, recentLimit)
 	if err != nil {
 		return nil, err
-	}
-	// anasayfa kapısı: kategori homepage_min_score eşiğinin altındaki içerikler çıkarılır
-	if len(rec) > 0 {
-		keep := rec[:0]
-		for _, c := range rec {
-			ok, err := homepageAllowed(ctx, pool, c)
-			if err != nil || ok {
-				keep = append(keep, c)
-			}
-		}
-		rec = keep
 	}
 	h.Recent = rec
 	return h, nil
 }
 
-// homepageAllowed içeriğin anasayfa eşiğini geçip geçmediğini kontrol eder.
-func homepageAllowed(ctx context.Context, pool *pgxpool.Pool, c Content) (bool, error) {
-	var min int
-	err := pool.QueryRow(ctx, `SELECT COALESCE(homepage_min_score,0) FROM categories WHERE id = $1`, c.CategoryID).Scan(&min)
+// recentPublishedHome "son yayınlananlar" listesini anasayfa kapısıyla
+// birlikte TEK sorguda döndürür.
+//
+// NEDEN: eski kod önce RecentPublished ile listeyi çekiyor, sonra her içerik
+// için homepageAllowed'ı ayrı çağırıyordu — 48 içerikte 48 ek sorgu (klasik
+// N+1). Ölçüm (7 Kasım 2026, 50 eşzamanlı istemci): ana sayfa p50 191 ms,
+// /markets p50 87 ms; aradaki farkın baskın kısmı bu turdu. Eşik kategori
+// tablosunda durduğu için kapı SQL'e taşındı: aynı satırlar, tek gidiş-dönüş.
+//
+// Eşdeğerlik: eski homepageAllowed kategori bulunamazsa İZİN veriyordu.
+// COALESCE(c.ai_score,0) >= COALESCE(cat.homepage_min_score,0) bu davranışı
+// korur (kategori yok → 0 >= 0).
+func recentPublishedHome(ctx context.Context, pool *pgxpool.Pool, siteID int64, locale string, limit int) ([]Content, error) {
+	q := `SELECT ` + contentCols + ` FROM contents c
+		LEFT JOIN categories cat ON cat.id = c.category_id
+		LEFT JOIN users u ON u.id = c.author_id
+		LEFT JOIN mahrets m ON m.id = c.mahrep_id
+		WHERE c.status = 'yayinda' AND c.locale = $1 AND c.site_id = $2
+		  AND (COALESCE(c.ai_score, 0) >= COALESCE(cat.homepage_min_score, 0))
+		ORDER BY c.published_at DESC LIMIT $3`
+	rows, err := pool.Query(ctx, q, locale, siteID, limit)
 	if err != nil {
-		return true, nil // kategori yok → engelleme
+		return nil, err
 	}
-	return c.AiScore >= min, nil
+	defer rows.Close()
+	out := []Content{}
+	for rows.Next() {
+		c, err := scanContent(rows)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, c)
+	}
+	return out, rows.Err()
 }
 
 // DisplaySlug boşsa güvenli boş döndürür (şablon linkleri için).

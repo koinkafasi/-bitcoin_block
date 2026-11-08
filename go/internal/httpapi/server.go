@@ -71,9 +71,10 @@ type Server struct {
 	assetVer string
 
 	// içerik/ayar önbelleği (menü+footer+marka tekrarlarını azaltır)
-	siteCfgMu sync.Mutex
-	catsCache map[int64]catsCacheEntry
-	kvCache   map[string]kvCacheEntry
+	siteCfgMu   sync.Mutex
+	catsCache   map[int64]catsCacheEntry
+	kvCache     map[string]kvCacheEntry
+	ytAyarCache ytAyarCacheEntry
 
 	// sistemsel üretim (blok kapak şablonu — Faz 3) için kullanılacak kullanıcı
 	sysMu     sync.Mutex

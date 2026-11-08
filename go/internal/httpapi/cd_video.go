@@ -148,9 +148,12 @@ func ytHero(k repo.YoutubeKayit, etiket string) templkit.CDVideoHero {
 	}
 }
 
-// ytAyar panel ayarlarını istek bağlamından okur (DB hatasında varsayılan).
+// ytAyar panel ayarlarını kısa süre önbellekten okur (DB hatasında varsayılan).
+//
+// Ana sayfada üç video modülü aynı ayarları sorduğu için istek başına üç kez
+// okunuyordu; cachedYtAyar bunu tek okumaya indirir.
 func (s *Server) ytAyar(r *http.Request) youtube.Ayar {
-	return youtube.AyarlariOku(r.Context(), s.pool)
+	return s.cachedYtAyar(r.Context())
 }
 
 // handleCDVideos /videos

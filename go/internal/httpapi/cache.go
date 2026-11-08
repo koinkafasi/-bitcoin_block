@@ -5,11 +5,18 @@ import (
 	"time"
 
 	"theblock/site/internal/repo"
+	"theblock/site/internal/youtube"
 )
 
 // İçerik/ayar önbelleği: menü + footer + marka her istekte aynı kategorileri ve
 // ayarları okuduğu için kısa TTL ile tek sorguya indirilir (performans).
 const contentCacheTTL = 10 * time.Second
+
+type ytAyarCacheEntry struct {
+	at  time.Time
+	v   youtube.Ayar
+	set bool
+}
 
 type catsCacheEntry struct {
 	at time.Time
@@ -72,5 +79,32 @@ func (s *Server) invalidateContentCache() {
 	s.siteCfgMu.Lock()
 	s.catsCache = nil
 	s.kvCache = nil
+	s.ytAyarCache = ytAyarCacheEntry{}
 	s.siteCfgMu.Unlock()
+}
+
+// cachedYtAyar YouTube ayarlarını kısa süre önbellekten döndürür.
+//
+// Ana sayfada üç ayrı video modülü (video / klipler / canlı) aynı ayarları
+// soruyordu; her çağrı settings tablosuna 10 ayrı sorgu ile gidiyordu.
+// Ölçüm (8 Kasım 2026, log_statement=all, tek ana sayfa isteği): 54 sorgunun
+// 30'u yalnız bu üç çağrıdan geliyordu.
+//
+// AyarlariOku artık bölümü tek sorguda okuyor; bu önbellek kalan üç katı da
+// kaldırır. Panelde kaydetme anında invalidateContentCache çağrıldığı için
+// değişiklik en geç bir sonraki istekte görünür.
+func (s *Server) cachedYtAyar(ctx context.Context) youtube.Ayar {
+	s.siteCfgMu.Lock()
+	if e := s.ytAyarCache; e.set && time.Since(e.at) < contentCacheTTL {
+		s.siteCfgMu.Unlock()
+		return e.v
+	}
+	s.siteCfgMu.Unlock()
+
+	v := youtube.AyarlariOku(ctx, s.pool)
+
+	s.siteCfgMu.Lock()
+	s.ytAyarCache = ytAyarCacheEntry{at: time.Now(), v: v, set: true}
+	s.siteCfgMu.Unlock()
+	return v
 }

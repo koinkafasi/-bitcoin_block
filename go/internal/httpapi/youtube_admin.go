@@ -100,6 +100,8 @@ func (s *Server) handleVideoYayinAyar(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	s.audit(r, "video_yayin_ayar", kanalID)
+	// Ayarlar değişti: kısa süreli önbellek bir sonraki istekte tazelenir.
+	s.invalidateContentCache()
 	s.videoYayinSonuc(w, r, "info", "Ayarlar kaydedildi.")
 }
 

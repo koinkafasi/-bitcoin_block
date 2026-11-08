@@ -50,6 +50,16 @@ type Config struct {
 
 	// Kapanışta uçuştaki istekler için tanınan süre (SIGTERM → Shutdown).
 	ShutdownTimeout time.Duration
+
+	// PprofAddr boşsa profil uç noktası hiç açılmaz. Doluysa AYRI bir
+	// dinleyicide (`/debug/pprof/*`) yayınlanır — ana mux'a bağlanmaz.
+	//
+	// NEDEN AYRI DİNLEYİCİ: pprof çıktısı heap içeriği, goroutine yığınları
+	// ve dosya yolları taşır. Genel site mux'ına eklenseydi `demo.bitcosar.com`
+	// üzerinden herkese açık olurdu (Cloudflare tüneli 127.0.0.1:8090'a
+	// bağlı). Ayrı ve varsayılan olarak 127.0.0.1'e bağlı dinleyici, profili
+	// yalnız makineden erişilebilir tutar.
+	PprofAddr string
 }
 
 func Load() Config {
@@ -83,6 +93,7 @@ func Load() Config {
 		DBMaxConnLifetime: getDuration("DB_MAX_CONN_LIFETIME", 0),
 		DBMaxConnIdleTime: getDuration("DB_MAX_CONN_IDLE_TIME", 0),
 		ShutdownTimeout:   getDuration("SHUTDOWN_TIMEOUT", 25*time.Second),
+		PprofAddr:         getEnv("PPROF_ADDR", ""),
 	}
 	return cfg
 }

@@ -8,8 +8,10 @@ import (
 	"errors"
 	"log/slog"
 	"net/http"
+	"net/http/pprof"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
@@ -79,8 +81,21 @@ func main() {
 	aiclient := ai.NewClient(logger)
 	logger.Info("ai", "enabled", aiclient.Enabled(), "providers", aiclient.Providers())
 
+	// Görsel hattını Rust mikroservisine devret (varsa). Adres yoksa hiçbir
+	// şey değişmez: tüm görsel işlemleri yerel Go yolunda kalır.
+	platform.SetImageSvcURL(os.Getenv("IMAGE_SVC_URL"))
+	if u := platform.ImageSvcURL(); u != "" {
+		logger.Info("image-svc devrede", "url", u)
+	}
+
 	srv, app := httpapi.NewServerApp(cfg, logger, pool, bundle, aiclient)
 	logger.Info("theblock site dinliyor", "addr", cfg.ListenAddr, "env", cfg.Env)
+
+	// Profil dinleyicisi (opsiyonel). Ana mux'a DEĞİL, ayrı bir adrese bağlanır:
+	// pprof çıktısı heap/goroutine/dosya yolu sızdırır ve site tünelden
+	// erişilebilir durumdadır. PPROF_ADDR boşsa hiç açılmaz — üretimde
+	// varsayılan kapalı, açmak için 127.0.0.1:6060 gibi bir adres verilir.
+	pprofSrv := startPprof(cfg.PprofAddr, logger)
 
 	// Periyodik işler: planlı yayın, çöp temizliği, oturum temizliği.
 	workerCtx, workerCancel := context.WithCancel(ctx)
@@ -176,13 +191,50 @@ func main() {
 
 		// 3) Arka plan işleri durdur, havuzu kapat.
 		workerCancel()
+		if pprofSrv != nil {
+			_ = pprofSrv.Close()
+		}
 		pool.Close()
 		logger.Info("temiz kapanış tamamlandı")
 	}
 }
 
-// asrDefaults .env'den gelen başlangıç ASR yapılandırmasını kurar. Panel
-// değerleri bunları geçersiz kılar (bkz. transcribe.SettingsStore).
+// startPprof PPROF_ADDR doluysa yalnız /debug/pprof/* sunan ayrı bir HTTP
+// sunucusu başlatır ve döndürür; boşsa nil.
+//
+// Ayrı dinleyici bilinçli bir güvenlik kararı: profil çıktısı heap içeriği,
+// goroutine yığınları ve dosya yolları taşır. Genel mux'a eklenseydi
+// demo.bitcosar.com tünelinden herkese açık olurdu. Varsayılan davranış
+// (PPROF_ADDR boş) hiç açmamaktır.
+func startPprof(addr string, logger *slog.Logger) *http.Server {
+	if strings.TrimSpace(addr) == "" {
+		return nil
+	}
+	mux := http.NewServeMux()
+	mux.HandleFunc("/debug/pprof/", pprof.Index)
+	mux.HandleFunc("/debug/pprof/cmdline", pprof.Cmdline)
+	mux.HandleFunc("/debug/pprof/profile", pprof.Profile)
+	mux.HandleFunc("/debug/pprof/symbol", pprof.Symbol)
+	mux.HandleFunc("/debug/pprof/trace", pprof.Trace)
+
+	srv := &http.Server{
+		Addr:              addr,
+		Handler:           mux,
+		ReadHeaderTimeout: 5 * time.Second,
+	}
+	go func() {
+		logger.Info("pprof dinliyor", "addr", addr)
+		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			// Profil sunucusu çökerse site çalışmaya devam eder: ölçüm
+			// aracı, ürünün tek hata noktası olmamalı.
+			logger.Warn("pprof sunucusu duramadı", "error", err)
+		}
+	}()
+	return srv
+}
+
+// asrDefaults .env'den gelen başlangıç ASR yapılandırmasını kurar.
+// Panel değerleri bunları geçersiz kılar (bkz. transcribe.SettingsStore).
 func asrDefaults(cfg config.Config) transcribe.Config {
 	return transcribe.DefaultsFromValues(
 		cfg.TranscribeProvider,
