@@ -2188,7 +2188,77 @@ gofmt · vet · test · build   temiz (HEAD ayrı worktree'de doğrulandı)
 
 ---
 
+### 11.15 On yedinci tur (makale üst boşluğu + özet kutusu) — DURUM
+
+Kullanıcı bildirimi (yazı sayfası): "yukarıdaki etiket menüden boşluk aynı
+değil" ve "Summary/Özet alanı çerçeve rengi aynı değil".
+
+**Ölçüm kaynağı:** `coindesk.com/markets/2026/11/05/the-crypto-industry-…`,
+gerçek Chrome, 1920 px, 8 Kasım 2026 (`getComputedStyle` + `outerHTML`).
+
+#### 11.15.1 Üst boşluk ve kicker
+
+| Öğe | CoinDesk | bitcosar (önce) | bitcosar (şimdi) |
+|---|---|---|---|
+| şerit alt → kicker üst | **73 px** | **0 px** (yapışık) | 73 px |
+| kicker alt → H1 üst | **2 px** | 8 px | 2 px |
+| H1 alt → deck üst | **8 px** | 12 px | 8 px |
+| kicker biçimi | `text-transform: none` ("Markets"), 16/32 w500 | `uppercase` + `i18n.BuyukHarf` ("POLİTİKA") | `none`, 16/32 w500 |
+| kart kicker'ı | **hiç yok** | "POLİTİKA" 12/16 | "Politika" 12/16 |
+
+73 px'in kaynağı iki katmanlı dolgu: içerik kapsayıcısı 24 px + ızgara
+32 px (+ şeridin kendi alt dolgusu). Katmanları tek tek kurmak kırılgan
+olduğu için `.cd-main--makale { padding-top: 73px }` olarak sabitlendi.
+
+**İKİ KATMANLI HATA:** CSS'te `text-transform: none` yapmak yetmedi —
+metnin **kendisi** sunucuda `i18n.BuyukHarf` ile çevriliyordu. Ölçüm bunu
+yakaladı: computed değer `none` ama `textContent` "POLİTİKA". Bu yüzden
+`cd_article.go`, `cd_home.go` ve `cd_section.go`'daki üç çağrı da
+kaldırıldı.
+
+#### 11.15.2 Özet kutusu — çerçeve gradyan
+
+CoinDesk'te çerçeve **düz çizgi değil, marka gradyanı**:
+
+| Öğe | Değer |
+|---|---|
+| dış kap | 680×116 · radius **7** · padding **2** · margin 16 0 32 |
+| zemin | `linear-gradient(102deg, #FFD200 -0.2%, #18E589 171.06%)` |
+| iç kutu | 676×112 · radius **5** · padding **20 20 12** · zemin beyaz |
+| başlık satırı | 15×15 **sparkle ikon** + "Summary" 16/24 **w500** solda; sağda "Show" + chevron, mb 16 |
+| önizleme | **TEK satır + ellipsis** (`truncate`); alt solma gradyanı **yok** |
+| chevron | açılınca **180°** döner |
+
+Bizde 1 px `--cd-border` çizgisi vardı → kullanıcı bildirimi haklı.
+
+#### 11.15.3 Bulunan GERÇEK yapı hatası
+
+`<summary>` bir `<div class="cd-ozet__ic">` **içine** konmuştu. HTML'de
+`<summary>`, `<details>`in **doğrudan çocuğu** olmak zorunda; tarayıcı
+geçersiz summary'yi yok sayıp yerine **"Details"** yazıyordu (ekran
+görüntüsünde görüldü). Gövde artık summary'nin **kardeşi**;
+`.cd-ozet__govde` beyaz zemini sürdürüp alt köşeleri yuvarlıyor.
+
+#### 11.15.4 Doğrulama
+
+```
+şerit → kicker         73 px
+kicker → H1            2 px
+H1 → deck              8 px
+kicker metni           "Politika" · text-transform: none
+kart kicker            "Politika" · text-transform: none
+özet kutusu            680 genişlik · radius 7 · padding 2 · border 0
+                       background-image: linear-gradient(102deg, …)
+özet açık              chevron matrix(-1,0,0,-1,0,0) · gövde görünür
+"Details" metni        YOK
+yatay taşma            0
+gofmt · vet · test · build   temiz (HEAD ayrı worktree'de doğrulandı)
+```
+
+---
+
 ## 12. Kopyalanması önerilen sözleşmeler
+
 
 Ölçüm sırasında CoinDesk'in iyi kararları:
 
