@@ -2,6 +2,7 @@ package httpapi
 
 import (
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -32,6 +33,11 @@ func (s *Server) handleCDTag(w http.ResponseWriter, r *http.Request) {
 	}
 
 	sayfa := 1
+	if v := r.URL.Query().Get("sayfa"); v != "" {
+		if n, err := strconv.Atoi(v); err == nil && n > 0 && n <= 500 {
+			sayfa = n
+		}
+	}
 	items, toplam, err := repo.TagIcerikleri(ctx, s.pool, 1, "tr", slug, sayfa, 24)
 	if err != nil {
 		s.logger.Warn("etiket sayfası", "etiket", slug, "error", err)
@@ -94,8 +100,23 @@ func (s *Server) handleCDTag(w http.ResponseWriter, r *http.Request) {
 			v.Latest = append(v.Latest, cdStoryCevir(c, simdi))
 		}
 	}
-	if toplam > 24 {
-		v.NextHref = "/tag/" + slug + "?sayfa=2"
+	if toplam > sayfa*24 {
+		v.NextHref = "/tag/" + slug + sayfaURL(sayfa+1)
+	}
+	if sayfa > 1 {
+		v.PrevHref = "/tag/" + slug + sayfaURL(sayfa-1)
+	}
+
+	// PARÇA (`?sayfa=N&parca=1`) — bkz. cd_section.go: cd-daha.js sayfa
+	// geçişi olmadan ekler. Etikette lead/alt/ray bölmesi YOK; parçada
+	// banner da basılmaz (banner yalnız 1. sayfanın tepesinde).
+	if r.URL.Query().Get("parca") == "1" {
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		w.Header().Set("Cache-Control", cacheControlPublic)
+		if err := templkit.CDTagParca(kartlar, v.PrevHref, v.NextHref).Render(ctx, w); err != nil {
+			s.logger.Error("etiket parça render", "error", err)
+		}
+		return
 	}
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")

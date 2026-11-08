@@ -78,6 +78,30 @@ func (s *Server) handleCDSection(w http.ResponseWriter, r *http.Request, slug st
 	}
 
 	kanonik := s.cfg.BaseURL + "/" + slug
+
+	// PARÇA (`?sayfa=N&parca=1`): cd-daha.js "Daha fazla haber"a basınca
+	// bu yanıtı çeker ve satırları listenin sonuna ekler — sayfa geçişi
+	// OLMAZ (CoinDesk davranışı: URL değişmez, sayfa yenilenmez).
+	//
+	// Parçada o sayfanın TÜM haberleri DÜZ satır olarak gider: lead/alt/
+	// ray bölmesi yalnız tam sayfada (JS'siz fallback) uygulanır. Nav da
+	// parçada: JS yeni href'lerle yeniler.
+	if r.URL.Query().Get("parca") == "1" {
+		var prev, next string
+		if sayfa > 1 {
+			prev = "/" + slug + sayfaURL(sayfa-1)
+		}
+		if toplam > sayfa*perPage {
+			next = "/" + slug + sayfaURL(sayfa+1)
+		}
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		w.Header().Set("Cache-Control", cacheControlPublic)
+		if err := templkit.CDBolumParca(kartlar, prev, next).Render(r.Context(), w); err != nil {
+			s.logger.Error("cd bölüm parça render", "error", err)
+		}
+		return
+	}
+
 	v := templkit.CDSectionPage{
 		Shell:     s.cdShellCtx(r.Context(), r, slug),
 		Title:     meta.Ad + " — " + s.siteName,

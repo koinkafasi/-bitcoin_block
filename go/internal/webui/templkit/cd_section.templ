@@ -63,9 +63,14 @@ templ CDSectionPageView(v CDSectionPage) {
 					}
 				</div>
 
-				if len(v.Stories) > 0 {
+				<!-- Sayfalama: CoinDesk "More stories" DÜĞMESİ. JS varsa
+				     cd-daha.js parçayı aynı sayfaya ekler (sayfa geçişi
+				     yok); JS yoksa normal ?sayfa=N bağlantısı çalışır.
+				     Nav, satırlarla AYNI konteynerde: JS satırları
+				     nav'dan ÖNCE ekler (1032px ortalanmış alan korunur). -->
+				if len(v.Stories) > 0 || v.PrevHref != "" || v.NextHref != "" {
 					<div class="cd-kat-genis">
-						if v.MoreBaslik != "" {
+						if v.MoreBaslik != "" && len(v.Stories) > 0 {
 							<p class="cd-kat-more">{ v.MoreBaslik }</p>
 						}
 						for i, s := range v.Stories {
@@ -74,23 +79,23 @@ templ CDSectionPageView(v CDSectionPage) {
 							}
 							@cdKatSatir(s)
 						}
+						if v.PrevHref != "" || v.NextHref != "" {
+							<nav class="cd-daha" aria-label="Sayfalama">
+								if v.PrevHref != "" {
+									<a class="cd-daha__geri" href={ v.PrevHref } rel="prev">← Önceki</a>
+								}
+								if v.NextHref != "" {
+									<a class="cd-daha__btn" href={ v.NextHref } rel="next">Daha fazla haber</a>
+								}
+							</nav>
+						}
 					</div>
 				} else if v.Lead.Href == "" {
 					<p class="cd-card__spot">Bu bölümde henüz haber yok.</p>
 				}
 
-				<!-- Sayfalama: CoinDesk "More stories" DÜĞMESİ (sonsuz kaydırma
-				     değil). "Önceki" bağlantısı erişilebilirlik için kalır:
-				     yalnız ileri düğme 2. sayfada geri dönüşü imkânsız kılar. -->
-				if v.PrevHref != "" || v.NextHref != "" {
-					<nav class="cd-daha" aria-label="Sayfalama">
-						if v.PrevHref != "" {
-							<a class="cd-daha__geri" href={ v.PrevHref } rel="prev">← Önceki</a>
-						}
-						if v.NextHref != "" {
-							<a class="cd-daha__btn" href={ v.NextHref } rel="next">Daha fazla haber</a>
-						}
-					</nav>
+				if v.NextHref != "" {
+					<script src={ "/static/cd-daha.js?v=" + cdVarlik() } defer></script>
 				}
 			</main>
 			@cdFooter(v.Shell)
@@ -207,5 +212,31 @@ templ cdGorselImg(url string, yuva CDYuva, oncelikli bool) {
 			<img src={ url } alt="" loading="lazy" decoding="async"
 				referrerpolicy="no-referrer"/>
 		}
+	}
+}
+
+// CDBolumParca "Daha fazla haber" PARÇASI: yalnız satırlar + yeni nav.
+//
+// NEDEN: `?sayfa=N` tam sayfa geçişi yerine cd-daha.js bu parçayı çeker
+// ve listenin sonuna ekler (CoinDesk davranışı: URL değişmez, sayfa
+// yenilenmez). Parça DİZİSİZ (head/footer/modül yok) — `?parca=1`.
+//
+// Her satırdan ÖNCE ayırıcı basılır (tam sayfada i>0 kuralı var): parça
+// mevcut listenin sonuna eklendiğinde ilk yeni satırın da üstünde çizgi
+// olmalı. Nav parçanın içinde: JS yeni href'lerle yeniler.
+templ CDBolumParca(stories []CDStory, prevHref, nextHref string) {
+	for _, s := range stories {
+		<hr class="cd-kat-satir__cizgi"/>
+		@cdKatSatir(s)
+	}
+	if prevHref != "" || nextHref != "" {
+		<nav class="cd-daha" aria-label="Sayfalama">
+			if prevHref != "" {
+				<a class="cd-daha__geri" href={ prevHref } rel="prev">← Önceki</a>
+			}
+			if nextHref != "" {
+				<a class="cd-daha__btn" href={ nextHref } rel="next">Daha fazla haber</a>
+			}
+		</nav>
 	}
 }
