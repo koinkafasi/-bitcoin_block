@@ -25,7 +25,7 @@ templ CDArticle(v CDArticleView) {
 		<body class="cd">
 			@cdTopbar(v.Shell)
 			@cdTicker(v.Shell)
-			<main class="cd-wrap cd-main">
+			<main class="cd-wrap cd-main cd-main--makale">
 				<article class="cd-article">
 					<span class="cd-kicker">{ v.Kicker }</span>
 					<h1>{ v.Headline }</h1>
@@ -108,26 +108,46 @@ templ CDArticle(v CDArticleView) {
 						</figure>
 					}
 
-					<!-- Özet kutusu (spec §10.2.2). `ai_summary` BOŞSA hiç
-					     basılmaz: uydurma özet yazmak yanlış bilgi olurdu. -->
+					<!-- Özet kutusu — CoinDesk deseni (ölçüldü, 8 Kasım 2026).
+					     Kaynak HTML: gradient sarmalayıcı (7 px, 2 px dolgu)
+					     → beyaz iç kutu (5 px, pad 20/20/12) → başlık satırı
+					     (sparkle ikon + "Summary" w500 solda, "Show" + chevron
+					     sağda, mb 16) → önizleme (TEK satır, `truncate`).
+
+					     YAPI KRİTİK: `<summary>` HTML'de `<details>`in
+					     DOĞRUDAN çocuğu olmak zorunda. Eski sürüm onu
+					     `<div class="cd-ozet__ic">` içine koyuyordu;
+					     tarayıcı geçersiz summary'yi yok sayıp yerine
+					     "Details" yazıyordu (ekran görüntüsünde görüldü). -->
 					if v.Summary != "" {
 						<details class="cd-ozet">
-							<div class="cd-ozet__ic">
-								<summary>
-									<span>Özet</span>
-									<span>
+							<summary class="cd-ozet__ic">
+								<span class="cd-ozet__ust">
+									<span class="cd-ozet__etiket">
+										<svg class="cd-ozet__ikon" width="16" height="16" viewBox="0 0 15 15"
+											fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+											<path d="M14.6995 3.69629L14.6057 3.70215C12.8348 3.80889 11.4173 5.22624 11.3108 6.99707L11.3049 7.09082H11.1038L11.0979 6.99707C10.9912 5.22626 9.57349 3.80896 7.80298 3.70215L7.70923 3.69629V3.49512L7.80298 3.48926C9.57373 3.38216 10.9911 1.96507 11.0979 0.194336L11.1038 0.100586H11.3049L11.3108 0.194336C11.4176 1.96511 12.8349 3.38224 14.6057 3.48926L14.6995 3.49512V3.69629Z" fill="currentColor" stroke="currentColor" stroke-width="0.2"></path>
+											<path d="M0 14.8005V13.4706H7.80945V14.8005H0ZM0 11.4758V10.146H12.2235V11.4758H0ZM0 8.15116V6.82129H7.80945V8.15116H0Z" fill="currentColor"></path>
+										</svg>
+										<span>Özet</span>
+									</span>
+									<span class="cd-ozet__degistir">
 										<span class="cd-ozet__ac">Göster</span>
 										<span class="cd-ozet__kapat">Gizle</span>
+										<svg class="cd-ozet__ok" width="16" height="16" viewBox="0 0 24 24"
+											fill="currentColor" aria-hidden="true" focusable="false">
+											<path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"></path>
+										</svg>
 									</span>
-								</summary>
-								<p class="cd-ozet__onizleme">{ v.SummaryIlkSatir }</p>
-								<div class="cd-ozet__govde">
-									<ul>
-										for _, m := range v.SummaryMaddeler {
-											<li>{ m }</li>
-										}
-									</ul>
-								</div>
+								</span>
+								<span class="cd-ozet__onizleme">{ v.SummaryIlkSatir }</span>
+							</summary>
+							<div class="cd-ozet__govde">
+								<ul>
+									for _, m := range v.SummaryMaddeler {
+										<li>{ m }</li>
+									}
+								</ul>
 							</div>
 						</details>
 					}

@@ -1833,19 +1833,30 @@ html.cd-arama-acik, html.cd-arama-acik body { overflow: hidden; }
 .cd-crumbs a { color: var(--cd-muted); }
 
 .cd-article { max-width: 680px; margin: 0 auto; }
+/* ÜST BOŞLUK — ÖLÇÜLDÜ (8 Kasım 2026): CoinDesk'te şerit altından kicker
+   üstüne kadar 73 px var (şerit alt 419 → kicker üst 492). Bizde makale
+   `<main class="cd-wrap cd-main">` ile başlıyordu ve dikey dolgu olmadığı
+   için kicker şeride YAPIŞIYORDU (ölçüm: 0 px). */
+.cd-main--makale { padding-top: 73px; }
 /* Makale kicker'ı 16/32 w500 (`font-title`) — kart kicker'ından (12/16)
    BÜYÜK. Ölçüm spec §10.2: "div.font-title 680×32". */
+/* BÜYÜK HARF YOK (ölçüldü, 8 Kasım 2026): CoinDesk kicker'ı
+   `text-transform: none` ile "Markets" basıyor. Bizde `uppercase` vardı ve
+   "POLİTİKA" çıkıyordu; kullanıcı bildirimi. */
 .cd-article .cd-kicker {
   font-size: 16px;
   line-height: 32px;
   font-weight: 500;
   letter-spacing: 0;
+  text-transform: none;
   color: var(--cd-fg);
 }
 /* Makale H1 36/44 w500 — bölüm H1'inden AĞIRLIK farkı (700). */
+/* Dikey boşluk ÖLÇÜLDÜ (8 Kasım 2026): kicker alt → H1 üst = 2 px,
+   H1 alt → deck üst = 8 px. Eski sürüm 8/12 kullanıyordu. */
 .cd-article h1 {
   font-family: var(--cd-serif);
-  margin: 8px 0 12px;
+  margin: 2px 0 0;
   font-size: 36px;
   line-height: 44px;
   font-weight: 500;
@@ -1855,7 +1866,7 @@ html.cd-arama-acik, html.cd-arama-acik body { overflow: hidden; }
   font-size: 16px;
   line-height: 24px;
   color: var(--cd-fg);
-  margin: 0 0 16px;
+  margin: 8px 0 0;
 }
 /* Kapak: en-boy oranı SARMALAYICIDA sabit. Kaynak görselin oranı bilinmese
    de CLS sıfır kalır (CoinDesk `aspect-video` deseni, spec §12.2). */
@@ -2017,55 +2028,87 @@ html.dark .cd-google { color: var(--cd-fg); }
    "çerçeve" etkisi yaratıyor; düz border değil.
    JS YOK: `<details>` kullanılıyor. CoinDesk buton + state ile açıyor;
    <details> klavye ve ekran okuyucu desteğini bedava verir. */
+/* ---- Özet kutusu (ölçüldü, coindesk.com/markets/2026/11/05/…
+   8 Kasım 2026). CoinDesk'te çerçeve DÜZ ÇİZGİ DEĞİL, marka gradyanı:
+     dış kap  680×116 · radius 7 · padding 2 · margin 16 0 32
+              linear-gradient(102deg, #FFD200 -0.2%, #18E589 171.06%)
+     iç kutu  676×112 · radius 5 · padding 20 20 12 · zemin beyaz
+     başlık satırı 24 · mb 16 · sparkle ikon + "Summary" w500, sağda
+              "Show" + chevron (açılınca 180° döner)
+     önizleme TEK satır · `truncate` (ellipsis) · 16/24
+   Eski sürüm 1 px `--cd-border` çizgisi kullanıyordu; kullanıcı bildirimi
+   "Summary Özet alanı çerçeve rengi aynı değil" — ölçüm haklı çıktı. */
 .cd-ozet {
   margin: 16px 0 32px;
   padding: 2px;
-  border: 1px solid var(--cd-border);
+  border: 0;
   border-radius: var(--cd-radius-ozet);
+  /* Marka gradyanı: temayla DEĞİŞMEZ (CoinDesk'te de sabit kimlik rengi). */
+  background-image: linear-gradient(102deg, #ffd200 -0.2%, #18e585 171.06%);
 }
+/* summary = iç kutunun kendisi (beyaz zemin + 5 px köşe). */
 .cd-ozet__ic {
-  position: relative;
+  display: block;
   border-radius: var(--cd-radius-ozet-ic);
   background: var(--cd-bg);
   padding: 20px 20px 12px;
+  cursor: pointer;
+  list-style: none;
 }
-.cd-ozet summary {
+.cd-ozet[open] .cd-ozet__ic {
+  border-radius: var(--cd-radius-ozet-ic) var(--cd-radius-ozet-ic) 0 0;
+}
+.cd-ozet summary::-webkit-details-marker { display: none; }
+.cd-ozet summary::marker { content: ""; }
+.cd-ozet__ust {
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin-bottom: 16px;
-  cursor: pointer;
-  list-style: none;
-  font-size: 14px;
+  font-size: 16px;
   line-height: 24px;
   font-weight: 500;
 }
-.cd-ozet summary::-webkit-details-marker { display: none; }
-.cd-ozet summary::marker { content: ""; }
+.cd-ozet__etiket { display: inline-flex; align-items: center; gap: 6px; }
+.cd-ozet__ikon { display: block; flex: none; color: var(--cd-fg); }
+.cd-ozet__degistir {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 400;
+}
 /* Açma/kapama metni CSS ile: JS yok, iki <span> arasında geçiş. */
 .cd-ozet__ac { display: inline; color: var(--cd-muted); font-weight: 400; }
 .cd-ozet__kapat { display: none; color: var(--cd-muted); font-weight: 400; }
 .cd-ozet[open] .cd-ozet__ac { display: none; }
 .cd-ozet[open] .cd-ozet__kapat { display: inline; }
-/* Kapalıyken içerik TEK satır + alt solma; native <details> kapalıyken
-   içeriği tamamen gizler, o yüzden önizleme satırı ayrı basılıyor. */
+.cd-ozet__ok { display: block; transition: transform 200ms ease; }
+.cd-ozet[open] .cd-ozet__ok { transform: rotate(180deg); }
+/* Önizleme: CoinDesk `truncate` — TEK satır + ellipsis. Alt solma
+   gradyanı YOK (eski sürüm ekliyordu; ölçümde `::after` yok). */
 .cd-ozet__onizleme {
-  position: relative;
-  max-height: 24px;
+  display: block;
+  margin-bottom: 16px;
   overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
   font-size: 16px;
   line-height: 24px;
 }
-.cd-ozet__onizleme::after {
-  content: "";
-  position: absolute;
-  left: 0; right: 0; bottom: 0;
-  height: 32px;
-  background: linear-gradient(to bottom, transparent, var(--cd-bg));
-}
 .cd-ozet[open] .cd-ozet__onizleme { display: none; }
-.cd-ozet[open] .cd-ozet__govde { display: block; animation: cd-ozet-ac 300ms ease-in-out; }
-.cd-ozet__govde { display: none; font-size: 16px; line-height: 24px; }
+/* Gövde summary'nin KARDEŞİ: beyaz zemini sürdürür, alt köşeleri yuvarlar. */
+.cd-ozet__govde {
+  display: none;
+  background: var(--cd-bg);
+  border-radius: 0 0 var(--cd-radius-ozet-ic) var(--cd-radius-ozet-ic);
+  padding: 0 20px 12px;
+  font-size: 16px;
+  line-height: 24px;
+}
+.cd-ozet[open] .cd-ozet__govde {
+  display: block;
+  animation: cd-ozet-ac 300ms ease-in-out;
+}
 .cd-ozet__govde ul {
   list-style: none;
   margin: 0 0 16px;

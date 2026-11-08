@@ -7,7 +7,6 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"theblock/site/internal/i18n"
 	"theblock/site/internal/repo"
 	"theblock/site/internal/webui/templkit"
 )
@@ -52,11 +51,13 @@ func (s *Server) handleCDArticle(w http.ResponseWriter, r *http.Request, lang, s
 	}
 
 	v := templkit.CDArticleView{
-		Shell:       s.cdShellCtx(ctx, bolumSlug),
-		Title:       cdMakaleBaslik(c),
-		Desc:        cdMakaleAciklama(c),
-		Canonical:   s.cfg.BaseURL + makaleURL(c),
-		Kicker:      i18n.BuyukHarf(bolumAd),
+		Shell:     s.cdShellCtx(ctx, bolumSlug),
+		Title:     cdMakaleBaslik(c),
+		Desc:      cdMakaleAciklama(c),
+		Canonical: s.cfg.BaseURL + makaleURL(c),
+		// Kicker: CoinDesk bölüm adını OLDUĞU GİBİ basıyor ("Markets"),
+		// büyük harfe çevirmiyor (ölçüldü: computed `text-transform: none`).
+		Kicker:      bolumAd,
 		SectionName: bolumAd,
 		SectionHref: "/" + bolumSlug,
 		Headline:    c.Title,
