@@ -13,6 +13,7 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"theblock/site/internal/auth"
@@ -54,17 +55,56 @@ func (s *Server) homeView(r *http.Request) *tmplData {
 	// Düşüş varsa sayfa noindex'lenir ve canonical varsayılan dilin
 	// adresine verilir: aynı Türkçe içerik kopya olarak dizinlenmesin.
 	icerikLocale, dusus := s.icerikDili(ctx, site.ID, lang)
-	// Düzen bir kez okunur: hem eski kategori panellerinin gerekip
-	// gerekmediğini anlamak hem blokları kurmak için kullanılır.
-	layoutRaw, _ := repo.GetLayout(ctx, s.pool, site.ID, "home")
 
-	// lead=8 (üst manşet/slider), breaking=12 (son dakika),
-	// recent=48: manşet + son dakika havuzundan ayıklandıktan sonra
-	// "Öne Çıkanlar" bloğunun dolu kalabilmesi için geniş tutulur.
-	hl, err := repo.HomeHighlights(ctx, s.pool, site.ID, icerikLocale, 8, 12, 48)
-	if err != nil {
-		s.logger.Warn("home yüklenemedi", "error", err)
-	}
+	// ---- Bağımsız okumalar PARALEL ----
+	//
+	// ÖLÇÜM (8 Kasım 2026): ana sayfa p50 51 ms, diğer sayfalar 21–29 ms.
+	// Profil: istek başına CPU yalnızca ~4 ms; kalan süre PostgreSQL
+	// gidiş-dönüşlerinin BEKLENMESİ. Tek istekte ~24 sorgu sırayla
+	// çalışıyordu, her biri ~2 ms → ~48 ms.
+	//
+	// Bu bloklar birbirine bağımlı değil (hepsi site.ID + locale ile
+	// çalışır), bu yüzden birlikte uçurulur. Derinlik 24 sıralı turdan
+	// 2 tura iner; p50 en yavaş bloğun süresine yaklaşır.
+	//
+	// Hata davranışı DEĞİŞMEDİ: her çağrı eskisi gibi kendi hatasını
+	// yutuyor (log/boş değer). Bir blok patlarsa yalnız o blok boş kalır;
+	// sayfa eskiden de böyle davranıyordu.
+	var (
+		highlights  *repo.Highlights
+		layoutRaw   []byte
+		navCats     []repo.Category
+		menu        []MenuRow
+		footer      *FooterConfig
+		hava        *WeatherS
+		kurlar      []repo.Kur
+		kurDemo     bool
+		cities      []repo.City
+		etkinlik    []repo.Event
+		kategoriler []repo.Category
+	)
+	var wg sync.WaitGroup
+	wg.Add(10)
+	go func() { defer wg.Done(); layoutRaw, _ = repo.GetLayout(ctx, s.pool, site.ID, "home") }()
+	go func() { defer wg.Done(); navCats = s.navCategoriesLang(ctx, locale) }()
+	go func() { defer wg.Done(); menu = s.publicMenuLocale(ctx, locale) }()
+	go func() { defer wg.Done(); footer = s.footerConfigLang(ctx, locale) }()
+	go func() { defer wg.Done(); hava = s.havaFromCache(ctx) }()
+	go func() { defer wg.Done(); kurlar, kurDemo = servisKurlar(ctx, s.pool) }()
+	go func() { defer wg.Done(); cities, _ = repo.ListCities(ctx, s.pool) }()
+	go func() { defer wg.Done(); etkinlik, _ = repo.UpcomingEvents(ctx, s.pool, site.ID, 14, 5) }()
+	go func() { defer wg.Done(); kategoriler, _ = repo.ListCategories(ctx, s.pool, site.ID) }()
+	// Manşet/son dakika/taze havuz: yalnız buna icerikLocale gerekir.
+	go func() {
+		defer wg.Done()
+		hl, err := repo.HomeHighlights(ctx, s.pool, site.ID, icerikLocale, 8, 12, 48)
+		if err != nil {
+			s.logger.Warn("home yüklenemedi", "error", err)
+			return
+		}
+		highlights = hl
+	}()
+	wg.Wait()
 
 	langBase := s.langBase(locale)
 
@@ -76,13 +116,14 @@ func (s *Server) homeView(r *http.Request) *tmplData {
 		d.Robots = "noindex,follow"
 		d.Canonical = strings.TrimRight(s.absBase(r), "/") + homeURL(s.i18n.Default())
 	}
-	d.NavCategories = s.navCategoriesLang(ctx, locale)
-	d.Menu = s.publicMenuLocale(ctx, locale)
-	d.Footer = s.footerConfigLang(ctx, locale)
+	d.NavCategories = navCats
+	d.Menu = menu
+	d.Footer = footer
 	d.Theme = themeFromReq(r)
 	d.Home = &homeData{SiteID: site.ID}
 	d.Home.JSONLD = s.orgJSONLD()
-	if hl != nil {
+	if highlights != nil {
+		hl := highlights
 		d.Home.Breaking = hl.Breaking
 		d.Home.Lead = hl.Lead
 		d.Home.Recent = hl.Recent
@@ -100,18 +141,26 @@ func (s *Server) homeView(r *http.Request) *tmplData {
 		if strings.Contains(string(layoutRaw), `"kategori_bloklari"`) {
 			d.Home.CatBlocks = s.homeCatBlocks(ctx, site.ID, locale, 6)
 		}
-		// top read (en çok okunan)
-		d.Home.TopRead, _ = repo.TopRead(ctx, s.pool, site.ID, 5)
-		// galeri foto/video (type_key ile)
-		d.Home.GalleryPhotos, _, _ = repo.ListContents(ctx, s.pool, repo.ListFilter{TypeKey: "foto_galeri", Status: "yayinda", SiteID: site.ID, PerPage: 6, Page: 1})
-		d.Home.GalleryVideos, _, _ = repo.ListContents(ctx, s.pool, repo.ListFilter{TypeKey: "video", Status: "yayinda", SiteID: site.ID, PerPage: 6, Page: 1})
+		// top read (en çok okunan) + galeri foto/video: bağımsız, paralel.
+		var gw sync.WaitGroup
+		gw.Add(3)
+		go func() { defer gw.Done(); d.Home.TopRead, _ = repo.TopRead(ctx, s.pool, site.ID, 5) }()
+		go func() {
+			defer gw.Done()
+			d.Home.GalleryPhotos, _, _ = repo.ListContents(ctx, s.pool, repo.ListFilter{TypeKey: "foto_galeri", Status: "yayinda", SiteID: site.ID, PerPage: 6, Page: 1})
+		}()
+		go func() {
+			defer gw.Done()
+			d.Home.GalleryVideos, _, _ = repo.ListContents(ctx, s.pool, repo.ListFilter{TypeKey: "video", Status: "yayinda", SiteID: site.ID, PerPage: 6, Page: 1})
+		}()
+		gw.Wait()
 	}
 	// hava + kur bandı (önbellekten; yoksa bas)
-	d.Home.Hava = s.havaFromCache(ctx)
+	d.Home.Hava = hava
 	// USD/EUR/ALTIN + BIST/BTC/ONS; demo kurlar banda hiç alınmaz.
-	d.Home.Kurlar, d.Home.KurDemo = servisKurlar(ctx, s.pool)
+	d.Home.Kurlar, d.Home.KurDemo = kurlar, kurDemo
 	// hava bandı için il/şehir seçimi
-	d.Cities, _ = repo.ListCities(ctx, s.pool)
+	d.Cities = cities
 	// kategori sekmesi filtresi (spec 07): ana sayfada akış
 	catID, fslug, cname, other, _, _, _ := s.resolveFeedQuery(r)
 	d.Akis = &feedData{CatSlug: fslug, CatName: cname, Other: other, Guncel: fslug == "" && !other, TabBase: "/"}
@@ -124,7 +173,7 @@ func (s *Server) homeView(r *http.Request) *tmplData {
 		d.Home.FilterName = cname
 	}
 	// modüler sayfa düzeni (spec 08)
-	d.Home.Categories, _ = repo.ListCategories(ctx, s.pool, site.ID)
+	d.Home.Categories = kategoriler
 	if len(layoutRaw) > 0 {
 		d.Blocks = s.buildBlocks(ctx, d, layoutRaw)
 	}
@@ -132,7 +181,7 @@ func (s *Server) homeView(r *http.Request) *tmplData {
 		d.Blocks = nil // filtre aktifken bloklar yerine filtrelenmiş liste göster
 	}
 	// yaklaşan etkinlikler (hatırlatma şeridi)
-	d.Etkinlik, _ = repo.UpcomingEvents(ctx, s.pool, site.ID, 14, 5)
+	d.Etkinlik = etkinlik
 	return d
 }
 

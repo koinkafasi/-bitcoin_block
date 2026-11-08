@@ -133,8 +133,45 @@ keskinlik farkı yaratıyordu).
 
 `config/pool.go` yazılmış ama `app.env`'de hiçbir değer tanımlı değildi →
 pgx varsayılanı `max(4, NumCPU)` = 12 bağlantı, 20+ arka plan işçisi varken.
-Artık açık: `DB_MAX_CONNS=16`, `DB_MIN_CONNS=2`, yaşam süresi 30 dk,
-boşta 5 dk (PostgreSQL'de `idle in transaction` birikmesin).
+Artık açık ayarlı. Aynı yük testiyle boyut denendi:
+
+| `DB_MAX_CONNS` | rps | p50 | p95 |
+|---|---|---|---|
+| 16 | 1.252 | 33,0 ms | 69,4 ms |
+| **24** | **1.478** | **29,5 ms** | **61,5 ms** |
+| 32 | 1.502 | 28,7 ms | 62,9 ms |
+
+24 seçildi: 32 ile fark ölçüm gürültüsü içinde ve PostgreSQL
+`max_connections=100` sınırında arka plan işçilerine yer bırakıyor.
+
+### 2.6 Ana sayfa okumaları paralelleştirildi
+
+Profil şunu gösterdi: istek başına **CPU yalnızca ~4 ms**, kalan süre
+PostgreSQL gidiş-dönüşlerinin **beklenmesi**. Ana sayfa ~24 sorguyu sırayla
+çalıştırıyordu; her tur ~2 ms.
+
+Birbirine bağımlı olmayan 10 okuma (düzen, menü, footer, hava, kurlar,
+şehirler, etkinlikler, kategoriler, navigasyon, manşet havuzu) artık birlikte
+uçuyor; ardından gelen 3 okuma (en çok okunan + iki galeri) da kendi içinde
+paralel. Sıralı derinlik 24 turdan 2 tura indi.
+
+| Eşzamanlı istemci | Ana sayfa p50 | p95 |
+|---|---|---|
+| 1 | **9,0 ms** | 10,9 ms |
+| 4 | **10,0 ms** | 13,0 ms |
+| 12 | **17,5 ms** | 23,3 ms |
+
+Tek istekte 26 ms → **9 ms**. 50 eşzamanlı istemcide ise kazanç görünmüyor
+(p50 55 ms): orada darboğaz artık **bağlantı havuzu**, istek içi sıralama
+değil. Bu yüzden 50-eşzamanlı tablodaki asıl kazanç 2.2–2.4'ten geliyor;
+paralelleştirme gecikmeyi tek/az istemcide düşürüyor.
+
+**Görsel regresyon kontrolü:** eski sürüm (commit `2fa02fd`) ayrı worktree'de
+derlenip 8091'de çalıştırıldı ve 5 sayfanın HTML'i bayt bayt karşılaştırıldı.
+Sonuç: **tüm sayfalar aynı boyutta ve aynı içerikte**; tek fark süreç başına
+değişen statik varlık sürümü (`?v=...`). Paralelleştirme çıktıyı değiştirmedi.
+
+`go test -race` ile de doğrulandı (eşzamanlı okumalar veri yarışı üretmiyor).
 
 ---
 
@@ -150,22 +187,29 @@ boşta 5 dk (PostgreSQL'de `idle in transaction` birikmesin).
 | `TestGetSettingsTextSarmaliCozer` | jsonb sarmalı çözülür (`"x"` → `x`) |
 | `TestGetSettingsTextTekSorgu` | N+1 geri gelmez (tek sorgu) |
 | `BenchmarkResizeToWidth*`, `BenchmarkCreateThumb*` | kazanç ölçülebilir kalır |
+| `BenchmarkRenderDesign` | manşet raster'ının maliyeti (10,1 ms) takip edilir |
 
 Tüm paket testleri geçiyor: `go test -short ./...` → 23 paket **ok**,
-`gofmt -l .` boş, `go vet ./...` temiz.
+`go test -race` (httpapi/repo/youtube/platform) temiz, `gofmt -l .` boş,
+`go vet ./...` temiz.
+Ek olarak eski sürümle **HTML karşılaştırması** yapıldı: 5 sayfa bayt bayt aynı.
 
 ---
 
 ## 4. Sırada ne var (ölçümle doğrulanmış adaylar)
 
-1. **`/price` sayfası**: yük altında p50 21 ms'e indi ama istek başına 3,35
-   transaction görülüyor — fiyat/endeks uçları için tek batch'e aday.
+1. **50 eşzamanlı yükte darboğaz bağlantı havuzu.** Ana sayfa isteği ~24 sorgu
+   çalıştırıyor; en büyük kazanç artık sorgu sayısını düşürmek:
+   - `/price` istek başına **3,35 transaction** (fiyat/endeks uçları batch'e aday).
+   - Ana sayfadaki bağımsız okumalar tek `pgx.Batch`'e indirilebilir; havuz
+     turu 24'ten 2-3'e iner, bu da 50-eşzamanlı p50'yi doğrudan düşürür.
 2. **`/media/thumb` ve `/media/variant`**: ilk istekte üretiliyor, sonra
    diskten. Medya tablosu şu an boş; içerik dolduğunda `image-svc`
    kazancı (1,8×) doğrudan kullanıcıya yansıyacak.
 3. **`platform/render.go` (583 satır, JSON tasarım → JPEG)**: manşet raster'ı
-   hâlâ Go'da. `image-svc` ile aynı kütüphane etkisi bekleniyor; ayrı süreç
-   olarak Rust'a taşınmaya en uygun parça (bkz. analiz §6, Faz B).
+   hâlâ Go'da; ölçüldü **10,1 ms/raster**. `image-svc` ile aynı kütüphane
+   etkisi bekleniyor; ayrı süreç olarak Rust'a taşınmaya en uygun parça
+   (bkz. analiz §6, Faz B).
 4. **`GOMEMLIMIT`**: bellek artık ölçülüyor; 256 MB hedefiyle GC baskısı
    ayarlanabilir.
 
@@ -183,6 +227,12 @@ IMAGE_SVC_URL=http://127.0.0.1:8172 \
 
 # istek başına sorgu sayımı
 bash /mnt/c/Users/alper/AppData/Local/Temp/opencode/perquery2.sh
+
+# düşük eşzamanlılık (istek içi paralelliği görür)
+python3 /mnt/c/Users/alper/AppData/Local/Temp/opencode/lowload.py
+
+# görsel regresyon: eski commit'i ayrı portta çalıştırıp HTML diff
+bash /mnt/c/Users/alper/AppData/Local/Temp/opencode/diffhtml.sh
 
 # profil
 curl -sS -o /tmp/cpu.pprof "http://127.0.0.1:6060/debug/pprof/profile?seconds=8"
