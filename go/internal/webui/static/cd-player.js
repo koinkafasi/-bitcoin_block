@@ -152,22 +152,57 @@
       else if (k === 'f' || k === 'F') { self.tamEkranDegistir(); e.preventDefault(); }
     });
 
-    /* Kontrol çubuğu: 2,5 sn hareketsizlikte gizlen (oynarken).
-     * DİNLEYİCİ KATMANDA: iframe yüzeyin tamamını kapladığı için sahne
-     * olayları YouTube belgesinde kalıyordu; çubuk bir kez gizlenince bir
-     * daha geri gelmiyordu (ölçüldü, 8 Kasım 2026). */
-    var hedef = this.katman || this.sahne;
-    hedef.addEventListener('pointermove', function () { self.kontrolGoster(); });
-    hedef.addEventListener('pointerdown', function () { self.kontrolGoster(); });
-    hedef.addEventListener('pointerenter', function () { self.kontrolGoster(); });
-    hedef.addEventListener('pointerleave', function () {
+    /* ---- Kontrol çubuğu görünürlüğü ----
+     *
+     * DİNLEYİCİLER KÖKTE (this.kok), katmanda değil. Olaylar katmandan,
+     * kontrol çubuğundan ve tüm düğmelerden köke köpürür; yalnız iframe'in
+     * içindekiler ulaşmaz (o bölgeyi şeffaf katman yakalar).
+     *
+     * NEDEN DEĞİŞTİ (kullanıcı bildirimi, 8 Kasım 2026): "otomatik player
+     * kendini gizlerken ses ve hız araçları yeniden üstüne gelince görünür
+     * olup yönetilebilir değil". Eski sürümde dinleyici YALNIZ katmandaydı;
+     * fare alt çubuğun üzerine gelince olay çubukta (z-index 8) kalıyordu →
+     * çubuk bir daha açılmıyordu. Üstelik gizli çubuk `pointer-events`
+     * kapatmadığı için alt şeritteki tıklamaları yutuyordu: ses kaydırıcısı,
+     * hız ve tam ekran düğmeleri "ölü" görünüyordu. */
+    this.kok.addEventListener('pointermove', function () { self.kontrolGoster(); });
+    this.kok.addEventListener('pointerdown', function () {
+      /* Çubuk gizliyken yapılan dokunuş/tıklama YALNIZ çubuğu getirir.
+         Aksi hâlde kullanıcı (görünmeyen) duraklat düğmesinin yerine
+         tıklayınca video duruyordu. */
+      if (self.kok.classList.contains('cd-vplayer--sakin')) {
+        self._sadeceGoster = true;
+        setTimeout(function () { self._sadeceGoster = false; }, 700);
+      }
+      self.kontrolGoster();
+    });
+    this.kok.addEventListener('pointerenter', function () {
+      self._fareUzerinde = true;
+      self.kontrolGoster();
+    });
+    /* Klavyeyle çubuktaki bir düğmeye odaklanınca da çubuk açık kalsın. */
+    this.kok.addEventListener('focusin', function () { self.kontrolGoster(); });
+    this.kok.addEventListener('pointerleave', function () {
+      self._fareUzerinde = false;
       if (self.oynuyor) self.kok.classList.add('cd-vplayer--sakin');
     });
+
+    /* Yüzey tıklaması: oynat/duraklat — kontrol katmanına karışmadan. */
     this.sahne.addEventListener('click', function (e) {
-      /* Yüzeye tıklama: oynat/duraklat (kontrol çubuğu ve menü hariç). */
       if (e.target.closest('[data-cd-kontrol]')) return;
-      if (e.target === self.buyuk) return;
-      if (!self.basladi) { self.baslat(); return; }
+      if (e.target.closest('[data-cd-buyuk]')) return;
+      if (e.target.closest('[data-cd-ses-cip]')) return;
+      if (e.target.closest('.cd-vplayer__kunye')) return;
+      if (e.target.closest('.cd-vplayer__son')) return;
+      if (!self._oynadi) {
+        /* Henüz oynamadı: tıklama "duraklat" sayılmaz (çift tıklamada video
+           başlar başlamaz duruyordu). */
+        self.baslat();
+        return;
+      }
+      /* Çubuğu yeni açtıysak bu tıklama oynat/duraklat sayılmaz. */
+      if (self._sadeceGoster) return;
+      if (Date.now() - (self._baslamaZaman || 0) < 900) return;
       self.oynatDegistir();
     });
 
@@ -411,9 +446,12 @@
       }, ms);
     });
 
-    if (this.kok.scrollIntoView && this.kok.getBoundingClientRect().top < 0) {
-      this.kok.scrollIntoView({ block: 'center', behavior: 'smooth' });
-    }
+    /* SAYFA KAYDIRILMAZ (8 Kasım 2026 — kullanıcı bildirimi: "video
+       kaydırınca sürekli scroll yenileme"). Eski sürüm oynatıcı görüntü
+       alanının üstündeyse `scrollIntoView({block:'center', behavior:'smooth'})`
+       çağırıyordu; sticky başlık + iframe ile birleşince sayfa kendiliğinden
+       kayıyor, satır satır yeniden boyama görünüyordu. Kullanıcı oynat
+       düğmesine bastığında oynatıcı zaten ekranda. */
 
     /* 1.2 sn: hâlâ oynamadıysa SESSİZ moda geç (evrensel çözüm). */
     setTimeout(function () {
@@ -633,7 +671,16 @@
     clearTimeout(this._sakinZaman);
     if (!this.oynuyor) return;
     this._sakinZaman = setTimeout(function () {
-      if (self.oynuyor && self.menu && self.menu.hidden) self.kok.classList.add('cd-vplayer--sakin');
+      if (!self.oynuyor) return;
+      /* HIZ MENÜSÜ AÇIKKEN GİZLENME: kullanıcı seçim yapıyor. Eskiden süre
+         dolduğunda menü açıksa gizleme atlanıyor ama bir daha
+         denenmiyordu; menü kapandıktan sonra çubuk sonsuza kadar açık
+         kalıyordu. Artık süre yeniden kuruluyor. */
+      if (self.menu && !self.menu.hidden) { self.kontrolGoster(); return; }
+      /* Fare hâlâ oynatıcının üzerindeyse gizleme (YouTube da böyle):
+         kullanıcı çubuğa uzanırken kaybolmasın. */
+      if (self._fareUzerinde) { self.kontrolGoster(); return; }
+      self.kok.classList.add('cd-vplayer--sakin');
     }, 2500);
   };
 
