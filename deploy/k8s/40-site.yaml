@@ -99,6 +99,15 @@ spec:
               value: /data/storage
             - name: PRIVATE_STORAGE_DIR
               value: /data/storage-private
+            # Bellek emniyeti: pod limiti 256Mi. Go varsayılanı yalnız
+            # tahsis edilen heap'i görür, konteyner limitini bilmez; limit
+            # aşılınca süreç GC'ye değil OOMKill'e gider. GOMEMLIMIT'i
+            # limitin ALTINA koymak GC'yi erken ve yumuşak devreye sokar.
+            # Ölçüm (8 Kasım 2026, yerel): boşta 30-32 MB, yük altında tepe
+            # ~55 MB. 220MiB, normal kullanımın çok üstünde; kırpma değil
+            # emniyet kemeri.
+            - name: GOMEMLIMIT
+              value: 220MiB
           ports:
             - { name: http, containerPort: 8070 }
           volumeMounts:

@@ -40,7 +40,13 @@ Sayfa bazında (yük altında, p50):
 | `/canli-yayin` | 91 ms | **21 ms** |
 | `/business` | 87 ms | **26 ms** |
 
-Tek istek (boşta, `curl`): ana sayfa **26 ms → 12 ms**.
+Tek istek (boşta, `curl`): ana sayfa **26 ms → 12 ms**; istek içi
+paralelleştirmeden sonra **9 ms** (bkz. §2.6).
+
+> **Not:** 8 Kasım 2026'dan sonra çalışma ağacında başka bir geliştirme
+> (piyasa şeridinin tüm sayfalara taşınması) devreye girdi ve tüm CD
+> sayfalarına bir fiyat okuması ekledi. Yukarıdaki tablo o değişiklikten
+> ÖNCE, aynı oturumda art arda alınmış ölçümdür.
 
 ### Bellek
 
@@ -196,26 +202,32 @@ Ek olarak eski sürümle **HTML karşılaştırması** yapıldı: 5 sayfa bayt b
 
 ---
 
-## 4. Sırada ne var (ölçümle doğrulanmış adaylar)
+## 4. Yapıldı: bellek emniyeti (kazanç değil, koruma)
 
-1. **50 eşzamanlı yükte darboğaz bağlantı havuzu.** Ana sayfa isteği ~24 sorgu
+`GOMEMLIMIT` hem yerel systemd biriminde (256MiB) hem k8s manifestinde
+(220MiB) ayarlandı. Pod limiti 256Mi; Go konteyner limitini görmediği için
+limit aşımı GC'ye değil **OOMKill**'e gidiyordu. Normal kullanımın çok
+üstünde duruyor — kırpma değil, emniyet kemeri.
+
+## 5. Sırada ne var (ölçümle doğrulanmış adaylar)
+
+1. **50 eşzamanlı yükte darboğaz bağlantı havuzu.** Ana sayfa isteği ~20 sorgu
    çalıştırıyor; en büyük kazanç artık sorgu sayısını düşürmek:
-   - `/price` istek başına **3,35 transaction** (fiyat/endeks uçları batch'e aday).
    - Ana sayfadaki bağımsız okumalar tek `pgx.Batch`'e indirilebilir; havuz
-     turu 24'ten 2-3'e iner, bu da 50-eşzamanlı p50'yi doğrudan düşürür.
+     turu 20'den 2-3'e iner, bu da 50-eşzamanlı p50'yi doğrudan düşürür.
+     (Paralelleştirme tur *derinliğini* düşürdü, tur *sayısını* değil.)
+   - `/price` istek başına **3,35 transaction**.
 2. **`/media/thumb` ve `/media/variant`**: ilk istekte üretiliyor, sonra
    diskten. Medya tablosu şu an boş; içerik dolduğunda `image-svc`
    kazancı (1,8×) doğrudan kullanıcıya yansıyacak.
-3. **`platform/render.go` (583 satır, JSON tasarım → JPEG)**: manşet raster'ı
-   hâlâ Go'da; ölçüldü **10,1 ms/raster**. `image-svc` ile aynı kütüphane
-   etkisi bekleniyor; ayrı süreç olarak Rust'a taşınmaya en uygun parça
-   (bkz. analiz §6, Faz B).
-4. **`GOMEMLIMIT`**: bellek artık ölçülüyor; 256 MB hedefiyle GC baskısı
-   ayarlanabilir.
+3. **`platform/render.go`** (583 satır, JSON tasarım → JPEG): ölçüldü
+   **10,1 ms/raster**, ama **sıcak yolda değil** (kapak/manşet üretimi, panel
+   ve arka plan işleri). Rust'a taşımak için uygun bir öğrenme parçası;
+   performans gerekçesi zayıf. Karar: ihtiyaç doğunca.
 
 ---
 
-## 5. Yeniden üretme
+## 6. Yeniden üretme
 
 ```bash
 # yük testi (50 eşzamanlı × 10 sn)
