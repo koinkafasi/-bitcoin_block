@@ -167,6 +167,8 @@ func (s *Server) handleCDHome(w http.ResponseWriter, r *http.Request) {
 		// Google'da "aynı içerik" cezası riski).
 		Hreflang: map[string]string{"tr": s.cfg.BaseURL + "/"},
 		JSONLD:   string(orgJSONLD(s.siteName, strings.TrimRight(s.cfg.BaseURL, "/"), s.cfg.BaseURL+r.URL.Path)),
+		// "Explore more from CoinDesk" şeridi — gerçek veriyle.
+		Explore: s.cdExploreDoldur(r, sections),
 		// CoinDesk ana sayfa sınıflandırması.
 		PageCategory:    "homepage",
 		ContentCategory: "homepage",

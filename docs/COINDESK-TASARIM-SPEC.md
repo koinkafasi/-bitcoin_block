@@ -2361,6 +2361,61 @@ Lighthouse: `/` 100 · `/markets` 100 · `/price` 100 (SEO 100, BP 96, CLS 0).
 
 ---
 
+### 11.16 On sekizinci tur ("Explore more" şeridi + bölüm panelleri) — DURUM
+
+CoinDesk ana sayfasındaki **"Explore more from CoinDesk"** şeridi kuruldu.
+Ölçüm: gerçek Chrome 1920 px, `getComputedStyle`, 8 Kasım 2026.
+
+**Yerleşim sırası (CoinDesk'ten ölçüldü):** hero → Explore → Görüş +
+En Çok Okunan → bölüm blokları. Yani şerit "en çok okunanlar"ın **üstünde**.
+
+| Öğe | CoinDesk (ölçüldü) | bitcosar |
+|---|---|---|
+| kapsayıcı | 1464×672, `overflow: hidden` | 1464×672 ✅ |
+| başlık | 220×24 · 16/24 w500 | 16/24 w500 ✅ |
+| başlık → şerit | 16 px | 16 px ✅ |
+| şerit | 1464×632 · flex · gap 16 · `padding: 0 16` | aynı ✅ |
+| kaydırma | `overflow-x:auto` + `snap-x mandatory` + çubuk gizli | aynı ✅ |
+| panel | 400×632 · `flex-shrink:0` · `scroll-snap-align:start` | 400×632 ✅ |
+| kart | radius 8 · zemin `--cd-bg` · **dört kenar** 1 px `#d9d9d9` | aynı ✅ |
+| iç dolgu | 16 · flex column · yükseklik %100 | aynı ✅ |
+| panel başlığı | 366×32 · gap 8 · 24×24 ikon + (16/32 w500 + 16×16 chevron) | aynı ✅ |
+| fiyat satırı | 382×36 (pad 6/8, radius 8, gap 8) · değişim rozeti 22 px | 382×34 ✅ |
+| video satırı | 366×94 · kapak 168×94 · metin 182 | aynı ✅ |
+| alt satır | 366×22 · 14/22 | aynı ✅ |
+
+**Panel sayısı — bilinçli fark.** CoinDesk 6 panel basıyor: Prices · Stocks ·
+Exchange Benchmark · Videos · CoinDesk Indices · Podcast. Bizde hisse
+(BIST dışı), endeks ve borsa-benchmark **verisi yok**; bülten içeriği de
+yayında değil. "Veri yoksa modül basılmaz" kuralı gereği o paneller
+uydurulmadı. Yerine **gerçek veriyle dolan 7 panel** kuruldu:
+
+| # | Panel | Kaynak |
+|---|---|---|
+| 1 | Fiyatlar (10 satır) | canlı fiyat şeridi (`/price`) |
+| 2 | Videolar (5 satır) | YouTube `video` + `stream` arşivi |
+| 3 | Klipler (3×2, 9:16) | YouTube `short` |
+| 4–7 | Piyasalar · Politika · Teknoloji · Finans (5'er satır) | bölüm listeleri (`/markets`, `/policy`, `/tech`, `/business`) |
+
+Bölüm panelleri ana sayfa havuzundan değil **bölümün kendi listesinden**
+besleniyor (`cdListeIcerikleri`): havuz 60 kayıtla sınırlı olduğu için
+Piyasalar paneli 2 satırda kalıyordu.
+
+**Videolar panelinde açıklama ve alt bağlantı yok** — CoinDesk'te de yok
+(ölçüm: başlık 32 → 16 → 5×94 = 534). Eklenince 5. satır kartın dışına
+taşıyordu. Klipler panelinde de aynı gerekçeyle ikisi basılmıyor: 2 satır
+(2×248 + 8) ancak sığıyor.
+
+**JS yok:** kaydırma tarayıcının kendi `overflow-x` + `scroll-snap`
+davranışından geliyor (dokunmatik, Shift+tekerlek, klavye, sürükleme).
+CoinDesk'te de ok düğmesi yok.
+
+Doğrulama (1920 · 768 · 390): yatay taşma **0**, panel 7, kırık görsel 0
+(görseller `loading="lazy"` — ekrana gelince yükleniyor), koyu temada kart
+`#161616` / kenar `#262626` / metin `#d4d4d4`. `cd.css` bütçesi aşılmadı.
+
+---
+
 ## 16. Gerçek veri katmanı (8 Kasım 2026)
 
 Bu turda **sahte/demo veri siteden çıkarıldı** ve grafikler gerçek kaynaklara

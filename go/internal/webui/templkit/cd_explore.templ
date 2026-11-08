@@ -1,0 +1,174 @@
+package templkit
+
+// "Explore more from CoinDesk" — JS'siz yatay kaydırma şeridi.
+//
+// JS YOK: tarayıcının kendi `overflow-x: auto` + `scroll-snap-type: x
+// mandatory` davranışı kullanılıyor. Dokunmatik kaydırma, tekerlek
+// (Shift+tekerlek), klavye (Tab + ok tuşları) ve fare sürükleme
+// tarayıcıdan gelir; kaydırma çubuğu `scrollbar-width: none` ile gizli.
+// CoinDesk de aynı yolu izliyor (`overflow-x-auto snap-x snap-mandatory
+// scrollbar-hide`), ok düğmesi YOK.
+
+// cdExploreIkon panel başlığındaki 24×24 ikon.
+//
+// CoinDesk her panelde farklı ikon kullanıyor; bizde tür başına tek ikon
+// (fiyat · video · klip · haber). Emoji yasak (emoji_test.go), SVG.
+templ cdExploreIkon(tur string) {
+	if tur == "fiyat" {
+		<svg class="cd-explore__ikon" width="24" height="24" viewBox="0 0 24 24"
+			fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true" focusable="false">
+			<path d="M3 17l5-5 4 4 7-7" stroke-linecap="round" stroke-linejoin="round"></path>
+			<path d="M15 9h4v4" stroke-linecap="round" stroke-linejoin="round"></path>
+		</svg>
+	} else if tur == "video" {
+		<svg class="cd-explore__ikon" width="24" height="24" viewBox="0 0 24 24"
+			fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true" focusable="false">
+			<rect x="2.5" y="5.5" width="14" height="13" rx="2"></rect>
+			<path d="M16.5 10.5l5-2.5v8l-5-2.5z" stroke-linejoin="round"></path>
+		</svg>
+	} else if tur == "klip" {
+		<svg class="cd-explore__ikon" width="24" height="24" viewBox="0 0 24 24"
+			fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true" focusable="false">
+			<rect x="6.5" y="2.5" width="11" height="19" rx="2.5"></rect>
+			<path d="M10.5 11.5l4 2.5-4 2.5z" fill="currentColor" stroke="none"></path>
+		</svg>
+	} else {
+		<svg class="cd-explore__ikon" width="24" height="24" viewBox="0 0 24 24"
+			fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true" focusable="false">
+			<rect x="2.5" y="4.5" width="19" height="15" rx="2"></rect>
+			<path d="M2.5 9.5h19"></path>
+			<path d="M6.5 13.5h7M6.5 16.5h4" stroke-linecap="round"></path>
+		</svg>
+	}
+}
+
+// cdExploreOk panel başlığındaki 16×16 chevron (CoinDesk `chevron_forward`).
+templ cdExploreOk() {
+	<svg class="cd-explore__ok" width="16" height="16" viewBox="0 0 24 24"
+		fill="none" aria-hidden="true" focusable="false">
+		<path d="M9.29 6.71a.996.996 0 000 1.41L13.17 12l-3.88 3.88a.996.996 0 101.41 1.41l4.59-4.59a.996.996 0 000-1.41L10.7 6.71a.996.996 0 00-1.41 0z"
+			fill="currentColor"></path>
+	</svg>
+}
+
+// cdExplore ana sayfa şeridi.
+templ cdExplore(e CDExplore) {
+	if e.Baslik != "" && cdExploreVar(e) {
+		<section class="cd-explore" aria-labelledby="cd-explore-baslik">
+			<h3 class="cd-explore__baslik" id="cd-explore-baslik">{ e.Baslik }</h3>
+			<div class="cd-explore__serit" role="list">
+				for _, p := range e.Paneller {
+					@cdExplorePanel(p)
+				}
+			</div>
+		</section>
+	}
+}
+
+// cdExplorePanel tek panel (400×632 kart).
+templ cdExplorePanel(p CDExplorePanel) {
+	<div class="cd-explore__panel" role="listitem">
+		<div class="cd-explore__kart">
+			<div class="cd-explore__ic">
+				<div class="cd-explore__ust">
+					@cdExploreIkon(p.Tur)
+					<a class="cd-explore__bag" href={ p.Href }>
+						<h2 class="cd-explore__ad">{ p.Baslik }</h2>
+						@cdExploreOk()
+					</a>
+				</div>
+				if p.Aciklama != "" {
+					<p class="cd-explore__aciklama">{ p.Aciklama }</p>
+				}
+
+				if p.Tur == "fiyat" {
+					<div class="cd-explore__satirlar">
+						for _, f := range p.Fiyatlar {
+							<a class="cd-explore__fiyat" href={ f.Href }>
+								<span class="cd-explore__sira">{ cdSayiMetni(f.Rank) }</span>
+								<span class="cd-explore__sym">{ f.Sym }</span>
+								<span class="cd-explore__px">{ f.Price }</span>
+								if f.Up {
+									<span class="cd-explore__degisim cd-explore__degisim--up">{ f.Change }</span>
+								} else {
+									<span class="cd-explore__degisim cd-explore__degisim--down">{ f.Change }</span>
+								}
+							</a>
+						}
+					</div>
+				} else if p.Tur == "video" {
+					<div class="cd-explore__videolar">
+						for _, v := range p.Videolar {
+							<a class="cd-explore__video" href={ v.Href }>
+								<span class="cd-explore__kucuk-gorsel">
+									if v.Image != "" {
+										<img src={ v.Image } alt="" loading="lazy" decoding="async"
+											referrerpolicy="no-referrer"/>
+									}
+									if v.Sure != "" {
+										<span class="cd-explore__sure">{ v.Sure }</span>
+									}
+								</span>
+								<span class="cd-explore__video-metin">
+									<span class="cd-explore__video-baslik">{ v.Baslik }</span>
+								</span>
+							</a>
+						}
+					</div>
+				} else if p.Tur == "klip" {
+					<div class="cd-explore__klipler">
+						for _, k := range p.Klipler {
+							<a class="cd-explore__klip" href={ k.Href }>
+								<span class="cd-explore__klip-gorsel">
+									if k.Image != "" {
+										<img src={ k.Image } alt="" loading="lazy" decoding="async"
+											referrerpolicy="no-referrer"/>
+									}
+									<span class="cd-explore__oynat" aria-hidden="true">
+										<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+											<path d="M8 5v14l11-7z"></path>
+										</svg>
+									</span>
+								</span>
+								<span class="cd-explore__klip-baslik">{ k.Baslik }</span>
+							</a>
+						}
+					</div>
+				} else {
+					<div class="cd-explore__haberler">
+						for _, s := range p.Haberler {
+							<a class="cd-explore__haber" href={ s.Href }>
+								if s.Image != "" {
+									<span class="cd-explore__haber-gorsel">
+										<img src={ s.Image } alt="" loading="lazy" decoding="async"
+											referrerpolicy="no-referrer"/>
+									</span>
+								}
+								<span class="cd-explore__haber-metin">
+									<span class="cd-explore__haber-baslik">{ s.Title }</span>
+									if s.Time != "" {
+										<time class="cd-explore__haber-saat">{ s.Time }</time>
+									}
+								</span>
+							</a>
+						}
+					</div>
+				}
+
+				if p.AltMetin != "" && p.AltHref != "" {
+					<p class="cd-explore__alt">
+						<span>{ p.AltMetin }</span>
+						<a href={ p.AltHref }>
+							{ p.AltBaglam }
+							<svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+								aria-hidden="true" focusable="false">
+								<path d="M9.29 6.71a.996.996 0 000 1.41L13.17 12l-3.88 3.88a.996.996 0 101.41 1.41l4.59-4.59a.996.996 0 000-1.41L10.7 6.71a.996.996 0 00-1.41 0z"
+									fill="currentColor"></path>
+							</svg>
+						</a>
+					</p>
+				}
+			</div>
+		</div>
+	</div>
+}

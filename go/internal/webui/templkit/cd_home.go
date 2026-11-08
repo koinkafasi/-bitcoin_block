@@ -149,6 +149,9 @@ type CDHomeView struct {
 	// Piyasa Nabzı (yalnız /markets): gerçek zincir-üstü veri.
 	NabizFiyat *CDGrafikKart
 	Nabiz      []CDGrafikKart
+	// Explore "Explore more from CoinDesk" yatay şeridi (bölüm
+	// panelleriyle). Boşsa modül basılmaz.
+	Explore CDExplore
 }
 
 // CDArticleView makale sayfası (§7).

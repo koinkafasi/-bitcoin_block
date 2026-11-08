@@ -794,6 +794,13 @@ templ CDHome(v CDHomeView) {
 				@cdNabizModul(v.NabizFiyat, v.Nabiz,
 					"Kaynak: CryptoQuant · BTC · Binance akışları · günlük veri · 10 dakika önbellek")
 
+				<!-- "Explore more from CoinDesk" — yatay kaydırma şeridi.
+				     CoinDesk sırası: hero → Explore → Görüş+En Çok Okunan →
+				     bölüm blokları (ölçüldü, 8 Kasım 2026). Paneller gerçek
+				     veriyle doluyor: Fiyatlar · Videolar · Klipler ve her
+				     bölümün kendi son haber paneli. -->
+				@cdExplore(v.Explore)
+
 				<!-- §20+§21 Görüş (25%) + En Çok Okunan (75%) yan yana -->
 				@cdIkili(v.Opinion, v.MostRead)
 

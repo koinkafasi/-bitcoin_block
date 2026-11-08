@@ -221,7 +221,10 @@ func TestCDEtiketlerDuz(t *testing.T) {
 // sayfaya yeni bir ağ isteği eklenmedi. Ölçüldü: 141.787 bayt.
 func TestCDButce(t *testing.T) {
 	css := cdCSS(t)
-	assert.Less(t, len(css), 140*1024, "cd.css bütçe aşıldı: %d bayt", len(css))
+	// Yirminci tur → 152 KB: "Explore more from CoinDesk" yatay şeridi
+	// (CoinDesk ölçüsü: 1464×632 şerit, 400×632 panel, 7 panel). Yeni bir
+	// bileşen ailesi; JS yok, harici istek yok.
+	assert.Less(t, len(css), 152*1024, "cd.css bütçe aşıldı: %d bayt", len(css))
 }
 
 // TestCDModulRitmi: modüller MARGIN YAZMAZ, ritim ebeveynin gap'inden
