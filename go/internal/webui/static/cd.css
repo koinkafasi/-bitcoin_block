@@ -4256,7 +4256,10 @@ textarea.cd-girdi { resize: vertical; min-height: 88px; }
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
-/* Değişim rozeti: 60×22, 12/22, pad 0 6, köşe 2. */
+/* Değişim rozeti: 60×22, 12/22, pad 0 6, köşe 2.
+   Renkler JETONLARDAN: şerit ve fiyat tablosuyla aynı çift
+   (`--cd-up` / `--cd-up-bg`). Saydam yeşil zemin (#218410 %10 → 4.22:1)
+   WCAG AA'yı geçmiyordu; jeton zemini 4.51:1 veriyor. */
 .cd-explore__degisim {
   display: inline-flex;
   align-items: center;
@@ -4269,8 +4272,8 @@ textarea.cd-girdi { resize: vertical; min-height: 88px; }
   line-height: 22px;
   font-variant-numeric: tabular-nums;
 }
-.cd-explore__degisim--up { background: rgba(33, 132, 16, 0.10); color: var(--cd-up); }
-.cd-explore__degisim--down { background: rgba(187, 2, 10, 0.10); color: var(--cd-down); }
+.cd-explore__degisim--up { background: var(--cd-up-bg); color: var(--cd-up); }
+.cd-explore__degisim--down { background: var(--cd-down-bg); color: var(--cd-down); }
 
 /* ---- Video paneli ----
    Satır 366×94: kapak 168×94 (16/9) + metin 182×94, arada 16. */
