@@ -6,7 +6,6 @@ import (
 	"strings"
 	"time"
 
-	"theblock/site/internal/i18n"
 	"theblock/site/internal/repo"
 	"theblock/site/internal/webui/templkit"
 )
@@ -43,7 +42,9 @@ func (s *Server) handleCDHome(w http.ResponseWriter, r *http.Request) {
 			st.SourceURL = *c.SourceURL
 		}
 		if c.CategoryName != nil {
-			st.Kicker = i18n.BuyukHarf(*c.CategoryName)
+			// Kicker: CoinDesk kategori adını OLDUĞU GİBİ basıyor ("Markets"),
+			// büyük harfe çevirmiyor (ölçüldü, 8 Kasım 2026).
+			st.Kicker = *c.CategoryName
 		}
 		return st
 	}
