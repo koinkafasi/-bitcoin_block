@@ -329,13 +329,20 @@ html { overflow-x: clip; }
 
 /* Kicker/etiket: 12/16 w400, harf aralığı 0.4 px, BÜYÜK HARF (ölçüldü).
    Eski sürüm 700 + 0.09em kullanıyordu — ölçümle uyuşmuyor. */
+/* Kicker (kategori etiketi) — TEMEL SINIF.
+   BÜYÜK HARF YOK (ölçüldü, 8 Kasım 2026): CoinDesk hiçbir yerde kategori
+   adını büyük harfle basmıyor; makale kicker'ı `text-transform: none`
+   ("Markets"), kartlarda kicker hiç yok. Bizde `uppercase` vardı ve ilgili
+   haber kartlarında "POLİTİKA" çıkıyordu (kullanıcı bildirimi: makale üstü
+   etiket menüyle aynı değil). Harf aralığı da kaldırıldı: büyük harf
+   olmadan 0.4 px aralık metni dağınık gösteriyor. */
 .cd-kicker {
   display: inline-block;
   font-size: 12px;
   line-height: 16px;
   font-weight: 400;
-  letter-spacing: 0.4px;
-  text-transform: uppercase;
+  letter-spacing: 0;
+  text-transform: none;
   color: var(--cd-muted);
 }
 
