@@ -1,0 +1,152 @@
+package templkit
+
+// Etiket sayfası (/tag/{slug}) — CoinDesk /tag/bitcoin BİREBİR yapısı.
+//
+// ÖLÇÜM (8 Kasım 2026, 1440×1000, gerçek Chrome):
+//
+//	banner  : 1384 px; sol metin max 680 (h1 36/44 **w400** capitalize,
+//	          spot 18/27), sağ görsel 692×389 (16:9)
+//	<hr>    : tam genişlik
+//	12 kolon: gap 16
+//	  sol 8 : her satır metin 524 + görsel 327×185; başlık 16/24 **w400**,
+//	          spot 16/24 (3 satır), saat **12/16**, aralarda hr (my-16)
+//	  sağ 4 : "Latest Crypto News" paneli (bg surface, başlık 16/32 w500,
+//	          satırlar 16/24 w500 + saat 12/16, "Explore" bağlantısı)
+//	          + bülten kutusu
+//
+// NEDEN AYRI ŞABLON: önceki sürüm etiket sayfasını BÖLÜM şablonuyla
+// basıyordu (h1 w700, 6+3+3 ızgara, sağ ray yok, banner yok). CoinDesk'te
+// iki sayfa ailesi birbirinden tamamen farklı — ölçüldü.
+
+// CDTagPage /tag/{slug} verisi.
+type CDTagPage struct {
+	Shell     CDShell
+	Title     string
+	Desc      string
+	Canonical string
+	// H1 CoinDesk deseni: "<Etiket> Haberleri" (36/44 w400 capitalize).
+	H1 string
+	// Spot banner açıklaması (18/27, 4 satır kırpma). Boşsa basılmaz.
+	Spot string
+	// Banner görseli: etiketin en yeni içeriğinin görseli. Boşsa sağ
+	// sütun hiç basılmaz (banner tek kolon kalır).
+	BannerImage string
+	BannerHref  string
+	// Stories banner'dan SONRAKİ haberler (tekrar yok).
+	Stories []CDStory
+	// Latest sağ paneldeki "Son Kripto Haberler" akışı.
+	Latest   []CDStory
+	Page     int
+	PrevHref string
+	NextHref string
+	JSONLD   string
+	// CoinDesk SEO sınıflandırması (bkz. templkit.CDHead).
+	PageCategory    string
+	ContentCategory string
+	Locale          string
+	BaseURL         string
+}
+
+templ CDTagPageView(v CDTagPage) {
+	<!doctype html>
+	<html lang="tr">
+		<head>
+			@cdHead(CDHead{Title: v.Title, Desc: v.Desc, Canonical: v.Canonical,
+				OGType: "website", Image: v.BannerImage, SiteName: v.Shell.SiteName,
+				RSSFeed: "/rss.xml", NoIndex: v.Page > 1, JSONLD: v.JSONLD,
+				Locale: v.Locale, PageCategory: v.PageCategory, BaseURL: v.BaseURL,
+				ContentCategory: v.ContentCategory})
+		</head>
+		<body class="cd">
+			@cdTopbar(v.Shell)
+			@cdTicker(v.Shell)
+			<main class="cd-wrap">
+				<div class="cd-tag-banner">
+					<div class="cd-tag-banner__metin">
+						<h1>{ v.H1 }</h1>
+						if v.Spot != "" {
+							<p class="cd-tag-banner__spot">{ v.Spot }</p>
+						}
+					</div>
+					if v.BannerImage != "" {
+						<a class="cd-tag-banner__gorsel" href={ v.BannerHref } tabindex="-1" aria-hidden="true">
+							@cdGorselImg(v.BannerImage, YuvaTagBanner, true)
+						</a>
+					}
+				</div>
+				<hr class="cd-tag-hr"/>
+
+				<div class="cd-tag-izgara">
+					<div class="cd-tag-liste">
+						if len(v.Stories) == 0 {
+							<p class="cd-card__spot">Bu etikette henüz haber yok.</p>
+						}
+						for i, s := range v.Stories {
+							if i > 0 {
+								<hr class="cd-tag-satir__cizgi"/>
+							}
+							@cdTagSatir(s)
+						}
+						if v.PrevHref != "" || v.NextHref != "" {
+							<nav class="cd-daha" aria-label="Sayfalama">
+								if v.PrevHref != "" {
+									<a class="cd-daha__geri" href={ v.PrevHref } rel="prev">← Önceki</a>
+								}
+								if v.NextHref != "" {
+									<a class="cd-daha__btn" href={ v.NextHref } rel="next">Daha fazla haber</a>
+								}
+							</nav>
+						}
+					</div>
+					<aside class="cd-tag-yan">
+						if len(v.Latest) > 0 {
+							<section class="cd-tag-latest">
+								<div class="cd-tag-latest__bas">
+									<h2>Son Kripto Haberler</h2>
+								</div>
+								<div class="cd-tag-latest__liste">
+									for _, s := range v.Latest {
+										<div class="cd-tag-latest__kalem">
+											if s.Time != "" {
+												<span class="cd-tag-latest__saat">{ s.Time }</span>
+											}
+											<a href={ s.Href }>{ s.Title }</a>
+										</div>
+									}
+								</div>
+								<div class="cd-tag-latest__daha">
+									<a href="/latest-crypto-news">Tümünü gör →</a>
+								</div>
+							</section>
+						}
+						@cdNewsletter()
+					</aside>
+				</div>
+			</main>
+			@cdFooter(v.Shell)
+		</body>
+	</html>
+}
+
+// cdTagSatir etiket listesinin satırı: metin 524 + görsel 327×185.
+//
+// DİKKAT: başlık 16/24 **w400** — bölüm listesindeki 24/30 w500'den
+// bilinçli fark (CoinDesk'te ölçüldü). Saat 12/16.
+templ cdTagSatir(s CDStory) {
+	<article class="cd-tag-satir">
+		<div class="cd-tag-satir__metin">
+			<h2><a href={ s.Href }>{ s.Title }</a></h2>
+			if s.Spot != "" {
+				<p class="cd-tag-satir__spot">{ s.Spot }</p>
+			}
+			if s.Time != "" {
+				<time class="cd-tag-satir__saat">{ s.Time }</time>
+			}
+		</div>
+		if s.Image != "" {
+			<a class="cd-tag-satir__gorsel" href={ s.Href } tabindex="-1" aria-hidden="true">
+				@cdGorselImg(s.Image, YuvaKatSatir, false)
+			</a>
+		}
+	</article>
+}

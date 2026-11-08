@@ -98,16 +98,34 @@ func (s *Server) handleCDSection(w http.ResponseWriter, r *http.Request, slug st
 		v.NabizFiyat, v.Nabiz = s.cdNabiz(r.Context())
 	}
 
+	// YERLEŞİM (CoinDesk /markets ölçümü, 8 Kasım 2026):
+	//   lead      : 1 haber (yatay kart, metin %31 / görsel %67)
+	//   alt       : sonraki 4 haber (239 px kart ızgarası)
+	//   ray       : sonraki 6 haber (görselsiz başlık + saat)
+	//   stories   : kalanlar ("More From" satırları, 1032 px)
+	//
+	// Önceki sürüm 1 lead + 3 yan + kalan dikey kart kullanıyordu; CoinDesk'te
+	// bu sayfada yan sütun ve dikey kart YOK (ölçüldü).
+	const altAdet, rayAdet = 4, 6
 	if len(kartlar) > 0 {
 		v.Lead = kartlar[0]
-		// Yan sütun: manşetten sonraki 3.
-		for i := 1; i < len(kartlar) && i <= 3; i++ {
-			v.Side = append(v.Side, kartlar[i])
+		kalan := kartlar[1:]
+		if len(kalan) > altAdet {
+			v.Alt = kalan[:altAdet]
+			kalan = kalan[altAdet:]
+		} else {
+			v.Alt = kalan
+			kalan = nil
 		}
-		// Izgara: 4. haberden sonrası.
-		if len(kartlar) > 4 {
-			v.Stories = kartlar[4:]
+		if len(kalan) > rayAdet {
+			v.Ray = kalan[:rayAdet]
+			kalan = kalan[rayAdet:]
+		} else {
+			v.Ray = kalan
+			kalan = nil
 		}
+		v.Stories = kalan
+		v.MoreBaslik = meta.Ad + " bölümünden daha fazlası"
 	}
 	if sayfa > 1 {
 		v.PrevHref = "/" + slug + sayfaURL(sayfa-1)

@@ -219,12 +219,20 @@ func TestCDEtiketlerDuz(t *testing.T) {
 // (900/560 px) tek bir yeni bileşen ailesi. Harici grafik kütüphanesi
 // YÜKLENMEDİ (CSP `script-src 'self'`); bu yüzden CSS'in payı arttı ama
 // sayfaya yeni bir ağ isteği eklenmedi. Ölçüldü: 141.787 bayt.
+//
+// Yirminci tur → 172 KB: KATEGORİ + ETİKET sayfa aileleri CoinDesk
+// yapısına göre YENİDEN yazıldı (ölçüm: coindesk.com/markets ve
+// /tag/bitcoin). Önceki sürüm ana sayfanın `.cd-kat-one` ızgarasını
+// kullanıyordu; CoinDesk'te bu sayfalar tamamen farklı (lead yatay,
+// 4'lü alt ızgara, görselsiz sağ ray, 1032 px ortalanmış "More From"
+// listesi; etikette banner + 8/4 ızgara + sağ "Latest News" paneli).
+// Yeni sınıf ailesi ~14 KB. Aynı ağaçta paralel oturumun `cd-explore`
+// paneli de eklendi; bütçe ikisini birlikte karşılıyor (163.161 bayt).
+// Bu tur: kategori sağ rayının dikey ayracı + etiket kutuları + banner
+// sütun oranı → 165.566 bayt.
 func TestCDButce(t *testing.T) {
 	css := cdCSS(t)
-	// Yirminci tur → 152 KB: "Explore more from CoinDesk" yatay şeridi
-	// (CoinDesk ölçüsü: 1464×632 şerit, 400×632 panel, 7 panel). Yeni bir
-	// bileşen ailesi; JS yok, harici istek yok.
-	assert.Less(t, len(css), 152*1024, "cd.css bütçe aşıldı: %d bayt", len(css))
+	assert.Less(t, len(css), 172*1024, "cd.css bütçe aşıldı: %d bayt", len(css))
 }
 
 // TestCDModulRitmi: modüller MARGIN YAZMAZ, ritim ebeveynin gap'inden
@@ -361,4 +369,47 @@ func TestCDShellSiniflari(t *testing.T) {
 	} {
 		assert.Contains(t, css, "."+sinif, "CSS sınıfı eksik: %s", sinif)
 	}
+}
+
+// TestCDKategoriAyraclar: kategori/etiket sayfası YAPI sözleşmesinin
+// görünür kalemleri CSS'te de var (8 Kasım 2026 ölçümü).
+//
+// NİYE CSS TESTİ: şablon sınıfları HTML'de durur ama ayraç/kutu
+// görünümünü CSS verir. Kullanıcı raporu: kategoride sağdaki haberlerle
+// arasındaki ayırma çizgisi unutulmuştu — CoinDesk /markets'te sağ rayın
+// sol kenarında 1px dikey çizgi var (332 = 1 + 24 + 307). Etiket
+// sayfasında ise iki sütun da çerçeveli kutu (1px + 8px köşe + 20px).
+// Bu testler çizgi/kutu CSS'i silinirse kırılır.
+func TestCDKategoriAyraclar(t *testing.T) {
+	css := cdCSS(t)
+
+	// Kategori: sağ rayda dikey ayraç + 24px iç boşluk.
+	i := strings.Index(css, ".cd-kat-ray {")
+	require.GreaterOrEqual(t, i, 0, ".cd-kat-ray kuralı yok")
+	blok := css[i:]
+	blok = blok[:strings.Index(blok, "}")]
+	assert.Contains(t, blok, "border-left: 1px solid var(--cd-border)",
+		"sağ rayın sol dikey ayracı yok (CoinDesk ölçümü: 1px border-left)")
+	assert.Contains(t, blok, "padding-left: 24px",
+		"sağ rayda 24px iç boşluk yok (ölçülen 1094-1070=24)")
+
+	// Tam genişliğe düşünce ayraç kalkmalı (kendi medya sorgusu).
+	m := strings.Index(css, ".cd-kat-sol, .cd-kat-ray { grid-column: span 12; }")
+	require.GreaterOrEqual(t, m, 0, "rayı tam genişliğe alan medya kuralı yok")
+	medya := css[m : m+500]
+	assert.Contains(t, medya, "border-left: 0", "1279 altı için ayraç kalkmıyor")
+
+	// Etiket: liste kutusu çerçeveli.
+	i = strings.Index(css, ".cd-tag-liste {")
+	require.GreaterOrEqual(t, i, 0, ".cd-tag-liste kuralı yok")
+	blok = css[i:]
+	blok = blok[:strings.Index(blok, "}")]
+	assert.Contains(t, blok, "background: var(--cd-surface-soft)",
+		"etiket listesi yüzey kutusu değil")
+	assert.Contains(t, blok, "border-bottom: 1px solid var(--cd-border)",
+		"etiket listesinde alt çizgi yok")
+
+	// Etiket: sağ sütun çocukları (Latest + bülten) kutu.
+	assert.Contains(t, css, ".cd-tag-yan > *",
+		"sağ sütun kutu stili yok")
 }

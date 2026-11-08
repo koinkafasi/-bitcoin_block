@@ -4099,6 +4099,456 @@ textarea.cd-girdi { resize: vertical; min-height: 88px; }
   .cd-nabiz__kartlar { grid-template-columns: minmax(0, 1fr); }
 }
 
+/* =====================================================================
+   KATEGORİ + ETİKET SAYFASI — CoinDesk birebir yapısı
+   ---------------------------------------------------------------------
+   ÖLÇÜM (coindesk.com/markets ve /tag/bitcoin, 1440×1000, gerçek Chrome,
+   8 Kasım 2026). Önceki sürüm ana sayfanın `.cd-kat-one` / `.cd-kat-bant`
+   ızgarasını kullanıyordu; CoinDesk'te bu sayfalar TAMAMEN FARKLI:
+
+   KATEGORİ (/markets)
+     H1 kutusu      : h1 36/44 w700, `border-b strong`, mb 24, toplam 61 px
+     Ana ızgara     : 12 kolon, gap 16
+       sol blok     : span 9 (1029 px)
+         lead       : YATAY — metin 319 px + gap 24 + görsel 686×386
+                      h2 28/36 w700, spot 16/24 (3 satır), saat 14/22
+                      altında `border-t` (mt 24 / mb 8)
+         alt ızgara : 4 kolon, gap 24, kart 239 px
+                      görsel 239×135 (16:9), h2 20/26 w500, saat 14/22
+       sağ ray      : span 3 (332 px; iç 307), gap 24, GÖRSELSİZ
+                      h2 16/24 w500, saat 14/22, 6 kalem
+     "More From X"  : 1032 px ORTALANMIŞ, border-t strong, pt 24,
+                      14/21 w500
+     haber satırı   : metin 681 px + gap 16 + görsel 327×185
+                      h2 24/30 w500, spot 16/24, saat 14/22, aralarda hr
+     sayfalama      : 133×48 düğme, ortalanmış, 14/21 w600
+
+   ETİKET (/tag/{slug})
+     banner         : sol metin max 680 px (h1 36/44 **w400** capitalize,
+                      spot 18/27), sağda görsel 692×389
+     <hr> tam genişlik
+     ana ızgara     : 12 kolon, gap 16
+       liste        : span 8 (917 px) — metin 524 + görsel 327×185,
+                      h3 16/24 **w400**, spot 16/24, saat 12/16, hr my-16
+       sağ          : span 4 (451 px) — "Latest Crypto News" paneli
+                      (bg surface, başlık 16/32 w500) + bülten kutusu
+
+   NEDEN AYRI SINIF AİLESİ: ana sayfa `.cd-kat-one` (6+3+3 kolon) ve
+   `.cd-kat-bant` (tam genişlik dikey kart) kullanıyor; o yapı bu
+   sayfalarda YANLIŞTI (ölçüldü: lead 681 px, satırlar 1029×749 px).
+   ===================================================================== */
+
+/* ------------------------------ KATEGORİ ------------------------------ */
+.cd-kat-izgara {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 16px;
+}
+.cd-kat-sol {
+  grid-column: span 9;
+  min-width: 0;
+}
+.cd-kat-ray {
+  grid-column: span 3;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  /* SOL DİKEY AYRAÇ (ölçüldü: CoinDesk /markets sağ rayı
+     `border-left: 1px solid border-default`, içerik 24 px içeriden
+     başlıyor — 332 = 1 + 24 + 307). Ray ile haberler arasındaki bu
+     çizgi bilinçli olarak vardı; yokluğu ilk sürümde farktı. */
+  border-left: 1px solid var(--cd-border);
+  padding-left: 24px;
+}
+
+/* Öne çıkan: metin solda 31 %, görsel sağda 67 % (ölçülen 319/686). */
+.cd-kat-lead {
+  display: flex;
+  gap: 24px;
+}
+.cd-kat-lead__metin {
+  flex: 0 0 31%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.cd-kat-lead__metin h2 {
+  margin: 0;
+  font-family: var(--cd-serif);
+  font-size: 28px;
+  line-height: 36px;
+  font-weight: 700;
+  letter-spacing: normal;
+}
+.cd-kat-lead__metin h2 a { color: inherit; text-decoration: none; }
+.cd-kat-lead__metin h2 a:hover { text-decoration: underline; }
+.cd-kat-lead__spot {
+  margin: 0;
+  font-size: 16px;
+  line-height: 24px;
+  color: var(--cd-muted);
+  /* 3 satır: ölçülen 72 px (CoinDesk line-clamp-3). */
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.cd-kat-lead__gorsel {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: block;
+}
+.cd-kat-lead__gorsel img {
+  display: block;
+  width: 100%;
+  /* Ölçülen 686×386 = 16:9. */
+  aspect-ratio: 16 / 9;
+  height: auto;
+  object-fit: cover;
+  border-radius: 8px;
+}
+/* Lead'in altındaki ayırıcı: CoinDesk `border-t mt-6 mb-2`. */
+.cd-kat-lead__cizgi {
+  border: 0;
+  border-top: 1px solid var(--cd-border);
+  margin: 24px 0 8px;
+}
+
+/* Alt 4 kart: görsel ÜSTTE, metin ALTTA (CoinDesk düzeni). */
+.cd-kat-alt {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 24px;
+}
+.cd-kat-alt__kart { display: flex; flex-direction: column; gap: 15px; min-width: 0; }
+.cd-kat-alt__gorsel { display: block; }
+.cd-kat-alt__gorsel img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  height: auto;
+  object-fit: cover;
+  border-radius: 8px;
+}
+.cd-kat-alt__kart h3 {
+  margin: 0;
+  font-family: var(--cd-serif);
+  font-size: 20px;
+  line-height: 26px;
+  font-weight: 500;
+  letter-spacing: normal;
+}
+.cd-kat-alt__kart h3 a { color: inherit; text-decoration: none; }
+.cd-kat-alt__kart h3 a:hover { text-decoration: underline; }
+
+/* Sağ ray: görselsiz başlık + saat. */
+.cd-kat-ray__kalem { display: flex; flex-direction: column; gap: 4px; }
+.cd-kat-ray__kalem h2 {
+  margin: 0;
+  font-family: var(--cd-sans);
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 500;
+  letter-spacing: normal;
+}
+.cd-kat-ray__kalem h2 a { color: inherit; text-decoration: none; }
+.cd-kat-ray__kalem h2 a:hover { text-decoration: underline; }
+.cd-kat-ray__saat,
+.cd-kat-alt__saat,
+.cd-kat-lead__meta {
+  font-size: 14px;
+  line-height: 22px;
+  color: var(--cd-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* "More From X" + haber listesi: 1032 px, ORTALANMIŞ. */
+.cd-kat-genis {
+  max-width: 1032px;
+  margin: 0 auto;
+  width: 100%;
+}
+.cd-kat-more {
+  border-top: 1px solid var(--cd-border-strong);
+  padding-top: 24px;
+  margin: 48px auto 0;
+  font-family: var(--cd-sans);
+  font-size: 14px;
+  line-height: 21px;
+  font-weight: 500;
+  color: var(--cd-fg);
+}
+
+/* Haber satırı: metin 681 + görsel 327 (satır genişliği 1032). */
+.cd-kat-satir {
+  display: flex;
+  gap: 16px;
+  padding: 0;
+}
+.cd-kat-satir__metin {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.cd-kat-satir__metin h2 {
+  margin: 0 0 12px;
+  font-family: var(--cd-serif);
+  font-size: 24px;
+  line-height: 30px;
+  font-weight: 500;
+  letter-spacing: normal;
+}
+.cd-kat-satir__metin h2 a { color: inherit; text-decoration: none; }
+.cd-kat-satir__metin h2 a:hover { text-decoration: underline; }
+.cd-kat-satir__spot {
+  margin: 0 0 12px;
+  font-size: 16px;
+  line-height: 24px;
+  color: var(--cd-muted);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.cd-kat-satir__gorsel { flex: 0 0 327px; }
+.cd-kat-satir__gorsel img {
+  display: block;
+  width: 327px;
+  height: 185px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+.cd-kat-satir__cizgi {
+  border: 0;
+  border-top: 1px solid var(--cd-border);
+  margin: 16px 0;
+}
+
+/* --------------------------- ETİKET --------------------------- */
+.cd-tag-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 24px;
+  padding: 24px 0 32px;
+}
+.cd-tag-banner__metin {
+  /* CoinDesk: metin sütunu 680 px'e kadar BÜYÜR (md:max-w-[680px]),
+     görsel kalanı (692 px) alır — 668 + 24 + 692 = 1384. Eski sürümde
+     flex:0 0 auto idi: kısa açıklamada metin daralıyor, görsel 1004 px
+     oluyordu (ölçüldü, 8 Kasım 2026). */
+  flex: 1 1 680px;
+  max-width: 680px;
+  min-width: 0;
+}
+/* DİKKAT: etiket H1'i w400 ve capitalize — bölüm H1'i w700'den BİLİNÇLİ
+   fark (CoinDesk'te ölçüldü: font-weight 400). */
+.cd-tag-banner h1 {
+  margin: 0 0 16px;
+  font-family: var(--cd-serif);
+  font-size: 36px;
+  line-height: 44px;
+  font-weight: 400;
+  letter-spacing: normal;
+  text-transform: capitalize;
+}
+.cd-tag-banner__spot {
+  margin: 0;
+  font-family: var(--cd-serif);
+  font-size: 18px;
+  line-height: 27px;
+  color: var(--cd-fg);
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.cd-tag-banner__gorsel { flex: 1 1 auto; min-width: 0; }
+.cd-tag-banner__gorsel img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  height: auto;
+  object-fit: cover;
+  border-radius: 8px;
+}
+.cd-tag-hr {
+  border: 0;
+  border-top: 1px solid var(--cd-border-default, var(--cd-border));
+  margin: 0 0 24px;
+}
+
+.cd-tag-izgara {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 16px;
+}
+/* Etiket sayfasında İKİ SÜTUN DA ÇERÇEVELİ KUTU (ölçüldü: CoinDesk
+   /tag/bitcoin — `border-default border-b-1 lg:border-1 lg:rounded-lg
+   bg-surface-default lg:p-5`; 917 = 2 + 40 + 875). Mobilde yalnız
+   alt çizgi + 16 px yatay boşluk (lg:border-1 / px-4 / lg:p-5). */
+.cd-tag-liste {
+  grid-column: span 8;
+  min-width: 0;
+  background: var(--cd-surface-soft);
+  border-bottom: 1px solid var(--cd-border);
+  border-radius: 0;
+  padding: 16px 16px 24px;
+}
+.cd-tag-yan {
+  grid-column: span 4;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+.cd-tag-yan > * {
+  background: var(--cd-surface-soft);
+  border: 1px solid var(--cd-border);
+  border-radius: 0;
+  margin: 0;
+  padding: 16px 16px 24px;
+}
+.cd-tag-yan > .cd-tag-latest { padding: 16px 8px 24px; }
+@media (min-width: 1024px) {
+  .cd-tag-liste,
+  .cd-tag-yan > * {
+    border: 1px solid var(--cd-border);
+    border-radius: 8px;
+    padding: 20px;
+  }
+  .cd-tag-yan > .cd-tag-latest { padding: 20px 8px; }
+}
+
+/* Etiket satırı: metin + 327×185 görsel; h3 16/24 w400 (küçük başlık). */
+.cd-tag-satir { display: flex; gap: 16px; }
+.cd-tag-satir__metin {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.cd-tag-satir__metin h2 {
+  margin: 0;
+  font-family: var(--cd-sans);
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 400;
+  letter-spacing: normal;
+}
+.cd-tag-satir__metin h2 a { color: inherit; text-decoration: none; }
+.cd-tag-satir__metin h2 a:hover { text-decoration: underline; }
+.cd-tag-satir__spot {
+  margin: 0;
+  font-size: 16px;
+  line-height: 24px;
+  color: var(--cd-muted);
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.cd-tag-satir__saat {
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--cd-muted);
+  font-variant-numeric: tabular-nums;
+}
+.cd-tag-satir__gorsel { flex: 0 0 327px; }
+.cd-tag-satir__gorsel img {
+  display: block;
+  width: 327px;
+  height: 185px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+.cd-tag-satir__cizgi {
+  border: 0;
+  border-top: 1px solid var(--cd-border);
+  margin: 16px 0;
+}
+
+/* Sağ "Latest Crypto News" paneli — kutu stili `.cd-tag-yan > *`'ten
+   gelir (tek kaynak); burada yalnız iç boşluk kalır. */
+.cd-tag-latest {
+  padding: 16px 8px 24px;
+}
+.cd-tag-latest__bas {
+  display: flex;
+  align-items: center;
+  padding: 0 0 16px 12px;
+}
+.cd-tag-latest__bas h2 {
+  margin: 0;
+  font-family: var(--cd-sans);
+  font-size: 16px;
+  line-height: 32px;
+  font-weight: 500;
+}
+.cd-tag-latest__liste { display: flex; flex-direction: column; gap: 16px; padding-left: 12px; padding-right: 12px; }
+.cd-tag-latest__kalem { display: flex; flex-direction: column; gap: 4px; }
+.cd-tag-latest__kalem a {
+  font-family: var(--cd-sans);
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 500;
+  color: var(--cd-fg);
+  text-decoration: none;
+}
+.cd-tag-latest__kalem a:hover { text-decoration: underline; }
+.cd-tag-latest__saat { font-size: 12px; line-height: 16px; color: var(--cd-muted); }
+.cd-tag-latest__daha {
+  display: flex;
+  justify-content: flex-end;
+  padding: 16px 12px 0;
+  font-size: 14px;
+  line-height: 21px;
+  font-weight: 600;
+}
+.cd-tag-latest__daha a { color: inherit; text-decoration: none; }
+.cd-tag-latest__daha a:hover { text-decoration: underline; }
+
+/* Duyarlı kırılma noktaları (ölçülen sınıf önekleri: xl 12, sm 4, xs 2). */
+@media (max-width: 1279px) {
+  .cd-kat-sol, .cd-kat-ray { grid-column: span 12; }
+  .cd-kat-ray {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px 24px;
+    /* Tam genişliğe düşünce dikey ayraç anlamsız: kalkar, üst çizgiye
+       döner (CoinDesk'in mobilde `border-b`'ye geçmesi gibi). */
+    border-left: 0;
+    padding-left: 0;
+    border-top: 1px solid var(--cd-border);
+    padding-top: 24px;
+  }
+  .cd-tag-liste, .cd-tag-yan { grid-column: span 12; }
+}
+@media (max-width: 1023px) {
+  .cd-kat-lead { flex-direction: column-reverse; }
+  .cd-kat-lead__metin { flex: 1 1 auto; }
+  .cd-kat-alt { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .cd-tag-banner { flex-direction: column; }
+  .cd-tag-banner__metin { max-width: none; flex: 0 0 auto; }
+  .cd-tag-banner__gorsel { width: 100%; }
+}
+@media (max-width: 767px) {
+  .cd-kat-satir, .cd-tag-satir { flex-direction: column-reverse; gap: 12px; }
+  .cd-kat-satir__gorsel, .cd-tag-satir__gorsel { flex: 0 0 auto; width: 100%; }
+  .cd-kat-satir__gorsel img, .cd-tag-satir__gorsel img { width: 100%; height: auto; aspect-ratio: 16 / 9; }
+  .cd-kat-more { margin-top: 32px; }
+}
+@media (max-width: 639px) {
+  .cd-kat-alt { grid-template-columns: minmax(0, 1fr); }
+  .cd-kat-ray { grid-template-columns: minmax(0, 1fr); }
+  .cd-tag-banner h1 { font-size: 28px; line-height: 36px; }
+  .cd-tag-banner__spot { font-size: 16px; line-height: 24px; }
+}
+
 /* ==================================================================
    "Explore more from CoinDesk" — yatay kaydırma şeridi
    ==================================================================

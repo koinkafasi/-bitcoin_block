@@ -52,15 +52,16 @@ func (s *Server) handleCDTag(w http.ResponseWriter, r *http.Request) {
 	}
 
 	kanonik := s.cfg.BaseURL + "/tag/" + slug
-	v := templkit.CDSectionPage{
+	aciklama := ad + " etiketli son kripto haberleri ve analizler."
+	v := templkit.CDTagPage{
 		Shell:     s.cdShellCtx(ctx, r, ""),
-		Title:     "#" + ad + " — " + s.siteName,
-		Desc:      ad + " etiketli son kripto haberleri ve analizler.",
+		Title:     ad + " Haberleri — " + s.siteName,
+		Desc:      aciklama,
 		Canonical: kanonik,
-		Section:   "#" + ad,
-		Href:      "/tag/" + slug,
-		Page:      sayfa,
-		Stories:   kartlar,
+		// CoinDesk deseni: "<Etiket> News" → "Bitcoin Haberleri".
+		H1:   ad + " Haberleri",
+		Spot: aciklama,
+		Page: sayfa,
 		// CoinDesk etiket sayfasında JSON-LD basmıyor; biz CollectionPage
 		// basıyoruz (Google'ın koleksiyon sayfası için doğru tipi).
 		JSONLD:          string(cdCollectionJSONLD(s.siteName, strings.TrimRight(s.cfg.BaseURL, "/"), ad, kanonik, ldItems)),
@@ -69,9 +70,29 @@ func (s *Server) handleCDTag(w http.ResponseWriter, r *http.Request) {
 		Locale:          "tr",
 		BaseURL:         strings.TrimRight(s.cfg.BaseURL, "/"),
 	}
+	// BANNER: CoinDesk'te sağda 692×389 görsel var. Kaynağımız etiketin en
+	// yeni içeriğinin görseli; o içerik listeden ÇIKARILIR (tekrar yok).
 	if len(kartlar) > 0 {
-		v.Lead = kartlar[0]
-		v.Stories = kartlar[1:]
+		if kartlar[0].Image != "" {
+			v.BannerImage = kartlar[0].Image
+			v.BannerHref = kartlar[0].Href
+			v.Stories = kartlar[1:]
+		} else {
+			v.Stories = kartlar
+		}
+	}
+	// Sağ panel: son kripto haberleri (CoinDesk "Latest Crypto News").
+	if son, _, err := repo.ListContents(ctx, s.pool, repo.ListFilter{
+		Status:         "yayinda",
+		SiteID:         1,
+		Locale:         "tr",
+		Page:           1,
+		PerPage:        6,
+		ExcludeGallery: true,
+	}); err == nil {
+		for _, c := range son {
+			v.Latest = append(v.Latest, cdStoryCevir(c, simdi))
+		}
 	}
 	if toplam > 24 {
 		v.NextHref = "/tag/" + slug + "?sayfa=2"
@@ -79,7 +100,7 @@ func (s *Server) handleCDTag(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.Header().Set("Cache-Control", cacheControlPublic)
-	if err := templkit.CDSectionPageView(v).Render(ctx, w); err != nil {
+	if err := templkit.CDTagPageView(v).Render(ctx, w); err != nil {
 		s.logger.Error("etiket render", "error", err)
 	}
 }

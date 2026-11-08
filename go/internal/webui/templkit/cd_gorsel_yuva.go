@@ -61,6 +61,16 @@ const (
 	// YuvaAkis hero orta kolonundaki 8'li haber akışının küçük görseli
 	// (152×86; 16/9). Ölçüldü 6 Kasım 2026.
 	YuvaAkis
+	// ---- Kategori/etiket sayfası (8 Kasım 2026, CoinDesk ölçümü) ----
+	// YuvaKatLeadYatay öne çıkan YATAY kartın görseli (686×386).
+	// Eski YuvaKatLead 689'luk dikey kart içindi; yeni yapıda lead yatay.
+	YuvaKatLeadYatay
+	// YuvaKatAlt alt sıradaki 4'lü ızgaranın kartı (239×135).
+	YuvaKatAlt
+	// YuvaKatSatir "More From" listesinin satır görseli (327×185).
+	YuvaKatSatir
+	// YuvaTagBanner etiket sayfası banner görseli (692×389).
+	YuvaTagBanner
 )
 
 // Mobil/tablet genişlik İFADELERİ (calc() sarmalayıcısı olmadan).
@@ -147,6 +157,29 @@ var yuvaBilgi = map[CDYuva]struct {
 		Sizes:      cdSizes(ifadeMobil, ifadeTam, 152),
 		Basamaklar: []int{320, 480},
 		Varsayilan: 320,
+	},
+	// Kategori/etiket yuvaları. Basamaklar çarpanlı sizes'a göre:
+	//   686 × 1,3 ≈ 892 → 960 · 239 × 1,3 ≈ 311 → 480
+	//   327 × 1,3 ≈ 425 → 480 · 692 × 1,3 ≈ 900 → 960
+	YuvaKatLeadYatay: {
+		Sizes:      cdSizes(ifadeMobil, ifadeTam, 686),
+		Basamaklar: []int{480, 768, 960},
+		Varsayilan: 768,
+	},
+	YuvaKatAlt: {
+		Sizes:      cdSizes(ifadeMobil, ifadeKatTablet, 239),
+		Basamaklar: []int{320, 480},
+		Varsayilan: 320,
+	},
+	YuvaKatSatir: {
+		Sizes:      cdSizes(ifadeMobil, ifadeKatTablet, 327),
+		Basamaklar: []int{320, 480},
+		Varsayilan: 480,
+	},
+	YuvaTagBanner: {
+		Sizes:      cdSizes(ifadeMobil, ifadeTam, 692),
+		Basamaklar: []int{480, 768, 960},
+		Varsayilan: 768,
 	},
 }
 

@@ -232,12 +232,20 @@ type CDSectionPage struct {
 	Section   string
 	Href      string
 	Lead      CDStory
-	Side      []CDStory
-	Stories   []CDStory
-	MostRead  []CDStory
-	Page      int
-	PrevHref  string
-	NextHref  string
+	// Alt öne çıkan 4'lü ızgara (239 px kartlar).
+	Alt []CDStory
+	// Sağ ray: görselsiz başlık + saat (6 kalem).
+	Ray []CDStory
+	// Side eski 3'lü yan sütun — geriye dönük alan, yeni şablonda
+	// KULLANILMIYOR (CoinDesk kategori sayfasında böyle bir sütun yok).
+	Side     []CDStory
+	Stories  []CDStory
+	MostRead []CDStory
+	// MoreBaslik "More From {bölüm}" etiketi (CoinDesk deseni).
+	MoreBaslik string
+	Page       int
+	PrevHref   string
+	NextHref   string
 	// JSONLD Go tarafında üretilmiş yapısal veri.
 	JSONLD string
 	// CoinDesk SEO sınıflandırması (bkz. templkit.CDHead).
