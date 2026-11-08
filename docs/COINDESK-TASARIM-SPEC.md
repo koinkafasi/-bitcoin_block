@@ -1369,7 +1369,7 @@ Bizim değerler `go/internal/webui/static/cd.css`'ten **okundu**, tahmin değil.
 
 | Konu | Neden |
 |---|---|
-| Hero sol/sağ ray modülleri (izleme listesi, Today's Videos, Featured Research, dikey klipler) | **KISMEN UYGULANDI** — 3 kolon kuruldu (290·608·290). Sol ray: "Son Haberler" (başlık + saat, görselsiz). Sağ ray: üç bölüm kartı. CoinDesk'in video/araştırma/klipler modülleri veri kaynağı olmadığı için basılmıyor (bkz. §7A.1). |
+| Hero sol/sağ ray modülleri (izleme listesi, Today's Videos, Featured Research, dikey klipler) | **UYGULANDI** — 3 kolon (290·608·290). Sol ray: Son Haberler + canlı yayın modülü + Düşünce Liderliği. Sağ ray: Bugünün Videoları · Öne Çıkan Araştırma · Bugünün Klipleri. Video/klip verisi artık GERÇEK (YouTube kanal senkronu, `youtube_icerik` tablosu); veri yoksa modül basılmaz. |
 | Slider ("Explore more") | Slider'ın dolacağı içerik türü (video/koleksiyon) yok |
 | `order-*` mobil dizilim | Yan ray olmadığı için yeniden dizilecek modül yok |
 | `display: contents` | Ray sarmalayıcı olmadığı için gereksiz |
@@ -1419,7 +1419,7 @@ yanlış ölçüt kullanmıştım — `window.innerWidth` içerikle birlikte bü
 | Ray kartı tipografisi | başlık 20/26 w500, kicker YOK, iç boşluk 8 | birebir (kicker ray kartında gizli) | ✅ |
 | Manşet başlığı | 36/44 **w700** | birebir (önceki 24/30 w500) | ✅ |
 | Manşet sırası | metin üstte, görsel altta | birebir | ✅ |
-| Video · araştırma · klip modülleri | var | **basılmıyor** — veri 0 (uydurma olmaz) | ⛔ |
+| Video · araştırma · klip modülleri | var | **UYGULANDI** — YouTube veri hattı bağlandı (`youtube_icerik`, 15 dk senkron); üç modül gerçek videoyla doluyor | ✅ |
 | Mobil | tek kolon, sol ray manşetin altında, sağ ray gizli | birebir; taşma 0 | ✅ |
 | 1283 sınırı | tek kolon | birebir | ✅ |
 
@@ -2288,6 +2288,93 @@ Gerçek Chrome, 1920×871, `getComputedStyle` — spec §11'deki kalemlerin
 tamamı ölçüldü; **25/25 uyumlu**. Tema anahtarı: açık → koyu geçiş,
 `localStorage` kalıcılığı, yeniden yükleme sonrası tercih korunuyor.
 Lighthouse: `/` 100 · `/markets` 100 · `/price` 100 (SEO 100, BP 96, CLS 0).
+
+---
+
+## 16. Gerçek veri katmanı (8 Kasım 2026)
+
+Bu turda **sahte/demo veri siteden çıkarıldı** ve grafikler gerçek kaynaklara
+bağlandı. İlke: *veri yoksa modül basılmaz* — uydurma sayı yazılmaz.
+
+### 16.1 Piyasa şeridi artık HER sayfada
+
+**Bildirim:** "diğer sayfalarda kur alanı neden yok sadece ana sayfada var".
+
+**Kök neden:** şablon (`cdTicker`) dokuz sayfa ailesinde çağrılıyordu ama
+`Shell.Ticker` yalnız `cd_home.go` içinde dolduruluyordu. Diğer sayfalarda
+dilim boş olduğu için şerit **hiç basılmıyordu**.
+
+**Çözüm:** şerit `cdShellCtx` içinde doldurulur (tek yer, tüm sayfalar).
+Ölçüm: `/`, `/markets`, `/price`, `/videos`, `/business`, `/tech`, `/policy`,
+`/opinion`, `/latest-crypto-news`, `/business?sayfa=2` → **7 kalem / sayfa**.
+
+**Hisse sekmesi** (`?serit=stocks`) ölü bağlantıydı: parametre hiçbir yerde
+okunmuyordu. Artık okunuyor, `sh.TickerTab` şablona geçiyor ve BIST verisi
+(`services` işi → Yahoo Finance `.IS`) listeleniyor. Kripto satırları
+`borsa/ana` önbelleğinde de bulunduğu için sekmede **süzülür** — aksi hâlde
+"Hisse Senetleri" sekmesi BTC/ETH gösteriyordu (ölçüldü).
+
+Şerit kalemleri artık `Href` taşır: kripto → `/price/{slug}`, BIST → `/markets`
+(ölü `/price/THYAO` adresi basılmaz).
+
+### 16.2 CryptoQuant — zincir-üstü veri
+
+İstemci: `go/internal/cryptoquant` (yalnız `net/http`, ek bağımlılık yok).
+Anahtar `CRYPTOQUANT_KEY` ortam değişkeninden okunur; **repoya yazılmaz**.
+Anahtar yoksa istemci kapalı davranır ve hiçbir istek atılmaz.
+
+| Metrik | Uç | Kapsam (ölçüldü) |
+|---|---|---|
+| Fiyat OHLCV | `/{coin}/market-data/price-ohlcv` | btc, eth, xrp, trx (diğerleri 404) |
+| MVRV | `/btc/market-indicator/mvrv` | yalnız btc |
+| SOPR | `/btc/market-indicator/sopr` | yalnız btc (`sopr/a_sopr/sth_sopr/lth_sopr`) |
+| Borsa giriş/çıkış/rezerv | `/{coin}/exchange-flows/{inflow|netflow|reserve}` | btc, eth — **`exchange=` zorunlu** |
+| Borsa balina oranı | `/btc/flow-indicator/exchange-whale-ratio` | yalnız btc |
+
+Notlar:
+- `GET /v1/` **404** döner (kök uç yok) — doğrudan metrik yolu çağrılır.
+- Fiyat ve piyasa değeri **CoinGecko'da kalır** (`repo.Fiyatlar`, 60 sn
+  önbellek): CryptoQuant yalnız 4 varlık için fiyat veriyor, şerit ve fiyat
+  tablosu 25 varlık gösteriyor. İki kaynak karıştırılmaz.
+- Yanıtlar `services_cache` (`kind = zincir`) içinde **10 dakika** önbellekli.
+  Seriler paralel çekilir (6 istek → ~1 tur gecikme).
+
+### 16.3 Grafikler — bağımlılıksız inline SVG
+
+CSP `script-src 'self'` olduğu için harici grafik kütüphanesi yüklenemez.
+Grafikler **sunucuda** üretilir (`templkit.CDGrafikYolu`): `viewBox 640×180`,
+`preserveAspectRatio="none"`, çizgi kalınlığı `vector-effect:
+non-scaling-stroke` ile sabit. JS kapalıyken de görünür, ilk boyamada hazır,
+istemci maliyeti sıfır.
+
+| Sayfa | Modül |
+|---|---|
+| `/` | Piyasa Nabzı (BTC fiyat + MVRV/SOPR/net akış/rezerv) |
+| `/markets` | Piyasa Nabzı (manşetin üstünde) |
+| `/price` | Piyasa Nabzı |
+| `/price/bitcoin` | Fiyat grafiği + 5 zincir-üstü kart |
+| `/price/ethereum` | Fiyat grafiği + net akış + rezerv |
+| diğer coinler | **hiç basılmaz** (CryptoQuant o varlık için veri döndürmüyor) |
+
+Ölçüm (Chrome 1440 px): 5 kart / `/markets`, SVG 755×180 (büyük) + 4×232×84
+(mini), yatay taşma 0. `cd.css` bütçesi 136 → **140 KB** (ölçüldü 141.787
+bayt); harici istek eklenmediği için ağ maliyeti artmadı.
+
+Sayı biçimi tek kaynağa alındı: `repo.SayiBicim` ("1,234.56"). Önce
+`piyasa.FormatTR` ile aynı kartta "1,40" ve "$75,778.14" yan yana görünüyordu.
+
+### 16.4 Tasarım tablosundaki kalan boşluklar
+
+| Konu | Durum |
+|---|---|
+| Video · araştırma · klip modülleri | ✅ gerçek YouTube verisiyle dolu |
+| Hero ray modülleri | ✅ üç kolon, sağ ray üç modül |
+| Piyasa şeridi | ✅ tüm sayfalarda |
+| Hisse sekmesi | ✅ gerçek BIST verisi |
+| Grafik paneli | ✅ yeni bileşen ailesi (CoinDesk'te grafik kartı ölçüsü: başlık 12 px uppercase, değer 28 px w700, eksen 12 px) |
+| Hisse şablonu `/price/stock/*` | ⛔ ABD hisse verisi bağlanmadı |
+| Google News pill | ⛔ yayın sonrası |
+| Çeviri etiketi | ⛔ EN çeviri hattı gelince |
 
 ---
 

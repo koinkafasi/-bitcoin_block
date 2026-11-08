@@ -40,6 +40,10 @@ type Config struct {
 	HunspellBin  string
 	HunspellDict string
 
+	// CryptoQuant zincir-üstü veri anahtarı. Boşsa zincir-üstü modüller
+	// (MVRV, SOPR, borsa akışı) hiç basılmaz — uydurma veri üretilmez.
+	CryptoQuantKey string
+
 	// Veritabanı havuzu. Boş/0 ise pgx varsayılanı kullanılır
 	// (pgx varsayılanı: MaxConns = max(4, NumCPU)). Canlıda ani yükte
 	// bağlantı fırtınası olmaması için açıkça ayarlanabilir olmalı.
@@ -87,6 +91,7 @@ func Load() Config {
 		FFprobeBin:         getEnv("FFPROBE_BIN", "ffprobe"),
 		HunspellBin:        getEnv("HUNSPELL_BIN", ""),
 		HunspellDict:       getEnv("HUNSPELL_DICT", "tr_TR"),
+		CryptoQuantKey:     getEnv("CRYPTOQUANT_KEY", ""),
 
 		DBMaxConns:        getInt("DB_MAX_CONNS", 0),
 		DBMinConns:        getInt("DB_MIN_CONNS", 0),

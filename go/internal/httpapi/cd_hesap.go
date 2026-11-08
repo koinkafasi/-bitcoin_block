@@ -39,7 +39,7 @@ func cdHesapNavListesi(h *hesapData) []templkit.CDHesapNav {
 
 // cdHesapSayfaOlustur hesapData → templkit.CDHesapSayfa.
 func (s *Server) cdHesapSayfaOlustur(r *http.Request, d *tmplData, h *hesapData, sekme, baslik, aciklama string) templkit.CDHesapSayfa {
-	shell := s.cdShellCtx(r.Context(), "")
+	shell := s.cdShellCtx(r.Context(), r, "")
 	// Fiyat şeridi her sayfada dolu olmalı: cdShellCtx bunu doldurmuyor
 	// (ana sayfa kendi dolduruyor). Boş şerit yalnız "Canlı Piyasalar"
 	// başlığıyla görünüyordu — ölçüldü, 7 Kasım 2026.

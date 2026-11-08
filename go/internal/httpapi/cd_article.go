@@ -51,12 +51,13 @@ func (s *Server) handleCDArticle(w http.ResponseWriter, r *http.Request, lang, s
 	}
 
 	v := templkit.CDArticleView{
-		Shell:     s.cdShellCtx(ctx, bolumSlug),
+		Shell:     s.cdShellCtx(ctx, r, bolumSlug),
 		Title:     cdMakaleBaslik(c),
 		Desc:      cdMakaleAciklama(c),
 		Canonical: s.cfg.BaseURL + makaleURL(c),
 		// Kicker: CoinDesk bölüm adını OLDUĞU GİBİ basıyor ("Markets"),
 		// büyük harfe çevirmiyor (ölçüldü: computed `text-transform: none`).
+		// Eskiden i18n.BuyukHarf uygulanıyordu ve "POLİTİKA" çıkıyordu.
 		Kicker:      bolumAd,
 		SectionName: bolumAd,
 		SectionHref: "/" + bolumSlug,

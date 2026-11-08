@@ -212,9 +212,16 @@ func TestCDEtiketlerDuz(t *testing.T) {
 // video GERÇEKTEN oynarken kalkıyor (oynatma engellenince YouTube poster'ı
 // görünüyordu), bekleme karartması ve sessiz başlatmada "Sesi aç" çipi
 // eklendi. Ölçüldü: 132.270 bayt; gzip'te ~19 KB.
+//
+// On dokuzuncu tur → 140 KB: GRAFİK PANELLERİ (inline SVG, CryptoQuant
+// gerçek verisi). Bütçe bilinçli olarak 4 KB büyütüldü: grafik kartı, mini
+// metrik kartları, /markets "Piyasa Nabzı" ızgarası ve iki kırılma noktası
+// (900/560 px) tek bir yeni bileşen ailesi. Harici grafik kütüphanesi
+// YÜKLENMEDİ (CSP `script-src 'self'`); bu yüzden CSS'in payı arttı ama
+// sayfaya yeni bir ağ isteği eklenmedi. Ölçüldü: 141.787 bayt.
 func TestCDButce(t *testing.T) {
 	css := cdCSS(t)
-	assert.Less(t, len(css), 136*1024, "cd.css bütçe aşıldı: %d bayt", len(css))
+	assert.Less(t, len(css), 140*1024, "cd.css bütçe aşıldı: %d bayt", len(css))
 }
 
 // TestCDModulRitmi: modüller MARGIN YAZMAZ, ritim ebeveynin gap'inden

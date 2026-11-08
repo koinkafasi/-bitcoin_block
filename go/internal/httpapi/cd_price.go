@@ -1,6 +1,7 @@
 package httpapi
 
 import (
+	"context"
 	"net/http"
 	"strings"
 
@@ -10,18 +11,72 @@ import (
 
 // Fiyat şeridi + /price sayfası (CoinDesk §3 ve §14).
 
-// cdTickerDoldur şerit kalemlerini doldurur. Veri yoksa şerit boş kalır
-// (boş şerit basılmaz — cdTicker len kontrolü yapar).
+// cdTickerDoldur istek bağlamından şerit sekmesini okuyup doldurur.
 func (s *Server) cdTickerDoldur(r *http.Request) []templkit.CDTickerItem {
-	fiyatlar := repo.Fiyatlar(r.Context(), s.pool)
+	sekme := "markets"
+	if strings.TrimSpace(r.URL.Query().Get("serit")) == "stocks" {
+		sekme = "stocks"
+	}
+	return s.cdTickerDoldurSekme(r.Context(), sekme)
+}
+
+// cdTickerDoldurSekme şerit kalemlerini doldurur.
+//
+// ŞERİT HER SAYFADA (kullanıcı bildirimi, 8 Kasım 2026: "diğer sayfalarda
+// kur alanı neden yok"). Önceki sürümde `Shell.Ticker` yalnız ana sayfada
+// dolduruluyordu; şablon her sayfada `cdTicker` çağırdığı hâlde diğer
+// sayfalarda liste boş olduğu için şerit HİÇ basılmıyordu. Artık kabuk
+// verisi (cdShellCtx) şeridi de dolduruyor — tek yerden tüm sayfalar.
+//
+// SEKMELER: "markets" = kripto (CoinGecko, 60 sn önbellek), "stocks" =
+// BIST. Hisse sekmesi önceden ÖLÜ BAĞLANTIYDI: `?serit=stocks` hiçbir
+// yerde okunmuyor, sekme her zaman kripto gösteriyordu.
+func (s *Server) cdTickerDoldurSekme(ctx context.Context, sekme string) []templkit.CDTickerItem {
+	if sekme == "stocks" {
+		// BIST verisi `services` işinin önbelleğinden gelir (Yahoo Finance).
+		// Önbellek boşsa şerit BOŞ kalır — uydurma fiyat basılmaz.
+		bd := repo.BorsaOf(ctx, s.pool)
+		if bd.Demo || len(bd.Rows) == 0 {
+			return nil
+		}
+		out := make([]templkit.CDTickerItem, 0, len(bd.Rows))
+		for _, r := range bd.Rows {
+			// `borsa/ana` önbelleği kripto satırlarını da taşır (TRY fiyat).
+			// Hisse sekmesinde yalnız endeks + hisse gösterilir; aksi hâlde
+			// sekme "BTC / ETH" listeliyordu (ölçüldü, 8 Kasım 2026).
+			if r.Kind == "kripto" {
+				continue
+			}
+			if r.Value <= 0 {
+				continue
+			}
+			out = append(out, templkit.CDTickerItem{
+				Sym: strings.TrimSuffix(r.Code, ".IS"),
+				// Hisselerin kendi sayfası yok: tüm BIST kalemleri
+				// /markets'e gider (ölü "/price/" bağlantısı basılmaz).
+				Href:   "/markets",
+				Price:  repo.FiyatBicimP(r.Value, r.Para),
+				Change: repo.DegisimBicim(r.Delta),
+				Up:     r.Delta >= 0,
+			})
+			if len(out) >= 7 {
+				break
+			}
+		}
+		return out
+	}
+
+	fiyatlar := repo.Fiyatlar(ctx, s.pool)
 	var out []templkit.CDTickerItem
 	for _, f := range fiyatlar {
 		if len(out) >= 7 {
 			break
 		}
+		slug := repo.CoinSlug(f.Name)
 		out = append(out, templkit.CDTickerItem{
 			Sym:    f.Sym,
-			Slug:   repo.CoinSlug(f.Name),
+			Slug:   slug,
+			Href:   "/price/" + slug,
 			Price:  repo.FiyatBicim(f.Price),
 			Change: repo.DegisimBicim(f.Change),
 			Up:     f.Change >= 0,
@@ -37,6 +92,31 @@ func (s *Server) cdFiyatSatirlari(r *http.Request, adet int) []templkit.CDPriceR
 	for _, f := range fiyatlar {
 		if len(out) >= adet {
 			break
+		}
+		out = append(out, templkit.CDPriceRow{
+			Rank:   f.Rank,
+			Sym:    f.Sym,
+			Name:   f.Name,
+			Price:  repo.FiyatBicim(f.Price),
+			Change: repo.DegisimBicim(f.Change),
+			Up:     f.Change >= 0,
+			Href:   "/price/" + repo.CoinSlug(f.Name),
+		})
+	}
+	return out
+}
+
+// cdDigerVarliklar kendi varlığını dışarıda bırakan fiyat listesi.
+func (s *Server) cdDigerVarliklar(r *http.Request, adet int, haricSym string) []templkit.CDPriceRow {
+	haricSym = strings.ToUpper(strings.TrimSpace(haricSym))
+	fiyatlar := repo.Fiyatlar(r.Context(), s.pool)
+	out := make([]templkit.CDPriceRow, 0, adet)
+	for _, f := range fiyatlar {
+		if len(out) >= adet {
+			break
+		}
+		if haricSym != "" && strings.EqualFold(f.Sym, haricSym) {
+			continue
 		}
 		out = append(out, templkit.CDPriceRow{
 			Rank:   f.Rank,
@@ -73,12 +153,17 @@ func (s *Server) handleCDPrice(w http.ResponseWriter, r *http.Request) {
 	})))
 	ld.WriteString(string(cdFiyatListesiJSONLD("Cryptocurrency Market Cap Rankings", ldItems)))
 
+	// Piyasa Nabzı: /price sayfası da grafik gösterir (gerçek veri).
+	nbFiyat, nbKartlar := s.cdNabiz(r.Context())
+
 	v := templkit.CDPricePage{
-		Shell:           s.cdShellCtx(r.Context(), "price"),
+		Shell:           s.cdShellCtx(r.Context(), r, "price"),
 		Title:           "Kripto Fiyatları — " + s.siteName,
 		Desc:            "Bitcoin, Ethereum ve önde gelen kripto paraların canlı fiyatları, 24 saatlik değişimleri ve piyasa sıralaması.",
 		Canonical:       kanonik,
 		Rows:            rows,
+		NabizFiyat:      nbFiyat,
+		Nabiz:           nbKartlar,
 		JSONLD:          ld.String(),
 		PageCategory:    "price_page",
 		ContentCategory: "price",

@@ -146,6 +146,9 @@ type CDHomeView struct {
 	Locale          string
 	// BaseURL og:image mutlaklaştırması için kök adres.
 	BaseURL string
+	// Piyasa Nabzı (yalnız /markets): gerçek zincir-üstü veri.
+	NabizFiyat *CDGrafikKart
+	Nabiz      []CDGrafikKart
 }
 
 // CDArticleView makale sayfası (§7).
@@ -240,6 +243,9 @@ type CDSectionPage struct {
 	Locale          string
 	// BaseURL og:image mutlaklaştırması için kök adres.
 	BaseURL string
+	// Piyasa Nabzı (yalnız /markets): gerçek zincir-üstü veri.
+	NabizFiyat *CDGrafikKart
+	Nabiz      []CDGrafikKart
 }
 
 // cdBasinGeri / cdBasinIleri JS'siz slider'ın halka gezinmesi.

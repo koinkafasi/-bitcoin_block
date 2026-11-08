@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"theblock/site/internal/i18n"
 	"theblock/site/internal/repo"
 	"theblock/site/internal/webui/templkit"
 )
@@ -78,7 +79,7 @@ func (s *Server) handleCDSection(w http.ResponseWriter, r *http.Request, slug st
 
 	kanonik := s.cfg.BaseURL + "/" + slug
 	v := templkit.CDSectionPage{
-		Shell:     s.cdShellCtx(r.Context(), slug),
+		Shell:     s.cdShellCtx(r.Context(), r, slug),
 		Title:     meta.Ad + " — " + s.siteName,
 		Desc:      meta.Aciklama,
 		Canonical: kanonik,
@@ -92,6 +93,11 @@ func (s *Server) handleCDSection(w http.ResponseWriter, r *http.Request, slug st
 		Locale:          "tr",
 		BaseURL:         strings.TrimRight(s.cfg.BaseURL, "/"),
 	}
+	// Piyasa Nabzı yalnız /markets ilk sayfasında: gerçek CryptoQuant verisi.
+	if slug == "markets" && sayfa == 1 {
+		v.NabizFiyat, v.Nabiz = s.cdNabiz(r.Context())
+	}
+
 	if len(kartlar) > 0 {
 		v.Lead = kartlar[0]
 		// Yan sütun: manşetten sonraki 3.
@@ -144,11 +150,11 @@ func (s *Server) kategoriID(ctx context.Context, slug string) int64 {
 // Maliyet: iki hafif sorgu — fiyat 60 sn önbellekli (repo.Fiyatlar), etiket
 // sorgusu indeksli GROUP BY. Sayfa başına <1 ms; karşılığında menü tutarlı.
 func (s *Server) cdShell(aktif string) templkit.CDShell {
-	return s.cdShellCtx(context.Background(), aktif)
+	return s.cdShellCtx(context.Background(), nil, aktif)
 }
 
 // cdShellCtx istek bağlamıyla çalışan sürüm (iptal edilebilir).
-func (s *Server) cdShellCtx(ctx context.Context, aktif string) templkit.CDShell {
+func (s *Server) cdShellCtx(ctx context.Context, r *http.Request, aktif string) templkit.CDShell {
 	nav := []templkit.CDNavLink{
 		{Label: "Son Haberler", Href: "/latest-crypto-news"},
 		{Label: "Piyasalar", Href: "/markets"},
@@ -185,22 +191,20 @@ func (s *Server) cdShellCtx(ctx context.Context, aktif string) templkit.CDShell 
 
 	// Etiket sütunu: yalnız İÇERİĞİ OLAN etiketler. Boş etiket sayfasına
 	// bağlantı vermek 404'e götürür (ölçüm: /tag/xrp 404 idi).
-	{
-		for _, e := range kabuk.Tags {
-			ad := etiketMenuAdi(e.Ad)
-			// Sütun başlığı zaten "Crypto News": adı yalnız "News"/"Haber"
-			// olan genel etiket satırı bilgi katmıyor (ölçüm: menüde
-			// "Crypto News → News").
-			if ad == "" || strings.EqualFold(ad, "News") || strings.EqualFold(ad, "Haber") {
-				continue
-			}
-			sh.MenuTags = append(sh.MenuTags, templkit.CDMenuItem{
-				Label: ad,
-				Href:  "/tag/" + e.Slug,
-			})
-			if len(sh.MenuTags) >= 5 {
-				break
-			}
+	for _, e := range kabuk.Tags {
+		ad := etiketMenuAdi(e.Ad)
+		// Sütun başlığı zaten "Crypto News": adı yalnız "News"/"Haber"
+		// olan genel etiket satırı bilgi katmıyor (ölçüm: menüde
+		// "Crypto News → News").
+		if ad == "" || strings.EqualFold(ad, "News") || strings.EqualFold(ad, "Haber") {
+			continue
+		}
+		sh.MenuTags = append(sh.MenuTags, templkit.CDMenuItem{
+			Label: ad,
+			Href:  "/tag/" + e.Slug,
+		})
+		if len(sh.MenuTags) >= 5 {
+			break
 		}
 	}
 
@@ -235,6 +239,27 @@ func (s *Server) cdShellCtx(ctx context.Context, aktif string) templkit.CDShell 
 		}
 		sh.Nav = nav2
 	}
+	// PİYASA ŞERİDİ: tüm CD sayfalarında aynı veri. Tek yerden doldurulur
+	// (kullanıcı bildirimi, 8 Kasım 2026: "diğer sayfalarda kur alanı yok").
+	// Fiyatlar 60 sn önbellekli; sayfa başına maliyet bir DB okuması.
+	//
+	// SEKME: `?serit=stocks` istek parametresi okunur. Önce şablon sekmeyi
+	// çiziyordu ama veri her zaman kripto kalıyordu — "Hisse Senetleri"
+	// sekmesi ölü bağlantıydı.
+	sekme := "markets"
+	if r != nil {
+		if strings.TrimSpace(r.URL.Query().Get("serit")) == "stocks" {
+			sekme = "stocks"
+		}
+	}
+	sh.TickerTab = sekme
+	if sekme == "stocks" {
+		sh.TickerLive = "BIST"
+	} else {
+		sh.TickerLive = "Canlı Piyasalar"
+	}
+	sh.Ticker = s.cdTickerDoldurSekme(ctx, sekme)
+
 	return sh
 }
 
@@ -276,8 +301,7 @@ func cdStoryCevir(c repo.Content, simdi time.Time) templkit.CDStory {
 		st.SourceURL = *c.SourceURL
 	}
 	if c.CategoryName != nil {
-		// Kicker büyük harfe çevrilmez (ölçüldü, 8 Kasım 2026).
-		st.Kicker = *c.CategoryName
+		st.Kicker = i18n.BuyukHarf(*c.CategoryName)
 	}
 	return st
 }

@@ -14,6 +14,7 @@ import "strconv"
 type CDTickerItem struct {
 	Sym    string
 	Slug   string // kanonik yol parçası (tam ad): "bitcoin"
+	Href   string // tıklama hedefi; boşsa Slug'tan /price/ yolu kurulur
 	Price  string
 	Change string // "+%3.48" gibi, işaret dahil
 	Up     bool

@@ -198,7 +198,7 @@ func (s *Server) handleCDVideos(w http.ResponseWriter, r *http.Request) {
 	ytSonraki(&hero, siradaki)
 
 	v := templkit.CDVideoPage{
-		Shell:     s.cdShellCtx(ctx, "videos"),
+		Shell:     s.cdShellCtx(ctx, r, "videos"),
 		Title:     "Videolar — " + s.siteName,
 		Desc:      "Kripto piyasaları, borsa ve yatırım üzerine videolar; canlı yayınlar ve kısa klipler.",
 		Canonical: s.cfg.BaseURL + "/videos",
@@ -246,7 +246,7 @@ func (s *Server) handleCDShorts(w http.ResponseWriter, r *http.Request) {
 	ytSonraki(&hero, siradaki)
 
 	v := templkit.CDVideoPage{
-		Shell:     s.cdShellCtx(ctx, "videos"),
+		Shell:     s.cdShellCtx(ctx, r, "videos"),
 		Title:     "Shorts — " + s.siteName,
 		Desc:      "Kısa videolar: piyasa hareketleri, günün öne çıkan gelişmeleri ve yatırım notları.",
 		Canonical: s.cfg.BaseURL + "/videos/shorts",
@@ -323,7 +323,7 @@ func (s *Server) handleCDCanli(w http.ResponseWriter, r *http.Request) {
 	}
 
 	v := templkit.CDVideoPage{
-		Shell:           s.cdShellCtx(ctx, "videos"),
+		Shell:           s.cdShellCtx(ctx, r, "videos"),
 		Title:           "Canlı Yayın — " + s.siteName,
 		Desc:            "Bitcoin, borsa ve piyasa değerlendirmeleri; canlı yayın kayıtları ve güncel yayın akışı.",
 		Canonical:       s.cfg.BaseURL + "/canli-yayin",
@@ -373,7 +373,7 @@ func (s *Server) handleCDVideoWatch(w http.ResponseWriter, r *http.Request) {
 	canonical := s.cfg.BaseURL + ytHref(*k)
 
 	v := templkit.CDVideoWatch{
-		Shell:     s.cdShellCtx(ctx, "videos"),
+		Shell:     s.cdShellCtx(ctx, r, "videos"),
 		Title:     k.Baslik + " — " + s.siteName,
 		Desc:      aciklama,
 		Canonical: canonical,

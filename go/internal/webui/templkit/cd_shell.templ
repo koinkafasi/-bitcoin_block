@@ -72,20 +72,34 @@ templ cdTicker(s CDShell) {
 						<div class="cd-ticker__ayirici" role="separator"
 							aria-orientation="vertical"></div>
 					}
-					<a class="cd-ticker__item" href={ "/price/" + it.Slug }>
-						<span class="cd-ticker__sym">{ it.Sym }</span>
-						<!-- Fiyat + yüzde TEK SATIRDA (CoinDesk ölçümü: sembol
-						     üstte, altında "$x.xxx +0.05%"). Üç ayrı flex çocuğu
-						     olsaydı üç satır olurdu. -->
-						<span class="cd-ticker__alt">
-							<span class="cd-ticker__px">{ it.Price }</span>
-							if it.Up {
-								<span class="cd-up">{ it.Change }</span>
-							} else {
-								<span class="cd-down">{ it.Change }</span>
-							}
+					<!-- HREF: kripto kalemleri /price/{slug}'a, BIST kalemleri
+					     /markets'e gider. `Href` boşsa bağlantı kurulmaz
+					     (ölü "/price/BIST" adresi basılmaz). -->
+					if it.Href != "" {
+						<a class="cd-ticker__item" href={ templ.SafeURL(it.Href) }>
+							<span class="cd-ticker__sym">{ it.Sym }</span>
+							<span class="cd-ticker__alt">
+								<span class="cd-ticker__px">{ it.Price }</span>
+								if it.Up {
+									<span class="cd-up">{ it.Change }</span>
+								} else {
+									<span class="cd-down">{ it.Change }</span>
+								}
+							</span>
+						</a>
+					} else {
+						<span class="cd-ticker__item">
+							<span class="cd-ticker__sym">{ it.Sym }</span>
+							<span class="cd-ticker__alt">
+								<span class="cd-ticker__px">{ it.Price }</span>
+								if it.Up {
+									<span class="cd-up">{ it.Change }</span>
+								} else {
+									<span class="cd-down">{ it.Change }</span>
+								}
+							</span>
 						</span>
-					</a>
+					}
 				}
 			</div>
 		</div>

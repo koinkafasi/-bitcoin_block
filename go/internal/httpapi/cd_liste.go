@@ -75,7 +75,7 @@ func (s *Server) cdTurListesi(w http.ResponseWriter, r *http.Request, tur string
 	case "sponsorlu":
 		yol = "/sponsored-content"
 	}
-	v.Shell = s.cdShellCtx(ctx, strings.TrimPrefix(yol, "/"))
+	v.Shell = s.cdShellCtx(ctx, r, strings.TrimPrefix(yol, "/"))
 	v.Title = v.Baslik + " — " + s.siteName
 	v.Desc = v.Aciklama
 	v.Canonical = s.cfg.BaseURL + yol
@@ -97,7 +97,7 @@ func (s *Server) cdTurListesi(w http.ResponseWriter, r *http.Request, tur string
 func (s *Server) handleCDNewsletters(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	v := templkit.CDNewsletterPage{
-		Shell:           s.cdShellCtx(ctx, "newsletters"),
+		Shell:           s.cdShellCtx(ctx, r, "newsletters"),
 		Title:           "Bültenler — " + s.siteName,
 		Desc:            "Günün kripto haberleri ve piyasa özeti e-postanızda. Ücretsiz abone olun.",
 		Canonical:       s.cfg.BaseURL + "/newsletters",

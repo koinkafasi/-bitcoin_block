@@ -71,12 +71,21 @@ func CDSectionPageView(v CDSectionPage) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "</h1><!-- CoinDesk bölüm sayfasında H1 altı AÇIKLAMA YOK\n\t\t\t\t\t     (ölçüm, spec §10.3 — eski spec \"tek satır açıklama\"\n\t\t\t\t\t     diyordu, yanlış). Metin yine <meta description>'da\n\t\t\t\t\t     ve kart spotlarında duruyor; görünür tekrar\n\t\t\t\t\t     hiyerarşiyi bozuyordu. --></header><!-- ÖNE ÇIKAN: 12 kolonlu ızgara, gap 16 (ölçüm, spec §10.3).\n\t\t\t\t     İlk kart 6 kolon (689px), diğerleri 3 kolon (327px).\n\t\t\t\t     `.cd-hero` BURADA KULLANILMAZ: CoinDesk kategori\n\t\t\t\t     sayfasında asimetrik manşet bloğu yok, ve o ızgaraya\n\t\t\t\t     iki çocuk verilince manşet en dar kolona düşüyordu —\n\t\t\t\t     yan kartlar ondan geniş görünüyordu ve bir kolon boş\n\t\t\t\t     kalıyordu (ölçüldü: lead 290 / yan 596, spec §10.3.1). -->")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "</h1><!-- CoinDesk bölüm sayfasında H1 altı AÇIKLAMA YOK\n\t\t\t\t\t     (ölçüm, spec §10.3 — eski spec \"tek satır açıklama\"\n\t\t\t\t\t     diyordu, yanlış). Metin yine <meta description>'da\n\t\t\t\t\t     ve kart spotlarında duruyor; görünür tekrar\n\t\t\t\t\t     hiyerarşiyi bozuyordu. --></header><!-- PİYASA NABZI (yalnız /markets): gerçek CryptoQuant verisi.\n\t\t\t\t     Kaynak yoksa blok hiç basılmaz. -->")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = cdNabizModul(v.NabizFiyat, v.Nabiz,
+			"Kaynak: CryptoQuant · BTC · Binance akışları · günlük veri · 10 dakika önbellek").Render(ctx, templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<!-- ÖNE ÇIKAN: 12 kolonlu ızgara, gap 16 (ölçüm, spec §10.3).\n\t\t\t\t     İlk kart 6 kolon (689px), diğerleri 3 kolon (327px).\n\t\t\t\t     `.cd-hero` BURADA KULLANILMAZ: CoinDesk kategori\n\t\t\t\t     sayfasında asimetrik manşet bloğu yok, ve o ızgaraya\n\t\t\t\t     iki çocuk verilince manşet en dar kolona düşüyordu —\n\t\t\t\t     yan kartlar ondan geniş görünüyordu ve bir kolon boş\n\t\t\t\t     kalıyordu (ölçüldü: lead 290 / yan 596, spec §10.3.1). -->")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		if v.Lead.Href != "" {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<section class=\"cd-mod\"><div class=\"cd-kat-one\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "<section class=\"cd-mod\"><div class=\"cd-kat-one\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -90,13 +99,13 @@ func CDSectionPageView(v CDSectionPage) templ.Component {
 					return templ_7745c5c3_Err
 				}
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "</div></section>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "</div></section>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		}
 		if len(v.Stories) > 0 {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "<section class=\"cd-mod\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "<section class=\"cd-mod\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -104,7 +113,7 @@ func CDSectionPageView(v CDSectionPage) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "<!-- Liste bandı: 12 kolonun 9'u (1032px ölçüldü). --><div class=\"cd-kat-bant\"><div class=\"cd-kat-liste\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "<!-- Liste bandı: 12 kolonun 9'u (1032px ölçüldü). --><div class=\"cd-kat-bant\"><div class=\"cd-kat-liste\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -114,12 +123,12 @@ func CDSectionPageView(v CDSectionPage) templ.Component {
 					return templ_7745c5c3_Err
 				}
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "</div></div></section>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "</div></div></section>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		} else {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "<p class=\"cd-card__spot\">Bu bölümde henüz haber yok.</p>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "<p class=\"cd-card__spot\">Bu bölümde henüz haber yok.</p>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -128,59 +137,59 @@ func CDSectionPageView(v CDSectionPage) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "<!-- Sayfalama: CoinDesk \"More stories\" DÜĞMESİ kullanıyor,\n\t\t\t\t     sonsuz kaydırma değil (spec §10.3). \"Önceki\" bağlantısı\n\t\t\t\t     erişilebilirlik için yanında kalır (klavye/geri dönüş):\n\t\t\t\t     yalnız ileri düğme, 2. sayfada geri dönüşü imkânsız kılar. --><!-- Tek sayfalık bölümde nav HİÇ basılmaz. Ölçümde boş\n\t\t\t\t     `<nav class=\"cd-daha\">` render ediliyordu: 0 çocuk ama\n\t\t\t\t     `margin: 32px 0 8px` taşıdığı için sayfanın altına\n\t\t\t\t     sebepsiz 40px boşluk bırakıyordu. -->")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "<!-- Sayfalama: CoinDesk \"More stories\" DÜĞMESİ kullanıyor,\n\t\t\t\t     sonsuz kaydırma değil (spec §10.3). \"Önceki\" bağlantısı\n\t\t\t\t     erişilebilirlik için yanında kalır (klavye/geri dönüş):\n\t\t\t\t     yalnız ileri düğme, 2. sayfada geri dönüşü imkânsız kılar. --><!-- Tek sayfalık bölümde nav HİÇ basılmaz. Ölçümde boş\n\t\t\t\t     `<nav class=\"cd-daha\">` render ediliyordu: 0 çocuk ama\n\t\t\t\t     `margin: 32px 0 8px` taşıdığı için sayfanın altına\n\t\t\t\t     sebepsiz 40px boşluk bırakıyordu. -->")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		if v.PrevHref != "" || v.NextHref != "" {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "<nav class=\"cd-daha\" aria-label=\"Sayfalama\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "<nav class=\"cd-daha\" aria-label=\"Sayfalama\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			if v.PrevHref != "" {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "<a class=\"cd-daha__geri\" href=\"")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "<a class=\"cd-daha__geri\" href=\"")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var3 templ.SafeURL
 				templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinURLErrs(v.PrevHref)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_section.templ`, Line: 79, Col: 49}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_section.templ`, Line: 84, Col: 49}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "\" rel=\"prev\">← Önceki</a> ")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "\" rel=\"prev\">← Önceki</a> ")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 			}
 			if v.NextHref != "" {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "<a class=\"cd-daha__btn\" href=\"")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "<a class=\"cd-daha__btn\" href=\"")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var4 templ.SafeURL
 				templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinURLErrs(v.NextHref)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_section.templ`, Line: 82, Col: 48}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_section.templ`, Line: 87, Col: 48}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "\" rel=\"next\">Daha fazla haber</a>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, "\" rel=\"next\">Daha fazla haber</a>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, "</nav>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "</nav>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "</main>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, "</main>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -188,7 +197,7 @@ func CDSectionPageView(v CDSectionPage) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, "</body></html>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 20, "</body></html>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

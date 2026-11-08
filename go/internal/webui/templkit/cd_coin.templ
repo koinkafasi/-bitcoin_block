@@ -15,6 +15,10 @@ type CDCoinPage struct {
 	Change    string
 	Up        bool
 	Others    []CDPriceRow
+	// Grafik + zincir-üstü metrikler (CryptoQuant, gerçek veri).
+	// Veri yoksa nil/boş kalır ve modüller hiç basılmaz.
+	Grafik *CDGrafikKart
+	Zincir []CDGrafikKart
 	JSONLD    string
 	BaseURL   string
 	// CoinDesk SEO sınıflandırması (bkz. templkit.CDHead).
@@ -53,6 +57,28 @@ templ CDCoinPageView(v CDCoinPage) {
 						<span class="cd-card__meta">· 24s · piyasa sırası #{ v.Rank }</span>
 					</div>
 				</header>
+
+				<!-- FİYAT GRAFİĞİ: yalnız gerçek OHLCV varsa (CryptoQuant).
+				     Veri yoksa modül hiç basılmaz — uydurma çizgi yok. -->
+				if v.Grafik != nil {
+					<section class="cd-mod">
+						@cdSectionHead("Fiyat grafiği", "")
+						@cdGrafikKartPanel(*v.Grafik)
+					</section>
+				}
+				if len(v.Zincir) > 0 {
+					<section class="cd-mod">
+						@cdSectionHead("Zincir üstü metrikler", "")
+						<div class="cd-grafik-izgara">
+							for _, k := range v.Zincir {
+								@cdGrafikKartPanel(k)
+							}
+						</div>
+						<p class="cd-grafik-kaynak">Kaynak: CryptoQuant · borsa akışları Binance ·
+							günlük veri · 10 dakika önbellek</p>
+					</section>
+				}
+
 				<section class="cd-mod">
 					@cdSectionHead("Diğer varlıklar", "/price")
 					@cdPriceTable("", v.Others)

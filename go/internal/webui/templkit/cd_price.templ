@@ -9,6 +9,9 @@ type CDPricePage struct {
 	Desc      string
 	Canonical string
 	Rows      []CDPriceRow
+	// Piyasa Nabzı: gerçek zincir-üstü veri (boşsa basılmaz).
+	NabizFiyat *CDGrafikKart
+	Nabiz      []CDGrafikKart
 	JSONLD    string
 	BaseURL   string
 	// CoinDesk SEO sınıflandırması (bkz. templkit.CDHead).
@@ -34,6 +37,8 @@ templ CDPricePageView(v CDPricePage) {
 					<h1>Kripto Fiyatları</h1>
 					<p class="cd-card__spot">{ v.Desc }</p>
 				</header>
+				@cdNabizModul(v.NabizFiyat, v.Nabiz,
+					"Kaynak: CryptoQuant · BTC · Binance akışları · günlük veri · 10 dakika önbellek")
 				<section class="cd-mod">
 					@cdPriceTable("Piyasa değerine göre", v.Rows)
 				</section>

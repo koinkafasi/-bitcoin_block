@@ -29,6 +29,11 @@ templ CDSectionPageView(v CDSectionPage) {
 					     hiyerarşiyi bozuyordu. -->
 				</header>
 
+				<!-- PİYASA NABZI (yalnız /markets): gerçek CryptoQuant verisi.
+				     Kaynak yoksa blok hiç basılmaz. -->
+				@cdNabizModul(v.NabizFiyat, v.Nabiz,
+					"Kaynak: CryptoQuant · BTC · Binance akışları · günlük veri · 10 dakika önbellek")
+
 				<!-- ÖNE ÇIKAN: 12 kolonlu ızgara, gap 16 (ölçüm, spec §10.3).
 				     İlk kart 6 kolon (689px), diğerleri 3 kolon (327px).
 				     `.cd-hero` BURADA KULLANILMAZ: CoinDesk kategori

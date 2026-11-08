@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"theblock/site/internal/i18n"
 	"theblock/site/internal/repo"
 	"theblock/site/internal/webui/templkit"
 )
@@ -23,7 +24,6 @@ func (s *Server) handleCDHome(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	items := s.cdHomeIcerikleri(ctx)
-
 	simdi := time.Now()
 	cevir := func(c repo.Content) templkit.CDStory {
 		st := templkit.CDStory{
@@ -42,9 +42,7 @@ func (s *Server) handleCDHome(w http.ResponseWriter, r *http.Request) {
 			st.SourceURL = *c.SourceURL
 		}
 		if c.CategoryName != nil {
-			// Kicker: CoinDesk kategori adını OLDUĞU GİBİ basıyor ("Markets"),
-			// büyük harfe çevirmiyor (ölçüldü, 8 Kasım 2026).
-			st.Kicker = *c.CategoryName
+			st.Kicker = i18n.BuyukHarf(*c.CategoryName)
 		}
 		return st
 	}
@@ -147,7 +145,7 @@ func (s *Server) handleCDHome(w http.ResponseWriter, r *http.Request) {
 	}
 
 	d := templkit.CDHomeView{
-		Shell:     s.cdShellCtx(r.Context(), ""),
+		Shell:     s.cdShellCtx(r.Context(), r, ""),
 		Title:     s.siteName + " — Kripto Haberleri ve Piyasa Verisi",
 		Desc:      "Bitcoin, Ethereum ve kripto piyasalarından son haberler, analizler ve canlı fiyatlar.",
 		Canonical: s.cfg.BaseURL + r.URL.Path,
@@ -175,8 +173,10 @@ func (s *Server) handleCDHome(w http.ResponseWriter, r *http.Request) {
 		Locale:          "tr",
 		BaseURL:         strings.TrimRight(s.cfg.BaseURL, "/"),
 	}
-	// Fiyat şeridi (§3) — veri yoksa boş kalır, şablon basmaz.
-	d.Shell.Ticker = s.cdTickerDoldur(r)
+	// Fiyat şeridi cdShellCtx içinde doldurulur (tüm sayfalar için tek yer).
+
+	// Piyasa Nabzı: gerçek CryptoQuant verisi; anahtar yoksa boş kalır.
+	d.NabizFiyat, d.Nabiz = s.cdNabiz(r.Context())
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.Header().Set("Cache-Control", cacheControlPublic)

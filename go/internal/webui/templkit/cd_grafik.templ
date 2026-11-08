@@ -1,0 +1,103 @@
+package templkit
+
+// Grafik panelleri (inline SVG, JS yok).
+//
+// NEDEN AYRI DOSYA: templ üretimi tüm `.templ` dosyalarını yeniden yazar;
+// aynı ağaçta başka bir oturum çalışırken en küçük yüzeyi tutmak
+// değişikliklerin kaybolma riskini azaltır.
+
+// cdGrafikKartPanel tek grafik. `g.Yol` boşsa HİÇ basılmaz (veri yok =
+// uydurma çizgi yok).
+templ cdGrafikKartPanel(g CDGrafikKart) {
+	if g.Yol != "" {
+		if g.Kucuk {
+			<figure class="cd-grafik cd-grafik--kucuk">
+				<figcaption class="cd-grafik__bas">
+					<span class="cd-grafik__ad">{ g.Baslik }</span>
+				</figcaption>
+				<div class="cd-grafik__deger-satir">
+					<strong class="cd-grafik__deger">{ g.Deger }</strong>
+					if g.Degisim != "" {
+						if g.Up {
+							<span class="cd-up">{ g.Degisim }</span>
+						} else {
+							<span class="cd-down">{ g.Degisim }</span>
+						}
+					}
+				</div>
+				<svg class="cd-grafik__svg" viewBox="0 0 640 180" preserveAspectRatio="none" role="img" aria-label={ g.Baslik }>
+					if g.Up {
+						<path class="cd-grafik__alan cd-grafik__alan--yukselis" d={ g.Alan }></path>
+						<path class="cd-grafik__cizgi cd-grafik__cizgi--yukselis" d={ g.Yol }></path>
+					} else {
+						<path class="cd-grafik__alan cd-grafik__alan--dusus" d={ g.Alan }></path>
+						<path class="cd-grafik__cizgi cd-grafik__cizgi--dusus" d={ g.Yol }></path>
+					}
+				</svg>
+				if g.Alt != "" {
+					<p class="cd-grafik__alt">{ g.Alt }</p>
+				}
+			</figure>
+		} else {
+			<figure class="cd-grafik">
+				<figcaption class="cd-grafik__bas">
+					<span class="cd-grafik__ad">{ g.Baslik }</span>
+					<span class="cd-grafik__deger-grup">
+						<strong class="cd-grafik__deger">{ g.Deger }</strong>
+						if g.Degisim != "" {
+							if g.Up {
+								<span class="cd-up">{ g.Degisim }</span>
+							} else {
+								<span class="cd-down">{ g.Degisim }</span>
+							}
+						}
+					</span>
+				</figcaption>
+				<svg class="cd-grafik__svg" viewBox="0 0 640 180" preserveAspectRatio="none" role="img" aria-label={ g.Baslik }>
+					if g.Up {
+						<path class="cd-grafik__alan cd-grafik__alan--yukselis" d={ g.Alan }></path>
+						<path class="cd-grafik__cizgi cd-grafik__cizgi--yukselis" d={ g.Yol }></path>
+					} else {
+						<path class="cd-grafik__alan cd-grafik__alan--dusus" d={ g.Alan }></path>
+						<path class="cd-grafik__cizgi cd-grafik__cizgi--dusus" d={ g.Yol }></path>
+					}
+				</svg>
+				<div class="cd-grafik__eksen">
+					<span>{ g.EtiketSol }</span>
+					<span>{ g.Min } – { g.Maks }</span>
+					<span>{ g.EtiketSag }</span>
+				</div>
+				if g.Alt != "" {
+					<p class="cd-grafik__alt">{ g.Alt }</p>
+				}
+			</figure>
+		}
+	}
+}
+
+// cdNabizModul "Piyasa Nabzı" bloğu — ana sayfa, /markets ve /price aynı
+// bileşeni kullanır. Veri yoksa HİÇ basılmaz.
+templ cdNabizModul(fiyat *CDGrafikKart, kartlar []CDGrafikKart, kaynak string) {
+	if fiyat != nil || len(kartlar) > 0 {
+		<section class="cd-mod cd-nabiz">
+			@cdSectionHead("Piyasa Nabzı", "")
+			<div class="cd-nabiz__govde">
+				if fiyat != nil {
+					<div class="cd-nabiz__buyuk">
+						@cdGrafikKartPanel(*fiyat)
+					</div>
+				}
+				if len(kartlar) > 0 {
+					<div class="cd-nabiz__kartlar">
+						for _, k := range kartlar {
+							@cdGrafikKartPanel(k)
+						}
+					</div>
+				}
+			</div>
+			if kaynak != "" {
+				<p class="cd-grafik-kaynak">{ kaynak }</p>
+			}
+		</section>
+	}
+}

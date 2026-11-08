@@ -144,6 +144,31 @@ func FiyatBicim(f float64) string {
 	}
 }
 
+// FiyatBicimP fiyatı para birimine göre biçimler.
+//
+// TRY için ₺ ve iki ondalık (BIST fiyatları kuruş hassasiyetinde);
+// diğer para birimlerinde FiyatBicim kuralı (küçük fiyatlarda anlamlı
+// basamak korunur).
+func FiyatBicimP(f float64, para string) string {
+	if f <= 0 {
+		return "—"
+	}
+	if para == "TRY" {
+		return "₺" + binlikAyrac(f, 2)
+	}
+	return FiyatBicim(f)
+}
+
+// SayiBicim sayıyı site geneli biçimle yazar: 1234567.89 → "1,234,567.89".
+//
+// NEDEN: fiyat bandı, şerit ve tablolar İngiliz biçimini kullanıyor
+// (CoinDesk ölçümü). Zincir-üstü metrikler `piyasa.FormatTR` ile
+// "1,40" yazınca aynı kart içinde iki ayrı ondalık ayırıcı görünüyordu
+// (ölçüldü, 8 Kasım 2026). Artık tek kaynak.
+func SayiBicim(f float64, ondalik int) string {
+	return binlikAyrac(f, ondalik)
+}
+
 // binlikAyrac 1234567.89 → "1,234,567.89".
 func binlikAyrac(f float64, ondalik int) string {
 	s := strconv.FormatFloat(f, 'f', ondalik, 64)

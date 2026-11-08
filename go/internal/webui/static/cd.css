@@ -1841,15 +1841,23 @@ html.cd-arama-acik, html.cd-arama-acik body { overflow: hidden; }
 
 .cd-article { max-width: 680px; margin: 0 auto; }
 /* ÜST BOŞLUK — ÖLÇÜLDÜ (8 Kasım 2026): CoinDesk'te şerit altından kicker
-   üstüne kadar 73 px var (şerit alt 419 → kicker üst 492). Bizde makale
-   `<main class="cd-wrap cd-main">` ile başlıyordu ve dikey dolgu olmadığı
-   için kicker şeride YAPIŞIYORDU (ölçüm: 0 px). */
+   üstüne kadar 73 px var (şerit alt 419 → kicker üst 492). Kaynağı iki
+   katmanlı dolgu: içerik kapsayıcısı 24 px + ızgara 32 px (+ şerit kendi
+   alt dolgusu). Bizde makale `<main class="cd-wrap cd-main">` ile
+   başlıyordu ve dikey dolgu olmadığı için kicker şeride YAPIŞIYORDU
+   (ölçüm: 0 px). Kullanıcı bildirimi: "yukarıdaki etiket menüden boşluk
+   aynı değil".
+
+   Değer sabit 73 px: üç sayfa tipinde de (makale, bölüm, fiyat) aynı
+   ızgara kullanılıyor, katmanları ayrı ayrı kurmak kırılgan olurdu. */
 .cd-main--makale { padding-top: 73px; }
 /* Makale kicker'ı 16/32 w500 (`font-title`) — kart kicker'ından (12/16)
-   BÜYÜK. Ölçüm spec §10.2: "div.font-title 680×32". */
-/* BÜYÜK HARF YOK (ölçüldü, 8 Kasım 2026): CoinDesk kicker'ı
-   `text-transform: none` ile "Markets" basıyor. Bizde `uppercase` vardı ve
-   "POLİTİKA" çıkıyordu; kullanıcı bildirimi. */
+   BÜYÜK. Ölçüm spec §10.2: "div.font-title 680×32".
+
+   BÜYÜK HARF YOK (ölçüldü, 8 Kasım 2026): CoinDesk kicker'ı
+   `text-transform: none` ile "Markets" basıyor — computed değer `none`,
+   ekranda başlık biçiminde. Bizde `uppercase` vardı ve "POLİTİKA"
+   çıkıyordu; kullanıcı bildirimi: "yukarıdaki etiket ... aynı değil". */
 .cd-article .cd-kicker {
   font-size: 16px;
   line-height: 32px;
@@ -1858,8 +1866,8 @@ html.cd-arama-acik, html.cd-arama-acik body { overflow: hidden; }
   text-transform: none;
   color: var(--cd-fg);
 }
-/* Makale H1 36/44 w500 — bölüm H1'inden AĞIRLIK farkı (700). */
-/* Dikey boşluk ÖLÇÜLDÜ (8 Kasım 2026): kicker alt → H1 üst = 2 px,
+/* Makale H1 36/44 w500 — bölüm H1'inden AĞIRLIK farkı (700).
+   Dikey boşluk ÖLÇÜLDÜ (8 Kasım 2026): kicker alt → H1 üst = 2 px,
    H1 alt → deck üst = 8 px. Eski sürüm 8/12 kullanıyordu. */
 .cd-article h1 {
   font-family: var(--cd-serif);
@@ -2035,16 +2043,15 @@ html.dark .cd-google { color: var(--cd-fg); }
    "çerçeve" etkisi yaratıyor; düz border değil.
    JS YOK: `<details>` kullanılıyor. CoinDesk buton + state ile açıyor;
    <details> klavye ve ekran okuyucu desteğini bedava verir. */
-/* ---- Özet kutusu (ölçüldü, coindesk.com/markets/2026/11/05/…
-   8 Kasım 2026). CoinDesk'te çerçeve DÜZ ÇİZGİ DEĞİL, marka gradyanı:
+/* ---- Özet kutusu (ölçüldü, coindesk.com/markets/2026/11/05/… ,8 Kasım 2026)
+   CoinDesk'te çerçeve DÜZ ÇİZGİ DEĞİL, marka gradyanı:
      dış kap  680×116 · radius 7 · padding 2 · margin 16 0 32
-              linear-gradient(102deg, #FFD200 -0.2%, #18E589 171.06%)
+              background-image: linear-gradient(102deg, #ffd200 -0.2%, #18e585 171.06%)
      iç kutu  676×112 · radius 5 · padding 20 20 12 · zemin beyaz
-     başlık satırı 24 · mb 16 · sparkle ikon + "Summary" w500, sağda
-              "Show" + chevron (açılınca 180° döner)
-     önizleme TEK satır · `truncate` (ellipsis) · 16/24
+     başlık satırı 24 yüksek · margin-bottom 16 · 16/24 w400 serif
+     önizleme 24 yüksek · 16/24
    Eski sürüm 1 px `--cd-border` çizgisi kullanıyordu; kullanıcı bildirimi
-   "Summary Özet alanı çerçeve rengi aynı değil" — ölçüm haklı çıktı. */
+   "Summary/Özet alanı çerçeve rengi aynı değil" — ölçüm haklı çıktı. */
 .cd-ozet {
   margin: 16px 0 32px;
   padding: 2px;
@@ -2061,12 +2068,14 @@ html.dark .cd-google { color: var(--cd-fg); }
   padding: 20px 20px 12px;
   cursor: pointer;
   list-style: none;
+  /* Açılınca alt köşeler düzleşir: gövde hemen altında devam ediyor. */
 }
-.cd-ozet[open] .cd-ozet__ic {
-  border-radius: var(--cd-radius-ozet-ic) var(--cd-radius-ozet-ic) 0 0;
-}
+.cd-ozet[open] .cd-ozet__ic { border-radius: var(--cd-radius-ozet-ic) var(--cd-radius-ozet-ic) 0 0; }
 .cd-ozet summary::-webkit-details-marker { display: none; }
 .cd-ozet summary::marker { content: ""; }
+/* Başlık satırı: sparkle ikon + "Özet" solda, "Göster" + chevron sağda.
+   CoinDesk ölçümü: satır 24 px, margin-bottom 16, yazı w500 (`font-label
+   font-medium`). Eski sürüm w400 kullanıyordu. */
 .cd-ozet__ust {
   display: flex;
   align-items: center;
@@ -2078,17 +2087,13 @@ html.dark .cd-google { color: var(--cd-fg); }
 }
 .cd-ozet__etiket { display: inline-flex; align-items: center; gap: 6px; }
 .cd-ozet__ikon { display: block; flex: none; color: var(--cd-fg); }
-.cd-ozet__degistir {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  font-weight: 400;
-}
+.cd-ozet__degistir { display: inline-flex; align-items: center; gap: 4px; font-weight: 400; }
 /* Açma/kapama metni CSS ile: JS yok, iki <span> arasında geçiş. */
 .cd-ozet__ac { display: inline; color: var(--cd-muted); font-weight: 400; }
 .cd-ozet__kapat { display: none; color: var(--cd-muted); font-weight: 400; }
 .cd-ozet[open] .cd-ozet__ac { display: none; }
 .cd-ozet[open] .cd-ozet__kapat { display: inline; }
+/* Chevron açılınca 180° döner (CoinDesk `transition-transform`). */
 .cd-ozet__ok { display: block; transition: transform 200ms ease; }
 .cd-ozet[open] .cd-ozet__ok { transform: rotate(180deg); }
 /* Önizleme: CoinDesk `truncate` — TEK satır + ellipsis. Alt solma
@@ -2112,10 +2117,7 @@ html.dark .cd-google { color: var(--cd-fg); }
   font-size: 16px;
   line-height: 24px;
 }
-.cd-ozet[open] .cd-ozet__govde {
-  display: block;
-  animation: cd-ozet-ac 300ms ease-in-out;
-}
+.cd-ozet[open] .cd-ozet__govde { display: block; animation: cd-ozet-ac 300ms ease-in-out; }
 .cd-ozet__govde ul {
   list-style: none;
   margin: 0 0 16px;
@@ -3981,4 +3983,118 @@ textarea.cd-girdi { resize: vertical; min-height: 88px; }
   .cd-hesap-kisayollar, .cd-alan-izgara { grid-template-columns: minmax(0, 1fr); }
   .cd-hesap-kayit { grid-template-columns: minmax(0, 1fr); }
   .cd-hesap-kayit img { max-width: 100%; }
+}
+
+/* =====================================================================
+   GRAFİKLER — inline SVG (CryptoQuant gerçek verisi)
+   ---------------------------------------------------------------------
+   NEDEN SVG: site CSP'si `script-src 'self'`; harici grafik kütüphanesi
+   yüklenemez. Grafik sunucuda üretiliyor → JS kapalıyken de görünür.
+
+   NOT: `preserveAspectRatio="none"` ile viewBox genişliğe yayılır, bu
+   yüzden çizgi kalınlığı `vector-effect: non-scaling-stroke` ile sabit
+   tutulur (aksi hâlde mobilde 1 px'e düşüyordu).
+   ===================================================================== */
+.cd-grafik {
+  margin: 0;
+  padding: 20px 24px 18px;
+  background: var(--cd-surface-soft);
+  border: 1px solid var(--cd-border);
+  border-radius: 12px;
+}
+.cd-grafik__bas {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.cd-grafik__ad {
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--cd-muted);
+  font-weight: 700;
+}
+.cd-grafik__deger-grup,
+.cd-grafik__deger-satir {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+.cd-grafik__deger {
+  font-size: 28px;
+  line-height: 1.1;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--cd-fg-strong);
+}
+.cd-grafik__svg {
+  display: block;
+  width: 100%;
+  height: 180px;
+  margin-top: 14px;
+}
+.cd-grafik__cizgi {
+  fill: none;
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+}
+.cd-grafik__cizgi--yukselis { stroke: var(--cd-up); }
+.cd-grafik__cizgi--dusus { stroke: var(--cd-down); }
+.cd-grafik__alan--yukselis { fill: var(--cd-up); opacity: 0.10; }
+.cd-grafik__alan--dusus { fill: var(--cd-down); opacity: 0.10; }
+.cd-grafik__eksen {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--cd-muted);
+  font-variant-numeric: tabular-nums;
+}
+.cd-grafik__alt {
+  margin: 8px 0 0;
+  font-size: 12px;
+  color: var(--cd-muted);
+}
+.cd-grafik-kaynak {
+  margin: 10px 0 0;
+  font-size: 12px;
+  color: var(--cd-muted);
+}
+
+/* Mini kartlar (zincir-üstü metrikler) */
+.cd-grafik--kucuk { padding: 16px 18px 14px; }
+.cd-grafik--kucuk .cd-grafik__deger { font-size: 20px; }
+.cd-grafik--kucuk .cd-grafik__svg { height: 84px; margin-top: 10px; }
+.cd-grafik-izgara {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(232px, 1fr));
+  gap: 16px;
+}
+
+/* /markets "Piyasa Nabzı" düzeni */
+.cd-nabiz__govde {
+  display: grid;
+  grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr);
+  gap: 16px;
+  align-items: stretch;
+}
+.cd-nabiz__kartlar {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+@media (max-width: 900px) {
+  .cd-nabiz__govde { grid-template-columns: minmax(0, 1fr); }
+  .cd-nabiz__kartlar { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 560px) {
+  .cd-grafik { padding: 16px 14px 14px; }
+  .cd-grafik__deger { font-size: 22px; }
+  .cd-grafik__svg { height: 140px; }
+  .cd-nabiz__kartlar { grid-template-columns: minmax(0, 1fr); }
 }

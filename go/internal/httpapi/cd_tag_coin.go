@@ -53,7 +53,7 @@ func (s *Server) handleCDTag(w http.ResponseWriter, r *http.Request) {
 
 	kanonik := s.cfg.BaseURL + "/tag/" + slug
 	v := templkit.CDSectionPage{
-		Shell:     s.cdShellCtx(ctx, ""),
+		Shell:     s.cdShellCtx(ctx, r, ""),
 		Title:     "#" + ad + " — " + s.siteName,
 		Desc:      ad + " etiketli son kripto haberleri ve analizler.",
 		Canonical: kanonik,
@@ -137,7 +137,10 @@ func (s *Server) handleCDCoin(w http.ResponseWriter, r *http.Request) {
 	base := strings.TrimRight(s.cfg.BaseURL, "/")
 	fiyatMetin := repo.FiyatBicim(bulunan.Price)
 	degisimMetin := repo.DegisimBicim(bulunan.Change)
-	digerleri := s.cdFiyatSatirlari(r, 12)
+	// "Diğer varlıklar" kendi satırını İÇERMEZ (Bitcoin sayfasında Bitcoin
+	// listeleniyordu — ölçüldü, 8 Kasım 2026). Bir satır eksik alınır ki
+	// liste yine 12 satır olsun.
+	digerleri := s.cdDigerVarliklar(r, 12, sym)
 
 	// CoinDesk /price/{coin} yapısı: WebPage+FinancialProduct, BreadcrumbList,
 	// ItemList. FAQPage BİLİNÇLİ OLARAK YOK: soru-cevap metnimiz yok,
@@ -155,8 +158,10 @@ func (s *Server) handleCDCoin(w http.ResponseWriter, r *http.Request) {
 	})))
 	ld.WriteString(string(cdFiyatListesiJSONLD("Cryptocurrency Market Cap Rankings", ldItems)))
 
+	grafik, zincirKartlar := s.cdCoinGrafikler(r.Context(), sym, bulunan.Name)
+
 	v := templkit.CDCoinPage{
-		Shell:           s.cdShellCtx(r.Context(), "price"),
+		Shell:           s.cdShellCtx(r.Context(), r, "price"),
 		Title:           bulunan.Name + " (" + sym + ") Fiyatı — " + s.siteName,
 		Desc:            bulunan.Name + " canlı fiyatı, 24 saatlik değişimi ve piyasa sıralaması.",
 		Canonical:       kanonik,
@@ -167,6 +172,8 @@ func (s *Server) handleCDCoin(w http.ResponseWriter, r *http.Request) {
 		Change:          degisimMetin,
 		Up:              bulunan.Change >= 0,
 		Others:          digerleri,
+		Grafik:          grafik,
+		Zincir:          zincirKartlar,
 		JSONLD:          ld.String(),
 		PageCategory:    "price_page",
 		ContentCategory: "price",
