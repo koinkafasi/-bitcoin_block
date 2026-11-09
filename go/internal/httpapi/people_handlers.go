@@ -10,6 +10,11 @@ import (
 
 // handlePeopleList /yazarlar — yazar ve editör dizini (Faz 51).
 func (s *Server) handlePeopleList(w http.ResponseWriter, r *http.Request) {
+	// YENİ KABUK (kullanıcı bildirimi, 9 Kasım 2026).
+	if !s.sayfaDuzeniVar(r.Context(), "yazarlar") {
+		s.cdYazarlarSayfasi(w, r)
+		return
+	}
 	ctx := r.Context()
 	locale := langOf(r, s)
 	d := s.baseView(locale, s.langBase(locale), "Yazarlar")

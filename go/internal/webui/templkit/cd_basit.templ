@@ -1,0 +1,65 @@
+package templkit
+
+// Basit içerik sayfaları (hizmet/yardımcı sayfalar) — YENİ KABUK.
+//
+// NEDEN VAR: /hava-durumu, /namaz-vakitleri, /imsakiye, /astroloji,
+// /fikstur, /resmi-ilanlar, /yazarlar hâlâ theblock kabuğunu
+// (site_header/site_footer) kullanıyordu (ölçüldü, 9 Kasım 2026).
+// Her biri için ayrı tasarım şablonu yazmak yerine ORTAK iskelet:
+// kabuk + başlık + içerik yuvası. Böylece üst çubuk, şerit, alt bilgi ve
+// tipografi her sayfada aynı; sayfa yalnız gövdesini veriyor.
+
+// CDBasitSayfa kabuk + başlık + serbest gövde.
+type CDBasitSayfa struct {
+	Shell     CDShell
+	Title     string
+	Desc      string
+	Canonical string
+	JSONLD    string
+	BaseURL   string
+	Locale    string
+
+	PageCategory    string
+	ContentCategory string
+
+	// Baslik görünen H1.
+	Baslik string
+	// Aciklama H1 altındaki spot (boşsa basılmaz).
+	Aciklama string
+	// Govde sayfaya özel içerik. Sunucuda üretilen GÜVENLİ HTML'dir
+	// (blok motoru / elle yazılmış işaretleme); kullanıcı girdisi
+	// doğrudan geçirilmez.
+	Govde SafeHTML
+	// Serit true ise piyasa şeridi de basılır.
+	Serit bool
+}
+
+templ CDBasitSayfaView(v CDBasitSayfa) {
+	<!doctype html>
+	<html lang="tr">
+		<head>
+			@cdHead(CDHead{Title: v.Title, Desc: v.Desc, Canonical: v.Canonical,
+				OGType: "website", SiteName: v.Shell.SiteName, RSSFeed: "/rss.xml",
+				JSONLD: v.JSONLD, Locale: v.Locale, PageCategory: v.PageCategory,
+				ContentCategory: v.ContentCategory, BaseURL: v.BaseURL})
+		</head>
+		<body class="cd">
+			@cdTopbar(v.Shell)
+			if v.Serit {
+				@cdTicker(v.Shell)
+			}
+			<main class="cd-wrap cd-basit">
+				<header class="cd-section-title">
+					<h1>{ v.Baslik }</h1>
+					if v.Aciklama != "" {
+						<p class="cd-card__spot">{ v.Aciklama }</p>
+					}
+				</header>
+				<div class="cd-basit__govde">
+					@templ.Raw(string(v.Govde))
+				</div>
+			</main>
+			@cdFooter(v.Shell)
+		</body>
+	</html>
+}

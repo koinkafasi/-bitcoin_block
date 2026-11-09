@@ -45,18 +45,48 @@ func (s *Server) cdBolumHandler(slug string) http.HandlerFunc {
 	}
 }
 
+// cdBolumMeta bölüm başlığı ve açıklaması.
+//
+// İKİ KAYNAK: önce sabit harita (CoinDesk bölümleri), sonra DB
+// kategorileri (`/kategori/{slug}` adresleri buradan gelir).
+//
+// NEDEN: `/kategori/{slug}` sayfası theblock şablonunu kullanıyordu —
+// menüden tıklanan kategori eski kabuğa düşüyordu (kullanıcı bildirimi,
+// 9 Kasım 2026). Aynı içerik iki ayrı şablonla iki farklı görünümde
+// basılıyordu. Artık tek şablon: `/tech` ve `/kategori/tech` birebir aynı.
+func (s *Server) cdBolumMeta(ctx context.Context, slug string) (ad, aciklama string, ok bool) {
+	if m, var_ := cdSectionMeta[slug]; var_ {
+		return m.Ad, m.Aciklama, true
+	}
+	// DB kategorisi (panelden eklenen bölümler).
+	var name string
+	var status string
+	err := s.pool.QueryRow(ctx,
+		`SELECT name, status FROM categories WHERE slug=$1 AND site_id=1 LIMIT 1`, slug).Scan(&name, &status)
+	if err != nil || status != "yayinda" {
+		return "", "", false
+	}
+	return name, name + " kategorisindeki son haberler, analizler ve gelişmeler.", true
+}
+
 // handleCDSection bölüm sayfası.
 func (s *Server) handleCDSection(w http.ResponseWriter, r *http.Request, slug string) {
-	meta, ok := cdSectionMeta[slug]
+	ad, aciklama, ok := s.cdBolumMeta(r.Context(), slug)
 	if !ok {
 		s.handleNotFound(w, r)
 		return
 	}
+	meta := struct{ Ad, Aciklama string }{ad, aciklama}
 
 	sayfa := 1
-	if v := r.URL.Query().Get("sayfa"); v != "" {
-		if n, err := strconv.Atoi(v); err == nil && n > 0 && n <= 500 {
-			sayfa = n
+	// `?sayfa=` kanonik; `?s=` eski `/kategori/{slug}` adreslerinden gelen
+	// bağlantılar için korunuyor (onlar hâlâ dolaşımda — 301 üretmedik).
+	for _, anahtar := range []string{"sayfa", "s"} {
+		if v := r.URL.Query().Get(anahtar); v != "" {
+			if n, err := strconv.Atoi(v); err == nil && n > 0 && n <= 500 {
+				sayfa = n
+				break
+			}
 		}
 	}
 	const perPage = 24

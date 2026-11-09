@@ -111,6 +111,11 @@ func (s *Server) handleNoticeDelete(w http.ResponseWriter, r *http.Request) {
 
 // handleNoticesPublic genel resmi ilanlar sayfası.
 func (s *Server) handleNoticesPublic(w http.ResponseWriter, r *http.Request) {
+	// YENİ KABUK (kullanıcı bildirimi, 9 Kasım 2026).
+	if !s.sayfaDuzeniVar(r.Context(), "resmi-ilanlar") {
+		s.cdResmiIlanSayfasi(w, r, s.siteByDomain(r.Context(), r.Host).ID)
+		return
+	}
 	ctx := r.Context()
 	locale := langOf(r, s)
 	site := s.siteByDomain(ctx, r.Host)

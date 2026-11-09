@@ -355,6 +355,10 @@ func (s *Server) handleAPIBorsa(w http.ResponseWriter, r *http.Request) {
 
 // handleFiksturPage puan durumu + hafta bazlı fikstür sayfası (mynet tarzı).
 func (s *Server) handleFiksturPage(w http.ResponseWriter, r *http.Request) {
+	if !s.sayfaDuzeniVar(r.Context(), "fikstur") {
+		s.cdFiksturSayfasi(w, r)
+		return
+	}
 	ctx := r.Context()
 	locale := langOf(r, s)
 	d := s.baseView(locale, s.langBase(locale), "Puan Durumu & Fikstür")
@@ -403,6 +407,10 @@ func (s *Server) handleAPIFikstur(w http.ResponseWriter, r *http.Request) {
 
 // handleAstrolojiPage günlük burç yorumları sayfası.
 func (s *Server) handleAstrolojiPage(w http.ResponseWriter, r *http.Request) {
+	if !s.sayfaDuzeniVar(r.Context(), "astroloji") {
+		s.cdAstrolojiSayfasi(w, r)
+		return
+	}
 	locale := langOf(r, s)
 	d := s.baseView(locale, s.langBase(locale), "Astroloji")
 	d.LangBase = s.langBase(locale)
@@ -421,6 +429,12 @@ func (s *Server) handleAPIAstroloji(w http.ResponseWriter, r *http.Request) {
 
 // handleHavaDurumu genel hava durumu sayfası.
 func (s *Server) handleHavaDurumu(w http.ResponseWriter, r *http.Request) {
+	// YENİ KABUK (kullanıcı bildirimi, 9 Kasım 2026): eski theblock şablonu
+	// yerine ortak cd iskeleti. Panel düzeni varsa eski motor korunur.
+	if !s.sayfaDuzeniVar(r.Context(), "hava") {
+		s.cdHavaSayfasi(w, r)
+		return
+	}
 	locale := langOf(r, s)
 	d := s.baseView(locale, s.langBase(locale), "Hava Durumu")
 	d.LangBase = s.langBase(locale)
@@ -459,6 +473,10 @@ type NamazS struct {
 
 // handleNamazDurumu genel "Namaz Vakitleri" sayfası.
 func (s *Server) handleNamazDurumu(w http.ResponseWriter, r *http.Request) {
+	if !s.sayfaDuzeniVar(r.Context(), "namaz") {
+		s.cdNamazSayfasi(w, r)
+		return
+	}
 	locale := langOf(r, s)
 	d := s.baseView(locale, s.langBase(locale), "Namaz Vakitleri")
 	d.LangBase = s.langBase(locale)
@@ -486,6 +504,10 @@ func (s *Server) handleNamazDurumu(w http.ResponseWriter, r *http.Request) {
 
 // handleImsakiye genel aylık imsakiye sayfası (varsayılan Ankara).
 func (s *Server) handleImsakiye(w http.ResponseWriter, r *http.Request) {
+	if !s.sayfaDuzeniVar(r.Context(), "imsakiye") {
+		s.cdImsakiyeSayfasi(w, r)
+		return
+	}
 	locale := langOf(r, s)
 	d := s.baseView(locale, s.langBase(locale), "İmsakiye")
 	d.LangBase = s.langBase(locale)
