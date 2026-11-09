@@ -54,6 +54,10 @@ type CDHisseSayfa struct {
 	Up      bool
 	AsOf    string // "9 Kas 2026 15:59 EST" (borsa saati)
 
+	// Profil: şirket künyesi ("About …"). Boşsa bölüm HİÇ basılmaz.
+	// Sektör/çalışan Key Stats satırına handler'da eklenir.
+	Ozet string
+
 	Istatistik []CDHisseStat
 
 	// Grafik: seri yoksa Yol boş kalır ve grafik bloğu hiç basılmaz.

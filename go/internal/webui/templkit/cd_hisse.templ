@@ -54,6 +54,18 @@ templ CDHisseSayfaView(v CDHisseSayfa) {
 								</div>
 							}
 						</section>
+
+						<!-- ABOUT — CoinDesk §10.6: 326×407 section. Kaynak metin
+						     İngilizce (Yahoo Finance); çeviri hattı olmadığı için
+						     olduğu gibi basılır, kaynağı yazılır. Veri yoksa bölüm
+						     hiç basılmaz. -->
+						if v.Ozet != "" {
+							<section class="cd-hisse__about" aria-labelledby="cd-hisse-about">
+								<h2 class="cd-hisse__baslik" id="cd-hisse-about">{ v.Ad } Hakkında</h2>
+								<p class="cd-hisse__about-metin">{ v.Ozet }</p>
+								<p class="cd-hisse__about-kaynak">Kaynak: Yahoo Finance</p>
+							</section>
+						}
 					</aside>
 
 					<!-- SAĞ KOLON 976 px: kip düğmeleri, zaman sekmeleri, grafik, performans. -->

@@ -11,6 +11,7 @@ import (
 	"context"
 	"net/http"
 	"strings"
+	"sync"
 	"time"
 
 	"theblock/site/internal/repo"
@@ -34,6 +35,28 @@ func (s *Server) hisseCek(r *http.Request, sym, aralik string) (repo.HisseDetay,
 			return repo.HisseDetay{}, false
 		}
 		return d, true
+	})
+}
+
+// hisseProfilOnbellek: profil 10 dakikada bir tazelenir.
+//
+// NEDEN UZUN TTL (fiyattan farklı): iş tanımı/sektör/çalışan sayısı
+// gün içinde değişmez; piyasa değeri de 60 sn'de bir değişecek kadar
+// kritik değil (asıl fiyat grafiğin kendisinde). Crumb akışı 2 ek istek
+// demek olduğu için tekrarını önlemek önemli.
+var hisseProfilOnbellek = newTTLCache[repo.HisseProfil](10 * time.Minute)
+
+// hisseProfilCek önbellekli profil çekimi. İkinci değer false ise veri YOK.
+func (s *Server) hisseProfilCek(ctx context.Context, sym string) (repo.HisseProfil, bool) {
+	return hisseProfilOnbellek.Load(ctx, sym, func(ctx context.Context) (repo.HisseProfil, bool) {
+		p, err := repo.HisseProfilCek(ctx, sym)
+		if err != nil {
+			// Uyarı seviyesinde: profil gelmemesi sayfayı düşürmez,
+			// yalnız About/piyasa değeri satırları basılmaz.
+			s.logger.Warn("hisse profil", "sembol", sym, "error", err)
+			return repo.HisseProfil{}, false
+		}
+		return p, true
 	})
 }
 
@@ -108,6 +131,36 @@ func (s *Server) handleCDHisse(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	// Performans satırı ve profil ARKA PLANDA çekilir (paralel).
+	//
+	// NEDEN PARALEL: ana grafik geldikten sonra ikisi ardışık çalışınca
+	// soğuk istek 0.6 sn'ye çıkıyordu (ölçüldü, 9 Kasım 2026: 3 uç
+	// çağrısı sırayla). İkisi de birbirinden ve ana grafikten bağımsız;
+	// paralel çalıştırınca süre en yavaşlarına iner.
+	//
+	// Profil zaman aşımı 2 sn: gelmezse About/piyasa değeri satırları
+	// basılmaz, sayfa yine açılır (zenginleştirme, zorunluluk değil).
+	var (
+		performans []templkit.CDHisseDonem
+		profil     repo.HisseProfil
+		profilOk   bool
+		paralel    sync.WaitGroup
+	)
+	paralel.Add(2)
+	go func() {
+		defer paralel.Done()
+		if g1, ok := s.hisseCek(r, sym, "1y"); ok {
+			performans = hissePerformansSatiri(g1, d.Onceki)
+		}
+	}()
+	go func() {
+		defer paralel.Done()
+		pctx, iptal := context.WithTimeout(r.Context(), 2*time.Second)
+		defer iptal()
+		profil, profilOk = s.hisseProfilCek(pctx, sym)
+	}()
+	paralel.Wait()
+
 	// Advanced kipi: gerçek OHLC mumları (Basic ile aynı viewBox ölçeği).
 	var mumlar []templkit.CDHisseMum
 	if kip == "advanced" {
@@ -124,9 +177,14 @@ func (s *Server) handleCDHisse(w http.ResponseWriter, r *http.Request) {
 		mumlar = templkit.CDMumlar(ac, yu, du, ka)
 	}
 
-	// Key Stats: yalnız uçtan GELEN alanlar. Market Cap Yahoo'nun bu
-	// ucunda yok (v7/v10 401) — satır hiç basılmaz, sayı uydurulmaz.
+	// Key Stats: yalnız uçtan GELEN alanlar. Değer yoksa satır basılmaz.
 	var istatistik []templkit.CDHisseStat
+	if profilOk && profil.PiyasaDeger > 0 {
+		istatistik = append(istatistik, templkit.CDHisseStat{
+			Etiket: "Piyasa değeri",
+			Deger:  repo.SayiBicimKisa(profil.PiyasaDeger, d.Para),
+		})
+	}
 	if d.GunMin > 0 && d.GunMaks > 0 {
 		istatistik = append(istatistik, templkit.CDHisseStat{
 			Etiket: "Gün aralığı",
@@ -149,6 +207,21 @@ func (s *Server) handleCDHisse(w http.ResponseWriter, r *http.Request) {
 			Etiket: "Önceki kapanış", Deger: repo.FiyatBicimP(d.Onceki, d.Para),
 		})
 	}
+	// Sektör ve çalışan sayısı da uçtan geliyor (profil).
+	if profilOk {
+		if profil.Sektor != "" {
+			sektor := profil.Sektor
+			if profil.Endustri != "" {
+				sektor += " · " + profil.Endustri
+			}
+			istatistik = append(istatistik, templkit.CDHisseStat{Etiket: "Sektör", Deger: sektor})
+		}
+		if profil.Calisan > 0 {
+			istatistik = append(istatistik, templkit.CDHisseStat{
+				Etiket: "Çalışan", Deger: repo.SayiBicim(float64(profil.Calisan), 0),
+			})
+		}
+	}
 
 	// OHLC: son seansın değerleri. Yüksek/düşük META'dan alınır (5 dakikalık
 	// barların uç değeri kaçırması "Gün aralığı" ile çelişki yaratıyordu:
@@ -164,19 +237,6 @@ func (s *Server) handleCDHisse(w http.ResponseWriter, r *http.Request) {
 		ohlcO = repo.FiyatBicimP(o, d.Para)
 		ohlcH = repo.FiyatBicimP(h, d.Para)
 		ohlcL = repo.FiyatBicimP(l, d.Para)
-	}
-
-	// Performans satırı: 1 yıllık seriden türetilir (CoinDesk'te de sabit).
-	var performans []templkit.CDHisseDonem
-	if g1, ok := s.hisseCek(r, sym, "1y"); ok {
-		for _, p := range repo.HissePerformans(g1.Noktalar, d.Onceki, time.Now()) {
-			if !p.Gecerli {
-				continue
-			}
-			performans = append(performans, templkit.CDHisseDonem{
-				Ad: p.Ad, Yuzde: repo.DegisimBicim(p.Yuzde), Up: p.Yuzde >= 0,
-			})
-		}
 	}
 
 	// Kip bağlantıları mevcut aralığı korur.
@@ -220,6 +280,8 @@ func (s *Server) handleCDHisse(w http.ResponseWriter, r *http.Request) {
 		Up:      d.Degisim >= 0,
 		AsOf:    hisseAsOf(d.Guncelleme, d.Dilim),
 
+		Ozet: hisseOzet(profil, profilOk),
+
 		Istatistik: istatistik,
 
 		Yol:        yolSVG,
@@ -251,6 +313,34 @@ func (s *Server) handleCDHisse(w http.ResponseWriter, r *http.Request) {
 	if err := templkit.CDHisseSayfaView(v).Render(r.Context(), w); err != nil {
 		s.logger.Error("hisse render", "error", err)
 	}
+}
+
+// hissePerformansSatiri 1 yıllık seriden dönem hücrelerini üretir.
+//
+// Geçersiz dönem (seri o dönemi kapsamıyor) HİÇ basılmaz: sıfır yüzde
+// uydurmak yerine hücre atlanır.
+func hissePerformansSatiri(g1 repo.HisseDetay, onceki float64) []templkit.CDHisseDonem {
+	var out []templkit.CDHisseDonem
+	for _, p := range repo.HissePerformans(g1.Noktalar, onceki, time.Now()) {
+		if !p.Gecerli {
+			continue
+		}
+		out = append(out, templkit.CDHisseDonem{
+			Ad: p.Ad, Yuzde: repo.DegisimBicim(p.Yuzde), Up: p.Yuzde >= 0,
+		})
+	}
+	return out
+}
+
+// hisseOzet About metnini üretir (cümle sınırında kırpılmış).
+//
+// 700 karakter: CoinDesk "About" bölümü 326×407 px ≈ 13 satır; tam metin
+// (META 1988, ASELS 1991 karakter) sol rayı taşırıyordu.
+func hisseOzet(p repo.HisseProfil, ok bool) string {
+	if !ok {
+		return ""
+	}
+	return repo.OzetKirp(p.Ozet, 700)
 }
 
 // hisseKisaTarih grafik ekseni etiketi: "9 Kas".

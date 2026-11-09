@@ -185,3 +185,70 @@ func TestCDHisseHariciJSYok(t *testing.T) {
 		t.Errorf("hisse sayfası grafik kütüphanesi yüklemiş")
 	}
 }
+
+// TestCDHisseAbout "About …" bölümü (CoinDesk §10.6) sözleşmesi.
+//
+// KAYNAK: Yahoo Finance assetProfile.longBusinessSummary. Metin İngilizce
+// gelir (çeviri hattı yok) — olduğu gibi basılır ama KAYNAK yazılır.
+// Veri yoksa bölüm HİÇ basılmamalı (uydurma tanıtım metni yazılmaz).
+func TestCDHisseAbout(t *testing.T) {
+	v := ornekHisse()
+	v.Ozet = "Meta Platforms, Inc. engages in the development of products."
+
+	html := hisseCiz(t, v)
+	for _, istenen := range []string{
+		`class="cd-hisse__about"`,
+		"Meta Platforms, Inc. Hakkında",
+		"engages in the development of products",
+		"Kaynak: Yahoo Finance",
+	} {
+		if !strings.Contains(html, istenen) {
+			t.Errorf("eksik: %s", istenen)
+		}
+	}
+
+	// Özet boşsa bölüm basılmamalı.
+	v.Ozet = ""
+	html = hisseCiz(t, v)
+	if strings.Contains(html, "cd-hisse__about") {
+		t.Errorf("özet yokken About bölümü basılmış")
+	}
+	if strings.Contains(html, "Hakkında") {
+		t.Errorf("özet yokken 'Hakkında' başlığı basılmış")
+	}
+}
+
+// TestCDHisseKeyStatsSatirlari Key Stats satırlarının sırası ve içeriği.
+//
+// CoinDesk sırası: Market Cap · Volume (24h) · 52-Week Range. Bizde ek
+// olarak gün aralığı/önceki kapanış/sektör/çalışan var (hepsi uçtan gelen
+// gerçek alanlar); sıra "en genel → en ayrıntılı" korunur.
+func TestCDHisseKeyStatsSatirlari(t *testing.T) {
+	v := ornekHisse()
+	v.Istatistik = []CDHisseStat{
+		{Etiket: "Piyasa değeri", Deger: "$1.63T"},
+		{Etiket: "Gün aralığı", Deger: "$630.00 – $644.54"},
+		{Etiket: "52 hafta aralığı", Deger: "$520.26 – $779.82"},
+		{Etiket: "Sektör", Deger: "Technology · Consumer Electronics"},
+		{Etiket: "Çalışan", Deger: "167,000"},
+	}
+	html := hisseCiz(t, v)
+
+	onceki := -1
+	for _, e := range []string{"Piyasa değeri", "Gün aralığı", "52 hafta aralığı", "Sektör", "Çalışan"} {
+		i := strings.Index(html, e)
+		if i < 0 {
+			t.Fatalf("satır yok: %s", e)
+		}
+		if i < onceki {
+			t.Errorf("sıra bozuk: %s", e)
+		}
+		onceki = i
+	}
+	// Değerler basılmış olmalı.
+	for _, d := range []string{"$1.63T", "167,000", "Consumer Electronics"} {
+		if !strings.Contains(html, d) {
+			t.Errorf("değer yok: %s", d)
+		}
+	}
+}

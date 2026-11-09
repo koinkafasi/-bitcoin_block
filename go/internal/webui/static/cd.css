@@ -5236,3 +5236,8 @@ textarea.cd-girdi { resize: vertical; min-height: 88px; }
 .cd-hisse__fitil--dusus { stroke: var(--cd-down); }
 .cd-hisse__mum--yukselis { fill: var(--cd-up); }
 .cd-hisse__mum--dusus { fill: var(--cd-down); }
+
+/* ABOUT — CoinDesk §10.6: 326 genişlik, 407 yükseklik, 14/21 gövde. */
+.cd-hisse__about { margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--cd-border); }
+.cd-hisse__about-metin { font-size: 14px; line-height: 21px; color: var(--cd-fg); }
+.cd-hisse__about-kaynak { margin-top: 8px; font-size: 12px; line-height: 16px; color: var(--cd-muted); }

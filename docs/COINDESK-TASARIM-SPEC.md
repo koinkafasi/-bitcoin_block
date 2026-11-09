@@ -1311,12 +1311,27 @@ ama tipografi 12/22 (şeritte 12/16).
 > | Basic / Advanced | Basic alan+çizgi, **Advanced gerçek OHLC mumları** |
 > | OHLC okuması | O/H/L basılır (H/L borsa gününden) |
 > | Performans satırı 88 px | 24s·5g·1a·YTD·1y — 1 yıllık seriden |
+> | **"Key Stats"** | Piyasa değeri · Gün aralığı · 52 hafta · Hacim · Önceki kapanış · Sektör · Çalışan |
+> | **"About …"** | ✅ gerçek iş tanımı (326 px sol ray, 14/21) |
 >
-> Bilinçli eksik: **"Market Cap" satırı YOK.** Yahoo'nun grafik ucu bu alanı
-> döndürmüyor; `v7/quote` ve `v10/quoteSummary` 401 "Invalid Crumb" veriyor
-> (ölçüldü). Uydurma sayı basılmaz; satır hiç çıkmaz.
-> "About …" bölümü de şirket açıklaması gerçek kaynaktan gelmediği için
-> basılmıyor.
+> **CRUMB AKIŞI (9 Kasım 2026):** Market Cap ve "About" ilk sürümde
+> "veri yok" diye atlanmıştı; `v10/quoteSummary` doğrudan 401 "Invalid
+> Crumb" veriyordu. Çerez + `/v1/test/getcrumb` akışı eklendi
+> (`repo/hisse_profil.go`): `fc.yahoo.com` çerezi → crumb → `?crumb=…`.
+> Ölçüldü — META ve THYAO.IS dahil **her iki pazarda** geliyor:
+>
+> | | META | THYAO.IS |
+> |---|---|---|
+> | Piyasa değeri | $1.63T | ₺425.41B |
+> | Sektör | Communication Services · Internet Content & Information | Industrials · Airlines |
+> | Çalışan | 66,775 | 66,549 |
+> | İş tanımı | 1.988 karakter | 804 karakter |
+>
+> Crumb süreç içinde 6 saat önbellekte; 401 alınırsa bir kez yenilenir.
+> Profil önbelleği 10 dakika + 2 sn zaman aşımı: profil gelmezse About ve
+> piyasa değeri satırları **hiç basılmaz**, sayfa yine açılır.
+> İş tanımı kaynak dilinde (İngilizce) basılır ve altında "Kaynak: Yahoo
+> Finance" yazar — çeviri hattı gelince çevrilecek, uydurma çeviri yok.
 
 ## 11. bitcosar ↔ CoinDesk fark tablosu
 
@@ -2632,7 +2647,7 @@ Sayı biçimi tek kaynağa alındı: `repo.SayiBicim` ("1,234.56"). Önce
 | Hisse sekmesi | ✅ gerçek BIST verisi |
 | Grafik paneli | ✅ yeni bileşen ailesi (CoinDesk'te grafik kartı ölçüsü: başlık 12 px uppercase, değer 28 px w700, eksen 12 px) |
 | Hisse şablonu `/price/stock/*` | ✅ gerçek ABD hisse verisiyle (Yahoo Finance; Basic + Advanced mum) |
-| Market Cap satırı | ⛔ Yahoo grafik ucu vermiyor (v7/v10 401) — uydurulmaz |
+| Market Cap satırı | ✅ crumb akışıyla geliyor ($1.63T / ₺425.41B) |
 | Google News pill | ⛔ yayın sonrası |
 | Hisse keşfedilebilirliği | ✅ sitemap + JSON-LD + mega menü + /price/stock 301 |
 | Çeviri etiketi | ⛔ EN çeviri hattı gelince |
