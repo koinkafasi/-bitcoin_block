@@ -53,17 +53,33 @@ func (s *Server) handleCDArticle(w http.ResponseWriter, r *http.Request, lang, s
 		bolumSlug = *c.CategorySlug
 	}
 
+	// KANONİK ÖNCELİĞİ: içerikte elle atanmış `canonical_url` varsa o kazanır.
+	// Kaynak sitede aynı haber birden çok kez yayınlanmış olabiliyor
+	// (WordPress aktarımında 3 böyle grup var); sendika/kopya içerikte
+	// kanonik adresi asıl yayına çevirmek yinelenen içeriği tek sayfada
+	// toplar. Alan boşsa bugüne kadarki davranış korunur.
+	kanonik := s.kanonikKok(r) + makaleURL(c)
+	if c.CanonicalURL != nil {
+		if elle := strings.TrimSpace(*c.CanonicalURL); elle != "" {
+			if strings.HasPrefix(elle, "http://") || strings.HasPrefix(elle, "https://") {
+				kanonik = elle
+			} else {
+				kanonik = s.kanonikKok(r) + "/" + strings.TrimLeft(elle, "/")
+			}
+		}
+	}
+
 	v := templkit.CDArticleView{
 		Shell:     s.cdShellCtx(ctx, r, bolumSlug),
 		Title:     cdMakaleBaslik(c),
 		Desc:      cdMakaleAciklama(c),
-		Canonical: s.kanonikKok(r) + makaleURL(c),
+		Canonical: kanonik,
 		// Kicker: CoinDesk bölüm adını OLDUĞU GİBİ basıyor ("Markets"),
 		// büyük harfe çevirmiyor (ölçüldü: computed `text-transform: none`).
 		// Eskiden i18n.BuyukHarf uygulanıyordu ve "POLİTİKA" çıkıyordu.
 		Kicker:      bolumAd,
 		SectionName: bolumAd,
-		SectionHref: "/" + bolumSlug,
+		SectionHref: s.bolumHref(bolumSlug),
 		Headline:    c.Title,
 		Spot:        c.Spot,
 		BodyHTML:    string(s.blocksToHTML(c.Detail, nil)),
