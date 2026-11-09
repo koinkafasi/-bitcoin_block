@@ -138,7 +138,10 @@ func BuildDailyDigest(ctx context.Context, pool *pgxpool.Pool, siteID int64, day
 			summary = string([]rune(summary)[:400]) + "…"
 		}
 	}
-	title := day.Format("2 Ocak 2006") + " Günlük Özeti"
+	// "2 Ocak 2006" Go layout'unda AY BELİRTECİ DEĞİLDİR: "Ocak" düz metin
+	// olarak basılıyordu ve her özet "… Ocak 2026 Günlük Özeti" çıkıyordu
+	// (ölçüldü 9 Kasım 2026). TarihTRUzun gerçek ay adını yazar.
+	title := TarihTRUzun(day) + " Günlük Özeti"
 	if locale != "tr" {
 		title = day.Format("2006-01-02") + " Daily Digest"
 	}

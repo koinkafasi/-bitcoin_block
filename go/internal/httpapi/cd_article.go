@@ -75,8 +75,9 @@ func (s *Server) handleCDArticle(w http.ResponseWriter, r *http.Request, lang, s
 	} else {
 		v.Author = s.siteName
 	}
+	v.Dil = templkit.CDMakaleDilIcin(c.Locale)
 	if c.PublishedAt != nil {
-		v.PublishedAt = c.PublishedAt.Format("2 Ocak 2006 15:04 MST")
+		v.PublishedAt = makaleTarih(*c.PublishedAt, c.Locale)
 		v.PublishedISO = c.PublishedAt.UTC().Format(time.RFC3339)
 	}
 	// "Güncellendi" yalnız GERÇEKTEN sonradan düzenlendiyse.
@@ -87,7 +88,7 @@ func (s *Server) handleCDArticle(w http.ResponseWriter, r *http.Request, lang, s
 	// editoryal düzenlemeyi yakalar; altındaki fark tarama gürültüsüdür.
 	if !c.UpdatedAt.IsZero() && c.PublishedAt != nil &&
 		c.UpdatedAt.Sub(*c.PublishedAt) > time.Hour {
-		v.UpdatedAt = c.UpdatedAt.Format("2 Ocak 2006 15:04 MST")
+		v.UpdatedAt = makaleTarih(c.UpdatedAt, c.Locale)
 		v.UpdatedISO = c.UpdatedAt.UTC().Format(time.RFC3339)
 	}
 	v.ReadMinutes = cdOkumaDakika(c.Spot, v.BodyHTML)
@@ -99,6 +100,22 @@ func (s *Server) handleCDArticle(w http.ResponseWriter, r *http.Request, lang, s
 		v.SummaryIlkSatir = ilkCumle(ozet)
 		v.SummaryMaddeler = cumlelereBol(ozet, 3)
 	}
+	// ÇEVİRİ ETİKETİ (§10.2): yalnız GERÇEK çeviri kayıtlarında.
+	//
+	// "translation_of" dolu = bu içerik başka bir dildeki içerikten
+	// üretilmiş. Etiket okuyucuya sayfanın makine çevirisi olduğunu
+	// SÖYLER — bu bir dürüstlük yükümlülüğü, süs değil.
+	//
+	// Bağlantı ORİJİNAL makaleye gider: okuyucu kaynağı tek tıkla
+	// görebilmeli. Orijinal okunamazsa (silinmiş/taşınmış) etiket yine
+	// basılır ama bağlantısız (kırık bağlantı üretilmez).
+	if c.TranslationOf != nil {
+		v.CeviriEtiketi = v.Dil.Ceviri
+		if kok, err := repo.GetContent(ctx, s.pool, *c.TranslationOf); err == nil {
+			v.CeviriHref = makaleURL(kok)
+		}
+	}
+
 	if c.SourceName != nil {
 		v.SourceName = *c.SourceName
 	}
@@ -291,4 +308,22 @@ func kirpRune(s string, n int) string {
 	}
 	r := []rune(s)
 	return strings.TrimSpace(string(r[:n])) + "…"
+}
+
+// makaleTarih makale tarihini SAYFA DİLİNE göre biçimler.
+//
+// İKİ KUSUR DÜZELTİLDİ (ölçüldü, 9 Kasım 2026):
+//  1. Biçim `"2 Ocak 2006 15:04 MST"` idi. Go'nun layout'unda ay belirteci
+//     "Jan"/"January"dır; **"Ocak" tanınmaz ve DÜZ METİN olarak basılır**.
+//     Sonuç: hangi ayda yayınlanırsa yayınlansın her Türkçe makale
+//     "6 Ocak 2026" gösteriyordu (Kasım'daki haber Ocak görünüyordu).
+//     Türkçe ay adları bu yüzden ELLE eşlenir.
+//  2. İngilizce çeviri sayfası da aynı Türkçe biçimi kullanıyordu.
+func makaleTarih(t time.Time, locale string) string {
+	if strings.EqualFold(locale, "en") {
+		return t.Format("Jan 2, 2006 3:04 PM MST")
+	}
+	// Ay adı eşlemesi TEK YERDE (repo.TarihTRSaat): burada ikinci bir
+	// layout dizgisi tutmak aynı hatayı geri getirirdi.
+	return repo.TarihTRSaat(t)
 }

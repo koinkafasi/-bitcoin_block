@@ -1047,6 +1047,35 @@ Açık/kapalı ölçümü:
 | Tarih | "Nov 5, 2026, 8:30 p.m. EST" | "5 Kas 2026 ÖS 9:26 GMT-5" |
 | `<html lang>` | `en` | `tr` |
 
+#### 10.2.6 Çeviri etiketi — UYGULAMA (9 Kasım 2026)
+
+CoinDesk yalnız çeviri dillerinde "AI tarafından çevrildi" etiketi
+basıyor. Bizde akış TERSİNE: içerik Türkçe üretiliyor, İngilizceye
+çevriliyor (`contents.translation_of`). Bu yüzden etiket:
+
+| Kural | Uygulama |
+|---|---|
+| Koşul | YALNIZ `translation_of` DOLU kayıtlarda (orijinalde etiket yok) |
+| Konum | Tarih bloğunun altında, eylem şeridinin üstünde (y=510) |
+| Ölçü | 14/21, sessiz ton (`--cd-muted`), çeviri ikonu + metin |
+| Metin | Sayfa diline göre: "Translated by AI" (EN) / "AI tarafından çevrildi" (TR) |
+| Bağlantı | ORİJİNAL makaleye (okuyucu kaynağı tek tıkla görür) |
+| Orijinal okunamazsa | Etiket `<span>` olarak basılır — kırık `<a>` yok |
+
+Aynı turda **dil iskeleti** düzeltildi: makale sayfasındaki "Yazan",
+"Yayınlandı", "Güncellendi" ve tarih biçimi şablonda SABİT Türkçeydi;
+İngilizce çeviri sayfasında İngilizce gövdenin ortasında Türkçe ay adı
+görünüyordu. Artık `CDMakaleDil` ile sayfa diline uyuyor.
+
+> **ÖLÇÜLEN HATA — Türkçe ay adı hiç çalışmıyordu.** Tarih biçimi
+> `"2 Ocak 2006 15:04 MST"` idi. Go'nun `time.Format` layout'unda ay
+> belirteci `Jan`/`January`dır; **"Ocak" tanınmaz ve düz metin olarak
+> basılır**. Sonuç: hangi ayda yayınlanırsa yayınlansın HER Türkçe makale
+> "6 Ocak 2026" gösteriyordu (Kasım'daki haber Ocak görünüyordu) ve günlük
+> özet başlığı "… Ocak 2026 Günlük Özeti" çıkıyordu. Ay adları artık
+> `repo.AyTR` / `repo.TarihTRUzun` / `repo.TarihTRSaat` ile elle eşleniyor;
+> `internal/repo/tarih_tr_test.go` 12 ayın hepsini kilitliyor.
+
 **Türkçe başlık aynı puntoda %50 daha uzun.** 22px gövde kararı
 alınırken bu hesaba katılmalı (§13).
 
@@ -1408,7 +1437,7 @@ Bizim değerler `go/internal/webui/static/cd.css`'ten **okundu**, tahmin değil.
 | Şerit kaydırma dönüşümü (157×50 → 196×32) | CoinDesk bunu JS ile scroll durumuna bağlıyor; bizde CSP nedeniyle JS'siz ilke var. Şerit zaten tek satır. |
 | Google News pill | `google.com/preferences/source` hedefi site yayına alınınca eklenecek |
 | Hisse keşfedilebilirliği | ✅ `/price` hisse tablosu, `/borsa/hisseler` satır bağlantıları, şerit, mega menü "Hisse Senetleri" sütunu, `/sitemaps/stocks-1.xml` (632 URL), WebPage+FinancialProduct JSON-LD, `/price/stock` → 301 `/price` |
-| Çeviri etiketi ("AI tarafından çevrildi") | EN çeviri hattı gelince; şu an çevrilmiş içerik yok |
+| Çeviri etiketi ("AI tarafından çevrildi") | ✅ **UYGULANDI** (9 Kasım 2026) — 133 EN çeviri kaydında basılıyor, orijinale bağlanıyor (§10.2.6) |
 | Hisse şablonu (`/price/stock/*`) | ✅ **UYGULANDI** (9 Kasım 2026) — Yahoo Finance gerçek verisi (§10.6) |
 | Dördüncü genişlik kademesi (1432) | ✅ hisse sayfasında kullanılıyor (`--cd-max-section`) |
 
@@ -2766,7 +2795,7 @@ Sayı biçimi tek kaynağa alındı: `repo.SayiBicim` ("1,234.56"). Önce
 | Market Cap satırı | ✅ crumb akışıyla geliyor ($1.63T / ₺425.41B) |
 | Google News pill | ⛔ yayın sonrası |
 | Hisse keşfedilebilirliği | ✅ sitemap + JSON-LD + mega menü + /price/stock 301 |
-| Çeviri etiketi | ⛔ EN çeviri hattı gelince |
+| Çeviri etiketi | ✅ EN çeviri kayıtlarında basılıyor (orijinale bağlı) |
 
 ---
 
