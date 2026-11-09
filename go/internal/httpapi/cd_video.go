@@ -418,8 +418,8 @@ func (s *Server) cdYoutubeVideolar(r *http.Request, adet int) []templkit.CDVideo
 	if !ayar.VideoGoster {
 		return nil
 	}
-	kayitlar, err := repo.YoutubeListele(r.Context(), s.pool, "video", adet)
-	if err != nil || len(kayitlar) == 0 {
+	kayitlar := ytListeDilim(s.ytListe(r.Context(), "video"), adet)
+	if len(kayitlar) == 0 {
 		return nil
 	}
 	out := make([]templkit.CDVideo, 0, len(kayitlar))
@@ -445,8 +445,8 @@ func (s *Server) cdYoutubeKlipler(r *http.Request, adet int) []templkit.CDKlip {
 	if !ayar.ShortGoster {
 		return nil
 	}
-	kayitlar, err := repo.YoutubeListele(r.Context(), s.pool, "short", adet)
-	if err != nil || len(kayitlar) == 0 {
+	kayitlar := ytListeDilim(s.ytListe(r.Context(), "short"), adet)
+	if len(kayitlar) == 0 {
 		return nil
 	}
 	out := make([]templkit.CDKlip, 0, len(kayitlar))
@@ -470,8 +470,8 @@ func (s *Server) cdYoutubeCanli(r *http.Request) templkit.CDCanli {
 	if !ayar.CanliGoster {
 		return templkit.CDCanli{}
 	}
-	kayitlar, err := repo.YoutubeListele(r.Context(), s.pool, "stream", 12)
-	if err != nil && len(kayitlar) == 0 {
+	kayitlar := s.ytListe(r.Context(), "stream")
+	if len(kayitlar) == 0 {
 		return templkit.CDCanli{}
 	}
 

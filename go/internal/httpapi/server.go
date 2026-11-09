@@ -87,6 +87,12 @@ type Server struct {
 	cdShellCache *ttlcache[cdShellData]
 	cdHomeCache  *ttlcache[[]repo.Content]
 	cdListeCache *ttlcache[cdListeSonuc]
+	// kategoriCache slug → kategori kimliği (ana sayfa aynı 4 slug'ı her
+	// render'da çeviriyordu).
+	kategoriCache *ttlcache[int64]
+	// ytListeCache YouTube listeleri, TÜR bazında (ana sayfa aynı listeyi
+	// 6 kez çekiyordu; bkz. yt_liste.go).
+	ytListeCache *ttlcache[[]repo.YoutubeKayit]
 
 	// cspHashes gövde → CSP başlığı önbelleği (bkz. csp_hashcache.go).
 	cspHashes *cspHashCache
@@ -134,11 +140,13 @@ func NewServerApp(cfg config.Config, logger *slog.Logger, pool *pgxpool.Pool, bu
 		siteCache:  map[string]siteEntry{},
 		assetVer:   strconv.FormatInt(time.Now().Unix(), 36),
 
-		cdShellCache: newTTLCache[cdShellData](cdCacheTTL),
-		cdHomeCache:  newTTLCache[[]repo.Content](cdCacheTTL),
-		cdListeCache: newTTLCache[cdListeSonuc](cdCacheTTL),
-		cspHashes:    newCSPHashCache(),
-		sayfaCache:   newSayfaOnbellek(),
+		cdShellCache:  newTTLCache[cdShellData](cdCacheTTL),
+		cdHomeCache:   newTTLCache[[]repo.Content](cdCacheTTL),
+		cdListeCache:  newTTLCache[cdListeSonuc](cdCacheTTL),
+		kategoriCache: newTTLCache[int64](cdCacheTTL),
+		ytListeCache:  newTTLCache[[]repo.YoutubeKayit](ytListeTTL),
+		cspHashes:     newCSPHashCache(),
+		sayfaCache:    newSayfaOnbellek(),
 	}
 	s.siteName = s.initialSiteName()
 	// Statik varlık sürümünü templkit'e de ver: cd_head.templ `?v=` ile

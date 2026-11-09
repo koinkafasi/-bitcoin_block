@@ -5,7 +5,6 @@ import (
 	"strings"
 	"time"
 
-	"theblock/site/internal/repo"
 	"theblock/site/internal/webui/templkit"
 	"theblock/site/internal/youtube"
 )
@@ -123,8 +122,8 @@ func (s *Server) cdExploreVideolar(r *http.Request, adet int) []templkit.CDVideo
 		if len(out) >= adet {
 			return
 		}
-		kayitlar, err := repo.YoutubeListele(r.Context(), s.pool, tur, adet-len(out))
-		if err != nil {
+		kayitlar := ytListeDilim(s.ytListe(r.Context(), tur), adet-len(out))
+		if len(kayitlar) == 0 {
 			return
 		}
 		for _, k := range kayitlar {

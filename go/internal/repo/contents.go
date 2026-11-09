@@ -200,8 +200,67 @@ func ContentMinWeight(ctx context.Context, pool *pgxpool.Pool, id int64) (int, e
 	return n, nil
 }
 
-// ContentBySlug yayın URL'si için yalnız slug ile içerik döndürür.
+// ContentsByIDs birden çok içeriği TEK sorguda döndürür (id → içerik).
 //
+// NEDEN: liste hâlinde içerik yükleyen yerler (`RelatedContents`) her satır
+// için `GetContent` çağırıyordu — satır başına 2 gidiş-dönüş
+// (contentCols + ayrı `min_tier_weight` sorgusu). Ölçüm (10 Kasım 2026,
+// soğuk makale): 6 ilgili haber -> 12 sorgu.
+//
+// `min_tier_weight` BURADA contentCols'a eklenmez (kolonu tüm listelere
+// taşımak riskli); onun yerine ayrı bir toplu okuma yapılır. Yine de
+// satır başına 1 sorgu yerine toplam 2 sorgu olur.
+func ContentsByIDs(ctx context.Context, pool *pgxpool.Pool, ids []int64) (map[int64]Content, error) {
+	out := make(map[int64]Content, len(ids))
+	if len(ids) == 0 {
+		return out, nil
+	}
+	q := `SELECT ` + contentCols + ` FROM contents c
+		LEFT JOIN categories cat ON cat.id = c.category_id
+		LEFT JOIN users u ON u.id = c.author_id
+		LEFT JOIN mahrets m ON m.id = c.mahrep_id
+		WHERE c.id = ANY($1)`
+	rows, err := pool.Query(ctx, q, ids)
+	if err != nil {
+		return out, err
+	}
+	defer rows.Close()
+	bulunan := make([]int64, 0, len(ids))
+	for rows.Next() {
+		c, err := scanContent(rows)
+		if err != nil {
+			return out, err
+		}
+		out[c.ID] = c
+		bulunan = append(bulunan, c.ID)
+	}
+	if err := rows.Err(); err != nil {
+		return out, err
+	}
+	// min_tier_weight ikinci toplu sorgu (contentCols'ta YOK).
+	if len(bulunan) > 0 {
+		agirlik := map[int64]int{}
+		wrows, werr := pool.Query(ctx, `SELECT id, min_tier_weight FROM contents WHERE id = ANY($1)`, bulunan)
+		if werr == nil {
+			for wrows.Next() {
+				var id int64
+				var w int
+				if wrows.Scan(&id, &w) == nil {
+					agirlik[id] = w
+				}
+			}
+			wrows.Close()
+		}
+		for id, w := range agirlik {
+			c := out[id]
+			c.MinTierWeight = w
+			out[id] = c
+		}
+	}
+	return out, nil
+}
+
+// ContentBySlug yayın URL'si için yalnız slug ile içerik döndürür.
 // NEDEN: CoinDesk URL deseni tarih taşır ve SON segment yalın slug'dır
 // (/{section}/{y}/{m}/{d}/{slug}). `slug` üzerinde tekil indeks var
 // (ux_contents_slug), bu yüzden arama güvenli.

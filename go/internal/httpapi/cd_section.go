@@ -2,10 +2,13 @@ package httpapi
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/jackc/pgx/v5"
 
 	"theblock/site/internal/i18n"
 	"theblock/site/internal/repo"
@@ -175,11 +178,35 @@ func sayfaURL(n int) string {
 }
 
 // kategoriID slug'dan kategori kimliği bulur (yoksa 0).
+// kategoriID bölüm slug'ını kimliğe çevirir (10 sn önbellekli).
+//
+// NEDEN ÖNBELLEK: ana sayfa render'ı bölüm panelleri için AYNI dört slug'ı
+// çeviriyor (4 sorgu/istek, ölçüldü 10 Kasım 2026). Kategori kimliği
+// pratikte hiç değişmez; 10 sn'lik süreç içi katman yeter.
 func (s *Server) kategoriID(ctx context.Context, slug string) int64 {
-	var id int64
-	_ = s.pool.QueryRow(ctx,
-		`SELECT id FROM categories WHERE slug=$1 LIMIT 1`, slug).Scan(&id)
-	return id
+	if s.kategoriCache == nil {
+		var id int64
+		_ = s.pool.QueryRow(ctx,
+			`SELECT id FROM categories WHERE slug=$1 LIMIT 1`, slug).Scan(&id)
+		return id
+	}
+	v, ok := s.kategoriCache.Load(ctx, slug, func(ctx context.Context) (int64, bool) {
+		var id int64
+		if err := s.pool.QueryRow(ctx,
+			`SELECT id FROM categories WHERE slug=$1 LIMIT 1`, slug).Scan(&id); err != nil {
+			// "Yok" GEÇERLİ sonuçtur (0) ve önbelleğe yazılır: olmayan bir
+			// slug her istekte yeniden sorgulanmasın. DB hatası yazılmaz.
+			if errors.Is(err, pgx.ErrNoRows) {
+				return 0, true
+			}
+			return 0, false
+		}
+		return id, true
+	})
+	if !ok {
+		return 0
+	}
+	return v
 }
 
 // cdShell ortak kabuk verisini kurar (nav + arama + dil + mega menü verisi).
