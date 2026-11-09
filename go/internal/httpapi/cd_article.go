@@ -57,7 +57,7 @@ func (s *Server) handleCDArticle(w http.ResponseWriter, r *http.Request, lang, s
 		Shell:     s.cdShellCtx(ctx, r, bolumSlug),
 		Title:     cdMakaleBaslik(c),
 		Desc:      cdMakaleAciklama(c),
-		Canonical: s.cfg.BaseURL + makaleURL(c),
+		Canonical: s.kanonikKok(r) + makaleURL(c),
 		// Kicker: CoinDesk bölüm adını OLDUĞU GİBİ basıyor ("Markets"),
 		// büyük harfe çevirmiyor (ölçüldü: computed `text-transform: none`).
 		// Eskiden i18n.BuyukHarf uygulanıyordu ve "POLİTİKA" çıkıyordu.
@@ -68,7 +68,7 @@ func (s *Server) handleCDArticle(w http.ResponseWriter, r *http.Request, lang, s
 		Spot:        c.Spot,
 		BodyHTML:    string(s.blocksToHTML(c.Detail, nil)),
 		Image:       cdMakaleGorsel(c, s),
-		BaseURL:     strings.TrimRight(s.cfg.BaseURL, "/"),
+		BaseURL:     s.kanonikKok(r),
 	}
 	if c.AuthorName != "" {
 		v.Author = c.AuthorName
@@ -186,7 +186,7 @@ func (s *Server) handleCDArticle(w http.ResponseWriter, r *http.Request, lang, s
 		View: v, YayinISO: yayinISO, GuncelISO: guncelISO,
 		ID: itoa64(c.ID), YazarSlug: yazarSlug, Keywords: anahtar,
 		GorselAlt: v.ImageCredit,
-		Gorsel:    s.mutlakGorsel(strings.TrimRight(s.cfg.BaseURL, "/"), v.Image),
+		Gorsel:    s.mutlakGorsel(s.kanonikKok(r), v.Image),
 	}))
 	v.BreadcrumbJSONLD = string(makaleBreadcrumbJSONLD(v))
 
@@ -199,7 +199,7 @@ func (s *Server) handleCDArticle(w http.ResponseWriter, r *http.Request, lang, s
 		Yazar:      v.Author,
 		YazarSlug:  yazarSlug,
 		Kanonik:    v.Canonical,
-		Gorsel:     s.mutlakGorsel(strings.TrimRight(s.cfg.BaseURL, "/"), c.ImageURL),
+		Gorsel:     s.mutlakGorsel(s.kanonikKok(r), c.ImageURL),
 		YayinISO:   yayinISO,
 		YayinTarih: yayinTarihKisa(c),
 		YayinSaat:  yayinSaatKisa(c),
@@ -214,7 +214,7 @@ func (s *Server) handleCDArticle(w http.ResponseWriter, r *http.Request, lang, s
 			if t.ID == c.ID || t.Status != "yayinda" || t.Locale == "tr" {
 				continue
 			}
-			diller[t.Locale] = strings.TrimRight(s.cfg.BaseURL, "/") +
+			diller[t.Locale] = s.kanonikKok(r) +
 				publicArticleURL(t.Locale, t.DisplaySlug(), t.ID)
 		}
 	}

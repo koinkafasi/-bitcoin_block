@@ -77,7 +77,7 @@ func (s *Server) handleCDSection(w http.ResponseWriter, r *http.Request, slug st
 		}
 	}
 
-	kanonik := s.cfg.BaseURL + "/" + slug
+	kanonik := s.kanonikKok(r) + "/" + slug
 
 	// PARÇA (`?sayfa=N&parca=1`): cd-daha.js "Daha fazla haber"a basınca
 	// bu yanıtı çeker ve satırları listenin sonuna ekler — sayfa geçişi

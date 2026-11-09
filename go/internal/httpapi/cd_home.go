@@ -3,7 +3,6 @@ package httpapi
 import (
 	"net/http"
 	"strconv"
-	"strings"
 	"time"
 
 	"theblock/site/internal/i18n"
@@ -21,6 +20,13 @@ import (
 // veriye bağlardı. Eski düzen `/klasik` altında korunur.
 
 func (s *Server) handleCDHome(w http.ResponseWriter, r *http.Request) {
+	// WordPress kimlikli adres: /?p=<yazı kimliği> — kanonik adrese taşınır.
+	// `GET /{$}` kalıbı yolu "/" ile birebir eşlediği için istek buraya düşer;
+	// handlePublicSegment'e hiç uğramaz.
+	if wpID := wpKimlikSorgusu(r.URL.Query()); wpID > 0 {
+		s.eskiKimlikYonlendir(w, r, wpID)
+		return
+	}
 	ctx := r.Context()
 
 	items := s.cdHomeIcerikleri(ctx)
@@ -148,7 +154,7 @@ func (s *Server) handleCDHome(w http.ResponseWriter, r *http.Request) {
 		Shell:     s.cdShellCtx(r.Context(), r, ""),
 		Title:     s.siteName + " — Kripto Haberleri ve Piyasa Verisi",
 		Desc:      "Bitcoin, Ethereum ve kripto piyasalarından son haberler, analizler ve canlı fiyatlar.",
-		Canonical: s.cfg.BaseURL + r.URL.Path,
+		Canonical: s.kanonikKok(r) + r.URL.Path,
 		Lead:      lead,
 		RailLeft:  railSol,
 		Dusunce:   cdGeciciDusunce(),
@@ -165,8 +171,8 @@ func (s *Server) handleCDHome(w http.ResponseWriter, r *http.Request) {
 		// hreflang: yalnız GERÇEK diller. Şu an içerik Türkçe; EN içerik
 		// üretildiğinde buraya eklenecek (çevirisi olmayan dili yazmak
 		// Google'da "aynı içerik" cezası riski).
-		Hreflang: map[string]string{"tr": s.cfg.BaseURL + "/"},
-		JSONLD:   string(orgJSONLD(s.siteName, strings.TrimRight(s.cfg.BaseURL, "/"), s.cfg.BaseURL+r.URL.Path)),
+		Hreflang: map[string]string{"tr": s.kanonikKok(r) + "/"},
+		JSONLD:   string(orgJSONLD(s.siteName, s.kanonikKok(r), s.kanonikKok(r)+r.URL.Path)),
 		// "Explore more from CoinDesk" şeridi — gerçek veriyle.
 		Explore: s.cdExploreDoldur(r, sections),
 		// MODÜLER YERLEŞİM (9 Kasım 2026): sayfa tasarımcısının yazdığı
@@ -176,7 +182,7 @@ func (s *Server) handleCDHome(w http.ResponseWriter, r *http.Request) {
 		PageCategory:    "homepage",
 		ContentCategory: "homepage",
 		Locale:          "tr",
-		BaseURL:         strings.TrimRight(s.cfg.BaseURL, "/"),
+		BaseURL:         s.kanonikKok(r),
 	}
 	// Fiyat şeridi cdShellCtx içinde doldurulur (tüm sayfalar için tek yer).
 

@@ -353,6 +353,12 @@ func (s *Server) handlePublicSegment(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// WordPress kimlikli adres: /?p=<yazı kimliği> — kanonik adrese taşınır.
+	if wpID := wpKimlikSorgusu(r.URL.Query()); wpID > 0 {
+		s.eskiKimlikYonlendir(w, r, wpID)
+		return
+	}
+
 	p := strings.Trim(r.URL.Path, "/")
 	if p == "" {
 		s.handleHome(w, r)
@@ -434,7 +440,17 @@ func (s *Server) handlePublicSegment(w http.ResponseWriter, r *http.Request) {
 		s.handleSitemap(w, r)
 	case seg == "rss.xml":
 		s.handleFeed(w, r)
+	case seg == "feed" || (seg == "comments" && i+1 < len(segs) && segs[i+1] == "feed"):
+		// WordPress besleme adresleri RSS'e taşınır.
+		http.Redirect(w, r, homeURL(lang)+"rss.xml", http.StatusMovedPermanently)
 	default:
+		// WordPress tarih arşivi (/2019, /2019/12, /2019/12/11) yeni sitede
+		// ayrı sayfa değil; arşive taşınır.
+		if tarihArsivMi("/" + p) {
+			http.Redirect(w, r, homeURL(lang)+"arsiv", http.StatusMovedPermanently)
+			return
+		}
+
 		// CoinDesk tarihli makale deseni: /{section}/{YYYY}/{MM}/{DD}/{slug}
 		// Ya da bölümsüz: /{YYYY}/{MM}/{DD}/{slug}
 		kalan := segs[i:]
@@ -442,6 +458,18 @@ func (s *Server) handlePublicSegment(w http.ResponseWriter, r *http.Request) {
 			c, err := repo.ContentBySlug(r.Context(), s.pool, slugTarih)
 			if err == nil {
 				if c.Status == "yayinda" {
+					// TEK KANONİK ADRES: yazıya bölüm öneki yanlış ya da hiç
+					// yokken de ulaşılabiliyordu (aynı içerik iki adreste 200).
+					// Google için yinelenen içerik; kanonik adrese 301 verilir.
+					if lang == c.Locale {
+						if hedef := makaleURL(c); hedef != r.URL.Path {
+							if r.URL.RawQuery != "" {
+								hedef += "?" + r.URL.RawQuery
+							}
+							http.Redirect(w, r, hedef, http.StatusMovedPermanently)
+							return
+						}
+					}
 					s.handleCDArticle(w, r, lang, slugTarih, c.ID)
 					return
 				}
@@ -910,12 +938,6 @@ func (s *Server) handleCategory(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	slug := r.PathValue("slug")
 	locale := langOf(r, s)
-	// Akış vitrini (coinhit/enerji modeli) için HTML parçası: "Daha fazla"
-	// ve sonsuz kaydırma bu uçtan 12'lik enerji bloklarını çeker.
-	if r.URL.Query().Get("parca") == "1" {
-		s.handleCategoryAkisParca(w, r, slug, locale)
-		return
-	}
 	// Eski Güncel adresi yeni Gündem adresine kalıcı yönlensin.
 	if slug == "guncel" {
 		target := s.langBase(locale) + "/kategori/gundem"
@@ -923,6 +945,25 @@ func (s *Server) handleCategory(w http.ResponseWriter, r *http.Request) {
 			target += "?" + q
 		}
 		http.Redirect(w, r, target, http.StatusMovedPermanently)
+		return
+	}
+	// YENİ KABUK — kullanıcı bildirimi (9 Kasım 2026): "/kategori/ … hâlâ
+	// theblock'tan kalma stil ve şablon". Aynı içerik iki ayrı şablonla iki
+	// farklı görünümde basılıyordu; artık `/tech` ile `/kategori/tech`
+	// birebir aynı CoinDesk bölüm sayfası.
+	//
+	// PANEL DÜZENİ KORUNUR: kategoriye özel bir düzen (`kategori:<slug>`)
+	// varsa eski motor kullanılır — editörün elle kurduğu modüller sessizce
+	// kaybolmasın. Ölçüm: page_layouts tablosu şu an BOŞ, yani her kategori
+	// yeni kabuğa geçiyor.
+	if !s.sayfaDuzeniVar(ctx, "kategori:"+slug) {
+		s.handleCDSection(w, r, slug)
+		return
+	}
+	// Akış vitrini (coinhit/enerji modeli) için HTML parçası: "Daha fazla"
+	// ve sonsuz kaydırma bu uçtan 12'lik enerji bloklarını çeker.
+	if r.URL.Query().Get("parca") == "1" {
+		s.handleCategoryAkisParca(w, r, slug, locale)
 		return
 	}
 	site := s.siteByDomain(ctx, r.Host)
@@ -1196,6 +1237,15 @@ func (s *Server) handleArchive(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	locale := langOf(r, s)
 	site := s.siteByDomain(ctx, r.Host)
+
+	// YENİ KABUK — kullanıcı bildirimi (9 Kasım 2026): theblock şablonu
+	// kalan sayfalar yeni tasarıma geçsin. Arşiv eski kabuğun son büyük
+	// listesiydi (site_header/site_footer). Panelde bu sayfa için özel
+	// düzen varsa eski motor korunur.
+	if !s.sayfaDuzeniVar(ctx, "arsiv") {
+		s.cdArsivSayfasi(w, r, locale, site.ID)
+		return
+	}
 	items, _ := repo.RecentPublished(ctx, s.pool, site.ID, locale, 100)
 	d := s.baseView(locale, s.langBase(locale), s.i18n.T(locale, "recent"))
 	d.LangBase = s.langBase(locale)
@@ -1543,7 +1593,10 @@ func googleSourceURL(base string) string {
 
 // absBase mutlak site kökü (sitemap/JSON-LD için); istek başlığından düşer.
 func (s *Server) absBase(r *http.Request) string {
-	if b := strings.TrimRight(s.cfg.BaseURL, "/"); b != "" {
+	// Alan adı farkındalığı: canlıda bitcosar.com, önizlemede demo.
+	// (Eskiden koşulsuz cfg.BaseURL dönüyordu; sitemap/robots canlıya
+	// geçildiğinde demo adresini gösterecekti.)
+	if b := s.kanonikKok(r); b != "" {
 		return b
 	}
 	sch := "https"
@@ -2259,4 +2312,66 @@ func buildContentRozets(c repo.Content) []rozet {
 		}
 	}
 	return out
+}
+
+// sayfaDuzeniVar bir sayfa anahtarı için panelden kaydedilmiş ÖZEL düzen
+// olup olmadığını söyler.
+//
+// NEDEN: modüler şablonlar (page_layouts) panelde elle kurulmuş modüller
+// taşıyor; yeni kabuk bunları basmıyor. Düzen VARSA eski motor korunur ki
+// editörün işi sessizce yok olmasın. Düzen YOKSA yeni kabuk kullanılır.
+func (s *Server) sayfaDuzeniVar(ctx context.Context, pageKey string) bool {
+	b, err := repo.GetLayout(ctx, s.pool, 1, pageKey)
+	if err != nil {
+		return false
+	}
+	// GetLayout bulunamazsa "[]" döner: boş dizi = düzen yok.
+	trim := strings.TrimSpace(string(b))
+	return trim != "" && trim != "[]" && trim != "null"
+}
+
+// cdArsivSayfasi /arsiv — son yayınlanan içerikler, yeni kabukta.
+//
+// ESKİ ŞABLON: site_header + "cat_liste" ızgarası. Yeni kabukta aynı
+// içerik `.cd-grid--3` kart ızgarasıyla basılır; üst çubuk, şerit ve alt
+// bilgi ortak cd bileşenlerinden gelir.
+func (s *Server) cdArsivSayfasi(w http.ResponseWriter, r *http.Request, locale string, siteID int64) {
+	ctx := r.Context()
+	items, _ := repo.RecentPublished(ctx, s.pool, siteID, locale, 100)
+
+	simdi := time.Now()
+	kartlar := make([]templkit.CDStory, 0, len(items))
+	var ldItems []cdLDItem
+	for i, c := range items {
+		kartlar = append(kartlar, cdStoryCevir(c, simdi))
+		if i < 11 {
+			it := cdLDItem{Headline: c.Title, URL: s.absBase(r) + makaleURL(c), Author: c.AuthorName}
+			if c.PublishedAt != nil {
+				it.Published = c.PublishedAt.UTC().Format(time.RFC3339)
+			}
+			ldItems = append(ldItems, it)
+		}
+	}
+
+	kanonik := s.kanonikKok(r) + "/arsiv"
+	v := templkit.CDListePage{
+		Shell:           s.cdShellCtx(ctx, r, "arsiv"),
+		Title:           "Arşiv — " + s.siteName,
+		Desc:            "Yayınlanan tüm haberler, en yeniden eskiye.",
+		Canonical:       kanonik,
+		Baslik:          "Arşiv",
+		Aciklama:        "Son yayınlanan haberler, en yeniden eskiye.",
+		Stories:         kartlar,
+		BosMetin:        "Henüz yayınlanmış içerik yok.",
+		JSONLD:          string(cdCollectionJSONLD(s.siteName, strings.TrimRight(s.cfg.BaseURL, "/"), "Arşiv", kanonik, ldItems)),
+		PageCategory:    "section_landing_page",
+		ContentCategory: "archive",
+		Locale:          locale,
+		BaseURL:         strings.TrimRight(s.cfg.BaseURL, "/"),
+	}
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.Header().Set("Cache-Control", cacheControlPublic)
+	if err := templkit.CDListePageView(v).Render(ctx, w); err != nil {
+		s.logger.Error("cd arşiv render", "error", err)
+	}
 }

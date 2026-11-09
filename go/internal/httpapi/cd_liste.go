@@ -78,13 +78,13 @@ func (s *Server) cdTurListesi(w http.ResponseWriter, r *http.Request, tur string
 	v.Shell = s.cdShellCtx(ctx, r, strings.TrimPrefix(yol, "/"))
 	v.Title = v.Baslik + " — " + s.siteName
 	v.Desc = v.Aciklama
-	v.Canonical = s.cfg.BaseURL + yol
+	v.Canonical = s.kanonikKok(r) + yol
 	// CoinDesk video/podcast/sponsorlu sayfaları CollectionPage basıyor.
-	v.JSONLD = string(cdCollectionJSONLD(s.siteName, strings.TrimRight(s.cfg.BaseURL, "/"), v.Baslik, v.Canonical, ldItems))
+	v.JSONLD = string(cdCollectionJSONLD(s.siteName, s.kanonikKok(r), v.Baslik, v.Canonical, ldItems))
 	v.PageCategory = "section_landing_page"
 	v.ContentCategory = strings.TrimPrefix(yol, "/")
 	v.Locale = "tr"
-	v.BaseURL = strings.TrimRight(s.cfg.BaseURL, "/")
+	v.BaseURL = s.kanonikKok(r)
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.Header().Set("Cache-Control", cacheControlPublic)
