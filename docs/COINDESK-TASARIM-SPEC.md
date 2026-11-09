@@ -1297,9 +1297,26 @@ Performans:   976×88 · border-top 1px
 Sekme stili fiyat şeridindeki sekmeyle **aynı desen** (r6px, aktif zemin)
 ama tipografi 12/22 (şeritte 12/16).
 
-> **bitcosar:** bizde `/price/stock/*` şablonu **hiç yok**; ABD hisse
-> verisi bağlanmadığı için menüden de çıkarıldı (§14). Bu bölüm veri
-> kaynağı bağlanırsa uygulanmak üzere kayıtlı.
+> **bitcosar UYGULANDI (9 Kasım 2026):** `/price/stock/{sembol}` şablonu
+> yazıldı. Veri kaynağı **Yahoo Finance grafik ucu** — BIST için zaten
+> kullanılan uç (`query1.finance.yahoo.com/v8/finance/chart/…`); ABD
+> hisseleri aynı uçtan gelir, yeni bağımlılık/anahtar YOK.
+>
+> | Ölçülen alan | Uygulama |
+> |---|---|
+> | `<h1>` yok, ad küçük | görünür h1 yok; a11y/SEO için `.cd-visually-hidden` h1 |
+> | Büyük fiyat 28/42 w500 | aynı |
+> | Izgara 392 + 976 (gap 32) | aynı (`--cd-max-section` 1432) |
+> | Sekmeler 1D·5D·1M·YTD·1Y·All | aynı; `?aralik=` |
+> | Basic / Advanced | Basic alan+çizgi, **Advanced gerçek OHLC mumları** |
+> | OHLC okuması | O/H/L basılır (H/L borsa gününden) |
+> | Performans satırı 88 px | 24s·5g·1a·YTD·1y — 1 yıllık seriden |
+>
+> Bilinçli eksik: **"Market Cap" satırı YOK.** Yahoo'nun grafik ucu bu alanı
+> döndürmüyor; `v7/quote` ve `v10/quoteSummary` 401 "Invalid Crumb" veriyor
+> (ölçüldü). Uydurma sayı basılmaz; satır hiç çıkmaz.
+> "About …" bölümü de şirket açıklaması gerçek kaynaktan gelmediği için
+> basılmıyor.
 
 ## 11. bitcosar ↔ CoinDesk fark tablosu
 
@@ -1376,8 +1393,8 @@ Bizim değerler `go/internal/webui/static/cd.css`'ten **okundu**, tahmin değil.
 | Şerit kaydırma dönüşümü (157×50 → 196×32) | CoinDesk bunu JS ile scroll durumuna bağlıyor; bizde CSP nedeniyle JS'siz ilke var. Şerit zaten tek satır. |
 | Google News pill | `google.com/preferences/source` hedefi site yayına alınınca eklenecek |
 | Çeviri etiketi ("AI tarafından çevrildi") | EN çeviri hattı gelince; şu an çevrilmiş içerik yok |
-| Hisse şablonu (`/price/stock/*`) | ABD hisse verisi bağlanmadı (§14) |
-| Dördüncü genişlik kademesi (1432) | Yalnız hisse sayfasında; veri yok |
+| Hisse şablonu (`/price/stock/*`) | ✅ **UYGULANDI** (9 Kasım 2026) — Yahoo Finance gerçek verisi (§10.6) |
+| Dördüncü genişlik kademesi (1432) | ✅ hisse sayfasında kullanılıyor (`--cd-max-section`) |
 
 ### 11.2 Dördüncü tur (mega menü + mobil taşma) — DURUM (6 Kasım 2026)
 
@@ -2497,7 +2514,8 @@ Sayı biçimi tek kaynağa alındı: `repo.SayiBicim` ("1,234.56"). Önce
 | Piyasa şeridi | ✅ tüm sayfalarda |
 | Hisse sekmesi | ✅ gerçek BIST verisi |
 | Grafik paneli | ✅ yeni bileşen ailesi (CoinDesk'te grafik kartı ölçüsü: başlık 12 px uppercase, değer 28 px w700, eksen 12 px) |
-| Hisse şablonu `/price/stock/*` | ⛔ ABD hisse verisi bağlanmadı |
+| Hisse şablonu `/price/stock/*` | ✅ gerçek ABD hisse verisiyle (Yahoo Finance; Basic + Advanced mum) |
+| Market Cap satırı | ⛔ Yahoo grafik ucu vermiyor (v7/v10 401) — uydurulmaz |
 | Google News pill | ⛔ yayın sonrası |
 | Çeviri etiketi | ⛔ EN çeviri hattı gelince |
 

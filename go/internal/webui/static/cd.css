@@ -4914,3 +4914,183 @@ textarea.cd-girdi { resize: vertical; min-height: 88px; }
   .cd-explore__fiyat:nth-child(n + 8),
   .cd-explore__haber:nth-child(n + 4) { display: none; }
 }
+
+/* ---------------------------------------------------------------- mobil üst çubuk */
+/* MOBİL PARÇALAR masaüstünde GİZLİ; ≤1023 bloğu açar. */
+.cd-topbar__sol,
+.cd-mobil-arama,
+.cd-mobil-giris,
+.cd-mobil-hesap { display: none; }
+
+/* Masaüstünde "Canlı Piyasalar" etiketi ile sekmeler doğrudan şeridin
+   flex çocukları gibi davranır — ölçülen masaüstü dağılımı bozulmasın. */
+.cd-ticker__sol { display: contents; }
+
+/* CoinDesk mobil başlığı — ÖLÇÜLDÜ (9 Kasım 2026, 390×844, iPhone UA):
+     başlık 57 px (56 + 1 px çizgi) · hamburger 32×32 x=16 ·
+     arama 36×32 x=48 · logo ORTADA · "Sign In" 40 px (0 16 dolgu,
+     16/24 w400, radius 4).
+   Masaüstü kümesi (mega menü, dil, Oturum Aç/Kaydol) mobilde gizlenir;
+   aynı bağlantılar hamburger panelinde var (cd_mobil.templ). */
+@media (max-width: 1023px) {
+  :root { --cd-header-h: 57px; }
+
+  /* Üst çubuk CoinDesk'te mobilde YAPIŞKAN DEĞİL (xl altında static). */
+  .cd-topbar { position: relative; }
+  .cd-topbar .cd-wrap { padding: 0; }
+  .cd-topbar__inner {
+    position: relative;
+    height: 56px;
+    padding: 0 16px;
+    gap: 0;
+    justify-content: flex-start;
+    flex-wrap: nowrap;
+  }
+
+  .cd-topbar__sol { display: flex; align-items: center; flex: none; }
+  .cd-mobil-arama {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 32px;
+    color: var(--cd-fg);
+    border-radius: var(--cd-radius);
+  }
+  .cd-mobil-arama:hover { background: var(--cd-surface-soft); text-decoration: none; }
+  .cd-mobil-arama__ikon { display: block; width: 24px; height: 24px; }
+
+  /* Logo ORTADA: mutlak konum, iki yana göre simetrik. */
+  .cd-logo {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+  }
+  .cd-logo__img { width: 118px; height: 26px; }
+
+  .cd-topbar__actions { display: none; }
+
+  .cd-mobil-giris {
+    display: inline-flex;
+    align-items: center;
+    margin-left: auto;
+    height: 40px;
+    padding: 0 16px;
+    border-radius: var(--cd-radius);
+    font-size: 16px;
+    line-height: 24px;
+    font-weight: 400;
+    color: var(--cd-fg);
+    white-space: nowrap;
+  }
+  .cd-mobil-giris:hover { background: var(--cd-surface-soft); text-decoration: none; }
+  .cd-mobil-hesap { display: flex; align-items: center; margin-left: auto; }
+
+  /* Şerit mobilde akışta (CoinDesk): iki yapışkan katman ekran yiyordu. */
+  .cd-ticker { position: static; }
+}
+
+/* Mobil şerit — ÖLÇÜLDÜ: 390×75, dolgu 8 16, aralık 16, yatay kaydırma;
+   sol küme 122×59 = etiket 10/15 + 8 px + sekmeler 36 (dolgu 4, radius 6). */
+@media (max-width: 767px) {
+  .cd-ticker__sol {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    flex: none;
+  }
+  .cd-ticker__inner {
+    justify-content: flex-start;
+    align-items: center;
+    gap: 16px;
+  }
+  .cd-ticker__canli { align-self: flex-start; gap: 4px; padding: 0; }
+  .cd-ticker__tabs { margin-right: 0; }
+  .cd-ticker__tab {
+    display: inline-flex;
+    align-items: center;
+    height: 28px;
+    padding: 0 8px;
+  }
+}
+
+/* hisse detay (/price/stock/…) — olcum §10.6 */
+.cd-hisse-wrap { max-width: var(--cd-max-section); padding-top: 24px; }
+.cd-hisse { display: grid; grid-template-columns: 392px minmax(0, 1fr); gap: 32px; }
+.cd-hisse__sol {
+  border-top: 1px solid var(--cd-border);
+  border-bottom: 1px solid var(--cd-border);
+  padding: 12px 32px 32px;
+}
+.cd-hisse__crumbs { padding: 0 0 12px; }
+.cd-hisse__kimlik { padding-bottom: 20px; }
+.cd-hisse__ad { font-family: var(--cd-serif); font-size: 20px; line-height: 30px; font-weight: 500; }
+.cd-hisse__meta { margin-top: 4px; font-size: 12px; line-height: 16px; letter-spacing: 0.4px; color: var(--cd-muted); }
+.cd-hisse__fiyat {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-top: 12px;
+  font-variant-numeric: tabular-nums;
+}
+.cd-hisse__fiyat strong { font-size: 28px; line-height: 42px; font-weight: 500; letter-spacing: -0.02em; }
+.cd-hisse__asof { margin-top: 4px; font-size: 12px; line-height: 16px; color: var(--cd-muted); }
+.cd-hisse__stats { border-top: 1px solid var(--cd-border); padding-top: 16px; }
+.cd-hisse__baslik { font-size: 16px; line-height: 24px; font-weight: 700; margin-bottom: 8px; }
+.cd-hisse__stat { display: flex; flex-direction: column; gap: 4px; padding: 8px 0; border-bottom: 1px solid var(--cd-border); }
+.cd-hisse__stat-ad { font-size: 14px; line-height: 21px; color: var(--cd-muted); }
+.cd-hisse__stat-deger { font-size: 14px; line-height: 21px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.cd-hisse__sag { min-width: 0; }
+.cd-hisse__ustsatir { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 8px; }
+.cd-hisse__kip { display: flex; gap: 4px; }
+.cd-hisse__kip-dugme { font-size: 12px; line-height: 22px; padding: 4px 12px; border-radius: 6px; color: var(--cd-muted); }
+.cd-hisse__kip-dugme--aktif { background: var(--cd-surface-soft); color: var(--cd-fg); }
+.cd-hisse__ohlc { display: flex; gap: 14px; font-size: 12px; line-height: 16px; color: var(--cd-muted); font-variant-numeric: tabular-nums; }
+.cd-hisse__ohlc strong { font-weight: 500; color: var(--cd-fg); }
+.cd-hisse__sekmeler { display: flex; gap: 4px; margin-bottom: 8px; }
+.cd-hisse__sekme { font-size: 12px; line-height: 22px; padding: 4px 12px; border-radius: 6px; color: var(--cd-muted); }
+.cd-hisse__sekme--aktif { background: var(--cd-surface-soft); color: var(--cd-fg); }
+.cd-hisse__grafik-kutu { margin: 0; }
+.cd-hisse__grafik { display: block; width: 100%; height: 500px; }
+.cd-hisse__izgara { stroke: var(--cd-border); stroke-width: 1; stroke-dasharray: 2 4; vector-effect: non-scaling-stroke; }
+.cd-hisse__eksen {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 8px;
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--cd-muted);
+  font-variant-numeric: tabular-nums;
+}
+.cd-hisse__performans {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 12px;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--cd-border);
+  min-height: 88px;
+}
+.cd-hisse__perf { display: flex; flex-direction: column; gap: 6px; }
+.cd-hisse__perf-ad { font-size: 16px; line-height: 24px; }
+.cd-hisse__perf-yuzde { font-size: 14px; line-height: 21px; font-variant-numeric: tabular-nums; }
+.cd-hisse__bos { padding: 40px 0; color: var(--cd-muted); }
+@media (max-width: 1279px) {
+  .cd-hisse { grid-template-columns: minmax(0, 1fr); gap: 24px; }
+  .cd-hisse__sol { border-bottom: 0; padding: 12px 0 0; }
+  .cd-hisse__grafik { height: 320px; }
+}
+@media (max-width: 767px) {
+  .cd-hisse__performans { grid-template-columns: repeat(2, 1fr); }
+  .cd-hisse__grafik { height: 240px; }
+}
+
+/* Advanced kipi: mumlar (Basic alan+çizgi, Advanced OHLC). */
+.cd-hisse__fitil { stroke-width: 1; vector-effect: non-scaling-stroke; }
+.cd-hisse__fitil--yukselis { stroke: var(--cd-up); }
+.cd-hisse__fitil--dusus { stroke: var(--cd-down); }
+.cd-hisse__mum--yukselis { fill: var(--cd-up); }
+.cd-hisse__mum--dusus { fill: var(--cd-down); }

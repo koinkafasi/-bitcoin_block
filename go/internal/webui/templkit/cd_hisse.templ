@@ -1,0 +1,146 @@
+package templkit
+
+// Hisse detay sayfası (/price/stock/{sembol}) — CoinDesk §10.6 ölçümü.
+//
+// COINDESK'TE <h1> YOK (ölçüldü): ad breadcrumb'ın altında küçük metin
+// olarak duruyor, sayfanın en büyük yazısı FİYAT. Görsel yapı birebir
+// korunur; erişilebilirlik/SEO için aynı ad `.cd-visually-hidden` bir h1
+// olarak basılır (ekranda görünmez, ekran okuyucu ve arama motoru görür).
+
+templ CDHisseSayfaView(v CDHisseSayfa) {
+	<!doctype html>
+	<html lang="tr">
+		<head>
+			@cdHead(CDHead{Title: v.Title, Desc: v.Desc, Canonical: v.Canonical,
+				OGType: "website", SiteName: v.Shell.SiteName, RSSFeed: "/rss.xml",
+				JSONLD: v.JSONLD, Locale: v.Locale, PageCategory: v.PageCategory,
+				ContentCategory: v.ContentCategory, BaseURL: v.BaseURL})
+		</head>
+		<body class="cd">
+			@cdTopbar(v.Shell)
+			@cdTicker(v.Shell)
+			<main class="cd-wrap cd-hisse-wrap">
+				<div class="cd-hisse">
+					<!-- SOL RAY 392 px: breadcrumb + ad + fiyat, Key Stats. -->
+					<aside class="cd-hisse__sol">
+						<nav class="cd-crumbs cd-hisse__crumbs" aria-label="Konum">
+							<a href="/">Ana sayfa</a>
+							<span>/</span>
+							<a href="/price">Fiyatlar</a>
+						</nav>
+						<header class="cd-hisse__kimlik">
+							<h1 class="cd-visually-hidden">{ v.Ad } fiyatı</h1>
+							<p class="cd-hisse__ad">{ v.Ad }</p>
+							<p class="cd-hisse__meta">{ v.Sembol } · { v.Borsa } · { v.Para }</p>
+							<div class="cd-hisse__fiyat">
+								<strong>{ v.Fiyat }</strong>
+								if v.Up {
+									<span class="cd-up">{ v.Degisim }</span>
+								} else {
+									<span class="cd-down">{ v.Degisim }</span>
+								}
+							</div>
+							if v.AsOf != "" {
+								<p class="cd-hisse__asof">{ v.AsOf } itibarıyla</p>
+							}
+						</header>
+
+						<section class="cd-hisse__stats" aria-label="Temel istatistikler">
+							<h2 class="cd-hisse__baslik">Key Stats</h2>
+							for _, s := range v.Istatistik {
+								<div class="cd-hisse__stat">
+									<span class="cd-hisse__stat-ad">{ s.Etiket }</span>
+									<span class="cd-hisse__stat-deger">{ s.Deger }</span>
+								</div>
+							}
+						</section>
+					</aside>
+
+					<!-- SAĞ KOLON 976 px: kip düğmeleri, zaman sekmeleri, grafik, performans. -->
+					<div class="cd-hisse__sag">
+						if v.GrafikVar {
+							<div class="cd-hisse__ustsatir">
+								<div class="cd-hisse__kip" role="group" aria-label="Grafik kipi">
+									if v.Kip == "advanced" {
+										<a class="cd-hisse__kip-dugme" href={ v.KipHrefBasic }>Basic</a>
+										<span class="cd-hisse__kip-dugme cd-hisse__kip-dugme--aktif" aria-current="true">Advanced</span>
+									} else {
+										<span class="cd-hisse__kip-dugme cd-hisse__kip-dugme--aktif" aria-current="true">Basic</span>
+										<a class="cd-hisse__kip-dugme" href={ v.KipHrefAdvanced }>Advanced</a>
+									}
+								</div>
+								if v.Acilis != "" {
+									<p class="cd-hisse__ohlc">
+										<span>O:<strong>{ v.Acilis }</strong></span>
+										<span>H:<strong>{ v.Yuksek }</strong></span>
+										<span>L:<strong>{ v.Dusuk }</strong></span>
+									</p>
+								}
+							</div>
+							<nav class="cd-hisse__sekmeler" aria-label="Zaman aralığı">
+								for _, s := range v.Sekmeler {
+									if s.Aktif {
+										<span class="cd-hisse__sekme cd-hisse__sekme--aktif" aria-current="true">{ s.Ad }</span>
+									} else {
+										<a class="cd-hisse__sekme" href={ s.Href }>{ s.Ad }</a>
+									}
+								}
+							</nav>
+
+							<figure class="cd-hisse__grafik-kutu">
+								<svg class="cd-hisse__grafik" viewBox="0 0 640 180" preserveAspectRatio="none" role="img" aria-label={ v.Ad + " fiyat grafiği" }>
+									<line class="cd-hisse__izgara" x1="0" y1="45" x2="640" y2="45"></line>
+									<line class="cd-hisse__izgara" x1="0" y1="90" x2="640" y2="90"></line>
+									<line class="cd-hisse__izgara" x1="0" y1="135" x2="640" y2="135"></line>
+									if v.Kip == "advanced" && len(v.Mumlar) > 0 {
+										for _, m := range v.Mumlar {
+											if m.Up {
+												<line class="cd-hisse__fitil cd-hisse__fitil--yukselis" x1={ cdF(m.X) } y1={ cdF(m.YUst) } x2={ cdF(m.X) } y2={ cdF(m.YAlt) }></line>
+												<rect class="cd-hisse__mum cd-hisse__mum--yukselis" x={ cdF(m.X - m.Genislik/2) } y={ cdF(m.YGovdeUst) } width={ cdF(m.Genislik) } height={ cdF(m.YGovdeAlt - m.YGovdeUst) }></rect>
+											} else {
+												<line class="cd-hisse__fitil cd-hisse__fitil--dusus" x1={ cdF(m.X) } y1={ cdF(m.YUst) } x2={ cdF(m.X) } y2={ cdF(m.YAlt) }></line>
+												<rect class="cd-hisse__mum cd-hisse__mum--dusus" x={ cdF(m.X - m.Genislik/2) } y={ cdF(m.YGovdeUst) } width={ cdF(m.Genislik) } height={ cdF(m.YGovdeAlt - m.YGovdeUst) }></rect>
+											}
+										}
+									} else if v.GrafikUp {
+										<path class="cd-grafik__alan cd-grafik__alan--yukselis" d={ v.Alan }></path>
+										<path class="cd-grafik__cizgi cd-grafik__cizgi--yukselis" d={ v.Yol }></path>
+									} else {
+										<path class="cd-grafik__alan cd-grafik__alan--dusus" d={ v.Alan }></path>
+										<path class="cd-grafik__cizgi cd-grafik__cizgi--dusus" d={ v.Yol }></path>
+									}
+								</svg>
+								<figcaption class="cd-hisse__eksen">
+									<span>{ v.EtiketSol }</span>
+									<span>{ v.GrafikMin } – { v.GrafikMaks }</span>
+									<span>{ v.EtiketSag }</span>
+								</figcaption>
+							</figure>
+
+							if len(v.Performans) > 0 {
+								<div class="cd-hisse__performans">
+									for _, d := range v.Performans {
+										<div class="cd-hisse__perf">
+											<span class="cd-hisse__perf-ad">{ d.Ad }</span>
+											if d.Up {
+												<span class="cd-hisse__perf-yuzde cd-up">{ d.Yuzde }</span>
+											} else {
+												<span class="cd-hisse__perf-yuzde cd-down">{ d.Yuzde }</span>
+											}
+										</div>
+									}
+								</div>
+							}
+							if v.Kaynak != "" {
+								<p class="cd-grafik-kaynak">{ v.Kaynak }</p>
+							}
+						} else {
+							<p class="cd-hisse__bos">Bu hisse için grafik verisi şu an alınamıyor; birkaç dakika sonra yeniden deneyin.</p>
+						}
+					</div>
+				</div>
+			</main>
+			@cdFooter(v.Shell)
+		</body>
+	</html>
+}

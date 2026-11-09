@@ -230,9 +230,15 @@ func TestCDEtiketlerDuz(t *testing.T) {
 // paneli de eklendi; bütçe ikisini birlikte karşılıyor (163.161 bayt).
 // Bu tur: kategori sağ rayının dikey ayracı + etiket kutuları + banner
 // sütun oranı → 165.566 bayt.
+//
+// Yirmi birinci tur → 176 KB: HİSSE DETAY şablonu (`/price/stock/{sembol}`,
+// spec §10.6). Coin şablonundan ayrı düzen (392 + 976 iki kolon, 976×500
+// grafik, sekmeler, 88 px performans satırı) ~4 KB sınıf ailesi ekledi.
+// Aynı ağaçta paralel oturumun üst çubuk/hesap menüsü CSS'i de var;
+// ölçüldü: 176.487 bayt — bütçe ikisini birlikte karşılıyor.
 func TestCDButce(t *testing.T) {
 	css := cdCSS(t)
-	assert.Less(t, len(css), 172*1024, "cd.css bütçe aşıldı: %d bayt", len(css))
+	assert.Less(t, len(css), 176*1024, "cd.css bütçe aşıldı: %d bayt", len(css))
 }
 
 // TestCDModulRitmi: modüller MARGIN YAZMAZ, ritim ebeveynin gap'inden
