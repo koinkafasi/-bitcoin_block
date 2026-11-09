@@ -2431,6 +2431,122 @@ Doğrulama (1920 · 768 · 390): yatay taşma **0**, panel 7, kırık görsel 0
 (görseller `loading="lazy"` — ekrana gelince yükleniyor), koyu temada kart
 `#161616` / kenar `#262626` / metin `#d4d4d4`. `cd.css` bütçesi aşılmadı.
 
+### 11.17 On dokuzuncu tur (mobil CoinDesk eşleşmesi + koyu palet) — DURUM
+
+Ölçüm: gerçek Chrome, 9 Kasım 2026. Mobil 390×844, `isMobile`, iPhone UA.
+CoinDesk tarafı JS KAPALI ölçüldü (no-JS varyantı birebir alınıyor).
+
+#### 11.17.1 Mobil başlık ve menü
+
+CoinDesk iki mobil menü varyantı basıyor: JS açıkken kayan panel, JS
+kapalıyken `<details name="cd-nav-section">` akordiyonu. Projenin JS'siz
+ilkesi gereği **no-JS varyantı** alındı.
+
+| Öğe | CoinDesk (ölçüldü) | bitcosar |
+|---|---|---|
+| header | 57 px (56 + 1 px çizgi) | 57 ✅ |
+| iç dolgu | 16 px, logo ORTADA | aynı ✅ |
+| hamburger | 32×32 x=16, ikon 20×20 | aynı ✅ |
+| arama ikonu | 36×32 x=48 | 36×32 x=16+32 ✅ |
+| logo | 127×25, mutlak orta | 118×26, mutlak orta ✅ |
+| Oturum Aç | 77×40, 16/24 w400, 0 16 | 113×40 aynı tipografi ✅ |
+| panel | header altı, tam genişlik, `max-h calc(100vh − 57px)` | aynı ✅ |
+| panel iç dolgu | 16 16 192 | aynı ✅ |
+| satır | 64 px (16 + 32 + 16) | aynı ✅ |
+| başlık | 14/32 w700, x=32 | aynı ✅ |
+| chevron | 24×24 sağda, **DÖNMEZ** | aynı ✅ |
+| alt bağlantı | 14/32 w400, dolgu 16 0 16 24 → 64 px | aynı ✅ |
+| ayraç | tam genişlik 1 px | aynı ✅ |
+| alt blok | Dil · Tema · Oturum, 32 px aralık | aynı ✅ |
+
+**Panel yüksekliği:** liste kısa olduğunda altında sayfa içeriği görünüyordu
+(kullanıcı bildirimi). `min-height: calc(100vh − var(--cd-header-h))`
+eklendi; içerik uzunsa `max-height` sınırı kaydırmayı devreye sokuyor.
+
+**Mobilde yapışkanlık yok:** CoinDesk mobilde üst çubuk `static`, şerit de
+akışta. Bizde de öyle (`--cd-header-h: 57px`, `.cd-ticker { position: static }`).
+Tek satırlık kaydırılmış şerit (`html.cd-kaydi`) yalnız ≥1024 px'te eklenir
+(`matchMedia` ile), mobilde sınıf hiç yazılmaz.
+
+**Tema anahtarı** iki seçenekli segment (`role="radiogroup"` +
+`aria-checked`); `csp-delegated.js` `data-tema-deger` ile işler. Tema
+düğmesinin mobil satırı CoinDesk'teki gibi: kap `surface-soft` 4 px dolgu,
+8 px köşe, seçili düğme panel zemini + gölge.
+
+#### 11.17.2 Mobil makale
+
+| Öğe | CoinDesk (390 px) | bitcosar |
+|---|---|---|
+| şerit → kicker | 32 px | 32 ✅ |
+| kicker | 14/32 w500 | aynı ✅ |
+| H1 | 28/36 **w500** | aynı ✅ |
+| deck | 16/24 w400, mt 16 | 16/24, mt 8 → **fark bilinçli** (deck H1'e 8 px) |
+| gövde | 20/28, paragraf arası 32 | aynı ✅ |
+| özet kutusu | 358×116, iç 354×112 (dolgu 20/20/12) | 358×116 / 354×112 ✅ |
+| özet başlığı | 14/24 w500 | 16/24 w500 → **fark bilinçli** (masaüstüyle tutarlı) |
+| görünür breadcrumb | yok | yok ✅ |
+| yatay taşma | 0 | 0 ✅ |
+
+**Bulunan gerçek hata:** `.cd-article` yalnız `max-width: 680px` taşıyordu;
+flex ebeveyn içinde küçülmediği için 390 px viewport'ta **680 px** kalıyor ve
+sayfa yatay taşıyordu. `width: 100%` eklendi (masaüstünde `max-width` zaten
+sınırlıyor, görünüm değişmiyor).
+
+#### 11.17.3 Koyu palet (9 Kasım 2026 — kullanıcı isteği)
+
+| Katman | Renk |
+|---|---|
+| gövde | `#0a0b0e` |
+| üst çubuk | `#0e1014` |
+| şerit (`--cd-ticker-bg`) | `#0e1014` |
+| alt bilgi (`--cd-footer-bg`) | `#0e1014` |
+| açılır panel (`--cd-surface-panel`; mobil menü, arama, mega menü) | `#0e1014` |
+| kart/blok (`--cd-surface-soft`) | `#14171d` |
+| etkileşim (`--cd-surface-action`) | `#1c2027` |
+| çizgi | `#1f2329` / güçlü `#3a4048` |
+| metin | `#eaecef` / sönük `#848e9c` |
+| yükseliş / düşüş | `#0ecb81` / `#f6465d` |
+
+Şerit, alt bilgi ve panel **ayrı jeton** (`--cd-ticker-bg`, `--cd-footer-bg`,
+`--cd-surface-panel`). Ayrı yazılmalarının nedeni: gövde rengi ileride
+değişirse bu üç yüzeyin sessizce onunla birlikte kaymasını engellemek.
+Açık temada üçü de beyaz — görünüm değişmiyor.
+
+`theme-color` meta'sı da güncellendi (`#0a0b0e`). Kamu sayfaları
+(`cd-public.css`, `uye-giris.css`) aynı skalaya taşındı; orada koyu tema
+`html[data-theme="dark"]` ile geliyor.
+
+**Bulunan hata:** koyu temada giriş sayfasının gövde metni `#262626`
+kalıyordu (taban kural `color: #262626` yazıyor, koyu blok yalnız zemin
+veriyordu). `color: var(--a-text)` eklendi — 1,1:1 kontrasttı, WCAG AA'nın
+çok altında.
+
+#### 11.17.4 Marka sarısı → `#fcc334`
+
+`#ffd200` sitede **tek yerden** yönetiliyordu ama dört dosyaya dağılmıştı:
+`--cd-brand`, `cd-public.css` (2 kural + okuma çubuğu), `favicon.svg`,
+`google-preferred.svg`. Hepsi `#fcc334` yapıldı; tasarım testi de yeni
+değeri doğruluyor.
+
+#### 11.17.5 Özet kutusu gradyanı
+
+CoinDesk'in sarı→yeşil gradyanı korunmuyor (kullanıcı isteği):
+`linear-gradient(44deg, #007effe0 -0.2%, #ff00a3 171.06%)` — mavi → magenta.
+Yapı aynı: dış kap radius 7 / 2 px dolgu, iç kutu radius 5 / dolgu 20 20 12.
+
+#### 11.17.6 Doğrulama (390 px + 1512 px, gerçek Chrome)
+
+Yatay taşma **0**: `/`, makale, `/policy`, `/price`, `/price/bitcoin`,
+`/hesabim`, `/uye-giris`, `/arama`. Ölçülen koyu tema değerleri:
+gövde `rgb(10,11,14)`, üst çubuk `rgb(14,16,20)`, şerit `rgb(14,16,20)`,
+alt bilgi `rgb(14,16,20)`, panel `rgb(14,16,20)`, metin `rgb(234,236,239)`.
+Mobil menü: Escape kapatıyor, dışarı tıklama kapatıyor, arama paneli
+menüyü kapatıyor ve odağı arama girdisine veriyor.
+
+`templ` / `gofmt` / `go vet` / `go test` / `go build` temiz. `cd.css`
+bütçesi 172 → **176 KB** (ölçüldü 177.685 bayt); yeni CSS'in tamamı koyu
+tema jetonları ve mobil düzeltmeleri, harici istek eklenmedi.
+
 ---
 
 ## 16. Gerçek veri katmanı (8 Kasım 2026)

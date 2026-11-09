@@ -308,7 +308,7 @@ func cdHead(h CDHead) templ.Component {
 				}
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 21, "<meta name=\"theme-color\" content=\"#ffffff\" media=\"(prefers-color-scheme: light)\"><meta name=\"theme-color\" content=\"#161616\" media=\"(prefers-color-scheme: dark)\"><!-- hreflang: yalnız GERÇEK çeviriler + x-default -->")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 21, "<meta name=\"theme-color\" content=\"#ffffff\" media=\"(prefers-color-scheme: light)\"><meta name=\"theme-color\" content=\"#0a0b0e\" media=\"(prefers-color-scheme: dark)\"><!-- hreflang: yalnız GERÇEK çeviriler + x-default -->")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

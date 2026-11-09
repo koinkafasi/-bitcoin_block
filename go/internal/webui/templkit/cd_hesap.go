@@ -12,8 +12,8 @@ package templkit
 // uydurulmadı; sitenin ÖLÇÜLMÜŞ tasarım jetonları kullanıldı:
 //   - kapsayıcı 1512/1432, kart köşesi 4 px, çizgi #d9d9d9
 //   - H1 serif 36/44 w700, gövde 16/24, etiket 11/16 büyük harf #676767
-//   - birincil düğme siyah zemin/beyaz metin; marka sarısı #ffd200 vurgu
-//   - koyu temada zemin #161616, kart zemini saydam + çizgi
+//   - birincil düğme siyah zemin/beyaz metin; marka sarısı #fcc334 vurgu
+//   - koyu temada zemin #0a0b0e, kart zemini saydam + çizgi
 
 // CDHesapNav hesap kenar menüsü satırı.
 type CDHesapNav struct {

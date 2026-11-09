@@ -52,18 +52,24 @@ templ cdTicker(s CDShell) {
 	<div class="cd-ticker" role="region" aria-label="Piyasa şeridi">
 		<div class="cd-wrap">
 			<div class="cd-ticker__inner">
-				<span class="cd-ticker__canli">
-					<span class="cd-ticker__nokta" aria-hidden="true"></span>
-					Canlı Piyasalar
-				</span>
-				<div class="cd-ticker__tabs" role="tablist">
-					if s.TickerTab == "stocks" {
-						<a class="cd-ticker__tab" role="tab" aria-selected="false" href="?serit=markets">Kripto</a>
-						<a class="cd-ticker__tab" role="tab" aria-selected="true" href="?serit=stocks">Hisse Senetleri</a>
-					} else {
-						<a class="cd-ticker__tab" role="tab" aria-selected="true" href="?serit=markets">Kripto</a>
-						<a class="cd-ticker__tab" role="tab" aria-selected="false" href="?serit=stocks">Hisse Senetleri</a>
-					}
+				<!-- Mobilde "Canlı Piyasalar" etiketi sekmelerin ÜSTÜNE
+				     çıkar (CoinDesk mobil ölçümü: sol küme 122×59,
+				     etiket 10/15 + 8 px + sekmeler 36). Masaüstünde
+				     ikisi yan yana kalır. -->
+				<div class="cd-ticker__sol">
+					<span class="cd-ticker__canli">
+						<span class="cd-ticker__nokta" aria-hidden="true"></span>
+						Canlı Piyasalar
+					</span>
+					<div class="cd-ticker__tabs" role="tablist">
+						if s.TickerTab == "stocks" {
+							<a class="cd-ticker__tab" role="tab" aria-selected="false" href="?serit=markets">Kripto</a>
+							<a class="cd-ticker__tab" role="tab" aria-selected="true" href="?serit=stocks">Hisse Senetleri</a>
+						} else {
+							<a class="cd-ticker__tab" role="tab" aria-selected="true" href="?serit=markets">Kripto</a>
+							<a class="cd-ticker__tab" role="tab" aria-selected="false" href="?serit=stocks">Hisse Senetleri</a>
+						}
+					</div>
 				</div>
 				for i, it := range s.Ticker {
 					if i > 0 {
@@ -111,9 +117,24 @@ templ cdTopbar(s CDShell) {
 	<header class="cd-topbar">
 		<div class="cd-wrap">
 			<div class="cd-topbar__inner">
+				<!-- MOBİL SOL KÜME — CoinDesk ölçümü (9 Kasım 2026):
+				     hamburger 32×32 x=16, arama 36×32 x=48. Masaüstünde
+				     gizli; mobilde mega nav ve aksiyon şeridi yerine
+				     bunlar görünür (CoinDesk mobil başlığı). -->
+				<div class="cd-topbar__sol">
+					@cdMobilNav(s)
+					<a class="cd-mobil-arama" href={ s.SearchHref } data-arama-ac
+						aria-label="Aramayı aç" aria-expanded="false" aria-controls="cd-arama">
+						<svg class="cd-mobil-arama__ikon" viewBox="0 0 24 24" width="24" height="24"
+							fill="none" stroke="currentColor" stroke-width="1.5"
+							stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"
+							focusable="false">
+							<path d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"/>
+						</svg>
+					</a>
+				</div>
 				@cdLogoMark(s.SiteName)
 				@cdMegaNav(s)
-				@cdMobilNav(s)
 				<div class="cd-topbar__actions">
 					<!-- ARAMA — CoinDesk'te bağlantı değil, HAP biçimli düğme:
 					     200×40, zemin surface-subtle, köşe 9999, 16 px büyüteç +
@@ -197,24 +218,87 @@ templ cdTopbar(s CDShell) {
 							</span>
 						}
 					}
-					<!-- Dil ile "Oturum Aç" arasındaki DİKEY AYIRICI — CoinDesk
+					<!-- Dil ile oturum kümesi arasındaki DİKEY AYIRICI — CoinDesk
 					     ölçümü (7 Kasım 2026): 1×40 px, `#d9d9d9`, `role="separator"`.
 					     İki yanında 8 px boşluk var (kapsayıcı gap'i). -->
-					if len(s.Diller) > 0 && s.LoginHref != "" {
+					if len(s.Diller) > 0 && (s.LoginHref != "" || s.LoggedIn) {
 						<div class="cd-topbar__ayirici" role="separator"
 							aria-orientation="vertical"></div>
 					}
-					if s.LoginHref != "" {
-						<a class="cd-btn cd-btn--ghost" href={ s.LoginHref }>Oturum Aç</a>
-					}
-					if s.SignupHref != "" {
-						<a class="cd-btn cd-btn--kayit" href={ s.SignupHref }>Kaydol</a>
+					<!-- OTURUM DALI (kullanıcı isteği, 8 Kasım 2026: "giriş
+					     yapmışken neden hâlâ oturum aç ve kaydol gösteriyor"):
+					     oturum YOKKEN iki bağlantı (CoinDesk ölçümü 104×40 +
+					     77×40); oturum VARKEN ikisi de kalkar, yerine kullanıcı
+					     simgesi + hesap menüsü gelir. Menü <details> — JS'siz
+					     açılır, klavye/dokunmatik çalışır (CSP 'unsafe-inline'
+					     yok; mobil menüyle aynı desen). -->
+					if s.LoggedIn {
+						@cdHesapMenu(s)
+					} else {
+						if s.LoginHref != "" {
+							<a class="cd-btn cd-btn--ghost" href={ s.LoginHref }>Oturum Aç</a>
+						}
+						if s.SignupHref != "" {
+							<a class="cd-btn cd-btn--kayit" href={ s.SignupHref }>Kaydol</a>
+						}
 					}
 				</div>
+				<!-- MOBİL SAĞ — CoinDesk'te "Sign In": 40 px yükseklik,
+				     0 16 dolgu, 16/24 w400, radius 4. Oturum açıkken
+				     aynı yerde avatar bağlantısı durur. -->
+				if s.LoggedIn {
+					<a class="cd-mobil-hesap" href={ s.UserHref } aria-label="Hesabım">
+						<span class="cd-hesap-ac__avatar" aria-hidden="true">{ s.UserInitial }</span>
+					</a>
+				} else {
+					if s.LoginHref != "" {
+						<a class="cd-mobil-giris" href={ s.LoginHref }>Oturum Aç</a>
+					}
+				}
 			</div>
 		</div>
 	</header>
 	@cdAramaPanel(s)
+}
+
+// cdHesapMenu üst çubuk hesap menüsü — OTURUM AÇIKKEN.
+//
+// NEDEN: kullanıcı bildirimi (8 Kasım 2026) — giriş yapılmışken üst çubuk
+// yine "Oturum Aç" + "Kaydol" gösteriyordu. CoinDesk'in girişli üst çubuğu
+// Auth0 duvarının arkasında ölçülemiyor (bkz. cd_hesap.go notu); geometri
+// UYDURULMADI — sitenin ölçülmüş aksiyon kademeleri kullanıldı: 40 px
+// yükseklik, radius 4, 14/21 w500, yüzey/çizgi jetonları.
+//
+// JS YOK: açılış <details>'in kendi davranışı (mobil menüyle aynı desen,
+// bkz. cd_mobil.templ). csp-delegated.js yalnız DIŞARI tıklama ve Escape
+// ile kapatmayı ekler; JS olmasa da menü açılır-kapanır.
+//
+// ÇIKIŞ GET DEĞİL: bağlantı ile oturum kapatan sayfa var (forced-logout
+// CSRF — cikis_test.go); form POST /cikis'e gider, aynı Origin ara katmanı
+// tarafından onaylanır.
+templ cdHesapMenu(s CDShell) {
+	<details class="cd-hesap-ac" data-hesap>
+		<summary class="cd-hesap-ac__dugme" aria-label={ s.UserName + " — hesap menüsü" }>
+			<span class="cd-hesap-ac__avatar" aria-hidden="true">{ s.UserInitial }</span>
+			if s.UserUnread > 0 {
+				<span class="cd-hesap-ac__rozet" aria-hidden="true">{ cdBildirimSayi(s.UserUnread) }</span>
+			}
+		</summary>
+		<div class="cd-hesap-ac__panel">
+			<p class="cd-hesap-ac__ad">{ s.UserName }</p>
+			<a class="cd-hesap-ac__satir" href={ s.UserHref }>Hesabım</a>
+			<a class="cd-hesap-ac__satir" href={ s.UserHref + "/kaydedilenler" }>Kaydedilenler</a>
+			<a class="cd-hesap-ac__satir" href={ s.UserHref + "/bildirimler" }>
+				Bildirimler
+				if s.UserUnread > 0 {
+					<span class="cd-hesap-ac__sayi">{ cdBildirimSayi(s.UserUnread) }</span>
+				}
+			</a>
+			<form class="cd-hesap-ac__cikis" method="post" action="/cikis">
+				<button class="cd-hesap-ac__satir" type="submit">Çıkış</button>
+			</form>
+		</div>
+	</details>
 }
 
 // cdAramaPanel arama paneli — CoinDesk'in komut paleti deseni.

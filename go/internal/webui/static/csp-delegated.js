@@ -157,19 +157,35 @@
       dugmeler[i].setAttribute('aria-label',
         koyu ? 'Aydınlık moda geç' : 'Karanlık moda geç');
     }
+    // MOBİL MENÜDEKİ İKİ SEÇENEKLİ SEGMENT — CoinDesk "Theme" satırı.
+    // `role="radiogroup"` + `aria-checked` (CoinDesk deseni); üst çubuktaki
+    // tek düğme `aria-pressed` kullanmaya devam eder.
+    var secenekler = document.querySelectorAll('[data-tema-deger]');
+    for (var j = 0; j < secenekler.length; j++) {
+      var secili = (secenekler[j].getAttribute('data-tema-deger') === 'dark') === koyu;
+      secenekler[j].setAttribute('aria-checked', secili ? 'true' : 'false');
+    }
+  }
+
+  function temaAyarla(koyu) {
+    var kok = document.documentElement;
+    kok.classList.remove('light', 'dark');
+    kok.classList.add(koyu ? 'dark' : 'light');
+    try { localStorage.setItem('tema', koyu ? 'dark' : 'light'); } catch (err) { /* yok say */ }
+    temaDugmeleri();
   }
 
   document.addEventListener('click', function (e) {
     var el = e.target;
     if (!el || !el.closest) return;
+    var secenek = el.closest('[data-tema-deger]');
+    if (secenek) {
+      temaAyarla(secenek.getAttribute('data-tema-deger') === 'dark');
+      return;
+    }
     var btn = el.closest('[data-tema]');
     if (!btn) return;
-    var kok = document.documentElement;
-    var koyu = !kok.classList.contains('dark');
-    kok.classList.remove('light', 'dark');
-    kok.classList.add(koyu ? 'dark' : 'light');
-    try { localStorage.setItem('tema', koyu ? 'dark' : 'light'); } catch (err) { /* yok say */ }
-    temaDugmeleri();
+    temaAyarla(!document.documentElement.classList.contains('dark'));
   }, true);
 
   temaDugmeleri();
@@ -181,12 +197,21 @@
   // 80 px: menü ~73 px, şerit 67 px — ilk ekranın üstünde kalıyor.
   // Sınıf <html> üzerinde: CSS `html.cd-kaydi .cd-ticker__item` ile
   // bütün şeridi tek kuralla çeviriyor.
+  //
+  // MOBİLDE KAPALI: CoinDesk mobilde şerit yapışkan değil, sayfayla
+  // kayıp gidiyor; tek satırlık "kaydırılmış" görünüm orada yok (ölçüldü
+  // 9 Kasım 2026). Sınıf yalnız ≥1024 px'te eklenir; ekran daralınca
+  // değişiklik olayı sınıfı temizler.
+  var kaydiSorgu = window.matchMedia('(min-width: 1024px)');
   function kaydiGuncelle() {
-    var kaydi = (window.scrollY || window.pageYOffset || 0) > 80;
+    var kaydi = kaydiSorgu.matches && (window.scrollY || window.pageYOffset || 0) > 80;
     document.documentElement.classList.toggle('cd-kaydi', kaydi);
   }
   kaydiGuncelle();
   window.addEventListener('scroll', kaydiGuncelle, { passive: true });
+  if (kaydiSorgu.addEventListener) {
+    kaydiSorgu.addEventListener('change', kaydiGuncelle);
+  }
 
   // --- data-arama-ac: arama paneli (CoinDesk komut paleti) ---
   //
@@ -197,29 +222,37 @@
   (function () {
     var panel = document.getElementById('cd-arama');
     if (!panel) return;
-    var acDugme = document.querySelector('[data-arama-ac]');
+    var acDugmeler = document.querySelectorAll('[data-arama-ac]');
+    var sonAc = null;
     var girdi = panel.querySelector('.cd-arama__girdi');
     var kok = document.documentElement;
+    var mobilMenu = document.querySelector('[data-mobil-menu]');
 
     function ac() {
       panel.hidden = false;
       kok.classList.add('cd-arama-acik');
-      if (acDugme) acDugme.setAttribute('aria-expanded', 'true');
+      // Mobil menü açıksa kapanır: panel onun üstünü örtüyor.
+      if (mobilMenu && mobilMenu.open) mobilMenu.open = false;
+      for (var i = 0; i < acDugmeler.length; i++) {
+        acDugmeler[i].setAttribute('aria-expanded', 'true');
+      }
       if (girdi) girdi.focus();
     }
     function kapat() {
       panel.hidden = true;
       kok.classList.remove('cd-arama-acik');
-      if (acDugme) {
-        acDugme.setAttribute('aria-expanded', 'false');
-        acDugme.focus();
+      for (var i = 0; i < acDugmeler.length; i++) {
+        acDugmeler[i].setAttribute('aria-expanded', 'false');
       }
+      var geri = sonAc || acDugmeler[0];
+      if (geri) geri.focus();
     }
 
     document.addEventListener('click', function (e) {
       var el = e.target;
       if (!el || !el.closest) return;
-      if (el.closest('[data-arama-ac]')) { e.preventDefault(); ac(); return; }
+      var acEl = el.closest('[data-arama-ac]');
+      if (acEl) { e.preventDefault(); sonAc = acEl; ac(); return; }
       if (el.closest('[data-arama-kapat]')) { e.preventDefault(); kapat(); return; }
       var cip = el.closest('[data-arama-cip]');
       if (!cip) return;
@@ -245,6 +278,62 @@
       var kisayol = (e.key === '/' && !yaziyor) ||
         ((e.ctrlKey || e.metaKey) && (e.key === 'k' || e.key === 'K'));
       if (kisayol) { e.preventDefault(); ac(); }
+    });
+  })();
+
+  // --- data-hesap: üst çubuk hesap menüsü ---
+  //
+  // Açılış/kapama <details>'in KENDİ davranışında (JS'siz de çalışır;
+  // klavye ve dokunmatik bedava). Burada yalnız JS'in ekleyebileceği iki
+  // kapanış var: menünün DIŞINA tıklama ve Escape. İkisi de yoksa menü
+  // özet düğmesine tekrar basılana kadar açık kalır — kullanıcıyı
+  // kilitlemez.
+  (function () {
+    var kutular = document.querySelectorAll('[data-hesap]');
+    if (!kutular.length) return;
+
+    document.addEventListener('click', function (e) {
+      var el = e.target;
+      if (!el || !el.closest) return;
+      for (var i = 0; i < kutular.length; i++) {
+        var k = kutular[i];
+        if (k.open && !k.contains(el)) k.open = false;
+      }
+    });
+
+    document.addEventListener('keydown', function (e) {
+      if (e.key !== 'Escape') return;
+      for (var i = 0; i < kutular.length; i++) {
+        var k = kutular[i];
+        if (!k.open) continue;
+        k.open = false;
+        var ozet = k.querySelector('summary');
+        if (ozet) ozet.focus();
+      }
+    });
+  })();
+
+  // --- data-mobil-menu: hamburger paneli ---
+  //
+  // Açılış/kapama <details>'in KENDİ davranışında (JS'siz de çalışır).
+  // Burada yalnız JS'in ekleyebileceği iki kapanış var: panelin DIŞINA
+  // tıklama ve Escape — hesap menüsüyle aynı desen (cd_hesap.go notu).
+  (function () {
+    var menu = document.querySelector('[data-mobil-menu]');
+    if (!menu) return;
+
+    document.addEventListener('click', function (e) {
+      if (!menu.open) return;
+      var el = e.target;
+      if (el && el.closest && el.closest('[data-mobil-menu]')) return;
+      menu.open = false;
+    });
+
+    document.addEventListener('keydown', function (e) {
+      if (e.key !== 'Escape' || !menu.open) return;
+      menu.open = false;
+      var ozet = menu.querySelector('summary');
+      if (ozet) ozet.focus();
     });
   })();
 })();

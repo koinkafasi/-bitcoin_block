@@ -49,7 +49,7 @@ func TestCDTasarimTokenlari(t *testing.T) {
 		"--cd-up: #218410",
 		"--cd-down: #bb020a",
 		// marka — temayla dönmez
-		"--cd-brand: #ffd200",
+		"--cd-brand: #fcc334",
 		// kapsayıcı ve köşe (ölçüldü: 1512 / 4 px)
 		"--cd-max: 1512px",
 		"--cd-max-section: 1432px",
@@ -133,7 +133,7 @@ func TestCDTasarimKurallari(t *testing.T) {
 func TestCDMakaleTipografi(t *testing.T) {
 	css := cdCSS(t)
 	for _, kural := range []struct{ ad, deger string }{
-		{"makale sütunu 680px", ".cd-article { max-width: 680px"},
+		{"makale sütunu 680px", ".cd-article { width: 100%; max-width: 680px"},
 		{"gövde 22px", "font-size: 22px;"},
 		{"gövde paragraf arası 32px", ".cd-article__body p { margin: 0 0 32px; }"},
 		{"ara başlık 28px", "font-size: 28px;"},
@@ -188,7 +188,8 @@ func TestCDEtiketlerDuz(t *testing.T) {
 // 64 px başlık, 28 px çipler, kaydırılan gövde) eklendi; tema anahtarı
 // iki simgeye (ay/güneş) ayrıldı. Önceki turlarda fiyat şeridi (1×32 px
 // ayırıcı, 22 px rozet, 45 px kaydırılmış satır), üst çubuk sağ kümesi
-// ve koyu tema zeminleri (#161616 gövde/şerit, #000000 üst çubuk) gelmişti.
+// ve koyu tema zeminleri (9 Kasım 2026: Binance paleti — #0a0b0e gövde,
+// #0e1014 üst çubuk/şerit/alt bilgi, #16181d yükseltilmiş katman) gelmişti.
 // Değerler px olarak yazılı ve her jetonun gerekçesi yorumda duruyor.
 // Gerçek maliyet sıkıştırılmış boyut: bu dosya gzip'te ~14 KB — tek
 // bloklayıcı CSS için kabul edilebilir.
@@ -372,6 +373,7 @@ func TestCDShellSiniflari(t *testing.T) {
 		"cd-up", "cd-down", "cd-section-head", "cd-tema", "cd-daha",
 		"cd-main", "cd-mod", "cd-hero", "cd-wrap--bolum", "cd-tam",
 		"cd-ozet", "cd-pill", "cd-aksiyon", "cd-footer__ic", "cd-tuy",
+		"cd-hesap-ac", "cd-hesap-ac__panel",
 	} {
 		assert.Contains(t, css, "."+sinif, "CSS sınıfı eksik: %s", sinif)
 	}

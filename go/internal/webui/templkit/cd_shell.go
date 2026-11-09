@@ -46,7 +46,19 @@ type CDShell struct {
 	SearchHref string
 	LoginHref  string
 	SignupHref string
-	Locale     string
+	// Oturum durumu (üst çubuk): giriş YOKKEN "Oturum Aç" + "Kaydol",
+	// VARKEN ikisi de kalkar yerine kullanıcı simgesi + hesap menüsü gelir
+	// (kullanıcı isteği, 8 Kasım 2026: "giriş yapmışken neden hâlâ oturum
+	// aç ve kaydol gösteriyor").
+	//
+	// cdShellCtx çerezden çözer; istek yoksa (r == nil) alanlar sıfır
+	// kalır ve şablon bağlantıları basar — anonim davranış değişmez.
+	LoggedIn    bool
+	UserName    string
+	UserInitial string
+	UserHref    string // hesap merkezi ("/hesabim")
+	UserUnread  int    // okunmamış bildirim (0 = rozet basılmaz)
+	Locale      string
 	// Diller dil seçicisi (yalnız gerçek diller).
 	Diller []CDDil
 	// MenuTags mega menüdeki etiket sütunu (yalnız içeriği olan etiketler).
@@ -171,6 +183,15 @@ func cdSiraya(i int) string {
 
 // cdSayiMetni sayacı metne çevirir (hesap menüsü/kutuları).
 func cdSayiMetni(n int) string {
+	return strconv.Itoa(n)
+}
+
+// cdBildirimSayi bildirim ROZETİ metni — 9 üstü "9+" (eski header ile
+// aynı sınır; rozet kutusu 3 haneli sayıya şişmesin).
+func cdBildirimSayi(n int) string {
+	if n > 9 {
+		return "9+"
+	}
 	return strconv.Itoa(n)
 }
 

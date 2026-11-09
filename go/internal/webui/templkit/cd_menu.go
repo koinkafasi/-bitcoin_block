@@ -162,6 +162,38 @@ func cdMenuKartVar(g CDMenuGroup) bool {
 	return false
 }
 
+// cdMobilAnaGruplar ve cdMobilMedyaGruplar mobil menüyü CoinDesk'in İKİ
+// bloğuna ayırır: ana bölümler, sonra medya (Video/Podcast).
+//
+// NEDEN: CoinDesk mobil menüsü (JS kapalı, ölçüldü 9 Kasım 2026) önce
+// News/Prices/Data/Research/Events/Sponsored bloğunu, bir ayraçtan sonra
+// Videos/Podcasts/Newsletters bloğunu basıyor. Masaüstü sırası DEĞİŞMEZ;
+// yalnız mobil görünüm bu iki bloğa ayrılır.
+func cdMobilAnaGruplar(s CDShell) []CDMenuGroup {
+	out := make([]CDMenuGroup, 0, len(cdMenuSabit))
+	for _, g := range cdMenuGroups(s) {
+		if !cdMedyaGrubu(g) {
+			out = append(out, g)
+		}
+	}
+	return out
+}
+
+func cdMobilMedyaGruplar(s CDShell) []CDMenuGroup {
+	out := make([]CDMenuGroup, 0, 2)
+	for _, g := range cdMenuGroups(s) {
+		if cdMedyaGrubu(g) {
+			out = append(out, g)
+		}
+	}
+	return out
+}
+
+// cdMedyaGrubu video/podcast bölümlerini işaretler.
+func cdMedyaGrubu(g CDMenuGroup) bool {
+	return g.Href == "/videos" || g.Href == "/podcasts"
+}
+
 // cdMenuGroups menüyü, kabuktaki veriyle birleştirir.
 //
 // `s.MenuTags` ve `s.MenuCoins` boşsa ilgili sütun **hiç basılmaz**:

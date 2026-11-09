@@ -259,107 +259,287 @@ html.dark .cd-mega,
  * (cd_mobil.templ). Burada ek kural gerekmiyor. */
 
 /* ---------------------------------------------------------------- mobil gezinme */
-/* JS YOK: <details>/<summary> tarayıcının kendi davranışı. Masaüstünde
-   gizli, mobilde görünür. Gölge yok, ayırma çizgiyle — tasarım kuralı. */
+/* CoinDesk'in JS'SİZ hamburger menüsü — BİREBİR.
+   ÖLÇÜM: coindesk.com, 390×844, iPhone UA, JavaScript KAPALI (9 Kasım 2026).
+   CoinDesk iki varyant basıyor: JS açıkken kayan panel, JS kapalıyken
+   `<details name="cd-nav-section">` akordiyonu. İlkemiz JS'siz çalışmak
+   olduğu için no-JS varyantı alındı; aşağıdaki ölçüler ondan:
+
+     panel        : header'ın hemen altı, tam genişlik, beyaz, gölge,
+                    max-h calc(100vh - 57px), dikey kaydırma
+     iç dolgu     : 16 px (alt 192 px — CoinDesk pb-48)
+     satır        : 64 px (16 + 32 satır + 16)
+     başlık       : 14/32 w700, x=32
+     chevron      : 24×24, sağda 40 px kutuda, DÖNMEZ (ölçüldü)
+     alt bağlantı : 14/32 w400, dolgu 16 0 16 24 → 64 px satır
+     ayraç        : tam genişlik 1 px
+     alt blok     : 32 px üst boşluk; Dil · Tema · Oturum, aralarında 32 px
+
+   Masaüstünde gizli; mobilde mega menü gizlenir. */
 .cd-mobil { display: none; }
 
+/* Hamburger: 32×32, ikon 20×20 ortada (CoinDesk ölçümü). */
 .cd-mobil__dugme {
-  display: inline-flex;
+  display: flex;
   align-items: center;
-  gap: 8px;
-  cursor: pointer;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  margin: 0;
+  padding: 0;
   list-style: none;
-  padding: 8px 10px;
-  border: 1px solid var(--cd-border-strong);
-  border-radius: var(--cd-radius);
-  font-size: 0.78rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
+  cursor: pointer;
   color: var(--cd-fg);
+  background: transparent;
+  border: 0;
+  border-radius: var(--cd-radius);
 }
-/* Safari/Chrome varsayılan üçgenini kaldır (kendi çizgilerimiz var). */
 .cd-mobil__dugme::-webkit-details-marker { display: none; }
 .cd-mobil__dugme::marker { content: ""; }
+.cd-mobil__ikon { display: block; width: 20px; height: 20px; }
 
-.cd-mobil__cizgi {
-  display: block;
-  width: 14px;
-  height: 2px;
-  background: currentColor;
-}
-.cd-mobil__yazi { margin-left: 2px; }
-
-/* Açılınca çizgiler kapanır: "X" görünümü yerine sadece yazı kalır —
-   ikinci bir kapatma düğmesi eklemek kalabalık olurdu. */
-.cd-mobil[open] .cd-mobil__cizgi { display: none; }
-
+/* Panel — header'ın hemen altından, tam genişlik. */
 .cd-mobil__panel {
   position: absolute;
   left: 0;
   right: 0;
-  top: 100%;
+  top: var(--cd-header-h);
   z-index: 70;
-  background: var(--cd-bg);
-  border-top: 1px solid var(--cd-border);
-  border-bottom: 1px solid var(--cd-border);
-  max-height: 75vh;
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
   overflow-y: auto;
-  padding: 8px 0 14px;
+  max-height: calc(100vh - var(--cd-header-h));
+  /* Panel görüntü alanının TAMAMINI kaplar (kullanıcı bildirimi, 9 Kasım
+     2026: menü kısa olduğunda ALTINDA sayfa içeriği görünüyordu). Liste
+     kısaysa bile yükseklik viewport'a sabitlenir; içerik uzunsa
+     `max-height` sınırı kaydırmayı devreye sokar. */
+  min-height: calc(100vh - var(--cd-header-h));
+  /* Panel zemini gövdeden bir ton açık yüzey (koyu temada #0e1014):
+     üst çubuk, şerit ve alt bilgiyle aynı katman. */
+  background: var(--cd-surface-panel);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.12);
+}
+.cd-mobil__ic { padding: 16px 16px 192px; }
+
+/* Liste: satır arası 8 px (CoinDesk `my-2`). */
+.cd-mobil__liste { list-style: none; margin: 0; padding: 0; }
+.cd-mobil__li {
+  display: flex;
+  flex-direction: column;
+  margin: 8px 0;
 }
 
-.cd-mobil__grup { border-bottom: 1px solid var(--cd-border); }
+/* Akordiyon başlığı — 64 px satır. */
+.cd-mobil__grup { width: 100%; }
 .cd-mobil__grup-baslik {
   display: flex;
+  align-items: stretch;
   justify-content: space-between;
-  align-items: center;
-  cursor: pointer;
+  padding: 0 16px;
   list-style: none;
-  padding: 12px 20px;
-  font-size: 0.86rem;
-  font-weight: 700;
+  cursor: pointer;
+  color: var(--cd-fg);
 }
 .cd-mobil__grup-baslik::-webkit-details-marker { display: none; }
 .cd-mobil__grup-baslik::marker { content: ""; }
-.cd-mobil__grup-baslik::after {
-  content: "";
-  width: 0; height: 0;
-  border-left: 4px solid transparent;
-  border-right: 4px solid transparent;
-  border-top: 4px solid currentColor;
-  opacity: .5;
+.cd-mobil__grup-baslik:hover { background: var(--cd-surface-soft); }
+.cd-mobil__grup-metin { flex: 1 1 auto; padding: 16px 0; }
+.cd-mobil__grup-ad { font-size: 14px; line-height: 32px; font-weight: 700; }
+.cd-mobil__ok-kutu {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  flex: none;
 }
-.cd-mobil__grup[open] > .cd-mobil__grup-baslik::after { transform: rotate(180deg); }
+/* Chevron DÖNMEZ — CoinDesk no-JS menüsünde de sabit (ölçüldü). */
+.cd-mobil__ok { display: block; width: 24px; height: 24px; color: var(--cd-fg); }
 
-.cd-mobil__duz {
+/* Alt bağlantılar — 14/32 w400, sol 24 px. */
+.cd-mobil__alt { list-style: none; margin: 0; padding: 0 0 8px; }
+.cd-mobil__alt-li > a {
   display: block;
-  padding: 12px 20px;
-  font-size: 0.86rem;
-  font-weight: 700;
-  border-bottom: 1px solid var(--cd-border);
-}
-
-.cd-mobil__sutun {
-  list-style: none;
-  margin: 0;
-  padding: 0 20px 10px 28px;
-}
-.cd-mobil__sutun a {
-  display: block;
-  padding: 7px 0;
-  font-size: 0.85rem;
+  padding: 16px 0 16px 24px;
+  font-size: 14px;
+  line-height: 32px;
+  font-weight: 400;
   color: var(--cd-fg);
 }
-
-.cd-mobil__eylem {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-  padding: 14px 20px 4px;
+.cd-mobil__alt-li > a:hover {
+  background: var(--cd-surface-soft);
+  text-decoration: none;
+}
+/* Alt liste başlığı (CoinDesk `ml-2 pt-6 pb-4`). */
+.cd-mobil__alt-baslik {
+  display: block;
+  margin-left: 8px;
+  padding: 24px 0 16px;
+  font-size: 14px;
+  line-height: 32px;
+  font-weight: 700;
 }
 
-/* Masaüstünde mobil nav gizli; mobilde mega nav gizlenir ve hamburger çıkar. */
-@media (max-width: 1024px) {
+/* Sütunsuz grup: düz bağlantı, akordiyon başlığıyla AYNI satır ölçüsü. */
+.cd-mobil__duz {
+  display: block;
+  padding: 16px;
+  font-size: 14px;
+  line-height: 32px;
+  font-weight: 700;
+  color: var(--cd-fg);
+}
+.cd-mobil__duz:hover { background: var(--cd-surface-soft); text-decoration: none; }
+
+/* Tam genişlik ayraç: panel dolgusunu taşırır (CoinDesk `-mx-4`). */
+.cd-mobil__ayrac { height: 1px; margin: 0 -16px; background: var(--cd-border); }
+
+/* Alt blok: 32 px üst boşluk, satırlar arası 32 px. */
+.cd-mobil__alt-blok {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  margin-top: 32px;
+}
+
+/* Dil satırı: etiket 14/21 w500; hap 12/16 büyük harf, 1 px çerçeve,
+   9999 köşe, dolgu 8 16, ikon arası 4 px. */
+.cd-mobil__dil {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+details.cd-mobil__dil { display: block; }
+.cd-mobil__dil-ozet {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  list-style: none;
+  cursor: pointer;
+}
+.cd-mobil__dil-ozet::-webkit-details-marker { display: none; }
+.cd-mobil__dil-ozet::marker { content: ""; }
+.cd-mobil__etiket {
+  font-size: 14px;
+  line-height: 21px;
+  font-weight: 500;
+  color: var(--cd-fg);
+}
+.cd-mobil__dil-hap {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 16px;
+  border: 1px solid var(--cd-border-strong);
+  border-radius: 9999px;
+  font-size: 12px;
+  line-height: 16px;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  color: var(--cd-fg);
+  list-style: none;
+  cursor: pointer;
+}
+.cd-mobil__dil-hap::-webkit-details-marker { display: none; }
+.cd-mobil__dil-hap::marker { content: ""; }
+.cd-mobil__dil-hap--tek { cursor: default; }
+.cd-mobil__dil-ok { display: block; width: 16px; height: 16px; }
+.cd-mobil__dil-liste { list-style: none; margin: 8px 0 0; padding: 0; }
+.cd-mobil__dil-liste a {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  border-radius: var(--cd-radius);
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 500;
+  color: var(--cd-fg);
+}
+.cd-mobil__dil-liste a:hover { background: var(--cd-surface-soft); text-decoration: none; }
+.cd-mobil__dil-kod {
+  font-size: 14px;
+  font-weight: 400;
+  text-transform: uppercase;
+  color: var(--cd-muted);
+}
+
+/* Tema segmenti: kap surface-subtle, 4 px dolgu, 8 px köşe, aralık 4 px;
+   seçili düğme beyaz zemin + gölge. */
+.cd-mobil__tema {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+.cd-mobil__tema-sec {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 8px;
+  background: var(--cd-surface-soft);
+}
+.cd-mobil__tema-dugme {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 12px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--cd-muted);
+  cursor: pointer;
+}
+.cd-mobil__tema-dugme svg { display: block; width: 16px; height: 16px; }
+.cd-mobil__tema-dugme[aria-checked="true"] {
+  background: var(--cd-bg);
+  color: var(--cd-fg-strong);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+
+/* Oturum: iki tam genişlik 48 px düğme, aralarında 12 px. */
+.cd-mobil__oturum {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+.cd-mobil__btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 48px;
+  padding: 8px 24px;
+  border: 1px solid var(--cd-border);
+  border-radius: var(--cd-radius);
+  background: var(--cd-bg);
+  color: var(--cd-fg);
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 600;
+  text-align: center;
+  cursor: pointer;
+}
+.cd-mobil__btn:hover { background: var(--cd-surface-soft); text-decoration: none; }
+.cd-mobil__btn--birincil {
+  border-color: var(--cd-brand);
+  background: var(--cd-brand);
+  color: var(--cd-dark);
+}
+/* ÖZGÜLLÜK: `.cd a { color: inherit }` (0,1,1) tek sınıflı kuralı ezip
+   koyu temada marka düğmesinin yazısını BEYAZ yapıyordu (sarı üstüne
+   beyaz = 1,4:1). Aynı tuzak `.cd-btn--kayit`'ta da yaşanmıştı. */
+a.cd-mobil__btn--birincil { color: var(--cd-dark); }
+.cd-mobil__btn--birincil:hover { background: var(--cd-brand); opacity: 0.9; }
+.cd-mobil__cikis { display: flex; width: 100%; margin: 0; }
+
+/* Masaüstünde mobil gezinme gizli; mobilde mega menü gizlenir.
+   Üst çubuk CoinDesk'te mobilde YAPIŞKAN DEĞİL (xl altında static). */
+@media (max-width: 1023px) {
   .cd-mobil { display: block; }
   .cd-nav--mega { display: none; }
   .cd-topbar { position: relative; }

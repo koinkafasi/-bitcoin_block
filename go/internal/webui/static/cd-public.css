@@ -50,7 +50,7 @@
 
   /* Alt bilgi: CoinDesk koyu zemin. */
   --hp-footer-ust-bg: #000000;
-  --hp-footer-bg: #161616;
+  --hp-footer-bg: #0e1014;
   --hp-footer-baslik: #a6a6a6;
   --hp-footer-link: #d9d9d9;
 
@@ -72,20 +72,23 @@
 }
 
 html[data-theme="dark"] {
-  --hp-body-bg: #161616;
-  --hp-surface: #161616;
-  --hp-surface-2: #1f1f1f;
-  --hp-text: #f4f4f4;
-  --hp-text-2: #d9d9d9;
-  --hp-text-muted: #a6a6a6;
-  --muted-fg: #a6a6a6;
-  --hp-border: #2e2e2e;
-  --hp-border-2: #4a4a4a;
-  --hp-header-bg: #000000;
-  --hp-menu-renk: #f4f4f4;
-  --hp-header-muted: #a6a6a6;
-  --hp-footer-bg: #000000;
-  --hp-footer-ust-bg: #000000;
+  /* Koyu palet (kullanıcı isteği, 9 Kasım 2026):
+     gövde #0a0b0e · üst çubuk/alt bilgi #0e1014 · yükseltilmiş
+     yüzey #16181d · çizgi #1f2329 / #3a4048 · metin #eaecef / #848e9c. */
+  --hp-body-bg: #0a0b0e;
+  --hp-surface: #0a0b0e;
+  --hp-surface-2: #16181d;
+  --hp-text: #eaecef;
+  --hp-text-2: #cfd6df;
+  --hp-text-muted: #848e9c;
+  --muted-fg: #848e9c;
+  --hp-border: #1f2329;
+  --hp-border-2: #3a4048;
+  --hp-header-bg: #0e1014;
+  --hp-menu-renk: #eaecef;
+  --hp-header-muted: #848e9c;
+  --hp-footer-bg: #0e1014;
+  --hp-footer-ust-bg: #0e1014;
   --hp-shadow-lg: 0 8px 30px rgba(0, 0, 0, .6);
 }
 
@@ -234,8 +237,8 @@ a.btn {
 
 /* Marka sarısı yalnız vurgu düğmelerinde (CoinDesk "Sign Up"). */
 .btn.marka, .btn--marka {
-  background: #ffd200;
-  border-color: #ffd200;
+  background: #fcc334;
+  border-color: #fcc334;
   color: #000000;
 }
 
@@ -304,10 +307,10 @@ html[data-theme="dark"] select:focus { border-color: #ffffff; }
 .site-footer,
 .site-footer.foot-skin-accent,
 .site-footer.foot-skin-dark {
-  --hp-footer-bg: #161616;
+  --hp-footer-bg: #0e1014;
   --hp-footer-link: #d9d9d9;
   --hp-footer-baslik: #a6a6a6;
-  background: #161616;
+  background: #0e1014;
   color: #d9d9d9;
 }
 
@@ -356,7 +359,7 @@ html[data-theme="dark"] select:focus { border-color: #ffffff; }
 .hp-social a:hover { background: #ffffff; color: #000000; }
 
 /* ---- 7) Yapışkan "başa dön" ve okuma çubuğu ---- */
-.reading-bar { background: #ffd200; }
+.reading-bar { background: #fcc334; }
 .to-top {
   background: #000000;
   color: #ffffff;
@@ -385,9 +388,9 @@ html[data-theme="dark"] .to-top { background: #ffffff; color: #000000; }
 
 /* ---- 9) Karanlık modda beyaz zemin sızıntısı olmasın ---- */
 html[data-theme="dark"] body { background-color: var(--hp-body-bg); }
-html[data-theme="dark"] .site-header { border-bottom-color: #2e2e2e; }
+html[data-theme="dark"] .site-header { border-bottom-color: #1f2329; }
 html[data-theme="dark"] .cd-girdi,
-html[data-theme="dark"] .input { background: #1f1f1f; }
+html[data-theme="dark"] .input { background: #16181d; }
 
 /* ---- 10) Duyarlı: başlık ölçeği küçülür ---- */
 @media (max-width: 767px) {

@@ -67,9 +67,18 @@
   /* ---- zemin katmanları ---- */
   --cd-bg: #ffffff;              /* surface-default — gövde zemini */
   /* ÜST ÇUBUK ZEMİNİ AYRI JETON (kullanıcı isteği, 7 Kasım 2026):
-     açık temada beyaz, koyu temada SİYAH (#000000). Gövde zemini koyu
-     temada #161616 olduğu için üst çubuk artık ondan AYRIŞIYOR. */
+     açık temada beyaz, koyu temada #0e1014. Gövde zemini koyu temada
+     #0a0b0e olduğu için üst çubuk, şerit ve alt bilgi ondan bir ton
+     açık katman oluşturuyor (9 Kasım 2026 paleti). */
   --cd-topbar-bg: #ffffff;
+  /* Şerit ve alt bilgi AYRI JETON (kullanıcı isteği, 9 Kasım 2026):
+     koyu temada gövdeden bir ton açık yüzey oluşturuyorlar. Açık temada
+     ikisi de gövdeyle aynı (beyaz) — görünüm değişmiyor. */
+  --cd-ticker-bg: #ffffff;
+  --cd-footer-bg: #ffffff;
+  /* Açılır panel zemini (mobil menü, mega menü): açık temada beyaz,
+     koyu temada üst çubukla aynı katman (#0e1014). */
+  --cd-surface-panel: #ffffff;
   --cd-surface-soft: #f4f4f4;    /* surface-subtle — kart/blok (en sık) */
   --cd-surface-alt: #f4f4f4;     /* geriye dönük ad; aynı katman */
   --cd-surface-action: #d9d9d9;  /* surface-action — etkileşim zemini */
@@ -94,7 +103,7 @@
   --cd-down-bg: #ffe5e5;
 
   /* ---- marka: temayla DÖNMEZ ---- */
-  --cd-brand: #ffd200;           /* bg-surface-brand-fixed */
+  --cd-brand: #fcc334;           /* bg-surface-brand-fixed */
   --cd-dark: #262626;
   --cd-dark-2: #2e3644;
 
@@ -166,6 +175,12 @@
 }
 
 /* ---- koyu tema ----
+ * PALET (kullanıcı isteği, 9 Kasım 2026): gövde #0a0b0e · üst çubuk, şerit
+ * ve alt bilgi #0e1014 (gövdeden bir ton açık) · kart/blok yüzeyi #14171d ·
+ * etkileşim yüzeyi #1c2027 · çizgi #1f2329 / #3a4048 · metin #eaecef /
+ * #848e9c. Önceki turdaki Binance skalası (#202630 gövde) bu turda
+ * değiştirildi; eski değerler yorumda kaldı ki karar izlenebilsin.
+ *
  * CoinDesk'te kullanıcı anahtarı var: <html class="light|dark">.
  * İlk değeri `prefers-color-scheme` verir, anahtar onu EZER. Bu yüzden
  * medya sorgusu yalnız "kullanıcı seçim yapmadıysa" geçerli
@@ -173,44 +188,50 @@
  * işletim sistemi koyu diye geri alınmaz. */
 @media (prefers-color-scheme: dark) {
   :root:not(.light):not(.dark) {
-    --cd-bg: #161616;
-    --cd-topbar-bg: #000000;
-    --cd-surface-soft: #262626;
-    --cd-surface-alt: #262626;
-    --cd-surface-action: #262626;
-    --cd-surface-disable: #0f0f0f;
-    --cd-fg: #d4d4d4;
-    --cd-fg-strong: #ececec;
-    --cd-muted: #949494;
-    --cd-muted-strong: #c4c4c4;
-    --cd-border: #262626;
-    --cd-border-strong: #585858;
-    --cd-border-disable: #0f0f0f;
-    --cd-up: #18e589;
-    --cd-down: #ff454d;
-    --cd-up-bg: #10301c;
-    --cd-down-bg: #3a1214;
+    --cd-bg: #0a0b0e;
+    --cd-topbar-bg: #0e1014;
+    --cd-ticker-bg: #0e1014;
+    --cd-footer-bg: #0e1014;
+    --cd-surface-panel: #0e1014;
+    --cd-surface-soft: #14171d;
+    --cd-surface-alt: #14171d;
+    --cd-surface-action: #1c2027;
+    --cd-surface-disable: #101216;
+    --cd-fg: #eaecef;
+    --cd-fg-strong: #ffffff;
+    --cd-muted: #848e9c;
+    --cd-muted-strong: #b7bdc6;
+    --cd-border: #1f2329;
+    --cd-border-strong: #3a4048;
+    --cd-border-disable: #101216;
+    --cd-up: #0ecb81;
+    --cd-down: #f6465d;
+    --cd-up-bg: #0c2b21;
+    --cd-down-bg: #2a1114;
   }
 }
 
 html.dark {
-  --cd-bg: #161616;
-  --cd-topbar-bg: #000000;
-  --cd-surface-soft: #262626;
-  --cd-surface-alt: #262626;
-  --cd-surface-action: #262626;
-  --cd-surface-disable: #0f0f0f;
-  --cd-fg: #d4d4d4;
-  --cd-fg-strong: #ececec;
-  --cd-muted: #949494;
-  --cd-muted-strong: #c4c4c4;
-  --cd-border: #262626;
-  --cd-border-strong: #585858;
-  --cd-border-disable: #0f0f0f;
-  --cd-up: #18e589;
-  --cd-down: #ff454d;
-  --cd-up-bg: #10301c;
-  --cd-down-bg: #3a1214;
+  --cd-bg: #0a0b0e;
+  --cd-topbar-bg: #0e1014;
+  --cd-ticker-bg: #0e1014;
+  --cd-footer-bg: #0e1014;
+  --cd-surface-panel: #0e1014;
+  --cd-surface-soft: #14171d;
+  --cd-surface-alt: #14171d;
+  --cd-surface-action: #1c2027;
+  --cd-surface-disable: #101216;
+  --cd-fg: #eaecef;
+  --cd-fg-strong: #ffffff;
+  --cd-muted: #848e9c;
+  --cd-muted-strong: #b7bdc6;
+  --cd-border: #1f2329;
+  --cd-border-strong: #3a4048;
+  --cd-border-disable: #101216;
+  --cd-up: #0ecb81;
+  --cd-down: #f6465d;
+  --cd-up-bg: #0c2b21;
+  --cd-down-bg: #2a1114;
   color-scheme: dark;
 }
 
@@ -373,16 +394,16 @@ html { overflow-x: clip; }
   position: sticky;
   top: var(--cd-header-h);
   z-index: 30;
-  /* Şerit zemini KOYU TEMADA #161616 (kullanıcı isteği, 7 Kasım 2026).
-     Gövde jetonuyla aynı; ayrı yazılması ileride gövde rengi değişirse
-     şeridin kazara başka renge dönmesini engelliyor. */
-  background: var(--cd-bg);
+  /* Şerit zemini KOYU TEMADA #0e1014 — gövdeden (#0a0b0e) bir ton açık
+     (kullanıcı isteği, 9 Kasım 2026). Ayrı jeton olması ileride gövde
+     rengi değişirse şeridin kazara başka renge dönmesini engelliyor. */
+  background: var(--cd-ticker-bg);
   border-bottom: 1px solid var(--cd-border);
   font-variant-numeric: tabular-nums;
 }
-html.dark .cd-ticker { background: #161616; }
+html.dark .cd-ticker { background: var(--cd-ticker-bg); }
 @media (prefers-color-scheme: dark) {
-  :root:not(.light):not(.dark) .cd-ticker { background: #161616; }
+  :root:not(.light):not(.dark) .cd-ticker { background: var(--cd-ticker-bg); }
 }
 /* ÖLÇÜLDÜ (CoinDesk /tr, 7 Kasım 2026): kapsayıcı `justify-between` +
    `gap: 12px`. Yedi kalem sağdaki "Kaydol" düğmesinin bittiği hizaya kadar
@@ -715,7 +736,7 @@ a.cd-btn--kayit { color: var(--cd-dark); }
 /* ÜST ÇUBUK DÜĞMELERİ — CoinDesk ölçümü:
      "Oturum Aç" 104×40, "Kaydol" 77×40; ikisi de dolgu 0 16, radius 4,
      14/21 w500. Oturum şeffaf + hover'da surface-soft; Kaydol marka sarısı
-     (#ffd200) + siyah metin + hover'da opacity .9.
+     (#fcc334) + siyah metin + hover'da opacity .9.
    Global `.cd-btn` 8px 14px dolgu ve 20 px satır yüksekliği kullanıyor;
    üst çubukta bunlar 40 px yüksekliği tutturamıyordu. */
 .cd-topbar__actions .cd-btn {
@@ -744,6 +765,118 @@ a.cd-btn--kayit { color: var(--cd-dark); }
 }
 .cd-topbar__actions .cd-btn--kayit { background: var(--cd-brand); color: var(--cd-dark); }
 .cd-topbar__actions .cd-btn--kayit:hover { opacity: 0.9; text-decoration: none; }
+
+/* ÜST ÇUBUK HESAP MENÜSÜ — oturum AÇIKKEN Oturum Aç/Kaydol yerine
+   (kullanıcı isteği, 8 Kasım 2026). CoinDesk'in girişli üst çubuğu Auth0
+   duvarının arkasında ölçülemiyor (bkz. cd_hesap.go notu) — geometri
+   UYDURULMADI: sitenin ölçülmüş aksiyon kademeleri (40 px yükseklik,
+   radius 4, 14/21 w500) ve yüzey/çizgi jetonları kullanıldı.
+   Simge 40 px daire + baş harf; rozet metni TERS jeton (zemin/renk yer
+   değiştirir) — her iki temada AA.
+
+   BLOK ADI `cd-hesap-ac`: `.cd-hesap` (tek çizgi) /hesabim sayfasının
+   kapsayıcısı (aşağıda, padding 32/64) — aynı sınıfı paylaştıysak üst
+   çubuktaki menüye o padding uygulanır ve hesap sayfası display:flex'e
+   döner. Adlar bilerek ayrı. */
+.cd-hesap-ac { position: relative; display: flex; align-items: center; }
+.cd-hesap-ac__dugme {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  position: relative;
+  border: 1px solid var(--cd-border-strong);
+  border-radius: 50%;
+  background: var(--cd-surface-soft);
+  color: var(--cd-fg-strong);
+  cursor: pointer;
+  list-style: none;
+  transition: background-color 120ms ease;
+}
+.cd-hesap-ac__dugme:hover { background: var(--cd-bg); }
+.cd-hesap-ac__dugme::-webkit-details-marker { display: none; }
+.cd-hesap-ac__dugme::marker { content: ""; }
+.cd-hesap-ac__avatar { font-size: 15px; line-height: 1; font-weight: 500; }
+.cd-hesap-ac__rozet {
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 9999px;
+  background: var(--cd-fg-strong);
+  color: var(--cd-bg);
+  font-size: 11px;
+  line-height: 18px;
+  font-weight: 500;
+  text-align: center;
+}
+.cd-hesap-ac__panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 50;
+  min-width: 240px;
+  display: flex;
+  flex-direction: column;
+  background: var(--cd-bg);
+  border: 1px solid var(--cd-border);
+  border-radius: var(--cd-radius);
+  /* Gölge YALNIZ jeton üzerinden (TestCDTasarimKurallari). */
+  box-shadow: var(--cd-shadow-overlay);
+  overflow: hidden;
+  color: var(--cd-fg);
+}
+.cd-hesap-ac__ad {
+  margin: 0;
+  padding: 12px 16px;
+  font-size: 14px;
+  line-height: 21px;
+  font-weight: 500;
+  color: var(--cd-fg-strong);
+  border-bottom: 1px solid var(--cd-border);
+  overflow-wrap: anywhere;
+}
+.cd-hesap-ac__satir,
+a.cd-hesap-ac__satir {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 16px;
+  border: 0;
+  background: none;
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 21px;
+  /* `.cd a { color: inherit }` (0,1,1) özgüllüğü — bağlantı satırı da
+     aynı renkte kalır (bkz. a.cd-btn notu). */
+  color: var(--cd-fg);
+  text-align: left;
+  cursor: pointer;
+}
+.cd-hesap-ac__satir:hover { background: var(--cd-surface-soft); text-decoration: none; }
+.cd-hesap-ac__sayi {
+  flex: none;
+  min-width: 20px;
+  padding: 0 6px;
+  border-radius: 9999px;
+  background: var(--cd-surface-soft);
+  color: var(--cd-fg-strong);
+  font-size: 12px;
+  line-height: 18px;
+  font-weight: 500;
+  text-align: center;
+}
+.cd-hesap-ac__cikis {
+  display: flex;
+  margin: 0;
+  border-top: 1px solid var(--cd-border);
+}
 
 /* Üst çubuk ikon düğmesi (arama): CoinDesk'te metin düğme yok, 32 px
    yuvarlak ikon var. Çerçevesiz, sönük renk, hover'da zemin. */
@@ -874,7 +1007,7 @@ html.dark .cd-tema__gunes { display: block; }
   margin: 64px auto 0;
   display: flex;
   flex-direction: column;
-  background: var(--cd-bg);
+  background: var(--cd-surface-panel);
   border: 1px solid var(--cd-border);
   border-radius: 16px;
   /* Gölge YALNIZ jeton üzerinden (TestCDTasarimKurallari): kartlarda
@@ -1839,7 +1972,7 @@ html.cd-arama-acik, html.cd-arama-acik body { overflow: hidden; }
 }
 .cd-crumbs a { color: var(--cd-muted); }
 
-.cd-article { max-width: 680px; margin: 0 auto; }
+.cd-article { width: 100%; max-width: 680px; margin: 0 auto; }
 /* ÜST BOŞLUK — ÖLÇÜLDÜ (8 Kasım 2026): CoinDesk'te şerit altından kicker
    üstüne kadar 73 px var (şerit alt 419 → kicker üst 492). Kaynağı iki
    katmanlı dolgu: içerik kapsayıcısı 24 px + ızgara 32 px (+ şerit kendi
@@ -2046,7 +2179,7 @@ html.dark .cd-google { color: var(--cd-fg); }
 /* ---- Özet kutusu (ölçüldü, coindesk.com/markets/2026/11/05/… ,8 Kasım 2026)
    CoinDesk'te çerçeve DÜZ ÇİZGİ DEĞİL, marka gradyanı:
      dış kap  680×116 · radius 7 · padding 2 · margin 16 0 32
-              background-image: linear-gradient(102deg, #ffd200 -0.2%, #18e585 171.06%)
+              background-image: linear-gradient(44deg, #007effe0 -0.2%, #ff00a3 171.06%)
      iç kutu  676×112 · radius 5 · padding 20 20 12 · zemin beyaz
      başlık satırı 24 yüksek · margin-bottom 16 · 16/24 w400 serif
      önizleme 24 yüksek · 16/24
@@ -2057,8 +2190,9 @@ html.dark .cd-google { color: var(--cd-fg); }
   padding: 2px;
   border: 0;
   border-radius: var(--cd-radius-ozet);
-  /* Marka gradyanı: temayla DEĞİŞMEZ (CoinDesk'te de sabit kimlik rengi). */
-  background-image: linear-gradient(102deg, #ffd200 -0.2%, #18e585 171.06%);
+  /* Çerçeve gradyanı (kullanıcı isteği, 9 Kasım 2026): mavi → magenta.
+     Temayla DEĞİŞMEZ; CoinDesk'te de sabit kimlik rengi. */
+  background-image: linear-gradient(44deg, #007effe0 -0.2%, #ff00a3 171.06%);
 }
 /* summary = iç kutunun kendisi (beyaz zemin + 5 px köşe). */
 .cd-ozet__ic {
@@ -2173,7 +2307,7 @@ html.dark .cd-google { color: var(--cd-fg); }
 .cd-footer {
   margin-top: 56px;
   border-top: 1px solid var(--cd-border-strong);
-  background: var(--cd-bg);
+  background: var(--cd-footer-bg);
   padding: 48px 32px;
 }
 .cd-footer__ic {
@@ -2674,9 +2808,17 @@ html.dark .cd-google { color: var(--cd-fg); }
   /* Gövde 22 px mobilde çok geniş satır olur; 20 px'e iner
      (Türkçe sözcükler uzun — spec §13.3 kararı). */
   .cd-article__body { font-size: 20px; line-height: 28px; }
-  .cd-article__body p { margin-bottom: 28px; }
-  .cd-article h1 { font-size: 30px; line-height: 38px; }
+  /* Paragraf arası 32 px — CoinDesk mobil ölçümü (9 Kasım 2026). */
+  .cd-article__body p { margin-bottom: 32px; }
+  /* Makale H1 mobilde 28/36 w500 — CoinDesk ölçümü (9 Kasım 2026).
+     Masaüstü 36/44; mobilde 30/38 fazla büyüktü. */
+  .cd-article h1 { font-size: 28px; line-height: 36px; }
   .cd-section-title h1 { font-size: 30px; line-height: 38px; }
+  /* Kicker mobilde 14/32 w500 (CoinDesk ölçümü); masaüstü 16/32. */
+  .cd-article .cd-kicker { font-size: 14px; line-height: 32px; }
+  /* Şerit → kicker arası 32 px (CoinDesk mobil: şerit alt 404 → kicker
+     436). Masaüstü 73 px sabiti burada geçerli değil. */
+  .cd-main--makale { padding-top: 32px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

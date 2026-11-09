@@ -52,18 +52,20 @@ body.auth-page {
 }
 
 html[data-theme="dark"] body.auth-page {
-  --a-card: #141519;
-  --a-art-1: #1d1c21;
-  --a-art-2: #121116;
-  --a-text: #f2f0f4;
-  --a-muted: #a39fae;
-  --a-hair: #302d37;
-  --a-danger: #ff8f86;
-  --a-warn: #f2c14e;
-  --a-ok: #4ade80;
-  --a-ghost: #1d1c22;
-  --a-ghost-hover: #26242c;
-  --a-ink: #0b0b0e;
+  /* Koyu palet (9 Kasım 2026): gövde #0a0b0e, kart #0a0b0e,
+     yükseltilmiş #16181d, çizgi #1f2329. */
+  --a-card: #0a0b0e;
+  --a-art-1: #16181d;
+  --a-art-2: #0e1014;
+  --a-text: #eaecef;
+  --a-muted: #848e9c;
+  --a-hair: #1f2329;
+  --a-danger: #f6465d;
+  --a-warn: #fcd535;
+  --a-ok: #0ecb81;
+  --a-ghost: #16181d;
+  --a-ghost-hover: #20242b;
+  --a-ink: #0e1014;
   --a-cream: #f3e9d2;
 }
 
@@ -74,7 +76,7 @@ html[data-theme="dark"] body.auth-page {
   z-index: 0;
   pointer-events: none;
   background:
-    radial-gradient(120% 90% at 50% 0%, var(--a-bg-2), var(--a-bg) 55%, #070608 100%);
+    radial-gradient(120% 90% at 50% 0%, var(--a-bg-2), var(--a-bg) 55%, #06070a 100%);
 }
 .auth-room::after {
   content: "";
@@ -779,23 +781,27 @@ body.auth-page {
 }
 
 html[data-theme="dark"] body.auth-page {
-  --a-bg: #161616;
-  --a-bg-2: #161616;
-  --a-card: #161616;
-  --a-art-1: #1f1f1f;
-  --a-art-2: #262626;
-  --a-text: #f4f4f4;
-  --a-muted: #a6a6a6;
-  --a-hair: #2e2e2e;
-  --a-danger: #ff6b6b;
-  --a-ok: #4ade80;
-  --a-ghost: #1f1f1f;
-  --a-ghost-hover: #262626;
+  /* Koyu palet (kullanıcı isteği, 9 Kasım 2026). */
+  --a-bg: #0a0b0e;
+  --a-bg-2: #0a0b0e;
+  --a-card: #0a0b0e;
+  --a-art-1: #16181d;
+  --a-art-2: #20242b;
+  --a-text: #eaecef;
+  --a-muted: #848e9c;
+  --a-hair: #1f2329;
+  --a-danger: #f6465d;
+  --a-ok: #0ecb81;
+  --a-ghost: #16181d;
+  --a-ghost-hover: #20242b;
   --a-red: #ffffff;
   --a-red-deep: #d9d9d9;
   --a-ink: #ffffff;
 
-  background-color: #161616;
+  background-color: #0a0b0e;
+  /* Gövde metin rengi de jetonla dönmeli: taban kural `color:#262626`
+     yazdığı için koyu temada metin koyu kalıyordu (9 Kasım 2026 ölçümü). */
+  color: var(--a-text);
 }
 
 /* Koyu bordo ışık katmanı kalkar: CoinDesk düz zemin kullanıyor. */
