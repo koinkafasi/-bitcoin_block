@@ -947,12 +947,21 @@ func gazeteTarih(iso string) string {
 }
 
 func templateFuncs() template.FuncMap {
-	return template.FuncMap{"formatTime": func(t *time.Time) string {
-		if t == nil {
-			return ""
-		}
-		return t.Local().Format("02.01.2006 15:04")
-	},
+	return template.FuncMap{
+		// yaziURL bir içeriğin KANONİK adresini üretir.
+		//
+		// NEDEN: eski şablonlar `/{slug}-{id}` bağlantısı basıyordu; o adres
+		// 301 ile kanonik adrese gidiyor. İç bağlantıların her biri bir
+		// yönlendirme sıçraması demek: tarama bütçesi boşa gider, kullanıcı
+		// bir tur fazla bekler. Yeni şablonlar zaten makaleURL kullanıyor;
+		// bu işlev eski şablonların da aynı adresi basmasını sağlar.
+		"yaziURL": makaleURL,
+		"formatTime": func(t *time.Time) string {
+			if t == nil {
+				return ""
+			}
+			return t.Local().Format("02.01.2006 15:04")
+		},
 		// gazeteTarih "2026-11-02" → "2 Kasım 2026". Gazete manşetleri
 		// modülünde tarih Türkçe okunur biçimde gösterilir; ISO tarih
 		// okuyucuya yabancı kalıyordu.

@@ -301,7 +301,7 @@ document.addEventListener('click', function (e) {
     <h1 class="hesap-title">Kaydedilenler <span class="hesap-sayi">{{.Hesap.Stats.Bookmarks}}</span></h1>
     <div class="gap">
       {{range .Hesap.Bookmarks}}
-      <a class="card card-pad" href="{{$.LangBase}}/{{.DisplaySlug}}-{{.ID}}">
+      <a class="card card-pad" href="{{yaziURL .}}">
         <h3 style="margin:0">{{.Title}}</h3>
         {{if .Spot}}<p class="muted small" style="margin:.4em 0 0">{{.Spot}}</p>{{end}}
       </a>

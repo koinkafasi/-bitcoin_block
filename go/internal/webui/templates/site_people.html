@@ -54,7 +54,7 @@
   <h2 class="page-title" style="margin-top:26px">Yazıları <span class="muted" style="font-size:.9rem;font-weight:600">({{.PersonTotal}})</span></h2>
   <div class="grid-2">
     {{range .PersonContents}}
-    <a class="card" href="{{$.LangBase}}/{{.DisplaySlug}}-{{.ID}}">
+    <a class="card" href="{{yaziURL .}}">
       {{if .CoverMediaID}}<img class="thumb" src="{{mediaURL .CoverMediaID}}" alt="" loading="lazy">{{end}}
       <div class="card-pad"><h3>{{.Title}}</h3>
         <div class="shape">{{if .CategoryName}}{{.CategoryName}} · {{end}}{{formatTime .PublishedAt}}</div>

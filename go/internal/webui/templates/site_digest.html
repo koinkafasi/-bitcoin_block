@@ -52,7 +52,7 @@
   <p class="small muted">{{len .Digest.Items}} haber · {{.Digest.Day.WordCount}} kelime · <a href="/ping">tüm özetler</a> · <a href="/podcast/{{.Digest.Day.Date.Format "2006-01-02"}}"> sesli</a></p>
   <div class="gap" style="margin-top:14px">
     {{range .Digest.Items}}
-    <a class="card card-pad" href="{{$.LangBase}}/{{.DisplaySlug}}-{{.ID}}">
+    <a class="card card-pad" href="{{yaziURL .}}">
       <h3 style="margin:0">{{.Title}}</h3>
       {{if .Spot}}<p class="muted small" style="margin:.4em 0 0">{{.Spot}}</p>{{end}}
     </a>{{else}}<p class="muted">Bu gün yayınlanan haber yok.</p>{{end}}
@@ -74,7 +74,7 @@
   {{if .Digest.Day.Summary}}<p class="muted">{{.Digest.Day.Summary}}</p>{{end}}
   <div class="gap" style="margin-top:14px">
     {{range .Digest.Items}}
-    <a class="card card-pad" href="{{$.LangBase}}/{{.DisplaySlug}}-{{.ID}}">
+    <a class="card card-pad" href="{{yaziURL .}}">
       <h3 style="margin:0">{{.Title}}</h3>
       {{if .Spot}}<p class="muted small" style="margin:.4em 0 0">{{.Spot}}</p>{{end}}
     </a>{{else}}<p class="muted">Bu gün yayınlanan haber yok.</p>{{end}}

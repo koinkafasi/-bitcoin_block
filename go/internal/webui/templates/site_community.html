@@ -5,7 +5,7 @@
   <h1 class="page-title"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-bookmark"></use></svg> Kaydedilenler</h1>
   <div class="gap">
     {{range .Community.Bookmarks}}
-    <a class="card card-pad" href="{{$.LangBase}}/{{.DisplaySlug}}-{{.ID}}">
+    <a class="card card-pad" href="{{yaziURL .}}">
       <h3 style="margin:0">{{.Title}}</h3>
       {{if .Spot}}<p class="muted small" style="margin:.4em 0 0">{{.Spot}}</p>{{end}}
     </a>{{else}}<p class="muted">Henüz kaydettiğiniz haber yok. Haber sayfasındaki "Kaydet" düğmesini kullanın.</p>{{end}}
