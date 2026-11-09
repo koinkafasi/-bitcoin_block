@@ -512,6 +512,57 @@ doğrudan sayılır (2 istek → +2).
 `TestSayfaOnbellekArkaPlanYenilemeSayilmaz` (3 istek → 3 okunma, yenileme
 sayılmaz), `TestOkunmaBiriktiriciToplam`.
 
+### 2.16 Sorgu sayısının gerçek dağılımı — ve iki N+1
+
+**Önce ölçüm yöntemi yanlıştı.** Sorgu sayısını `log_statement='all'` +
+`docker logs` ile saydım ve **89 / 62** gibi sayılar buldum. Bunlar
+yanlıştı: çok satırlı sorgular log satırı olarak bölünüyor ve arka plan
+işleri aynı pencereye düşüyor. Doğru cevap için `pgx.QueryTracer` ile her
+sorguyu **çağıran fonksiyon:satır** ile yakalayan geçici bir araç yazdım
+(`cmd/atrib`, commit'e girmedi).
+
+**Doğru sayılar (soğuk istek, süreç içi önbellekler boş):**
+
+| | sorgu | süre |
+|---|---|---|
+| ana sayfa | **28** | ~109 ms |
+| makale | **38** | ~95 ms |
+
+**N+1 #1 — ilgili haberler.** `repo.RelatedContents` her öneri için
+`GetContent` çağırıyordu; `GetContent` ayrıca **ikinci** bir
+`min_tier_weight` sorgusu atıyor. Yani öneri başına 2 gidiş-dönüş:
+6 ilgili haber = **12 sorgu**, makale toplamının %32'si. Düzeltme:
+`repo.ContentsByIDs` (tek sorgu + tek toplu `min_tier_weight`).
+Sıra korunur — puanlama sırası `LinkSuggestions`'tan geliyor, map sırası
+kullanılsaydı "en ilgili" haber rastgele olurdu.
+
+**N+1 #2 — YouTube listesi.** Ana sayfa **aynı** listeyi 6 kez çekiyordu
+(video · short · stream; modüller + "Explore" paneli ayrı ayrı). Tür
+başına 10 sn önbellek (`yt_liste.go`), tavan 12 satır çekilip dilimlenir →
+farklı `LIMIT` değerleri ayrı önbellek girdisi üretmez.
+
+**Ayrıca** `kategoriID` (slug → id) 10 sn önbelleğe alındı: aynı 4 slug her
+render'da çevriliyordu.
+
+**Sonuç (aynı araç, 5 soğuk koşum):**
+
+| | sorgu | gecikme |
+|---|---|---|
+| ana sayfa | 28 → **25** | ~109 → ~104 ms |
+| makale | 38 → **28** | ~95 → ~93 ms |
+
+**Dürüst yorum: sorgu sayısı %26 azaldı, gecikme yalnızca ~2 ms düzeldi.**
+Bu sorgular aynı bağlantıda sırayla giden hafif okumalar (~0,2 ms/sorgu);
+asıl maliyet gidiş-dönüş *sayısı* değil, sorguların kendisi (400 satırlık
+alaka havuzu, gzip, şablon). Bu yüzden bu değişiklik "büyük hız kazancı"
+değil, **DB yükü ve karmaşıklık azaltma** olarak değerlendirilmeli.
+Toplu `pgx.Batch` fikrinin beklenen getirisi de bu ölçümle küçüldü: aynı
+bağlantıda 5 sorguyu birleştirmek ~1 ms kazandırır.
+
+**Doğruluk kanıtı.** Eski ve yeni ikilinin çıktısı 5 sayfada **bayt bayt
+aynı** (`/`, `/markets`, makale, `/tag/bitcoin`, `/price`). N+1 kaldırmak
+çıktıyı değiştirmedi.
+
 ---
 
 ## 3. Eklenen testler
@@ -551,6 +602,8 @@ sayılmaz), `TestOkunmaBiriktiriciToplam`.
 | `TestSayfaOnbellekOkunmaIsabetteDeSayilir` | isabet sayaçı durdurmaz |
 | `TestSayfaOnbellekArkaPlanYenilemeSayilmaz` | yenileme sahte okunma üretmez |
 | `TestOkunmaBiriktiriciToplam` | biriktirici toplar, boşaltınca sıfırlar |
+| `TestYtListeDilim` | YouTube listesi 3/5/6/12/20 isteklerinde doğru dilimlenir |
+| `TestSayfaOnbellekIleUyum` | N+1 düzeltmeleri önbellek kapsamını değiştirmedi |
 | `BenchmarkResizeToWidth*`, `BenchmarkCreateThumb*` | görsel kazancı ölçülebilir kalır |
 | `BenchmarkRenderDesign` | manşet raster'ının maliyeti (10,1 ms) takip edilir |
 
@@ -574,9 +627,9 @@ limit aşımı GC'ye değil **OOMKill**'e gidiyordu. Normal kullanımın çok
 
 1. **Önbellek ıskası (soğuk istek).** Isabet 0,16 ms (makale: 0,4 ms);
    ıska c=1 p50 7,8 ms ana sayfa, 20–100 ms makale. Bayat sun ve makale
-   önbelleği ile ıska artık kullanıcıya yansımıyor (bkz. §2.12, §2.14);
-   ama DB kesintisi/yeniden başlatma sonrası gerçek. Sıradaki kazanç, ıska
-   maliyetini düşürmek: ana sayfadaki ~20 sorguyu tek `pgx.Batch`'e indirmek.
+   önbelleği ile ıska artık kullanıcıya yansımıyor (bkz. §2.12, §2.14).
+   Sorgu sayısı §2.16'da 28/25'e indi ama **gecikme kazancı ~2 ms**;
+   toplu `pgx.Batch` artık düşük getirili.
 2. **TTL ve tazelik ayarı — yapıldı** (`SAYFA_ONBELLEK_TTL` /
    `SAYFA_ONBELLEK_BAYAT`, §2.12). Varsayılan 10 sn taze + 30 sn bayat.
 3. **`/media/thumb` ve `/media/variant`**: ilk istekte üretiliyor, sonra
