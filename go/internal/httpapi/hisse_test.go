@@ -257,6 +257,15 @@ func TestHisseSayfaOlustur(t *testing.T) {
 	require.Len(t, eksik.Satir, 1)
 	assert.False(t, eksik.Satir[0].Var, "fiyat yoksa Var=false (— basılır)")
 
+	// BAĞLANTI SÖZLEŞMESİ: fiyatı olan satır KENDİ detay sayfasına gider
+	// (".IS" ekli — Yahoo BIST sembolü), fiyatı olmayan arama linkinde
+	// kalır (detay ucu veri bulamayınca 404 olurdu).
+	assert.Equal(t, "/price/stock/THYAO.IS", kod.Satir[0].Href)
+	assert.Equal(t, "/borsa/hisseler?q=THYAO", eksik.Satir[0].Href)
+	for _, r := range hepsi.Satir {
+		assert.NotEmpty(t, r.Href, "%s satırında bağlantı boş", r.Code)
+	}
+
 	// Sonuç yok.
 	assert.Empty(t, hisseSayfaOlustur(hd, "zzzzz", "").Satir)
 }

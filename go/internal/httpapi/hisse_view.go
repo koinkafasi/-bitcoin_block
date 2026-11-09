@@ -1,6 +1,7 @@
 package httpapi
 
 import (
+	"net/url"
 	"sort"
 	"strconv"
 	"strings"
@@ -318,6 +319,13 @@ type hisseSatir struct {
 	Value float64
 	Delta float64
 	Var   bool // fiyat verisi var mı
+	// Href satır bağlantısı.
+	//
+	// FİYATI OLAN hisse KENDİ detay sayfasına gider (`/price/stock/
+	// {KOD}.IS` — CoinDesk hisse şablonu, gerçek Yahoo verisi). Fiyatı
+	// olmayan satır arama linkinde kalır: detay ucu veri bulamayınca 404
+	// döndüğü için oraya bağlamak kırık bağlantı olurdu.
+	Href string
 }
 
 // Yon sınıfı (CSS): up | down | flat.
@@ -398,6 +406,11 @@ func hisseSayfaOlustur(hd repo.HisseData, q, harf string) *hisseSayfa {
 		}
 		if r, ok := byCode[meta.Code]; ok && r.Value > 0 {
 			row.Value, row.Delta, row.Var = r.Value, r.Delta, true
+		}
+		if row.Var {
+			row.Href = "/price/stock/" + hisseBorsaKodu(meta.Code)
+		} else {
+			row.Href = "/borsa/hisseler?q=" + url.QueryEscape(meta.Code)
 		}
 		out.Satir = append(out.Satir, row)
 	}

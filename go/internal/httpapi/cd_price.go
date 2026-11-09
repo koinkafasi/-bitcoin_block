@@ -52,9 +52,10 @@ func (s *Server) cdTickerDoldurSekme(ctx context.Context, sekme string) []templk
 			}
 			out = append(out, templkit.CDTickerItem{
 				Sym: strings.TrimSuffix(r.Code, ".IS"),
-				// Hisselerin kendi sayfası yok: tüm BIST kalemleri
-				// /markets'e gider (ölü "/price/" bağlantısı basılmaz).
-				Href:   "/markets",
+				// BIST kalemleri KENDİ hisse detayına gider. Önceki sürüm
+				// hepsini /markets'e yolluyordu (o zaman hisse sayfası
+				// yoktu); artık `/price/stock/{KOD}.IS` gerçek veri basıyor.
+				Href:   "/price/stock/" + hisseBorsaKodu(r.Code),
 				Price:  repo.FiyatBicimP(r.Value, r.Para),
 				Change: repo.DegisimBicim(r.Delta),
 				Up:     r.Delta >= 0,
@@ -131,6 +132,54 @@ func (s *Server) cdDigerVarliklar(r *http.Request, adet int, haricSym string) []
 	return out
 }
 
+// hisseBorsaKodu BIST kodunu Yahoo sembolüne çevirir.
+//
+// NEDEN: `BorsaRow.Code` ".IS" eki KALDIRILMIŞ olarak saklanır (şeritte
+// "THYAO" görünsün diye). Hisse detay ucu ise Yahoo'nun ".IS" ekli
+// sembolünü bekliyor; eksik ek `/price/stock/THYAO` → 404 veriyordu
+// (ölçüldü, 9 Kasım 2026: 9 bağlantının 9'u 404). Ek tek yerde eklenir.
+func hisseBorsaKodu(code string) string {
+	c := strings.ToUpper(strings.TrimSpace(code))
+	if c == "" || strings.HasSuffix(c, ".IS") {
+		return c
+	}
+	return c + ".IS"
+}
+
+// cdOndeGelenHisseler /price sayfasının hisse giriş listesi.
+//
+// KAYNAK: `borsa/ana` önbelleği (2 dakikada bir yenilenen gerçek BIST
+// kotasyonları). Sıra sabit bir liste değil, önbelleğin kendi sırası —
+// yani şeritte görünen hisselerle AYNI kaynak. Endeks satırı (XU100)
+// listeye girmez: bu tablo hisse listesi.
+//
+// Demo veri varsa BOŞ döner: demo bayrağı açıkken fiyat uydurma olur.
+func (s *Server) cdOndeGelenHisseler(ctx context.Context, adet int) []templkit.CDPriceRow {
+	bd := repo.BorsaOf(ctx, s.pool)
+	if bd.Demo {
+		return nil
+	}
+	out := make([]templkit.CDPriceRow, 0, adet)
+	for _, r := range bd.Rows {
+		if len(out) >= adet {
+			break
+		}
+		if r.Kind != "hisse" || r.Value <= 0 {
+			continue
+		}
+		out = append(out, templkit.CDPriceRow{
+			Sym:    strings.TrimSuffix(r.Code, ".IS"),
+			Name:   r.Name,
+			Price:  repo.FiyatBicimP(r.Value, r.Para),
+			Change: repo.DegisimBicim(r.Delta),
+			Up:     r.Delta >= 0,
+			// Detay sayfası `.IS` ekiyle istenir (Yahoo BIST sembolü).
+			Href: "/price/stock/" + hisseBorsaKodu(r.Code),
+		})
+	}
+	return out
+}
+
 // handleCDPrice /price — CoinDesk fiyat sayfası.
 //
 // Yapı: H1 + açıklama → fiyat tablosu (25 varlık) → bölüm bağlantıları.
@@ -162,6 +211,8 @@ func (s *Server) handleCDPrice(w http.ResponseWriter, r *http.Request) {
 		Desc:            "Bitcoin, Ethereum ve önde gelen kripto paraların canlı fiyatları, 24 saatlik değişimleri ve piyasa sıralaması.",
 		Canonical:       kanonik,
 		Rows:            rows,
+		Hisseler:        s.cdOndeGelenHisseler(r.Context(), 12),
+		HisselerHref:    "/borsa/hisseler",
 		NabizFiyat:      nbFiyat,
 		Nabiz:           nbKartlar,
 		JSONLD:          ld.String(),

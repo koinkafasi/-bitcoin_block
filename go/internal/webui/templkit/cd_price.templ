@@ -9,6 +9,11 @@ type CDPricePage struct {
 	Desc      string
 	Canonical string
 	Rows      []CDPriceRow
+	// Hisseler: /price sayfasından hisse detay sayfalarına GİRİŞ listesi
+	// (BIST önde gelenler). Veri yoksa bölüm hiç basılmaz.
+	Hisseler []CDPriceRow
+	// HisselerHref "Tüm hisseler" dizini (/borsa/hisseler).
+	HisselerHref string
 	// Piyasa Nabzı: gerçek zincir-üstü veri (boşsa basılmaz).
 	NabizFiyat *CDGrafikKart
 	Nabiz      []CDGrafikKart
@@ -45,8 +50,53 @@ templ CDPricePageView(v CDPricePage) {
 				if len(v.Rows) == 0 {
 					<p class="cd-card__spot">Fiyat verisi şu an alınamıyor; birkaç dakika sonra yeniden deneyin.</p>
 				}
+				@cdHisseGiris(v.Hisseler, v.HisselerHref)
 			</main>
 			@cdFooter(v.Shell)
 		</body>
 	</html>
+}
+
+// cdHisseGiris /price → hisse detay köprüsü.
+//
+// NEDEN: hisse detay sayfaları (`/price/stock/{sembol}`) yalnız doğrudan
+// adresle açılabiliyordu; sitede onlara giden TEK bir bağlantı yoktu.
+// Liste `.cd-table` sınıfını yeniden kullanır → yeni CSS yok.
+// Fiyatı olmayan hisse satırı HİÇ basılmaz (boş değer gösterme yerine
+// satırı atla; bağlantısı da kırık olmaz).
+templ cdHisseGiris(rows []CDPriceRow, tumHref string) {
+	if len(rows) > 0 {
+		<section class="cd-mod">
+			@cdSectionHead("Hisse Senetleri", tumHref)
+			<table class="cd-table">
+				<thead>
+					<tr>
+						<th>Hisse</th>
+						<th class="num">Fiyat</th>
+						<th class="num">24s</th>
+					</tr>
+				</thead>
+				<tbody>
+					for _, r := range rows {
+						<tr>
+							<td>
+								<a href={ r.Href }>
+									<strong>{ r.Sym }</strong>
+									<span class="cd-card__meta"> { r.Name }</span>
+								</a>
+							</td>
+							<td class="num">{ r.Price }</td>
+							<td class="num">
+								if r.Up {
+									<span class="cd-up">{ r.Change }</span>
+								} else {
+									<span class="cd-down">{ r.Change }</span>
+								}
+							</td>
+						</tr>
+					}
+				</tbody>
+			</table>
+		</section>
+	}
 }
