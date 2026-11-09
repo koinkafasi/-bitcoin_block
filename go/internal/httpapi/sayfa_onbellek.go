@@ -1,6 +1,7 @@
 package httpapi
 
 import (
+	"context"
 	"crypto/sha256"
 	"net/http"
 	"strconv"
@@ -12,20 +13,35 @@ import (
 	"theblock/site/internal/auth"
 )
 
-// sayfaOnbellekTTL tam sayfa önbelleğinin ömrü.
+// sayfaOnbellekTTL tam sayfa önbelleğinin TAZE ömrü.
 //
 // HTTP yanıtı zaten `max-age=60, s-maxage=300` ile önbellekleniyor; 10 sn'lik
 // süreç içi katman kullanıcıya görünen tazeliği değiştirmez.
-const sayfaOnbellekTTL = 10 * time.Second
+var sayfaOnbellekTTL = 10 * time.Second
 
-// sayfaOnbellekMaxGovde önbelleğe alınacak en büyük gövde. Daha büyük yanıtlar
-// (nadir) önbelleğe alınmaz: bellek sınırlı kalsın.
+// sayfaOnbellekBayatPencere taze ömür geçtikten sonra BAYAT gövdenin ne kadar
+// daha sunulacağı.
+//
+// NEDEN: ilk sürüm TTL dolunca önbelleği tamamen ıskalıyordu; 50 eşzamanlı
+// istek TTL anına denk gelirse hepsi aynı anda render + gzip yapıyordu
+// (ölçüm: p-max 700 ms sıçrama). Artık süresi dolmuş gövde HEMEN sunulur,
+// yenisini tek bir arka plan goroutine'i üretir — kullanıcı beklemez.
+//
+// 30 sn, HTTP `max-age=60`'ın altında: tarayıcı/kenar önbelleği zaten daha
+// eskisini sunmuyor. Haber içeriği dakikalar mertebesinde değiştiği için
+// görünür bir bayatlama yaratmıyor.
+var sayfaOnbellekBayatPencere = 30 * time.Second
+
+// sayfaOnbellekMaxGovde önbelleğe alınacak en büyük gövde.
 const sayfaOnbellekMaxGovde = 512 << 10 // 512 KB
 
 // sayfaOnbellekMaxGiris toplam giriş sayısı sınırı (~40 MB üst sınır).
 const sayfaOnbellekMaxGiris = 400
 
-// sayfaOnbellek replays'te kopyalanacak başlıklar.
+// sayfaOnbellekArkaPlanButce arka plan yenilemesinin üst süresi.
+const sayfaOnbellekArkaPlanButce = 20 * time.Second
+
+// sayfaOnbellekBasliklari replays'te kopyalanacak başlıklar.
 //
 // BEYAZ LİSTE bilinçli: `X-Request-Id` istek başına üretilir ve önbellekten
 // gelirse tüm istekler aynı kimliği taşır (log/tracing bozulur). `Set-Cookie`
@@ -69,8 +85,9 @@ type sayfaOnbellek struct {
 	sira  [][32]byte
 	calls map[[32]byte]chan struct{}
 
-	// sayaçlar: isabet/ıska görünürlüğü (pano ve testler için).
-	isabet, iska atomic.Int64
+	// sayaçlar: isabet/bayat/ıska görünürlüğü.
+	isabet, bayat, iska atomic.Int64
+	arsivYenileme       atomic.Int64
 }
 
 func newSayfaOnbellek() *sayfaOnbellek {
@@ -95,14 +112,27 @@ func sayfaAnahtar(host, yol, sorgu string, gzipIster bool) [32]byte {
 	return sha256.Sum256([]byte(k))
 }
 
-func (p *sayfaOnbellek) al(anahtar [32]byte) (*sayfaGirdi, bool) {
+// al kaydı ve tazelik durumunu döndürür.
+//
+//	varMi=false        → hiç yok (senkron üretim gerekir)
+//	varMi=true, taze   → hemen sun
+//	varMi=true, !taze  → bayat sun + arka planda yenile
+//	                        (bayat pencere aşıldıysa yine senkron üretim)
+func (p *sayfaOnbellek) al(anahtar [32]byte) (g *sayfaGirdi, taze bool, varMi bool) {
 	p.mu.Lock()
 	defer p.mu.Unlock()
-	g, ok := p.m[anahtar]
-	if !ok || time.Since(g.at) >= sayfaOnbellekTTL {
-		return nil, false
+	e, ok := p.m[anahtar]
+	if !ok {
+		return nil, false, false
 	}
-	return g, true
+	yas := time.Since(e.at)
+	if yas < sayfaOnbellekTTL {
+		return e, true, true
+	}
+	if yas < sayfaOnbellekTTL+sayfaOnbellekBayatPencere {
+		return e, false, true
+	}
+	return nil, false, false // çok eski: yeniden üret
 }
 
 func (p *sayfaOnbellek) koy(anahtar [32]byte, g *sayfaGirdi) {
@@ -119,19 +149,64 @@ func (p *sayfaOnbellek) koy(anahtar [32]byte, g *sayfaGirdi) {
 	p.m[anahtar] = g
 }
 
-// temizle süresi dolmuş kayıtları atar (yalnız bellek sınırı için).
+// kilit tek-uçuş (singleflight) kilidi.
+//
+// lider=true → çağıran üretimi yapar ve birak() çağırmalıdır.
+// lider=false → bekle kanalı kapanana kadar beklenir.
+func (p *sayfaOnbellek) kilit(anahtar [32]byte) (lider bool, bekle chan struct{}) {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	if c, varMi := p.calls[anahtar]; varMi {
+		return false, c
+	}
+	c := make(chan struct{})
+	p.calls[anahtar] = c
+	return true, c
+}
+
+func (p *sayfaOnbellek) birak(anahtar [32]byte) {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	if c, varMi := p.calls[anahtar]; varMi {
+		delete(p.calls, anahtar)
+		close(c)
+	}
+}
+
+// temizle süresi (bayat pencereyle birlikte) dolmuş kayıtları atar.
 func (p *sayfaOnbellek) temizle() {
 	p.mu.Lock()
 	defer p.mu.Unlock()
+	sinir := sayfaOnbellekTTL + sayfaOnbellekBayatPencere
 	kalan := p.sira[:0]
 	for _, k := range p.sira {
-		if g, ok := p.m[k]; ok && time.Since(g.at) < sayfaOnbellekTTL {
+		if g, ok := p.m[k]; ok && time.Since(g.at) < sinir {
 			kalan = append(kalan, k)
 		} else {
 			delete(p.m, k)
 		}
 	}
 	p.sira = kalan
+}
+
+// SetSayfaOnbellekSuresi TTL ve bayat pencereyi ayarlar (ölçüm/işletim için).
+//
+// Sıfır veya negatif değer yok sayılır: yanlış yapılandırma önbelleği
+// kapatmasın (bayat pencere TTL'den kısa olamaz, kırpılır).
+func SetSayfaOnbellekSuresi(ttl, bayat time.Duration) {
+	if ttl <= 0 {
+		return
+	}
+	if bayat <= 0 {
+		bayat = 3 * ttl
+	}
+	sayfaOnbellekTTL = ttl
+	sayfaOnbellekBayatPencere = bayat
+}
+
+// SayfaOnbellekSuresi yapılandırılmış değerleri döndürür (log/tanı).
+func SayfaOnbellekSuresi() (ttl, bayat time.Duration) {
+	return sayfaOnbellekTTL, sayfaOnbellekBayatPencere
 }
 
 // sayfaOnbellegeUygun yol bu istek için tam sayfa önbelleğine uygun mu?
@@ -171,8 +246,6 @@ func sayfaYoluOnbelleklenir(yol string) bool {
 	if yol == "/" || yol == "/cd" {
 		return true
 	}
-	// "/tag/" gibi SONU BÖLÜ olan önekler doğrudan; "/price" gibi tam
-	// sözcük önekleri hem kendisi hem "/.../" alt yolları.
 	for _, onek := range []string{"/tag/", "/video/"} {
 		if strings.HasPrefix(yol, onek) {
 			return true
@@ -238,7 +311,20 @@ func (c *cacheWriter) Write(p []byte) (int, error) {
 // Unwrap ResponseController'ın alt yazıcıya erişmesini sağlar.
 func (c *cacheWriter) Unwrap() http.ResponseWriter { return c.ResponseWriter }
 
-// withSayfaOnbellek herkese açık CD sayfalarını 10 sn süreç içi önbelleğe alır.
+// yazmayanWriter arka plan yenilemesinde gövdeyi istemciye değil boşluğa
+// yazar; yalnız başlıkları tutar (cacheWriter zaten gövdeyi yakalıyor).
+type yazmayanWriter struct{ h http.Header }
+
+func (w *yazmayanWriter) Header() http.Header {
+	if w.h == nil {
+		w.h = http.Header{}
+	}
+	return w.h
+}
+func (w *yazmayanWriter) Write(p []byte) (int, error) { return len(p), nil }
+func (w *yazmayanWriter) WriteHeader(int)             {}
+
+// withSayfaOnbellek herkese açık CD sayfalarını önbelleğe alır.
 //
 // Yerleşim: zincirin EN DIŞINDA (gzip ve HTMLCSP'nin üstünde). Böylece
 // isabet eden istek render + CSP + gzip işlerinin TAMAMINI atlar.
@@ -270,68 +356,137 @@ func (s *Server) withSayfaOnbellek(next http.Handler) http.Handler {
 
 		gzipIster := acceptsGzip(r)
 		anahtar := sayfaAnahtar(r.Host, r.URL.Path, r.URL.RawQuery, gzipIster)
+		cache := s.sayfaCache
 
-		if g, ok := s.sayfaCache.al(anahtar); ok {
-			s.sayfaCache.isabet.Add(1)
-			bas := time.Now()
-			// İstek kimliği YENİ üretilir: önbellekten gelen kimlik tüm
-			// isteklerde aynı olurdu (log/tracing bozulurdu).
-			rid := genID()
-			w.Header().Set("X-Request-Id", rid)
-			for _, ad := range sayfaOnbellekBasliklari {
-				if v, varMi := g.baslik[ad]; varMi {
-					w.Header().Set(ad, v)
-				}
+		if g, taze, varMi := cache.al(anahtar); varMi {
+			if taze {
+				cache.isabet.Add(1)
+			} else {
+				cache.bayat.Add(1)
 			}
-			// Content-Length her zaman elimizdeki gövdeden hesaplanır:
-			// gzip middleware uzunluğu sildiği için saklanan başlıkta
-			// bulunmaz, ama replay'de kesin olarak biliyoruz.
-			w.Header().Set("Content-Length", strconv.Itoa(len(g.govde)))
-			w.WriteHeader(g.durum)
-			_, _ = w.Write(g.govde)
-			// İSABET LOGLANIR: ara katman atlandığı için withRequestID
-			// çalışmıyor; log yazılmazsa trafik panolarda "kaybolmuş"
-			// görünür. `cache:"hit"` alanı isabet olduğunu açıkça söyler.
-			if s.logger != nil {
-				s.logger.Info("http",
-					"method", r.Method,
-					"path", r.URL.Path,
-					"status", g.durum,
-					"dur_ms", time.Since(bas).Milliseconds(),
-					"req_id", rid,
-					"cache", "hit",
-				)
+			s.sayfaSun(w, r, g)
+			if !taze {
+				// BAYAT SUNULDU: kullanıcı beklemedi. Yenileme arka planda,
+				// tek bir goroutine'de (singleflight) yapılır.
+				s.sayfaArkaPlandaYenile(next, r, anahtar)
 			}
 			return
 		}
 
-		s.sayfaCache.iska.Add(1)
-		cw := &cacheWriter{ResponseWriter: w}
-		next.ServeHTTP(cw, r)
-
-		// Yalnız başarılı, çerez yazmayan, taşmamış yanıtlar saklanır.
-		if cw.durum != http.StatusOK || cw.tasma || len(cw.govde) == 0 {
-			return
-		}
-		if len(cw.Header().Values("Set-Cookie")) > 0 {
-			return
-		}
-		// Yönlendirme/oturum yanıtları asla önbelleğe girmez.
-		if cw.Header().Get("Location") != "" {
-			return
-		}
-
-		baslik := make(map[string]string, len(sayfaOnbellekBasliklari)+1)
-		for _, ad := range sayfaOnbellekBasliklari {
-			if v := cw.Header().Get(ad); v != "" {
-				baslik[ad] = v
+		// HİÇ YOK: tek lider üretir, eşzamanlı diğer istekler bekler.
+		// Beklemeden hepsi render etseydi TTL anında N kat CPU harcanırdı
+		// (ölçüm: 50 eşzamanlıda p-max 700 ms sıçrama).
+		cache.iska.Add(1)
+		lider, bekle := cache.kilit(anahtar)
+		if lider {
+			defer cache.birak(anahtar)
+			cw := &cacheWriter{ResponseWriter: w}
+			next.ServeHTTP(cw, r)
+			if g, ok := sayfaGirdiCikar(cw); ok {
+				cache.koy(anahtar, g)
 			}
+			return
 		}
-		s.sayfaCache.koy(anahtar, &sayfaGirdi{
-			at:     time.Now(),
-			durum:  cw.durum,
-			baslik: baslik,
-			govde:  cw.govde,
-		})
+
+		select {
+		case <-bekle:
+		case <-r.Context().Done():
+			return
+		}
+		if g, _, varMi := cache.al(anahtar); varMi {
+			s.sayfaSun(w, r, g)
+			return
+		}
+		// Lider saklanabilir bir yanıt üretmedi (ör. 500): doğrudan render.
+		next.ServeHTTP(w, r)
 	})
+}
+
+// sayfaSun kaydı istemciye yazar.
+func (s *Server) sayfaSun(w http.ResponseWriter, r *http.Request, g *sayfaGirdi) {
+	// İstek kimliği YENİ üretilir: önbellekten gelen kimlik tüm isteklerde
+	// aynı olurdu (log/tracing bozulurdu).
+	rid := genID()
+	w.Header().Set("X-Request-Id", rid)
+	for _, ad := range sayfaOnbellekBasliklari {
+		if v, varMi := g.baslik[ad]; varMi {
+			w.Header().Set(ad, v)
+		}
+	}
+	// Content-Length her zaman elimizdeki gövdeden hesaplanır: gzip
+	// middleware uzunluğu sildiği için saklanan başlıkta bulunmaz.
+	w.Header().Set("Content-Length", strconv.Itoa(len(g.govde)))
+	w.WriteHeader(g.durum)
+	_, _ = w.Write(g.govde)
+
+	// İSABET LOGLANIR: ara katman atlandığı için withRequestID çalışmıyor;
+	// log yazılmazsa trafik panolarda "kaybolmuş" görünür.
+	if s.logger != nil {
+		s.logger.Info("http",
+			"method", r.Method,
+			"path", r.URL.Path,
+			"status", g.durum,
+			"dur_ms", 0,
+			"req_id", rid,
+			"cache", "hit",
+		)
+	}
+}
+
+// sayfaArkaPlandaYenile bayat kaydı tek bir arka plan goroutine'inde tazeler.
+//
+// Bağlam: istek bağlamı istek bitince İPTAL OLUR. Arka plan işi ona
+// bağlanırsa yarıda kalır; bu yüzden WithoutCancel kullanılır ve ayrı bir
+// bütçe verilir.
+func (s *Server) sayfaArkaPlandaYenile(next http.Handler, r *http.Request, anahtar [32]byte) {
+	cache := s.sayfaCache
+	lider, _ := cache.kilit(anahtar)
+	if !lider {
+		return // yenileme zaten uçuşta
+	}
+	cache.arsivYenileme.Add(1)
+
+	go func() {
+		defer cache.birak(anahtar)
+		// Bağlam: istek bağlamı istek bitince İPTAL OLUR. Arka plan işi ona
+		// bağlanırsa yarıda kalır; WithoutCancel + ayrı bütçe kullanılır.
+		ctx, iptal := context.WithTimeout(context.WithoutCancel(r.Context()), sayfaOnbellekArkaPlanButce)
+		defer iptal()
+		// İsteğin kopyası: başlıklar (Accept-Encoding) korunur, gövde yok.
+		kopya := r.Clone(ctx)
+		kopya.Header.Set("X-Request-Id", "arka-plan-yenileme")
+		cw := &cacheWriter{ResponseWriter: &yazmayanWriter{}}
+		next.ServeHTTP(cw, kopya)
+		if g, ok := sayfaGirdiCikar(cw); ok {
+			cache.koy(anahtar, g)
+		}
+	}()
+}
+
+// sayfaGirdiCikar yakalanan yanıttan önbellek kaydı üretir.
+//
+// SAKLANMAZ: 200 dışı, taşmış, boş, çerez yazan veya yönlendiren yanıtlar.
+// Çerez yazan bir yanıt saklanırsa oturum çerezi herkese dağılırdı.
+func sayfaGirdiCikar(cw *cacheWriter) (*sayfaGirdi, bool) {
+	if cw.durum != http.StatusOK || cw.tasma || len(cw.govde) == 0 {
+		return nil, false
+	}
+	if len(cw.Header().Values("Set-Cookie")) > 0 {
+		return nil, false
+	}
+	if cw.Header().Get("Location") != "" {
+		return nil, false
+	}
+	baslik := make(map[string]string, len(sayfaOnbellekBasliklari))
+	for _, ad := range sayfaOnbellekBasliklari {
+		if v := cw.Header().Get(ad); v != "" {
+			baslik[ad] = v
+		}
+	}
+	return &sayfaGirdi{
+		at:     time.Now(),
+		durum:  cw.durum,
+		baslik: baslik,
+		govde:  cw.govde,
+	}, true
 }

@@ -384,6 +384,72 @@ yanıt. Bu yüzden kontrol yerinde tekrarlandı.
 LCP 0,7 s · CLS 0,005 · TBT 0 ms — sıkıştırma seviyesi değişikliği ve
 önbellek görünür hiçbir metriği bozmadı.
 
+### 2.12 Bayat sun (stale-while-revalidate) — TTL anındaki sıçrama
+
+**Bulunan sorun.** İlk sürümde TTL dolduğu an kayıt **tamamen** geçersiz
+sayılıyordu: gelen istek senkron render ediyor, TTL anına birden çok istek
+denk gelirse hepsi sıraya giriyordu. Tek-uçuş (singleflight) bunu "tek
+üretim"e indiriyordu ama **o tek istek yine ~9 ms bekliyordu** ve 50
+eşzamanlıda kuyruk p-max 190 ms'ye çıkıyordu.
+
+**Değişiklik.** TTL geçmiş gövde **hemen** sunulur (bayat), yenisini tek bir
+arka plan goroutine'i üretir. Bayat pencere 30 sn; HTTP `max-age=60`'ın
+altında olduğu için tarayıcı/kenar zaten daha eskisini sunmuyor. Arka plan
+işi `context.WithoutCancel` + 20 sn bütçe ile çalışır: istemci gitse de
+önbellek tazelenir.
+
+**A/B (TTL=1s, 50 eşzamanlı, 8 sn, aynı makine, sıra iki yönde de denendi):**
+
+| | rps | p50 | p99 | **max** | **render** |
+|---|---|---|---|---|---|
+| önce | 13 925 | 2,8 ms | 13,6 ms | **190,0 ms** | **50** |
+| sonra | 14 974 | 2,7 ms | 12,7 ms | **49,2 ms** | **10** |
+
+Render sayısı loglardan sayıldı (her isabet `"cache":"hit"` yazar, kalan her
+satır bir üretim). TTL=1s ile 8 sn'de ~8 süre sonu var; önce her süre sonu
+bir senkron üretim + kuyruk, sonra yalnız arka plan: **50 → 10 render**,
+p-max **190 → 49 ms**. Sıra ters çevrilince de aynı yön (max 114 ms vs
+37 ms), yani ölçüm sıralamaya duyarlı değil.
+
+Düşük eşzamanlılıkta (c=4) fark küçük ve beklenen yönde: p99 1,4 → 1,2 ms,
+max 30 → 25 ms — bu katman zaten kullanıcı gecikmesini değil **sıçramayı**
+hedefliyor.
+
+**Canlı doğrulama (varsayılan 10 sn taze / 30 sn bayat).** TTL dolduktan
+sonraki ilk istek **0,68 ms** (önbellek isabeti mertebesinde); eskiden bu
+istek soğuk yoldu (~9 ms). Başlangıç logu yapılandırmayı yazıyor:
+`"msg":"sayfa önbelleği","taze":"10s","bayat":"30s"`.
+
+**Yapılandırma.** `SAYFA_ONBELLEK_TTL` / `SAYFA_ONBELLEK_BAYAT`; boşsa
+10 sn / 30 sn. Bayat pencere verilmezse `3×TTL`. Geçersiz (≤0) değer yok
+sayılır — yanlış yapılandırma önbelleği kapatmasın.
+
+**Testler.** `TestSayfaOnbellekBayatHemenSunulurArkaPlandaYenilenir` (bayat
+gövde anında + sonra yeni sürüm gelir), `TestSayfaOnbellekSingleflightTekUretim`
+(20 eşzamanlı = 1 üretim, hepsi aynı gövdeyi alır),
+`TestSayfaOnbellekArkaPlanBagimsizCalisir` (istek iptal edilse bile yenileme
+tamamlanır).
+
+### 2.13 Soğuk yolun (ıska) güncel taban çizgisi
+
+Önbellek çalıştığı sürece soğuk yol yalnız ilk istekte ve her TTL sonunda
+(bayat pencere kapattığı için artık kullanıcıya yansımıyor), ama DB
+kesintisi/yeniden başlatma sonrası gerçek. Go yük üreteci, `-nocache`
+(`Cache-Control: no-cache` → katman atlanır), 6 sn:
+
+| eşzamanlılık | rps | p50 | p95 | p99 |
+|---|---|---|---|---|
+| c=1 | 111 | **7,8 ms** | 9,2 ms | 10,1 ms |
+| c=4 | 410 | 9,4 ms | 12,5 ms | 15,4 ms |
+| c=12 | 743 | 15,8 ms | 21,3 ms | 25,0 ms |
+
+Sıcak yol aynı üreteçle: c=1 p50 **0,6 ms**, c=50 p50 2,9 ms / p99 13,2 ms.
+
+Soğuk yol CPU profili (c=8, 10 sn, 29 s örnek): `Syscall6` %11,8,
+`flate.(*fastEncL4).encode` %16,9 (gzip), `futex` %6,7, `memmove` %4,4.
+Yani maliyetin çoğu **DB gidiş-dönüşü + gzip + kopyalama**; aritmetik değil.
+Sıradaki aday ana sayfadaki ~20 sorguyu tek `pgx.Batch`'e indirmek.
+
 ---
 
 ## 3. Eklenen testler
@@ -415,6 +481,9 @@ LCP 0,7 s · CLS 0,005 · TBT 0 ms — sıkıştırma seviyesi değişikliği ve
 | `TestSayfaOnbellekGzipVeHamAyriSaklanir` | gzip kabul etmeyene ham gövde |
 | `TestSayfaOnbellekCSPKorunur` | replay'de CSP başlığı aynı |
 | `TestSayfaOnbellekBlokluIPIsabetteDeReddedilir` | **bloklu IP önbellekten 200 almaz** |
+| `TestSayfaOnbellekBayatHemenSunulurArkaPlandaYenilenir` | bayat gövde anında, yenisi arka planda |
+| `TestSayfaOnbellekSingleflightTekUretim` | 20 eşzamanlı = 1 üretim |
+| `TestSayfaOnbellekArkaPlanBagimsizCalisir` | iptal edilen istek yenilemeyi durdurmaz |
 | `BenchmarkResizeToWidth*`, `BenchmarkCreateThumb*` | görsel kazancı ölçülebilir kalır |
 | `BenchmarkRenderDesign` | manşet raster'ının maliyeti (10,1 ms) takip edilir |
 
@@ -436,14 +505,12 @@ limit aşımı GC'ye değil **OOMKill**'e gidiyordu. Normal kullanımın çok
 
 ## 5. Sırada ne var (ölçümle doğrulanmış adaylar)
 
-1. **Önbellek ıskası (soğuk istek) artık tek pahalı yol.** Isabet 0,16 ms;
-   ıska ~4,5 ms ve ilk istekte ~1 sn (bağlantı havuzu + tüm sorgular).
-   Sıradaki kazanç, ıska maliyetini düşürmek: ana sayfadaki ~20 sorguyu tek
-   `pgx.Batch`'e indirmek.
-2. **TTL ve tazelik ayarı.** 10 sn sabit; içerik hızına göre
-   (`YAYIN_ONBELLEK_TTL`) yapılandırılabilir hâle getirilebilir. Şu an
-   kullanıcıya görünen gecikme en fazla ~10 sn (bot içerikleri dakikalar
-   mertebesinde geldiği için ölçülebilir bir fark yaratmıyor).
+1. **Önbellek ıskası (soğuk istek).** Isabet 0,16 ms; ıska c=1 p50 7,8 ms.
+   Bayat sun ile ıska artık kullanıcıya yansımıyor (bkz. §2.12), ama DB
+   kesintisi/yeniden başlatma sonrası gerçek. Sıradaki kazanç, ıska
+   maliyetini düşürmek: ana sayfadaki ~20 sorguyu tek `pgx.Batch`'e indirmek.
+2. **TTL ve tazelik ayarı — yapıldı** (`SAYFA_ONBELLEK_TTL` /
+   `SAYFA_ONBELLEK_BAYAT`, §2.12). Varsayılan 10 sn taze + 30 sn bayat.
 3. **`/media/thumb` ve `/media/variant`**: ilk istekte üretiliyor, sonra
    diskten. Medya tablosu şu an boş; içerik dolduğunda `image-svc`
    kazancı (1,8×) doğrudan kullanıcıya yansıyacak.
@@ -482,6 +549,13 @@ bash /mnt/c/Users/alper/AppData/Local/Temp/opencode/diffhtml.sh
 
 # önbellek doğrulaması: soğuk (önbellek boş) = sıcak (önbellekten)
 bash /mnt/c/Users/alper/AppData/Local/Temp/opencode/cacheverify.sh
+
+# bayat sun A/B: aynı commit, iki ikili, TTL=1s; render sayısı loglardan
+bash /mnt/c/Users/alper/AppData/Local/Temp/opencode/ab_swr_run.sh
+bash /mnt/c/Users/alper/AppData/Local/Temp/opencode/render_count.sh
+
+# soğuk (ıska) / sıcak yol taban çizgisi — Go üreteç
+bash /mnt/c/Users/alper/AppData/Local/Temp/opencode/cold_base.sh
 
 # contents tablosu tarama sayısı (istek başına DB yükü)
 bash /mnt/c/Users/alper/AppData/Local/Temp/opencode/scans.sh

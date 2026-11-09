@@ -93,6 +93,13 @@ func main() {
 	}
 	logger.Info("gzip", "seviye", httpapi.GzipLevel())
 
+	// Tam sayfa önbelleği süreleri: boşsa 10 sn taze + 30 sn bayat.
+	if cfg.SayfaOnbellekTTL > 0 {
+		httpapi.SetSayfaOnbellekSuresi(cfg.SayfaOnbellekTTL, cfg.SayfaOnbellekBayat)
+	}
+	ttl, bayat := httpapi.SayfaOnbellekSuresi()
+	logger.Info("sayfa önbelleği", "taze", ttl.String(), "bayat", bayat.String())
+
 	srv, app := httpapi.NewServerApp(cfg, logger, pool, bundle, aiclient)
 	logger.Info("theblock site dinliyor", "addr", cfg.ListenAddr, "env", cfg.Env)
 

@@ -70,6 +70,12 @@ type Config struct {
 	// bkz. internal/httpapi/gzip.go (seviye 6 → 4: sıkıştırma CPU'su -%29,
 	// gövde +%6).
 	GzipLevel int
+
+	// SayfaOnbellekTTL herkese açık CD sayfalarının taze ömrü.
+	// Bayat pencere: TTL geçtikten sonra eski gövdenin sunulmaya devam
+	// ettiği süre (yenisi arka planda üretilir). Boşsa 10 sn / 30 sn.
+	SayfaOnbellekTTL   time.Duration
+	SayfaOnbellekBayat time.Duration
 }
 
 func Load() Config {
@@ -99,13 +105,15 @@ func Load() Config {
 		HunspellDict:       getEnv("HUNSPELL_DICT", "tr_TR"),
 		CryptoQuantKey:     getEnv("CRYPTOQUANT_KEY", ""),
 
-		DBMaxConns:        getInt("DB_MAX_CONNS", 0),
-		DBMinConns:        getInt("DB_MIN_CONNS", 0),
-		DBMaxConnLifetime: getDuration("DB_MAX_CONN_LIFETIME", 0),
-		DBMaxConnIdleTime: getDuration("DB_MAX_CONN_IDLE_TIME", 0),
-		ShutdownTimeout:   getDuration("SHUTDOWN_TIMEOUT", 25*time.Second),
-		PprofAddr:         getEnv("PPROF_ADDR", ""),
-		GzipLevel:         getInt("GZIP_LEVEL", 0),
+		DBMaxConns:         getInt("DB_MAX_CONNS", 0),
+		DBMinConns:         getInt("DB_MIN_CONNS", 0),
+		DBMaxConnLifetime:  getDuration("DB_MAX_CONN_LIFETIME", 0),
+		DBMaxConnIdleTime:  getDuration("DB_MAX_CONN_IDLE_TIME", 0),
+		ShutdownTimeout:    getDuration("SHUTDOWN_TIMEOUT", 25*time.Second),
+		PprofAddr:          getEnv("PPROF_ADDR", ""),
+		GzipLevel:          getInt("GZIP_LEVEL", 0),
+		SayfaOnbellekTTL:   getDuration("SAYFA_ONBELLEK_TTL", 0),
+		SayfaOnbellekBayat: getDuration("SAYFA_ONBELLEK_BAYAT", 0),
 	}
 	return cfg
 }
