@@ -87,6 +87,11 @@ func main() {
 	if u := platform.ImageSvcURL(); u != "" {
 		logger.Info("image-svc devrede", "url", u)
 	}
+	// Sıkıştırma seviyesi: boşsa paket varsayılanı (4) kalır.
+	if cfg.GzipLevel > 0 {
+		httpapi.SetGzipLevel(cfg.GzipLevel)
+	}
+	logger.Info("gzip", "seviye", httpapi.GzipLevel())
 
 	srv, app := httpapi.NewServerApp(cfg, logger, pool, bundle, aiclient)
 	logger.Info("theblock site dinliyor", "addr", cfg.ListenAddr, "env", cfg.Env)

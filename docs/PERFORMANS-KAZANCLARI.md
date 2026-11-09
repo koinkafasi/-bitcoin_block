@@ -10,20 +10,35 @@ Aşağıdaki her sayı bu makinede ölçüldü.
 
 ## 1. Sonuç tablosu
 
-Aynı yük testi (50 eşzamanlı istemci × 10 sn, 6 sayfa, aynı betik):
+> ### Ölçüm yöntemi düzeltmesi (9 Kasım 2026)
+>
+> İlk turlarda yük üreteci **Python thread'leriydi**. 1.500 rps'nin üstünde
+> Python kendisi CPU'nun %79'unu yiyordu, yani ölçülen "rps" büyük ölçüde
+> **istemciyi** ölçüyordu. Go ile yazılmış sabit-eşzamanlılık yük üreteci
+> (`/tmp/loadgen`) ile aynı ortamda gerçek tavan **~1.400 rps** çıktı.
+>
+> Bu yüzden 1.400 rps üstündeki karşılaştırmalar **gürültüye** dayanıyor ve
+> aşağıdaki tablodaki 1.810/1.945 değerleri **abartılı** okunmalıdır. Sağlam
+> olan ölçümler:
+>
+> | Ölçüm | Değer | Neden güvenilir |
+> |---|---|---|
+> | Tek istek gecikmesi (ana sayfa) | 26 ms → **9 ms** | istemci etkisi yok |
+> | İstek başına sunucu CPU'su | 2,53 → **2,30 ms** | `/proc/<pid>/stat` ile süreç bazlı |
+> | DB taraması / istek | 34 → **4** | `pg_stat_user_tables` |
+>
+> 50 eşzamanlıda ölçülen rps **istemciye bağlı** olduğu için artık birincil
+> metrik değil; yerine **istek başına sunucu CPU'su** kullanılıyor.
 
-| Metrik | Önce | 1. tur | 2. tur | **3. tur** |
+İlk ölçüm turu (50 eşzamanlı istemci × 10 sn, 6 sayfa, Python üreteç):
+
+| Metrik | Önce | 1. tur | 2. tur | 3. tur |
 |---|---|---|---|---|
-| rps | 435 | 1.810 | 1.515 | **1.945** |
-| p50 | 96 ms | 25 ms | 30 ms | **24 ms** |
-| p95 | 211 ms | 51 ms | 57 ms | **45 ms** |
-| p99 | 270 ms | 59 ms | 72 ms | **57 ms** |
-| Hata | 0 | 0 | 0 | **0** |
-
-> Turlar arasında ölçüm koşulları değişti (2. turda arka planda başka iş
-> vardı, ayrıca çalışma ağacına başka bir geliştirme girdi). Bu yüzden
-> "1. tur" ile "3. tur"u doğrudan kıyaslamak yerine her turun kendi
-> **önce/sonra** ölçümü esas alınmalı.
+| rps (istemci sınırlı) | 435 | 1.810 | 1.515 | 1.945 |
+| p50 | 96 ms | 25 ms | 30 ms | 24 ms |
+| p95 | 211 ms | 51 ms | 57 ms | 45 ms |
+| p99 | 270 ms | 59 ms | 72 ms | 57 ms |
+| Hata | 0 | 0 | 0 | 0 |
 
 Ana sayfa, aynı yük altında (p50): **191 ms → 51 ms → 52 ms → 35 ms**.
 
@@ -213,6 +228,53 @@ terk edilmiş istek, yavaş sorgu bitene kadar goroutine tutmaz. Testle korunuyo
 **Doğrulama:** soğuk (önbellek boş) ve sıcak (önbellekten) yanıtlar 5 sayfada
 **bayt bayt aynı** — önbellek render çıktısını değiştirmiyor.
 
+### 2.8 gzip seviyesi 6 → 4 — istek yolundaki en pahalı tek kalem
+
+Sorgu sayısı ve CSP düştükten sonra alınan profil (10 sn, yük altında,
+20 eşzamanlı) **332% CPU** örnekledi ve dağılım şöyleydi:
+
+| Kalem | CPU payı |
+|---|---|
+| **`compress/flate` (gzip kodlama)** | **%31,4** |
+| sistem çağrıları (DB/ağ) | %9,5 |
+| `memmove` | %5,0 |
+| GC taraması | ~%6 |
+| `sha256` (CSP hash) | %2,0 |
+
+Yani gzip, her HTML yanıtını yeniden sıkıştırmak istek yolunun **en pahalı
+tek işi** hâline gelmişti.
+
+Gerçek 77 KB sayfa gövdesi üzerinde seviyeler ölçüldü (60 tur):
+
+| Seviye | Çıktı | Oran | CPU/istek |
+|---|---|---|---|
+| 1 (BestSpeed) | 18 KB | %23,8 | 0,37 ms |
+| 3 | 17 KB | %22,7 | 0,43 ms |
+| **4 (yeni varsayılan)** | **17 KB** | **%22,2** | **0,45 ms** |
+| 6 (eski varsayılan) | 16 KB | %21,2 | 0,63 ms |
+| 9 | 15 KB | %20,6 | 1,16 ms |
+
+**Uçtan uca A/B** — aynı ikili, yalnız `GZIP_LEVEL` farklı, 8 eşzamanlı,
+iki turda sıra değiştirilerek:
+
+| | CPU/istek | rps | gzip gövde |
+|---|---|---|---|
+| seviye 6 | 4,67 ms | ~665 | 24.115 B |
+| **seviye 4** | **4,30 ms** | **~689** | 25.312 B |
+| fark | **−%7,9** | +%3,6 | +%5 |
+
+Seviye 4 seçildi: **CPU'da %8 kazanç**, karşılığında gövdede ~1,2 KB.
+Cloudflare önbelleği (`s-maxage=300`) ve kenar sıkıştırması düşünülünce bu
+1,2 KB önemsiz; buna karşılık haber patlamalarında önbellek ıskalayan her
+istek bu CPU'yu ödüyor.
+
+**Uygulama notu — havuz tuzağı:** `gzip.Writer.Reset()` seviyeyi
+*değiştirmez*; seviye writer oluşturulurken sabitlenir. Tek `sync.Pool`
+kullanılsaydı seviye değiştiğinde havuzdan eski seviyeli writer alınır ve
+istenen seviye sessizce yok sayılırdı. Bunu yazdığım test yakaladı
+(`TestGzipSeviyeHavuzuKirletmez`: seviye 9 ile 1 aynı boyutu üretiyordu).
+Çözüm: **seviye başına ayrı havuz** (1–9).
+
 ---
 
 ## 3. Eklenen testler
@@ -231,6 +293,11 @@ terk edilmiş istek, yavaş sorgu bitene kadar goroutine tutmaz. Testle korunuyo
 | `TestTTLCacheBasarisizSonucOnbellegeYazilmaz` | DB hatası 10 sn donmaz |
 | `TestTTLCacheSingleflight` | 20 eşzamanlı çağrı = 1 yükleme |
 | `TestTTLCacheIptalBeklemeyiBiraktirir` | iptal edilen istek beklemede kalmaz |
+| `TestCSPHashCacheAyniGovdeAyniBaslik` | CSP önbelleği başlığı birebir korur |
+| `TestCSPHashCacheKapasiteTahliye` | önbellek süreç ömründe büyümez |
+| `TestCSPHashCacheUretimMiddlewareIsabet` | gerçek zincirde 2. istek aynı başlık |
+| `TestGzipSeviyeAyaruUygulanir` | seviye uygulanır, aralık dışı yok sayılır |
+| `TestGzipSeviyeHavuzuKirletmez` | seviye değişince havuz yanlış writer vermez |
 | `BenchmarkResizeToWidth*`, `BenchmarkCreateThumb*` | görsel kazancı ölçülebilir kalır |
 | `BenchmarkRenderDesign` | manşet raster'ının maliyeti (10,1 ms) takip edilir |
 
@@ -252,11 +319,12 @@ limit aşımı GC'ye değil **OOMKill**'e gidiyordu. Normal kullanımın çok
 
 ## 5. Sırada ne var (ölçümle doğrulanmış adaylar)
 
-1. **Şablon render'ı artık listenin başında.** Sorgu sayısı düştükten sonra
-   ana sayfada kalan sürenin büyük kısmı templ render + CSP hash üretimi.
-   Profilde `indexFold` (CSP taraması) tek başına ~%9 CPU alıyor.
-   Ölçülebilir aday: CSP hash'lerini gövde başına **bir kez** üretmek yerine
-   yanıtla birlikte önbelleğe almak (aynı HTML → aynı hash).
+1. **Kalan CPU:** gzip 4'e indikten sonra istek başına ~4,3 ms CPU'nun
+   dağılımı: flate ~%23, GC ~%10, sistem çağrıları ~%10, şablon render +
+   json ~%15. Bir sonraki anlamlı adım **yanıtı bir kez üretip kısa süre
+   saklamak** (HTML önbelleği) — aynı gövde yeniden üretilmediği için hem
+   render hem gzip ortadan kalkar. Risk: kişiselleştirilmiş alanlar (oturum,
+   tema, AB) gövdeye giriyor; yalnız anonim isteklerde uygulanabilir.
 2. **`/media/thumb` ve `/media/variant`**: ilk istekte üretiliyor, sonra
    diskten. Medya tablosu şu an boş; içerik dolduğunda `image-svc`
    kazancı (1,8×) doğrudan kullanıcıya yansıyacak.
@@ -273,8 +341,15 @@ limit aşımı GC'ye değil **OOMKill**'e gidiyordu. Normal kullanımın çok
 ## 6. Yeniden üretme
 
 ```bash
-# yük testi (50 eşzamanlı × 10 sn)
-python3 /mnt/c/Users/alper/AppData/Local/Temp/opencode/load2.py
+# YÜK ÜRETECİ: Go (Python thread'leri 1.500 rps üstünde kendisi darboğaz olur)
+/tmp/loadgen -u http://127.0.0.1:8090/ -c 50 -d 10
+
+# istek başına sunucu CPU'su (asıl metrik)
+python3 /mnt/c/Users/alper/AppData/Local/Temp/opencode/gz_cpu.py
+
+# gzip seviyesi A/B: aynı ikili, yalnız GZIP_LEVEL farklı
+GZIP_LEVEL=6 ./bin/site &   # 8097
+GZIP_LEVEL=4 ./bin/site &   # 8098
 
 # görsel hattı karşılaştırması
 IMAGE_SVC_URL=http://127.0.0.1:8172 \

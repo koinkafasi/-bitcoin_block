@@ -43,7 +43,7 @@ const cspBufferLimit = 8 << 20 // 8 MB
 // withHTMLCSP HTML yanıtlarını tamponlayıp CSP'yi nihai gövdeden üretir.
 func (s *Server) withHTMLCSP(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		bw := &cspWriter{w: w, raporURL: s.cspRaporURL()}
+		bw := &cspWriter{w: w, raporURL: s.cspRaporURL(), hashes: s.cspHashes}
 		next.ServeHTTP(bw, r)
 		bw.finish()
 	})
@@ -52,6 +52,10 @@ func (s *Server) withHTMLCSP(next http.Handler) http.Handler {
 type cspWriter struct {
 	w        http.ResponseWriter
 	raporURL string
+	// hashes: gövde → CSP başlığı süreç içi önbelleği (nil = önbellek kapalı;
+	// testlerde sınanır). Aynı gövde her seferinde yeniden taranıp yeniden
+	// hash'leniyordu; profil bu yolu CPU'nun ~%9'u olarak gösterdi.
+	hashes   *cspHashCache
 	buf      strings.Builder
 	status   int  // handler'ın bildirdiği durum kodu
 	hdrYazil bool // WriteHeader çağrıldı mı
@@ -154,6 +158,24 @@ func (c *cspWriter) Flush() {
 func (c *cspWriter) Unwrap() http.ResponseWriter { return c.w }
 
 // bosalt biriken tamponu alttaki yazıcıya yazar.
+// cspBasligi gövde için CSP başlığını üretir (önbellekli).
+//
+// Önbellek anahtarı gövdenin kendisidir: CSP hash'leri yalnız gövdeye bağlı.
+// Iskalamada gövde iki kez taranır + her blok için sha256 hesaplanır; bu
+// istek yolundaki en pahalı saf-CPU işiydi (profil: indexFold ~%9).
+func (c *cspWriter) cspBasligi(govde string) string {
+	if c.hashes != nil {
+		if v, ok := c.hashes.Get(govde); ok {
+			return v
+		}
+	}
+	v := buildCSP(cspScriptHashes(govde), cspStyleHashes(govde), collabURL(), c.raporURL)
+	if c.hashes != nil {
+		c.hashes.Set(govde, v)
+	}
+	return v
+}
+
 func (c *cspWriter) bosalt() error {
 	c.durumIlet(c.durumKesin())
 	if c.buf.Len() == 0 {
@@ -172,8 +194,7 @@ func (c *cspWriter) finish() {
 	govde := c.buf.String()
 	if strings.HasPrefix(c.w.Header().Get("Content-Type"), "text/html") ||
 		(c.w.Header().Get("Content-Type") == "" && strings.Contains(strings.ToLower(govde[:min(400, len(govde))]), "<html")) {
-		c.w.Header().Set("Content-Security-Policy",
-			buildCSP(cspScriptHashes(govde), cspStyleHashes(govde), collabURL(), c.raporURL))
+		c.w.Header().Set("Content-Security-Policy", c.cspBasligi(govde))
 	}
 	if c.buf.Len() == 0 {
 		// Gövdesiz yanıt (204, 304, boş 302): durum kodu yine iletilmeli.

@@ -87,6 +87,9 @@ type Server struct {
 	cdShellCache *ttlcache[cdShellData]
 	cdHomeCache  *ttlcache[[]repo.Content]
 	cdListeCache *ttlcache[cdListeSonuc]
+
+	// cspHashes gövde → CSP başlığı önbelleği (bkz. csp_hashcache.go).
+	cspHashes *cspHashCache
 }
 
 // siteIDFromCtx bağlamdan site kimliğini döndürür (yoksa 1).
@@ -130,6 +133,7 @@ func NewServerApp(cfg config.Config, logger *slog.Logger, pool *pgxpool.Pool, bu
 		cdShellCache: newTTLCache[cdShellData](cdCacheTTL),
 		cdHomeCache:  newTTLCache[[]repo.Content](cdCacheTTL),
 		cdListeCache: newTTLCache[cdListeSonuc](cdCacheTTL),
+		cspHashes:    newCSPHashCache(),
 	}
 	s.siteName = s.initialSiteName()
 	// Statik varlık sürümünü templkit'e de ver: cd_head.templ `?v=` ile

@@ -64,6 +64,12 @@ type Config struct {
 	// bağlı). Ayrı ve varsayılan olarak 127.0.0.1'e bağlı dinleyici, profili
 	// yalnız makineden erişilebilir tutar.
 	PprofAddr string
+
+	// GzipLevel metin yanıtlarının sıkıştırma seviyesi (1–9).
+	// Boş/0 ise paket varsayılanı (4) kullanılır. Ölçüm ve gerekçe:
+	// bkz. internal/httpapi/gzip.go (seviye 6 → 4: sıkıştırma CPU'su -%29,
+	// gövde +%6).
+	GzipLevel int
 }
 
 func Load() Config {
@@ -99,6 +105,7 @@ func Load() Config {
 		DBMaxConnIdleTime: getDuration("DB_MAX_CONN_IDLE_TIME", 0),
 		ShutdownTimeout:   getDuration("SHUTDOWN_TIMEOUT", 25*time.Second),
 		PprofAddr:         getEnv("PPROF_ADDR", ""),
+		GzipLevel:         getInt("GZIP_LEVEL", 0),
 	}
 	return cfg
 }
