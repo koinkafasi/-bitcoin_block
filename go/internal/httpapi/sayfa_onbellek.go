@@ -67,6 +67,10 @@ type sayfaGirdi struct {
 	durum  int
 	baslik map[string]string
 	govde  []byte
+	// okunmaID: gövdeyi üreten handler'ın bildirdiği içerik kimliği (makale
+	// sayfaları). İsabette okunma sayacı bununla artırılır; aksi hâlde
+	// önbellek, okunma sayılarını tümden durdururdu.
+	okunmaID int64
 }
 
 // sayfaOnbellek tam sayfa (render + CSP + gzip) önbelleği.
@@ -237,12 +241,30 @@ func sayfaOnbellegeUygun(r *http.Request) bool {
 	return sayfaYoluOnbelleklenir(r.URL.Path)
 }
 
+// sayfaOnbellekHaricOnekler makale desenine benzese bile ASLA önbelleğe
+// girmeyecek kökler.
+//
+// NEDEN: makale deseni (4-5 segment + tarih) geniş; `/api/2026/11/05/x`
+// gibi bir yol da desene uyuyor. Bugün `/api` mux'ta ayrı çözülüyor (yani
+// pratikte buraya düşmez), ama rota değişirse kişisel/veri yolu önbelleğe
+// girerdi. Bu liste bir sözleşme değil, emniyet kemeri.
+var sayfaOnbellekHaricOnekler = []string{
+	"/api/", "/admin", "/media/", "/kg/", "/canli/", "/giris", "/hesabim",
+	"/static/", "/internal/", "/webhooks/", "/amp/", "/sitemap", "/indexnow/",
+	"/sw.js", "/robots.txt", "/ads.txt",
+}
+
 // sayfaYoluOnbelleklenir yalnız HERKESE AÇIK CD sayfaları.
 //
 // Yönetim paneli (/admin), API (/api), medya (/media, /kg), canlı akış
 // (/canli), oturum yolları (/giris, /hesabim…) ve sitemap/robots gibi
 // üretilen dosyalar bilinçli olarak DIŞARIDA: kişisel ya da ucuz.
 func sayfaYoluOnbelleklenir(yol string) bool {
+	for _, o := range sayfaOnbellekHaricOnekler {
+		if strings.HasPrefix(yol, o) {
+			return false
+		}
+	}
 	if yol == "/" || yol == "/cd" {
 		return true
 	}
@@ -264,7 +286,44 @@ func sayfaYoluOnbelleklenir(yol string) bool {
 		_, ok := cdSectionMeta[tekSegment]
 		return ok
 	}
-	return false
+	// MAKALE sayfaları — bir haber sitesinde trafiğin çoğu burası.
+	// Ölçüm (9 Kasım 2026): makale 20-100 ms (cache dışı) → önbellekte
+	// 0,4 ms. Tarih deseni zorunlu: rastgele çok segmentli yollar
+	// (panel, hesap, API) buraya takılmasın.
+	return makaleYoluMu(yol)
+}
+
+// makaleYoluMu /{bolum}/{YYYY}/{MM}/{DD}/{slug} ve /{YYYY}/{MM}/{DD}/{slug}
+// desenlerini tanır.
+//
+// SON SEGMENT bilinçli olarak denetlenmez (slug serbest metin); kapsamı
+// daraltan şey tarih üçlüsü. Desen dışı her yol önbellek DIŞINDA kalır.
+func makaleYoluMu(yol string) bool {
+	s := strings.Split(strings.Trim(yol, "/"), "/")
+	switch len(s) {
+	case 5: // bölüm + tarih + slug
+		s = s[1:] // bölüm adını at → [YYYY MM DD slug]
+	case 4: // tarih + slug
+	default:
+		return false
+	}
+	if s[3] == "" {
+		return false
+	}
+	return len(s[0]) == 4 && sayiMi(s[0]) && sayiMi(s[1]) && sayiMi(s[2])
+}
+
+// sayiMi s boş değilse ve yalnız rakamlardan oluşuyorsa true.
+func sayiMi(s string) bool {
+	if s == "" {
+		return false
+	}
+	for _, r := range s {
+		if r < '0' || r > '9' {
+			return false
+		}
+	}
+	return true
 }
 
 // cacheWriter yanıtı yakalayan yazıcı.
@@ -364,11 +423,17 @@ func (s *Server) withSayfaOnbellek(next http.Handler) http.Handler {
 			} else {
 				cache.bayat.Add(1)
 			}
+			// OKUNMA İSABETTE DE SAYILIR. Makale gövdesi önbellekten gelince
+			// handler çalışmaz; sayaç burada artırılmazsa popülerlik verisi
+			// (counters_hit/hit_daily) önbellek açıkken neredeyse dururdu.
+			if g.okunmaID != 0 {
+				okunmaTamponu.ekle(g.okunmaID)
+			}
 			s.sayfaSun(w, r, g)
 			if !taze {
 				// BAYAT SUNULDU: kullanıcı beklemedi. Yenileme arka planda,
 				// tek bir goroutine'de (singleflight) yapılır.
-				s.sayfaArkaPlandaYenile(next, r, anahtar)
+				s.sayfaArkaPlandaYenile(next, r, anahtar, g.okunmaID)
 			}
 			return
 		}
@@ -381,8 +446,16 @@ func (s *Server) withSayfaOnbellek(next http.Handler) http.Handler {
 		if lider {
 			defer cache.birak(anahtar)
 			cw := &cacheWriter{ResponseWriter: w}
+			// Handler'a sayaç işareti ver: hangi içeriğin okunduğunu
+			// bildirsin, sayımı biz yapalım (isabette de aynı yol).
+			isaret := &okunmaIsareti{}
+			r = r.WithContext(context.WithValue(r.Context(), okunmaIsaretAnahtari{}, isaret))
 			next.ServeHTTP(cw, r)
 			if g, ok := sayfaGirdiCikar(cw); ok {
+				g.okunmaID = isaret.al()
+				if g.okunmaID != 0 {
+					okunmaTamponu.ekle(g.okunmaID)
+				}
 				cache.koy(anahtar, g)
 			}
 			return
@@ -438,7 +511,7 @@ func (s *Server) sayfaSun(w http.ResponseWriter, r *http.Request, g *sayfaGirdi)
 // Bağlam: istek bağlamı istek bitince İPTAL OLUR. Arka plan işi ona
 // bağlanırsa yarıda kalır; bu yüzden WithoutCancel kullanılır ve ayrı bir
 // bütçe verilir.
-func (s *Server) sayfaArkaPlandaYenile(next http.Handler, r *http.Request, anahtar [32]byte) {
+func (s *Server) sayfaArkaPlandaYenile(next http.Handler, r *http.Request, anahtar [32]byte, okunmaID int64) {
 	cache := s.sayfaCache
 	lider, _ := cache.kilit(anahtar)
 	if !lider {
@@ -453,11 +526,14 @@ func (s *Server) sayfaArkaPlandaYenile(next http.Handler, r *http.Request, anaht
 		ctx, iptal := context.WithTimeout(context.WithoutCancel(r.Context()), sayfaOnbellekArkaPlanButce)
 		defer iptal()
 		// İsteğin kopyası: başlıklar (Accept-Encoding) korunur, gövde yok.
-		kopya := r.Clone(ctx)
+		// Sayım kapatılır: yenileme kullanıcı okuması değildir.
+		kopya := r.Clone(okunmaSayilmasin(ctx))
 		kopya.Header.Set("X-Request-Id", "arka-plan-yenileme")
 		cw := &cacheWriter{ResponseWriter: &yazmayanWriter{}}
 		next.ServeHTTP(cw, kopya)
 		if g, ok := sayfaGirdiCikar(cw); ok {
+			// okunmaID korunur: sonraki isabetler yine sayılsın.
+			g.okunmaID = okunmaID
 			cache.koy(anahtar, g)
 		}
 	}()

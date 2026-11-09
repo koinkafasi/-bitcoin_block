@@ -450,6 +450,68 @@ Soğuk yol CPU profili (c=8, 10 sn, 29 s örnek): `Syscall6` %11,8,
 Yani maliyetin çoğu **DB gidiş-dönüşü + gzip + kopyalama**; aritmetik değil.
 Sıradaki aday ana sayfadaki ~20 sorguyu tek `pgx.Batch`'e indirmek.
 
+### 2.14 Makale sayfaları da önbelleğe alındı — trafiğin çoğu burada
+
+**Bulunan boşluk.** Önbellek kapsamı yalnız ana sayfa, bölüm, etiket ve
+sabit sayfalardı. Bir haber sitesinde **trafiğin çoğu makale sayfasına**
+gelir ve bunlar her istekte yeniden üretiliyordu: ölçüm **20–100 ms**
+(tek istek 20 ms; yük altında 100 ms'ye çıkıyor).
+
+**A/B (aynı makale, iki ikili, 6 sn, sıra iki yönde de):**
+
+| | rps (c=8) | p50 (c=8) | p50 (c=1) |
+|---|---|---|---|
+| önce | 63 – 278 | 27 – 96 ms | 85 ms |
+| sonra | **9 148** | **0,7 ms** | **0,4 ms** |
+
+"Önce"nin aralık olması ölçüm gürültüsü değil, **bulgunun kendisi**: her
+görüntülemede iki UPSERT (aşağıda) yapıldığı için sayfa, DB yüküne göre
+27 ile 96 ms arasında salınıyor. "Sonra" iki koşuda da 0,4–0,8 ms.
+
+**Kapsam nasıl belirleniyor.** Yol deseni zorunlu:
+`/{bölüm}/{YYYY}/{MM}/{DD}/{slug}` veya `/{YYYY}/{MM}/{DD}/{slug}`. Son
+segment denetlenmez (slug serbest metin); kapsamı daraltan tarih üçlüsü.
+Ayrıca **hariç kökler** listesi var (`/api/`, `/admin`, `/media/`, `/kg/`,
+`/canli/`, `/giris`, `/hesabim`, `/static/`, `/internal/`, `/webhooks/`,
+`/amp/`, `/sitemap`, …): tarih desenine uysalar bile önbelleğe girmezler.
+Bu ikinci liste bir test hatasıyla ortaya çıktı — `/api/2026/11/05/x`
+desene uyuyordu; desen testi ile kapsam testi ayrıldı.
+
+**Gövde değişmezliği kanıtlandı.** Önbellekten gelen gövde ile
+`Cache-Control: no-cache` ile taze üretilen gövde **bayt bayt aynı**
+(sha256; `/`, `/markets`, makale, `/tag/bitcoin`, `/price`). Yani makale
+şablonunda istek başına rastgelelik (CSRF/jeton) yok; olsaydı önbellek
+yanlış olurdu.
+
+### 2.15 Okunma sayacı istek yolundan çıkarıldı (2 UPSERT → 2 sn'de bir tur)
+
+**Sorun.** `repo.IncrementHit` her makale görüntülemesinde **iki ayrı,
+sıralı UPSERT** atıyordu (`counters_hit` + `hit_daily`). Ölçüm: yalnız bu
+iki yazım kaldırıldığında makale sayfası c=8'de **24 → 80 rps** (3,3×).
+Sayaç bir iş metriği; istek yolunun parçası olmamalı.
+
+**Değişiklik.** Okunmalar bellekte içerik başına biriktirilir, ~2 sn'de bir
+**tek turda** yazılır (`unnest` ile dizi parametreleri → N UPSERT yerine 2
+sorgu). Toplamlar kaybolmaz, yalnız gecikir (panel grafikleri dakika/gün
+çözünürlüğünde). Kapanışta kalan sayılar da yazılır.
+
+**Önbellekle çakışma — asıl tuzak.** Sayfa önbellekten gelince handler hiç
+çalışmaz; sayaç handler'da olsaydı popülerlik verisi önbellek açıkken
+**neredeyse dururdu**. Çözüm: handler içerik kimliğini istek bağlamına
+işaretler, sayımı önbellek katmanı yapar — hem ıskada hem isabette, tek
+yerden. Kimlik önbellek kaydında saklanır (`okunmaID`), böylece isabette
+DB'ye sorgu gitmez. Arka plan yenilemesi **sayılmaz** (kullanıcı okuması
+değil); bu, sahte okunma üretimini engeller.
+
+**Kanıt (canlı).** Önbellek isabeti 0,4 ms iken 30 istek → `counters_hit`
+**+30**, `hit_daily` **+30** (tam). Oturumlu istek önbelleği atlar ve
+doğrudan sayılır (2 istek → +2).
+
+**Testler.** `TestMakaleYoluMu` (desen + hariç kökler),
+`TestSayfaOnbellekOkunmaIsabetteDeSayilir` (5 istek / 1 render / 5 okunma),
+`TestSayfaOnbellekArkaPlanYenilemeSayilmaz` (3 istek → 3 okunma, yenileme
+sayılmaz), `TestOkunmaBiriktiriciToplam`.
+
 ---
 
 ## 3. Eklenen testler
@@ -484,6 +546,11 @@ Sıradaki aday ana sayfadaki ~20 sorguyu tek `pgx.Batch`'e indirmek.
 | `TestSayfaOnbellekBayatHemenSunulurArkaPlandaYenilenir` | bayat gövde anında, yenisi arka planda |
 | `TestSayfaOnbellekSingleflightTekUretim` | 20 eşzamanlı = 1 üretim |
 | `TestSayfaOnbellekArkaPlanBagimsizCalisir` | iptal edilen istek yenilemeyi durdurmaz |
+| `TestMakaleYoluMu` | makale deseni + **hariç kökler** önbelleğe girmez |
+| `TestSayfaOnbellekMakaleYoluUygun` | makale önbelleklenir, oturumlu istek yine kişisel |
+| `TestSayfaOnbellekOkunmaIsabetteDeSayilir` | isabet sayaçı durdurmaz |
+| `TestSayfaOnbellekArkaPlanYenilemeSayilmaz` | yenileme sahte okunma üretmez |
+| `TestOkunmaBiriktiriciToplam` | biriktirici toplar, boşaltınca sıfırlar |
 | `BenchmarkResizeToWidth*`, `BenchmarkCreateThumb*` | görsel kazancı ölçülebilir kalır |
 | `BenchmarkRenderDesign` | manşet raster'ının maliyeti (10,1 ms) takip edilir |
 
@@ -505,9 +572,10 @@ limit aşımı GC'ye değil **OOMKill**'e gidiyordu. Normal kullanımın çok
 
 ## 5. Sırada ne var (ölçümle doğrulanmış adaylar)
 
-1. **Önbellek ıskası (soğuk istek).** Isabet 0,16 ms; ıska c=1 p50 7,8 ms.
-   Bayat sun ile ıska artık kullanıcıya yansımıyor (bkz. §2.12), ama DB
-   kesintisi/yeniden başlatma sonrası gerçek. Sıradaki kazanç, ıska
+1. **Önbellek ıskası (soğuk istek).** Isabet 0,16 ms (makale: 0,4 ms);
+   ıska c=1 p50 7,8 ms ana sayfa, 20–100 ms makale. Bayat sun ve makale
+   önbelleği ile ıska artık kullanıcıya yansımıyor (bkz. §2.12, §2.14);
+   ama DB kesintisi/yeniden başlatma sonrası gerçek. Sıradaki kazanç, ıska
    maliyetini düşürmek: ana sayfadaki ~20 sorguyu tek `pgx.Batch`'e indirmek.
 2. **TTL ve tazelik ayarı — yapıldı** (`SAYFA_ONBELLEK_TTL` /
    `SAYFA_ONBELLEK_BAYAT`, §2.12). Varsayılan 10 sn taze + 30 sn bayat.

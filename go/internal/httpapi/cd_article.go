@@ -40,7 +40,10 @@ func (s *Server) handleCDArticle(w http.ResponseWriter, r *http.Request, lang, s
 		}
 	}
 
-	_ = repo.IncrementHit(ctx, s.pool, c.ID)
+	// Okunma sayımı: istek yolunda DB yazımı YOK. Sayı bellekte biriktirilir,
+	// ~2 sn'de bir tek turda yazılır (bkz. okunma.go). Ölçüm: iki UPSERT
+	// makale sayfasında c=8'de 24 rps → 80 rps.
+	s.okunmaKaydet(ctx, c.ID)
 
 	bolumAd, bolumSlug := "Piyasalar", "markets"
 	if c.CategoryName != nil && *c.CategoryName != "" {

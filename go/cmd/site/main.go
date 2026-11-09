@@ -111,6 +111,9 @@ func main() {
 
 	// Periyodik işler: planlı yayın, çöp temizliği, oturum temizliği.
 	workerCtx, workerCancel := context.WithCancel(ctx)
+	// Okunma sayacı: istek yolundan çıkarıldı; biriken sayılar ~2 sn'de bir
+	// tek turda yazılır (iki UPSERT/görüntüleme yerine).
+	httpapi.OkunmaSayaciBaslat(workerCtx, pool, logger, 0)
 	go scheduler.Run(workerCtx, pool, logger, 30*time.Second)
 	go scheduler.RunBot(workerCtx, pool, logger, 60*time.Second)
 	go scheduler.RunGundem(workerCtx, pool, logger, 60*time.Second)

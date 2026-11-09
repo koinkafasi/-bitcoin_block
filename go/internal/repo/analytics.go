@@ -31,6 +31,53 @@ func IncrementHit(ctx context.Context, pool *pgxpool.Pool, contentID int64) erro
 	return nil
 }
 
+// IncrementHits biriktirilmiş okunma sayılarını TEK turda yazar.
+//
+// NEDEN: `IncrementHit` her makale görüntülemesinde İKİ UPSERT atıyor
+// (counters_hit + hit_daily). Ölçüm (9 Kasım 2026, makale sayfası):
+// c=8'de 24 rps → bu iki yazım kaldırılınca 80 rps (3,3×). Yazımlar
+// sıralı ve her biri bir gidiş-dönüş; istek yolunda olmamalı.
+//
+// Çağıran (httpapi/okunma.go) sayıları bellekte biriktirip ~2 sn'de bir
+// buraya verir. Toplamlar KAYBOLMAZ: biriktirme yalnız geciktirir, her
+// okunma tam olarak bir kez yazılır.
+//
+// Tek sorgu, dizi parametreleriyle: N ayrı UPSERT yerine 1 gidiş-dönüş.
+func IncrementHits(ctx context.Context, pool *pgxpool.Pool, sayilar map[int64]int64) error {
+	if len(sayilar) == 0 {
+		return nil
+	}
+	idler := make([]int64, 0, len(sayilar))
+	adetler := make([]int64, 0, len(sayilar))
+	for id, n := range sayilar {
+		if n <= 0 {
+			continue
+		}
+		idler = append(idler, id)
+		adetler = append(adetler, n)
+	}
+	if len(idler) == 0 {
+		return nil
+	}
+
+	_, err := pool.Exec(ctx, `
+		INSERT INTO counters_hit (content_id, total)
+		SELECT id, adet FROM unnest($1::bigint[], $2::bigint[]) AS t(id, adet)
+		ON CONFLICT (content_id) DO UPDATE
+		SET total = counters_hit.total + EXCLUDED.total, updated_at = now()`,
+		idler, adetler)
+	if err != nil {
+		return err
+	}
+	// Günlük kırılım ikincil: burada hata olsa da toplam sayaç yazılmış olur.
+	_, _ = pool.Exec(ctx, `
+		INSERT INTO hit_daily (content_id, day, hits)
+		SELECT id, CURRENT_DATE, adet FROM unnest($1::bigint[], $2::bigint[]) AS t(id, adet)
+		ON CONFLICT (content_id, day) DO UPDATE SET hits = hit_daily.hits + EXCLUDED.hits`,
+		idler, adetler)
+	return nil
+}
+
 // IncrementShare paylaşım sayacını artırır.
 func IncrementShare(ctx context.Context, pool *pgxpool.Pool, contentID int64) error {
 	_, err := pool.Exec(ctx, `

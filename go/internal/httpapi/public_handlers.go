@@ -572,7 +572,7 @@ func (s *Server) handleArticle(w http.ResponseWriter, r *http.Request, lang, slu
 	}
 
 	if !preview {
-		_ = repo.IncrementHit(ctx, s.pool, c.ID)
+		s.okunmaKaydet(ctx, c.ID)
 	}
 	langBase := s.langBase(c.Locale)
 
