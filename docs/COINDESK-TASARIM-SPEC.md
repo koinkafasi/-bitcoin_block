@@ -2563,6 +2563,122 @@ menüyü kapatıyor ve odağı arama girdisine veriyor.
 bütçesi 172 → **176 KB** (ölçüldü 177.685 bayt); yeni CSS'in tamamı koyu
 tema jetonları ve mobil düzeltmeleri, harici istek eklenmedi.
 
+### 11.18 Yirminci tur (krem açık tema, mega menü koyu, hisse dizini) — DURUM
+
+Ölçüm: gerçek Chrome, 9 Kasım 2026 (1512 × 950 ve 390 × 844).
+
+#### 11.18.1 Açık tema zemini krem (#f3f1e9)
+
+Kullanıcı isteği: beyaz yerine sıcak kâğıt tonu. Dört jeton birlikte
+değişti — **gövde, üst çubuk, şerit, alt bilgi ve açılır panel hepsi
+`#f3f1e9`**. CoinDesk'te de bu beş yüzey aynı katmandır; ayrı jeton
+tutulmasının nedeni koyu temada ayrışmaları (aşağıda).
+
+| Jeton | Açık | Koyu |
+|---|---|---|
+| `--cd-bg` | `#f3f1e9` | `#0a0b0e` |
+| `--cd-topbar-bg` | `#f3f1e9` | `#04080b` |
+| `--cd-ticker-bg` | `#f3f1e9` | `#0e1014` |
+| `--cd-footer-bg` | `#f3f1e9` | `#0e1014` |
+| `--cd-surface-panel` | `#f3f1e9` | `#0e1014` |
+| `--cd-tab-active-bg` | `#ffffff` | `#0a0b0e` |
+
+**Yeni jeton `--cd-tab-active-bg`.** Gövde kreme dönünce seçili fiyat
+sekmesi (`background: var(--cd-bg)`) sekme kabının `#f4f4f4` zemini
+içinde kayboluyordu — "Kripto" sekmesi pasif görünüyordu. CoinDesk ölçümü
+seçili sekmeyi **beyaz** bastığı için ayrı jeton verildi; koyu temada
+gövde rengini alır.
+
+`theme-color` (açık) de `#f3f1e9` oldu.
+
+#### 11.18.2 Mega menü koyu temada KOYU
+
+**Önceki karar (7 Kasım 2026) yanlıştı:** panel koyu sayfada beyaz
+kalıyordu ("mega menüde dark moda geçince bu renkde olması gerek, beyaz
+kalıyor" — kullanıcı bildirimi). O kararın gerekçesi jeton sabitlemeydi:
+menüdeki her öğe `--cd-*` jetonlarından renk aldığı için paneli açık
+temaya sabitlemek "tek yerden çevirme" kolaylığı sağlıyordu.
+
+Artık panel `--cd-surface-panel` kullanıyor (koyu temada `#0e1014`) ve
+metin kök jetonlardan geliyor; jeton sabitlemesi tamamen kaldırıldı.
+Yalnız çizgi ve gölge ayarlanıyor (koyu zeminde üç katmanlı açık gölge
+görünmüyor).
+
+Ölçüm: üst çubuk `rgb(4,8,11)` → panel `rgb(14,16,20)` → sayfa
+`rgb(10,11,14)`. Panel üst çubuktan açık, gövdeden koyu: yükselti
+algısı korunuyor.
+
+#### 11.18.3 `/borsa/hisseler` yeni kabuğa geçti
+
+**Bulunan gerçek sorun:** sayfa `site_public.html` içindeki
+`{{define "hisseler"}}` bloğundan geliyordu — yani theblock'tan kalan
+kabuk (`site-header` / `site-footer` / `hsp-*`). Yeni temaya geçmiş her
+sayfa `cd-*` kabuğunu kullanırken bu sayfa geride kalmıştı; aynı sitede
+iki farklı tasarım görünüyordu.
+
+Yeni `templkit.CDHisselerPageView`:
+
+| Öğe | Ölçü |
+|---|---|
+| kabuk | `cd-topbar` + `cd-ticker` + `cd-footer` (aynı `cd.css`) |
+| başlık bloğu | `.cd-section-title` — `/price` ile **birebir aynı hiza** (main padding 0) |
+| arama hapı | 40 px yükseklik, 1 px `--cd-border-strong`, köşe 4 |
+| A-Z dizini | 28 px düğmeler, 4 px köşe, seçili ters renk |
+| tablo | `cd-table` temeli, satır 56 px |
+| avatar | 28 px daire, `--cd-surface-soft` |
+| fark rozeti | `--cd-up-bg` / `--cd-down-bg` + `--cd-up` / `--cd-down` |
+
+**Veri katmanı DEĞİŞMEDİ**: `hisseSayfaOlustur` aynı; 633 satır, fiyatı
+olmayan satır "—" basıyor (uydurma yok).
+
+**Bulunan hata:** yüzde öneki `"%%"` yazılmıştı — Go'da bu bir kaçış
+dizisi değil, ekranda `%%0,00` çıkıyordu. `"%"` olarak düzeltildi.
+Ayrıca tam sıfır değişim artık **yeşil rozet basmıyor** (`Duz` alanı):
+"yükseliş" göstermek yanıltıcıydı.
+
+Eski kabuk sınıflarının (`site-header`, `hsp-table` …) basılmadığı testle
+kilitlendi (`TestCDHisselerSayfasiKabuk`).
+
+#### 11.18.4 Yeni tasarım artık MODÜLER (sayfa tasarımcısı)
+
+`cd_home.templ` yeni tasarımı **sabit sırayla** yazıyordu: hero → nabız →
+explore → görüş/en çok okunan → bölüm blokları. Sayfa tasarımcısı ise
+yalnız theblock bloklarını yönetiyordu; yeni tasarımın hiçbir alanı
+panelden açılıp kapatılamıyordu.
+
+Artık her alan bir modül (`templkit.CDModul`):
+
+| Tip | Palet adı |
+|---|---|
+| `cd_hero` | Manşet (3 kolon) |
+| `cd_nabiz` | Piyasa Nabzı |
+| `cd_explore` | Keşfet Şeridi |
+| `cd_ikili` | Görüş + En Çok Okunan |
+| `cd_bloklar` | Bölüm Blokları |
+
+**Geriye dönük uyum:** `page_layouts` içinde `cd_*` bloğu YOKSA şablon
+eski sabit sırayı basar. Mevcut düzen kayıtları bozulmaz; düzen
+yazılmamış sitelerde görünüm birebir aynı kalır.
+
+`cd_ticker` bilinçle palette **yok**: şerit kabuğun parçası (üst çubuk
+gibi her sayfada); onu kaldırılabilir yapmak yalnız ana sayfada etkili
+olan bir anahtar vaat etmek olurdu.
+
+Doğrulama (canlı DB, düzen yedeklenip geri yüklendi): `cd_bloklar`
+birinci, `cd_hero` ikinci, `cd_explore` **gizli**, `cd_ikili` dördüncü
+yazıldı → sayfa tam olarak o sırayı ve görünürlüğü bastı (3 modül,
+explore yok). Ardından yedek aynen geri yüklendi (5 modül).
+
+#### 11.18.5 Boş sayfalama kabı
+
+Makale sonunda `<nav class="cd-pager">` iki uç da boşken de basılıyordu;
+kendi dış boşluğunu (32 px üst / 8 px alt) yazdığı için **40 px ölü alan**
+bırakıyordu (ölçüldü: nav 358×0, margin 32 0 8). Basım koşula bağlandı.
+
+`templ` / `gofmt` / `go vet` / `go test` / `go build` temiz. `cd.css`
+bütçesi 176 → **184 KB** (ölçüldü 182.413 bayt) — hisse dizini sayfası
+yeni kabuğa taşındığı için.
+
 ---
 
 ## 16. Gerçek veri katmanı (8 Kasım 2026)

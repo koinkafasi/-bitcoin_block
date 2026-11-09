@@ -66,6 +66,15 @@ var builderTypes = []blockType{
 	{"hisseler", "Hisseler", "BIST hisse şeridi: kod, fiyat, yön (canlı)", "chart"},
 	{"kripto_para", "Kripto Para", "Kripto fiyat ızgarası (ikon, fiyat, %24s)", "chart"},
 	{"kur_cevirici", "Kur Çevirici", "Döviz çevirici (12+ para birimi, canlı kur)", "chart"},
+	// YENİ TASARIM (bitcosar/CoinDesk) MODÜLLERİ — 9 Kasım 2026.
+	// Ana sayfanın yeni tasarımı `cd_home.templ` içinde sabit sıradaydı;
+	// artık her alan ayrı blok. Sıra ve görünürlük buradan yönetilir.
+	// `cd_*` blokları YOKSA şablon varsayılan sırayı basar, görünüm değişmez.
+	{"cd_hero", "Manşet (3 kolon)", "Sol ray + manşet + video/araştırma/klipler", "layout-grid"},
+	{"cd_nabiz", "Piyasa Nabzı", "Zincir-üstü gerçek veri (CryptoQuant); veri yoksa basılmaz", "chart"},
+	{"cd_explore", "Keşfet Şeridi", "Yatay kaydırmalı fiyat/video/klipler/bölüm panelleri", "image"},
+	{"cd_ikili", "Görüş + En Çok Okunan", "İki modül yan yana (25% / 75%)", "star"},
+	{"cd_bloklar", "Bölüm Blokları", "Piyasalar · Politika · Teknoloji · Finans 2×2 ızgara", "layout-grid"},
 	// Düzenlerde kullanılan ama palette eksik olan tipler
 	{"hikayeler", "Hikayeler", "Dairesel hikaye şeridi", "star"},
 	{"ust_manset", "Üst Manşet", "Yatay kaydırmalı kart şeridi", "layout-grid"},

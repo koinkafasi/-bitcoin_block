@@ -755,57 +755,36 @@ templ CDHome(v CDHomeView) {
 			@cdTopbar(v.Shell)
 			@cdTicker(v.Shell)
 			<main class="cd-wrap cd-main">
-				<!-- §8 manşet bloğu — CoinDesk hero'su ÜÇ kolon (spec §7A):
-				     290 sol ray · 608 merkez · 290 sağ ray, kolon arası 80.
-				     Sol: Son Haberler · Düşünce Liderliği · tek görselli manşet.
-				     Orta: manşet · 8 görselli akış · Basın Bültenleri slider.
-				     Sağ: Bugünün Videoları · Öne Çıkan Araştırma · Bugünün
-				     Klipleri (1284 px altında tamamen gizli).
-				     Hero ÇİZGİSİZ: CoinDesk'te ana içeriğin ilk modülü
-				     `border-top: 0`, `padding: 32px 0` (ölçüldü). -->
-				if v.Lead.Href != "" {
-					<section class="cd-mod cd-mod--cizgisiz">
-						<div class="cd-hero">
-							<aside class="cd-hero__sol">
-								@cdCanliModul(v.Canli)
-								@cdHeroSolRay(v.RailLeft)
-								if v.Dusunce != nil {
-									@cdDusunceModul(*v.Dusunce)
-								}
-								if v.TekGorsel.Href != "" {
-									@cdTekGorsel(v.TekGorsel)
-								}
-							</aside>
-							<div class="cd-hero__orta">
-								@cdHeroLead(v.Lead)
-								@cdAkis(v.Akis)
-								@cdBasinSlider(v.Basin)
-							</div>
-							<aside class="cd-hero__sag">
-								@cdVideoModul(v.Videolar)
-								@cdArastirmaModul(v.Arastirma)
-								@cdKlipler(v.Klipler)
-							</aside>
-						</div>
-					</section>
+				<!-- MODÜLER YERLEŞİM (9 Kasım 2026): sayfa tasarımcısı yeni
+				     tasarımın alanlarını ayrı bloklar olarak yönetir. Düzen
+				     yazılmamışsa (v.Moduller boş) aşağıdaki VARSAYILAN SIRA
+				     birebir eskisi gibi işler — mevcut görünüm değişmez.
+
+				     Varsayılan sıra (CoinDesk'ten ölçüldü, 8 Kasım 2026):
+				       hero → nabız → explore → görüş+en çok okunan → bölümler -->
+				if len(v.Moduller) > 0 {
+					for _, m := range v.Moduller {
+						@CDModulCiz(v, m)
+					}
+				} else {
+					<!-- §8 manşet bloğu — üç kolon (spec §7A) -->
+					@cdHeroModul(v)
+
+					<!-- PİYASA NABZI: gerçek CryptoQuant verisi. Boşsa basılmaz. -->
+					@cdNabizModul(v.NabizFiyat, v.Nabiz,
+						"Kaynak: CryptoQuant · BTC · Binance akışları · günlük veri · 10 dakika önbellek")
+
+					<!-- "Explore more" — yatay kaydırma şeridi. Paneller gerçek
+					     veriyle doluyor: Fiyatlar · Videolar · Klipler ve her
+					     bölümün kendi son haber paneli. -->
+					@cdExplore(v.Explore)
+
+					<!-- §20+§21 Görüş (25%) + En Çok Okunan (75%) yan yana -->
+					@cdIkili(v.Opinion, v.MostRead)
+
+					<!-- §22 bölüm blokları — tek 2×2 ızgara -->
+					@cdBloklar(v.Sections)
 				}
-
-				<!-- PİYASA NABZI: gerçek CryptoQuant verisi. Boşsa basılmaz. -->
-				@cdNabizModul(v.NabizFiyat, v.Nabiz,
-					"Kaynak: CryptoQuant · BTC · Binance akışları · günlük veri · 10 dakika önbellek")
-
-				<!-- "Explore more from CoinDesk" — yatay kaydırma şeridi.
-				     CoinDesk sırası: hero → Explore → Görüş+En Çok Okunan →
-				     bölüm blokları (ölçüldü, 8 Kasım 2026). Paneller gerçek
-				     veriyle doluyor: Fiyatlar · Videolar · Klipler ve her
-				     bölümün kendi son haber paneli. -->
-				@cdExplore(v.Explore)
-
-				<!-- §20+§21 Görüş (25%) + En Çok Okunan (75%) yan yana -->
-				@cdIkili(v.Opinion, v.MostRead)
-
-				<!-- §22 bölüm blokları — tek 2×2 ızgara -->
-				@cdBloklar(v.Sections)
 			</main>
 			@cdFooter(v.Shell)
 		</body>

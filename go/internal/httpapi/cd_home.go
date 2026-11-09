@@ -169,6 +169,9 @@ func (s *Server) handleCDHome(w http.ResponseWriter, r *http.Request) {
 		JSONLD:   string(orgJSONLD(s.siteName, strings.TrimRight(s.cfg.BaseURL, "/"), s.cfg.BaseURL+r.URL.Path)),
 		// "Explore more from CoinDesk" şeridi — gerçek veriyle.
 		Explore: s.cdExploreDoldur(r, sections),
+		// MODÜLER YERLEŞİM (9 Kasım 2026): sayfa tasarımcısının yazdığı
+		// `cd_*` blokları. Liste boşsa şablon varsayılan sırayı uygular.
+		Moduller: s.cdModuller(r.Context(), r),
 		// CoinDesk ana sayfa sınıflandırması.
 		PageCategory:    "homepage",
 		ContentCategory: "homepage",

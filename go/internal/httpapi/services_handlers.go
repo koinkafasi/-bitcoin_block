@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"theblock/site/internal/repo"
+	"theblock/site/internal/webui/templkit"
 )
 
 // servicesData servisler panel verisidir.
@@ -186,25 +187,68 @@ func (s *Server) handleBorsaPage(w http.ResponseWriter, r *http.Request) {
 // Referans: haberturk.com/ekonomi/borsa/tum-hisseler. Fiyatlar hisse
 // önbelleğinden gelir (istek yolunda ağa çıkılmaz); veri yoksa satır yine
 // basılır ama fiyat "—" olur — uydurma değer gösterilmez.
+//
+// TASARIM (9 Kasım 2026): sayfa `site_public.html` içindeki eski
+// `{{define "hisseler"}}` bloğundan geliyordu; yani theblock'tan kalan
+// kabuk (site-header/site-footer, `hsp-*`). Yeni temaya geçmiş her sayfa
+// `cd-*` kabuğunu kullanırken bu sayfa geride kalmıştı. Artık
+// `templkit.CDHisselerPageView` basılıyor: aynı veri, bitcosar kabuğu.
 func (s *Server) handleHisselerPage(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	locale := langOf(r, s)
 	q := strings.TrimSpace(r.URL.Query().Get("q"))
 	harf := strings.ToUpper(strings.TrimSpace(r.URL.Query().Get("harf")))
 
-	d := s.baseView(locale, s.langBase(locale), "Tüm Hisseler")
-	d.LangBase = s.langBase(locale)
-	d.HomeURL = homeURL(locale)
-	d.NavCategories = s.navCategories(ctx)
-	d.Menu = s.publicMenu(ctx)
-	d.Footer = s.footerConfig(ctx)
-	d.Theme = themeFromReq(r)
-	d.MetaTitle = "Tüm Hisseler — BIST hisse fiyatları ve arama"
-	d.MetaDesc = metaDesc("BIST'te işlem gören hisselerin kod, ad, fiyat ve günlük değişimi; hisse arama ve A-Z dizini.",
-		"Tüm hisseler, canlı fiyatlar ve hisse arama — "+s.siteName, s.siteName)
-	d.Robots = "index,follow"
-	d.Hisse = hisseSayfaOlustur(repo.HisselerOf(ctx, s.pool), q, harf)
-	s.renderPublic(w, r, "hisseler", d, cacheControlPublic)
+	sayfa := hisseSayfaOlustur(repo.HisselerOf(ctx, s.pool), q, harf)
+
+	rows := make([]templkit.CDHisseSatir, 0, len(sayfa.Satir))
+	for _, h := range sayfa.Satir {
+		row := templkit.CDHisseSatir{
+			Code: h.Code, Name: h.Name, Ilk: h.Ilk, Href: h.Href,
+			Arama: h.Arama, Var: h.Var,
+		}
+		if h.Var {
+			row.Fiyat = piyasaNum(h.Value, 2)
+			// piyasaChg "%" İÇERMEZ ("+1,25"); yüzde işareti burada eklenir.
+			// (İlk sürüm "%%" yazmıştı — Go'da bu bir kaçış dizisi değil,
+			// ekranda "%%1,25" çıkıyordu; ölçümle yakalandı.)
+			row.Yuzde = "%" + piyasaChg(h.Delta)
+			row.Up = h.Delta > 0
+			// Tam sıfır "yükseliş" değildir: yeşil rozet yanıltıcı olur.
+			row.Duz = h.Delta == 0
+		}
+		rows = append(rows, row)
+	}
+
+	guncel := ""
+	if !sayfa.Guncel.IsZero() {
+		guncel = sayfa.Guncel.Format("02.01.2006 15:04")
+	}
+
+	v := templkit.CDHisselerPage{
+		Shell:     s.cdShellCtx(ctx, r, "fiyatlar"),
+		Title:     "Tüm Hisseler — BIST hisse fiyatları ve arama",
+		Desc:      metaDesc("BIST'te işlem gören hisselerin kod, ad, fiyat ve günlük değişimi; hisse arama ve A-Z dizini.", "Tüm hisseler, canlı fiyatlar ve hisse arama — "+s.siteName, s.siteName),
+		Canonical: strings.TrimRight(s.cfg.BaseURL, "/") + "/borsa/hisseler",
+		Satir:     rows,
+		Harfler:   sayfa.Harfler,
+		Q:         sayfa.Q,
+		Harf:      sayfa.Harf,
+		Toplam:    sayfa.Toplam,
+		Adet:      sayfa.Adet,
+		Guncel:    guncel,
+		HomeURL:   "/",
+		// CoinDesk SEO sınıflandırması: fiyat dizini = katalog sayfası.
+		PageCategory:    "market_data_landing_page",
+		ContentCategory: "markets",
+		Locale:          "tr",
+		BaseURL:         strings.TrimRight(s.cfg.BaseURL, "/"),
+	}
+
+	w.Header().Set("Cache-Control", cacheControlPublic)
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	if err := templkit.CDHisselerPageView(v).Render(ctx, w); err != nil {
+		s.logger.Error("hisseler sayfası render", "error", err)
+	}
 }
 
 // handleKriptoPage /borsa/kripto: arama + görünüm seçici + liste.

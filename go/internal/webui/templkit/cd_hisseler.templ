@@ -1,0 +1,173 @@
+package templkit
+
+// "Tüm Hisseler" dizin sayfası (/borsa/hisseler) — bitcosar (CoinDesk)
+// tasarımıyla.
+//
+// ÖNCEKİ DURUM (kullanıcı bildirimi, 9 Kasım 2026): sayfa `site_public.html`
+// içindeki `{{define "hisseler"}}` bloğundan geliyordu; yani theblock'tan
+// kalan eski şablonu (site-header / site-footer / `hsp-*` sınıfları)
+// kullanıyordu. Yeni temaya geçen her sayfa `cd-*` kabuğunu kullanırken bu
+// sayfa eski kabukta kalmıştı.
+//
+// ÇÖZÜM: aynı veri, yeni kabuk. Üst çubuk/şerit/alt bilgi `cd-*`
+// bileşenleri; tablo `cd-table`; arama ve A-Z dizini bu sayfaya özel
+// `.cd-hisse-*` blokları. Veri katmanı DEĞİŞMEDİ (hisseSayfaOlustur aynı).
+
+// CDHisseSatir tablodaki tek satır.
+type CDHisseSatir struct {
+	Code  string
+	Name  string
+	Ilk   string // avatar harfi (A-Z)
+	Arama string // istemci filtresi için sadeleştirilmiş "kod + ad"
+	Href  string
+	Fiyat string // hazır biçimlenmiş ("—" olabilir)
+	Yuzde string
+	Up    bool
+	Duz   bool // tam sıfır: ne yükseliş ne düşüş (yeşil rozet yanıltıcı)
+	Var   bool
+}
+
+// CDHisselerPage /borsa/hisseler sayfasının görünüm verisi.
+type CDHisselerPage struct {
+	Shell     CDShell
+	Title     string
+	Desc      string
+	Canonical string
+	JSONLD    string
+	BaseURL   string
+	Locale    string
+
+	// PageCategory / ContentCategory: CoinDesk SEO sınıflandırması.
+	PageCategory    string
+	ContentCategory string
+
+	Satir   []CDHisseSatir
+	Harfler []string
+	Q       string
+	Harf    string
+	Toplam  int
+	Adet    int
+	Guncel  string // "02.01.2006 15:04" ya da boş
+	HomeURL string
+}
+
+templ CDHisselerPageView(v CDHisselerPage) {
+	<!doctype html>
+	<html lang="tr">
+		<head>
+			@cdHead(CDHead{Title: v.Title, Desc: v.Desc, Canonical: v.Canonical,
+				OGType: "website", SiteName: v.Shell.SiteName, RSSFeed: "/rss.xml",
+				JSONLD: v.JSONLD, Locale: v.Locale, PageCategory: v.PageCategory,
+				ContentCategory: v.ContentCategory, BaseURL: v.BaseURL})
+		</head>
+		<body class="cd">
+			@cdTopbar(v.Shell)
+			@cdTicker(v.Shell)
+			<main class="cd-wrap">
+				<header class="cd-section-title">
+					<h1>Tüm Hisseler</h1>
+					<p class="cd-card__spot">
+						BIST'te işlem gören hisselerin kod, ad, fiyat ve günlük değişimi.
+					</p>
+				</header>
+
+				<section class="cd-mod cd-mod--cizgisiz cd-hisse-dizin">
+					<form class="cd-hisse-ara" method="get" action="/borsa/hisseler" role="search">
+						<svg class="cd-hisse-ara__ikon" viewBox="0 0 24 24" width="16" height="16"
+							fill="none" stroke="currentColor" stroke-width="1.5"
+							stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"
+							focusable="false">
+							<path d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"></path>
+						</svg>
+						<input class="cd-hisse-ara__girdi" type="search" name="q" value={ v.Q }
+							placeholder="Hisse ara (THYAO veya Türk Hava Yolları)"
+							aria-label="Hisse ara" autocomplete="off" data-hsp-q/>
+						if v.Harf != "" {
+							<input type="hidden" name="harf" value={ v.Harf }/>
+						}
+						<button class="cd-hisse-ara__dugme" type="submit">Ara</button>
+						if v.Q != "" || v.Harf != "" {
+							<a class="cd-hisse-ara__temizle" href="/borsa/hisseler">Temizle</a>
+						}
+					</form>
+
+					<nav class="cd-hisse-alfa" aria-label="Alfabetik hisse dizini">
+						if v.Harf == "" {
+							<span class="cd-hisse-alfa__harf cd-hisse-alfa__harf--on" aria-current="page">TÜMÜ</span>
+						} else {
+							<a class="cd-hisse-alfa__harf" href={ cdHisseHarfHref("", v.Q) }>TÜMÜ</a>
+						}
+						for _, h := range v.Harfler {
+							if h == v.Harf {
+								<span class="cd-hisse-alfa__harf cd-hisse-alfa__harf--on" aria-current="page">{ h }</span>
+							} else {
+								<a class="cd-hisse-alfa__harf" href={ cdHisseHarfHref(h, v.Q) }>{ h }</a>
+							}
+						}
+					</nav>
+
+					<p class="cd-hisse-sayi">
+						<strong data-hsp-count>{ cdItoa(v.Adet) }</strong> hisse
+						if v.Q != "" {
+							<span> · “{ v.Q }” araması</span>
+						}
+						if v.Harf != "" {
+							<span> · { v.Harf } ile başlayanlar</span>
+						}
+					</p>
+
+					<table class="cd-table cd-hisse-tablo">
+						<thead>
+							<tr>
+								<th scope="col">Hisse adı</th>
+								<th scope="col" class="num">Fiyat</th>
+								<th scope="col" class="num">Fark</th>
+							</tr>
+						</thead>
+						<tbody data-hsp-body>
+							for _, r := range v.Satir {
+								<tr data-code={ r.Code } data-arama={ r.Arama } data-fin="hisse"
+									data-fin-sym={ r.Code }>
+									<td class="cd-hisse-ad">
+										<span class="cd-hisse-av" aria-hidden="true">{ r.Ilk }</span>
+										<a class="cd-hisse-ad__bag" href={ r.Href }>
+											<span class="cd-hisse-ad__kod">{ r.Code }</span>
+											<span class="cd-hisse-ad__unvan">{ r.Name }</span>
+										</a>
+									</td>
+									if r.Var {
+										<td class="num cd-hisse-fiyat">{ r.Fiyat }</td>
+										<td class="num cd-hisse-fark">
+											if r.Duz {
+												<span>{ r.Yuzde }</span>
+											} else if r.Up {
+												<span class="cd-up">{ r.Yuzde }</span>
+											} else {
+												<span class="cd-down">{ r.Yuzde }</span>
+											}
+										</td>
+									} else {
+										<td class="num cd-hisse-fiyat">—</td>
+										<td class="num cd-hisse-fark">—</td>
+									}
+								</tr>
+							}
+						</tbody>
+					</table>
+					<p class="cd-hisse-bos" data-hsp-empty hidden>
+						Bu aramaya uygun hisse yok. Kodu (THYAO) veya şirket adını deneyin.
+					</p>
+
+					<p class="cd-hisse-dipnot">
+						if v.Guncel != "" {
+							<span>Son güncelleme: { v.Guncel }</span>
+							<span> · </span>
+						}
+						Fiyatlar gecikmeli olabilir; bilgilendirme amaçlıdır, yatırım tavsiyesi değildir.
+					</p>
+				</section>
+			</main>
+			@cdFooter(v.Shell)
+		</body>
+	</html>
+}

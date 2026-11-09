@@ -65,20 +65,29 @@
 
 :root {
   /* ---- zemin katmanları ---- */
-  --cd-bg: #ffffff;              /* surface-default — gövde zemini */
+  /* AÇIK TEMA ZEMİNİ SICAK KREM (kullanıcı isteği, 9 Kasım 2026):
+     beyaz yerine #f3f1e9. Gövde, üst çubuk ve alt bilgi AYNI kremde —
+     CoinDesk'in beyaz zemini bizde sıcak bir kâğıt tonuna dönüyor.
+     Koyu tema bu değişiklikten etkilenmez (kendi jetonlarını yazar). */
+  --cd-bg: #f3f1e9;              /* surface-default — gövde zemini */
   /* ÜST ÇUBUK ZEMİNİ AYRI JETON (kullanıcı isteği, 7 Kasım 2026):
-     açık temada beyaz, koyu temada #0e1014. Gövde zemini koyu temada
-     #0a0b0e olduğu için üst çubuk, şerit ve alt bilgi ondan bir ton
-     açık katman oluşturuyor (9 Kasım 2026 paleti). */
-  --cd-topbar-bg: #ffffff;
+     açık temada gövdeyle aynı krem (#f3f1e9), koyu temada #04080b
+     (gövde #0a0b0e'den daha koyu üst katman). Şerit ve alt bilgi koyu
+     temada #0e1014'te kalıyor; üst çubuk üçünün en koyusu. */
+  --cd-topbar-bg: #f3f1e9;
   /* Şerit ve alt bilgi AYRI JETON (kullanıcı isteği, 9 Kasım 2026):
      koyu temada gövdeden bir ton açık yüzey oluşturuyorlar. Açık temada
-     ikisi de gövdeyle aynı (beyaz) — görünüm değişmiyor. */
-  --cd-ticker-bg: #ffffff;
-  --cd-footer-bg: #ffffff;
-  /* Açılır panel zemini (mobil menü, mega menü): açık temada beyaz,
-     koyu temada üst çubukla aynı katman (#0e1014). */
-  --cd-surface-panel: #ffffff;
+     ikisi de gövdeyle aynı krem (#f3f1e9) — CoinDesk'te de üçü aynı
+     katman. */
+  --cd-ticker-bg: #f3f1e9;
+  --cd-footer-bg: #f3f1e9;
+  /* Açılır panel zemini (mobil menü, mega menü, arama): açık temada
+     gövdeyle aynı krem, koyu temada #0e1014. */
+  --cd-surface-panel: #f3f1e9;
+  /* Seçili sekme zemini. Gövde kreme dönünce `--cd-bg` sekme kabının
+     (#f4f4f4) içinde kayboluyordu; CoinDesk ölçümü seçili sekmeyi BEYAZ
+     basıyor, bu yüzden ayrı jeton. Koyu temada gövde rengini alır. */
+  --cd-tab-active-bg: #ffffff;
   --cd-surface-soft: #f4f4f4;    /* surface-subtle — kart/blok (en sık) */
   --cd-surface-alt: #f4f4f4;     /* geriye dönük ad; aynı katman */
   --cd-surface-action: #d9d9d9;  /* surface-action — etkileşim zemini */
@@ -189,10 +198,11 @@
 @media (prefers-color-scheme: dark) {
   :root:not(.light):not(.dark) {
     --cd-bg: #0a0b0e;
-    --cd-topbar-bg: #0e1014;
+    --cd-topbar-bg: #04080b;
     --cd-ticker-bg: #0e1014;
     --cd-footer-bg: #0e1014;
     --cd-surface-panel: #0e1014;
+    --cd-tab-active-bg: #0a0b0e;
     --cd-surface-soft: #14171d;
     --cd-surface-alt: #14171d;
     --cd-surface-action: #1c2027;
@@ -213,10 +223,11 @@
 
 html.dark {
   --cd-bg: #0a0b0e;
-  --cd-topbar-bg: #0e1014;
+  --cd-topbar-bg: #04080b;
   --cd-ticker-bg: #0e1014;
   --cd-footer-bg: #0e1014;
   --cd-surface-panel: #0e1014;
+  --cd-tab-active-bg: #0a0b0e;
   --cd-surface-soft: #14171d;
   --cd-surface-alt: #14171d;
   --cd-surface-action: #1c2027;
@@ -490,7 +501,7 @@ html.dark .cd-ticker { background: var(--cd-ticker-bg); }
 }
 .cd-ticker__tab[aria-selected="true"] {
   font-weight: 500;
-  background: var(--cd-bg);
+  background: var(--cd-tab-active-bg);
   color: var(--cd-fg-strong);
 }
 /* `.cd a { color: inherit }` (0,1,1) sekme rengini eziyordu; pasif sekme
@@ -2824,6 +2835,161 @@ html.dark .cd-google { color: var(--cd-fg); }
 @media (prefers-reduced-motion: reduce) {
   .cd * { animation: none !important; transition: none !important; }
 }
+/* ---------------------------------------------------------------- hisse dizini (/borsa/hisseler) */
+/* YENİ KABUK (9 Kasım 2026): sayfa theblock'un `site_public.html` bloğundan
+   (`hsp-*` + site-header/site-footer) geliyordu; yeni temaya geçmiş her sayfa
+   `cd-*` kabuğunu kullanırken bu sayfa geride kalmıştı. Aşağıdaki bloklar
+   aynı işlevi `cd-*` jetonlarıyla kuruyor.
+
+   Ölçüler CoinDesk'in kendi arama/tablo kademelerinden: arama hapı 40 px
+   yükseklik (üst çubuktaki `cd-arama-ac` ile aynı), A-Z şeridi 28 px
+   düğmeler, tablo `cd-table` (12/18, satır 69 px), avatarlar 28 px daire. */
+.cd-hisse-dizin { display: flex; flex-direction: column; gap: 16px; }
+
+/* Arama: tek satır hap. `cd-arama-ac` ile aynı yükseklik ve köşe. */
+.cd-hisse-ara {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 40px;
+  padding: 0 4px 0 12px;
+  border: 1px solid var(--cd-border-strong);
+  border-radius: var(--cd-radius);
+  background: var(--cd-bg);
+}
+.cd-hisse-ara:focus-within { border-color: var(--cd-fg); }
+.cd-hisse-ara__ikon { flex: none; color: var(--cd-muted); }
+.cd-hisse-ara__girdi {
+  flex: 1 1 auto;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  font-family: var(--cd-font);
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--cd-fg);
+  /* Safari arama alanının yerleşik temizle düğmesini gizle. */
+  appearance: none;
+}
+.cd-hisse-ara__girdi::placeholder { color: var(--cd-muted); opacity: 1; }
+.cd-hisse-ara__dugme {
+  flex: none;
+  height: 32px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: var(--cd-radius);
+  background: var(--cd-fg);
+  color: var(--cd-bg);
+  font-family: var(--cd-font);
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 500;
+  cursor: pointer;
+}
+.cd-hisse-ara__dugme:hover { opacity: 0.88; }
+.cd-hisse-ara__temizle {
+  flex: none;
+  padding: 0 12px 0 4px;
+  font-size: 12px;
+  line-height: 18px;
+  color: var(--cd-muted);
+}
+.cd-hisse-ara__temizle:hover { color: var(--cd-fg); }
+
+/* A-Z dizini: 28 px düğmeler, 4 px köşe, seçili olan ters renk. */
+.cd-hisse-alfa {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+}
+.cd-hisse-alfa__harf {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 28px;
+  padding: 0 6px;
+  border-radius: var(--cd-radius);
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 500;
+  color: var(--cd-fg);
+}
+.cd-hisse-alfa__harf:hover {
+  background: var(--cd-surface-soft);
+  text-decoration: none;
+}
+.cd-hisse-alfa__harf--on {
+  background: var(--cd-fg);
+  color: var(--cd-bg);
+}
+.cd-hisse-alfa__harf--on:hover { background: var(--cd-fg); }
+
+/* Sayaç satırı: 12/18, sayı güçlü. */
+.cd-hisse-sayi { margin: 0; font-size: 12px; line-height: 18px; color: var(--cd-muted); }
+.cd-hisse-sayi strong { color: var(--cd-fg); font-weight: 700; }
+
+/* Tablo: `cd-table` temeli + hisse hücresi. */
+.cd-hisse-tablo thead th { padding: 10px 8px; }
+.cd-hisse-tablo tbody tr { height: 56px; }
+.cd-hisse-ad { display: flex; align-items: center; gap: 10px; }
+.cd-hisse-av {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 9999px;
+  background: var(--cd-surface-soft);
+  color: var(--cd-muted);
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 500;
+}
+.cd-hisse-ad__bag { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.cd-hisse-ad__kod { font-size: 14px; line-height: 20px; font-weight: 700; color: var(--cd-fg); }
+.cd-hisse-ad__unvan {
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--cd-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.cd-hisse-fiyat { font-size: 14px; line-height: 20px; font-weight: 500; }
+.cd-hisse-fark { font-size: 14px; line-height: 20px; font-weight: 500; }
+.cd-hisse-fark .cd-up, .cd-hisse-fark .cd-down { display: inline-flex; padding: 2px 6px; border-radius: var(--cd-radius); }
+.cd-hisse-fark .cd-up { background: var(--cd-up-bg); }
+.cd-hisse-fark .cd-down { background: var(--cd-down-bg); }
+
+.cd-hisse-bos {
+  margin: 8px 0 0;
+  font-size: 14px;
+  line-height: 22px;
+  color: var(--cd-muted);
+}
+.cd-hisse-dipnot {
+  margin: 8px 0 0;
+  font-size: 12px;
+  line-height: 18px;
+  color: var(--cd-muted);
+}
+
+/* Mobilde tablo iki kolona sıkışmasın: ünvan gizlenir, kod kalır. */
+@media (max-width: 767px) {
+  .cd-hisse-ad { gap: 8px; }
+  .cd-hisse-ad__unvan { display: none; }
+  .cd-hisse-ara { padding-left: 10px; }
+  .cd-hisse-ara__dugme { padding: 0 12px; }
+  .cd-hisse-alfa__harf { min-width: 26px; height: 26px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cd * { animation: none !important; transition: none !important; }
+}
+
 
 /* ---------------------------------------------------------------- tek varlık (/price/{coin}) */
 .cd-coin-head { padding: 20px 0 8px; border-bottom: 1px solid var(--cd-border); }
@@ -5241,3 +5407,20 @@ textarea.cd-girdi { resize: vertical; min-height: 88px; }
 .cd-hisse__about { margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--cd-border); }
 .cd-hisse__about-metin { font-size: 14px; line-height: 21px; color: var(--cd-fg); }
 .cd-hisse__about-kaynak { margin-top: 8px; font-size: 12px; line-height: 16px; color: var(--cd-muted); }
+
+/* ÇEVİRİ ETİKETİ — CoinDesk §10.2: `a` 160×25, 14/21, tarih bloğunun
+   altında (y=510) ve eylem şeridinin üstünde. Yalnız çeviri kaydında
+   basılır; orijinale bağlanır. Sessiz ton: bilgi verir, dikkat çalmaz. */
+.cd-ceviri {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 4px 0 12px;
+  padding: 2px 0;
+  font-size: 14px;
+  line-height: 21px;
+  color: var(--cd-muted);
+  text-decoration: none;
+}
+a.cd-ceviri:hover { color: var(--cd-fg); text-decoration: underline; }
+.cd-ceviri svg { flex: none; }

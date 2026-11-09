@@ -1,5 +1,7 @@
 package templkit
 
+import "strings"
+
 // CoinDesk ana sayfa — veri tipleri.
 //
 // Modül sırası docs/COINDESK-SPEC.md §6'dan BİREBİR alınmıştır; sıra
@@ -152,6 +154,10 @@ type CDHomeView struct {
 	// Explore "Explore more from CoinDesk" yatay şeridi (bölüm
 	// panelleriyle). Boşsa modül basılmaz.
 	Explore CDExplore
+	// Moduller: sayfa tasarımcısından gelen modül sırası (9 Kasım 2026).
+	// BOŞSA `cd_home.templ` varsayılan sabit sırayı uygular — düzen
+	// yazılmamış sitelerde görünüm birebir aynı kalır.
+	Moduller []CDModul
 }
 
 // CDArticleView makale sayfası (§7).
@@ -202,6 +208,19 @@ type CDArticleView struct {
 	BreadcrumbJSONLD string
 	// Hreflang gerçek çeviriler (dil → mutlak URL).
 	Hreflang map[string]string
+	// Dil makale iskeletinin dil metinleri (Yazan / Yayınlandı / …).
+	//
+	// NEDEN: bu sözcükler şablonda SABİT Türkçeydi; çeviri sayfalarında
+	// (`/en/…`) İngilizce gövdenin ortasında "Yazan", "Yayınlandı" ve
+	// Türkçe ay adları görünüyordu (ölçüldü, 9 Kasım 2026). Sıfır değer
+	// Türkçeye düşer (eski davranış korunur).
+	Dil CDMakaleDil
+	// CeviriEtiketi çeviri sayfasında basılan etiket
+	// ("AI tarafından çevrildi"). BOŞSA hiç basılmaz — asıl dildeki
+	// içerikte etiket yoktur (uydurma "çeviri" damgası vurulmaz).
+	CeviriEtiketi string
+	// CeviriHref etiketin bağlandığı ORİJİNAL makale adresi.
+	CeviriHref string
 	// PageCategory/ContentCategory/Locale/ImageAlt/Metas: head'e geçen
 	// CoinDesk SEO alanları (bkz. templkit.CDHead).
 	PageCategory    string
@@ -215,6 +234,52 @@ type CDArticleView struct {
 	ShareX        string
 	ShareWhatsApp string
 	ShareLinkedIn string
+}
+
+// CDMakaleDil makale sayfasının dil metinleri.
+//
+// YALNIZ İSKELET metinleri: içerik metni çevrilmiyor, sayfa süslemesi
+// (etiketler) sayfa diline uyuyor. Sıfır değer Türkçeye düşer.
+type CDMakaleDil struct {
+	Yazan       string
+	Yayinlandi  string
+	Guncellendi string
+	// Ceviri etiket metni ("AI tarafından çevrildi").
+	Ceviri string
+	// CeviriIpucu etiketin aria-label'i (ekran okuyucu için tam cümle).
+	CeviriIpucu string
+}
+
+// CDMakaleDilTR Türkçe varsayılan iskelet metinleri.
+func CDMakaleDilTR() CDMakaleDil {
+	return CDMakaleDil{
+		Yazan:       "Yazan",
+		Yayinlandi:  "Yayınlandı",
+		Guncellendi: "Güncellendi",
+		Ceviri:      "AI tarafından çevrildi",
+		CeviriIpucu: "Bu sayfa yapay zekâ ile Türkçeye çevrildi; orijinalini görüntüle",
+	}
+}
+
+// CDMakaleDilEN İngilizce iskelet metinleri.
+func CDMakaleDilEN() CDMakaleDil {
+	return CDMakaleDil{
+		Yazan:       "By",
+		Yayinlandi:  "Published",
+		Guncellendi: "Updated",
+		Ceviri:      "Translated by AI",
+		CeviriIpucu: "This page was translated into English by AI; view the original",
+	}
+}
+
+// CDMakaleDilIcin dil koduna göre iskelet metinleri (bilinmeyen → TR).
+func CDMakaleDilIcin(locale string) CDMakaleDil {
+	switch strings.ToLower(strings.TrimSpace(locale)) {
+	case "en":
+		return CDMakaleDilEN()
+	default:
+		return CDMakaleDilTR()
+	}
 }
 
 // CDTag makale etiketi.

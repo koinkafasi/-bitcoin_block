@@ -1,0 +1,65 @@
+package templkit
+
+// CDModulCiz tek modülü basar. `cd_home.templ` hem varsayılan sırada hem
+// tasarımcı sırasında BURAYI çağırır: iki kod yolu olsaydı panelden
+// yerleştirilen modül ile varsayılan modül zamanla ayrışırdı.
+//
+// Bilinmeyen tip SESSİZCE atlanır (boş modül basmaktansa hiç basmamak
+// doğru — "veri yoksa modül basılmaz" kuralının devamı).
+templ CDModulCiz(v CDHomeView, m CDModul) {
+	if !m.Goster {
+		<!-- Tasarımcıda kapatılmış: hiçbir şey basılmaz. -->
+	} else {
+		if m.Tip == "cd_hero" {
+			@cdHeroModul(v)
+		} else if m.Tip == "cd_nabiz" {
+			@cdNabizModul(v.NabizFiyat, v.Nabiz,
+				"Kaynak: CryptoQuant · BTC · Binance akışları · günlük veri · 10 dakika önbellek")
+		} else if m.Tip == "cd_explore" {
+			@cdExplore(v.Explore)
+		} else if m.Tip == "cd_ikili" {
+			@cdIkili(v.Opinion, v.MostRead)
+		} else if m.Tip == "cd_bloklar" {
+			@cdBloklar(v.Sections)
+		}
+	}
+}
+
+// cdHeroModul §8 manşet bloğu — CoinDesk hero'su ÜÇ kolon (spec §7A):
+// 290 sol ray · 608 merkez · 290 sağ ray, kolon arası 80.
+//
+// Sol: Son Haberler · Düşünce Liderliği · tek görselli manşet.
+// Orta: manşet · 8 görselli akış · Basın Bültenleri slider.
+// Sağ: Bugünün Videoları · Öne Çıkan Araştırma · Bugünün Klipleri
+//      (1284 px altında tamamen gizli).
+//
+// Hero ÇİZGİSİZ: CoinDesk'te ana içeriğin ilk modülü `border-top: 0`,
+// `padding: 32px 0` (ölçüldü).
+templ cdHeroModul(v CDHomeView) {
+	if v.Lead.Href != "" {
+		<section class="cd-mod cd-mod--cizgisiz">
+			<div class="cd-hero">
+				<aside class="cd-hero__sol">
+					@cdCanliModul(v.Canli)
+					@cdHeroSolRay(v.RailLeft)
+					if v.Dusunce != nil {
+						@cdDusunceModul(*v.Dusunce)
+					}
+					if v.TekGorsel.Href != "" {
+						@cdTekGorsel(v.TekGorsel)
+					}
+				</aside>
+				<div class="cd-hero__orta">
+					@cdHeroLead(v.Lead)
+					@cdAkis(v.Akis)
+					@cdBasinSlider(v.Basin)
+				</div>
+				<aside class="cd-hero__sag">
+					@cdVideoModul(v.Videolar)
+					@cdArastirmaModul(v.Arastirma)
+					@cdKlipler(v.Klipler)
+				</aside>
+			</div>
+		</section>
+	}
+}

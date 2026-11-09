@@ -33,7 +33,7 @@ templ CDArticle(v CDArticleView) {
 						<p class="cd-article__spot">{ v.Spot }</p>
 					}
 					<div class="cd-article__meta">
-						<span>Yazan</span>
+						<span>{ v.Dil.Yazan }</span>
 						if v.AuthorURL != "" {
 							<a class="cd-yazar-bag" href={ v.AuthorURL }>{ v.Author }</a>
 						} else {
@@ -49,12 +49,40 @@ templ CDArticle(v CDArticleView) {
 					if v.PublishedAt != "" {
 						<div class="cd-article__tarih">
 							if v.UpdatedAt != "" {
-								<span>Güncellendi <time datetime={ v.UpdatedISO }>{ v.UpdatedAt }</time></span>
-								<span>Yayınlandı <time datetime={ v.PublishedISO }>{ v.PublishedAt }</time></span>
+								<span>{ v.Dil.Guncellendi } <time datetime={ v.UpdatedISO }>{ v.UpdatedAt }</time></span>
+								<span>{ v.Dil.Yayinlandi } <time datetime={ v.PublishedISO }>{ v.PublishedAt }</time></span>
 							} else {
-								<span>Yayınlandı <time datetime={ v.PublishedISO }>{ v.PublishedAt }</time></span>
+								<span>{ v.Dil.Yayinlandi } <time datetime={ v.PublishedISO }>{ v.PublishedAt }</time></span>
 							}
 						</div>
+					}
+
+					<!-- ÇEVİRİ ETİKETİ — CoinDesk §10.2: tarih bloğunun ALTINDA
+					     (y=510), eylem şeridinin ÜSTÜNDE; 160×25, 14/21.
+					     YALNIZ çeviri kayıtlarında (translation_of dolu)
+					     basılır; orijinal içerikte etiket YOKTUR.
+					     Etiket ORİJİNAL makaleye bağlanır: okuyucu çevirinin
+					     kaynağını tek tıkla görebilmeli. -->
+					if v.CeviriEtiketi != "" {
+						if v.CeviriHref != "" {
+							<a class="cd-ceviri" href={ v.CeviriHref } aria-label={ v.Dil.CeviriIpucu }>
+								<svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+									stroke="currentColor" stroke-width="1.6" aria-hidden="true"
+									focusable="false"><path d="M4 5h9M8.5 3v2c0 4-2 7-5 8"></path>
+									<path d="M6 11c1.5 2.5 3.5 4 6 5"></path>
+									<path d="M13 21l4-10 4 10M14.5 17.5h5"></path></svg>
+								{ v.CeviriEtiketi }
+							</a>
+						} else {
+							<span class="cd-ceviri">
+								<svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+									stroke="currentColor" stroke-width="1.6" aria-hidden="true"
+									focusable="false"><path d="M4 5h9M8.5 3v2c0 4-2 7-5 8"></path>
+									<path d="M6 11c1.5 2.5 3.5 4 6 5"></path>
+									<path d="M13 21l4-10 4 10M14.5 17.5h5"></path></svg>
+								{ v.CeviriEtiketi }
+							</span>
+						}
 					}
 
 					<!-- Eylem şeridi: üç pill (spec §10.2.3), hepsi 32 px. -->
@@ -201,14 +229,20 @@ templ CDArticle(v CDArticleView) {
 					</section>
 				}
 
-				<nav class="cd-pager" aria-label="Haber gezinmesi">
-					if v.PrevHref != "" {
-						<a class="cd-btn cd-btn--ghost" href={ v.PrevHref }>← { v.PrevTitle }</a>
-					}
-					if v.NextHref != "" {
-						<a class="cd-btn cd-btn--ghost" href={ v.NextHref }>{ v.NextTitle } →</a>
-					}
-				</nav>
+				<!-- Sayfalama YALNIZ iki uçtan biri varsa basılır: boş `<nav>`
+				     kendi dış boşluğunu (32 px üst / 8 px alt) yine yazıyor
+				     ve makale sonunda 40 px ölü alan bırakıyordu (mobilde
+				     ölçüldü: nav 358×0, margin 32 0 8). -->
+				if v.PrevHref != "" || v.NextHref != "" {
+					<nav class="cd-pager" aria-label="Haber gezinmesi">
+						if v.PrevHref != "" {
+							<a class="cd-btn cd-btn--ghost" href={ v.PrevHref }>← { v.PrevTitle }</a>
+						}
+						if v.NextHref != "" {
+							<a class="cd-btn cd-btn--ghost" href={ v.NextHref }>{ v.NextTitle } →</a>
+						}
+					</nav>
+				}
 			</main>
 			@cdFooter(v.Shell)
 		</body>

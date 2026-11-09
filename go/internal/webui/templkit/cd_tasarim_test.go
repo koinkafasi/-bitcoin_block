@@ -34,8 +34,16 @@ func TestCDTasarimTokenlari(t *testing.T) {
 	css := cdCSS(t)
 	for _, token := range []string{
 		// zemin (surface-*)
-		"--cd-bg: #ffffff",
-		"--cd-surface-soft: #f4f4f4",
+		// 9 Kasım 2026: açık tema zemini beyazdan sıcak kreme geçti
+		// (kullanıcı isteği). Gövde = üst çubuk = şerit = alt bilgi = panel.
+		"--cd-bg: #f3f1e9",
+		"--cd-topbar-bg: #f3f1e9",
+		"--cd-ticker-bg: #f3f1e9",
+		"--cd-footer-bg: #f3f1e9",
+		"--cd-surface-panel: #f3f1e9",
+		// Seçili sekme zemini ayrı jeton: gövde kreme dönünce sekme kabının
+		// (#f4f4f4) içinde kayboluyordu. CoinDesk ölçümü: seçili sekme BEYAZ.
+		"--cd-tab-active-bg: #ffffff", "--cd-surface-soft: #f4f4f4",
 		"--cd-surface-action: #d9d9d9",
 		"--cd-surface-disable: #e9e9e9",
 		// metin (text-*)
@@ -239,7 +247,10 @@ func TestCDEtiketlerDuz(t *testing.T) {
 // ölçüldü: 176.487 bayt — bütçe ikisini birlikte karşılıyor.
 func TestCDButce(t *testing.T) {
 	css := cdCSS(t)
-	assert.Less(t, len(css), 176*1024, "cd.css bütçe aşıldı: %d bayt", len(css))
+	// Bütçe 176 → 184 KB (9 Kasım 2026): hisse dizini sayfası eski
+	// `site_public.html` bloğundan yeni `cd-*` kabuğuna taşındı; arama hapı,
+	// A-Z dizini ve tablo hücreleri eklendi. Ölçüldü 182.413 bayt.
+	assert.Less(t, len(css), 184*1024, "cd.css bütçe aşıldı: %d bayt", len(css))
 }
 
 // TestCDModulRitmi: modüller MARGIN YAZMAZ, ritim ebeveynin gap'inden
