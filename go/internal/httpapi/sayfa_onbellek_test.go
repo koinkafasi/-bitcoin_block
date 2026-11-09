@@ -9,6 +9,7 @@ import (
 	"strings"
 	"sync/atomic"
 	"testing"
+	"time"
 
 	"theblock/site/internal/auth"
 )
@@ -26,6 +27,10 @@ func sayfaTestSunucu(govde string, basliklar map[string]string) (*Server, http.H
 		_, _ = w.Write([]byte(govde))
 	})
 	s := &Server{sayfaCache: newSayfaOnbellek()}
+	// Blok listesi "taze" işaretlenir: isIPBlocked DB'ye gitmesin (bu test
+	// önbellek davranışını sınıyor, blok listesini değil).
+	s.blockAt = time.Now()
+	s.blockCache = map[string]bool{}
 	return s, s.withSayfaOnbellek(s.withGzip(ic)), &sayac
 }
 
@@ -122,6 +127,9 @@ func TestSayfaOnbellekHataSaklanmaz(t *testing.T) {
 		_, _ = w.Write([]byte("hata"))
 	})
 	s := &Server{sayfaCache: newSayfaOnbellek()}
+	// Blok listesi "taze": isIPBlocked DB'ye gitmesin.
+	s.blockAt = time.Now()
+	s.blockCache = map[string]bool{}
 	h := s.withSayfaOnbellek(s.withGzip(ic))
 
 	sayfaIste(h, "/")
@@ -160,6 +168,12 @@ func TestSayfaOnbellekYolVeMetotFiltresi(t *testing.T) {
 	r.Header.Set("Cache-Control", "no-cache")
 	if sayfaOnbellegeUygun(r) {
 		t.Error("no-cache isteği önbelleğe uygun olmamalı")
+	}
+	// HTMX/parça istekleri aynı yolda farklı gövde döndürebilir.
+	r = httptest.NewRequest(http.MethodGet, "/markets?parca=1", nil)
+	r.Header.Set("HX-Request", "true")
+	if sayfaOnbellegeUygun(r) {
+		t.Error("HX-Request isteği önbelleğe uygun olmamalı")
 	}
 }
 
@@ -201,5 +215,52 @@ func TestSayfaOnbellekCSPKorunur(t *testing.T) {
 	}
 	if w2.Header().Get("Content-Security-Policy") != csp {
 		t.Fatalf("önbellekten gelen yanıt CSP = %q", w2.Header().Get("Content-Security-Policy"))
+	}
+}
+
+// TestSayfaOnbellekBlokluIPIsabetteDeReddedilir: sayfa önbelleği
+// `withIPBlock`'un DIŞINDA (gzip'in de dışında olması gerekiyor: saklanan
+// gövde zaten sıkıştırılmış). Bu yüzden bloklu bir IP önbellekteki sayfayı
+// 200 ile almamalı — kontrol isabet yolunda tekrar edilmezse bot tuzağının
+// (410 + otomatik blok) koruması delinirdi.
+func TestSayfaOnbellekBlokluIPIsabetteDeReddedilir(t *testing.T) {
+	govde := strings.Repeat("<p>haber</p>", 20)
+	var sayac int32
+	ic := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		atomic.AddInt32(&sayac, 1)
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		_, _ = w.Write([]byte(govde))
+	})
+	s := &Server{sayfaCache: newSayfaOnbellek()}
+	// Blok listesi hazır: blockAt taze olduğu için DB'ye gidilmez.
+	s.blockCache = map[string]bool{"203.0.113.7": true}
+	s.blockAt = time.Now()
+	h := s.withSayfaOnbellek(s.withGzip(ic))
+
+	// Önce temiz IP ile önbelleği doldur.
+	r1 := httptest.NewRequest(http.MethodGet, "/", nil)
+	r1.Header.Set("Accept-Encoding", "gzip")
+	r1.RemoteAddr = "198.51.100.1:1234"
+	w1 := httptest.NewRecorder()
+	h.ServeHTTP(w1, r1)
+	if w1.Code != http.StatusOK {
+		t.Fatalf("temiz IP: %d", w1.Code)
+	}
+	if n := atomic.LoadInt32(&sayac); n != 1 {
+		t.Fatalf("handler %d kez çalıştı, 1 beklenirdi", n)
+	}
+
+	// Aynı sayfa, BLOKLU IP: önbellekte olmasına rağmen 403 dönmeli.
+	r2 := httptest.NewRequest(http.MethodGet, "/", nil)
+	r2.Header.Set("Accept-Encoding", "gzip")
+	r2.RemoteAddr = "203.0.113.7:5555"
+	w2 := httptest.NewRecorder()
+	h.ServeHTTP(w2, r2)
+
+	if w2.Code != http.StatusForbidden {
+		t.Fatalf("bloklu IP %d aldı, 403 beklenirdi (önbellek bloğu ATLAMIŞ)", w2.Code)
+	}
+	if w2.Header().Get("Cache-Control") != "no-store" {
+		t.Fatalf("403 yanıtında Cache-Control = %q", w2.Header().Get("Cache-Control"))
 	}
 }

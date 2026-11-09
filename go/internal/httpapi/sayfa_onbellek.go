@@ -147,6 +147,13 @@ func sayfaOnbellegeUygun(r *http.Request) bool {
 	if r.Header.Get("Authorization") != "" {
 		return false
 	}
+	// HTMX/parça istekleri AYNI yolda FARKLI gövde döndürebilir (ör. panel
+	// parçaları). Bugün herkese açık CD yollarında HX-Request'e bakan bir
+	// dal yok, ama bu bir sözleşme değil: bir gün eklenirse önbellek tam
+	// sayfayı parça sanıp dağıtırdı. Kapıyı şimdi kapatmak bedava.
+	if r.Header.Get("HX-Request") != "" {
+		return false
+	}
 	// İstemci açıkça tazeleme istiyorsa önbelleği atla.
 	cc := strings.ToLower(r.Header.Get("Cache-Control"))
 	if strings.Contains(cc, "no-cache") || strings.Contains(cc, "no-store") {
@@ -242,6 +249,22 @@ func (s *Server) withSayfaOnbellek(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if !sayfaOnbellegeUygun(r) {
 			next.ServeHTTP(w, r)
+			return
+		}
+
+		// BLOKLU IP KONTROLÜ — ÖNCE, İSABETTEN ÖNCE.
+		//
+		// Bu ara katman `withIPBlock`'un DIŞINDA duruyor (gzip'in de dışında
+		// olması gerekiyor: saklanan gövde zaten sıkıştırılmış, tekrar
+		// sıkıştırmak bozar). Dışarıda olmanın bedeli şu olurdu: bloklanmış
+		// bir IP önbellekteki sayfayı 200 ile alırdı — bot tuzağının
+		// (410 + otomatik blok) koruması delinirdi. Bu yüzden kontrol
+		// burada TEKRAR ediliyor. `isIPBlocked` 30 sn'lik bellek önbelleği
+		// kullanır: mutex + map bakışı, DB'ye gitmez.
+		if ip := clientIP(r); ip != "" && s.isIPBlocked(r.Context(), ip) {
+			w.Header().Set("X-Robots-Tag", "noindex")
+			w.Header().Set("Cache-Control", "no-store")
+			http.Error(w, "403 Forbidden", http.StatusForbidden)
 			return
 		}
 

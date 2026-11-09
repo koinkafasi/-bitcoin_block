@@ -334,6 +334,56 @@ sıkıştırılmış bayt gitmez (anahtar kodlama varyantını içerir).
 (SSE), oturum yolları (`/giris`, `/hesabim`…), `/arama`, sitemap/robots.
 Bunlar kişisel ya da zaten ucuz.
 
+### 2.10 Önbelleğin açtığı güvenlik açığı ve kapanışı
+
+Bu katman yazılırken **kendi elimle bir açık ürettim** ve ölçüm yakaladı.
+Ara katman sırası şöyleydi:
+
+```
+sayfaÖnbellek → gzip → recover → requestID → güvenlikBaşlıkları
+              → sameOrigin → IPBloğu → site → HTMLCSP → mux
+```
+
+Önbellek en dışta olduğu için **isabet eden istek `withIPBlock`'u hiç
+çalıştırmıyordu**. Bot tuzağına yakalanıp bloklanmış bir IP, önbellekte
+duran sayfayı **200** ile alabiliyordu — yani blok koruması delinmişti.
+
+**Kanıt (canlı, aynı senaryo, iki ikili):**
+
+| İkili | temiz IP | bloklu IP |
+|---|---|---|
+| kontrolsüz | 200 | **200** ← açık |
+| fixli | 200 | **403** |
+
+**Düzeltme:** kontrol isabet yolunda **tekrar** ediliyor
+(`isIPBlocked` 30 sn bellek önbelleği kullanır: mutex + map, DB'ye gitmez).
+Önbelleği `withIPBlock`'un içine almak da bir seçenekti ama o zaman
+saklanan (önceden sıkıştırılmış) gövde ikinci kez gzip'ten geçerdi — bozuk
+yanıt. Bu yüzden kontrol yerinde tekrarlandı.
+
+`TestSayfaOnbellekBlokluIPIsabetteDeReddedilir` bunu kilitliyor.
+
+**Diğer ara katmanlar gözden geçirildi:**
+- `withSameOrigin` yalnız durum değiştiren metotlara bakar; önbellek yalnız GET.
+- `withSecurityHeaders` başlıkları beyaz listeyle replay ediliyor (CSP dahil).
+- `withHTMLCSP` hash'li politikası saklanan başlıktan aynen gidiyor.
+- `withRequestID` isabet yolunda atlanıyor → isabet kendi log satırını yazıyor.
+- Bot tuzağı yolları (`/wp-login.php` vb.) önbellek kapsamında değil.
+
+### 2.11 Lighthouse bütçesi (değişiklik sonrası)
+
+`make performans` (gerçek Chrome, canlı 8090):
+
+| | Skor | Eşik |
+|---|---|---|
+| performance | **100** | 90 |
+| seo | **100** | 95 |
+| accessibility | 97 | 90 |
+| best-practices | **100** | 90 |
+
+LCP 0,7 s · CLS 0,005 · TBT 0 ms — sıkıştırma seviyesi değişikliği ve
+önbellek görünür hiçbir metriği bozmadı.
+
 ---
 
 ## 3. Eklenen testler
@@ -364,6 +414,7 @@ Bunlar kişisel ya da zaten ucuz.
 | `TestSayfaOnbellekYolVeMetotFiltresi` | yalnız herkese açık CD yolları + GET |
 | `TestSayfaOnbellekGzipVeHamAyriSaklanir` | gzip kabul etmeyene ham gövde |
 | `TestSayfaOnbellekCSPKorunur` | replay'de CSP başlığı aynı |
+| `TestSayfaOnbellekBlokluIPIsabetteDeReddedilir` | **bloklu IP önbellekten 200 almaz** |
 | `BenchmarkResizeToWidth*`, `BenchmarkCreateThumb*` | görsel kazancı ölçülebilir kalır |
 | `BenchmarkRenderDesign` | manşet raster'ının maliyeti (10,1 ms) takip edilir |
 
