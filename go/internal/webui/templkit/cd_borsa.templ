@@ -1,0 +1,119 @@
+package templkit
+
+// Piyasa sayfaları — bitcosar kabuğu.
+//
+// ÖNCEKİ DURUM (kullanıcı isteği, 9 Kasım 2026: "menü ve footer ve diğer
+// herşey yeni tasarıma göre geçiş"): `/borsa` ve `/borsa/kripto` theblock'un
+// `borsa` / `kripto` şablonlarından geliyordu (site-header/site-footer,
+// `.card` + satır içi `style`). Yeni temaya geçmiş sayfalar `cd-*` kabuğu
+// kullanırken bunlar eski tasarımda kalmıştı.
+//
+// ÇÖZÜM: aynı veri (`repo.BorsaData`) `cd-*` kabuğunda tablo olarak. Kart
+// yerine tablo: fiyat karşılaştırması sütun hizası ister (eski şablon da
+// satır satır liste basıyordu, kart ızgarası yalnız süsüydü).
+
+// CDBorsaSatir piyasa özeti satırı.
+type CDBorsaSatir struct {
+	Ad    string
+	Kod   string
+	Tur   string // Kripto | Endeks | Hisse
+	Fiyat string
+	Para  string
+	Yuzde string
+	Up    bool
+	// Href: satırın gidebileceği bir sayfa varsa (kripto → /price/{slug}).
+	Href string
+}
+
+// CDBorsaPage /borsa görünümü.
+type CDBorsaPage struct {
+	Shell     CDShell
+	Title     string
+	Desc      string
+	Canonical string
+	JSONLD    string
+	BaseURL   string
+	Locale    string
+
+	PageCategory    string
+	ContentCategory string
+
+	Satir   []CDBorsaSatir
+	Guncel  string
+	Demo    bool
+}
+
+templ CDBorsaPageView(v CDBorsaPage) {
+	<!doctype html>
+	<html lang="tr">
+		<head>
+			@cdHead(CDHead{Title: v.Title, Desc: v.Desc, Canonical: v.Canonical,
+				OGType: "website", SiteName: v.Shell.SiteName, RSSFeed: "/rss.xml",
+				JSONLD: v.JSONLD, Locale: v.Locale, PageCategory: v.PageCategory,
+				ContentCategory: v.ContentCategory, BaseURL: v.BaseURL})
+		</head>
+		<body class="cd">
+			@cdTopbar(v.Shell)
+			@cdTicker(v.Shell)
+			<main class="cd-wrap cd-doc cd-doc--genis">
+				<header class="cd-section-title">
+					<h1>Piyasa &amp; Borsa</h1>
+					<p class="cd-card__spot">BIST endeksi ve hisseleri ile önde gelen kripto paralar.</p>
+				</header>
+
+				if v.Guncel != "" {
+					<p class="cd-hisse-sayi">Son güncelleme: { v.Guncel }</p>
+				}
+
+				if len(v.Satir) == 0 {
+					<p class="cd-arama-bos">Veri yok — planlı yenileme bekleniyor.</p>
+				} else {
+					<table class="cd-table cd-borsa-tablo">
+						<thead>
+							<tr>
+								<th scope="col">Varlık</th>
+								<th scope="col">Tür</th>
+								<th scope="col" class="num">Fiyat</th>
+								<th scope="col" class="num">Günlük</th>
+							</tr>
+						</thead>
+						<tbody>
+							for _, r := range v.Satir {
+								<tr>
+									<td>
+										if r.Href != "" {
+											<a class="cd-borsa-ad" href={ r.Href }>
+												<strong>{ r.Ad }</strong>
+												<span class="cd-hisse-ad__unvan">{ r.Kod }</span>
+											</a>
+										} else {
+											<span class="cd-borsa-ad">
+												<strong>{ r.Ad }</strong>
+												<span class="cd-hisse-ad__unvan">{ r.Kod }</span>
+											</span>
+										}
+									</td>
+									<td class="cd-borsa-tur">{ r.Tur }</td>
+									<td class="num cd-hisse-fiyat">{ r.Fiyat } <span class="cd-borsa-para">{ r.Para }</span></td>
+									<td class="num cd-hisse-fark">
+										if r.Up {
+											<span class="cd-up">{ r.Yuzde }</span>
+										} else {
+											<span class="cd-down">{ r.Yuzde }</span>
+										}
+									</td>
+								</tr>
+							}
+						</tbody>
+					</table>
+				}
+
+				<p class="cd-hisse-dipnot">
+					Kaynaklar: BIST (Yahoo Finance) · kripto (CoinGecko) — TRY.
+					Bilgilendirme amaçlıdır, yatırım tavsiyesi değildir.
+				</p>
+			</main>
+			@cdFooter(v.Shell)
+		</body>
+	</html>
+}

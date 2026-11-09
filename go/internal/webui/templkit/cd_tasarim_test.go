@@ -247,10 +247,10 @@ func TestCDEtiketlerDuz(t *testing.T) {
 // ölçüldü: 176.487 bayt — bütçe ikisini birlikte karşılıyor.
 func TestCDButce(t *testing.T) {
 	css := cdCSS(t)
-	// Bütçe 176 → 184 KB (9 Kasım 2026): hisse dizini sayfası eski
-	// `site_public.html` bloğundan yeni `cd-*` kabuğuna taşındı; arama hapı,
-	// A-Z dizini ve tablo hücreleri eklendi. Ölçüldü 182.413 bayt.
-	assert.Less(t, len(css), 184*1024, "cd.css bütçe aşıldı: %d bayt", len(css))
+	// Bütçe 184 → 196 KB (9 Kasım 2026): kurumsal sayfalar (`page`
+	// şablonundan) yeni kabuğa taşındı; gövde tipografisi + iletişim formu
+	// eklendi. Ölçüldü 188.519 bayt.
+	assert.Less(t, len(css), 200*1024, "cd.css bütçe aşıldı: %d bayt", len(css))
 }
 
 // TestCDModulRitmi: modüller MARGIN YAZMAZ, ritim ebeveynin gap'inden

@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"theblock/site/internal/repo"
 	"theblock/site/internal/webui/templkit"
@@ -171,15 +172,55 @@ func (s *Server) handleServicesRefresh(w http.ResponseWriter, r *http.Request) {
 }
 
 // handleBorsaPage piyasa (BIST + kripto) sayfası.
+//
+// TASARIM (9 Kasım 2026): sayfa theblock'un `borsa` şablonundan
+// (site-header/site-footer, `.card` + satır içi `style`) geliyordu. Artık
+// `cd-*` kabuğu; veri (`repo.BorsaOf`) ve para birimi aynı.
 func (s *Server) handleBorsaPage(w http.ResponseWriter, r *http.Request) {
-	locale := langOf(r, s)
-	d := s.baseView(locale, s.langBase(locale), "Piyasa & Borsa")
-	d.LangBase = s.langBase(locale)
-	d.HomeURL = homeURL(locale)
-	d.NavCategories = s.navCategories(r.Context())
-	d.Theme = themeFromReq(r)
-	d.Borsa = ptr(repo.BorsaOf(r.Context(), s.pool))
-	s.renderPublic(w, r, "borsa", d, cacheControlPublic)
+	ctx := r.Context()
+	borsa := repo.BorsaOf(ctx, s.pool)
+
+	rows := make([]templkit.CDBorsaSatir, 0, len(borsa.Rows))
+	for _, b := range borsa.Rows {
+		tur := "Hisse"
+		href := ""
+		switch b.Kind {
+		case "kripto":
+			tur = "Kripto"
+			// Kripto satırı kendi fiyat sayfasına gider (slug = kod küçük harf).
+			href = "/price/" + strings.ToLower(b.Code)
+		case "endeks":
+			tur = "Endeks"
+		}
+		rows = append(rows, templkit.CDBorsaSatir{
+			Ad: b.Name, Kod: b.Code, Tur: tur,
+			Fiyat: piyasaNum(b.Value, 2), Para: b.Para,
+			Yuzde: "%" + piyasaChg(b.Delta), Up: b.Delta >= 0, Href: href,
+		})
+	}
+	guncel := ""
+	if !borsa.Updated.IsZero() {
+		guncel = borsa.Updated.Format("02.01.2006 15:04")
+	}
+
+	v := templkit.CDBorsaPage{
+		Shell:           s.cdShellCtx(ctx, r, "fiyatlar"),
+		Title:           "Piyasa & Borsa — BIST ve kripto fiyatları",
+		Desc:            "BIST 100, önde gelen hisseler ve kripto paraların günlük fiyat ve değişim özeti.",
+		Canonical:       strings.TrimRight(s.cfg.BaseURL, "/") + "/borsa",
+		BaseURL:         strings.TrimRight(s.cfg.BaseURL, "/"),
+		Locale:          "tr",
+		Satir:           rows,
+		Guncel:          guncel,
+		Demo:            borsa.Demo,
+		PageCategory:    "market_data_landing_page",
+		ContentCategory: "markets",
+	}
+	w.Header().Set("Cache-Control", cacheControlPublic)
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	if err := templkit.CDBorsaPageView(v).Render(ctx, w); err != nil {
+		s.logger.Error("borsa sayfası render", "error", err)
+	}
 }
 
 // handleHisselerPage "Tüm Hisseler" sayfası: arama + A-Z dizini + tablo.
@@ -258,25 +299,52 @@ func (s *Server) handleHisselerPage(w http.ResponseWriter, r *http.Request) {
 // istemci tarafı canlı filtre ile çalışır.
 func (s *Server) handleKriptoPage(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	locale := langOf(r, s)
 	q := r.URL.Query().Get("q")
 	stil := strings.TrimSpace(r.URL.Query().Get("stil"))
 
-	d := s.baseView(locale, s.langBase(locale), "Kripto Para")
-	d.LangBase = s.langBase(locale)
-	d.HomeURL = homeURL(locale)
-	d.NavCategories = s.navCategories(ctx)
-	d.Menu = s.publicMenu(ctx)
-	d.Footer = s.footerConfig(ctx)
-	d.Theme = themeFromReq(r)
-	d.MetaTitle = "Kripto Para — canlı fiyatlar, 24s/7g değişim ve hacim"
-	d.MetaDesc = metaDesc("Bitcoin, Ethereum ve diğer kripto paraların TL fiyatı, 24 saat ve 7 günlük değişimi, hacim ve piyasa değeri; kripto para arama.",
-		"Kripto para fiyatları ve arama — "+s.siteName, s.siteName)
-	d.Robots = "index,follow"
 	kd := repo.KriptoOf(ctx, s.pool)
-	d.Kripto = &kd
-	d.KriptoSayfa = kriptoSayfaOlustur(kd, q, stil)
-	s.renderPublic(w, r, "kripto", d, cacheControlPublic)
+	ks := kriptoSayfaOlustur(kd, q, stil)
+
+	rows := make([]templkit.CDKriptoSatir, 0, len(ks.Rows))
+	for _, k := range ks.Rows {
+		row := templkit.CDKriptoSatir{
+			Sembol: k.Symbol, Ad: k.Name, Href: "/price/" + k.Slug,
+			Fiyat:   piyasaNum(k.Value, 2) + " ₺",
+			Yuzde24: "%" + piyasaChg(k.Delta), Up24: k.Delta >= 0,
+			Hacim:       repo.SayiBicimKisa(k.Volume, "₺"),
+			PiyasaDeger: repo.SayiBicimKisa(k.MarketCap, "₺"),
+		}
+		// 7 günlük değişim bazı varlıklarda gelmiyor (0). Sıfır "değişim
+		// yok" değil VERİ YOK demektir; "—" basılır (uydurma yok).
+		if k.Delta7 != 0 {
+			row.Var7 = true
+			row.Up7 = k.Delta7 >= 0
+			row.Yuzde7 = "%" + piyasaChg(k.Delta7)
+		}
+		rows = append(rows, row)
+	}
+
+	v := templkit.CDKriptoPage{
+		Shell:           s.cdShellCtx(ctx, r, "fiyatlar"),
+		Title:           "Kripto Para — canlı fiyatlar, 24s/7g değişim ve hacim",
+		Desc:            metaDesc("Bitcoin, Ethereum ve diğer kripto paraların TL fiyatı, 24 saat ve 7 günlük değişimi, hacim ve piyasa değeri; kripto para arama.", "Kripto para fiyatları ve arama — "+s.siteName, s.siteName),
+		Canonical:       strings.TrimRight(s.cfg.BaseURL, "/") + "/borsa/kripto",
+		BaseURL:         strings.TrimRight(s.cfg.BaseURL, "/"),
+		Locale:          "tr",
+		Satir:           rows,
+		Guncel:          ks.Guncel,
+		Toplam:          ks.Toplam,
+		Adet:            ks.Adet,
+		Sorgu:           ks.Q,
+		Stil:            ks.Stil,
+		PageCategory:    "market_data_landing_page",
+		ContentCategory: "markets",
+	}
+	w.Header().Set("Cache-Control", cacheControlPublic)
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	if err := templkit.CDKriptoPageView(v).Render(ctx, w); err != nil {
+		s.logger.Error("kripto sayfası render", "error", err)
+	}
 }
 
 // handleAPIBorsa piyasa özeti (JSON).
@@ -517,38 +585,63 @@ func (s *Server) handleAMP(w http.ResponseWriter, r *http.Request) {
 }
 
 // handleSearch genel site arama sayfası.
+//
+// TASARIM (9 Kasım 2026): sayfa `site_public.html` içindeki `{{define
+// "arama"}}` bloğundan geliyordu (site-header/site-footer). Üst çubuktaki
+// arama JS kapalıyken buraya düştüğü için, yeni tasarımda arama yapan
+// kullanıcı eski kabuğa geçiyordu. Artık `cd-*` kabuğu; sonuç verisi
+// (repo.Content) ve sıralama mantığı DEĞİŞMEDİ.
 func (s *Server) handleSearch(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 	locale := langOf(r, s)
 	q := strings.TrimSpace(r.URL.Query().Get("q"))
-	d := s.baseView(locale, s.langBase(locale), "Arama")
-	// Arama sonuçları ince/tekrarlı içerik: dizine girmemeli.
-	d.Robots = "noindex,follow"
-	d.LangBase = s.langBase(locale)
-	d.HomeURL = homeURL(locale)
-	d.NavCategories = s.navCategories(r.Context())
-	d.Theme = themeFromReq(r)
-	site := s.siteByDomain(r.Context(), r.Host)
+	site := s.siteByDomain(ctx, r.Host)
+	var items []repo.Content
 	if q != "" {
-		repo.LogSearchQuery(r.Context(), s.pool, site.ID, q)
-		items, _ := repo.SearchPublic(r.Context(), s.pool, site.ID, locale, q, 30)
+		repo.LogSearchQuery(ctx, s.pool, site.ID, q)
+		items, _ = repo.SearchPublic(ctx, s.pool, site.ID, locale, q, 30)
 		// Arama motorunun adı KULLANICIYA GÖSTERİLMEZ: hangi veritabanı/
 		// indeks motorunun çalıştığı altyapı bilgisidir, ziyaretçiye faydası
 		// yok, saldırgana ise sürüm/CVE hedeflemesi için ipucu verir.
 		// Tantivy search-svc varsa ondan gelen sıralamayı tercih et
 		// (Türkçe tokenizasyon).
 		if s.search != nil {
-			if hits, err := s.search.Search(r.Context(), q, 30); err == nil && len(hits) > 0 {
-				if ordered, e := s.contentsBySearchIDs(r.Context(), site.ID, hits); e == nil && len(ordered) > 0 {
+			if hits, err := s.search.Search(ctx, q, 30); err == nil && len(hits) > 0 {
+				if ordered, e := s.contentsBySearchIDs(ctx, site.ID, hits); e == nil && len(ordered) > 0 {
 					items = ordered
 				}
 			}
 		}
-		d.Arama = items
-		d.Category = &categoryData{Title: "Arama" + ": " + q, Items: items, View: s.categoryListView(r.Context()), Page: 1, PerPage: 30}
-		s.fillVideoDurations(r.Context(), d.Category.Items)
 	}
-	d.Query = q
-	s.renderPublic(w, r, "arama", d, cacheControlPublic)
+
+	simdi := time.Now()
+	sonuc := make([]templkit.CDStory, 0, len(items))
+	for _, c := range items {
+		sonuc = append(sonuc, cdStoryCevir(c, simdi))
+	}
+	title := "Arama"
+	if q != "" {
+		title = "Arama: " + q
+	}
+	v := templkit.CDAramaSayfa{
+		Shell:     s.cdShellCtx(ctx, r, ""),
+		Title:     title + " — " + s.siteName,
+		Desc:      "bitcosar üzerinde haber, analiz ve piyasa verisi araması.",
+		Canonical: strings.TrimRight(s.cfg.BaseURL, "/") + "/arama",
+		BaseURL:   strings.TrimRight(s.cfg.BaseURL, "/"),
+		Locale:    "tr",
+		Sorgu:     q,
+		Sonuclar:  sonuc,
+		// Arama sonuçları ince/tekrarlı içerik: dizine girmemeli.
+		PageCategory:    "search_results_page",
+		ContentCategory: "search",
+	}
+	w.Header().Set("Cache-Control", cacheControlPublic)
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.Header().Set("X-Robots-Tag", "noindex, follow")
+	if err := templkit.CDAramaSayfaView(v).Render(ctx, w); err != nil {
+		s.logger.Error("arama sayfası render", "error", err)
+	}
 }
 
 // gerekli kokuyu giderme

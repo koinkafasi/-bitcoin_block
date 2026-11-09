@@ -8,6 +8,7 @@ import (
 
 	"theblock/site/internal/platform"
 	"theblock/site/internal/repo"
+	"theblock/site/internal/webui/templkit"
 )
 
 // ---- Etkinlikler (spec 01 §B2, 02 §207) ----
@@ -148,8 +149,38 @@ func (s *Server) handleEventsPublic(w http.ResponseWriter, r *http.Request) {
 	d.Footer = s.footerConfig(ctx)
 	d.Theme = themeFromReq(r)
 	site := s.siteByDomain(ctx, r.Host)
-	d.Etkinlik, _ = repo.UpcomingEvents(ctx, s.pool, site.ID, 90, 60)
-	s.renderPublic(w, r, "etkinlikler", d, cacheControlPublic)
+	etkinlikler, _ := repo.UpcomingEvents(ctx, s.pool, site.ID, 90, 60)
+
+	// YENİ TASARIM (9 Kasım 2026): sayfa theblock'un `etkinlikler`
+	// şablonundan (site-header/site-footer) geliyordu; alt bilgideki
+	// "Etkinlikler" bağlantısı kullanıcıyı eski tasarıma düşürüyordu.
+	rows := make([]templkit.CDEtkinlik, 0, len(etkinlikler))
+	for _, e := range etkinlikler {
+		row := templkit.CDEtkinlik{
+			Baslik: e.Title, Zaman: e.StartAt.Format("02.01.2006 15:04"),
+			Yer: e.Location, Aciklama: e.Description, URL: e.URL,
+		}
+		if e.CategoryName != nil {
+			row.Kategori = *e.CategoryName
+		}
+		rows = append(rows, row)
+	}
+	v := templkit.CDEtkinliklerPage{
+		Shell:           s.cdShellCtx(ctx, r, ""),
+		Title:           "Etkinlikler — " + s.siteName,
+		Desc:            "Kripto ve finans dünyasından yaklaşan etkinlikler, konferanslar ve takvim.",
+		Canonical:       strings.TrimRight(s.cfg.BaseURL, "/") + "/etkinlikler",
+		BaseURL:         strings.TrimRight(s.cfg.BaseURL, "/"),
+		Locale:          "tr",
+		Etkinlikler:     rows,
+		PageCategory:    "static_page",
+		ContentCategory: "events",
+	}
+	w.Header().Set("Cache-Control", cacheControlPublic)
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	if err := templkit.CDEtkinliklerPageView(v).Render(ctx, w); err != nil {
+		s.logger.Error("etkinlikler sayfası render", "error", err)
+	}
 }
 
 // eventFromForm form alanlarını Event yapısına çevirir.

@@ -23,6 +23,7 @@ import (
 	"theblock/site/internal/platform"
 	"theblock/site/internal/repo"
 	"theblock/site/internal/webui"
+	"theblock/site/internal/webui/templkit"
 )
 
 // handleHome ana sayfa (yerelleştirilmiş).
@@ -1268,8 +1269,10 @@ func (s *Server) handlePage(w http.ResponseWriter, r *http.Request) {
 		d.MetaDesc = *p.Spot
 	}
 	// Sayfa düzeni: modüller gövdeyi sarabilir (yoksa sabit gövde basılır).
+	var duzenVar bool
 	if raw, err := repo.GetLayout(ctx, s.pool, sid, "sayfa:"+p.Slug); err == nil && !layoutEmpty(raw) {
 		d.Blocks = s.buildBlocksFrom(ctx, d, raw, s.pageBlockHome(ctx, sid, locale))
+		duzenVar = len(d.Blocks) > 0
 		for i := range d.Blocks {
 			if d.Blocks[i].Type == "sayfa_govde" && d.Blocks[i].Visible {
 				d.Page.HasBodyBlock = true
@@ -1280,6 +1283,61 @@ func (s *Server) handlePage(w http.ResponseWriter, r *http.Request) {
 	cc := cacheControlPublic
 	if p.Slug == "iletisim" {
 		cc = "no-store" // form + flash mesajı önbelleğe girmemeli
+	}
+
+	// YENİ TASARIM (9 Kasım 2026): kurumsal sayfalar theblock'un `page`
+	// şablonundan (site-header/site-footer) geliyordu; alt bilgiden bir
+	// bağlantıya basan kullanıcı başka bir siteye geçmiş gibi görüyordu.
+	// Düzen (tasarımcı blokları) YOKSA bitcosar kabuğu basılır.
+	//
+	// NEDEN KOŞUL: sayfa tasarımcısı bu sayfalara modül eklediyse (ör.
+	// "Son Haberler" ızgarası) o bloklar `site_public.html` motoruyla
+	// çiziliyor. Blokları yeni kabuğa taşımadan zorla cd-* basmak, panelden
+	// eklenen modülleri sessizce yok ederdi. Bugün `sayfa:*` için kayıtlı
+	// düzen YOK (ölçüldü, 9 Kasım 2026) — yani tüm kurumsal sayfalar yeni
+	// kabukta.
+	if !duzenVar {
+		// BreadcrumbJSONLD sadece JSON gövdesi döner (eski şablon `<script>`
+		// etiketini kendisi sarıyordu). CDHead ham HTML beklediği için etiket
+		// BURADA sarılır — yoksa JSON sayfanın tepesine düz metin olarak
+		// basılıyordu (ölçüldü: /iletisim, 9 Kasım 2026).
+		ld := ""
+		if s := strings.TrimSpace(string(d.BreadcrumbJSONLD)); s != "" {
+			ld = `<script type="application/ld+json">` + s + `</script>`
+		}
+		v := templkit.CDKurumsalSayfa{
+			Shell:     s.cdShellCtx(ctx, r, ""),
+			Title:     d.MetaTitle,
+			Desc:      d.MetaDesc,
+			Canonical: d.Canonical,
+			JSONLD:    ld,
+			BaseURL:   strings.TrimRight(s.cfg.BaseURL, "/"), Locale: locale,
+			Baslik: title,
+			Govde:  templkit.SafeHTML(body),
+			// Kurumsal sayfa = statik bilgi sayfası.
+			PageCategory:    "static_page",
+			ContentCategory: "about",
+		}
+		if p.Slug == "iletisim" {
+			cv := contactViewOf(s.contactConfig(ctx))
+			if cv != nil {
+				v.Iletisim = &templkit.CDIletisim{
+					Genel: cv.Info, Haber: cv.Haber, Reklam: cv.Reklam,
+					Duzeltme: cv.Duzeltme, Telefon: cv.Telefon, Adres: cv.Adres,
+					Calisma: cv.Calisma, FormAktif: cv.FormAktif,
+				}
+			}
+			if d.Page.FlashKind != "" || d.Page.FlashText != "" {
+				v.FlashTip = d.Page.FlashKind
+				v.FlashMetin = d.Page.FlashText
+			}
+		}
+		w.Header().Set("Cache-Control", cc)
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		if err := templkit.CDKurumsalSayfaView(v).Render(ctx, w); err != nil {
+			s.logger.Error("kurumsal sayfa render", "slug", p.Slug, "error", err)
+		}
+		return
 	}
 	s.renderPublic(w, r, "page", d, cc)
 }

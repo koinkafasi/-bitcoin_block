@@ -1,0 +1,178 @@
+package templkit
+
+// Kripto para dizini (/borsa/kripto) — bitcosar kabuğu.
+//
+// ÖNCEKİ DURUM: `site_public.html` içindeki `{{define "kripto"}}` bloğu
+// (site-header/site-footer). Görünüm seçici (`?stil=tablo|kart|kompakt`)
+// korunuyor: aynı sorgu parametresi, aynı üç görünüm. Tablo temeli ortak
+// (`cd-table`), kart görünümü `cd-kat-one` ızgarasının basit hâli.
+
+// CDKriptoSatir kripto satırı.
+type CDKriptoSatir struct {
+	Sembol    string
+	Ad        string
+	Href      string
+	Fiyat     string
+	Yuzde24   string
+	Yuzde7    string
+	Hacim     string
+	PiyasaDeger string
+	Up24      bool
+	Up7       bool
+	Var7      bool
+}
+
+// CDKriptoPage /borsa/kripto görünümü.
+type CDKriptoPage struct {
+	Shell     CDShell
+	Title     string
+	Desc      string
+	Canonical string
+	JSONLD    string
+	BaseURL   string
+	Locale    string
+
+	PageCategory    string
+	ContentCategory string
+
+	Satir   []CDKriptoSatir
+	Guncel  string
+	Toplam  int
+	Adet    int
+	Sorgu   string
+	// Stil: tablo | kart | kompakt
+	Stil string
+}
+
+templ CDKriptoPageView(v CDKriptoPage) {
+	<!doctype html>
+	<html lang="tr">
+		<head>
+			@cdHead(CDHead{Title: v.Title, Desc: v.Desc, Canonical: v.Canonical,
+				OGType: "website", SiteName: v.Shell.SiteName, RSSFeed: "/rss.xml",
+				JSONLD: v.JSONLD, Locale: v.Locale, PageCategory: v.PageCategory,
+				ContentCategory: v.ContentCategory, BaseURL: v.BaseURL})
+		</head>
+		<body class="cd">
+			@cdTopbar(v.Shell)
+			@cdTicker(v.Shell)
+			<main class="cd-wrap cd-doc cd-doc--genis">
+				<header class="cd-section-title">
+					<h1>Kripto Para</h1>
+					<p class="cd-card__spot">Bitcoin, Ethereum ve diğer kripto paraların TL fiyatı, 24 saat ve 7 günlük değişimi.</p>
+				</header>
+
+				<form class="cd-hisse-ara" method="get" action="/borsa/kripto" role="search">
+					<svg class="cd-hisse-ara__ikon" viewBox="0 0 24 24" width="16" height="16"
+						fill="none" stroke="currentColor" stroke-width="1.5"
+						stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"
+						focusable="false">
+						<path d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"></path>
+					</svg>
+					<input class="cd-hisse-ara__girdi" type="search" name="q" value={ v.Sorgu }
+						placeholder="Kripto para ara (BTC, Bitcoin)" aria-label="Kripto para ara"
+						autocomplete="off"/>
+					if v.Stil != "" && v.Stil != "tablo" {
+						<input type="hidden" name="stil" value={ v.Stil }/>
+					}
+					<button class="cd-hisse-ara__dugme" type="submit">Ara</button>
+					if v.Sorgu != "" {
+						<a class="cd-hisse-ara__temizle" href="/borsa/kripto">Temizle</a>
+					}
+				</form>
+
+				<p class="cd-hisse-sayi">
+					<strong>{ cdItoa(v.Adet) }</strong> kripto para
+					if v.Sorgu != "" {
+						<span> · “{ v.Sorgu }” araması</span>
+					}
+				</p>
+
+				if len(v.Satir) == 0 {
+					<p class="cd-arama-bos">Bu aramaya uygun kripto para yok.</p>
+				} else if v.Stil == "kart" {
+					<div class="cd-kripto-kartlar">
+						for _, r := range v.Satir {
+							<a class="cd-kripto-kart" href={ r.Href }>
+								<span class="cd-kripto-kart__ust">
+									<strong>{ r.Sembol }</strong>
+									<span class="cd-hisse-ad__unvan">{ r.Ad }</span>
+								</span>
+								<span class="cd-kripto-kart__fiyat">{ r.Fiyat }</span>
+								<span class={ "cd-kripto-kart__yuzde", cdYonSinif(r.Up24) }>{ r.Yuzde24 }</span>
+							</a>
+						}
+					</div>
+				} else {
+					<table class={ "cd-table cd-borsa-tablo", cdKriptoYogunluk(v.Stil) }>
+						<thead>
+							<tr>
+								<th scope="col">Varlık</th>
+								<th scope="col" class="num">Fiyat</th>
+								<th scope="col" class="num">24s</th>
+								<th scope="col" class="num">7g</th>
+								<th scope="col" class="num">Hacim</th>
+								<th scope="col" class="num">Piyasa değeri</th>
+							</tr>
+						</thead>
+						<tbody>
+							for _, r := range v.Satir {
+								<tr>
+									<td>
+										<a class="cd-borsa-ad" href={ r.Href }>
+											<strong>{ r.Sembol }</strong>
+											<span class="cd-hisse-ad__unvan">{ r.Ad }</span>
+										</a>
+									</td>
+									<td class="num cd-hisse-fiyat">{ r.Fiyat }</td>
+									<td class="num cd-hisse-fark">
+										if r.Up24 {
+											<span class="cd-up">{ r.Yuzde24 }</span>
+										} else {
+											<span class="cd-down">{ r.Yuzde24 }</span>
+										}
+									</td>
+									<td class="num cd-hisse-fark">
+										if r.Var7 {
+											if r.Up7 {
+												<span class="cd-up">{ r.Yuzde7 }</span>
+											} else {
+												<span class="cd-down">{ r.Yuzde7 }</span>
+											}
+										} else {
+											<span>—</span>
+										}
+									</td>
+									<td class="num cd-borsa-hacim">{ r.Hacim }</td>
+									<td class="num cd-borsa-hacim">{ r.PiyasaDeger }</td>
+								</tr>
+							}
+						</tbody>
+					</table>
+				}
+
+				<p class="cd-hisse-dipnot">
+					Kaynak: CoinGecko — TRY.
+					Bilgilendirme amaçlıdır, yatırım tavsiyesi değildir.
+				</p>
+			</main>
+			@cdFooter(v.Shell)
+		</body>
+	</html>
+}
+
+// cdYonSinif yükseliş/düşüş sınıfı.
+func cdYonSinif(up bool) string {
+	if up {
+		return "cd-up"
+	}
+	return "cd-down"
+}
+
+// cdKriptoYogunluk görünüm → tablo yoğunluk sınıfı. "tablo" varsayılandır.
+func cdKriptoYogunluk(stil string) string {
+	if stil == "kompakt" {
+		return "cd-borsa-tablo--kompakt"
+	}
+	return ""
+}

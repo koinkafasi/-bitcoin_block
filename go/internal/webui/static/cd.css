@@ -2989,6 +2989,288 @@ html.dark .cd-google { color: var(--cd-fg); }
 @media (prefers-reduced-motion: reduce) {
   .cd * { animation: none !important; transition: none !important; }
 }
+/* ---------------------------------------------------------------- piyasa sayfaları (/borsa, /borsa/kripto) */
+/* Geniş sütun: tablo 6 kolona kadar çıkıyor, 680 px okuma ölçüsü yetmez.
+   ÖZGÜLLÜK: `.cd-doc` bu bloktan SONRA tanımlı (max-width 680); tek sınıflı
+   `.cd-doc--genis` onu ezemiyordu (ölçüldü: /borsa tablosu 640 px'te
+   kalıyordu). Bu yüzden iki sınıflı seçici. */
+.cd-doc.cd-doc--genis { max-width: var(--cd-max-section); }
+.cd-doc--genis .cd-section-title { border-bottom: 1px solid var(--cd-border-strong); }
+
+.cd-borsa-tablo thead th { padding: 10px 8px; }
+.cd-borsa-tablo tbody tr { height: 56px; }
+.cd-borsa-ad { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.cd-borsa-ad strong { font-size: 14px; line-height: 20px; font-weight: 700; color: var(--cd-fg); }
+.cd-borsa-tur { font-size: 12px; line-height: 18px; color: var(--cd-muted); }
+.cd-borsa-para { font-size: 11px; color: var(--cd-muted); }
+.cd-borsa-hacim { font-size: 13px; line-height: 20px; color: var(--cd-muted); }
+/* Kompakt görünüm: satır yüksekliği düşer, tipografi bir kademe iner. */
+.cd-borsa-tablo--kompakt tbody tr { height: 40px; }
+.cd-borsa-tablo--kompakt .cd-borsa-ad strong { font-size: 13px; line-height: 18px; }
+
+/* Kripto kart görünümü (?stil=kart). */
+.cd-kripto-kartlar {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 12px;
+}
+.cd-kripto-kart {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px 16px;
+  border: 1px solid var(--cd-border);
+  border-radius: var(--cd-radius);
+  min-width: 0;
+}
+.cd-kripto-kart:hover { background: var(--cd-surface-soft); text-decoration: none; }
+.cd-kripto-kart__ust { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.cd-kripto-kart__ust strong { font-size: 14px; line-height: 20px; font-weight: 700; color: var(--cd-fg); }
+.cd-kripto-kart__fiyat { font-size: 20px; line-height: 28px; font-weight: 700; color: var(--cd-fg); }
+.cd-kripto-kart__yuzde {
+  align-self: flex-start;
+  padding: 2px 6px;
+  border-radius: var(--cd-radius);
+  font-size: 12px;
+  line-height: 18px;
+  font-weight: 500;
+}
+.cd-kripto-kart__yuzde.cd-up { background: var(--cd-up-bg); }
+.cd-kripto-kart__yuzde.cd-down { background: var(--cd-down-bg); }
+
+/* ---------------------------------------------------------------- arama sayfası */
+/* Sonuçlar SATIR listesi: arama tarama işidir, 30 büyük kart okunamaz
+   yığın olurdu (eski şablon da liste kullanıyordu). */
+.cd-arama-sayfa { padding-bottom: 48px; }
+.cd-arama-formu { margin-bottom: 20px; }
+.cd-arama-sayi {
+  margin: 0 0 8px;
+  font-size: 12px;
+  line-height: 18px;
+  color: var(--cd-muted);
+}
+.cd-arama-liste { list-style: none; margin: 0; padding: 0; }
+.cd-arama-satir {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--cd-border);
+}
+.cd-arama-satir:first-child { border-top: 1px solid var(--cd-border); }
+.cd-arama-baslik {
+  margin: 0;
+  font-family: var(--cd-serif);
+  font-size: 20px;
+  line-height: 28px;
+  font-weight: 500;
+  color: var(--cd-fg);
+}
+.cd-arama-baslik a:hover { text-decoration: underline; text-underline-offset: 3px; }
+.cd-arama-spot {
+  margin: 0;
+  font-size: 14px;
+  line-height: 22px;
+  color: var(--cd-muted);
+}
+.cd-arama-bos { margin: 8px 0 0; font-size: 14px; line-height: 22px; color: var(--cd-muted); }
+
+/* ---------------------------------------------------------------- etkinlikler */
+/* Kart düzeni ÇİZGİ tabanlı: gölge yok (tasarım kuralı), ayırıcı 1 px.
+   Bilgi kümesi eski şablondan korundu: başlık · tarih · kategori · yer ·
+   açıklama · ayrıntı bağlantısı. */
+.cd-etkinlik-liste {
+  display: flex;
+  flex-direction: column;
+  margin-top: 8px;
+}
+.cd-etkinlik {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--cd-border);
+}
+.cd-etkinlik:first-child { border-top: 1px solid var(--cd-border); }
+.cd-etkinlik__ust {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.cd-etkinlik__baslik {
+  margin: 0;
+  font-family: var(--cd-serif);
+  font-size: 20px;
+  line-height: 28px;
+  font-weight: 700;
+  color: var(--cd-fg);
+}
+.cd-etkinlik__baslik a:hover { text-decoration: underline; text-underline-offset: 3px; }
+.cd-etkinlik__zaman {
+  flex: none;
+  font-size: 12px;
+  line-height: 18px;
+  color: var(--cd-muted);
+}
+.cd-etkinlik__meta { font-size: 12px; line-height: 18px; color: var(--cd-muted); }
+.cd-etkinlik__aciklama {
+  margin: 4px 0 0;
+  font-size: 14px;
+  line-height: 22px;
+  color: var(--cd-fg);
+}
+.cd-etkinlik-bos { margin: 8px 0 0; font-size: 14px; line-height: 22px; color: var(--cd-muted); }
+
+/* ---------------------------------------------------------------- kurumsal sayfalar */
+/* Hakkımızda · Kariyer · İletişim · Gizlilik · Kullanım koşulları · Çerez ·
+   Reklam politikası · Etkinlikler. ÖNCEKİ DURUM: bu sayfalar theblock'un
+   `page` şablonundan (site-header/site-footer, `.page-title`) geliyordu.
+   Artık `cd-*` kabuğu; aşağıdaki bloklar gövde tipografisini ve iletişim
+   formunu yeni tasarıma taşıyor.
+
+   Metin sütunu 680 px (makale ile aynı okuma genişliği): kurumsal metin de
+   uzun okuma, aynı ölçü doğru. */
+.cd-doc {
+  max-width: 680px;
+  margin: 0 auto;
+  padding-bottom: 48px;
+}
+.cd-doc .cd-crumbs { padding: 24px 0 0; }
+.cd-doc .cd-section-title { padding-bottom: 0; border-bottom: 0; margin-bottom: 8px; }
+.cd-doc .cd-section-title h1 { font-size: 36px; line-height: 44px; font-weight: 700; }
+
+/* Gövde: makale gövdesiyle AYNI okuma ölçüsü (18/30) ama kurumsal metin
+   daha küçük puntoda rahat okunur — CoinDesk statik sayfaları 18/30. */
+.cd-doc__govde { font-size: 18px; line-height: 30px; color: var(--cd-fg); }
+.cd-doc__govde > * + * { margin-top: 16px; }
+.cd-doc__govde h2 {
+  margin-top: 32px;
+  font-family: var(--cd-serif);
+  font-size: 24px;
+  line-height: 32px;
+  font-weight: 700;
+}
+.cd-doc__govde h3 {
+  margin-top: 24px;
+  font-family: var(--cd-serif);
+  font-size: 20px;
+  line-height: 28px;
+  font-weight: 700;
+}
+.cd-doc__govde ul, .cd-doc__govde ol { padding-left: 22px; }
+.cd-doc__govde li + li { margin-top: 6px; }
+.cd-doc__govde a { text-decoration: underline; text-underline-offset: 3px; }
+.cd-doc__govde img { max-width: 100%; height: auto; border-radius: var(--cd-radius); }
+.cd-doc__govde table { width: 100%; border-collapse: collapse; font-size: 16px; line-height: 24px; }
+.cd-doc__govde th, .cd-doc__govde td {
+  padding: 8px;
+  border-bottom: 1px solid var(--cd-border);
+  text-align: left;
+}
+.cd-doc__govde blockquote {
+  margin: 0;
+  padding-left: 16px;
+  border-left: 2px solid var(--cd-border-strong);
+  color: var(--cd-muted);
+}
+
+/* İletişim: kanal kartları + form. */
+.cd-doc__iletisim {
+  margin-top: 40px;
+  padding-top: 24px;
+  border-top: 1px solid var(--cd-border-strong);
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+.cd-doc__kanallar {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.cd-doc__kanal {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 14px 16px;
+  border: 1px solid var(--cd-border);
+  border-radius: var(--cd-radius);
+  min-width: 0;
+}
+.cd-doc__kanal:hover { background: var(--cd-surface-soft); text-decoration: none; }
+.cd-doc__kanal-ad {
+  font-size: 12px;
+  line-height: 16px;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  color: var(--cd-muted);
+}
+.cd-doc__kanal strong {
+  font-size: 14px;
+  line-height: 22px;
+  font-weight: 500;
+  color: var(--cd-fg);
+  overflow-wrap: anywhere;
+}
+
+.cd-doc__form { display: flex; flex-direction: column; gap: 16px; }
+.cd-doc__alan { display: flex; flex-direction: column; gap: 6px; }
+.cd-doc__alan label { font-size: 14px; line-height: 22px; font-weight: 500; color: var(--cd-fg); }
+.cd-doc__alan input,
+.cd-doc__alan textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--cd-border-strong);
+  border-radius: var(--cd-radius);
+  background: var(--cd-bg);
+  color: var(--cd-fg);
+  font-family: var(--cd-font);
+  font-size: 16px;
+  line-height: 24px;
+}
+.cd-doc__alan textarea { resize: vertical; min-height: 120px; }
+.cd-doc__alan input:focus,
+.cd-doc__alan textarea:focus {
+  outline: 0;
+  border-color: var(--cd-fg);
+}
+.cd-doc__onay {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 14px;
+  line-height: 22px;
+  color: var(--cd-muted);
+}
+.cd-doc__onay input { margin-top: 3px; flex: none; }
+.cd-doc__gonder { align-self: flex-start; }
+/* Bot tuzağı: ekran okuyucudan ve gözden gizli (doldurulursa spam). */
+.cd-doc__tuz {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+.cd-doc__flash {
+  margin: 0;
+  padding: 12px 16px;
+  border-radius: var(--cd-radius);
+  font-size: 14px;
+  line-height: 22px;
+  border: 1px solid var(--cd-border);
+}
+.cd-doc__flash--ok { border-color: var(--cd-up); color: var(--cd-up); }
+.cd-doc__flash--error { border-color: var(--cd-down); color: var(--cd-down); }
+
+@media (max-width: 767px) {
+  .cd-doc__kanallar { grid-template-columns: minmax(0, 1fr); }
+  .cd-doc .cd-section-title h1 { font-size: 28px; line-height: 36px; }
+  .cd-doc__govde { font-size: 17px; line-height: 28px; }
+}
+
 
 
 /* ---------------------------------------------------------------- tek varlık (/price/{coin}) */

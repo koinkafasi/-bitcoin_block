@@ -1,0 +1,99 @@
+package templkit
+
+// Etkinlikler sayfası — bitcosar kabuğu.
+//
+// ÖNCEKİ DURUM: `site_public.html` içindeki `{{define "etkinlikler"}}`
+// bloğu (site-header/site-footer, `.card` + satır içi `style`). Yeni temaya
+// geçmiş her sayfa `cd-*` kabuğunu kullanırken bu sayfa geride kalmıştı.
+//
+// Kart düzeni YENİDEN YAZILMADI: eski şablonun bilgileri (başlık, tarih,
+// kategori, yer, açıklama, ayrıntı bağlantısı) korunuyor; yalnız kabuk,
+// tipografi ve çizgi tabanlı kart stili değişti (gölge yok — tasarım kuralı).
+
+// CDEtkinlik tek etkinlik satırı.
+type CDEtkinlik struct {
+	Baslik      string
+	Zaman       string // "02.01.2006 15:04"
+	Kategori    string
+	Yer         string
+	Aciklama    string
+	URL         string
+}
+
+// CDEtkinliklerPage etkinlik takvimi görünümü.
+type CDEtkinliklerPage struct {
+	Shell     CDShell
+	Title     string
+	Desc      string
+	Canonical string
+	JSONLD    string
+	BaseURL   string
+	Locale    string
+
+	PageCategory    string
+	ContentCategory string
+
+	Etkinlikler []CDEtkinlik
+}
+
+templ CDEtkinliklerPageView(v CDEtkinliklerPage) {
+	<!doctype html>
+	<html lang="tr">
+		<head>
+			@cdHead(CDHead{Title: v.Title, Desc: v.Desc, Canonical: v.Canonical,
+				OGType: "website", SiteName: v.Shell.SiteName, RSSFeed: "/rss.xml",
+				JSONLD: v.JSONLD, Locale: v.Locale, PageCategory: v.PageCategory,
+				ContentCategory: v.ContentCategory, BaseURL: v.BaseURL})
+		</head>
+		<body class="cd">
+			@cdTopbar(v.Shell)
+			@cdTicker(v.Shell)
+			<main class="cd-wrap cd-doc">
+				<nav class="cd-crumbs" aria-label="Konum">
+					<a href="/">Anasayfa</a>
+					<span aria-hidden="true">›</span>
+					<span>Etkinlikler</span>
+				</nav>
+				<header class="cd-section-title">
+					<h1>Etkinlikler</h1>
+					<p class="cd-card__spot">Yaklaşan etkinlikler ve takvim.</p>
+				</header>
+
+				if len(v.Etkinlikler) == 0 {
+					<p class="cd-etkinlik-bos">Yaklaşan etkinlik yok.</p>
+				} else {
+					<div class="cd-etkinlik-liste">
+						for _, e := range v.Etkinlikler {
+							<article class="cd-etkinlik">
+								<div class="cd-etkinlik__ust">
+									<h2 class="cd-etkinlik__baslik">
+										if e.URL != "" {
+											<a href={ templ.SafeURL(e.URL) } rel="noopener" target="_blank">{ e.Baslik }</a>
+										} else {
+											<span>{ e.Baslik }</span>
+										}
+									</h2>
+									if e.Zaman != "" {
+										<time class="cd-etkinlik__zaman">{ e.Zaman }</time>
+									}
+								</div>
+								<div class="cd-etkinlik__meta">
+									if e.Kategori != "" {
+										<span>{ e.Kategori }</span>
+									}
+									if e.Yer != "" {
+										<span> · { e.Yer }</span>
+									}
+								</div>
+								if e.Aciklama != "" {
+									<p class="cd-etkinlik__aciklama">{ e.Aciklama }</p>
+								}
+							</article>
+						}
+					</div>
+				}
+			</main>
+			@cdFooter(v.Shell)
+		</body>
+	</html>
+}

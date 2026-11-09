@@ -1,0 +1,179 @@
+package templkit
+
+// KURUMSAL SAYFALAR (hakkımızda · kariyer · iletişim · gizlilik · kullanım
+// koşulları · çerez · reklam politikası · etkinlikler) — bitcosar kabuğu.
+//
+// ÖNCEKİ DURUM (kullanıcı bildirimi, 9 Kasım 2026: "menü ve footer ve diğer
+// herşey yeni tasarıma göre geçiş"): bu sayfalar `site_public.html` içindeki
+// `{{define "page"}}` bloğundan geliyordu — theblock'tan kalan kabuk
+// (`site-header` / `site-footer` / `page-title`). Yeni temaya geçmiş her sayfa
+// `cd-*` kabuğunu kullanırken bunlar geride kalmıştı; alt bilgiden bir
+// bağlantıya basan kullanıcı başka bir siteye geçmiş gibi görüyordu.
+//
+// ÇÖZÜM: aynı içerik, `cd-*` kabuğu. Gövde HTML'i DEĞİŞMEDİ (panelden
+// düzenlenen içerik aynen basılıyor); yalnız kabuk ve tipografi değişti.
+//
+// İLETİŞİM FORMU: sayfaya özel. Form POST'u ve flash mesajı aynı rotada
+// (`/iletisim`) kalıyor — yeni kabuk yalnız görünüm.
+
+// CDKurumsalSayfa kurumsal sayfa görünüm verisi.
+type CDKurumsalSayfa struct {
+	Shell     CDShell
+	Title     string
+	Desc      string
+	Canonical string
+	JSONLD    string
+	BaseURL   string
+	Locale    string
+
+	PageCategory    string
+	ContentCategory string
+
+	// Baslik görünen H1 (içerik başlığından farklı olabilir: "Hakkımızda").
+	Baslik string
+	// Govde panelden gelen, güvenli alt kümeden geçmiş HTML.
+	Govde SafeHTML
+
+	// İletişim sayfası: dolu ise form ve kartlar basılır.
+	Iletisim *CDIletisim
+	FlashTip string // "ok" | "error"
+	FlashMetin string
+}
+
+// CDIletisim iletişim sayfasının kanalları.
+type CDIletisim struct {
+	Genel    string
+	Haber    string
+	Reklam   string
+	Duzeltme string
+	Telefon  string
+	Adres    string
+	Calisma  string
+	FormAktif bool
+}
+
+templ CDKurumsalSayfaView(v CDKurumsalSayfa) {
+	<!doctype html>
+	<html lang="tr">
+		<head>
+			@cdHead(CDHead{Title: v.Title, Desc: v.Desc, Canonical: v.Canonical,
+				OGType: "website", SiteName: v.Shell.SiteName, RSSFeed: "/rss.xml",
+				JSONLD: v.JSONLD, Locale: v.Locale, PageCategory: v.PageCategory,
+				ContentCategory: v.ContentCategory, BaseURL: v.BaseURL})
+		</head>
+		<body class="cd">
+			@cdTopbar(v.Shell)
+			@cdTicker(v.Shell)
+			<main class="cd-wrap cd-doc">
+				<nav class="cd-crumbs" aria-label="Konum">
+					<a href="/">Anasayfa</a>
+					<span aria-hidden="true">›</span>
+					<span>{ v.Baslik }</span>
+				</nav>
+				<header class="cd-section-title">
+					<h1>{ v.Baslik }</h1>
+				</header>
+
+				<div class="cd-doc__govde">
+					@templ.Raw(string(v.Govde))
+				</div>
+
+				if v.Iletisim != nil {
+					@cdIletisimBlok(*v.Iletisim, v.FlashTip, v.FlashMetin)
+				}
+			</main>
+			@cdFooter(v.Shell)
+		</body>
+	</html>
+}
+
+// cdIletisimBlok iletişim kanalları + form.
+templ cdIletisimBlok(c CDIletisim, flashTip, flashMetin string) {
+	<section class="cd-doc__iletisim" id="iletisim-form">
+		if flashMetin != "" {
+			<p class={ "cd-doc__flash", "cd-doc__flash--" + flashTip }>{ flashMetin }</p>
+		}
+		<div class="cd-doc__kanallar">
+			if c.Genel != "" {
+				<a class="cd-doc__kanal" href={ "mailto:" + c.Genel }>
+					<span class="cd-doc__kanal-ad">Genel iletişim</span>
+					<strong>{ c.Genel }</strong>
+				</a>
+			}
+			if c.Haber != "" {
+				<a class="cd-doc__kanal" href={ "mailto:" + c.Haber }>
+					<span class="cd-doc__kanal-ad">Haber ihbarı</span>
+					<strong>{ c.Haber }</strong>
+				</a>
+			}
+			if c.Reklam != "" {
+				<a class="cd-doc__kanal" href={ "mailto:" + c.Reklam }>
+					<span class="cd-doc__kanal-ad">Reklam &amp; iş birliği</span>
+					<strong>{ c.Reklam }</strong>
+				</a>
+			}
+			if c.Duzeltme != "" {
+				<a class="cd-doc__kanal" href={ "mailto:" + c.Duzeltme }>
+					<span class="cd-doc__kanal-ad">Düzeltme talebi</span>
+					<strong>{ c.Duzeltme }</strong>
+				</a>
+			}
+			if c.Telefon != "" {
+				<a class="cd-doc__kanal" href={ "tel:" + c.Telefon }>
+					<span class="cd-doc__kanal-ad">Telefon</span>
+					<strong>{ c.Telefon }</strong>
+				</a>
+			}
+			if c.Adres != "" {
+				<div class="cd-doc__kanal">
+					<span class="cd-doc__kanal-ad">Adres</span>
+					<strong>{ c.Adres }</strong>
+				</div>
+			}
+			if c.Calisma != "" {
+				<div class="cd-doc__kanal">
+					<span class="cd-doc__kanal-ad">Çalışma saatleri</span>
+					<strong>{ c.Calisma }</strong>
+				</div>
+			}
+		</div>
+		if c.FormAktif {
+			<form class="cd-doc__form" method="post" action="/iletisim">
+				<!-- Bot tuzağı: görünmez alan. Doldurulursa sunucu sessizce
+				     başarılı görünür (contact.go). -->
+				<div class="cd-doc__tuz" aria-hidden="true">
+					<label for="cd-web">Web</label>
+					<input id="cd-web" name="web" type="text" tabindex="-1" autocomplete="off"/>
+				</div>
+				<div class="cd-doc__alan">
+					<label for="cd-ad">Adınız</label>
+					<input id="cd-ad" name="ad" type="text" required maxlength="120"/>
+				</div>
+				<div class="cd-doc__alan">
+					<label for="cd-eposta">E-posta</label>
+					<input id="cd-eposta" name="eposta" type="email" required maxlength="200"/>
+				</div>
+				<div class="cd-doc__alan">
+					<label for="cd-telefon">Telefon (isteğe bağlı)</label>
+					<input id="cd-telefon" name="telefon" type="tel" maxlength="40"/>
+				</div>
+				<div class="cd-doc__alan">
+					<label for="cd-konu">Konu</label>
+					<input id="cd-konu" name="konu" type="text" maxlength="200"/>
+				</div>
+				<div class="cd-doc__alan">
+					<label for="cd-mesaj">Mesajınız</label>
+					<textarea id="cd-mesaj" name="mesaj" rows="6" required maxlength="4000"></textarea>
+				</div>
+				<!-- `onay` ZORUNLU: sunucu bu alan yoksa reddediyor
+				     ("aydınlatma metnini onaylamanız gerekir"). -->
+				<label class="cd-doc__onay">
+					<input type="checkbox" name="onay" value="1" required/>
+					<span>Kişisel verilerimin mesajımın yanıtlanması amacıyla
+						işlenmesine ilişkin aydınlatma metnini okudum.</span>
+				</label>
+				<button class="cd-btn cd-btn--kayit cd-doc__gonder" type="submit">Gönder</button>
+			</form>
+		}
+	</section>
+}

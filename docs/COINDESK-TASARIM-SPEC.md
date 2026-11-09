@@ -2708,6 +2708,57 @@ bırakıyordu (ölçüldü: nav 358×0, margin 32 0 8). Basım koşula bağland�
 bütçesi 176 → **184 KB** (ölçüldü 182.413 bayt) — hisse dizini sayfası
 yeni kabuğa taşındığı için.
 
+### 11.19 Yirmi birinci tur (kalan sayfalar yeni kabuğa) — DURUM
+
+Kullanıcı isteği: "menü ve footer ve diğer herşey yeni tasarıma göre geçiş".
+Menüden/alt bilgiden erişilen **tüm** sayfalar tarandı (38 bağlantı, gerçek
+Chrome). Sekiz sayfa hâlâ theblock kabuğundaydı; hepsi taşındı.
+
+| Sayfa | Önce | Sonra |
+|---|---|---|
+| `/hakkimizda` · `/kariyer` · `/gizlilik-politikasi` · `/kullanim-kosullari` · `/cerez-politikasi` · `/reklam-politikasi` · `/kunye` · `/kvkk` · `/telif-haklari` · `/editoryal-ilkeler` · `/insan-kaynaklari` · `/sikca-sorulan-sorular` · `/bilgi-toplum-hizmetleri` · `/kvkk-basvuru` · `/iletisim` | `page` şablonu (`site-header`/`site-footer`) | `CDKurumsalSayfaView` |
+| `/etkinlikler` | `etkinlikler` şablonu | `CDEtkinliklerPageView` |
+| `/arama` | `arama` şablonu | `CDAramaSayfaView` |
+| `/borsa` | `borsa` şablonu | `CDBorsaPageView` |
+| `/borsa/kripto` | `kripto` şablonu | `CDKriptoPageView` |
+
+**Ortak kural:** `renderPublic` motorunu kullanan sayfalarda düzen
+(`page_layouts`) varsa ESKİ şablon korunur — panelden eklenmiş modüller
+sessizce yok olmasın. Kurumsal sayfalarda `sayfa:*` düzeni YOK (ölçüldü).
+
+Yeni bloklar `cd.css` içinde: `.cd-doc` (680 px okuma sütunu + gövde
+tipografisi), `.cd-doc__iletisim` (kanal kartları + form), `.cd-etkinlik*`,
+`.cd-arama-*`, `.cd-borsa-*`, `.cd-kripto-kart*`.
+
+#### Bulunan üç gerçek hata
+
+1. **JSON-LD gövdeye sızıyordu.** `breadcrumbJSONLD` yalnız JSON döner;
+   eski şablon `<script>` etiketini kendisi sarıyordu. Yeni kabuk ham HTML
+   beklediği için `/iletisim` sayfasının EN TEPESİNDE düz metin olarak
+   `{"@context":"https://schema.org"...}` basılıyordu (ekran görüntüsünde
+   görüldü). Etiket handler'da sarılıyor.
+
+2. **`.cd-doc--genis` ezilmiyordu.** `.cd-doc` (max-width 680) CSS'te
+   SONRA tanımlı olduğu için tek sınıflı genişletme kuralı kaybediyordu;
+   `/borsa` tablosu 640 px'te kalıyordu. Seçici `.cd-doc.cd-doc--genis`
+   yapıldı (5. turda yaşanan `.cd a { color: inherit }` tuzağının aynısı).
+
+3. **İletişim formu sunucudan reddediliyordu.** Yeni form `onay` alanını
+   göndermiyordu; `handleContactSubmit` bu alan yoksa "aydınlatma metnini
+   onaylamanız gerekir" diyip geri dönüyor. Onay kutusu + bot tuzağı
+   (`web`) + `telefon` alanı eklendi.
+
+#### Bilinçli kapsam dışı
+
+`/bulten` · `/abonelik` · `/asistan` · `/akis` hâlâ eski kabukta. Dördü de
+**menüde ve alt bilgide bağlantılı değil** (38 bağlantılık taramada
+çıkmıyorlar) ve kendi iş mantıkları var: abonelik ödeme akışı, AI asistan
+sohbeti, canlı akış. Körlemesine kabuk değiştirmek bu akışları kırardı;
+ayrı tur gerekiyor. `/gazete` 404 döndürüyor (rota `/gazete/{tarih}`).
+
+`templ` / `gofmt` / `go vet` / `go test` / `go build` temiz. `cd.css`
+bütçesi 184 → **200 KB** (ölçüldü 193.053 bayt).
+
 ---
 
 ## 16. Gerçek veri katmanı (8 Kasım 2026)
