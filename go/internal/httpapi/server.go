@@ -90,6 +90,10 @@ type Server struct {
 
 	// cspHashes gövde → CSP başlığı önbelleği (bkz. csp_hashcache.go).
 	cspHashes *cspHashCache
+
+	// sayfaCache tam sayfa önbelleği (render + CSP + gzip birlikte).
+	// Yalnız anonim istekler; bkz. sayfa_onbellek.go.
+	sayfaCache *sayfaOnbellek
 }
 
 // siteIDFromCtx bağlamdan site kimliğini döndürür (yoksa 1).
@@ -134,6 +138,7 @@ func NewServerApp(cfg config.Config, logger *slog.Logger, pool *pgxpool.Pool, bu
 		cdHomeCache:  newTTLCache[[]repo.Content](cdCacheTTL),
 		cdListeCache: newTTLCache[cdListeSonuc](cdCacheTTL),
 		cspHashes:    newCSPHashCache(),
+		sayfaCache:   newSayfaOnbellek(),
 	}
 	s.siteName = s.initialSiteName()
 	// Statik varlık sürümünü templkit'e de ver: cd_head.templ `?v=` ile
@@ -155,7 +160,7 @@ func NewServerApp(cfg config.Config, logger *slog.Logger, pool *pgxpool.Pool, bu
 
 	return &http.Server{
 		Addr:         cfg.ListenAddr,
-		Handler:      s.disKatman(s.withRequestID(s.withSecurityHeaders(s.withSameOrigin(s.withIPBlock(s.withSite(s.withHTMLCSP(s.localeAliasMiddleware(s.mux)))))))),
+		Handler:      s.withSayfaOnbellek(s.disKatman(s.withRequestID(s.withSecurityHeaders(s.withSameOrigin(s.withIPBlock(s.withSite(s.withHTMLCSP(s.localeAliasMiddleware(s.mux))))))))),
 		ReadTimeout:  15 * time.Second,
 		WriteTimeout: 60 * time.Second,
 		IdleTimeout:  60 * time.Second,

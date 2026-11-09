@@ -277,8 +277,66 @@ istenen seviye sessizce yok sayılırdı. Bunu yazdığım test yakaladı
 
 ---
 
-## 3. Eklenen testler
+### 2.9 Tam sayfa önbelleği — render + CSP + gzip birlikte atlanıyor
 
+Bir önceki bölümde kalan CPU'nun dağılımı şuydu: gzip %23, GC %10, sistem
+çağrıları %10, şablon render + JSON ~%15. Yani **hiçbiri tek başına baskın
+değildi**; hepsi aynı işin parçasıydı: aynı sayfayı sıfırdan üretmek.
+
+Çözüm: herkese açık CD sayfalarını **10 saniye** süreç içi önbelleğe almak.
+Zincirin **en dışına** yerleştirildi (gzip'in de üstüne), böylece isabet eden
+istek render, şablon, CSP hash üretimi **ve** sıkıştırmayı birlikte atlıyor.
+
+**Temiz A/B** (aynı HEAD, tek fark bu katman; ayrı portlar, 8 eşzamanlı,
+iki tur):
+
+| | CPU/istek | rps | p50 | p95 |
+|---|---|---|---|---|
+| önbelleksiz | 4,47 ms | ~658 | 11,7 ms | 15,0 ms |
+| **önbellekli** | **0,157 ms** | **~8.040** | **0,8 ms** | **1,8 ms** |
+| fark | **28× az** | **12× fazla** | **14× düşük** | 8× düşük |
+
+Canlıda (20 eşzamanlı): `/` **11.536 rps / p50 1,4 ms**, `/markets`
+**15.098 rps / p50 1,0 ms**, hata 0. Boşta RSS 33 MB, yük sonrası 42 MB
+(tepe 57 MB) — 400 girişlik sınır bellek büyümesini kapatıyor.
+
+**Doğruluk — en kritik kısım.** Önbellek isabeti ile taze render **bayt bayt
+aynı** (aynı ikili; "taze" istek `Cache-Control: no-cache` ile önbelleği
+atlıyor):
+
+| Sayfa | Sonuç |
+|---|---|
+| `/`, `/markets`, `/price`, `/videos`, `/canli-yayin`, `/business`, `/tag/bitcoin` | **AYNI** |
+
+**Kişiselleştirme — neden yalnız anonim.** Gövdeye oturum durumu giriyor
+(`LoggedIn`, kullanıcı adı, okunmamış bildirim rozeti). Bu yüzden:
+
+- `tb_session` çerezi olan istek **ne önbelleğe alınır ne önbellekten okunur**.
+- `Authorization` başlığı taşıyan istek aynı şekilde atlanır.
+- `Cache-Control: no-cache` gönderen istemci önbelleği atlar (panel/tazeleme).
+- Yanıt `Set-Cookie` veya `Location` içeriyorsa **saklanmaz** (önbelleklenmiş
+  oturum çerezi herkese dağılırdı).
+- 200 dışı yanıtlar saklanmaz.
+
+**Başlıklar beyaz liste ile kopyalanır.** `X-Request-Id` önbellekten gelmez —
+gelseydi tüm istekler aynı kimliği taşır ve log/tracing bozulurdu; isabet
+anında **yeni** kimlik üretilir. `Set-Cookie` listede yok.
+
+**Gözlemlenebilirlik.** İsabette ara katman (`withRequestID`) atlandığı için
+log satırı yazılmıyordu; trafik panolarda "kaybolmuş" görünürdü. Artık isabet
+kendi log satırını `"cache":"hit"` alanıyla yazıyor — toplam istek sayısı
+eskisiyle kıyaslanabilir kalıyor.
+
+**Gzip/ham varyantı ayrı saklanır**: gzip kabul etmeyen istemciye
+sıkıştırılmış bayt gitmez (anahtar kodlama varyantını içerir).
+
+**Kapsam dışı (bilinçli):** `/admin`, `/api`, `/media`, `/kg`, `/canli`
+(SSE), oturum yolları (`/giris`, `/hesabim`…), `/arama`, sitemap/robots.
+Bunlar kişisel ya da zaten ucuz.
+
+---
+
+## 3. Eklenen testler
 | Test | Neyi korur |
 |---|---|
 | `TestResizeToWidthServisAdresiniKullanir` | servis devredeyken iş oraya gider, `quality=82` ve doğru `ratio` geçer |
@@ -298,6 +356,14 @@ istenen seviye sessizce yok sayılırdı. Bunu yazdığım test yakaladı
 | `TestCSPHashCacheUretimMiddlewareIsabet` | gerçek zincirde 2. istek aynı başlık |
 | `TestGzipSeviyeAyaruUygulanir` | seviye uygulanır, aralık dışı yok sayılır |
 | `TestGzipSeviyeHavuzuKirletmez` | seviye değişince havuz yanlış writer vermez |
+| `TestSayfaOnbellekIsabetRenderTekrarlanmaz` | isabette handler bir kez çalışır |
+| `TestSayfaOnbellekOturumluIstekKisisel` | oturumlu istek önbelleği atlar |
+| `TestSayfaOnbellekIstekKimligiTekrarlanmaz` | isabetler aynı kimliği taşımaz |
+| `TestSayfaOnbellekCerezYazanYanitSaklanmaz` | `Set-Cookie`'li yanıt saklanmaz |
+| `TestSayfaOnbellekHataSaklanmaz` | 200 dışı yanıt saklanmaz |
+| `TestSayfaOnbellekYolVeMetotFiltresi` | yalnız herkese açık CD yolları + GET |
+| `TestSayfaOnbellekGzipVeHamAyriSaklanir` | gzip kabul etmeyene ham gövde |
+| `TestSayfaOnbellekCSPKorunur` | replay'de CSP başlığı aynı |
 | `BenchmarkResizeToWidth*`, `BenchmarkCreateThumb*` | görsel kazancı ölçülebilir kalır |
 | `BenchmarkRenderDesign` | manşet raster'ının maliyeti (10,1 ms) takip edilir |
 
@@ -319,18 +385,17 @@ limit aşımı GC'ye değil **OOMKill**'e gidiyordu. Normal kullanımın çok
 
 ## 5. Sırada ne var (ölçümle doğrulanmış adaylar)
 
-1. **Kalan CPU:** gzip 4'e indikten sonra istek başına ~4,3 ms CPU'nun
-   dağılımı: flate ~%23, GC ~%10, sistem çağrıları ~%10, şablon render +
-   json ~%15. Bir sonraki anlamlı adım **yanıtı bir kez üretip kısa süre
-   saklamak** (HTML önbelleği) — aynı gövde yeniden üretilmediği için hem
-   render hem gzip ortadan kalkar. Risk: kişiselleştirilmiş alanlar (oturum,
-   tema, AB) gövdeye giriyor; yalnız anonim isteklerde uygulanabilir.
-2. **`/media/thumb` ve `/media/variant`**: ilk istekte üretiliyor, sonra
+1. **Önbellek ıskası (soğuk istek) artık tek pahalı yol.** Isabet 0,16 ms;
+   ıska ~4,5 ms ve ilk istekte ~1 sn (bağlantı havuzu + tüm sorgular).
+   Sıradaki kazanç, ıska maliyetini düşürmek: ana sayfadaki ~20 sorguyu tek
+   `pgx.Batch`'e indirmek.
+2. **TTL ve tazelik ayarı.** 10 sn sabit; içerik hızına göre
+   (`YAYIN_ONBELLEK_TTL`) yapılandırılabilir hâle getirilebilir. Şu an
+   kullanıcıya görünen gecikme en fazla ~10 sn (bot içerikleri dakikalar
+   mertebesinde geldiği için ölçülebilir bir fark yaratmıyor).
+3. **`/media/thumb` ve `/media/variant`**: ilk istekte üretiliyor, sonra
    diskten. Medya tablosu şu an boş; içerik dolduğunda `image-svc`
    kazancı (1,8×) doğrudan kullanıcıya yansıyacak.
-3. **`pgx.Batch`**: ana sayfada hâlâ ~20 ayrı sorgu var (artık önbellekli,
-   ama önbellek boşken hepsi tek turda uçuyor). Tek batch'e indirmek soğuk
-   isteği kısaltır; sıcak yolda etkisi yok.
 4. **`platform/render.go`** (583 satır, JSON tasarım → JPEG): ölçüldü
    **10,1 ms/raster**, ama **sıcak yolda değil** (kapak/manşet üretimi, panel
    ve arka plan işleri). Rust'a taşımak için uygun bir öğrenme parçası;
