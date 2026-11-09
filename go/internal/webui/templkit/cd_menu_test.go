@@ -93,7 +93,10 @@ func TestCDMenuVeriYoksaSutunBasilmaz(t *testing.T) {
 			assert.Len(t, g.Columns, 1, "etiket verisi yokken News tek sütun olmalı")
 		}
 		if g.Href == "/price" {
-			require.Len(t, g.Columns, 1)
+			// İKİ SÜTUN: kripto (başlık + tümü) ve hisse (başlık +
+			// BIST hedefi + tümü). Hisse sütunu VERİYE bağlı değil:
+			// /borsa/hisseler her zaman dolu (evren listesi).
+			require.Len(t, g.Columns, 2)
 			var etiketler []string
 			for _, it := range g.Columns[0].Items {
 				etiketler = append(etiketler, it.Label)
@@ -235,5 +238,35 @@ func TestCDBolumSlug(t *testing.T) {
 		if got := cdBolumSlug(giris); got != beklenen {
 			t.Errorf("cdBolumSlug(%q) = %q, beklenen %q", giris, got, beklenen)
 		}
+	}
+}
+
+// TestCDMenuHisseSutunu: Fiyatlar panelinde hisse girişi olmalı.
+//
+// NEDEN: 633 BIST hissesinin kendi detay sayfası var. Menü, o sayfalara
+// giden en görünür giriş; sütun sessizce düşerse hisseler yine "yalnız
+// doğrudan adresle" durumuna döner.
+func TestCDMenuHisseSutunu(t *testing.T) {
+	for _, kabuk := range []CDShell{
+		{}, // fiyat servisi yok
+		{MenuCoins: []CDMenuItem{{Label: "Bitcoin (BTC)", Href: "/price/bitcoin"}}},
+	} {
+		var prices *CDMenuGroup
+		gruplar := cdMenuGroups(kabuk)
+		for i := range gruplar {
+			if gruplar[i].Href == "/price" {
+				prices = &gruplar[i]
+			}
+		}
+		require.NotNil(t, prices, "Fiyatlar grubu yok")
+		require.Len(t, prices.Columns, 2, "kripto + hisse sütunu beklenir")
+
+		hisse := prices.Columns[1].Items
+		require.NotEmpty(t, hisse)
+		var hedefler []string
+		for _, it := range hisse {
+			hedefler = append(hedefler, it.Href)
+		}
+		assert.Contains(t, hedefler, "/borsa/hisseler", "hisse hedefi yok")
 	}
 }

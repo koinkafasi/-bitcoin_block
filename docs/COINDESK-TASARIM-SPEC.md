@@ -1392,6 +1392,7 @@ Bizim değerler `go/internal/webui/static/cd.css`'ten **okundu**, tahmin değil.
 | `display: contents` | Ray sarmalayıcı olmadığı için gereksiz |
 | Şerit kaydırma dönüşümü (157×50 → 196×32) | CoinDesk bunu JS ile scroll durumuna bağlıyor; bizde CSP nedeniyle JS'siz ilke var. Şerit zaten tek satır. |
 | Google News pill | `google.com/preferences/source` hedefi site yayına alınınca eklenecek |
+| Hisse keşfedilebilirliği | ✅ `/price` hisse tablosu, `/borsa/hisseler` satır bağlantıları, şerit, mega menü "Hisse Senetleri" sütunu, `/sitemaps/stocks-1.xml` (632 URL), WebPage+FinancialProduct JSON-LD, `/price/stock` → 301 `/price` |
 | Çeviri etiketi ("AI tarafından çevrildi") | EN çeviri hattı gelince; şu an çevrilmiş içerik yok |
 | Hisse şablonu (`/price/stock/*`) | ✅ **UYGULANDI** (9 Kasım 2026) — Yahoo Finance gerçek verisi (§10.6) |
 | Dördüncü genişlik kademesi (1432) | ✅ hisse sayfasında kullanılıyor (`--cd-max-section`) |
@@ -2633,6 +2634,7 @@ Sayı biçimi tek kaynağa alındı: `repo.SayiBicim` ("1,234.56"). Önce
 | Hisse şablonu `/price/stock/*` | ✅ gerçek ABD hisse verisiyle (Yahoo Finance; Basic + Advanced mum) |
 | Market Cap satırı | ⛔ Yahoo grafik ucu vermiyor (v7/v10 401) — uydurulmaz |
 | Google News pill | ⛔ yayın sonrası |
+| Hisse keşfedilebilirliği | ✅ sitemap + JSON-LD + mega menü + /price/stock 301 |
 | Çeviri etiketi | ⛔ EN çeviri hattı gelince |
 
 ---

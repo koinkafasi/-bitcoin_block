@@ -192,6 +192,8 @@ func (s *Server) handleCDHisse(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var ld strings.Builder
+	ld.WriteString(string(cdHisseJSONLD(s.siteName, kanonik, d.Ad, d.Sembol, d.Borsa, d.Para,
+		repo.FiyatBicimP(d.Fiyat, d.Para), repo.DegisimBicim(d.Degisim))))
 	ld.WriteString(string(breadcrumbScript([]crumb{
 		{Name: s.siteName, URL: base + "/"},
 		{Name: "Fiyatlar", URL: base + "/price"},

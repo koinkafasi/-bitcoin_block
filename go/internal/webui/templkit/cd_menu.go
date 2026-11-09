@@ -206,8 +206,18 @@ func cdMedyaGrubu(g CDMenuGroup) bool {
 func cdMenuGroups(s CDShell) []CDMenuGroup {
 	out := make([]CDMenuGroup, 0, len(cdMenuSabit)+1)
 	for _, g := range cdMenuSabit {
-		// Prices grubu: canlı coinler.
+		// Prices grubu: canlı coinler + hisse girişi.
 		if g.Href == "/price" {
+			// HİSSE SÜTUNU: 633 BIST hissesinin kendi detay sayfası var
+			// (CoinDesk şablonu). Menüde canlı fiyat basmıyoruz — şerit
+			// zaten onu yapıyor; burada amaç hisse sayfalarına GİRİŞ.
+			// Hedef her zaman dolu: /borsa/hisseler evren listesini
+			// (fiyat gelmese de "—" ile) basıyor.
+			hisse := []CDMenuItem{
+				{Label: "Hisse Senetleri", Kind: "baslik"},
+				{Label: "BIST hisse fiyatları", Href: "/borsa/hisseler"},
+				{Label: "Tüm hisseleri gör", Href: "/borsa/hisseler", Kind: "tumu"},
+			}
 			if len(s.MenuCoins) == 0 {
 				// Fiyat servisi yanıt vermediyse menü yine çalışsın:
 				// yalnız "tüm fiyatlar" satırı.
@@ -220,6 +230,9 @@ func cdMenuGroups(s CDShell) []CDMenuGroup {
 				items = append(items, s.MenuCoins...)
 				items = append(items, CDMenuItem{Label: "Tüm kripto fiyatlarını gör", Href: "/price", Kind: "tumu"})
 				g.Columns = []CDMenuColumn{{Items: items}}
+			}
+			if len(hisse) > 0 {
+				g.Columns = append(g.Columns, CDMenuColumn{Items: hisse})
 			}
 		}
 		// News grubuna etiket sütunu eklenir (içeriği olan etiketler).

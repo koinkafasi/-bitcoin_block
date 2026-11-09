@@ -56,6 +56,7 @@ func (s *Server) handleSitemapIndex(w http.ResponseWriter, r *http.Request) {
 		yaz(abs + "/sitemaps/articles-" + strconv.Itoa(i) + ".xml")
 	}
 	yaz(abs + "/sitemaps/crypto-1.xml")
+	yaz(abs + "/sitemaps/stocks-1.xml")
 	sb.WriteString("</sitemapindex>")
 
 	s.writeXML(w, sb.String())
@@ -132,6 +133,9 @@ func (s *Server) handleSitemapsDosya(w http.ResponseWriter, r *http.Request) {
 	case "crypto-1.xml":
 		s.handleSitemapCrypto(w, r)
 		return
+	case "stocks-1.xml":
+		s.handleSitemapStocks(w, r)
+		return
 	}
 	if n, ok := cdMakaleDilimi(dosya); ok {
 		s.handleSitemapArticlesDilim(w, r, n)
@@ -188,6 +192,60 @@ func (s *Server) handleSitemapArticlesDilim(w http.ResponseWriter, r *http.Reque
 	}
 	sb.WriteString("</urlset>")
 	s.writeXML(w, sb.String())
+}
+
+// handleSitemapStocks /sitemaps/stocks-1.xml — hisse detayları (saatlik).
+//
+// NEDEN AYRI DOSYA: hisse sayfaları 631 URL; `static-1.xml` "sabit hizmet
+// sayfaları" demek ve onu 90 KB'lik fiyat listesiyle şişirmek yanlış
+// olurdu. CoinDesk de aynı desende `crypto-N.xml` ile ayırıyor.
+//
+// YALNIZ FİYATI OLAN HİSSELER yazılır: detay ucu veri bulamayınca 404
+// döndüğü için fiyatsız sembolü dizine koymak arama motoruna kırık adres
+// bildirmek olur. Böylece sitemap'teki her URL test edilebilir bir sayfa.
+func (s *Server) handleSitemapStocks(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	abs := s.absBase(r)
+
+	var sb strings.Builder
+	sb.WriteString(sitemapBaslik)
+	sb.WriteString(`<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">`)
+	hd := repo.HisselerOf(ctx, s.pool)
+	if len(hd.Rows) > 0 {
+		// Dizin sayfası: hisse tablosunun tamamı burada listeleniyor.
+		sb.WriteString("<url><loc>" + htmlEscape(abs+"/price") +
+			"</loc><changefreq>hourly</changefreq><priority>1</priority></url>")
+	}
+	gorulen := map[string]bool{}
+	for _, h := range hd.Rows {
+		if h.Value <= 0 {
+			continue
+		}
+		code := strings.ToUpper(strings.TrimSpace(h.Code))
+		if code == "" || gorulen[code] {
+			continue
+		}
+		gorulen[code] = true
+		// ".IS" eki URL'de kalır (Yahoo BIST sembolü; kanonik adres bu).
+		sb.WriteString("<url><loc>" + htmlEscape(abs+"/price/stock/"+hisseBorsaKodu(code)) +
+			"</loc><changefreq>hourly</changefreq><priority>1</priority></url>")
+	}
+	sb.WriteString("</urlset>")
+	s.writeXML(w, sb.String())
+}
+
+// handleCDHisseDizin /price/stock — hisse bölümünün kökü.
+//
+// Ölü adres (404) yerine TEK kanonik sayfaya yönlendirilir: /price zaten
+// "Hisse Senetleri" giriş listesini ve "Tümü" bağlantısını basıyor. İki
+// ayrı dizin sayfası tutmak (biri kripto, biri hisse tablolu) arama
+// motorunda yinelenen içerik olurdu.
+func (s *Server) handleCDHisseDizin(w http.ResponseWriter, r *http.Request) {
+	hedef := "/price"
+	if r.URL.RawQuery != "" {
+		hedef += "?" + r.URL.RawQuery
+	}
+	http.Redirect(w, r, hedef, http.StatusMovedPermanently)
 }
 
 // handleSitemapCrypto /sitemaps/crypto-1.xml — fiyat sayfaları (saatlik).

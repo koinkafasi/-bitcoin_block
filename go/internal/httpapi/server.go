@@ -297,6 +297,8 @@ func (s *Server) routes() {
 	// Hisse detayı — CoinDesk'te AYRI şablon (§10.6). İki segment olduğu
 	// için /price/{coin} ile çakışmaz.
 	s.mux.HandleFunc("GET /price/stock/{sembol}", s.handleCDHisse)
+	// Hisse bölümünün kökü: 404 değil, tek kanonik dizine yönlendirir.
+	s.mux.HandleFunc("GET /price/stock", s.handleCDHisseDizin)
 	// Mega menünün bağlandığı ek sayfalar (hepsi gerçek; boşsa dürüst
 	// boş durum basar). Ölçüm: bu dört yol menüde 404 veriyordu.
 	s.mux.HandleFunc("GET /videos", s.handleCDVideos)
