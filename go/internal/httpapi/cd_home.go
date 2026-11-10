@@ -208,7 +208,7 @@ func (s *Server) cdPopuler(r *http.Request, adet int) []templkit.CDStory {
 	simdi := time.Now()
 	var out []templkit.CDStory
 	for _, c := range items {
-		out = append(out, cdStoryCevir(c, simdi))
+		out = append(out, s.cdStoryCevir(c, simdi))
 	}
 	return out
 }

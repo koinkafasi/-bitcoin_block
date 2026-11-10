@@ -554,18 +554,14 @@ func dropContent(items []repo.Content, id int64, n int) []repo.Content {
 // (Faz 46). Yönetim rotası arkasındadır; yayın kapısı atlanır, hit SAYILMAZ,
 // cache no-store.
 func (s *Server) handleContentPreview(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-	id := parseID(r.PathValue("id"))
-	c, err := repo.GetContent(ctx, s.pool, id)
-	if err != nil {
-		s.handleNotFound(w, r)
-		return
-	}
-	slug := c.DisplaySlug()
-	if slug == "" {
-		slug = "icerik"
-	}
-	s.handleArticle(w, r, "", slug, c.ID, true)
+	// ÖNİZLEME = CANLI ŞABLON (kullanıcı bildirimi, 10 Kasım 2026:
+	// "ön izlemde yeni resim var ve bu önizleme eski theblock tasarımına
+	// ait"). Burada `handleArticle` (theblock) çağrılıyordu; editör yeni
+	// görseli eklediğinde önizlemede eski tasarımı görüyordu.
+	//
+	// Artık canlı makale ile AYNI cd şablonu kullanılıyor. Tek fark:
+	// durum kapısı yok (taslak/planlanmış da açılır) ve okunma sayılmaz.
+	s.handleCDArticleOnizleme(w, r)
 }
 
 func (s *Server) handleArticle(w http.ResponseWriter, r *http.Request, lang, slug string, id int64, preview bool) {
@@ -2336,7 +2332,7 @@ func (s *Server) cdArsivSayfasi(w http.ResponseWriter, r *http.Request, locale s
 	kartlar := make([]templkit.CDStory, 0, len(items))
 	var ldItems []cdLDItem
 	for i, c := range items {
-		kartlar = append(kartlar, cdStoryCevir(c, simdi))
+		kartlar = append(kartlar, s.cdStoryCevir(c, simdi))
 		if i < 11 {
 			it := cdLDItem{Headline: c.Title, URL: s.absBase(r) + makaleURL(c), Author: c.AuthorName}
 			if c.PublishedAt != nil {

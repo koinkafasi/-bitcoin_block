@@ -77,7 +77,7 @@ func (s *Server) cdExploreDoldur(r *http.Request, sections []templkit.CDSection)
 		slug := strings.TrimPrefix(sec.Href, "/")
 		if kayitlar, _ := s.cdListeIcerikleri(r.Context(), slug, 1); len(kayitlar) > 0 {
 			for _, c := range kayitlar {
-				haberler = append(haberler, cdStoryCevir(c, simdi))
+				haberler = append(haberler, s.cdStoryCevir(c, simdi))
 				if len(haberler) == 5 {
 					break
 				}

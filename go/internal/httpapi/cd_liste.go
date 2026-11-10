@@ -56,7 +56,7 @@ func (s *Server) cdTurListesi(w http.ResponseWriter, r *http.Request, tur string
 	simdi := time.Now()
 	var ldItems []cdLDItem
 	for i, c := range items {
-		v.Stories = append(v.Stories, cdStoryCevir(c, simdi))
+		v.Stories = append(v.Stories, s.cdStoryCevir(c, simdi))
 		if i < 11 {
 			it := cdLDItem{Headline: c.Title, URL: s.absBase(r) + makaleURL(c), Author: c.AuthorName}
 			if c.PublishedAt != nil {

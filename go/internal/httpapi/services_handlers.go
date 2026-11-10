@@ -639,7 +639,7 @@ func (s *Server) handleSearch(w http.ResponseWriter, r *http.Request) {
 	simdi := time.Now()
 	sonuc := make([]templkit.CDStory, 0, len(items))
 	for _, c := range items {
-		sonuc = append(sonuc, cdStoryCevir(c, simdi))
+		sonuc = append(sonuc, s.cdStoryCevir(c, simdi))
 	}
 	title := "Arama"
 	if q != "" {

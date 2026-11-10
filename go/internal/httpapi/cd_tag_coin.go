@@ -47,7 +47,7 @@ func (s *Server) handleCDTag(w http.ResponseWriter, r *http.Request) {
 	var kartlar []templkit.CDStory
 	var ldItems []cdLDItem
 	for i, c := range items {
-		kartlar = append(kartlar, cdStoryCevir(c, simdi))
+		kartlar = append(kartlar, s.cdStoryCevir(c, simdi))
 		if i < 11 {
 			it := cdLDItem{Headline: c.Title, URL: s.absBase(r) + makaleURL(c), Author: c.AuthorName}
 			if c.PublishedAt != nil {
@@ -97,7 +97,7 @@ func (s *Server) handleCDTag(w http.ResponseWriter, r *http.Request) {
 		ExcludeGallery: true,
 	}); err == nil {
 		for _, c := range son {
-			v.Latest = append(v.Latest, cdStoryCevir(c, simdi))
+			v.Latest = append(v.Latest, s.cdStoryCevir(c, simdi))
 		}
 	}
 	if toplam > sayfa*24 {

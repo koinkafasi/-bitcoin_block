@@ -101,7 +101,7 @@ func (s *Server) handleCDSection(w http.ResponseWriter, r *http.Request, slug st
 	var kartlar []templkit.CDStory
 	var ldItems []cdLDItem
 	for i, c := range items {
-		kartlar = append(kartlar, cdStoryCevir(c, simdi))
+		kartlar = append(kartlar, s.cdStoryCevir(c, simdi))
 		if i < 11 {
 			// CoinDesk CollectionPage ItemList: 11 en yeni haber.
 			it := cdLDItem{Headline: c.Title, URL: s.absBase(r) + makaleURL(c), Author: c.AuthorName}
@@ -412,12 +412,16 @@ func etiketMenuAdi(ad string) string {
 }
 
 // cdStoryCevir içeriği CoinDesk kart verisine çevirir (ortak yol).
-func cdStoryCevir(c repo.Content, simdi time.Time) templkit.CDStory {
+func (s *Server) cdStoryCevir(c repo.Content, simdi time.Time) templkit.CDStory {
 	st := templkit.CDStory{
 		Title: c.Title,
 		Spot:  c.Spot,
 		Href:  makaleURL(c),
-		Image: c.ImageURL,
+		// KAPAK ÖNCELİĞİ: editörün yüklediği görsel (cover_media_id),
+		// yoksa kaynağın görseli. Önce `image_url` okunuyordu; editör
+		// görseli değiştirdiğinde liste kartları eski görseli gösteriyordu
+		// (ölçüldü, 10 Kasım 2026). Ayrıntı: s.cdKapakGorsel.
+		Image: s.cdKapakGorsel(c),
 	}
 	if c.PublishedAt != nil {
 		st.Time = trGoreliZaman(*c.PublishedAt, simdi)

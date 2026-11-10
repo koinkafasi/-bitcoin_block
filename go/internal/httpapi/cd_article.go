@@ -40,10 +40,36 @@ func (s *Server) handleCDArticle(w http.ResponseWriter, r *http.Request, lang, s
 		}
 	}
 
-	// Okunma sayımı: istek yolunda DB yazımı YOK. Sayı bellekte biriktirilir,
-	// ~2 sn'de bir tek turda yazılır (bkz. okunma.go). Ölçüm: iki UPSERT
-	// makale sayfasında c=8'de 24 rps → 80 rps.
-	s.okunmaKaydet(ctx, c.ID)
+	// Okunma sayımı ve çizim ortak fonksiyonda (önizleme de aynı şablonu
+	// kullanır; orada sayım YAPILMAZ).
+	s.cdMakaleGoster(w, r, c, false)
+}
+
+// handleCDArticleOnizleme /admin/icerikler/{id}/onizleme — editör önizlemesi.
+//
+// NEDEN: önizleme `handleArticle`ı (theblock şablonu) çağırıyordu; editör
+// yeni görseli ekledikten sonra önizlemede ESKİ tasarımı görüyordu
+// (kullanıcı bildirimi, 10 Kasım 2026). Artık canlı sayfayla AYNI şablon.
+// Farklar yalnız: durum kapısı yok (taslak da açılır) ve okunma sayılmaz.
+func (s *Server) handleCDArticleOnizleme(w http.ResponseWriter, r *http.Request) {
+	id := parseID(r.PathValue("id"))
+	c, err := repo.GetContent(r.Context(), s.pool, id)
+	if err != nil {
+		s.handleNotFound(w, r)
+		return
+	}
+	s.cdMakaleGoster(w, r, c, true)
+}
+
+// cdMakaleGoster makale sayfasını basar.
+func (s *Server) cdMakaleGoster(w http.ResponseWriter, r *http.Request, c repo.Content, onizleme bool) {
+	ctx := r.Context()
+	if !onizleme {
+		// Okunma sayımı: istek yolunda DB yazımı YOK. Sayı bellekte
+		// biriktirilir, ~2 sn'de bir tek turda yazılır (bkz. okunma.go).
+		// Ölçüm: iki UPSERT makale sayfasında c=8'de 24 rps → 80 rps.
+		s.okunmaKaydet(ctx, c.ID)
+	}
 
 	bolumAd, bolumSlug := "Piyasalar", "markets"
 	if c.CategoryName != nil && *c.CategoryName != "" {
@@ -83,7 +109,7 @@ func (s *Server) handleCDArticle(w http.ResponseWriter, r *http.Request, lang, s
 		Headline:    c.Title,
 		Spot:        c.Spot,
 		BodyHTML:    string(s.blocksToHTML(c.Detail, nil)),
-		Image:       cdMakaleGorsel(c, s),
+		Image:       s.cdMakaleGorsel(c),
 		BaseURL:     s.kanonikKok(r),
 	}
 	if c.AuthorName != "" {
@@ -159,7 +185,7 @@ func (s *Server) handleCDArticle(w http.ResponseWriter, r *http.Request, lang, s
 		if len(v.Related) >= 3 {
 			break
 		}
-		v.Related = append(v.Related, cdStoryCevir(rc, simdi))
+		v.Related = append(v.Related, s.cdStoryCevir(rc, simdi))
 	}
 
 	// Önceki/sonraki: kripto portalında "sıradaki haber" okuma süresini
@@ -215,7 +241,7 @@ func (s *Server) handleCDArticle(w http.ResponseWriter, r *http.Request, lang, s
 		Yazar:      v.Author,
 		YazarSlug:  yazarSlug,
 		Kanonik:    v.Canonical,
-		Gorsel:     s.mutlakGorsel(s.kanonikKok(r), c.ImageURL),
+		Gorsel:     s.mutlakGorsel(s.kanonikKok(r), v.Image),
 		YayinISO:   yayinISO,
 		YayinTarih: yayinTarihKisa(c),
 		YayinSaat:  yayinSaatKisa(c),
@@ -288,17 +314,31 @@ func cdOkumaDakika(spot, govde string) int {
 	return d
 }
 
-// cdMakaleGorsel makalenin kapak görseli: kaynağın görseli varsa o,
-// yoksa editörün yüklediği kapak (cover_media_id). İkisi de yoksa boş —
-// uydurma görsel basılmaz.
-func cdMakaleGorsel(c repo.Content, s *Server) string {
-	if strings.TrimSpace(c.ImageURL) != "" {
-		return c.ImageURL
-	}
+// cdKapakGorsel içeriğin kapak görselini çözer.
+//
+// ÖNCELİK SIRASI — editör kazanır:
+//  1. `cover_media_id` (medya yöneticisinden yüklenen görsel)
+//  2. `image_url` (kaynak siteden gelen görsel)
+//
+// NEDEN TERSİYDİ: önce `image_url` okunuyordu. Editör yeni görsel yükleyip
+// kaydettiğinde canlı sayfa HÂLÂ eski CDN görselini gösteriyordu
+// (kullanıcı bildirimi, 10 Kasım 2026: "yeni resim var ama eski resim
+// imaj yolu görünüyor"). Aynı hata liste kartlarını da vuruyordu:
+// category/section/tag/related kartları da `image_url` kullanıyordu.
+// Diğer çıktılar (RSS, JSON-LD, canlı içerik) zaten `cover_media_id`yi
+// önceleyiyordu — tek tutarsız yer buydu.
+func (s *Server) cdKapakGorsel(c repo.Content) string {
 	if c.CoverMediaID != nil && *c.CoverMediaID > 0 {
-		return s.mediaURL(c.CoverMediaID)
+		if u := s.mediaURL(c.CoverMediaID); u != "" && u != "/media/none.svg" {
+			return u
+		}
 	}
-	return ""
+	return strings.TrimSpace(c.ImageURL)
+}
+
+// cdMakaleGorsel makalenin kapak görseli (bkz. cdKapakGorsel).
+func (s *Server) cdMakaleGorsel(c repo.Content) string {
+	return s.cdKapakGorsel(c)
 }
 
 // yayinTarihKisa CoinDesk `create_date` biçimi (YYYYMMDD).
