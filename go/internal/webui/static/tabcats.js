@@ -130,8 +130,12 @@
       resetBtn.addEventListener("click", function () {
         if (window.htmx) return; // hx-post + hx-confirm
         if (!confirm("Sekme listesini sıfırlayın mı? Blok menüdeki ilk 8 kategoriye döner.")) return;
-        fetch("/admin/tab-kategorileri/sifirla", { method: "POST" }).then(function () {
+        fetch("/admin/tab-kategorileri/sifirla", { method: "POST" }).then(function (r) {
+          if (!r.ok) throw new Error("HTTP " + r.status);
           window.location.reload();
+        }).catch(function () {
+          // Basarisiz sifirlama: kullaniciya soyle, sayfayi yenileme.
+          alert("Sekme listesi sifirlanamadi. Lutfen tekrar deneyin.");
         });
       });
     }

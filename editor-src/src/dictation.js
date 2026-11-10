@@ -105,7 +105,11 @@ function insertPunctuation(editor, mark) {
   let pos = state.selection.from
   const from = Math.max(0, pos - 4)
   const tail = state.doc.textBetween(from, pos, '\n', '\n')
-  const extra = tail.length - tail.replace(/[ \t]+$/, '').length
+  // Sondaki boşluk/sekme sayısı — regex yerine düz döngü (Sonar S8786:
+  // `[ \t]+$` süper-doğrusal geri izleme riski taşıyor).
+  let sonBosluk = tail.length
+  while (sonBosluk > 0 && (tail[sonBosluk - 1] === ' ' || tail[sonBosluk - 1] === '\t')) sonBosluk--
+  const extra = tail.length - sonBosluk
   if (extra > 0) {
     tr.delete(pos - extra, pos)
     pos -= extra

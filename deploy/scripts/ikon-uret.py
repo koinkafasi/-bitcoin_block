@@ -148,7 +148,7 @@ def svg_oku(yol):
     ic = s[i + 1:j]
     # Yorum ve gereksiz boşlukları temizle
     ic = re.sub(r'<!--.*?-->', '', ic, flags=re.S)
-    ic = re.sub(r'\s*\n\s*', ' ', ic).strip()
+    ic = re.sub(r'\s+', ' ', ic).strip()
     return ic
 def uret(kaynak, cikti, dolu_dahil=True):
     outline_dir = os.path.join(kaynak, 'icons', 'outline')

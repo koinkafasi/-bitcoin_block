@@ -1676,6 +1676,17 @@
     {{else}}
     <div class="hsp-tablewrap kps-kompakt">
       <table class="hsp-table">
+        <!-- Kompakt görünümde başlık SATIRI görünmez (tasarım: dar satırlar),
+             ama tablo bir VERİ tablosudur: ekran okuyucu sütunların ne
+             olduğunu başlıksız bilemez (Sonar Web:S5256). `.sr-only`
+             başlıklar görsel düzeni bozmadan bunu sağlar. -->
+        <thead class="sr-only">
+          <tr>
+            <th scope="col">Kripto para</th>
+            <th scope="col">Fiyat</th>
+            <th scope="col">Günlük değişim</th>
+          </tr>
+        </thead>
         <tbody data-kps-body>
           {{range .KriptoSayfa.Rows}}
           <tr data-code="{{.Symbol}}" data-arama="{{aramaNorm .Symbol}} {{aramaNorm .Name}} {{aramaNorm .Slug}}"

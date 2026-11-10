@@ -334,7 +334,7 @@
     }
     if (tur === 'piyasa') {
       if (fld === 'f') {
-        var hane = parseInt(el.getAttribute('data-fin-dec') || (kayit.o || 2), 10);
+        var hane = Number.parseInt(el.getAttribute('data-fin-dec') || (kayit.o || 2), 10);
         if (!isFinite(hane) || hane < 0) hane = 2;
         var birim = el.getAttribute('data-fin-unit') || kayit.b || '';
         return birim + finTR(v, hane);

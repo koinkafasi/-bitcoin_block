@@ -52,6 +52,9 @@ spec:
         metadata:
           labels: { app: theblock-yedek-db }
         spec:
+          # Service Account token'i POD'A BAGLAMA (Sonar S6865): yedek
+          # Job'i Kubernetes API'sini kullanmiyor.
+          automountServiceAccountToken: false
           restartPolicy: Never
           securityContext:
             runAsUser: 70          # postgres:17-alpine kimliği
@@ -101,8 +104,8 @@ spec:
                 - { name: yedek, mountPath: /yedek }
                 - { name: tmp, mountPath: /tmp }
               resources:
-                requests: { cpu: 50m, memory: 64Mi }
-                limits:   { cpu: 500m, memory: 256Mi }
+                requests: { cpu: 50m, memory: 64Mi, ephemeral-storage: 8Gi }
+                limits: { cpu: 500m, memory: 256Mi, ephemeral-storage: 8Gi }
           volumes:
             - name: yedek
               persistentVolumeClaim: { claimName: theblock-backup }
@@ -131,6 +134,9 @@ spec:
         metadata:
           labels: { app: theblock-yedek-medya }
         spec:
+          # Service Account token'i POD'A BAGLAMA (Sonar S6865): yedek
+          # Job'i Kubernetes API'sini kullanmiyor.
+          automountServiceAccountToken: false
           restartPolicy: Never
           securityContext:
             # MEDYA dosyaları site konteynerine ait: uid 10001, mod 600
@@ -183,11 +189,11 @@ spec:
                 - { name: medya, mountPath: /veri, readOnly: true }
                 - { name: tmp, mountPath: /tmp }
               resources:
-                requests: { cpu: 50m, memory: 64Mi }
+                requests: { cpu: 50m, memory: 64Mi, ephemeral-storage: 8Gi }
                 # 500m: kota limits.cpu 8 iken çalışan yükler 7 kullanıyor.
                 # 1 CPU isteseydik yedek sırasında bir rollout kota yüzünden
                 # takılabilirdi (5 Kasım'da collab'ta tam bu oldu).
-                limits:   { cpu: 500m, memory: 256Mi }
+                limits: { cpu: 500m, memory: 256Mi, ephemeral-storage: 8Gi }
           volumes:
             - name: yedek
               persistentVolumeClaim: { claimName: theblock-backup }

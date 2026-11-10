@@ -3,10 +3,10 @@
 
   var main = document.querySelector('main[data-article-id]');
   if (!main) return;
-  var id = parseInt(main.getAttribute('data-article-id') || '0', 10);
+  var id = Number.parseInt(main.getAttribute('data-article-id') || '0', 10);
   if (!id) return;
 
-  var currentVersion = parseInt(main.getAttribute('data-content-version') || '0', 10) || 0;
+  var currentVersion = Number.parseInt(main.getAttribute('data-content-version') || '0', 10) || 0;
   var refreshing = false;
   var es = null;
   var errorCount = 0;

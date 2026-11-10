@@ -31,5 +31,17 @@ tunnel-durum: ## demo.bitcosar.com tünelinin durumu
 	@curl -sS -o /dev/null -w 'https://demo.bitcosar.com → HTTP %{http_code}\n' \
 	  --max-time 15 https://demo.bitcosar.com/ || true
 
+# ---- SonarQube (statik analiz) ----
+# Yerel SonarQube (Docker, :9100). Kurulum bir kez: `sonar-kur`.
+sonar-kur: ## SonarQube'u kur/başlat (ilk kez veya makine açılışında)
+	@bash deploy/scripts/sonar-kur.sh
+
+sonar-tara: ## Kapsamı üret + SonarQube taraması
+	@bash deploy/scripts/sonar-tara.sh
+
+sonar-durum: ## Kalite kapısı + açık bulgular özeti
+	@bash deploy/scripts/sonar-durum.sh
+
 .PHONY: yardim guvenlik-tara guvenlik-rapor guvenlik-imaj performans \
-        performans-rapor derle templ tunnel-durum
+        performans-rapor derle templ tunnel-durum \
+        sonar-kur sonar-tara sonar-durum

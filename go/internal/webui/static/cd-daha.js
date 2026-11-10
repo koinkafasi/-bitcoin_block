@@ -66,7 +66,9 @@
           durum('Tekrar dene');
         }
       })
-      .then(function () {
+      // `.finally` — zincirin SONUNDA reddi yakalamayan bir `.then`
+      // bırakmamak için (Sonar S9383). Her iki durumda da çalışır.
+      .finally(function () {
         yukleniyor = false;
       });
   }

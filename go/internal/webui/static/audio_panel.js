@@ -235,7 +235,7 @@
   function seek(btn, word) {
     var mediaID = btn.getAttribute("data-audio-seek");
     var attr = word ? word.getAttribute("data-ms") : btn.getAttribute("data-start-ms");
-    var ms = parseInt(attr || "0", 10);
+    var ms = Number.parseInt(attr || "0", 10);
     if (!mediaID || isNaN(ms)) return;
     var player = document.querySelector('audio[data-audio-player="' + mediaID + '"]');
     if (!player) return;

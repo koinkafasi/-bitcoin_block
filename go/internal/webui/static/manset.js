@@ -93,7 +93,7 @@
     drawSelection();
     ctx.restore();
   }
-  function hexA(hex, a) { var h = (hex || "#000").replace("#", ""); if (h.length !== 6) h = "000000"; var r = parseInt(h.substr(0, 2), 16), g = parseInt(h.substr(2, 2), 16), b = parseInt(h.substr(4, 2), 16); return "rgba(" + r + "," + g + "," + b + "," + a + ")"; }
+  function hexA(hex, a) { var h = (hex || "#000").replace("#", ""); if (h.length !== 6) h = "000000"; var r = Number.parseInt(h.substr(0, 2), 16), g = Number.parseInt(h.substr(2, 2), 16), b = Number.parseInt(h.substr(4, 2), 16); return "rgba(" + r + "," + g + "," + b + "," + a + ")"; }
   function gradFor(dir, c, maxA, sp) {
     var x0 = 0, y0 = 0, x1 = 0, y1 = 0;
     switch (dir) {
@@ -297,12 +297,12 @@
       '<div class="field"><label for="m-shc">Gölge rengi</label><input type="color" class="input" id="m-shc" value="' + (l.shadowColor || "#000000") + '"></div>' +
       '<label class="small muted"><input type="checkbox" id="m-lock"' + (l.locked ? " checked" : "") + '> Kilitli</label>';
     bind("#m-t", function (v) { l.text = v; }, true);
-    bind("#m-s", function (v) { l.fontSize = parseInt(v, 10) || 30; }, true);
-    bind("#m-w", function (v) { l.weight = parseInt(v, 10) || 400; }, true);
+    bind("#m-s", function (v) { l.fontSize = Number.parseInt(v, 10) || 30; }, true);
+    bind("#m-w", function (v) { l.weight = Number.parseInt(v, 10) || 400; }, true);
     bind("#m-c", function (v) { l.color = v; }, true);
     bind("#m-a", function (v) { l.align = v; }, true);
-    bind("#m-lh", function (v) { l.lineHeight = parseFloat(v) || 1.15; }, true);
-    bind("#m-mw", function (v) { l.maxWidth = parseInt(v, 10); }, true);
+    bind("#m-lh", function (v) { l.lineHeight = Number.parseFloat(v) || 1.15; }, true);
+    bind("#m-mw", function (v) { l.maxWidth = Number.parseInt(v, 10); }, true);
     chk("#m-uc", function (v) { l.uppercase = v; });
     chk("#m-sh", function (v) { l.shadow = v; });
     bind("#m-shc", function (v) { l.shadowColor = v; }, true);
@@ -354,7 +354,7 @@
   function ui() { uiBg(); uiBadge(); uiLayers(); uiSel(); schedule(); }
   function applyZoom() {
     var wrap = document.querySelector(".me-canvaswrap");
-    var target = zoom === "fit" ? (document.getElementById("me-stage").clientWidth - 40) : CW * parseFloat(zoom);
+    var target = zoom === "fit" ? (document.getElementById("me-stage").clientWidth - 40) : CW * Number.parseFloat(zoom);
     var z = clamp(target / CW, 0.15, 2);
     CV.style.width = Math.round(CW * z) + "px"; CV.style.height = Math.round(CH * z) + "px";
     if (wrap) { wrap.style.width = CV.style.width; wrap.style.height = CV.style.height; }
@@ -367,12 +367,12 @@
   $("#me-overlay-color").addEventListener("input", function (e) { mutate(function () { state.background.overlay.color = e.target.value; }, true); });
   $("#me-overlay-on").addEventListener("change", function (e) { mutate(function () { state.background.overlay.active = e.target.checked; }); });
   $("#me-overlay-mode").addEventListener("change", function (e) { mutate(function () { state.background.overlay.mode = e.target.value; }); });
-  $("#me-overlay-spread").addEventListener("input", function (e) { mutate(function () { state.background.overlay.spread = parseInt(e.target.value, 10); }, true); $("#me-spread-v").textContent = "%" + e.target.value; });
-  $("#me-overlay-opacity").addEventListener("input", function (e) { mutate(function () { state.background.overlay.opacity = parseInt(e.target.value, 10); }, true); $("#me-opacity-v").textContent = "%" + e.target.value; });
+  $("#me-overlay-spread").addEventListener("input", function (e) { mutate(function () { state.background.overlay.spread = Number.parseInt(e.target.value, 10); }, true); $("#me-spread-v").textContent = "%" + e.target.value; });
+  $("#me-overlay-opacity").addEventListener("input", function (e) { mutate(function () { state.background.overlay.opacity = Number.parseInt(e.target.value, 10); }, true); $("#me-opacity-v").textContent = "%" + e.target.value; });
   $("#me-bg-media").addEventListener("change", function (e) {
     var id = e.target.value;
-    mutate(function () { state.background.media_id = id ? parseInt(id, 10) : null; });
-    if (id) fetch("/admin/manset-editor/media/" + id).then(function (r) { return r.json(); }).then(function (j) { if (j.ok) { var im = new Image(); im.onload = function () { bgImg = im; schedule(); }; im.src = j.url; } });
+    mutate(function () { state.background.media_id = id ? Number.parseInt(id, 10) : null; });
+    if (id) fetch("/admin/manset-editor/media/" + id).then(function (r) { return r.json(); }).then(function (j) { if (j.ok) { var im = new Image(); im.onload = function () { bgImg = im; schedule(); }; im.src = j.url; } }).catch(function () { /* medya yuklenemedi: onceki zemin kalir */ });
     else { bgImg = null; schedule(); }
   });
   document.querySelectorAll("[data-preset]").forEach(function (b) {
@@ -393,9 +393,9 @@
   $("#me-badge-text").addEventListener("input", function (e) { mutate(function () { state.badge.text = e.target.value; }, true); if (selObj && selObj.kind === "badge") {} });
   $("#me-badge-color").addEventListener("input", function (e) { mutate(function () { state.badge.color = e.target.value; }, true); });
   $("#me-badge-textcolor").addEventListener("input", function (e) { mutate(function () { state.badge.textColor = e.target.value; }, true); });
-  $("#me-badge-size").addEventListener("input", function (e) { mutate(function () { state.badge.fontSize = parseInt(e.target.value, 10) || 24; }, true); });
-  $("#me-badge-radius").addEventListener("input", function (e) { mutate(function () { state.badge.radius = parseInt(e.target.value, 10) || 0; }, true); });
-  $("#me-badge-pad").addEventListener("input", function (e) { mutate(function () { state.badge.padding = parseInt(e.target.value, 10) || 12; }, true); });
+  $("#me-badge-size").addEventListener("input", function (e) { mutate(function () { state.badge.fontSize = Number.parseInt(e.target.value, 10) || 24; }, true); });
+  $("#me-badge-radius").addEventListener("input", function (e) { mutate(function () { state.badge.radius = Number.parseInt(e.target.value, 10) || 0; }, true); });
+  $("#me-badge-pad").addEventListener("input", function (e) { mutate(function () { state.badge.padding = Number.parseInt(e.target.value, 10) || 12; }, true); });
   $("#me-badge-upper").addEventListener("change", function (e) { mutate(function () { state.badge.uppercase = e.target.checked; }); });
 
   // ---- toolbar ----
@@ -425,21 +425,22 @@
       return;
     }
     fetch("/admin/manset-editor/kaydet", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) })
-      .then(function (r) { return r.json(); }).then(function (j) { if (j.ok) { curId = j.id; location.reload(); } else { alert(j.error || "Hata"); } });
+      .then(function (r) { return r.json(); }).then(function (j) { if (j.ok) { curId = j.id; location.reload(); } else { alert(j.error || "Hata"); } })
+      .catch(function () { alert("Bağlantı hatası: kayıt gönderilemedi."); });
   }
   $("#me-save").addEventListener("click", save);
   document.querySelectorAll("[data-tplid]").forEach(function (b) {
     b.addEventListener("click", function () {
       fetch("/admin/manset-editor/template/" + b.getAttribute("data-tplid")).then(function (r) { return r.json(); }).then(function (j) {
         if (j.ok) { curId = j.id; state = j.design; state.layers = state.layers || []; state.background = state.background || {}; state.background.overlay = state.background.overlay || {}; state.badge = state.badge || {}; selected = (state.layers[0] || {}).id || ""; selObj = null; $("#me-default").checked = !!j.is_default; snapshot(); ui(); }
-      });
+      }).catch(function () { alert("Şablon yüklenemedi."); });
     });
   });
   document.querySelectorAll("[data-tplid-del]").forEach(function (b) {
     b.addEventListener("click", function () {
       if (window.htmx) return; // hx-post + hx-confirm
       if (!confirm("Tasarım silinsin mi?")) return;
-      fetch("/admin/manset-editor/sil", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: parseInt(b.getAttribute("data-tplid-del"), 10) }) }).then(function () { location.reload(); });
+      fetch("/admin/manset-editor/sil", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: Number.parseInt(b.getAttribute("data-tplid-del"), 10) }) }).then(function (r) { if (!r.ok) throw new Error("HTTP " + r.status); location.reload(); }).catch(function () { alert("Şablon silinemedi."); });
     });
   });
   $("#me-export").addEventListener("click", function () {
@@ -469,6 +470,17 @@
           hata.textContent = j.error || "Hata";
           out.appendChild(hata);
         }
+      })
+      // Ağ hatasında buton "…" (devre dışı) kalıyordu — kullanıcı bir daha
+      // deneyemiyordu. `.catch` hem durumu geri alır hem sebebi söyler.
+      .catch(function () {
+        btn.disabled = false; btn.textContent = "⬇ Dışa Aktar";
+        var out = $("#me-out");
+        out.textContent = "";
+        var hata = document.createElement("div");
+        hata.className = "flash error";
+        hata.textContent = "Bağlantı hatası: dışa aktarma başarısız.";
+        out.appendChild(hata);
       });
   });
 
@@ -482,7 +494,8 @@
           if (kind === "badge") { state.badge.active = true; state.badge.text = t.slice(0, 34).toUpperCase(); state.badge.uppercase = true; }
           else { var L = state.layers.filter(function (l) { return /ana_baslik/.test(l.role); }); var l = kind === "spot" ? (state.layers.filter(function (x) { return /alt_baslik/.test(x.role); })[0] || state.layers[2] || state.layers[0]) : (L[0] || state.layers[1] || state.layers[0]); if (l) l.text = t; }
         }); ui();
-      });
+      })
+      .catch(function () { alert("AI isteği başarısız: bağlantı hatası."); });
   }
   $("#me-ai-title").addEventListener("click", function () { ai("title"); });
   $("#me-ai-badge").addEventListener("click", function () { ai("badge"); });

@@ -487,7 +487,7 @@
      ŞERİT (ana sayfa modülü) — JS olmadan CSS scroll-snap ile çalışır
      ===================================================================== */
   function adetOku(track) {
-    var v = parseInt(getComputedStyle(track).getPropertyValue('--gzm-adet'), 10);
+    var v = Number.parseInt(getComputedStyle(track).getPropertyValue('--gzm-adet'), 10);
     return v > 0 ? v : 1;
   }
 
@@ -506,7 +506,7 @@
     var onceki = kok.querySelector('[data-gm-prev]');
     var sonraki = kok.querySelector('[data-gm-next]');
     var noktaKabi = kok.querySelector('[data-gm-dots]');
-    var aralik = parseInt(kok.getAttribute('data-gm-aralik') || '6', 10);
+    var aralik = Number.parseInt(kok.getAttribute('data-gm-aralik') || '6', 10);
     var sayfa = 0;
     var zamanlayici = null;
     var duraklat = false;

@@ -19,6 +19,10 @@ spec:
     metadata:
       labels: { app: theblock-postgres }
     spec:
+      # Service Account token'i POD'A BAGLAMA (Sonar S6865): pod'lar
+      # Kubernetes API'sini kullanmiyor; token mount edilirse ele gecirilen
+      # bir container kume API'sine konusabilir.
+      automountServiceAccountToken: false
       securityContext:
         # postgres:17-alpine gercek kimlik: uid 70 / gid 70 (dogrulandi).
         # fsGroup PVC'yi bu gruba verir; entrypoint root degilse chown'u
@@ -73,8 +77,8 @@ spec:
             periodSeconds: 20
             timeoutSeconds: 5
           resources:
-            requests: { cpu: 100m, memory: 384Mi }
-            limits:   { cpu: "2",  memory: 1Gi }
+            requests: { cpu: 100m, memory: 384Mi, ephemeral-storage: 1Gi }
+            limits: { cpu: "2",  memory: 1Gi, ephemeral-storage: 1Gi }
       volumes:
         - name: pgdata
           persistentVolumeClaim: { claimName: theblock-pgdata }

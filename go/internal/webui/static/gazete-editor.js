@@ -683,7 +683,7 @@
       satir.addEventListener("dragover", function (ev) { ev.preventDefault(); });
       satir.addEventListener("drop", function (ev) {
         ev.preventDefault();
-        var kaynak = parseInt(ev.dataTransfer.getData("text/plain"), 10);
+        var kaynak = Number.parseInt(ev.dataTransfer.getData("text/plain"), 10);
         if (isNaN(kaynak) || kaynak === i) return;
         sayfaTasi(kaynak, i);
       });

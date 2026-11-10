@@ -99,7 +99,7 @@
     this.oynatBtn.addEventListener('click', function () { self.oynatDegistir(); });
     this.sesBtn.addEventListener('click', function () { self.sessizDegistir(); });
     this.sesAralik.addEventListener('input', function () {
-      self.sesAyarla(parseInt(self.sesAralik.value, 10), true);
+      self.sesAyarla(Number.parseInt(self.sesAralik.value, 10), true);
     });
     this.tamBtn.addEventListener('click', function () { self.tamEkranDegistir(); });
     this.hizBtn.addEventListener('click', function (e) {

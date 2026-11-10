@@ -116,8 +116,11 @@ func TestGazeteKayitDogrula(t *testing.T) {
 // olduğunu doğrular. Damga kararsız olsaydı her kayıt çakışma üretirdi.
 func TestGazeteSurumDamgasi(t *testing.T) {
 	t1 := time.Date(2026, 10, 30, 12, 0, 0, 123456789, time.UTC)
-	if gazeteSurum(t1) != gazeteSurum(t1) {
-		t.Error("aynı zaman farklı damga üretti")
+	// İki çağrı ayrı değişkende: `f(t) != f(t)` yazmak determinizmi
+	// sınıyor ama okuyanı "kendisiyle karşılaştırma" sanısına düşürüyordu.
+	ilk, ikinci := gazeteSurum(t1), gazeteSurum(t1)
+	if ilk != ikinci {
+		t.Errorf("aynı zaman farklı damga üretti: %s vs %s", ilk, ikinci)
 	}
 	// Farklı saat dilimi, aynı an → aynı damga (UTC'ye çevriliyor).
 	t2 := t1.In(time.FixedZone("TRT", 3*3600))

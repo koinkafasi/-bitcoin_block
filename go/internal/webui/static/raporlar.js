@@ -30,7 +30,7 @@
       function calc() {
         var pv = parseFloat(pvEl.value) || 0,
           rpm = parseFloat(rpmEl.value) || 0,
-          n = parseInt(sitesEl.value, 10) || 1;
+          n = Number.parseInt(sitesEl.value, 10) || 1;
         var month = pv * rpm / 1000 * n;
         outEl.textContent = 'Aylık: $' + Math.round(month).toLocaleString('en-US') +
           ' · Yıllık: $' + Math.round(month * 12).toLocaleString('en-US');

@@ -165,8 +165,8 @@
     var words = [];
     if (transcript) {
       [].forEach.call(transcript.querySelectorAll("[data-ses-word]"), function (el) {
-        var s = parseInt(el.getAttribute("data-ms") || "", 10);
-        var e = parseInt(el.getAttribute("data-end-ms") || "", 10);
+        var s = Number.parseInt(el.getAttribute("data-ms") || "", 10);
+        var e = Number.parseInt(el.getAttribute("data-end-ms") || "", 10);
         if (isNaN(s)) return;
         // Bitişi eksik/bozuk kelimeye kısa bir pay ver; vurgu yine çalışsın.
         if (isNaN(e) || e <= s) e = s + 300;

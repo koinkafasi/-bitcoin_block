@@ -415,7 +415,7 @@
       notice("Bu alıntı kaynak transkriptte bulunamadı; dinlenecek bir saniye yok.");
       return;
     }
-    var ms = parseInt(btn.getAttribute("data-quote-seek") || "0", 10);
+    var ms = Number.parseInt(btn.getAttribute("data-quote-seek") || "0", 10);
     var media = btn.getAttribute("data-quote-media") || "";
     if (isNaN(ms)) return;
     var player = media

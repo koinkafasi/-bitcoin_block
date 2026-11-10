@@ -24,12 +24,19 @@ let suggestionMode = false
 let suggestionUserName = 'Editör'
 let lastInsertSuggestion = null
 
+// Öneri kimliği: yalnız DOM içinde benzersiz olması yeter, gizlilik değeri
+// taşımaz. Yine de Math.random KULLANILMAZ (Sonar S2245): zayıf PRNG'yi
+// "kimlik" gerekçesiyle kod tabanında bırakmak, bir gün yetki jetonu için
+// kopyalanmasının önünü açar. Sayaç + zaman damgası hem benzersiz hem
+// tahmin edilebilir biçimde sıralı.
+let suggestionSayac = 0
+
 function suggestionID() {
-  try {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
     return crypto.randomUUID()
-  } catch (_) {
-    return Date.now().toString(36) + Math.random().toString(36).slice(2, 8)
   }
+  suggestionSayac += 1
+  return 'oneri-' + Date.now().toString(36) + '-' + suggestionSayac.toString(36)
 }
 
 function newSuggestionAttrs() {
@@ -1309,11 +1316,20 @@ function openRemoteImageDialog(editor) {
       button.disabled = false
     }
   }
-  document.getElementById('editorUnsplashSearch').onclick = runSearch
+  // `runSearch` async: olay dinleyicisine DOĞRUDAN bağlanınca dönen söz
+  // hiçbir yerde yakalanmıyor (Sonar S9383). try/catch gövdenin içinde olsa
+  // da blok DIŞINDA atılan bir hata sessizce kaybolurdu; sarmalayıcı bunu
+  // kullanıcıya bildirir.
+  const aramaBaslat = () => {
+    runSearch().catch((err) => {
+      status.textContent = err.message || 'Unsplash araması başarısız.'
+    })
+  }
+  document.getElementById('editorUnsplashSearch').onclick = aramaBaslat
   query.onkeydown = (event) => {
     if (event.key === 'Enter') {
       event.preventDefault()
-      runSearch()
+      aramaBaslat()
     }
   }
 }
@@ -1565,9 +1581,17 @@ function openBookmarkDialog(editor) {
       status.textContent = 'Otomatik bilgi alınamadı: ' + (err.message || 'hata') + ' — alanları elle doldurabilirsiniz.'
     }
   }
-  fetchBtn.onclick = fetchMeta
+  // `fetchMeta` async: olay dinleyicisine doğrudan bağlanınca dönen söz
+  // yakalanmıyordu (Sonar S9383). Sarmalayıcı, gövde dışında atılan bir
+  // hatayı da kullanıcıya bildirir.
+  const metaGetir = () => {
+    fetchMeta().catch((err) => {
+      status.textContent = err.message || 'Adres bilgisi alınamadı.'
+    })
+  }
+  fetchBtn.onclick = metaGetir
   urlInput.onkeydown = (e) => {
-    if (e.key === 'Enter') { e.preventDefault(); fetchMeta() }
+    if (e.key === 'Enter') { e.preventDefault(); metaGetir() }
   }
   confirmBtn.onclick = () => {
     const url = urlInput.value.trim()
@@ -1841,6 +1865,7 @@ function loadEditorNotes() {
             headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
             body: fd.toString(),
           }).then(loadEditorNotes)
+            .catch(() => alert('Not durumu güncellenemedi.'))
         }
         actions.appendChild(resolve)
         const del = document.createElement('button')
@@ -1852,6 +1877,7 @@ function loadEditorNotes() {
           fetch(`/admin/icerikler/${editorContentID()}/yorumlar/${n.ID}/sil`, {
             method: 'POST', credentials: 'same-origin',
           }).then(loadEditorNotes)
+            .catch(() => alert('Not silinemedi.'))
         }
         actions.appendChild(del)
         card.appendChild(actions)
@@ -1875,7 +1901,7 @@ function addEditorNote() {
   }).then(() => {
     body.value = ''
     loadEditorNotes()
-  })
+  }).catch(() => alert('Not eklenemedi.'))
 }
 
 function bindComments() {
@@ -2399,6 +2425,7 @@ async function init(host) {
         if (files && files.length && Array.from(files).some((f) => f.type.startsWith('image/'))) {
           event.preventDefault()
           uploadEditorFiles(editor, files)
+            .catch(() => alert('Görsel yüklenemedi.'))
           return true
         }
         if (suggestionMode && !editor.state.selection.empty) {
@@ -2428,6 +2455,7 @@ async function init(host) {
         if (files && files.length && Array.from(files).some((f) => f.type.startsWith('image/'))) {
           event.preventDefault()
           uploadEditorFiles(editor, files)
+            .catch(() => alert('Görsel yüklenemedi.'))
           return true
         }
         return false
@@ -2477,7 +2505,8 @@ async function init(host) {
     hidden.dispatchEvent(new Event('input', { bubbles: true }))
   }
   window.__contentEditorAIBlocks = aiBlocks
-  window.__editorUploadFiles = (files) => uploadEditorFiles(editor, files)
+  window.__editorUploadFiles = (files) =>
+    uploadEditorFiles(editor, files).catch(() => alert('Görsel yüklenemedi.'))
   bindComments()
   bindBlockMenu(editor)
   bindSuggestionBar(editor)
@@ -2514,7 +2543,17 @@ function boot() {
     window.__collabActive = false
     host.dataset.ready = '0'
   }
-  init(host)
+  // `init` async: dönen söz yakalanmazsa editör kurulumundaki bir hata
+  // (collab bağlantısı, eklenti yüklemesi) sessizce kaybolur ve sayfa
+  // "hazır" görünürken editör çalışmaz (Sonar S9383).
+  init(host).catch((err) => {
+    console.error('Editör başlatılamadı:', err)
+    const h = document.getElementById('blockEditor')
+    if (h) {
+      h.dataset.ready = '0'
+      h.innerHTML = '<p class="flash error" style="margin:12px">Editör yüklenemedi. Sayfayı yenileyin.</p>'
+    }
+  })
 }
 
 document.addEventListener('keydown', (e) => {

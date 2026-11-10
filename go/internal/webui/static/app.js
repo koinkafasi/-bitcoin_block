@@ -216,7 +216,7 @@
 
     const payload = {
       action: action,
-      content_id: id ? parseInt(id, 10) : 0,
+      content_id: id ? Number.parseInt(id, 10) : 0,
       input: fromSel ? (document.querySelector(fromSel) ? document.querySelector(fromSel).value : "") : "",
     };
     fetch("/admin/icerikler/ai", {
@@ -914,7 +914,7 @@ window.tbPush = async function () {
     var allDots = Array.prototype.slice.call(slider.querySelectorAll('.hero-dot'));
     var idx = 0, timer = null, lim = allSlides.length;
     var autoplay = slider.getAttribute('data-autoplay') === '1';
-    var interval = (parseInt(slider.getAttribute('data-interval'), 10) || 6) * 1000;
+    var interval = (Number.parseInt(slider.getAttribute('data-interval'), 10) || 6) * 1000;
     function limitFor() {
       // Slider kolonu 2/3 genişlikte olabildiği için slider.clientWidth
       // kullanmak masaüstünde yanlışlıkla 8'e düşürüyordu. Ekran genişliği
@@ -947,7 +947,7 @@ window.tbPush = async function () {
     allDots.forEach(function (d) {
       var go = function (e) {
         if (e) e.preventDefault();
-        show(parseInt(d.getAttribute('data-idx'), 10) || 0);
+        show(Number.parseInt(d.getAttribute('data-idx'), 10) || 0);
         start();
       };
       d.addEventListener('click', go);
@@ -984,7 +984,7 @@ window.tbPush = async function () {
     if (!slides.length) return;
     var hasAll = !!root.querySelector('.m6-slide-all');
     var allowOver = root.getAttribute('data-allow-over') === '1';
-    var customSize = parseInt(root.getAttribute('data-pager-size'), 10) || 0;
+    var customSize = Number.parseInt(root.getAttribute('data-pager-size'), 10) || 0;
     function limitFor() {
       var w = window.innerWidth || document.documentElement.clientWidth;
       var base = w < 560 ? 4 : (w < 900 ? 5 : (allowOver ? 48 : 20));
@@ -992,7 +992,7 @@ window.tbPush = async function () {
     }
     var idx = 0, timer = null, lim = slides.length;
     var autoplay = root.getAttribute('data-autoplay') === '1';
-    var interval = (parseInt(root.getAttribute('data-interval'), 10) || 6) * 1000;
+    var interval = (Number.parseInt(root.getAttribute('data-interval'), 10) || 6) * 1000;
     function active() { return Math.min(lim, slides.length); }
     function show(i) {
       var n = active(); if (n < 1) return;
@@ -1022,7 +1022,7 @@ window.tbPush = async function () {
     var prev = root.querySelector('.m6-prev'), nx = root.querySelector('.m6-next');
     if (prev) prev.addEventListener('click', function (e) { e.preventDefault(); show(idx - 1); start(); });
     if (nx) nx.addEventListener('click', function (e) { e.preventDefault(); show(idx + 1); start(); });
-    nums.forEach(function (d) { d.addEventListener('click', function (e) { e.preventDefault(); show(parseInt(d.getAttribute('data-idx'), 10) || 0); start(); }); });
+    nums.forEach(function (d) { d.addEventListener('click', function (e) { e.preventDefault(); show(Number.parseInt(d.getAttribute('data-idx'), 10) || 0); start(); }); });
     root.addEventListener('mouseenter', stop);
     root.addEventListener('mouseleave', start);
     var x0 = null;
@@ -1116,7 +1116,7 @@ window.tbPush = async function () {
       panel.querySelectorAll('[data-knav]').forEach(function (b) {
         b.addEventListener('click', function (e) {
           e.preventDefault();
-          show(idx + parseInt(b.getAttribute('data-knav'), 10));
+          show(idx + Number.parseInt(b.getAttribute('data-knav'), 10));
         });
       });
       dots.forEach(function (d, i) {
@@ -2189,13 +2189,13 @@ window.addEventListener('load', __tbHikayeBaslat);
     if (!flow || flow.dataset.akReady) return;
     flow.dataset.akReady = "1";
 
-    var sinir = parseInt(flow.getAttribute("data-ak-sinir"), 10) || 0;
+    var sinir = Number.parseInt(flow.getAttribute("data-ak-sinir"), 10) || 0;
     var oto = flow.getAttribute("data-ak-oto") === "1";
     var wrap = flow.parentNode ? flow.parentNode.querySelector(".ak-more-wrap") : null;
     var btn = wrap ? wrap.querySelector("[data-ak-more]") : null;
     var sentinel = flow.parentNode ? flow.parentNode.querySelector("[data-ak-sentinel]") : null;
     var endNote = flow.parentNode ? flow.parentNode.querySelector("[data-ak-end]") : null;
-    var bas = parseInt(flow.getAttribute("data-ak-bas"), 10) || 0;
+    var bas = Number.parseInt(flow.getAttribute("data-ak-bas"), 10) || 0;
     var url = flow.getAttribute("data-ak-url") || "";
     var yukleniyor = false;
     var bitti = false;
@@ -2217,7 +2217,7 @@ window.addEventListener('load', __tbHikayeBaslat);
       fetch(q, { headers: { "X-Requested-With": "XMLHttpRequest" }, credentials: "same-origin" })
         .then(function (r) {
           if (!r.ok) throw new Error("http " + r.status);
-          var nextBas = parseInt(r.headers.get("X-Akis-Bas"), 10);
+          var nextBas = Number.parseInt(r.headers.get("X-Akis-Bas"), 10);
           var son = r.headers.get("X-Akis-Son") === "1";
           return r.text().then(function (html) { return { html: html, nextBas: nextBas, son: son }; });
         })

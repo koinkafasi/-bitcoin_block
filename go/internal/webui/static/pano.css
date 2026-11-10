@@ -210,11 +210,14 @@ html[data-theme="dark"] .pn-view {
 
 .pn-chart { width: 100%; height: 100%; overflow: visible; }
 
-.pn-nokta { fill: var(--pn-card); stroke: currentColor; stroke-width: 1.8; r: 3.2; opacity: 0; transition: opacity .12s ease, r .12s ease; }
+/* nokta yarıçapı SVG 2 geometri özelliğiyle (r) veriliyor: animasyonlu
+   büyüme yalnız bu özellikle mümkün. Sonar S9424 bunu bilmediği için
+   "bilinmeyen değer" diyor — NOSONAR ile susturuldu. */
+.pn-nokta { fill: var(--pn-card); stroke: currentColor; stroke-width: 1.8; r: 3.2; opacity: 0; transition: opacity .12s ease, r .12s ease; } /* NOSONAR */
 
 .pn-chartbox:hover .pn-nokta { opacity: .85; }
 
-.pn-nokta:hover { r: 5.5; opacity: 1; }
+.pn-nokta:hover { r: 5.5; opacity: 1; } /* NOSONAR: SVG 2 geometri ozelligi */
 
 .pn-cubuk { fill: var(--pn-c1); opacity: .82; transition: opacity .15s ease; }
 

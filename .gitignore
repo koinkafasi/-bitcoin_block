@@ -47,3 +47,6 @@ semgrep.sarif
 # profili boyle 40 MB cop birakmisti). Desen, tekrarini gorunmez kilmaz
 # ama commit edilmesini onler.
 C:\\Users\\*
+
+# Sonar kapsam raporu (uretilir; deploy/scripts/kapsam-uret.sh yazar).
+coverage.out
