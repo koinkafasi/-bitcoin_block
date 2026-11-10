@@ -6,6 +6,8 @@
 //	DATABASE_URL=... go run ./cmd/backfill -is=kategori [-dry]
 //	DATABASE_URL=... go run ./cmd/backfill -is=mukerrer [-dry]
 //	DATABASE_URL=... go run ./cmd/backfill -is=oncelik [-dry]
+//	DATABASE_URL=... go run ./cmd/backfill -is=gorsel [-dry]
+//	DATABASE_URL=... go run ./cmd/backfill -is=gorsel-kaldir [-dry]
 //
 // Neden ayrı komut: bu işler bot hattının kodunu (scoring/classify) yeniden
 // kullanır ama istek yolunda çalışmaz. Tabloyu sayfa sayfa gezer, her sayfayı
@@ -62,8 +64,12 @@ func main() {
 		runErr = mergeDuplicates(ctx, pool, *dry, *batch)
 	case "oncelik":
 		runErr = backfillOncelik(ctx, pool, *dry, *batch)
+	case "gorsel":
+		runErr = backfillGorseller(ctx, pool, *dry, *batch)
+	case "gorsel-kaldir":
+		runErr = backfillGorselKaldir(ctx, pool, *dry, *batch)
 	default:
-		fmt.Fprintln(os.Stderr, "kullanım: -is=skor|kategori|mukerrer|oncelik [-dry]")
+		fmt.Fprintln(os.Stderr, "kullanım: -is=skor|kategori|mukerrer|oncelik|gorsel|gorsel-kaldir [-dry]")
 		os.Exit(1)
 	}
 	if runErr != nil {

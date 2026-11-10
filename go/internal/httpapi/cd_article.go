@@ -328,12 +328,30 @@ func cdOkumaDakika(spot, govde string) int {
 // Diğer çıktılar (RSS, JSON-LD, canlı içerik) zaten `cover_media_id`yi
 // önceleyiyordu — tek tutarsız yer buydu.
 func (s *Server) cdKapakGorsel(c repo.Content) string {
-	if c.CoverMediaID != nil && *c.CoverMediaID > 0 {
-		if u := s.mediaURL(c.CoverMediaID); u != "" && u != "/media/none.svg" {
-			return u
-		}
+	// 1) Kapak görseli (medya yöneticisinden yüklenen)
+	if u := s.medyaYoluCoz(c.CoverMediaID); u != "" {
+		return u
 	}
+	// 2) Manşet görseli — editör yalnız "Manşet" alanını doldurmuş olabilir.
+	//    Kapak boşken bu görseli göstermemek, elle yüklenen görseli yok
+	//    saymak olurdu (kullanıcı isteği: "kendi medyamız varsa onu görcek").
+	if u := s.medyaYoluCoz(c.MansetMediaID); u != "" {
+		return u
+	}
+	// 3) Kaynağın görseli (dış adres ya da /kg proxy yolu)
 	return strings.TrimSpace(c.ImageURL)
+}
+
+// medyaYoluCoz medya kimliğini web yoluna çevirir; kayıt yoksa/silinmişse "".
+func (s *Server) medyaYoluCoz(id *int64) string {
+	if id == nil || *id <= 0 {
+		return ""
+	}
+	u := s.mediaURL(id)
+	if u == "" || u == "/media/none.svg" {
+		return ""
+	}
+	return u
 }
 
 // cdMakaleGorsel makalenin kapak görseli (bkz. cdKapakGorsel).
