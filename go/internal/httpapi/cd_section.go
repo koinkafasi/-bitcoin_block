@@ -10,6 +10,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 
+	"theblock/site/internal/auth"
 	"theblock/site/internal/i18n"
 	"theblock/site/internal/repo"
 	"theblock/site/internal/webui/templkit"
@@ -36,6 +37,7 @@ var cdSectionMeta = map[string]struct{ Ad, Aciklama string }{
 	"focus":              {"Odak", "Odak dosyaları ve uzun okumalar."},
 	"research":           {"Araştırma", "Araştırma raporları ve veri analizleri."},
 	"press-release":      {"Basın Bültenleri", "Basın bültenleri."},
+	"learn":              {"Kripto 101", "Kripto para ve blokzincir temelleri, rehberler ve açıklayıcılar."},
 }
 
 // cdBolumHandler tek bir bölümün handler'ını üretir.
@@ -252,6 +254,22 @@ func (s *Server) cdShell(aktif string) templkit.CDShell {
 	return s.cdShellCtx(context.Background(), nil, aktif)
 }
 
+// cdShellOturum oturum bilgisini kabuğa işler (üst çubuk menüsü).
+//
+// Giriş bağlantıları TEMİZLENİR: şablon `LoggedIn` dalına geçiyor ama
+// başka bir tüketici (mobil panel) `LoginHref`'e bakarsa ölü bir "Giriş"
+// bağlantısı basmasın.
+func cdShellOturum(sh *templkit.CDShell, u auth.User) {
+	sh.LoggedIn = true
+	// Ad KIRPILIR: kenar boşluklu ad menüde ve aria-label'da aynen
+	// görünürdü (memberInitial da kırpıyor — iki yerde tutarlı).
+	sh.UserName = strings.TrimSpace(u.Name)
+	sh.UserInitial = memberInitial(u.Name)
+	sh.UserHref = "/hesabim"
+	sh.LoginHref = ""
+	sh.SignupHref = ""
+}
+
 // cdShellCtx istek bağlamıyla çalışan sürüm (iptal edilebilir).
 func (s *Server) cdShellCtx(ctx context.Context, r *http.Request, aktif string) templkit.CDShell {
 	nav := []templkit.CDNavLink{
@@ -261,6 +279,7 @@ func (s *Server) cdShellCtx(ctx context.Context, r *http.Request, aktif string) 
 		{Label: "Teknoloji", Href: "/tech"},
 		{Label: "Politika", Href: "/policy"},
 		{Label: "Görüş", Href: "/opinion"},
+		{Label: "Kripto 101", Href: "/learn"},
 		{Label: "Fiyatlar", Href: "/price"},
 		{Label: "Video", Href: "/videos"},
 	}
@@ -280,6 +299,16 @@ func (s *Server) cdShellCtx(ctx context.Context, r *http.Request, aktif string) 
 		// EN içerik hattı gelince "en" de eklenir (çevirisi olmayan dil
 		// kullanıcıyı boş sayfaya götürür).
 		Diller: []templkit.CDDil{{Kod: "tr", Ad: "Türkçe", Aktif: true}},
+	}
+
+	// ÜST ÇUBUK OTURUMU: giriş yapılmışken Oturum Aç/Kaydol yerine
+	// kullanıcı simgesi + hesap menüsü basılır (bkz. cdHesapMenu).
+	// Çerez YOKSA DB'ye gitmez — anonim ziyaretçi ek tur ödemez.
+	if r != nil {
+		if u, err := s.currentUser(r); err == nil && u.ID > 0 {
+			cdShellOturum(&sh, u)
+			sh.UserUnread = s.uyeBildirimSayisi(ctx, u.ID)
+		}
 	}
 
 	// Kabuk verisi: etiketler + menü coinleri + bölüm doluluğu.

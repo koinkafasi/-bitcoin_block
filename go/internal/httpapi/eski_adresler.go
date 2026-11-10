@@ -34,6 +34,42 @@ func tarihArsivMi(yol string) bool {
 	return tarihArsivRE.MatchString(yol)
 }
 
+// makaleYolu tarihli makale desenini çözer ve yanıtı yazar.
+//
+// Dönüş değeri `true` ise yanıt üretilmiştir; çağıran başka iş yapmamalıdır.
+// `false` ise yol tarihli makale desenine uymuyordur (ya da içerik yoktur ve
+// çağıranın kendi 404'üne düşmesi gerekir).
+//
+// Bölüm adı ile makale yolunun çakışmasını çözer: `/borsa/2023/04/17/<slug>`
+// artık BORSA fiyat sayfasına değil makaleye gider (bkz. çağrı yeri yorumu).
+func (s *Server) makaleYolu(w http.ResponseWriter, r *http.Request, segs []string, lang string) bool {
+	slugTarih, ok := makaleTarihDeseni(segs)
+	if !ok {
+		return false
+	}
+	c, err := repo.ContentBySlug(r.Context(), s.pool, slugTarih)
+	if err != nil {
+		return false // içerik yok: çağıran bölüm sayfasını denesin
+	}
+	if c.Status != "yayinda" {
+		s.handleNotFound(w, r)
+		return true
+	}
+	// TEK KANONİK ADRES: yazıya bölüm öneki yanlış ya da hiç yokken de
+	// ulaşılabiliyordu (aynı içerik iki adreste 200). Kanonik adrese 301.
+	if lang == c.Locale {
+		if hedef := makaleURL(c); hedef != r.URL.Path {
+			if r.URL.RawQuery != "" {
+				hedef += "?" + r.URL.RawQuery
+			}
+			http.Redirect(w, r, hedef, http.StatusMovedPermanently)
+			return true
+		}
+	}
+	s.handleCDArticle(w, r, lang, slugTarih, c.ID)
+	return true
+}
+
 // wpKimlikSorgusu WordPress'in kimlikle erişim parametrelerini okur.
 // `?p=` yazı, `?page_id=` sayfa demektir; sayfalar taşınmadığı için
 // yalnız `p` ele alınır ve geçersizse 0 döner.

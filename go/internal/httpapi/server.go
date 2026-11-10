@@ -332,7 +332,7 @@ func (s *Server) routes() {
 	// ("conflicts with pattern"), ölçüldü: 53 kez yeniden başlama döngüsü.
 	for _, b := range []string{"markets", "business", "tech", "policy", "opinion",
 		"news-analysis", "latest-crypto-news", "focus", "research",
-		"press-release"} {
+		"press-release", "learn"} {
 		s.mux.HandleFunc("GET /"+b, s.cdBolumHandler(b))
 	}
 	s.mux.HandleFunc("GET /robots.txt", s.handleRobots)

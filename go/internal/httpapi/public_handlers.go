@@ -380,6 +380,24 @@ func (s *Server) handlePublicSegment(w http.ResponseWriter, r *http.Request) {
 
 	seg := segs[i]
 	r.SetPathValue("lang", lang)
+
+	// MAKALE YOLU BÖLÜM ADINDAN ÖNCE ÇÖZÜLÜR.
+	//
+	// Tuzak (canlıda görüldü, 10 Kasım 2026): `/borsa/2023/04/17/<slug>`
+	// adresi makale değil BORSA fiyat sayfası olarak açılıyordu — çünkü
+	// aşağıdaki `case seg == "borsa"` bölüm eşleşmesi, tarihli makale
+	// deseninden önce geliyordu. Aynı hata `etkinlikler`, `sinemalar`,
+	// `arsiv` gibi tüm literal bölüm adları için geçerliydi: o adlarla
+	// başlayan makaleler yanlış sayfaya (ve yanlış canonical'a) düşüyordu.
+	//
+	// Çözüm: tarihli makale deseni (/{bölüm}/{YYYY}/{MM}/{DD}/{slug})
+	// literal eşleşmelerden ÖNCE denenir. Desen takvimsel olarak geçerli
+	// olmalı (makaleTarihDeseni), bu yüzden `/borsa/hisseler` gibi gerçek
+	// bölüm adresleri etkilenmez.
+	if s.makaleYolu(w, r, segs[i:], lang) {
+		return
+	}
+
 	switch {
 	case seg == "kategori" && i+1 < len(segs):
 		r.SetPathValue("slug", segs[i+1])
@@ -451,32 +469,7 @@ func (s *Server) handlePublicSegment(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		// CoinDesk tarihli makale deseni: /{section}/{YYYY}/{MM}/{DD}/{slug}
-		// Ya da bölümsüz: /{YYYY}/{MM}/{DD}/{slug}
-		kalan := segs[i:]
-		if slugTarih, ok := makaleTarihDeseni(kalan); ok {
-			c, err := repo.ContentBySlug(r.Context(), s.pool, slugTarih)
-			if err == nil {
-				if c.Status == "yayinda" {
-					// TEK KANONİK ADRES: yazıya bölüm öneki yanlış ya da hiç
-					// yokken de ulaşılabiliyordu (aynı içerik iki adreste 200).
-					// Google için yinelenen içerik; kanonik adrese 301 verilir.
-					if lang == c.Locale {
-						if hedef := makaleURL(c); hedef != r.URL.Path {
-							if r.URL.RawQuery != "" {
-								hedef += "?" + r.URL.RawQuery
-							}
-							http.Redirect(w, r, hedef, http.StatusMovedPermanently)
-							return
-						}
-					}
-					s.handleCDArticle(w, r, lang, slugTarih, c.ID)
-					return
-				}
-				s.handleNotFound(w, r)
-				return
-			}
-		}
+		// Tarihli makale deseni switch'ten ÖNCE çözüldü (bkz. makaleYolu).
 
 		id := articleIDFromSegment(seg)
 		slug := articleSlugFromSegment(seg)
