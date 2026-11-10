@@ -563,6 +563,52 @@ bağlantıda 5 sorguyu birleştirmek ~1 ms kazandırır.
 aynı** (`/`, `/markets`, makale, `/tag/bitcoin`, `/price`). N+1 kaldırmak
 çıktıyı değiştirmedi.
 
+### 2.17 Alaka havuzu 40 ms → 10 ms, ve "İlgili Haberler" artık deterministik
+
+§2.16'dan sonra makale soğuk üretimi hâlâ ~95 ms'ydi. Nerede harcandığını
+`EXPLAIN ANALYZE` ile ölçtüm: **tek bir sorgu 40,2 ms** — toplamın %43'ü.
+
+**Sorun.** `LinkSuggestions` (İlgili Haberler / iç link ağı) tüm yayındaki
+içerikleri (**3 492 satır**) ve tüm etiket bağlarını (**25 290 satır**)
+`GROUP BY` ile toplayıp **sonra** 400'e indiriyordu. Yani her makale
+görüntülemesinde tüm site havuzu gruplanıyordu.
+
+**Düzeltme.** Önce aday listesi daraltılır (`ORDER BY updated_at DESC
+LIMIT 400`), etiketler yalnız o 400 satır için toplanır. Aynı sonuç
+kümesi, **9,9 ms**.
+
+| | süre |
+|---|---|
+| eski tek blok | 40,2 ms |
+| CTE'li | **9,9 ms** |
+
+Makale soğuk üretimi (aynı tracer, 7 koşum): **~95 ms → ~79 ms** (%17).
+
+**Beklenmedik bulgu: eski sıralama garanti değildi.** İlk doğrulamada
+"çıktı farklı" çıktı. Sebebini kovaladım ve şunu buldum: üretimde
+**binlerce içeriğin `updated_at` değeri birebir aynı** (toplu güncelleme).
+Eski sorgu yalnız `ORDER BY c.updated_at DESC` diyordu — eşitliklerde
+tie-break yok. Sonuç: sıra **plan'a bağlı**. Kanıt, aynı eski sorgu iki
+farklı planla:
+
+| plan | ilk 5 kimlik |
+|---|---|
+| normal | 7128, 8443, 7496, 8569, 7322 |
+| `enable_hashagg=off` | **6117, 6119, 6116** |
+
+Yani "İlgili Haberler" listesi PostgreSQL sürüm/plan değişiminde
+**kendiliğinden** değişebiliyordu. `id DESC` tie-break'i bunu sabitler;
+yeni sürüm 5 koşumda birebir aynı listeyi verdi.
+
+Bu yüzden "eski vs yeni çıktı farklı" görünüyor: fark hatadan değil,
+**eskinin belirsizliğinden** geliyor. Somut olarak aynı makalede eski
+sürüm 2020 tarihli, yeni sürüm 2022 tarihli (daha yeni) haberleri seçiyor;
+ikisi de "aynı kategori" puanında, artık tie-break karar veriyor.
+
+`TestLinkSuggestionsSorgusu` iki sözleşmeyi kilitler: aday CTE'si +
+`LIMIT 400` (performans) ve `ORDER BY c.updated_at DESC, c.id DESC`
+(tie-break). Ayrıca havuz sorgusunun `c.detail` seçmediğini doğrular.
+
 ---
 
 ## 3. Eklenen testler
@@ -604,6 +650,7 @@ aynı** (`/`, `/markets`, makale, `/tag/bitcoin`, `/price`). N+1 kaldırmak
 | `TestOkunmaBiriktiriciToplam` | biriktirici toplar, boşaltınca sıfırlar |
 | `TestYtListeDilim` | YouTube listesi 3/5/6/12/20 isteklerinde doğru dilimlenir |
 | `TestSayfaOnbellekIleUyum` | N+1 düzeltmeleri önbellek kapsamını değiştirmedi |
+| `TestLinkSuggestionsSorgusu` | alaka havuzu aday CTE'si + deterministik tie-break |
 | `BenchmarkResizeToWidth*`, `BenchmarkCreateThumb*` | görsel kazancı ölçülebilir kalır |
 | `BenchmarkRenderDesign` | manşet raster'ının maliyeti (10,1 ms) takip edilir |
 
@@ -626,10 +673,15 @@ limit aşımı GC'ye değil **OOMKill**'e gidiyordu. Normal kullanımın çok
 ## 5. Sırada ne var (ölçümle doğrulanmış adaylar)
 
 1. **Önbellek ıskası (soğuk istek).** Isabet 0,16 ms (makale: 0,4 ms);
-   ıska c=1 p50 7,8 ms ana sayfa, 20–100 ms makale. Bayat sun ve makale
-   önbelleği ile ıska artık kullanıcıya yansımıyor (bkz. §2.12, §2.14).
-   Sorgu sayısı §2.16'da 28/25'e indi ama **gecikme kazancı ~2 ms**;
-   toplu `pgx.Batch` artık düşük getirili.
+   ıska makale ~79 ms (§2.17), ana sayfa ~104 ms (§2.16). Bayat sun ve
+   makale önbelleği ile ıska kullanıcıya yansımıyor (bkz. §2.12, §2.14).
+   Sıradaki en büyük kalem artık **gzip ile şablon render'ı**: soğuk
+   profilde `flate` ~%17, `Syscall6` ~%12.
+2. **`updated_at` yığını.** Binlerce içerik aynı `updated_at` değerini
+   taşıyor (toplu güncelleme). Bu, "en yeni" sıralamalarını anlamsız
+   kılıyor (§2.17'de tie-break zorunlu hale geldi). Veri tarafında
+   `updated_at`'in gerçekten "son editoryal değişiklik" olması sağlanmalı;
+   şu an crawler her upsert'te tazeliyor.
 2. **TTL ve tazelik ayarı — yapıldı** (`SAYFA_ONBELLEK_TTL` /
    `SAYFA_ONBELLEK_BAYAT`, §2.12). Varsayılan 10 sn taze + 30 sn bayat.
 3. **`/media/thumb` ve `/media/variant`**: ilk istekte üretiliyor, sonra
