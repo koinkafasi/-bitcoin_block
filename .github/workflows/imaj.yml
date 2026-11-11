@@ -70,6 +70,9 @@ jobs:
           curl -fsSLO "$B/trivy_${TRIVY_SURUM}_checksums.txt"
           sha256sum -c --ignore-missing "trivy_${TRIVY_SURUM}_checksums.txt"
           tar xzf "$T"
+          # `install` hedef DİZİNİ oluşturmaz; runner'da ~/.local/bin yok
+          # (11 Kasım 2026: "invalid target ... No such file or directory").
+          mkdir -p "$HOME/.local/bin"
           install -m 0755 trivy "$HOME/.local/bin/trivy"
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
           "$HOME/.local/bin/trivy" --version

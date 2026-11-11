@@ -65,6 +65,9 @@ jobs:
           curl -fsSLO "$B/golangci-lint-${GOLANGCI_SURUM#v}-checksums.txt"
           grep " $T\$" "golangci-lint-${GOLANGCI_SURUM#v}-checksums.txt" | sha256sum -c -
           tar xzf "$T"
+          # `install` hedef DİZİNİ oluşturmaz; runner'da ~/.local/bin yok
+          # (11 Kasım 2026: "invalid target ... No such file or directory").
+          mkdir -p "$HOME/.local/bin"
           install -m 0755 "golangci-lint-${GOLANGCI_SURUM#v}-linux-amd64/golangci-lint" \
             "$HOME/.local/bin/golangci-lint"
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
