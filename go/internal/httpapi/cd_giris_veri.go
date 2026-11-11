@@ -46,6 +46,7 @@ func (s *Server) cdGirisOlustur(ctx context.Context) templkit.CDGiris {
 		{No: "03", Metin: "Doğrulanmış Kaynak"},
 	}
 	g.Guncelleme = cdYasMetni(v.Cekildi)
+	g.Cekildi = v.Cekildi
 
 	g.BTCFiyat = repo.FiyatBicim(v.BTCFiyat)
 	g.BTCDegisim = repo.DegisimBicim(v.BTC24)

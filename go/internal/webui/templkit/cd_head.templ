@@ -76,6 +76,11 @@ type CDHead struct {
 	// giriş hero'sunun ~9 KB'ı oraya eklenirse bütçe aşılırdı; hero
 	// yalnız ana sayfada basıldığı için stil de yalnız orada yükleniyor.
 	EkCSS []string
+	// EkJS sayfaya özel ek betikler (/static/... yolu, defer ile).
+	//
+	// CSP `script-src 'self'`: yalnız kendi origin'imizden. Ana sayfa
+	// hero'sunun canlı yoklaması bu yolla yükleniyor.
+	EkJS []string
 }
 
 // CDMeta tek bir `<meta name="…" content="…">` satırı.
@@ -211,6 +216,17 @@ templ cdHead(h CDHead) {
 	}
 	<!-- CSP uyumlu delege dinleyiciler (data-* öznitelikleri) -->
 	<script src={ "/static/csp-delegated.js?v=" + cdVarlik() } defer></script>
+	for _, ek := range h.EkJS {
+		<script src={ ek + "?v=" + cdVarlik() } defer></script>
+	}
+	<!-- CANLI PİYASA (11 Kasım 2026): üst şerit HER sayfada olduğu için
+	     betik de her sayfada. Akış yalnız sayfada canlı yüzey varsa açılır
+	     (cd-canli.js ilk satırda kendini kontrol eder). -->
+	<script src={ "/static/cd-canli.js?v=" + cdVarlik() } defer></script>
+	<!-- CANLI PİYASA (11 Kasım 2026): üst şerit HER sayfada olduğu için
+	     betik de her sayfada. Akış yalnız sayfada canlı yüzey varsa açılır
+	     (cd-canli.js ilk satırda kendini kontrol eder). -->
+	<script src={ "/static/cd-canli.js?v=" + cdVarlik() } defer></script>
 	<!-- Tema başlangıcı — BLOKLAYICI ve head'de olmalı: gövde boyanmadan
 	     önce html sınıfı yazılmazsa koyu tema seçen kullanıcı bir kare
 	     beyaz görür (FOUC). CSP satır içi betiğe izin veriyor çünkü

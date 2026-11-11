@@ -296,6 +296,13 @@ func (s *Server) routes() {
 	s.mux.HandleFunc("GET /readyz", s.handleReadyz)
 	s.mux.HandleFunc("POST /csp-rapor", s.handleCSPReport)
 	s.mux.HandleFunc("GET /{$}", s.handleCDHome)
+	// Canlı piyasa verisi (11 Kasım 2026): ana sayfa hero'su ve üst şerit
+	// bunu yoklar. `/canli/` öneki sayfa önbelleğinden ve gzip'ten MUAF
+	// (bkz. sayfa_onbellek.go, gzip.go) — her istek sunucuya ulaşır.
+	s.mux.HandleFunc("GET /canli/giris", s.handleCDGirisCanli)
+	// Sunucudan İTME (SSE, 11 Kasım 2026): fiyat değiştiği anda tüm bağlı
+	// tarayıcılara yazılır. Tarayıcı yoklaması yerine bu kullanılıyor.
+	s.mux.HandleFunc("GET /canli/piyasa", s.handleCanliPiyasaSSE)
 	// Eski (theblock) düzeni karşılaştırma için korunur.
 	s.mux.HandleFunc("GET /klasik", s.handleHome)
 	s.mux.HandleFunc("GET /cd", s.handleCDHome)

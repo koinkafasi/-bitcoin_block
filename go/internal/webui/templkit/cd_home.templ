@@ -843,8 +843,10 @@ templ cdPriceTable(baslik string, rows []CDPriceRow) {
 				</tr>
 			</thead>
 			<tbody>
+				<!-- data-cg-coin: canlı akış fiyatı DEĞİŞTİĞİ ANDA tazeler
+				     (cd-canli.js). Sembolle eşleşir. -->
 				for _, r := range rows {
-					<tr>
+					<tr data-cg-coin={ r.Sym }>
 						<td>{ r.Rank }</td>
 						<td>
 							<a href={ r.Href }>
@@ -852,12 +854,12 @@ templ cdPriceTable(baslik string, rows []CDPriceRow) {
 								<span class="cd-card__meta"> { r.Name }</span>
 							</a>
 						</td>
-						<td class="num">{ r.Price }</td>
+						<td class="num" data-cg-coin-fiyat>{ r.Price }</td>
 						<td class="num">
 							if r.Up {
-								<span class="cd-up">{ r.Change }</span>
+								<span class="cd-up" data-cg-coin-degisim>{ r.Change }</span>
 							} else {
-								<span class="cd-down">{ r.Change }</span>
+								<span class="cd-down" data-cg-coin-degisim>{ r.Change }</span>
 							}
 						</td>
 					</tr>

@@ -119,6 +119,14 @@ func main() {
 	go scheduler.RunGundem(workerCtx, pool, logger, 60*time.Second)
 	go scheduler.RunServices(workerCtx, pool, logger, 30*time.Minute)
 	go scheduler.RunFinance(workerCtx, pool, logger, 2*time.Minute)
+	// CANLI PİYASA MERKEZİ (11 Kasım 2026): Binance fiyatlarını 5 sn'de bir
+	// tazeler ve DEĞİŞTİĞİ ANDA bağlı tüm tarayıcılara iter (SSE).
+	// Sayfa isteklerinden bağımsız: kimse girmezse de önbellek sıcak kalır.
+	app.CanliPiyasaBaslat(workerCtx)
+	// CANLI PİYASA MERKEZİ (11 Kasım 2026): Binance fiyatlarını 5 sn'de bir
+	// tazeler ve DEĞİŞTİĞİ ANDA bağlı tüm tarayıcılara iter (SSE).
+	// Sayfa isteklerinden bağımsız: kimse girmezse de önbellek sıcak kalır.
+	app.CanliPiyasaBaslat(workerCtx)
 	go scheduler.RunTrends(workerCtx, pool, logger, 6*time.Hour)
 	go scheduler.RunTrendFetch(workerCtx, pool, logger, 30*time.Second)
 	go scheduler.RunTrendScore(workerCtx, pool, logger, 15*time.Minute)
@@ -265,7 +273,7 @@ func runMigrations(ctx context.Context, logger *slog.Logger, databaseURL string)
 		logger.Error("migration bağlantısı kurulamadı", "error", err)
 		os.Exit(1)
 	}
-	defer conn.Close(ctx)
+	defer func() { _ = conn.Close(ctx) }()
 	applied, err := db.Up(ctx, conn)
 	if err != nil {
 		logger.Error("migration başarısız", "error", err)

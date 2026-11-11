@@ -71,6 +71,14 @@ templ cdTicker(s CDShell) {
 						}
 					</div>
 				</div>
+				<!-- data-cg-sym: canlı akış (/canli/piyasa, SSE) bu kalemi
+				     sembolle bulup fiyatını DEĞİŞTİĞİ ANDA tazeler
+				     (cd-canli.js). Yorum döngünün DIŞINDA: içeride her
+				     kalem için tekrarlanıp HTML'i şişiriyordu. -->
+				<!-- data-cg-sym: canlı akış (/canli/piyasa, SSE) bu kalemi
+				     sembolle bulup fiyatını DEĞİŞTİĞİ ANDA tazeler
+				     (cd-canli.js). Yorum döngünün DIŞINDA: içeride her
+				     kalem için tekrarlanıp HTML'i şişiriyordu. -->
 				for i, it := range s.Ticker {
 					if i > 0 {
 						<!-- Kalemler arası dikey ayırıcı — CoinDesk'te
@@ -82,7 +90,7 @@ templ cdTicker(s CDShell) {
 					     /markets'e gider. `Href` boşsa bağlantı kurulmaz
 					     (ölü "/price/BIST" adresi basılmaz). -->
 					if it.Href != "" {
-						<a class="cd-ticker__item" href={ templ.SafeURL(it.Href) }>
+						<a class="cd-ticker__item" data-cg-sym={ it.Sym } href={ templ.SafeURL(it.Href) }>
 							<span class="cd-ticker__sym">{ it.Sym }</span>
 							<span class="cd-ticker__alt">
 								<span class="cd-ticker__px">{ it.Price }</span>
@@ -94,7 +102,7 @@ templ cdTicker(s CDShell) {
 							</span>
 						</a>
 					} else {
-						<span class="cd-ticker__item">
+						<span class="cd-ticker__item" data-cg-sym={ it.Sym }>
 							<span class="cd-ticker__sym">{ it.Sym }</span>
 							<span class="cd-ticker__alt">
 								<span class="cd-ticker__px">{ it.Price }</span>

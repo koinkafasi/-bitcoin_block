@@ -47,10 +47,12 @@ templ CDCoinPageView(v CDCoinPage) {
 				</nav>
 				<header class="cd-coin-head">
 					<h1>{ v.Name } <span class="cd-coin-sym">{ v.Sym }</span></h1>
+					<!-- data-cg-coin*: canlı akış bu sayfanın fiyatını da
+					     tazeler (cd-canli.js); varlık sembolüyle eşleşir. -->
 					<div class="cd-coin-price">
-						<strong>{ v.Price }</strong>
+						<strong data-cg-coin-fiyat={ v.Sym }>{ v.Price }</strong>
 						if v.Up {
-							<span class="cd-up">{ v.Change }</span>
+							<span class="cd-up" data-cg-coin-degisim>{ v.Change }</span>
 						} else {
 							<span class="cd-down">{ v.Change }</span>
 						}
