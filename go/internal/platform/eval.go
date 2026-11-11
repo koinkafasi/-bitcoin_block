@@ -17,7 +17,7 @@ func EvalCalc(expr string, vars map[string]float64) (float64, error) {
 	p := &calcParser{tokens: tokenizeCalc(expr)}
 	v, err := p.parseExpr()
 	if err != nil {
-		return 0, fmt.Errorf("%w: %v", errExpr, err)
+		return 0, fmt.Errorf("%w: %w", errExpr, err)
 	}
 	return v, nil
 }

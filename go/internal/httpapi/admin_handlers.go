@@ -1322,7 +1322,7 @@ func (s *Server) handleContentAutosave(w http.ResponseWriter, r *http.Request) {
 		s.writeJSON(w, http.StatusBadRequest, map[string]any{"ok": false, "hata": "başlık boş"})
 		return
 	}
-	version := int64(parseID(r.FormValue("version")))
+	version := parseID(r.FormValue("version"))
 	detay := parseDetailInput(r.FormValue("detay"))
 	newVersion, err := repo.SaveContentDraft(ctx, s.pool, id, version, baslik,
 		strings.TrimSpace(r.FormValue("spot")), detay)
@@ -1760,11 +1760,9 @@ func (s *Server) handleAIAction(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) runAIAction(r *http.Request, kind, input string, contentID, userID int64) (string, error) {
 	prompt := userPrompt(kind, input)
-	provider := "mock"
 	name := "mock"
 	if s.ai.Enabled() {
-		provider = s.ai.Providers()[0]
-		name = provider
+		name = s.ai.Providers()[0]
 	}
 	out, err := s.ai.Chat(r.Context(), []ai.Msg{
 		{Role: ai.RoleSystem, Content: systemPrompt()},
@@ -2911,22 +2909,6 @@ func (s *Server) buildReportsData(r *http.Request) *tmplData {
 	}
 	d.Reports = rd
 	return d
-}
-
-func (s *Server) renderReportsPanel(w http.ResponseWriter, r *http.Request, kind, text string) {
-	d := s.buildReportsData(r)
-	if kind != "" {
-		d.Flash = &flashMsg{Kind: kind, Text: text}
-	}
-	s.renderRaporlarPanelV2(w, r, d)
-}
-
-func (s *Server) reportsResult(w http.ResponseWriter, r *http.Request, kind, text string) {
-	if IsHTMX(r) {
-		s.renderReportsPanel(w, r, kind, text)
-		return
-	}
-	s.flashRedirect(w, r, "/admin/raporlar", kind, text)
 }
 
 func (s *Server) handleReportsAIExport(w http.ResponseWriter, r *http.Request) {

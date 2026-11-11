@@ -26,7 +26,7 @@ func WebpFromJpeg(jpeg []byte, quality int) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer os.RemoveAll(dir)
+	defer func() { _ = os.RemoveAll(dir) }()
 	in := filepath.Join(dir, "in.jpg")
 	out := filepath.Join(dir, "out.webp")
 	if err := os.WriteFile(in, jpeg, 0o644); err != nil {

@@ -162,20 +162,6 @@ type cdFooterBolum struct {
 	Links [][2]string
 }
 
-// cdFooterSutunlari alt bilgi sütunlarını döndürür; içeriği olmayan bölüm
-// satırları elenir.
-//
-// NEDEN: alt bilgi de bir gezinmedir. Ölçüm (6 Kasım 2026): Focus · Video ·
-// Podcast · Analiz · Basın Bültenleri bölümlerinde yayında içerik yoktu,
-// ama alt bilgi beş ölü bağlantı veriyordu. Kural mega menüyle aynı:
-// CDSekme etiketi: "markets" → "Markets Live".
-func cdSekmeEtiketi(tab string) string {
-	if tab == "stocks" {
-		return "Hisse Senetleri"
-	}
-	return "Canlı Piyasalar"
-}
-
 // cdSiraya numarayı 1-tabanlı metne çevirir (0 → "1").
 func cdSiraya(i int) string {
 	return strconv.Itoa(i + 1)

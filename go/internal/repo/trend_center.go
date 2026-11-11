@@ -549,7 +549,7 @@ func ReplaceTrendMatches(ctx context.Context, pool *pgxpool.Pool, termID int64, 
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback(ctx)
+	defer func() { _ = tx.Rollback(ctx) }()
 	if _, err := tx.Exec(ctx, `DELETE FROM trend_matches WHERE term_id=$1`, termID); err != nil {
 		return err
 	}
@@ -950,7 +950,7 @@ func SaveGSCQueries(ctx context.Context, pool *pgxpool.Pool, siteID int64, prope
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback(ctx)
+	defer func() { _ = tx.Rollback(ctx) }()
 	for _, r := range rows {
 		if _, err := tx.Exec(ctx, `INSERT INTO gsc_queries
 			(site_id, property, day, query, page, clicks, impressions, ctr, position)

@@ -6,8 +6,6 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-
-	"theblock/site/internal/webui"
 )
 
 // Mega menü sözleşmesi: MENÜYE YALNIZ VAR OLAN SAYFA YAZILIR.
@@ -29,15 +27,6 @@ var oluHedefler = []string{
 	"/index/cd20", "/index/xbx", "/index/etx",
 	"/price/stock/spy", "/price/stock/coin",
 	"/events",
-}
-
-func cdMenuKaynak(t *testing.T) string {
-	t.Helper()
-	b, err := webui.FS.ReadFile("static/cd-menu.css")
-	require.NoError(t, err, "cd-menu.css okunamadı")
-	// .templ/.go dosyaları embed'e dahil değil; sabitler Go kaynağında.
-	_ = b
-	return ""
 }
 
 // TestCDMenuOluHedefYok: menü tanımında ölü hedef kalmamalı.

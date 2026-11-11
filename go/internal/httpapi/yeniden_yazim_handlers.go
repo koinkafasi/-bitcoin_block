@@ -1,6 +1,7 @@
 package httpapi
 
 import (
+	"errors"
 	"net/http"
 	"strconv"
 	"strings"
@@ -205,7 +206,7 @@ func (s *Server) handleYenidenYazimOnayla(w http.ResponseWriter, r *http.Request
 	u := userFromContext(r.Context())
 	err := repo.YenidenYazimOnayla(r.Context(), s.pool, id, &u.ID)
 	switch {
-	case err == repo.ErrConflict:
+	case errors.Is(err, repo.ErrConflict):
 		s.flashRedirect(w, r, "/admin/yeniden-yazim/"+strconv.FormatInt(id, 10), "error",
 			"İçerik bu arada değişti (başka bir editör kaydetti). Öneri uygulanmadı; yeniden üretin.")
 		return

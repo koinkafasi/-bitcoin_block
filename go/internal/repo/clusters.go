@@ -61,7 +61,7 @@ func SetContentCluster(ctx context.Context, pool *pgxpool.Pool, contentID, clust
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback(ctx)
+	defer func() { _ = tx.Rollback(ctx) }()
 	if _, err := tx.Exec(ctx, `DELETE FROM content_clusters WHERE content_id = $1`, contentID); err != nil {
 		return err
 	}

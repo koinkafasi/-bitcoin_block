@@ -2,6 +2,7 @@ package repo
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/jackc/pgx/v5"
@@ -37,7 +38,7 @@ func scanEvent(row pgx.Row) (Event, error) {
 	var e Event
 	err := row.Scan(&e.ID, &e.SiteID, &e.Title, &e.Description, &e.Location, &e.URL,
 		&e.CategoryID, &e.StartAt, &e.EndAt, &e.RemindDays, &e.Status, &e.CreatedAt, &e.UpdatedAt, &e.CategoryName)
-	if err == pgx.ErrNoRows {
+	if errors.Is(err, pgx.ErrNoRows) {
 		return Event{}, ErrNotFound
 	}
 	return e, err

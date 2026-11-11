@@ -42,6 +42,22 @@ sonar-tara: ## Kapsamı üret + SonarQube taraması
 sonar-durum: ## Kalite kapısı + açık bulgular özeti
 	@bash deploy/scripts/sonar-durum.sh
 
+# ---- Go statik analizi (golangci-lint) ----
+# CI'da kapı YENİ KOD üzerinde (`lint-yeni`); tam depo yalnız rapor.
+lint: ## Tam depo lint raporu (bloklamaz, borcu gösterir)
+	@bash deploy/scripts/lint.sh
+
+lint-yeni: ## Yeni kodda 0 bulgu kapısı (CI ile aynı; kırmızıysa çıkış 1)
+	@bash deploy/scripts/lint.sh --kapi
+
+# ---- Tedarik zinciri ----
+tedarik-dogrula: ## cosign imza + SBOM doğrulaması (sevk öncesi)
+	@bash deploy/scripts/imaj-dogrula.sh
+
+dal-koruma: ## GitHub dal koruması + gizli tarama ayarları (bir kez)
+	@bash deploy/scripts/dal-koruma.sh
+
 .PHONY: yardim guvenlik-tara guvenlik-rapor guvenlik-imaj performans \
         performans-rapor derle templ tunnel-durum \
-        sonar-kur sonar-tara sonar-durum
+        sonar-kur sonar-tara sonar-durum \
+        lint lint-yeni tedarik-dogrula dal-koruma

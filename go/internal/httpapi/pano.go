@@ -18,8 +18,6 @@ import (
 // ayrı adreste büyüyor, beğenilince /admin'e taşınacak. Böylece iki düzen
 // yan yana karşılaştırılabiliyor ve geri dönüş için bayrak gerekmiyor.
 
-const panoAraliklar = 3 // 7 / 14 / 30 gün seçenekleri
-
 // Yayın şeridi kart ölçüleri. Genişlik yüzde olarak sabit: kart içeriği
 // başlık + saat, süre bilgisi yok — kartın gerçek süresi bilinmediği için
 // genişliği süreye bağlamak yanıltıcı bir kesinlik üretirdi.

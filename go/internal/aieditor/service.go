@@ -251,7 +251,7 @@ func (s *Service) ProcessJob(ctx context.Context, jobID int64) (Result, error) {
 			if errors.Is(rerr, research.ErrDisabled) {
 				return Result{}, s.failJob(ctx, jobID, fmt.Errorf("%w: BRAVE_SEARCH_API_KEY tanımlı değil", ErrResearchUnavailable))
 			}
-			return Result{}, s.failJob(ctx, jobID, fmt.Errorf("%w: %v", ErrResearchUnavailable, rerr))
+			return Result{}, s.failJob(ctx, jobID, fmt.Errorf("%w: %w", ErrResearchUnavailable, rerr))
 		}
 		if len(items) == 0 {
 			return Result{}, s.failJob(ctx, jobID, errors.New("araştırma için kaynak bulunamadı; doğrulama yapılmadı"))
@@ -305,7 +305,7 @@ func (s *Service) ProcessJob(ctx context.Context, jobID int64) (Result, error) {
 		})
 	}
 	if err != nil {
-		return Result{}, s.failJob(ctx, jobID, fmt.Errorf("%w: %v", ErrAIUnavailable, err))
+		return Result{}, s.failJob(ctx, jobID, fmt.Errorf("%w: %w", ErrAIUnavailable, err))
 	}
 	raw, err := parseJSONObject(resp.Text)
 	if err != nil {

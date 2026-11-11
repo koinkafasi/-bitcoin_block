@@ -35,15 +35,6 @@ func (s *Server) systemUserID(ctx context.Context) int64 {
 // doldurularak). Sonuç medya olarak saklanır ve (içerik_id, şablon_id) ile
 // önbelleğe alınır; içerik güncellenince otomatik yeniden üretilir.
 
-// coverBlockTypes bu tiplerin bloklarında kapak tasarımı görselleri değiştirir.
-var coverBlockTypes = map[string]bool{
-	"slider":       true,
-	"manset6":      true,
-	"manset":       true,
-	"one_cikanlar": true,
-	"ust_manset":   true,
-}
-
 // applyDesignCover bloğun Slider/Items görsellerini seçilen şablonla üretilen
 // kapak medyasıyla değiştirir. Şablon yoksa veya içerik hatası çıkarsa içeriğin
 // kendi görseli bozulmadan kalır (sessiz hata, görsel yolundan düşme).

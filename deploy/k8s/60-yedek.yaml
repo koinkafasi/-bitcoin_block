@@ -54,6 +54,7 @@ spec:
         spec:
           # Service Account token'i POD'A BAGLAMA (Sonar S6865): yedek
           # Job'i Kubernetes API'sini kullanmiyor.
+          serviceAccountName: theblock-yedek
           automountServiceAccountToken: false
           restartPolicy: Never
           securityContext:
@@ -78,6 +79,13 @@ spec:
                   valueFrom: { secretKeyRef: { name: theblock-env, key: POSTGRES_DB } }
                 - name: PGHOST
                   value: theblock-postgres
+                # verify-full: sunucu sertifikasi CA'ya karsi dogrulanir.
+                # `prefer` (libpq varsayilani) TLS'i dener ama dogrulamaz —
+                # yani araya giren biri yedegi okuyabilirdi.
+                - name: PGSSLMODE
+                  value: verify-full
+                - name: PGSSLROOTCERT
+                  value: /etc/pg-tls/ca.crt
                 - name: SAKLAMA_GUN
                   value: "14"
               command: ["/bin/sh", "-c"]
@@ -103,6 +111,7 @@ spec:
               volumeMounts:
                 - { name: yedek, mountPath: /yedek }
                 - { name: tmp, mountPath: /tmp }
+                - { name: pg-tls, mountPath: /etc/pg-tls, readOnly: true }
               resources:
                 requests: { cpu: 50m, memory: 64Mi, ephemeral-storage: 8Gi }
                 limits: { cpu: 500m, memory: 256Mi, ephemeral-storage: 8Gi }
@@ -111,6 +120,12 @@ spec:
               persistentVolumeClaim: { claimName: theblock-backup }
             - name: tmp
               emptyDir: {}
+            - name: pg-tls
+              secret:
+                secretName: theblock-pg-tls
+                defaultMode: 0444
+                items:
+                  - { key: ca.crt, path: ca.crt }
 
 ---
 apiVersion: batch/v1
@@ -136,6 +151,7 @@ spec:
         spec:
           # Service Account token'i POD'A BAGLAMA (Sonar S6865): yedek
           # Job'i Kubernetes API'sini kullanmiyor.
+          serviceAccountName: theblock-yedek
           automountServiceAccountToken: false
           restartPolicy: Never
           securityContext:

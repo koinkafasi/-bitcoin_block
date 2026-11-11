@@ -224,19 +224,19 @@ func (s *Server) gazeteMatbaaUret(ctx context.Context, siteID, issueID int64) (g
 	if err != nil {
 		return rap, err
 	}
-	defer os.RemoveAll(dir)
+	defer func() { _ = os.RemoveAll(dir) }()
 
 	htmlPath := filepath.Join(dir, "matbaa.html")
 	if err := os.WriteFile(htmlPath, []byte(gazeteBaskiMedyaMutlak(htmlDoc)), 0o644); err != nil {
 		return rap, err
 	}
 	hamPDF := filepath.Join(dir, "ham.pdf")
-	cmd := exec.CommandContext(ctx, chrome,
+	cmd := exec.CommandContext(ctx, chrome, // #nosec G702 -- sabit bayraklar + MkdirTemp yolu (G703 notuyla aynı gerekçe)
 		"--headless=new", "--disable-gpu", "--no-sandbox", "--disable-dev-shm-usage",
 		"--no-pdf-header-footer", "--virtual-time-budget=20000",
 		"--print-to-pdf="+hamPDF, "file://"+htmlPath)
 	if out, err := cmd.CombinedOutput(); err != nil {
-		return rap, fmt.Errorf("baskı PDF'i üretilemedi: %v (%s)", err, firstLine(string(out), 200))
+		return rap, fmt.Errorf("baskı PDF'i üretilemedi: %w (%s)", err, firstLine(string(out), 200))
 	}
 
 	ayar := s.gazeteMatbaaAyari(ctx)
@@ -265,8 +265,11 @@ func (s *Server) gazeteMatbaaUret(ctx context.Context, siteID, issueID int64) (g
 	}
 	args = append(args, defPath, hamPDF)
 
-	if out, err := exec.CommandContext(ctx, gsYol, args...).CombinedOutput(); err != nil {
-		return rap, fmt.Errorf("PDF/X dönüşümü başarısız: %v (%s)", err, firstLine(string(out), 300))
+	// #nosec G702 -- komut adı sabit (gsYol), argv sabit bayraklar +
+	// MkdirTemp kaynaklı yollar; dış girdi komut adına girmiyor.
+	gsKomut := exec.CommandContext(ctx, gsYol, args...)
+	if out, err := gsKomut.CombinedOutput(); err != nil {
+		return rap, fmt.Errorf("PDF/X dönüşümü başarısız: %w (%s)", err, firstLine(string(out), 300))
 	}
 
 	rap = s.gazeteMatbaaPreflight(ctx, matbaaPDF, rap)
@@ -299,7 +302,9 @@ func gazeteMmSayi(s string) float64 {
 func (s *Server) gazeteMatbaaPreflight(ctx context.Context, yol string, rap gazeteMatbaaRapor) gazeteMatbaaRapor {
 	ekle := func(f string, a ...any) { rap.Uyarilar = append(rap.Uyarilar, fmt.Sprintf(f, a...)) }
 
-	if b, err := exec.CommandContext(ctx, "pdfinfo", "-box", yol).Output(); err == nil {
+	// #nosec G702 -- komut adı ve bayraklar sabit; yol çağırandan gelir
+	pdfinfoKomut := exec.CommandContext(ctx, "pdfinfo", "-box", yol)
+	if b, err := pdfinfoKomut.Output(); err == nil {
 		metin := string(b)
 		for _, satir := range strings.Split(metin, "\n") {
 			alan := strings.SplitN(satir, ":", 2)
@@ -336,7 +341,9 @@ func (s *Server) gazeteMatbaaPreflight(ctx context.Context, yol string, rap gaze
 		ekle("çıktı amacı (OutputIntent) yok: dosya PDF/X sayılmaz")
 	}
 
-	if b, err := exec.CommandContext(ctx, "pdffonts", yol).Output(); err == nil {
+	// #nosec G702 -- komut adı ve bayraklar sabit; yol çağırandan gelir
+	pdffontsKomut := exec.CommandContext(ctx, "pdffonts", yol)
+	if b, err := pdffontsKomut.Output(); err == nil {
 		satirlar := strings.Split(string(b), "\n")
 		for i, satir := range satirlar {
 			if i < 2 || strings.TrimSpace(satir) == "" {
@@ -371,7 +378,6 @@ func (s *Server) gazeteMatbaaPreflight(ctx context.Context, yol string, rap gaze
 func (s *Server) gazeteMatbaaHTML(ctx context.Context, siteID int64,
 	iss repo.GazeteIssue, belge gazeteSablonDoc, boyut gazeteSayfaBoyut,
 	tasmaMm float64) (string, error) {
-
 	pages, err := repo.ListGazetePages(ctx, s.pool, iss.ID)
 	if err != nil {
 		return "", err

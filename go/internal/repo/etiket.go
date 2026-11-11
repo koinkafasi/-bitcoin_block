@@ -4,8 +4,9 @@ import (
 	"context"
 	"strings"
 
-	"github.com/jackc/pgx/v5/pgxpool"
 	"theblock/site/internal/platform"
+
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 // baglaEtiketler, kaynağın RSS <category> değerlerini `tags` tablosuna

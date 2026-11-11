@@ -145,7 +145,7 @@ func isGIF(data []byte) bool {
 // arındırılır (platform.SanitizeSVG).
 func (s *Server) saveBackgroundImage(r *http.Request, data []byte, filename string) (int64, error) {
 	ext := strings.ToLower(filepath.Ext(filename))
-	mime := ""
+	var mime string
 	width, height := 0, 0
 
 	if detectSVG(ext, data) {

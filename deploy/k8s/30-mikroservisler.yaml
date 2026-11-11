@@ -31,6 +31,7 @@ spec:
       # Service Account token'i POD'A BAGLAMA (Sonar S6865): pod'lar
       # Kubernetes API'sini kullanmiyor; token mount edilirse ele gecirilen
       # bir container kume API'sine konusabilir.
+      serviceAccountName: theblock-image-svc
       automountServiceAccountToken: false
       imagePullSecrets: [{ name: ghcr }]
       securityContext:
@@ -92,6 +93,7 @@ spec:
       # Service Account token'i POD'A BAGLAMA (Sonar S6865): pod'lar
       # Kubernetes API'sini kullanmiyor; token mount edilirse ele gecirilen
       # bir container kume API'sine konusabilir.
+      serviceAccountName: theblock-search-svc
       automountServiceAccountToken: false
       imagePullSecrets: [{ name: ghcr }]
       securityContext:
@@ -152,6 +154,7 @@ spec:
       # Service Account token'i POD'A BAGLAMA (Sonar S6865): pod'lar
       # Kubernetes API'sini kullanmiyor; token mount edilirse ele gecirilen
       # bir container kume API'sine konusabilir.
+      serviceAccountName: theblock-collab
       automountServiceAccountToken: false
       imagePullSecrets: [{ name: ghcr }]
       securityContext:

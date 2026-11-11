@@ -157,12 +157,6 @@ func cdMakaleDilimi(dosya string) (int, bool) {
 	return n, true
 }
 
-// handleSitemapArticles eski imza (tek dilim) — dilim numarası handler'da
-// çözüldüğü için bu sarmalayıcı yalnız testler/uyumluluk için duruyor.
-func (s *Server) handleSitemapArticles(w http.ResponseWriter, r *http.Request, n int) {
-	s.handleSitemapArticlesDilim(w, r, n)
-}
-
 // handleSitemapArticlesDilim /sitemaps/articles-N.xml — haber arşivi dilimi.
 func (s *Server) handleSitemapArticlesDilim(w http.ResponseWriter, r *http.Request, n int) {
 	ctx := r.Context()

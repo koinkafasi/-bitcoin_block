@@ -241,19 +241,6 @@ func (s *Server) kategoriID(ctx context.Context, slug string) int64 {
 	return v
 }
 
-// cdShell ortak kabuk verisini kurar (nav + arama + dil + mega menü verisi).
-//
-// Mega menünün etiket ve fiyat sütunları da BURADA doldurulur: menü her
-// sayfada aynı görünmeli. Ayrı bir "zengin" varyant tutmak, ana sayfada
-// menünün eksik kalmasına yol açtı (ölçüm: etiket sütunu yalnız liste
-// sayfalarında vardı).
-//
-// Maliyet: iki hafif sorgu — fiyat 60 sn önbellekli (repo.Fiyatlar), etiket
-// sorgusu indeksli GROUP BY. Sayfa başına <1 ms; karşılığında menü tutarlı.
-func (s *Server) cdShell(aktif string) templkit.CDShell {
-	return s.cdShellCtx(context.Background(), nil, aktif)
-}
-
 // cdShellOturum oturum bilgisini kabuğa işler (üst çubuk menüsü).
 //
 // Giriş bağlantıları TEMİZLENİR: şablon `LoggedIn` dalına geçiyor ama

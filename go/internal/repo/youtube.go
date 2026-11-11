@@ -177,7 +177,7 @@ func YoutubeCanliAyarla(ctx context.Context, pool DB, videoID string) error {
 // YoutubeBayrak tek bir bayrağı açar/kapatır. alan adı SABİT listeden gelir
 // (SQL'e kullanıcı metni eklenmez).
 func YoutubeBayrak(ctx context.Context, pool DB, videoID, alan string, deger bool) error {
-	kolon := ""
+	var kolon string
 	switch alan {
 	case "one_cikan":
 		kolon = "one_cikan"

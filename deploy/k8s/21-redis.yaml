@@ -17,6 +17,7 @@ spec:
       # Service Account token'i POD'A BAGLAMA (Sonar S6865): pod'lar
       # Kubernetes API'sini kullanmiyor; token mount edilirse ele gecirilen
       # bir container kume API'sine konusabilir.
+      serviceAccountName: theblock-redis
       automountServiceAccountToken: false
       securityContext:
         # redis:7-alpine gercek kimlik: uid 999 / gid 1000 (dogrulandi).

@@ -96,7 +96,7 @@ func main() {
 		fmt.Println("başka bir ceviri-doldur koşusu var; çıkılıyor")
 		return
 	}
-	defer pool.Exec(context.Background(), `SELECT pg_advisory_unlock(4242)`)
+	defer func() { _, _ = pool.Exec(context.Background(), `SELECT pg_advisory_unlock(4242)`) }()
 
 	bekleyen, err := bekleyenSayisi(ctx, pool, *siteID, *kaynak)
 	if err != nil {

@@ -102,6 +102,7 @@ func ParseStripeEvent(payload []byte) (StripeEvent, error) {
 	ev := StripeEvent{ID: raw.ID, Type: raw.Type}
 	var obj map[string]json.RawMessage
 	if err := json.Unmarshal(raw.Data.Object, &obj); err != nil {
+		//nolint:nilerr // olay gövdesinin data.object alanı çözülemezse alanlar boş bırakılır; imza zaten doğrulandı
 		return ev, nil
 	}
 	str := func(k string) string {

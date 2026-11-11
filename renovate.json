@@ -1,0 +1,51 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:best-practices",
+    ":semanticCommitsDisabled",
+    ":dependencyDashboard"
+  ],
+  "timezone": "Europe/Istanbul",
+  "schedule": ["before 6am on monday"],
+  "labels": ["bagimlilik"],
+  "prConcurrentLimit": 3,
+  "rebaseWhen": "conflicted",
+  "rangeStrategy": "pin",
+  "packageRules": [
+    {
+      "description": "GitHub Actions SHA'sı ile sabitlenmiş (zizmor: unpinned-uses). Renovate SHA'yı VE yanındaki # vX.Y.Z yorumunu birlikte günceller; aksi hâlde yorum yalan söyler.",
+      "matchManagers": ["github-actions"],
+      "pinDigests": true,
+      "groupName": "github actions"
+    },
+    {
+      "description": "Go bağımlılıkları: yalnız yama sürümleri otomatik; minor/major insan incelemesi ister (kütüphane davranışı değişebilir).",
+      "matchManagers": ["gomod"],
+      "matchUpdateTypes": ["patch", "digest"],
+      "automerge": false,
+      "groupName": "go yama"
+    },
+    {
+      "description": "Docker imajları (Dockerfile'lardaki FROM): digest + yama otomatik PR, major elle.",
+      "matchManagers": ["dockerfile"],
+      "groupName": "docker imajları"
+    },
+    {
+      "description": "npm: yalnız e2e/araç zinciri; major elle.",
+      "matchManagers": ["npm"],
+      "matchUpdateTypes": ["patch", "minor"],
+      "groupName": "npm"
+    },
+    {
+      "description": "Güvenlik düzeltmeleri beklemez: zamanlamayı atlar.",
+      "matchCategories": ["security"],
+      "schedule": ["at any time"],
+      "labels": ["bagimlilik", "guvenlik"]
+    }
+  ],
+  "vulnerabilityAlerts": {
+    "enabled": true,
+    "labels": ["guvenlik"]
+  },
+  "osvVulnerabilityAlerts": true
+}

@@ -626,7 +626,7 @@ func YenidenYazimOnayla(ctx context.Context, pool *pgxpool.Pool, id int64, userI
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback(ctx)
+	defer func() { _ = tx.Rollback(ctx) }()
 
 	var contentID int64
 	var status string

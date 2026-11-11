@@ -1099,7 +1099,7 @@ func SetContentPublishAt(ctx context.Context, pool *pgxpool.Pool, id int64, t *t
 // SetContentRozet içeriğin editorial rozetini (AM/UM/DM/SD/FH/HK) açar/kapatır
 // (Faz 39 — toplu rozet). Kod sabit whitelist'ten; sütun dinamik birleştirilmez.
 func SetContentRozet(ctx context.Context, pool *pgxpool.Pool, id int64, code string, on bool) error {
-	col := ""
+	var col string
 	switch code {
 	case "AM":
 		col = "is_am"

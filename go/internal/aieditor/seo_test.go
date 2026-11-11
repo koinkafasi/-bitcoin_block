@@ -1,6 +1,7 @@
 package aieditor
 
 import (
+	"context"
 	"os"
 	"strings"
 	"testing"
@@ -104,10 +105,13 @@ func TestSeoAnahtarlarSinirli(t *testing.T) {
 func TestSeoYazForceDavranisi(t *testing.T) {
 	// force=false → yalnız boş alanlar dolar. Bu davranış SeoYaz'ın SQL
 	// CASE ifadesinde; burada imzanın varsayılanını kilitliyoruz.
-	_, err := SeoYaz(nil, nil, 0, SeoOneri{Baslik: "a"}, false)
+	// context.TODO(): nil context Go'da yasaktır (SA1012) — burada DB
+	// katmanına hiç ulaşılmıyor, hata doğrulamada dönüyor; yine de doğru
+	// tür kullanılır ki test yanlış bir alışkanlığı örneklemesin.
+	_, err := SeoYaz(context.TODO(), nil, 0, SeoOneri{Baslik: "a"}, false)
 	assert.Error(t, err, "geçersiz içerik hata vermeli")
 
-	_, err = SeoYaz(nil, nil, 5, SeoOneri{}, false)
+	_, err = SeoYaz(context.TODO(), nil, 5, SeoOneri{}, false)
 	assert.Error(t, err, "boş öneri hata vermeli")
 }
 

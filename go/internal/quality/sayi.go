@@ -85,9 +85,7 @@ func VerifyNumbers(text, source string) SayiRapor {
 func extractNumbers(text string) []string {
 	// Yüzdeleri işaretten bağımsız yakala: %42,3 → 42,3
 	out := make([]string, 0, 8)
-	for _, m := range numRe.FindAllString(text, -1) {
-		out = append(out, m)
-	}
+	out = append(out, numRe.FindAllString(text, -1)...)
 	return out
 }
 
@@ -177,20 +175,6 @@ func isThousandsGrouping(parts []string) bool {
 	}
 	for _, p := range parts[1:] {
 		if len(p) != 3 {
-			return false
-		}
-	}
-	return true
-}
-
-// isSmallPlainNumber 0-99 arası ondalıksız sayı mı? (Yardımcı; denetim
-// akışında kullanılmıyor — sayılar istisnasız doğrulanır.)
-func isSmallPlainNumber(n string) bool {
-	if strings.Contains(n, ".") || len(n) > 2 {
-		return false
-	}
-	for _, r := range n {
-		if !unicode.IsDigit(r) {
 			return false
 		}
 	}

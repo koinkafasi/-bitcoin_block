@@ -19,7 +19,6 @@ import (
 	"theblock/site/internal/auth"
 
 	"theblock/site/internal/cryptoicon"
-	"theblock/site/internal/i18n"
 	"theblock/site/internal/platform"
 	"theblock/site/internal/repo"
 	"theblock/site/internal/webui"
@@ -535,21 +534,6 @@ func uniqueContent(items []repo.Content) []repo.Content {
 	return out
 }
 
-// dropContent listeden verilen kimliği çıkarır ve en fazla n öğe döndürür.
-func dropContent(items []repo.Content, id int64, n int) []repo.Content {
-	out := make([]repo.Content, 0, n)
-	for _, it := range items {
-		if it.ID == id {
-			continue
-		}
-		out = append(out, it)
-		if len(out) >= n {
-			break
-		}
-	}
-	return out
-}
-
 // handleContentPreview taslağı/yayın dışı içeriği okuyucu görünümüyle önizler
 // (Faz 46). Yönetim rotası arkasındadır; yayın kapısı atlanır, hit SAYILMAZ,
 // cache no-store.
@@ -564,274 +548,6 @@ func (s *Server) handleContentPreview(w http.ResponseWriter, r *http.Request) {
 	s.handleCDArticleOnizleme(w, r)
 }
 
-func (s *Server) handleArticle(w http.ResponseWriter, r *http.Request, lang, slug string, id int64, preview bool) {
-	ctx := r.Context()
-	c, err := repo.ContentBySlugAndID(ctx, s.pool, slug, id)
-	if err != nil || (c.Status != "yayinda" && !preview) {
-		s.handleNotFound(w, r)
-		return
-	}
-	// dil eşleşmesi: istenen dilde çeviri varsa oraya yönlendir; yoksa orijinal dilde göster
-	clang := c.Locale
-	if !preview && lang != "" && lang != clang {
-		if trs, err := repo.TranslationsOf(ctx, s.pool, c.TranslationRootID()); err == nil {
-			for _, t := range trs {
-				if t.Locale == lang && t.Status == "yayinda" {
-					http.Redirect(w, r, publicArticleURL(lang, t.DisplaySlug(), t.ID), http.StatusFound)
-					return
-				}
-			}
-		}
-		// çeviri yoksa orijinale kök dil URL'siyle git
-		if lang != clang && lang != "tr" {
-			http.Redirect(w, r, publicArticleURL(clang, c.DisplaySlug(), c.ID), http.StatusFound)
-			return
-		}
-	}
-
-	if !preview {
-		s.okunmaKaydet(ctx, c.ID)
-	}
-	langBase := s.langBase(c.Locale)
-
-	// Alaka motoru: kategori + etiket + başlık örtüşmesi, popülerlik ve
-	// tazelik ağırlıklarıyla sıralar. Havuz boş dönerse geriye uyumlu
-	// ilişki/kategori sorgusuna düşeriz.
-	related, err := repo.SimilarTo(ctx, s.pool, c.ID, c.SiteID, c.Locale, 8)
-	if err != nil || len(related) == 0 {
-		related, _ = repo.RelatedContents(ctx, s.pool, c.SiteID, c.ID, 8)
-	}
-	if len(related) == 0 {
-		related, _ = repo.PublishedBySlug(ctx, s.pool, c.SiteID, catSlugPtr(c.CategorySlug), c.Locale, 8)
-	}
-	comments, _ := repo.ListApprovedComments(ctx, s.pool, c.ID)
-	hits, _ := repo.Hits(ctx, s.pool, c.ID)
-
-	// Sağ sütun widget'ları (haberpi makale düzeni): canlı yayın, ilginizi
-	// çekebilir, trend, son haberler. Hepsi mevcut makalenin dışından seçilir.
-	sideLive, _, _ := repo.ListContents(ctx, s.pool, repo.ListFilter{
-		TypeKey: "video", Status: "yayinda", SiteID: c.SiteID, PerPage: 1, Page: 1,
-	})
-	if len(sideLive) == 0 {
-		sideLive, _, _ = repo.ListContents(ctx, s.pool, repo.ListFilter{
-			TypeKey: "foto_galeri", Status: "yayinda", SiteID: c.SiteID, PerPage: 1, Page: 1,
-		})
-	}
-	sideTrend, _ := repo.TopRead(ctx, s.pool, c.SiteID, 5)
-	sideLatest, _, _ := repo.ListContents(ctx, s.pool, repo.ListFilter{
-		Status: "yayinda", SiteID: c.SiteID, Locale: c.Locale, PerPage: 5, Page: 1,
-	})
-	sidePick := dropContent(related, c.ID, 5)
-	if len(sidePick) < 5 {
-		// havuz dar kaldıysa taze içeriklerle tamamla
-		sidePick = dropContent(append(sidePick, sideLatest...), c.ID, 5)
-	}
-
-	links := s.articleLangLinks(ctx, c)
-	// Sayfa başı hreflang etiketleri: yalnız gerçek çeviri varsa (>=2 dil).
-	hreflangs := hreflangLinks(s.absBase(r),
-		publicArticleURL(c.Locale, c.DisplaySlug(), c.ID), s.i18n.Default(), links)
-	rozets := buildContentRozets(c)
-	tags, _ := repo.TagsOf(ctx, s.pool, c.ID)
-	artHTML := s.blocksToHTML(c.Detail, nil)
-
-	// Faz 36 — yorum ağacı: kök yorumlar, ardından her kökün yanıtları.
-	commentTree := buildCommentTree(comments)
-
-	d := s.baseView(c.Locale, langBase, c.Title)
-	d.Preview = preview
-	d.LangBase = langBase
-	d.HomeURL = homeURL(c.Locale)
-	d.Hreflangs = hreflangs
-	// Google News kaynak bağlantısı sadece domain içerir (Faz 20).
-	d.GoogleSourceURL = template.URL(googleSourceURL(s.absBase(r)))
-	d.NavCategories = s.navCategoriesLang(ctx, c.Locale)
-	d.Menu = s.publicMenuLocale(ctx, c.Locale)
-	d.Footer = s.footerConfigLang(ctx, c.Locale)
-	d.Theme = themeFromReq(r)
-	// Dil-farkında self-canonical (hreflang ile tutarlı).
-	d.Canonical = strings.TrimRight(s.absBase(r), "/") + publicArticleURL(c.Locale, c.DisplaySlug(), c.ID)
-	// SEO: yönetimdeki SEO başlığı/açıklaması öncelikli, yoksa içerik alanları.
-	seoTitle := strings.TrimSpace(c.Title)
-	if c.SeoTitle != nil && strings.TrimSpace(*c.SeoTitle) != "" {
-		seoTitle = strings.TrimSpace(*c.SeoTitle)
-	}
-	// Yerelleştirilmiş site adı kullanılır: makale sayfası başlığı
-	// İngilizce içerikte "… — theblock.com.tr" olarak çıkıyordu (ölçüldü).
-	d.MetaTitle = seoTitle + " — " + d.SiteName
-	seoDesc := ""
-	if c.SeoDesc != nil {
-		seoDesc = *c.SeoDesc
-	}
-	d.MetaDesc = metaDesc(seoDesc, c.Spot, d.SiteSlogan)
-	d.OGType = "article"
-	d.Robots = "index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1"
-	absBase := strings.TrimRight(s.absBase(r), "/")
-	var authorRef *repo.PersonRef
-	if a, err := repo.PersonRefByID(ctx, s.pool, c.AuthorID); err == nil {
-		authorRef = &a
-	}
-	if c.CoverMediaID != nil {
-		d.OGImage = absBase + s.mediaURL(c.CoverMediaID)
-	}
-	crumbs := []crumb{{Name: "Anasayfa", URL: absBase + homeURL(c.Locale)}}
-	if c.CategorySlug != nil {
-		name := ""
-		if c.CategoryName != nil {
-			name = *c.CategoryName
-		}
-		if name != "" {
-			crumbs = append(crumbs, crumb{Name: name, URL: absBase + homeURL(c.Locale) + "kategori/" + *c.CategorySlug})
-		}
-	}
-	crumbs = append(crumbs, crumb{Name: c.Title, URL: d.Canonical})
-
-	d.Article = &articleData{
-		Content:      c,
-		HTML:         artHTML,
-		Rozets:       rozets,
-		Links:        links,
-		Hreflangs:    hreflangs,
-		Related:      related,
-		Fields:       repo.GetContentFields(ctx, s.pool, c.ID),
-		Comments:     comments,
-		CommentCount: len(comments),
-		CommentTree:  commentTree,
-		CanComment:   c.CommentStatus != "kapali",
-		Hits:         hits,
-		Tags:         tags,
-		ReadingMin:   readingMinutes(string(artHTML), c.Spot),
-		SideLive:     sideLive,
-		SidePick:     sidePick,
-		SideTrend:    sideTrend,
-		SideLatest:   sideLatest,
-		JSONLD:       s.articleJSONLD(c, d.Canonical, authorRef, tags),
-		// BreadcrumbList yapısal verisi (görsel kırıntı yoluyla aynı).
-		BreadcrumbJSONLD: breadcrumbJSONLD(crumbs),
-		// Faz 44 — kanal paylaşım düğmeleri: mutlak adres ve Go'da kodlanmış linkler.
-		ShareURL:  strings.TrimRight(s.absBase(r), "/") + publicArticleURL(c.Locale, c.DisplaySlug(), c.ID),
-		ShareBtns: articleShareLinks(strings.TrimRight(s.absBase(r), "/")+publicArticleURL(c.Locale, c.DisplaySlug(), c.ID), c.Title),
-	}
-	// Künye: yazar + (varsa) editör profiline bağlanır (Faz 51).
-	d.Article.Author = authorRef
-	// BİK meta değerleri: yazar belli olduktan SONRA hesaplanır, çünkü
-	// articleAuthor önce fikir işçisinin adını arar (bik.go).
-	d.Article.BIK = buildBikMeta(c, authorRef, d.Canonical)
-	if e, err := repo.ContentEditor(ctx, s.pool, c.ID); err == nil {
-		d.Article.Editor = e
-	}
-	// Kategori rozet haritası (Faz 16): önerilen video kartı ve komşu haber
-	// bandlarında kategori adı göstermek için. cachedCategories önbellekli
-	// olduğu için ek sorgu yoktur.
-	if cats := s.cachedCategories(ctx, c.SiteID); len(cats) > 0 {
-		m := make(map[int64]CatBadge, len(cats))
-		for _, cat := range cats {
-			m[cat.ID] = CatBadge{Name: cat.Name, Slug: cat.Slug}
-		}
-		d.Article.CatBadges = m
-	}
-	// Önerilen video (Faz 12): kart gövde sonuna basılır. Öncelik:
-	// 1) elle bağlanan (related_video_id), 2) aynı kategorideki video,
-	// 3) en son video (sideLive). Hiç video yoksa nil → kart basılmaz.
-	var pick func(list []repo.Content) *repo.Content
-	pick = func(list []repo.Content) *repo.Content {
-		if len(list) > 0 {
-			v := list[0]
-			return &v
-		}
-		return nil
-	}
-	if vid, err := repo.RelatedVideoID(ctx, s.pool, c.ID); err == nil && vid > 0 {
-		if vc, err := repo.GetContent(ctx, s.pool, vid); err == nil && vc.Status == "yayinda" {
-			d.Article.RelatedVideo = &vc
-		}
-	}
-	if d.Article.RelatedVideo == nil && c.CategoryID != nil {
-		catVideos, _, _ := repo.ListContents(ctx, s.pool, repo.ListFilter{
-			TypeKey: "video", Status: "yayinda", SiteID: c.SiteID, CategoryID: *c.CategoryID, PerPage: 1, Page: 1,
-		})
-		d.Article.RelatedVideo = pick(catVideos)
-	}
-	if d.Article.RelatedVideo == nil {
-		d.Article.RelatedVideo = pick(sideLive)
-	}
-	// Seçilen videonun süresi (Faz 17): tek alan okuması, kartta rozet olarak basılır.
-	if v := d.Article.RelatedVideo; v != nil {
-		d.Article.RelatedVideoSure = platform.FormatDurationTR(
-			repo.GetContentFields(ctx, s.pool, v.ID).VideoSeconds)
-	}
-
-	// SIRADAKİ HABER bandı: önce aynı kategorideki sonraki içerik, yoksa genel (Faz 13b).
-	after := c.CreatedAt
-	if c.PublishedAt != nil {
-		after = *c.PublishedAt
-	}
-	var catID int64
-	if c.CategoryID != nil {
-		catID = *c.CategoryID
-	}
-	if nc, err := repo.ContentAfter(ctx, s.pool, c.SiteID, after, c.Locale, c.ID, catID); err == nil {
-		d.Article.NextContent = &nc
-	} else if nc, err := repo.ContentAfter(ctx, s.pool, c.SiteID, after, c.Locale, c.ID, 0); err == nil {
-		d.Article.NextContent = &nc
-	}
-	// ÖNCEKİ HABER bandı: aynı mantık, ters yön (Faz 14).
-	if pc, err := repo.ContentBefore(ctx, s.pool, c.SiteID, after, c.Locale, c.ID, catID); err == nil {
-		d.Article.PrevContent = &pc
-	} else if pc, err := repo.ContentBefore(ctx, s.pool, c.SiteID, after, c.Locale, c.ID, 0); err == nil {
-		d.Article.PrevContent = &pc
-	}
-	if c.TypeKey == "hesaplayici" {
-		if extra, err := repo.GetContentExtra(ctx, s.pool, c.ID); err == nil {
-			d.Article.CalcJSON = template.JS(extra)
-		}
-	}
-	// paywall kapısı (yalnız genel site): editoryal roller sınırsız; abone
-	// katmanı içeriğin `min_tier_weight` eşiğini karşılamalı. Tek başına
-	// okuyucu oturumu yetmez (Google girişi sonrası açık kapatıldı).
-	userWeight := 0
-	if u, err := s.currentUser(r); err == nil {
-		userWeight = s.memberWeight(r)
-		d.User = ptr(u)
-		// Kırıntı yolundaki + düğmesi takip durumunu yansıtsın diye başlangıç değeri.
-		if c.CategorySlug != nil && *c.CategorySlug != "" {
-			d.Article.CatFollowed = repo.IsFollowing(ctx, s.pool, u.ID, "kategori", *c.CategorySlug)
-		}
-		// Görsel üstündeki kaydet düğmesi dolu/açık başlasın.
-		d.Article.Bookmarked = repo.IsBookmarked(ctx, s.pool, u.ID, c.ID)
-	} else if s.memberCookieEmail(r) != "" {
-		// Stripe/iyzico aboneliği imzalı çerezle de tanınır.
-		userWeight = s.memberWeight(r)
-	}
-	required := contentRequiredWeight(c.IsExclusive, c.MinTierWeight)
-	if required > 0 && !tierAllows(userWeight, required) && s.paywallAktif(ctx) {
-		d.Article.Locked = true
-		d.Article.FreeHTML = s.firstParagraphsHTML(c.Detail, s.paywallLimit(ctx))
-		d.Article.RequiredTier = s.tierNameByWeight(ctx, required)
-	}
-	if raw, err := repo.GetLayout(ctx, s.pool, c.SiteID, "article"); err == nil {
-		d.Blocks = s.buildBlocksFrom(ctx, d, raw, s.articleBlockHome(ctx, c, c.ID))
-	}
-	// Gövde bloğu (Faz 142): görünür "yazi_govde" varsa sabit gövde basılmaz.
-	for i := range d.Blocks {
-		if d.Blocks[i].Type == "yazi_govde" && d.Blocks[i].Visible {
-			d.HasBodyBlock = true
-			break
-		}
-	}
-	// Yazı sayfası şablon metinleri (Faz 142).
-	d.PageTexts = s.pageTextsFor(ctx, c.SiteID, "article", c.Locale, pageTextDefsFor("article"),
-		map[string]string{
-			"dk":   itoa(d.Article.ReadingMin),
-			"sayi": itoa(int(hits)),
-		})
-	cc := cacheControlPublic
-	if preview {
-		cc = "no-store" // önizleme önbelleğe girmez (Faz 46)
-	}
-	s.renderPublic(w, r, "article", d, cc)
-}
-
 // havaFromCache servis bandındaki varsayılan şehir (Ankara) havasını
 // önbellekten okur. Ana sayfa dışındaki sayfalarda veri havuzunda hava
 // olmadığı için tasarımcı/blok yolu da bu yardımcıyı kullanır.
@@ -840,7 +556,7 @@ func (s *Server) havaFromCache(ctx context.Context) *WeatherS {
 	if err != nil {
 		return nil
 	}
-	b, err := repo.CacheGet(ctx, s.pool, "hava", strconv.Itoa(int(ak.Plaka)))
+	b, err := repo.CacheGet(ctx, s.pool, "hava", strconv.Itoa(ak.Plaka))
 	if err != nil {
 		return nil
 	}
@@ -849,30 +565,6 @@ func (s *Server) havaFromCache(ctx context.Context) *WeatherS {
 		return nil
 	}
 	return &WeatherS{City: w.City, Slug: ak.Slug, Sicak: w.Sicaklik, Aciklama: w.Aciklama, Demo: w.Demo}
-}
-
-// articleBlockHome yazı sayfası bloklarının veri havuzunu kurar.
-// Ana sayfayla aynı homeData şekli kullanılır; böylece buildBlocksFrom
-// her iki sayfada da aynı kodla çalışır.
-func (s *Server) articleBlockHome(ctx context.Context, c repo.Content, excludeID int64) *homeData {
-	h := &homeData{SiteID: c.SiteID}
-	h.TopRead, _ = repo.TopRead(ctx, s.pool, c.SiteID, 5)
-	h.Categories, _ = repo.ListCategories(ctx, s.pool, c.SiteID)
-	h.GalleryPhotos, _, _ = repo.ListContents(ctx, s.pool, repo.ListFilter{
-		TypeKey: "foto_galeri", Status: "yayinda", SiteID: c.SiteID, PerPage: 6, Page: 1})
-	h.GalleryVideos, _, _ = repo.ListContents(ctx, s.pool, repo.ListFilter{
-		TypeKey: "video", Status: "yayinda", SiteID: c.SiteID, PerPage: 6, Page: 1})
-	h.Breaking, _, _ = repo.ListContents(ctx, s.pool, repo.ListFilter{
-		Status: "yayinda", SiteID: c.SiteID, Locale: c.Locale, PerPage: 24, Page: 1})
-	h.Recent = dropContent(h.Breaking, excludeID, 24)
-	if len(h.Recent) < 4 {
-		extra, _, _ := repo.ListContents(ctx, s.pool, repo.ListFilter{
-			Status: "yayinda", SiteID: c.SiteID, Locale: c.Locale, PerPage: 24, Page: 2})
-		h.Recent = dropContent(append(h.Recent, extra...), excludeID, 24)
-	}
-	h.Slides = h.Recent
-	h.Lead = firstContent(h.Recent, 5)
-	return h
 }
 
 // categoryBlockHome kategori liste sayfası bloklarının veri havuzunu kurar.
@@ -893,32 +585,6 @@ func (s *Server) categoryBlockHome(ctx context.Context, siteID int64, locale str
 	h.Breaking, _, _ = repo.ListContents(ctx, s.pool, repo.ListFilter{
 		Status: "yayinda", SiteID: siteID, Locale: locale, PerPage: 8, Page: 1})
 	return h
-}
-
-func (s *Server) articleLangLinks(ctx context.Context, c repo.Content) []langLink {
-	var out []langLink
-	seen := map[string]bool{}
-	list := []repo.Content{c}
-	if trs, err := repo.TranslationsOf(ctx, s.pool, c.TranslationRootID()); err == nil {
-		list = append(list, trs...)
-	}
-	// aktif/mevcut linkler
-	for _, t := range list {
-		l := t.Locale
-		if seen[l] {
-			continue
-		}
-		seen[l] = true
-		label := i18nNative(s.i18n, l)
-		if l == c.Locale {
-			out = append(out, langLink{Label: label, Code: l, Active: true})
-			continue
-		}
-		if t.ID != 0 {
-			out = append(out, langLink{Label: label, Code: l, URL: publicArticleURL(l, t.DisplaySlug(), t.ID)})
-		}
-	}
-	return out
 }
 
 // ---- kategori / arşiv / son dakika / sayfa ----
@@ -1352,7 +1018,7 @@ func (s *Server) handlePage(w http.ResponseWriter, r *http.Request) {
 			JSONLD:    ld,
 			BaseURL:   strings.TrimRight(s.cfg.BaseURL, "/"), Locale: locale,
 			Baslik: title,
-			Govde:  templkit.SafeHTML(body),
+			Govde:  body, // body zaten template.HTML (templkit.SafeHTML eş adı)
 			// Kurumsal sayfa = statik bilgi sayfası.
 			PageCategory:    "static_page",
 			ContentCategory: "about",
@@ -1936,23 +1602,6 @@ func (s *Server) langBase(locale string) string {
 	return "/" + locale
 }
 
-// articleShareLinks paylaşım düğmesi bağlantılarını Go'da QueryEscape'li kurar
-// (template.URL — html/template href içindeki % işaretlerini yeniden kodlamaz).
-func articleShareLinks(u, title string) []shareLink {
-	q := url.QueryEscape
-	mk := func(label, icon, href, t string) shareLink {
-		return shareLink{Label: label, Icon: icon, IconSVG: markaShareIcon(icon), Href: template.URL(href), Title: t}
-	}
-	return []shareLink{
-		mk("f", "facebook", "https://www.facebook.com/sharer/sharer.php?u="+q(u), "Facebook"),
-		mk("𝕏", "x", "https://twitter.com/intent/tweet?url="+q(u)+"&text="+q(title), "X"),
-		mk("wa", "whatsapp", "https://wa.me/?text="+q(title+" "+u), "WhatsApp"),
-		mk("tg", "telegram", "https://t.me/share/url?url="+q(u)+"&text="+q(title), "Telegram"),
-		mk("in", "linkedin", "https://www.linkedin.com/sharing/share-offsite/?url="+q(u), "LinkedIn"),
-		mk("bs", "bluesky", "https://bsky.app/intent/compose?text="+q(title+" "+u), "Bluesky"),
-	}
-}
-
 func homeURL(locale string) string {
 	if locale == "" || locale == "tr" {
 		return "/"
@@ -2242,11 +1891,6 @@ func themeFromReq(r *http.Request) string {
 	return "light"
 }
 
-func homeTitle(site, locale string) string {
-	_ = locale
-	return site
-}
-
 func mimeByExt(path string) string {
 	switch {
 	case strings.HasSuffix(path, ".jpg"), strings.HasSuffix(path, ".jpeg"):
@@ -2274,33 +1918,6 @@ func extOf(path string) string {
 		return strings.ToLower(path[i:])
 	}
 	return ""
-}
-
-func i18nNative(b *i18n.Bundle, code string) string {
-	for _, l := range b.Enabled() {
-		if l.Code == code {
-			return l.NativeName
-		}
-	}
-	return code
-}
-
-func buildContentRozets(c repo.Content) []rozet {
-	var out []rozet
-	type rz struct {
-		on   bool
-		code string
-		cls  string
-	}
-	for _, x := range []rz{
-		{c.IsAM, "AM", "b-am"}, {c.IsUM, "UM", "b-um"}, {c.IsDM, "DM", "b-dm"},
-		{c.IsSD, "SD", "b-sd"}, {c.IsFH, "FH", "b-fh"}, {c.IsHK, "HK", "b-hk"},
-	} {
-		if x.on {
-			out = append(out, rozet{Label: x.code, Class: x.cls})
-		}
-	}
-	return out
 }
 
 // sayfaDuzeniVar bir sayfa anahtarı için panelden kaydedilmiş ÖZEL düzen

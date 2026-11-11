@@ -46,12 +46,12 @@ func main() {
 		}
 
 		if _, err := conn.Exec(ctx, string(b)); err != nil {
-			conn.Close(ctx)
+			_ = conn.Close(ctx)
 			cancel()
 			fmt.Fprintf(os.Stderr, "SQL hatası (%s): %v\n", path, err)
 			os.Exit(1)
 		}
-		conn.Close(ctx)
+		_ = conn.Close(ctx)
 		cancel()
 		fmt.Println("uygulandi:", path)
 	}

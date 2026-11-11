@@ -92,7 +92,7 @@ func (s *Server) build2FAData(r *http.Request) *tmplData {
 	d := s.baseView("tr", "/admin", "2FA (TOTP)")
 	d.User = ptr(userFromContext(ctx))
 	d.Flash = s.consumeFlash(r)
-	str := ""
+	var str string
 	if u.TwoFactorSecret == nil || *u.TwoFactorSecret == "" {
 		sec, _ := auth.GenerateSecret()
 		_ = repo.UpdateUser2FA(ctx, s.pool, u.ID, &sec, false)

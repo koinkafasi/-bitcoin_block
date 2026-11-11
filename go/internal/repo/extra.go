@@ -11,6 +11,7 @@ func GetContentExtra(ctx context.Context, pool *pgxpool.Pool, contentID int64) (
 	var b []byte
 	err := pool.QueryRow(ctx, `SELECT extra FROM contents_extra WHERE content_id = $1`, contentID).Scan(&b)
 	if err != nil {
+		//nolint:nilerr // tür-özel kayıt yoksa boş JSON döner; çağıran varsayılan şemayı kullanır
 		return []byte("{}"), nil
 	}
 	return b, nil

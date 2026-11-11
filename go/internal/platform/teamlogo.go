@@ -102,9 +102,9 @@ func SaveTeamLogo(key string, data []byte) error {
 		return err
 	}
 	tmpName := tmp.Name()
-	defer os.Remove(tmpName) // rename başarılıysa bu no-op
+	defer func() { _ = os.Remove(tmpName) }() // rename başarılıysa bu no-op
 	if _, err := tmp.Write(data); err != nil {
-		tmp.Close()
+		_ = tmp.Close()
 		return err
 	}
 	if err := tmp.Close(); err != nil {

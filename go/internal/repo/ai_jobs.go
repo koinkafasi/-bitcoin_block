@@ -292,7 +292,7 @@ func RestoreContentRevision(ctx context.Context, pool *pgxpool.Pool, contentID, 
 	if err != nil {
 		return 0, err
 	}
-	defer tx.Rollback(ctx)
+	defer func() { _ = tx.Rollback(ctx) }()
 
 	var snap []byte
 	if err := tx.QueryRow(ctx, `

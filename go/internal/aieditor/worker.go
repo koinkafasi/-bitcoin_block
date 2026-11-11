@@ -2,6 +2,7 @@ package aieditor
 
 import (
 	"context"
+	"errors"
 	"log/slog"
 	"time"
 
@@ -76,7 +77,7 @@ func (s *Service) ProcessNext(ctx context.Context) (bool, error) {
 		return false, err
 	}
 	_, err = s.ProcessJob(ctx, job.ID)
-	if err != nil && err != ErrJobCancelled {
+	if err != nil && !errors.Is(err, ErrJobCancelled) {
 		return true, err
 	}
 	return true, nil

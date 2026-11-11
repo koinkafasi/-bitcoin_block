@@ -81,6 +81,7 @@ func (d *ImlaDenetleyici) Denetle(ctx context.Context, text string) ([]HunspellB
 	}
 	out, err := d.run(ctx, args, text)
 	if err != nil {
+		//nolint:nilerr // sözlük çalıştırılamazsa kural tabanlı denetime düşülür (boş sonuç = "sözlük görüşü yok")
 		return nil, nil // sessizce kural tabanlı denetime düş
 	}
 	counts := map[string]int{}

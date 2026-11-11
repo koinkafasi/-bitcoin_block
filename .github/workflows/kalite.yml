@@ -1,0 +1,162 @@
+name: kalite
+
+# KALİTE HATTI — Go statik analizi + kapsam çıtı.
+#
+# NEDEN AYRI WORKFLOW (ci.yml'deki guvenlik ve uygulama işlerinden):
+#   · `guvenlik` işi CVE/sır/workflow taraması yapar (Trivy, gosec, Semgrep,
+#     zizmor). Buradaki lint onun yerine GEÇMEZ: gosec yüksek önem güvenlik
+#     desenlerine bakar, errcheck/staticcheck/unused ise tip bilgisiyle
+#     hata-akışına ve ölü koda bakar.
+#   · `uygulama` işi testi koşar ama kapsam EŞİĞİ tutmaz.
+#
+# KAPI POLİTİKASI: yeni kod temiz olmalı (`--new-from-rev`). Depodaki eski
+# borç bir gecede kapanmaz; tam depoyu kapı yapmak CI'ı sürekli kırmızı
+# başlatır ve "kapıyı kapat" kararına götürür. Bu yüzden:
+#   · PR / push → yeni satırlarda 0 bulgu (BLOKLAYICI)
+#   · tam depo taraması → rapor (bloklamaz) + iş özetinde sayı
+# Yerelde `make lint` tam depoyu, `make lint-yeni` yalnız yeni kodu koşar.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: kalite-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  GO_SURUM: "1.27.3"
+  GOLANGCI_SURUM: "v2.15.0"
+  # Kapsam ÇITI (hedef değil): bugünkü ölçümün altına düşmeyi engeller.
+  # Ölçüm 11 Kasım 2026: %17,1. Her turda gerçek değere çekilir.
+  KAPSAM_ESIGI: "17.0"
+
+jobs:
+  lint:
+    name: golangci-lint (yeni kod)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          # Yeni-kod kapısı için taban commit'in geçmişi gerekir.
+          fetch-depth: 0
+          persist-credentials: false
+
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+        with:
+          go-version: ${{ env.GO_SURUM }}
+          cache-dependency-path: go/go.sum
+
+      # Sürüm SABİT ve resmî ikiliden: `go install` her koşuda yeni sürüm
+      # çeker, lint kuralları habersiz değişir (yerelde yeşil, CI'da kırmızı).
+      - name: golangci-lint kur
+        run: |
+          set -euo pipefail
+          D=$(mktemp -d); cd "$D"
+          T="golangci-lint-${GOLANGCI_SURUM#v}-linux-amd64.tar.gz"
+          B="https://github.com/golangci/golangci-lint/releases/download/${GOLANGCI_SURUM}"
+          curl -fsSLO "$B/$T"
+          curl -fsSLO "$B/golangci-lint-${GOLANGCI_SURUM#v}-checksums.txt"
+          grep " $T\$" "golangci-lint-${GOLANGCI_SURUM#v}-checksums.txt" | sha256sum -c -
+          tar xzf "$T"
+          install -m 0755 "golangci-lint-${GOLANGCI_SURUM#v}-linux-amd64/golangci-lint" \
+            "$HOME/.local/bin/golangci-lint"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          "$HOME/.local/bin/golangci-lint" --version
+
+      # TEMPL: templ üretilmeden _templ.go dosyaları BAYAT olur ve linter
+      # silinmiş/eklenmiş fonksiyonları yanlış raporlar. Sürüm sabit
+      # (v0.3.1070): paylaşımlı ikili v0.3.1100'e çekildiğinde
+      # `templruntime.NewAttributeExpression` derleme hatası veriyordu.
+      - name: templ üret (sabit sürüm)
+        run: |
+          set -euo pipefail
+          cd go
+          go run github.com/a-h/templ/cmd/templ@v0.3.1070 generate
+
+      - name: Kapı — yeni kodda 0 bulgu
+        if: github.event_name == 'pull_request'
+        # base_ref SCRIPT METNİNE gömülmez (zizmor: template-injection):
+        # env üzerinden geçirilir, kabuk onu veri olarak görür.
+        env:
+          TABAN_DAL: ${{ github.base_ref }}
+        run: |
+          set -euo pipefail
+          Taban="origin/${TABAN_DAL}"
+          echo "taban: $Taban"
+          cd go
+          golangci-lint run --timeout 12m --new-from-rev="$Taban"
+
+      - name: Kapı — son commit'te 0 bulgu (push)
+        if: github.event_name != 'pull_request'
+        run: |
+          set -euo pipefail
+          Taban="HEAD~1"
+          if ! git rev-parse --verify "$Taban" >/dev/null 2>&1; then
+            Taban="$(git rev-list --max-parents=0 HEAD)"
+          fi
+          echo "taban: $Taban"
+          cd go
+          golangci-lint run --timeout 12m --new-from-rev="$Taban"
+
+      # Tam depo: BLOKLAMAZ. Borç görünür kalsın, ama tek bir eski bulgu
+      # yüzünden iş kırmızıya dönmesin.
+      - name: Tam depo raporu (bloklamaz)
+        continue-on-error: true
+        run: |
+          set -uo pipefail
+          cd go
+          golangci-lint run --timeout 12m --output.text.print-issued-lines=false \
+            > /tmp/tam-lint.txt 2>&1 || true
+          {
+            echo "### Tam depo lint raporu"
+            echo ""
+            echo '```'
+            grep -E '^\* |^[0-9]+ issues' /tmp/tam-lint.txt || echo 'bulgu yok'
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          cat /tmp/tam-lint.txt
+
+  kapsam:
+    name: Kapsam çıtı
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+        with:
+          go-version: ${{ env.GO_SURUM }}
+          cache-dependency-path: go/go.sum
+
+      - name: Test + kapsam
+        run: |
+          set -euo pipefail
+          cd go
+          go test -count=1 -covermode=set -coverprofile=/tmp/cover.out ./... | tee /tmp/test.log
+          # Sonar ve raporlar depo köküne göre yol bekler.
+          sed -e 's|^theblock/site/|go/|' /tmp/cover.out > ../coverage.out
+          sed 's|^go/||' ../coverage.out > /tmp/cov_local.out
+          TOPLAM=$(go tool cover -func=/tmp/cov_local.out | tail -1 | awk '{print $NF}' | tr -d '%')
+          echo "kapsam: ${TOPLAM}%  çıt: ${KAPSAM_ESIGI}%"
+          echo "### Kapsam: ${TOPLAM}% (çıt ${KAPSAM_ESIGI}%)" >> "$GITHUB_STEP_SUMMARY"
+          awk -v t="$TOPLAM" -v e="$KAPSAM_ESIGI" 'BEGIN { exit (t < e) }' || {
+            echo "::error::Kapsam ${TOPLAM}% çıtın (${KAPSAM_ESIGI}%) altına düştü."
+            exit 1
+          }
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: always()
+        with:
+          name: kapsam-raporu
+          path: |
+            coverage.out
+            /tmp/test.log
+          retention-days: 14

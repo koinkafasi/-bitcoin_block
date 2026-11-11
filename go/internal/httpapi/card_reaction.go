@@ -22,7 +22,7 @@ func (s *Server) handleCardReaction(w http.ResponseWriter, r *http.Request) {
 		s.writeJSON(w, http.StatusBadRequest, map[string]any{"ok": false, "error": "geçersiz istek"})
 		return
 	}
-	reaction := 0
+	var reaction int
 	switch strings.TrimSpace(body.Yon) {
 	case "fazla":
 		reaction = 1

@@ -65,14 +65,14 @@ func SavePrivateAudio(src io.Reader, filename string) (string, int64, error) {
 		return "", 0, err
 	}
 	tmpName := tmp.Name()
-	defer os.Remove(tmpName)
+	defer func() { _ = os.Remove(tmpName) }()
 	size, err := io.Copy(tmp, src)
 	if err != nil {
-		tmp.Close()
+		_ = tmp.Close()
 		return "", 0, err
 	}
 	if err := tmp.Sync(); err != nil {
-		tmp.Close()
+		_ = tmp.Close()
 		return "", 0, err
 	}
 	if err := tmp.Close(); err != nil {

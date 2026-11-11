@@ -3,7 +3,6 @@ package httpapi
 import (
 	"encoding/json"
 	"net/http"
-	"strings"
 	"unicode"
 
 	"theblock/site/internal/repo"
@@ -101,11 +100,4 @@ func (s *Server) tercihlerJSON(r *http.Request) string {
 		return "{}"
 	}
 	return string(b)
-}
-
-// tercihlerMetaJSON <meta content="..."> içinde güvenli olsun diye tek
-// tırnak ve çift tırnak kaçırılır; html/template zaten kaçırıyor, bu ikinci
-// kat savunma.
-func tercihlerMetaJSON(k string) string {
-	return strings.ReplaceAll(k, "'", "&#39;")
 }

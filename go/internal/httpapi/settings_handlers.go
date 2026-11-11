@@ -299,22 +299,6 @@ func jsonStr(b []byte) string {
 	return ""
 }
 
-// ayarBoolB settings boolean değerini okur (jsonb true/false, JSON string
-// `"true"`, düz "true"/"1"). SetSetting geçersiz JSON'u string'e sardığı için
-// tırnaklı biçim de gerçek bir durumdur — yoksa işaretli checkbox "kapalı"
-// görünürdü.
-func ayarBoolB(b []byte) bool {
-	t := strings.Trim(strings.TrimSpace(string(b)), `"`)
-	if t == "" || t == "null" {
-		return false
-	}
-	var v bool
-	if json.Unmarshal([]byte(t), &v) == nil {
-		return v
-	}
-	return t == "1" || strings.EqualFold(t, "true")
-}
-
 func obj(b []byte) map[string]any {
 	if len(b) == 0 {
 		return nil
@@ -363,9 +347,7 @@ func parseJSONList(s string) []string {
 func parseIzinler(r *http.Request) map[string][]string {
 	out := map[string][]string{}
 	for _, tip := range r.Form["izin_tip"] {
-		for _, k := range r.Form["izin_"+tip] {
-			out[tip] = append(out[tip], k)
-		}
+		out[tip] = append(out[tip], r.Form["izin_"+tip]...)
 	}
 	return out
 }

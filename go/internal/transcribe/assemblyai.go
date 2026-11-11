@@ -338,10 +338,7 @@ func groupWords(raw []assemblyWord, durationMS int64) []Segment {
 func toWordItems(raw []assemblyWord) []wordItem {
 	words := make([]wordItem, 0, len(raw))
 	for _, w := range raw {
-		words = append(words, wordItem{
-			Text: w.Text, Start: w.Start, End: w.End,
-			Speaker: w.Speaker, Confidence: w.Confidence,
-		})
+		words = append(words, wordItem(w))
 	}
 	return words
 }

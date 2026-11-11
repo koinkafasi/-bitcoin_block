@@ -26,7 +26,7 @@ func CreateHeadlineDesign(ctx context.Context, pool *pgxpool.Pool, name string, 
 	if err != nil {
 		return 0, err
 	}
-	defer tx.Rollback(ctx)
+	defer func() { _ = tx.Rollback(ctx) }()
 	if isDefault {
 		if _, err := tx.Exec(ctx, `UPDATE headline_designs SET is_default = false WHERE category_id IS NOT DISTINCT FROM $1`, nullableInt64P(categoryID)); err != nil {
 			return 0, err
@@ -81,7 +81,7 @@ func UpdateHeadlineDesign(ctx context.Context, pool *pgxpool.Pool, id int64, nam
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback(ctx)
+	defer func() { _ = tx.Rollback(ctx) }()
 	if isDefault {
 		if _, err := tx.Exec(ctx, `UPDATE headline_designs SET is_default = false`); err != nil {
 			return err

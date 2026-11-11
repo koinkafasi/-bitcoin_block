@@ -1,0 +1,130 @@
+# ServiceAccount + PodDisruptionBudget.
+#
+# SERVİCE ACCOUNT: pod'lar şu an `default` SA ile koşuyor ve zaten
+# `automountServiceAccountToken: false`. Adlandırılmış SA, pod'un
+# KİMLİĞİNİ denetim kaydında ve ileride eklenecek RBAC'ta görünür kılar
+# ("hangi pod bu işlemi yaptı" sorusu cevaplanabilir olur).
+#
+# Hiçbir SA'ya ClusterRole BAĞLANMAZ: pod'lar Kubernetes API'sini
+# kullanmıyor (token da mount edilmiyor). Yetki vermemek, yetkiyi doğru
+# yönetmekten daha güvenli.
+#
+# PDB: tek düğümlü kümede etkisi sınırlı ama `minAvailable` ile düğüm
+# bakımı (drain) sırasında Kubernetes'in pod'u ne zaman tahliye edeceğini
+# bilmesini sağlar. PDB olmadan drain her şeyi siler.
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: theblock-site
+  namespace: theblock
+  labels: { app: theblock-site }
+automountServiceAccountToken: false
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: theblock-postgres
+  namespace: theblock
+  labels: { app: theblock-postgres }
+automountServiceAccountToken: false
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: theblock-redis
+  namespace: theblock
+  labels: { app: theblock-redis }
+automountServiceAccountToken: false
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: theblock-image-svc
+  namespace: theblock
+  labels: { app: theblock-image-svc }
+automountServiceAccountToken: false
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: theblock-search-svc
+  namespace: theblock
+  labels: { app: theblock-search-svc }
+automountServiceAccountToken: false
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: theblock-collab
+  namespace: theblock
+  labels: { app: theblock-collab }
+automountServiceAccountToken: false
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: theblock-yedek
+  namespace: theblock
+  labels: { app: theblock-yedek }
+automountServiceAccountToken: false
+---
+# SITE: replika 1 olduğu için minAvailable 0. Replika artırıldığında
+# bu değer 1'e çekilmeli (aksi hâlde drain sırasında kesinti olur).
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: theblock-site
+  namespace: theblock
+spec:
+  minAvailable: 0
+  selector:
+    matchLabels: { app: theblock-site }
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: theblock-postgres
+  namespace: theblock
+spec:
+  # Veritabanı TEK replika + RWO disk: drain sırasında kesinti kaçınılmaz.
+  # PDB yine de kaydı tutar; `maxUnavailable: 1` bilinçli tercih.
+  maxUnavailable: 1
+  selector:
+    matchLabels: { app: theblock-postgres }
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: theblock-redis
+  namespace: theblock
+spec:
+  maxUnavailable: 1
+  selector:
+    matchLabels: { app: theblock-redis }
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: theblock-image-search
+  namespace: theblock
+spec:
+  # image-svc ve search-svc site'ın yardımcıları; biri düşerse site
+  # çalışmaya devam eder (image-svc düşerse görseller orijinal boyutta
+  # servis edilir, search-svc düşerse SQL aramasına düşer).
+  minAvailable: 0
+  selector:
+    matchExpressions:
+      - key: app
+        operator: In
+        values: [theblock-image-svc, theblock-search-svc]
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: theblock-collab
+  namespace: theblock
+spec:
+  minAvailable: 0
+  selector:
+    matchLabels: { app: theblock-collab }

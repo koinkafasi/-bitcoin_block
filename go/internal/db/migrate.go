@@ -199,7 +199,7 @@ func apply(ctx context.Context, conn *pgx.Conn, version int, name, sql string) e
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback(ctx)
+	defer func() { _ = tx.Rollback(ctx) }()
 
 	if err := ensureSchemaTable(ctx, tx); err != nil {
 		return err
@@ -218,7 +218,7 @@ func rollback(ctx context.Context, conn *pgx.Conn, m Migration) error {
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback(ctx)
+	defer func() { _ = tx.Rollback(ctx) }()
 
 	if _, err := tx.Exec(ctx, m.Down); err != nil {
 		return err

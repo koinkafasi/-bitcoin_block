@@ -243,7 +243,7 @@ func kaynakGorselOku(hash, ek string) ([]byte, string, bool) {
 	if err != nil {
 		return nil, "", false
 	}
-	defer kok.Close()
+	defer func() { _ = kok.Close() }()
 	b, err := kok.ReadFile(kaynakGorselGoreli(hash, ek))
 	if err != nil || len(b) == 0 {
 		return nil, "", false
@@ -257,7 +257,7 @@ func kaynakGorselYaz(hash, ek string, b []byte) {
 	if err != nil {
 		return
 	}
-	defer kok.Close()
+	defer func() { _ = kok.Close() }()
 	if err := kok.MkdirAll(hash[:2], 0o755); err != nil {
 		return
 	}

@@ -2,7 +2,7 @@ package aieditor
 
 import (
 	"context"
-	"encoding/json"
+	"errors"
 	"log/slog"
 	"strconv"
 	"strings"
@@ -234,6 +234,7 @@ func yazimSonuclariUygula(ctx context.Context, pool *pgxpool.Pool, logger *slog.
 	n := 0
 	for _, is := range isler {
 		if ctx.Err() != nil {
+			//nolint:nilerr // iş listesi okunamazsa bu tur boş geçer; kuyruk bir sonraki turda yeniden denenir
 			return n, nil
 		}
 		res, err := DecodeResult(is.Result)
@@ -257,7 +258,7 @@ func yazimSonuclariUygula(ctx context.Context, pool *pgxpool.Pool, logger *slog.
 			surum = int64(job.ArticleVersion)
 		}
 		if err := repo.SetContentYazim(ctx, pool, is.ContentID, surum, y); err != nil {
-			if err == repo.ErrConflict {
+			if errors.Is(err, repo.ErrConflict) {
 				logger.Info("yazım: içerik bu arada değişti, sonuç yazılmadı",
 					"iş", is.JobID, "içerik", is.ContentID)
 				_ = repo.MarkAIJobApplied(ctx, pool, is.JobID)
@@ -326,12 +327,4 @@ func bodyParagraflari(body string) []string {
 		}
 	}
 	return out
-}
-
-// yazimDurumJSON panelde gösterilecek özeti JSON'a çevirir (tanı amaçlı).
-func yazimDurumJSON(o repo.YazimDurumOzeti) string {
-	b, _ := json.Marshal(map[string]any{
-		"bekleyen": o.Bekleyen, "kuyrukta": o.Kuyrukta, "uygulanacak": o.Uygulanacak,
-	})
-	return string(b)
 }

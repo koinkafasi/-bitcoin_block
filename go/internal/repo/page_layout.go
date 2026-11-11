@@ -17,6 +17,7 @@ func GetLayout(ctx context.Context, pool DB, siteID int64, pageKey string) ([]by
 	err := pool.QueryRow(ctx, `
 		SELECT blocks FROM page_layouts WHERE site_id=$1 AND page_key=$2`, siteID, pageKey).Scan(&b)
 	if err != nil {
+		//nolint:nilerr // sayfa düzeni kaydı yoksa boş dizi döner; şablon varsayılan sırayı basar
 		return []byte("[]"), nil
 	}
 	return b, nil

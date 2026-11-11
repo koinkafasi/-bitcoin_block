@@ -883,6 +883,7 @@ func reassignCategory(ctx context.Context, pool *pgxpool.Pool, link string, catI
 	if err := pool.QueryRow(ctx, `
 		SELECT id, COALESCE(category_id, 0) FROM contents
 		 WHERE site_id=1 AND source_url=$1 ORDER BY id LIMIT 1`, link).Scan(&id, &cur); err != nil {
+		//nolint:nilerr // kaynak URL ile eşleşen içerik yok: bu kart atlanır, tohumlama durmaz
 		return false, nil
 	}
 	if cur == catID {

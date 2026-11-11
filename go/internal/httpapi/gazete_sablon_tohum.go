@@ -30,11 +30,6 @@ func (b gazeteBlock) kaynak(tip string, limit int) gazeteBlock {
 	return b
 }
 
-func (b gazeteBlock) kategori(id int64, limit int) gazeteBlock {
-	b.Kaynak = &gazeteKaynak{Tip: "kategori", ID: id, Limit: limit}
-	return b
-}
-
 func (b gazeteBlock) stil(ciftler ...any) gazeteBlock {
 	m := map[string]any{}
 	for i := 0; i+1 < len(ciftler); i += 2 {

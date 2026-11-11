@@ -561,13 +561,12 @@ func normalizeNewsTitle(s string) string {
 
 // sectionCategorySlug, HTML/JSON-LD bölüm adını site kategorisine eşler.
 func sectionCategorySlug(section string) string {
-	k := strings.ToLower(strings.TrimSpace(section))
-	k = strings.NewReplacer(
+	k := strings.NewReplacer(
 		"İ", "i", "I", "i", "ı", "i",
 		"Ş", "s", "ş", "s", "Ç", "c", "ç", "c",
 		"Ğ", "g", "ğ", "g", "Ü", "u", "ü", "u", "Ö", "o", "ö", "o",
 		"Â", "a", "â", "a", "Î", "i", "î", "i", "Û", "u", "û", "u",
-	).Replace(section)
+	).Replace(strings.TrimSpace(section))
 	k = strings.ToLower(k)
 	switch {
 	case strings.Contains(k, "gundem"), strings.Contains(k, "guncel"), strings.Contains(k, "asayis"), strings.Contains(k, "politika"):

@@ -50,31 +50,6 @@ func tabCatSlugs(ctx context.Context, s *Server) ([]string, bool) {
 	return out, true
 }
 
-// tabCatCategories sekme sırasını kategori nesnelerine çevirir.
-// Ayar yoksa menüdeki kategorileri döndürür (geriye uyum).
-func (s *Server) tabCatCategories(ctx context.Context, siteID int64, fallback []repo.Category) []repo.Category {
-	slugs, ok := tabCatSlugs(ctx, s)
-	if !ok || len(slugs) == 0 {
-		return fallback
-	}
-	all, _ := repo.ListCategories(ctx, s.pool, siteID)
-	bySlug := map[string]repo.Category{}
-	for _, c := range all {
-		if c.Slug != "" {
-			bySlug[c.Slug] = c
-		}
-	}
-	out := make([]repo.Category, 0, len(slugs))
-	for _, sl := range slugs {
-		c, ok := bySlug[sl]
-		if !ok || c.Status != "yayinda" || c.Name == "" {
-			continue // silinmiş / yayından kalkmış kategori: sessizce atla
-		}
-		out = append(out, c)
-	}
-	return out
-}
-
 // handleTabCatsGet /admin/tab-kategorileri — ana sayfa sekme editörü.
 func (s *Server) handleTabCatsGet(w http.ResponseWriter, r *http.Request) {
 	d := s.buildTabCatsData(r)

@@ -30,6 +30,7 @@ spec:
       # Service Account token'i POD'A BAGLAMA (Sonar S6865): pod'lar
       # Kubernetes API'sini kullanmiyor; token mount edilirse ele gecirilen
       # bir container kume API'sine konusabilir.
+      serviceAccountName: theblock-site
       automountServiceAccountToken: false
       imagePullSecrets: [{ name: ghcr }]
       securityContext:
@@ -50,9 +51,11 @@ spec:
             - secretRef: { name: theblock-env }
           env:
             - name: DATABASE_URL
-              value: postgres://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@theblock-postgres:5432/$(POSTGRES_DB)?sslmode=disable
+              value: postgres://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@theblock-postgres:5432/$(POSTGRES_DB)?sslmode=verify-full&sslrootcert=/etc/pg-tls/ca.crt
           volumeMounts:
             - { name: tmp, mountPath: /tmp }
+            # verify-full bu CA'ya bakar; eksikse göç bağlantısı reddedilir.
+            - { name: pg-tls, mountPath: /etc/pg-tls, readOnly: true }
           resources:
             requests: { cpu: 50m, memory: 64Mi, ephemeral-storage: 1Gi }
             limits: { cpu: "1",  memory: 256Mi, ephemeral-storage: 1Gi }
@@ -83,7 +86,7 @@ spec:
             - name: APP_BASE_URL
               value: https://theblock.com.tr
             - name: DATABASE_URL
-              value: postgres://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@theblock-postgres:5432/$(POSTGRES_DB)?sslmode=disable
+              value: postgres://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@theblock-postgres:5432/$(POSTGRES_DB)?sslmode=verify-full&sslrootcert=/etc/pg-tls/ca.crt
             - name: REDIS_URL
               value: redis://theblock-redis:6379/0
             - name: SEARCH_SVC_URL
@@ -117,6 +120,7 @@ spec:
           volumeMounts:
             - { name: media, mountPath: /data }
             - { name: tmp, mountPath: /tmp }
+            - { name: pg-tls, mountPath: /etc/pg-tls, readOnly: true }
           readinessProbe:
             httpGet: { path: /healthz, port: 8070 }
             initialDelaySeconds: 5
@@ -144,6 +148,14 @@ spec:
         # (tmpfs DEĞİL), yoksa bellek limitini yer.
         - name: tmp
           emptyDir: {}
+        # Postgres CA'si. Yalnız ca.crt — istemci sunucu anahtarını görmez.
+        # Secret `deploy/scripts/pg-tls-uret.sh` tarafından yazılır.
+        - name: pg-tls
+          secret:
+            secretName: theblock-pg-tls
+            defaultMode: 0444
+            items:
+              - { key: ca.crt, path: ca.crt }
 
 ---
 apiVersion: v1

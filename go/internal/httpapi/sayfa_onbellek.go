@@ -177,22 +177,6 @@ func (p *sayfaOnbellek) birak(anahtar [32]byte) {
 	}
 }
 
-// temizle süresi (bayat pencereyle birlikte) dolmuş kayıtları atar.
-func (p *sayfaOnbellek) temizle() {
-	p.mu.Lock()
-	defer p.mu.Unlock()
-	sinir := sayfaOnbellekTTL + sayfaOnbellekBayatPencere
-	kalan := p.sira[:0]
-	for _, k := range p.sira {
-		if g, ok := p.m[k]; ok && time.Since(g.at) < sinir {
-			kalan = append(kalan, k)
-		} else {
-			delete(p.m, k)
-		}
-	}
-	p.sira = kalan
-}
-
 // SetSayfaOnbellekSuresi TTL ve bayat pencereyi ayarlar (ölçüm/işletim için).
 //
 // Sıfır veya negatif değer yok sayılır: yanlış yapılandırma önbelleği

@@ -1,7 +1,5 @@
 package httpapi
 
-import "strings"
-
 // htmlYorumAtla, `rest` içinde `<etiket` aramasından ÖNCE bir HTML yorumu
 // (`<!-- … -->`) varsa yorumu atlayıp kalan metni döndürür.
 //
@@ -38,23 +36,5 @@ func htmlYorumAtla(rest, etiket string) (string, int) {
 		}
 		// Yorumu tamamen atla; içindeki etiket metni sayılmaz.
 		rest = rest[ci+ce+3:]
-	}
-}
-
-// htmlYorumTemizle, testlerde/teşhiste yorumları kaldırmak için yardımcı.
-func htmlYorumTemizle(s string) string {
-	var b strings.Builder
-	for {
-		i := indexFold(s, "<!--")
-		if i < 0 {
-			b.WriteString(s)
-			return b.String()
-		}
-		b.WriteString(s[:i])
-		j := indexFold(s[i:], "-->")
-		if j < 0 {
-			return b.String()
-		}
-		s = s[i+j+3:]
 	}
 }

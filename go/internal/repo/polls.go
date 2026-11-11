@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 
+	"errors"
+
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -35,7 +37,7 @@ func (p Poll) Total() int {
 func GetPoll(ctx context.Context, pool *pgxpool.Pool, contentID int64) (Poll, error) {
 	var raw []byte
 	err := pool.QueryRow(ctx, `SELECT extra FROM contents_extra WHERE content_id=$1`, contentID).Scan(&raw)
-	if err != nil && err != pgx.ErrNoRows {
+	if err != nil && !errors.Is(err, pgx.ErrNoRows) {
 		return Poll{}, err
 	}
 	var m map[string]json.RawMessage
@@ -55,7 +57,7 @@ func SavePoll(ctx context.Context, pool *pgxpool.Pool, contentID int64, p Poll) 
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback(ctx)
+	defer func() { _ = tx.Rollback(ctx) }()
 	if err := writePollExtra(ctx, tx, contentID, p); err != nil {
 		return err
 	}
@@ -68,7 +70,7 @@ func VotePoll(ctx context.Context, pool *pgxpool.Pool, contentID int64, optionID
 	if err != nil {
 		return Poll{}, err
 	}
-	defer tx.Rollback(ctx)
+	defer func() { _ = tx.Rollback(ctx) }()
 
 	var raw []byte
 	if err := tx.QueryRow(ctx, `SELECT extra FROM contents_extra WHERE content_id=$1 FOR UPDATE`, contentID).Scan(&raw); err != nil {

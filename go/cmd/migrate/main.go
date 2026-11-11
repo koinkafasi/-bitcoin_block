@@ -36,7 +36,7 @@ func main() {
 		logger.Error("veritabanına bağlanılamadı", "error", err)
 		os.Exit(1)
 	}
-	defer conn.Close(ctx)
+	defer func() { _ = conn.Close(ctx) }()
 
 	if err := conn.Ping(ctx); err != nil {
 		logger.Error("veritabanı ping başarısız", "error", err)

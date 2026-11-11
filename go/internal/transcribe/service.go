@@ -163,7 +163,7 @@ func (s *Service) ProcessJob(ctx context.Context, jobID int64) error {
 	if err != nil {
 		return s.fail(job, "geçici çalışma dizini oluşturulamadı")
 	}
-	defer os.RemoveAll(workDir)
+	defer func() { _ = os.RemoveAll(workDir) }()
 	normalized := filepath.Join(workDir, "audio.mp3")
 
 	if err := s.ff.Normalize(ctx, srcPath, normalized); err != nil {

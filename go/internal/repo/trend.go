@@ -34,6 +34,7 @@ func GetTrendSources(ctx context.Context, pool *pgxpool.Pool) ([]TrendSource, er
 	b, err := GetSetting(ctx, pool, "gundem", "kaynaklar")
 	if err != nil {
 		// varsayılan
+		//nolint:nilerr // kaynak ayarı yoksa gömülü varsayılan kaynak kullanılır
 		return []TrendSource{{Name: "AA Gündem", URL: "https://www.aa.com.tr/tr/rss/default?cat=gundem"}}, nil
 	}
 	var out []TrendSource

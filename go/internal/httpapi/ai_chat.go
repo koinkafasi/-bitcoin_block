@@ -92,7 +92,7 @@ func (s *Server) renderAIChatMsgs(w http.ResponseWriter, r *http.Request, convID
 	w.Header().Set("Cache-Control", "no-store")
 	w.Header().Set("Vary", "HX-Request")
 	if errText != "" {
-		fmt.Fprintf(w, `<div class="flash error">%s</div>`, html.EscapeString(errText))
+		_, _ = fmt.Fprintf(w, `<div class="flash error">%s</div>`, html.EscapeString(errText))
 	}
 	_, _ = w.Write([]byte(sb.String()))
 }

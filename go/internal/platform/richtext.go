@@ -52,7 +52,7 @@ func SanitizeRichHTML(in string) string {
 			raw := in[i : i+j+1]
 			i += j + 1
 			close := len(raw) > 1 && raw[1] == '/'
-			name := ""
+			var name string
 			if close {
 				name = extractTagName(raw[2:])
 			} else {

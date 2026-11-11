@@ -697,19 +697,19 @@ func (s *Server) gazeteDogrula(ctx context.Context, siteID, issueID int64) ([]ga
 	if err != nil {
 		return nil, err
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { _ = os.RemoveAll(tmpDir) }()
 	htmlPath := filepath.Join(tmpDir, "olcum.html")
 	// #nosec G703 -- Yol, os.MkdirTemp'in ürettiği geçici dizin + SABİT
 	// dosya adı ("olcum.html"). Dış girdi yola girmiyor.
 	if err := os.WriteFile(htmlPath, []byte(gazeteBaskiMedyaMutlak(htmlDoc)), 0o644); err != nil {
 		return nil, err
 	}
-	cmd := exec.CommandContext(ctx, chrome,
+	cmd := exec.CommandContext(ctx, chrome, // #nosec G702 -- sabit bayraklar + MkdirTemp yolu (yukarıdaki G703 notu)
 		"--headless=new", "--disable-gpu", "--no-sandbox", "--disable-dev-shm-usage",
 		"--virtual-time-budget=15000", "--dump-dom", "file://"+htmlPath)
 	out, err := cmd.Output()
 	if err != nil {
-		return nil, fmt.Errorf("olcum basarisiz: %v", err)
+		return nil, fmt.Errorf("olcum basarisiz: %w", err)
 	}
 	return gazeteTasmaAyikla(string(out))
 }
@@ -729,7 +729,7 @@ func gazeteTasmaAyikla(dom string) ([]gazeteTasma, error) {
 	ham := html.UnescapeString(rest[:j])
 	var list []gazeteTasma
 	if err := json.Unmarshal([]byte(ham), &list); err != nil {
-		return nil, fmt.Errorf("olcum raporu cozulemedi: %v", err)
+		return nil, fmt.Errorf("olcum raporu cozulemedi: %w", err)
 	}
 	for i := range list {
 		list[i].Oneri = gazeteTasmaOneri(list[i])
@@ -800,7 +800,7 @@ func (s *Server) gazeteGeneratePDF(ctx context.Context, siteID, issueID int64) (
 	if err != nil {
 		return "", err
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { _ = os.RemoveAll(tmpDir) }()
 	htmlPath := filepath.Join(tmpDir, "baski.html")
 	pdfPath := filepath.Join(tmpDir, "gazete.pdf")
 	// Gorseller file:// altinda cozulebilsin diye mutlak yola cevrilir.
@@ -809,13 +809,13 @@ func (s *Server) gazeteGeneratePDF(ctx context.Context, siteID, issueID int64) (
 	if err := os.WriteFile(htmlPath, []byte(gazeteBaskiMedyaMutlak(htmlDoc)), 0o644); err != nil {
 		return "", err
 	}
-	cmd := exec.CommandContext(ctx, chrome,
+	cmd := exec.CommandContext(ctx, chrome, // #nosec G702 -- sabit bayraklar + MkdirTemp yolu (G703 notuyla aynı gerekçe)
 		"--headless=new", "--disable-gpu", "--no-sandbox", "--disable-dev-shm-usage",
 		"--no-pdf-header-footer", "--virtual-time-budget=15000",
 		"--print-to-pdf="+pdfPath, "file://"+htmlPath)
 	out, err := cmd.CombinedOutput()
 	if err != nil {
-		return "", fmt.Errorf("PDF üretilemedi: %v (%s)", err, firstLine(string(out), 200))
+		return "", fmt.Errorf("PDF üretilemedi: %w (%s)", err, firstLine(string(out), 200))
 	}
 	pdf, err := os.ReadFile(pdfPath)
 	if err != nil {
@@ -844,9 +844,10 @@ func (s *Server) gazetePageImages(ctx context.Context, siteID int64, iss repo.Ga
 	if err != nil {
 		return
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { _ = os.RemoveAll(tmpDir) }()
 	prefix := filepath.Join(tmpDir, "sayfa")
-	cmd := exec.CommandContext(ctx, pdftoppm, "-png", "-r", "60", pdfPath, prefix)
+	cmd := exec.CommandContext(ctx, pdftoppm, // #nosec G702 -- sabit bayraklar; pdfPath/prefix MkdirTemp kaynaklı
+		"-png", "-r", "60", pdfPath, prefix)
 	if out, err := cmd.CombinedOutput(); err != nil {
 		s.logger.Warn("gazete sayfa görselleri", "error", err, "out", firstLine(string(out), 120))
 		return

@@ -31,9 +31,7 @@ func (s *Server) medyaViewFrom(d *tmplData) templkit.MedyaView {
 	v.Pages = m.Pages
 	v.HasPrev = m.HasPrev
 	v.HasNext = m.HasNext
-	for _, y := range m.Years {
-		v.Years = append(v.Years, y)
-	}
+	v.Years = append(v.Years, m.Years...)
 	aylar := []string{"Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran",
 		"Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"}
 	for i, ad := range aylar {

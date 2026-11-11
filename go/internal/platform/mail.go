@@ -77,7 +77,7 @@ func (c SMTPConfig) deliver(to string, msg []byte) error {
 			}
 		}
 	}
-	defer client.Close()
+	defer func() { _ = client.Close() }()
 
 	if c.User != "" {
 		auth := smtp.PlainAuth("", c.User, c.Pass, c.Host)

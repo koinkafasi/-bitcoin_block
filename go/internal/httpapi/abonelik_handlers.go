@@ -443,31 +443,6 @@ func (s *Server) paywallAktif(ctx context.Context) bool {
 	return strings.TrimSpace(string(b)) == "true"
 }
 
-// paywallLimit önizleme paragraf sayısı.
-func (s *Server) paywallLimit(ctx context.Context) int {
-	limit := 3
-	if lb, err := repo.GetSetting(ctx, s.pool, "paywall", "limit"); err == nil {
-		if n, e := strconv.Atoi(strings.Trim(strings.TrimSpace(string(lb)), `"`)); e == nil && n > 0 {
-			limit = n
-		}
-	}
-	return limit
-}
-
-// tierNameByWeight verilen ağırlığa karşılık gelen katman adını döndürür.
-func (s *Server) tierNameByWeight(ctx context.Context, weight int) string {
-	tiers, err := repo.ListTiers(ctx, s.pool, true)
-	if err != nil {
-		return ""
-	}
-	for _, t := range tiers {
-		if t.Weight == weight {
-			return t.Name
-		}
-	}
-	return ""
-}
-
 // formatTL tutarı "1.234,56" biçiminde yazar.
 func formatTL(v float64) string {
 	s := strconv.FormatFloat(v, 'f', 2, 64)

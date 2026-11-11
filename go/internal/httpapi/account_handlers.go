@@ -126,11 +126,6 @@ func (s *Server) hesapView(r *http.Request, u auth.User, tab string) (*tmplData,
 	return d, h
 }
 
-// hesapRender sayfayı üye kabuğuyla basar.
-func (s *Server) hesapRender(w http.ResponseWriter, r *http.Request, d *tmplData, name string) {
-	s.renderPublic(w, r, name, d, "no-store")
-}
-
 // GET /hesabim — hub.
 func (s *Server) handleHesap(w http.ResponseWriter, r *http.Request) {
 	u, ok := s.requireMember(w, r)

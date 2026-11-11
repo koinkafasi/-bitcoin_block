@@ -17,49 +17,6 @@ import (
 	"theblock/site/internal/repo"
 )
 
-// firstParagraphsHTML paywall için serbest önizleme (ilk N paragraf).
-func (s *Server) firstParagraphsHTML(detail []byte, n int) template.HTML {
-	if isTipTapDetail(detail) {
-		var doc tipTapNode
-		if json.Unmarshal(detail, &doc) != nil {
-			return template.HTML("")
-		}
-		var sb strings.Builder
-		cnt := 0
-		for _, node := range doc.Content {
-			if node.Type == "paragraph" {
-				if cnt >= n {
-					break
-				}
-				sb.WriteString(renderTipTapNode(node, func(id int64) string {
-					return s.mediaPath(context.Background(), id)
-				}))
-				cnt++
-			}
-		}
-		return template.HTML(sb.String())
-	}
-	var blocks []struct {
-		Type string `json:"type"`
-		Text string `json:"text"`
-	}
-	if err := json.Unmarshal(detail, &blocks); err != nil {
-		return template.HTML("")
-	}
-	var sb strings.Builder
-	cnt := 0
-	for _, b := range blocks {
-		if b.Type == "p" && len(b.Text) > 0 {
-			if cnt >= n {
-				break
-			}
-			sb.WriteString("<p>" + html.EscapeString(b.Text) + "</p>")
-			cnt++
-		}
-	}
-	return template.HTML(sb.String())
-}
-
 // ---- medya URL çözümleme ----
 
 // mediaPath DB'den medya depolama yolunu çözer (bellek önbellekli).
@@ -294,19 +251,6 @@ func countTag(s, tag string) int {
 
 // ---- tip etiketleri ----
 
-var typeLabels = map[string]string{
-	"haber": "Haber", "foto_galeri": "Foto Galeri", "video": "Video", "makale": "Makale",
-	"resmi_ilan": "Resmi İlan", "e-gazete": "E-Gazete", "roportaj": "Röportaj", "anket": "Anket",
-	"biyografi": "Biyografi", "firma_rehberi": "Firma Rehberi", "seri_ilan": "Seri İlan", "vefat": "Vefat",
-}
-
-func typeLabel(key string) string {
-	if l, ok := typeLabels[key]; ok {
-		return l
-	}
-	return key
-}
-
 // ---- sayısal yardımcılar ----
 
 func parseID(s string) int64 {
@@ -327,8 +271,6 @@ func parseLocalTime(s string) *time.Time {
 	}
 	return &t
 }
-
-func boolPtr(b bool) *bool { return &b }
 
 func optID(s string) *int64 {
 	if s == "" {

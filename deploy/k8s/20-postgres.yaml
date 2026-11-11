@@ -22,6 +22,7 @@ spec:
       # Service Account token'i POD'A BAGLAMA (Sonar S6865): pod'lar
       # Kubernetes API'sini kullanmiyor; token mount edilirse ele gecirilen
       # bir container kume API'sine konusabilir.
+      serviceAccountName: theblock-postgres
       automountServiceAccountToken: false
       securityContext:
         # postgres:17-alpine gercek kimlik: uid 70 / gid 70 (dogrulandi).
@@ -58,12 +59,35 @@ spec:
             # kalırsa initdb "dizin boş değil" diye reddediyor.
             - name: PGDATA
               value: /var/lib/postgresql/data/pgdata
+          # TLS ZORUNLU (sslmode=verify-full). Sertifikalar
+          # `deploy/scripts/pg-tls-uret.sh` tarafından üretilip
+          # `theblock-pg-tls` Secret'ına yazılır; `k8s-sevk.sh` bunu
+          # otomatik koşar. Secret yoksa postgres BAŞLAMAZ — bilinçli:
+          # şifresiz başlamaktansa hiç başlamamak doğru (fail closed).
+          args:
+            - "-c"
+            - "ssl=on"
+            - "-c"
+            - "ssl_cert_file=/etc/pg-tls/server.crt"
+            - "-c"
+            - "ssl_key_file=/etc/pg-tls/server.key"
+            - "-c"
+            - "ssl_ca_file=/etc/pg-tls/ca.crt"
+            # Yalnız TLS'li bağlantı kabul et: `hostssl` istemciler için
+            # `host` (düz) satırları REDDET. Şifresiz istemci kazara
+            # bağlanırsa fark edilsin.
+            - "-c"
+            - "hba_file=/etc/pg-tls/pg_hba.conf"
           ports:
             - { name: postgres, containerPort: 5432 }
           volumeMounts:
             - { name: pgdata, mountPath: /var/lib/postgresql/data }
             - { name: run, mountPath: /var/run/postgresql }
             - { name: tmp, mountPath: /tmp }
+            # defaultMode 0640 + fsGroup 70: postgres anahtarı okuyabilir
+            # ama dünya okuyamaz. Postgres kuralı: anahtar root'a aitse
+            # grup-okuma serbest, diğer her durumda 0600 gerekir.
+            - { name: pg-tls, mountPath: /etc/pg-tls, readOnly: true }
           readinessProbe:
             exec:
               command: ["sh", "-c", "pg_isready -U \"$POSTGRES_USER\" -d \"$POSTGRES_DB\""]
@@ -88,6 +112,17 @@ spec:
           emptyDir: {}
         - name: tmp
           emptyDir: {}
+        # TLS materyali. `optional: false` (varsayılan): Secret yoksa pod
+        # beklemede kalır — sessizce şifresiz başlamaz.
+        - name: pg-tls
+          secret:
+            secretName: theblock-pg-tls
+            defaultMode: 0640
+            items:
+              - { key: ca.crt, path: ca.crt }
+              - { key: server.crt, path: server.crt }
+              - { key: server.key, path: server.key }
+              - { key: pg_hba.conf, path: pg_hba.conf }
 
 ---
 apiVersion: v1

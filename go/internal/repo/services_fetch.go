@@ -323,6 +323,7 @@ func RefreshEczane(ctx context.Context, pool DB) (int, error) {
 	ok := 0
 	for _, c := range cities {
 		if ctx.Err() != nil {
+			//nolint:nilerr // bağlam iptal edildi: tur normal biçimde biter, hata değildir
 			return ok, nil
 		}
 		anahtar := strconv.Itoa(c.Plaka)
@@ -1114,21 +1115,6 @@ type tsStanding struct {
 	Form   string `json:"strForm"`
 	Season string `json:"strSeason"`
 	League string `json:"strLeague"`
-}
-
-func tsStandings(key, league, season string, timeout time.Duration) []tsStanding {
-	path := fmt.Sprintf("lookuptable.php?l=%s&s=%s", league, season)
-	raw, err := httpGetJSONUA(fmt.Sprintf(tsAPI, key, path), timeout)
-	if err != nil {
-		return nil
-	}
-	var resp struct {
-		Table []tsStanding `json:"table"`
-	}
-	if json.Unmarshal(raw, &resp) != nil {
-		return nil
-	}
-	return resp.Table
 }
 
 // seasonOf verilen tarihe göre futbol sezonunu döndürür (Tem–Haz).

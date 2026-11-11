@@ -3,8 +3,6 @@ package httpapi
 import (
 	"context"
 	"strings"
-
-	"theblock/site/internal/repo"
 )
 
 // Yerelleştirme yardımcıları (Faz 189).
@@ -108,33 +106,6 @@ func (s *Server) categoryLangName(ctx context.Context, locale, slug, yedek strin
 		return yedek
 	}
 	return v
-}
-
-// sitemapDilleri içeriği olan dilleri döndürür (sitemap/hreflang için).
-func (s *Server) sitemapDilleri(ctx context.Context, siteID int64) []string {
-	var out []string
-	rows, err := s.pool.Query(ctx,
-		`SELECT DISTINCT locale FROM contents WHERE site_id=$1 AND status='yayinda'`,
-		siteIDOr1(siteID))
-	if err != nil {
-		return nil
-	}
-	defer rows.Close()
-	for rows.Next() {
-		var l string
-		if err := rows.Scan(&l); err == nil && l != "" {
-			out = append(out, l)
-		}
-	}
-	return out
-}
-
-// contentSiteID yayımlanmış içerikten site kimliği (yardımcı).
-func contentSiteID(c repo.Content) int64 {
-	if c.SiteID > 0 {
-		return c.SiteID
-	}
-	return 1
 }
 
 // localeText verilen anahtarın çevirisini, yoksa yedeği döndürür.

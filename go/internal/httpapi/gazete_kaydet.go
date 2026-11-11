@@ -87,7 +87,6 @@ func gazeteSurum(t time.Time) string {
 // Dönen ilk değer boş değilse çakışma var demektir (hata değil, kullanıcı kararı).
 func (s *Server) gazeteSayfalariYaz(ctx context.Context, issueID int64,
 	sayfalar []gazeteKayitSayfa, beklenenSurum string) (string, error) {
-
 	tx, err := s.pool.Begin(ctx)
 	if err != nil {
 		return "", err
@@ -134,14 +133,6 @@ func (s *Server) gazeteSayfalariYaz(ctx context.Context, issueID int64,
 		return "", err
 	}
 	return "", nil
-}
-
-// gazeteSayfaSayisi sayının kayıtlı sayfa sayısı (testler ve panel için).
-func (s *Server) gazeteSayfaSayisi(ctx context.Context, issueID int64) (int, error) {
-	var n int
-	err := s.pool.QueryRow(ctx,
-		`SELECT count(*) FROM gazete_pages WHERE issue_id=$1`, issueID).Scan(&n)
-	return n, err
 }
 
 // gazeteKayitDogrula gelen sayfa yukunu denetler.

@@ -44,34 +44,6 @@ func yedekIpucu(yedek string) string {
 	return "zorunlu"
 }
 
-// hedefYuzde "bugün yayınlanan / hedef" oranını 0-100 aralığına sıkıştırır.
-// Sıfır hedefte bölme yapılmaz: ilerleme çubuğu boş kalır.
-func hedefYuzde(bugun, hedef int) int {
-	if hedef <= 0 {
-		return 0
-	}
-	p := bugun * 100 / hedef
-	if p > 100 {
-		return 100
-	}
-	if p < 0 {
-		return 0
-	}
-	return p
-}
-
-// ilkHarf avatar dairesinde gösterilecek baş harfi verir. Türkçe'de
-// strings.ToUpper tek başına yetmez (i → İ), bu yüzden büyütme yapılmaz;
-// ilk rune olduğu gibi döner.
-func ilkHarf(ad string) string {
-	for _, r := range ad {
-		if r != ' ' {
-			return string(r)
-		}
-	}
-	return "?"
-}
-
 // boolStr aria-* öznitelikleri için "true"/"false" üretir. templ v0.3'te
 // templ.KV yalnız class içinde çalışıyor; aria-pressed metin bekliyor.
 func boolStr(b bool) string {

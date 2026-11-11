@@ -16,17 +16,6 @@ import (
 	"theblock/site/internal/repo"
 )
 
-// readingMinutes içerik metninden yaklaşık okuma süresini (dakika, 200 kelime/dk) hesaplar.
-func readingMinutes(htmlBody, spot string) int {
-	txt := stripTags(htmlBody) + " " + spot
-	words := len(strings.Fields(txt))
-	m := (words + 199) / 200
-	if m < 1 {
-		m = 1
-	}
-	return m
-}
-
 // ---- Modüler sayfa tasarımcısı (spec 08) ----
 
 // blockType palette öğesi.
@@ -1433,13 +1422,6 @@ func excludeContent(items []repo.Content, lists ...[]repo.Content) []repo.Conten
 		}
 	}
 	return out
-}
-
-func firstCat(items []repo.Category, n int) []repo.Category {
-	if n <= 0 || n > len(items) {
-		n = len(items)
-	}
-	return items[:n]
 }
 
 func firstTrend(items []repo.CatTrend, n int) []repo.CatTrend {

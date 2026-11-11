@@ -171,6 +171,3 @@ func makaleYayinISO(c repo.Content) string {
 	}
 	return c.PublishedAt.UTC().Format("2006-01-02T15:04:05Z")
 }
-
-// trKucult yardımcı (menü/etiket karşılaştırmaları).
-func trKucult(s string) string { return strings.ToLower(s) }

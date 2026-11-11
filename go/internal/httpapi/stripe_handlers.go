@@ -252,21 +252,3 @@ func (s *Server) memberSecret() []byte {
 	sum := sha256.Sum256([]byte("uye:" + key))
 	return sum[:]
 }
-
-// premiumViaCookie imzalı üyelik çerezi premium hesaba işaret ediyorsa true.
-func (s *Server) premiumViaCookie(r *http.Request) bool {
-	em := s.memberCookieEmail(r)
-	if em == "" {
-		return false
-	}
-	ctx := r.Context()
-	uid, ok, _ := repo.FindUserByEmailID(ctx, s.pool, em)
-	if !ok {
-		return false
-	}
-	var m string
-	if err := s.pool.QueryRow(ctx, `SELECT membership FROM users WHERE id=$1`, uid).Scan(&m); err != nil {
-		return false
-	}
-	return m == "premium"
-}

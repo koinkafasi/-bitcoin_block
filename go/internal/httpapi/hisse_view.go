@@ -131,22 +131,6 @@ var gecerliHisseSirala = map[string]bool{
 	"dusen":    true, // en çok düşen başta
 }
 
-// hisseHizSecenekleri akış hızı ön ayarları (px/sn).
-//
-// Kullanıcı "birebir değiştirilebilir" hız istediği için hem hazır
-// adımlar hem serbest px/sn alanı sunulur. Ön ayar seçiliyse sayısal alan
-// yok sayılır; "ozel" seçilirse serbest alan geçerli olur.
-var hisseHizSecenekleri = []struct{ Key, Label string }{
-	{"20", "Çok yavaş — 20 px/sn"},
-	{"30", "Yavaş — 30 px/sn"},
-	{"45", "Orta — 45 px/sn"},
-	{"60", "Normal — 60 px/sn (Habertürk)"},
-	{"90", "Hızlı — 90 px/sn"},
-	{"120", "Çok hızlı — 120 px/sn"},
-	{"180", "Ultra — 180 px/sn"},
-	{"ozel", "Özel (aşağıdaki px/sn)"},
-}
-
 // hisseHizSecimPx ön ayar anahtarını px/sn'ye çevirir.
 func hisseHizSecimPx(key string) (int, bool) {
 	if key == "" || key == "ozel" {

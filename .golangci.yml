@@ -1,0 +1,132 @@
+version: "2"
+
+# golangci-lint yapılandırması — Go statik analiz kapısı.
+#
+# NEDEN AYRI BİR ARAÇ (Sonar/gosec/Semgrep varken): üçü farklı soru sorar.
+#   · gosec (guvenlik-tara.sh) → yalnız YÜKSEK önem güvenlik desenleri
+#   · Semgrep  → desen eşleme, dile gevşek bağlı
+#   · Sonar    → kod kokusu + kapsam (yerelde koşuyor)
+#   · golangci-lint → Go'nun KENDİ tip bilgisiyle çalışan lint'ler
+#     (errcheck, staticcheck, unused). "Yakalanmayan hata", "ölü kod",
+#     "her zaman aynı değeri dönen ifade" gibi hataları yalnız bu yakalar;
+#     diğer üçü tip bilgisiyle bu derinlikte bakmaz.
+#
+# POLİTİKA: gürültü değil kapı.
+#   · CI'da kapı YENİ KOD üzerinde (`--new-from-rev`): yeni eklenen her
+#     satır temiz olmalı. Eski borç bir gecede kapanmaz, ama BÜYÜMEZ.
+#   · Yerelde `make lint` TÜM depoyu raporlar (borç görünür kalsın).
+# Bu ayrım bilinçli: tam depoyu kapı yapmak, bugün 200+ bulguyla CI'ı
+# kırmızı başlatır ve "kapıyı kapat" kararına götürür. Ters yönde ise
+# yeni kodda hiçbir gevşeme yok.
+
+run:
+  timeout: 10m
+  tests: true
+
+linters:
+  default: standard        # errcheck, govet, ineffassign, staticcheck, unused
+  enable:
+    - bodyclose            # HTTP yanıt gövdesi kapatılmıyor mu
+    - errorlint            # %v ile hata sarma, errors.Is yerine ==
+    - gosec                # güvenlik (guvenlik-tara.sh ile aynı kural ailesi)
+    - misspell             # yazım (kod içi yorumlar dahil)
+    - nilerr               # hata varken nil dönme
+    - unconvert            # gereksiz tip dönüşümü
+    - wastedassign         # hiç okunmayan atama
+    - whitespace           # baş/son boş satırlar
+  settings:
+    gosec:
+      # guvenlik-tara.sh ile AYNI eşik: yalnız yüksek önem + orta güven.
+      # Daha gevşek eşik, o kapıdan geçen kodun burada kırılması demekti
+      # (iki hat birbirini yalanlarsa ikisine de güvenilmez).
+      severity: high
+      confidence: medium
+      excludes:
+        - G104   # yakalanmayan hata errcheck'te zaten var
+    errcheck:
+      # Kapatma/serbest bırakma hataları: geri dönülecek bir şey yok,
+      # çağıran katman zaten hatayı göremez. Bunları zorunlu kılmak
+      # `_ = f.Close()` gürültüsü üretir, gerçek hataları gizler.
+      exclude-functions:
+        - (io.Closer).Close
+        - (*os.File).Close
+        - (io.ReadCloser).Close
+        - (net/http.ResponseWriter).Write
+        - (pgx.Tx).Rollback
+        - (*pgxpool.Pool).Close
+    misspell:
+      # TÜRKÇE SÖZLÜK: misspell'in ABD İngilizce sözlüğü Türkçe kelimeleri
+      # "yanlış yazım" sanıyor (performans, paralel, adres, personel...).
+      # Bunlar kod içindeki Türkçe yorumlarda ve KULLANICIYA GÖRÜNEN
+      # metinlerde doğru yazımlardır — düzeltmek yazım hatası üretir.
+      #
+      # `extra-words` ile kelime KENDİNE eşlenir = "bu kelime serbest".
+      # (v2'de `ignore-words` anahtarı kaldırıldı; şema doğrulaması reddeder.)
+      locale: US
+      extra-words:
+        - typo: transkript
+          correction: transkript
+        - typo: personel
+          correction: personel
+        - typo: performans
+          correction: performans
+        - typo: paralel
+          correction: paralel
+        - typo: adres
+          correction: adres
+        - typo: modeller
+          correction: modeller
+        - typo: kilometre
+          correction: kilometre
+        - typo: mamal
+          correction: mamal
+        - typo: cancelled
+          correction: cancelled
+        - typo: hten
+          correction: hten
+        - typo: europen
+          correction: europen
+    staticcheck:
+      checks:
+        - all
+        # Bu altı liste golangci-lint'in VARSAYILAN dışlaması; `checks: all`
+        # yazınca tekrar açılırlar (paket yorumu, kısaltma stili gibi
+        # biçim kuralları). Varsayılanla aynı çizgide kalınır.
+        - -ST1000
+        - -ST1003
+        - -ST1016
+        - -ST1020
+        - -ST1021
+        - -ST1022
+        # ST1005: hata metinleri Türkçe ve büyük harfle başlıyor
+        # ("Başlık boş."). Go'nun İngilizce kuralı burada anlamsız.
+        - -ST1005
+        # QF*: "şöyle yazsaydın daha kısa olurdu" önerileri — kapı değil.
+        - -QF1001
+        - -QF1002
+        - -QF1003
+        - -QF1012
+        # SA1019: webpush, crypto/elliptic'in ESKİ API'sini kullanıyor.
+        # Yeni API'ye geçiş ayrı bir iş (VAPID anahtar üretimi/doğrulaması
+        # yeniden yazılmalı). Kayıt: docs/guvenlik-hatti.md "bilinen borç".
+        - -SA1019
+  exclusions:
+    # Üretilen kod: templ çıktısı ve migration'lar elle düzenlenmez.
+    #
+    # DİKKAT: `unused`/`staticcheck`/`govet` _templ.go'da AÇIK bırakılır.
+    # Kapatılırsa linter templ dosyalarındaki yardımcı fonksiyonların
+    # ÇAĞRILDIĞINI göremez ve hepsini "unused" sanar (ilk denemede 50
+    # yanlış pozitifin 40'ı bu yüzdendi).
+    generated: lax
+    rules:
+      - path: _templ\.go
+        linters: [gosec, errcheck, bodyclose]
+      - path: migrations/
+        linters: [gosec, errcheck, staticcheck]
+      - path: _test\.go
+        linters: [gosec, errcheck, bodyclose, nilerr]
+
+formatters:
+  enable:
+    - gofmt
+    - goimports

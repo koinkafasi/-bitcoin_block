@@ -234,8 +234,6 @@ func RSSOku(xmlMetin string) ([]Oge, error) {
 
 // ---- /streams sayfası ----
 
-var icerikIDKalibi = regexp.MustCompile(`"contentId":"([A-Za-z0-9_-]{11})"`)
-
 // YayinKaydi /streams sayfasından çıkarılan tek yayın.
 type YayinKaydi struct {
 	VideoID string

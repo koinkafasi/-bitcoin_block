@@ -208,6 +208,7 @@ func (y *yahooSayi) UnmarshalJSON(b []byte) error {
 			Raw float64 `json:"raw"`
 		}
 		if err := json.Unmarshal(b, &s); err != nil {
+			//nolint:nilerr // sayı biçimi beklenmedikse alan boş bırakılır; profil kısmi gösterilir
 			return nil // biçim beklenmedik: alanı boş bırak, hata yükseltme
 		}
 		*y = yahooSayi(s.Raw)
@@ -215,6 +216,7 @@ func (y *yahooSayi) UnmarshalJSON(b []byte) error {
 	}
 	var f float64
 	if err := json.Unmarshal(b, &f); err != nil {
+		//nolint:nilerr // sayı biçimi beklenmedikse alan boş bırakılır; profil kısmi gösterilir
 		return nil
 	}
 	*y = yahooSayi(f)

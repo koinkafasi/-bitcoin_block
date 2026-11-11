@@ -103,6 +103,7 @@ type WordRule struct {
 func LoadWordRules(ctx context.Context, pool *pgxpool.Pool) ([]WordRule, error) {
 	b, err := GetSetting(ctx, pool, "bot", "kelimeler")
 	if err != nil {
+		//nolint:nilerr // ayar satırı yoksa kural listesi boş döner; bu "ayar yok" demektir, arıza değil
 		return nil, nil
 	}
 	var rules []WordRule
@@ -809,19 +810,6 @@ func feedAuthor(authorOpt *int64, def int64) int64 {
 		return *authorOpt
 	}
 	return def
-}
-
-// categorySlug kategori id'sinin slug'ını döndürür (id yoksa boş).
-func categorySlug(ctx context.Context, pool *pgxpool.Pool, id *int64) (string, error) {
-	if id == nil || *id == 0 {
-		return "", nil
-	}
-	var slug string
-	err := pool.QueryRow(ctx, `SELECT slug FROM categories WHERE id = $1`, *id).Scan(&slug)
-	if err != nil {
-		return "", err
-	}
-	return slug, nil
 }
 
 // categorySlugIDs slug → id haritası (çekim başına bir kez okunur).

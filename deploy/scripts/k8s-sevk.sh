@@ -128,7 +128,43 @@ fi
 
 echo "==> altyapı: namespace + PVC"
 uygula "$URETIM/00-namespace.yaml" || exit 1
+
+# SERVICE ACCOUNT'LAR ÖNCE: Deployment'lar bunlara `serviceAccountName` ile
+# bağlanıyor; SA yoksa pod Pending'de kalır ("serviceaccount not found").
+uygula "$URETIM/07-rbac.yaml"      || exit 1
+
+# POSTGRES TLS: `theblock-pg-tls` Secret'ı YOKSA postgres de site de
+# BAŞLAMAZ (fail closed — şifresiz bağlantıdan iyidir). Betik idempotent:
+# sertifika geçerliyse dokunmaz, süresi yaklaşmışsa yeniler.
+if command -v openssl >/dev/null 2>&1; then
+  bash "$KOK/deploy/scripts/pg-tls-uret.sh" || {
+    echo "HATA: Postgres TLS materyali üretilemedi." >&2
+    exit 1
+  }
+else
+  echo "UYARI: openssl yok — mevcut theblock-pg-tls Secret'ı kullanılacak." >&2
+  kctl -n "$NS" get secret theblock-pg-tls >/dev/null 2>&1 || {
+    echo "HATA: openssl yok ve theblock-pg-tls Secret'ı da yok." >&2
+    exit 1
+  }
+fi
+
 uygula "$URETIM/10-pvc.yaml"       || exit 1
+
+# AĞ POLİTİKALARI: varsayılan reddet. Deployment'lardan ÖNCE uygulanır ki
+# pod'lar ilk saniyeden itibaren segmentli doğsun.
+uygula "$URETIM/06-networkpolicy.yaml" || exit 1
+
+# KYVERNO: yalnız CRD kuruluysa. Kurulu değilse politika uygulamak
+# "no matches for kind ClusterPolicy" ile sevki kırar — küme Kyverno'suz
+# da çalışabilsin (politika kurulumu ayrı bir adım, bkz. dosya başı).
+if kctl get crd clusterpolicies.kyverno.io >/dev/null 2>&1; then
+  uygula "$URETIM/05-kyverno.yaml" || exit 1
+  echo "==> Kyverno politikaları uygulandı"
+else
+  echo "UYARI: Kyverno kurulu değil — imza zorunluluğu kümede AKTİF DEĞİL." >&2
+  echo "       Kurulum: deploy/k8s/05-kyverno.yaml başındaki helm komutu." >&2
+fi
 
 if [ "$SITE_ONLY" = 1 ]; then
   echo "==> yalnız site"

@@ -155,7 +155,6 @@ func (s *Server) handleCDCoin(w http.ResponseWriter, r *http.Request) {
 	if bulunan == nil {
 		for i := range fiyatlar {
 			if strings.ToLower(fiyatlar[i].Sym) == aranan {
-				bulunan = &fiyatlar[i]
 				// Sembol adresi kanonik değil: kalıcı yönlendir.
 				hedef := "/price/" + repo.CoinSlug(fiyatlar[i].Name)
 				if r.URL.RawQuery != "" {

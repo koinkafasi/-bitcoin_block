@@ -1,0 +1,203 @@
+name: imaj
+
+# İMAJ HATTI — tedarik zincirinin kalbi.
+#
+# NEDEN AYRI WORKFLOW: `ci.yml` her PR'da koşar ve hızlı olmalı. İmaj
+# derlemek 4 Dockerfile × çok aşamalı Go derlemesi ~4 dk. PR'da imaj
+# derlemek geri bildirimi geciktirir; ama `main`'e giren her commit
+# TARANMIŞ, SBOM'U ÇIKARILMIŞ ve İMZALANMIŞ bir imaj üretmeli.
+#
+# ZİNCİR: derle → Trivy tara (kapı) → SBOM (CycloneDX) → cosign imzala
+#         (keyless, OIDC) → GHCR'a digest ile bas.
+#
+# NEDEN DIGEST: `k8s-sevk.sh` etiket kullanıyor (`sha-abc1234`). Etiket
+# değiştirilebilir; digest değiştirilemez. Kyverno politikası kümede
+# digest ZORUNLU kılar (deploy/k8s/05-kyverno.yaml).
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Yetkiler İŞ DÜZEYİNDE: iş yalnız ihtiyacı kadar yetki alır (zizmor
+# `excessive-permissions`). İmza işi id-token/packages ister; doğrulama
+# işi yalnız okuma.
+permissions:
+  contents: read
+
+concurrency:
+  group: imaj-${{ github.ref }}
+  cancel-in-progress: false   # imaj hattı yarıda kesilmesin (yarım imaj kalmasın)
+
+env:
+  TRIVY_SURUM: "0.76.1"
+  REGISTRY: ghcr.io
+
+jobs:
+  imaj:
+    name: ${{ matrix.ad }}
+    runs-on: ubuntu-latest
+    # Bu iş imzalar ve GHCR'a yazar — yetki yalnız burada.
+    permissions:
+      contents: read
+      packages: write
+      id-token: write        # cosign keyless (OIDC)
+      attestations: write    # SBOM attestation
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - ad: site
+            dockerfile: deploy/docker/site.Dockerfile
+          - ad: image-svc
+            dockerfile: deploy/docker/image-svc.Dockerfile
+          - ad: search-svc
+            dockerfile: deploy/docker/search-svc.Dockerfile
+          - ad: collab
+            dockerfile: deploy/docker/collab.Dockerfile
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+
+      - name: Trivy kur (sabit sürüm, sağlama doğrulamalı)
+        run: |
+          set -euo pipefail
+          D=$(mktemp -d); cd "$D"
+          T="trivy_${TRIVY_SURUM}_Linux-64bit.tar.gz"
+          B="https://github.com/aquasecurity/trivy/releases/download/v${TRIVY_SURUM}"
+          curl -fsSLO "$B/$T"
+          curl -fsSLO "$B/trivy_${TRIVY_SURUM}_checksums.txt"
+          sha256sum -c --ignore-missing "trivy_${TRIVY_SURUM}_checksums.txt"
+          tar xzf "$T"
+          install -m 0755 trivy "$HOME/.local/bin/trivy"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          "$HOME/.local/bin/trivy" --version
+
+      - name: docker/setup-buildx
+        uses: docker/setup-buildx-action@b5ca514318bd6ebac0fb2aedd5d36ec1b5c232a2 # v3.10.0
+
+      - name: GHCR'a giriş
+        uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772 # v3.4.0
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: İmaj derle (yükleme YOK — önce tara)
+        id: derle
+        uses: docker/build-push-action@14487ce63c7a62a4a324b0bfb37086795e31c6c1 # v6.16.0
+        with:
+          context: .
+          file: ${{ matrix.dockerfile }}
+          load: true                 # yerel Docker'a yükle (trivy görecek)
+          tags: yerel/${{ matrix.ad }}:tarama
+          cache-from: type=gha,scope=${{ matrix.ad }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.ad }}
+
+      # KAPI: yaması olan CRITICAL/HIGH varsa imaj GHCR'a GİTMEZ.
+      # `--ignore-unfixed` bilinçli: yamasız bulgu kapıyı kalıcı kırmızıya
+      # çevirir ve kimse bakmaz (bkz. docs/guvenlik-hatti.md).
+      - name: Trivy imaj taraması (kapı)
+        run: |
+          set -euo pipefail
+          trivy image --quiet --scanners vuln \
+            --severity CRITICAL,HIGH --ignore-unfixed \
+            --exit-code 1 --table-mode summary \
+            "yerel/${{ matrix.ad }}:tarama"
+
+      # SBOM: hangi paket sürümlerinin imaja girdiğinin makine-okur kaydı.
+      # CVE çıktığında "bizde var mı" sorusunu saniyede yanıtlar.
+      - name: SBOM (CycloneDX)
+        run: |
+          set -euo pipefail
+          trivy image --quiet --format cyclonedx \
+            --output "sbom-${{ matrix.ad }}.cdx.json" \
+            "yerel/${{ matrix.ad }}:tarama"
+          echo "SBOM: $(wc -c < "sbom-${{ matrix.ad }}.cdx.json") bayt"
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: sbom-${{ matrix.ad }}
+          path: sbom-${{ matrix.ad }}.cdx.json
+          retention-days: 90
+
+      - name: İmajı GHCR'a bas (digest)
+        id: bas
+        run: |
+          set -euo pipefail
+          HEDEF="$REGISTRY/koinkafasi/theblock-${{ matrix.ad }}"
+          # İki etiket: kaydırılamaz commit etiketi + insan-okur `main`.
+          docker tag "yerel/${{ matrix.ad }}:tarama" "$HEDEF:${GITHUB_SHA::7}"
+          docker tag "yerel/${{ matrix.ad }}:tarama" "$HEDEF:main"
+          docker push --quiet "$HEDEF:${GITHUB_SHA::7}"
+          docker push --quiet "$HEDEF:main"
+          DIGEST=$(docker inspect --format '{{index .RepoDigests 0}}' "$HEDEF:${GITHUB_SHA::7}" | cut -d@ -f2)
+          echo "digest=$DIGEST" >> "$GITHUB_OUTPUT"
+          echo "etiket=${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+          echo "hedef=$HEDEF" >> "$GITHUB_OUTPUT"
+
+      - uses: sigstore/cosign-installer@398d4b0eeef1380460a10c8013a76f728fb906ac # v3.9.1
+        with:
+          cosign-release: v2.5.0
+
+      # KEYLESS imza: uzun ömürlü özel anahtar YOK. Kimlik GitHub OIDC
+      # jetonundan gelir; imza Rekor şeffaflık günlüğüne yazılır.
+      # Doğrulama: `cosign verify <imaj>@<digest> --certificate-identity-regexp ...`
+      - name: İmzala (keyless)
+        run: |
+          set -euo pipefail
+          cosign sign --yes \
+            "${{ steps.bas.outputs.hedef }}@${{ steps.bas.outputs.digest }}"
+
+      # SBOM'u imzaya BAĞLA: imza "bu digest + bu SBOM" der. Ayrı iki
+      # dosya olsaydı SBOM değiştirilip imza geçerli kalırdı.
+      - name: SBOM attestation
+        run: |
+          set -euo pipefail
+          cosign attest --yes --predicate "sbom-${{ matrix.ad }}.cdx.json" \
+            --type cyclonedx \
+            "${{ steps.bas.outputs.hedef }}@${{ steps.bas.outputs.digest }}"
+
+      - name: Özet
+        run: |
+          {
+            echo "### ${{ matrix.ad }}"
+            echo ""
+            echo "- etiket: \`${{ steps.bas.outputs.etiket }}\`"
+            echo "- digest: \`${{ steps.bas.outputs.digest }}\`"
+            echo "- imza: keyless (Rekor)"
+            echo "- SBOM: CycloneDX, imzaya bağlı"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  # İmzaların GERÇEKTEN doğrulandığını kanıtla: imzaladık demek yetmez.
+  dogrula:
+    name: İmza doğrulama
+    needs: imaj
+    runs-on: ubuntu-latest
+    # Doğrulama yalnız ÇEKER; yazma yetkisi YOK.
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - uses: sigstore/cosign-installer@398d4b0eeef1380460a10c8013a76f728fb906ac # v3.9.1
+        with:
+          cosign-release: v2.5.0
+
+      - name: GHCR'a giriş (çekme için)
+        uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772 # v3.4.0
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: cosign verify (4 imaj)
+        run: |
+          set -euo pipefail
+          for ad in site image-svc search-svc collab; do
+            echo "--- $ad"
+            cosign verify \
+              --certificate-identity-regexp "^https://github.com/${{ github.repository }}/.github/workflows/imaj.yml@refs/heads/main$" \
+              --certificate-oidc-issuer "https://token.actions.githubusercontent.com" \
+              "${{ env.REGISTRY }}/koinkafasi/theblock-$ad:${GITHUB_SHA::7}"
+          done

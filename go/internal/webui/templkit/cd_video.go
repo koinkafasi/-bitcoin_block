@@ -129,27 +129,6 @@ func cdVKartSinif(dikey bool) string {
 	return "cd-vkart"
 }
 
-// cdVSure saniyeyi "1:02:03" biçimine çevirir (boş süre "" döner).
-func cdVSure(sn int) string {
-	if sn <= 0 {
-		return ""
-	}
-	s := sn % 60
-	d := (sn / 60) % 60
-	sa := sn / 3600
-	if sa > 0 {
-		return strconv.Itoa(sa) + ":" + ikiHane(d) + ":" + ikiHane(s)
-	}
-	return strconv.Itoa(d) + ":" + ikiHane(s)
-}
-
-func ikiHane(n int) string {
-	if n < 10 {
-		return "0" + strconv.Itoa(n)
-	}
-	return strconv.Itoa(n)
-}
-
 // cdCanliSinif canlı yayın varsa çubuğu kırmızı gösteren sınıfı ekler.
 func cdCanliSinif(canli bool) string {
 	if canli {

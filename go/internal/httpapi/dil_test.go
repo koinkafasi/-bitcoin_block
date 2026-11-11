@@ -91,9 +91,14 @@ func TestSiteAdiYerellesir(t *testing.T) {
 	assert.Contains(t, src, "title != s.siteName",
 		"site adı karşılaştırması orijinal adla olmalı")
 
-	// Makale başlığı da yerelleştirilmiş adı kullanmalı.
-	pub := okuDosya(t, "public_handlers.go")
-	assert.Contains(t, pub, `d.MetaTitle = seoTitle + " — " + d.SiteName`)
+	// MAKALE BAŞLIĞI: yeni CoinDesk kabuğunda <title> YALNIZ makale
+	// başlığıdır (site adı eklenmez — CoinDesk deseni, ölçüldü).
+	// Eski theblock gövdesindeki `seoTitle + " — " + SiteName` kuralı
+	// CD şablonunda `cdMakaleBaslik`a yerini bıraktı; ölü kod silinince
+	// (lint: unused) bu kuralı arayan iddia da güncellendi.
+	art := okuDosya(t, "cd_article.go")
+	assert.Contains(t, art, "Title:     cdMakaleBaslik(c)",
+		"CD makale <title>'ı cdMakaleBaslik'tan gelmeli")
 }
 
 // TestKategoriAdiCevirisi: kategori adları `category.<slug>` anahtarından.

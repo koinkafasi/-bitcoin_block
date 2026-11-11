@@ -55,7 +55,7 @@ func main() {
 		fmt.Fprintln(os.Stderr, "bağlantı:", err)
 		os.Exit(1)
 	}
-	defer conn.Close(ctx)
+	defer func() { _ = conn.Close(ctx) }()
 
 	rows, err := conn.Query(ctx, sql)
 	if err != nil {
@@ -67,7 +67,7 @@ func main() {
 	fields := rows.FieldDescriptions()
 	names := make([]string, len(fields))
 	for i, f := range fields {
-		names[i] = string(f.Name)
+		names[i] = f.Name
 	}
 	fmt.Println(strings.Join(names, " | "))
 	fmt.Println(strings.Repeat("-", 60))

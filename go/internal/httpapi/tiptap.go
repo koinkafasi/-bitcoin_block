@@ -271,7 +271,7 @@ func renderTipTapNode(n tipTapNode, mediaPath func(int64) string) string {
 		return renderTipTapGallery(n.Attrs, mediaPath)
 	case "image":
 		mediaID := int64Attr(n.Attrs, "mediaId")
-		src := ""
+		var src string
 		if mediaID > 0 {
 			p := ""
 			if mediaPath != nil {

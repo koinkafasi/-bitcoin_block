@@ -6,7 +6,6 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"errors"
-	"time"
 
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -179,6 +178,3 @@ func PurgeLoginAttempts(ctx context.Context, pool *pgxpool.Pool) error {
 	_, err := pool.Exec(ctx, `DELETE FROM login_attempts WHERE attempted_at < now() - interval '1 day'`)
 	return err
 }
-
-// nowPlus testler için zaman üretimi (dakika).
-func nowPlus(d time.Duration) time.Time { return time.Now().Add(d) }
