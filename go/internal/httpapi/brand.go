@@ -86,16 +86,26 @@ func (s *Server) saveBrandImage(r *http.Request, field string) (int64, error) {
 		return 0, errors.New("dosya boş")
 	}
 	var width, height int
-	decoded, err := platform.DecodeImage(data)
-	if err == nil {
-		b := decoded.Bounds()
-		width, height = b.Dx(), b.Dy()
-	} else if !isKnownImageExt(hdr.Filename) {
-		return 0, errors.New("desteklenmeyen görsel (jpg/png/webp)")
+	if strings.HasSuffix(strings.ToLower(hdr.Filename), ".svg") {
+		// SVG: vektör. Beyaz liste temizliği ZORUNLU; başarısızsa reddedilir.
+		temiz, w, h, err := platform.SanitizeSVGBoyut(data)
+		if err != nil {
+			return 0, errors.New("SVG reddedildi: " + err.Error())
+		}
+		data = temiz
+		width, height = w, h // 0 olabilir: belgede ölçü yok
 	} else {
-		// Bilinen uzantı ama çözülemedi (ör. animasyonlu/egzotik webp):
-		// dosyayı sakla, ölçüleri boş bırak.
-		s.logger.Warn("marka görseli çözülemedi, ölçüsüz saklanıyor", "alan", field, "error", err)
+		decoded, err := platform.DecodeImage(data)
+		if err == nil {
+			b := decoded.Bounds()
+			width, height = b.Dx(), b.Dy()
+		} else if !isKnownImageExt(hdr.Filename) {
+			return 0, errors.New("desteklenmeyen görsel (jpg/png/webp/svg)")
+		} else {
+			// Bilinen uzantı ama çözülemedi (ör. animasyonlu/egzotik webp):
+			// dosyayı sakla, ölçüleri boş bırak.
+			s.logger.Warn("marka görseli çözülemedi, ölçüsüz saklanıyor", "alan", field, "error", err)
+		}
 	}
 	storedPath, err := platform.SaveMedia(data, hdr.Filename)
 	if err != nil {
@@ -117,7 +127,9 @@ func (s *Server) saveBrandImage(r *http.Request, field string) (int64, error) {
 // isKnownImageExt dosya adı bilinen görsel uzantısı mı?
 func isKnownImageExt(name string) bool {
 	lower := strings.ToLower(name)
-	for _, ext := range []string{".jpg", ".jpeg", ".png", ".webp", ".gif", ".avif"} {
+	// .svg: vektör logo (kullanıcı isteği, 11 Kasım 2026). Yükleme yolunda
+	// platform.SanitizeSVG beyaz liste temizliğinden geçer.
+	for _, ext := range []string{".jpg", ".jpeg", ".png", ".webp", ".gif", ".avif", ".svg"} {
 		if strings.HasSuffix(lower, ext) {
 			return true
 		}
@@ -237,14 +249,21 @@ func (s *Server) handleBrandSave(w http.ResponseWriter, r *http.Request) {
 		_ = repo.SetSetting(ctx, s.pool, "genel", "slogan", mustJSON(map[string]string{"tr": slogan}))
 	}
 	s.audit(r, "marka_guncelle", "brand")
+	// ÖNBELLEK: `invalidateContentCache` ayar (kvCache) ve kategori
+	// önbelleğini temizliyor; AYRICA kabuk (cdShellCache) temizlenmeli.
+	// Yoksa logo yüklendikten sonra ana sayfa 10 sn boyunca ESKİ logoyu
+	// gösteriyordu — kullanıcı "yükledim ama değişmedi" diyor (11 Kasım
+	// 2026'da tam olarak bu yaşandı). Kabuk önbelleği marka alanlarını
+	// taşıdığı için burada açıkça düşürülüyor.
 	s.invalidateContentCache()
+	s.cdShellCache.Clear()
 	if len(hatalar) > 0 {
 		s.brandResult(w, r, "error", "Kısmen kaydedildi — yüklenemeyen: "+strings.Join(hatalar, "; "))
 		return
 	}
 	not := "Marka ve logo ayarları kaydedildi."
 	if ustlendiLogo {
-		not += " Görsel logo modu otomatik açıldı. Site tarafında ~1 dakika içinde görünür (önbellek)."
+		not += " Görsel logo modu otomatik açıldı; site anında güncellendi (sayfayı yenilemeniz yeterli)."
 	}
 	s.brandResult(w, r, "info", not)
 }

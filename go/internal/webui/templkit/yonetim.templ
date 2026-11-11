@@ -56,7 +56,10 @@ templ MarkaPanel(v MarkaView) {
 					<label class="tag" style="cursor:pointer"><input type="radio" name="mode" value="text" if v.Mode != "image" { checked }/> Metin Logo</label>
 					<label class="tag" style="cursor:pointer"><input type="radio" name="mode" value="image" if v.Mode == "image" { checked }/> Görsel Logo</label>
 				</div>
-				<p class="hint">Görsel logo yüklenmezse otomatik olarak metin logoya düşülür (resim yokken yazı logo).</p>
+				<p class="hint">Görsel logo yüklenmezse otomatik olarak metin logoya düşülür (resim yokken yazı logo).
+					<b>SVG desteklenir</b> — vektör logo tek dosyada her ekranda net görünür.
+					Güvenlik için yüklenen SVG beyaz liste ile temizlenir: script, dış bağlantı ve
+					olay işleyicileri atılır.</p>
 			</div>
 			<div class="field">
 				<label for="f_text">Metin Logo</label>
@@ -75,7 +78,7 @@ templ MarkaPanel(v MarkaView) {
 					if v.LogoURL != "" {
 						<img src={ templ.SafeURL(v.LogoURL) } alt="logo" style="max-height:44px;background:#18181b;border-radius:6px;padding:6px;display:block;margin-bottom:6px"/>
 					}
-					<input class="input" type="file" name="logo" accept="image/jpeg,image/png,image/webp" aria-label="Logo görseli"/>
+					<input class="input" type="file" name="logo" accept="image/jpeg,image/png,image/webp,image/svg+xml,.svg" aria-label="Logo görseli"/>
 					if v.LogoURL != "" {
 						<label class="tag" style="cursor:pointer;margin-top:6px"><input type="checkbox" name="remove_logo"/> Mevcut görseli kaldır</label>
 					}
@@ -85,7 +88,7 @@ templ MarkaPanel(v MarkaView) {
 					if v.FaviconURL != "" {
 						<img src={ templ.SafeURL(v.FaviconURL) } alt="favicon" style="width:40px;height:40px;object-fit:contain;background:#fff;border-radius:6px;padding:4px;display:block;margin-bottom:6px"/>
 					}
-					<input class="input" type="file" name="favicon" accept="image/jpeg,image/png,image/webp" aria-label="Favicon / uygulama ikonu"/>
+					<input class="input" type="file" name="favicon" accept="image/jpeg,image/png,image/webp,image/svg+xml,.svg" aria-label="Favicon / uygulama ikonu"/>
 					if v.FaviconURL != "" {
 						<label class="tag" style="cursor:pointer;margin-top:6px"><input type="checkbox" name="remove_favicon"/> Kaldır</label>
 					}
@@ -95,7 +98,7 @@ templ MarkaPanel(v MarkaView) {
 					if v.OGURL != "" {
 						<img src={ templ.SafeURL(v.OGURL) } alt="og" style="max-height:70px;background:#18181b;border-radius:6px;padding:4px;display:block;margin-bottom:6px"/>
 					}
-					<input class="input" type="file" name="og" accept="image/jpeg,image/png,image/webp" aria-label="OG paylaşım görseli"/>
+					<input class="input" type="file" name="og" accept="image/jpeg,image/png,image/webp,image/svg+xml,.svg" aria-label="OG paylaşım görseli"/>
 					if v.OGURL != "" {
 						<label class="tag" style="cursor:pointer;margin-top:6px"><input type="checkbox" name="remove_og"/> Kaldır</label>
 					}

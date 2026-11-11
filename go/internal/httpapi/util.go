@@ -319,7 +319,10 @@ func platformFileExt(filename string) (string, error) {
 // tür ikonu basılır. Listede olmayan uzantılar reddedilir.
 func mediaKindByExt(filename string) (string, bool) {
 	switch strings.ToLower(filepath.Ext(filename)) {
-	case ".jpg", ".jpeg", ".png", ".webp":
+	case ".jpg", ".jpeg", ".png", ".webp", ".svg":
+		// SVG bir GÖRSEL değil XML belgesidir: yükleme yolunda ayrıca
+		// beyaz liste temizliğinden geçer (platform.SanitizeSVG) ve servis
+		// anında sıkı CSP ile sunulur. Burada yalnız tür ayrımı yapılıyor.
 		return "image", true
 	case ".mp3", ".wav", ".ogg", ".oga", ".m4a", ".aac", ".flac":
 		return "audio", true

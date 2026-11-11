@@ -375,6 +375,41 @@ func (s *Server) cdShellCtx(ctx context.Context, r *http.Request, aktif string) 
 	}
 	sh.Ticker = s.cdTickerDoldurSekme(ctx, sekme)
 
+	// MARKA: panelden yüklenen logo/favicon/slogan (11 Kasım 2026).
+	//
+	// NEDEN BURADA: cdShellCtx her cd sayfasının tek kabuk kaynağı.
+	// Markayı sayfa sayfa doldurmak 30+ çağrı yerini değiştirmek olurdu
+	// ve biri unutulunca o sayfa eski logoyu gösterirdi.
+	if bc := s.brandConfig(ctx); bc != nil {
+		u := func(id *int64) string {
+			if id == nil || *id <= 0 {
+				return ""
+			}
+			v := s.mediaURL(id)
+			if v == "" || v == "/media/none.svg" {
+				return ""
+			}
+			return v
+		}
+		sh.LogoURL = u(bc.ImageID)
+		sh.FaviconURL = u(bc.FaviconID)
+		// Trim: yalnız boşluk taşıyan slogan boş `<span>` basıyordu
+		// (test yakaladı, 11 Kasım 2026).
+		sh.Tagline = strings.TrimSpace(bc.Tagline)
+		// Ölçü: yüklenen dosyanın gerçek boyutu (CLS). Bilinmiyorsa 0
+		// kalır, şablon 146×32'ye düşer.
+		if bc.ImageID != nil {
+			if m, err := repo.GetMedia(ctx, s.pool, *bc.ImageID); err == nil {
+				if m.Width != nil {
+					sh.LogoGenislik = *m.Width
+				}
+				if m.Height != nil {
+					sh.LogoYukseklik = *m.Height
+				}
+			}
+		}
+	}
+
 	return sh
 }
 

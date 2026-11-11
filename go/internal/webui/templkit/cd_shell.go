@@ -1,6 +1,9 @@
 package templkit
 
-import "strconv"
+import (
+	"strconv"
+	"strings"
+)
 
 // CoinDesk tasarım kabuğu (bitcosar).
 // Kaynak: docs/COINDESK-SPEC.md §3 (üst gezinme + fiyat şeridi) ve §6
@@ -78,6 +81,33 @@ type CDShell struct {
 	// BaseURL og:image mutlaklaştırması ve yapısal veri için kök adres
 	// (sayfa görünümlerinden doldurulur; boşsa göreli kalır).
 	BaseURL string
+
+	// ---- MARKA (11 Kasım 2026) ----
+	//
+	// NEDEN: admin panelden logo yüklenebiliyordu ama cd kabuğu logoyu
+	// SABİT `/static/img/logo-bitcosar-2x.png` olarak basıyordu — yüklenen
+	// görsel hiçbir yerde görünmüyordu (kullanıcı bildirimi: "svg dosya ile
+	// değiştirebilmek için admin panelden denedim").
+	//
+	// Artık: LogoURL doluysa O kullanılır; boşsa eski statik PNG/SVG
+	// üçlemesine düşülür (geri uyumlu, dosya silinmişse kırık görsel yok).
+	LogoURL string
+
+	// LogoAcikURL açık tema için ayrı logo (markanın koyu renkli sürümü).
+	// Boşsa LogoURL iki temada da kullanılır.
+	LogoAcikURL string
+
+	// LogoGenislik / LogoYukseklik yüklenen dosyanın GERÇEK ölçüsü.
+	// CLS için width/height özniteliği gerekiyor; ölçü bilinmiyorsa
+	// (SVG'de viewBox yok) varsayılan 146×32 korunur.
+	LogoGenislik  int
+	LogoYukseklik int
+
+	// Tagline logonun altındaki slogan (marka ayarından).
+	Tagline string
+
+	// FaviconURL yüklenen favicon; boşsa statik simge kullanılır.
+	FaviconURL string
 }
 
 // cdFooterColumns CoinDesk alt bilgi sütunları (ölçüm §3).
@@ -205,3 +235,26 @@ func cdSlug(sym string) string {
 	}
 	return string(out)
 }
+
+// cdLogoOlcu logo width/height özniteliği için güvenli ölçü döndürür.
+//
+// CLS kuralı: <img> width/height taşımalı ki tarayıcı yer ayırsın.
+// Yüklenen dosyanın ölçüsü bilinmiyorsa (SVG'de viewBox yok, ya da medya
+// kaydında ölçü boş) VARSAYILANA düşülür — 0 yazmak düzeni bozar.
+// templ yalnız string/attribute basabildiği için strconv kullanılıyor.
+func cdLogoOlcu(deger, varsayilan int) string {
+	if deger <= 0 || deger > 4000 {
+		deger = varsayilan
+	}
+	return strconv.Itoa(deger)
+}
+
+// cdDolu metin GERÇEKTEN dolu mu (yalnız boşluk değil)?
+//
+// templ'de `if s != ""` yalnız boşluk taşıyan değeri de doğru sayıyor ve
+// boş `<span>` basılıyordu (test yakaladı, 11 Kasım 2026). Slogan gibi
+// kullanıcı girdisi alanlar için trim'li kontrol gerekiyor.
+func cdDolu(s string) bool { return strings.TrimSpace(s) != "" }
+
+// cdKirp baştaki/sondaki boşluğu atar (templ'den çağrılıyor).
+func cdKirp(s string) string { return strings.TrimSpace(s) }

@@ -28,14 +28,42 @@ package templkit
 // de aynı ölçü/oran; hangisinin görüneceğini TEMA belirliyor (CSS).
 // `alt` yalnız birinde dolu olur — ekran okuyucu logoyu iki kez okumasın
 // diye ikinci görsel `alt=""` + `aria-hidden`.
-templ cdLogoMark(siteName string) {
-	<a class="cd-logo" href="/" aria-label={ siteName + " ana sayfa" }>
-		<img class="cd-logo__img cd-logo__img--koyu" src="/static/img/logo-bitcosar-2x.png"
-			srcset="/static/img/logo-bitcosar-1x.png 1x, /static/img/logo-bitcosar-2x.png 2x, /static/img/logo-bitcosar-3x.png 3x"
-			width="146" height="32" alt={ siteName } decoding="async"/>
-		<img class="cd-logo__img cd-logo__img--acik" src="/static/img/logo-bitcosar-acik-2x.png"
-			srcset="/static/img/logo-bitcosar-acik-1x.png 1x, /static/img/logo-bitcosar-acik-2x.png 2x, /static/img/logo-bitcosar-acik-3x.png 3x"
-			width="146" height="32" alt="" aria-hidden="true" decoding="async"/>
+templ cdLogoMark(sh CDShell) {
+	<a class="cd-logo" href="/" aria-label={ sh.SiteName + " ana sayfa" }>
+		if sh.LogoURL != "" {
+			<!-- PANELDEN YÜKLENEN LOGO (11 Kasım 2026).
+			     Önceden burada SABİT bir PNG vardı ve admin panelden
+			     yüklenen logo hiçbir yerde görünmüyordu.
+
+			     Koyu/açık ayrımı: yüklenen tek dosya her iki temada da
+			     kullanılır (kullanıcı ne yüklediyse o). Ayrı bir "açık
+			     tema" dosyası yüklenirse LogoAcikURL dolar ve CSS onu
+			     gösterir.
+
+			     width/height GERÇEK ölçüden gelir (CLS). Bilinmiyorsa
+			     146×32'ye düşülür — eski logonun ölçüsü. -->
+			<img class="cd-logo__img cd-logo__img--koyu cd-logo__img--yuklenen"
+				src={ sh.LogoURL }
+				width={ cdLogoOlcu(sh.LogoGenislik, 146) }
+				height={ cdLogoOlcu(sh.LogoYukseklik, 32) }
+				alt={ sh.SiteName } decoding="async"/>
+			if sh.LogoAcikURL != "" {
+				<img class="cd-logo__img cd-logo__img--acik" src={ sh.LogoAcikURL }
+					width={ cdLogoOlcu(sh.LogoGenislik, 146) }
+					height={ cdLogoOlcu(sh.LogoYukseklik, 32) }
+					alt="" aria-hidden="true" decoding="async"/>
+			}
+			if cdDolu(sh.Tagline) {
+				<span class="cd-logo__slogan">{ cdKirp(sh.Tagline) }</span>
+			}
+		} else {
+			<img class="cd-logo__img cd-logo__img--koyu" src="/static/img/logo-bitcosar-2x.png"
+				srcset="/static/img/logo-bitcosar-1x.png 1x, /static/img/logo-bitcosar-2x.png 2x, /static/img/logo-bitcosar-3x.png 3x"
+				width="146" height="32" alt={ sh.SiteName } decoding="async"/>
+			<img class="cd-logo__img cd-logo__img--acik" src="/static/img/logo-bitcosar-acik-2x.png"
+				srcset="/static/img/logo-bitcosar-acik-1x.png 1x, /static/img/logo-bitcosar-acik-2x.png 2x, /static/img/logo-bitcosar-acik-3x.png 3x"
+				width="146" height="32" alt="" aria-hidden="true" decoding="async"/>
+		}
 	</a>
 }
 
@@ -141,7 +169,7 @@ templ cdTopbar(s CDShell) {
 						</svg>
 					</a>
 				</div>
-				@cdLogoMark(s.SiteName)
+				@cdLogoMark(s)
 				@cdMegaNav(s)
 				<div class="cd-topbar__actions">
 					<!-- ARAMA — CoinDesk'te bağlantı değil, HAP biçimli düğme:

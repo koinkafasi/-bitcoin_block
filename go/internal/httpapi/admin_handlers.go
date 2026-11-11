@@ -2620,11 +2620,23 @@ func (s *Server) storeUploadedMedia(ctx context.Context, r *http.Request, userID
 	// Yalnız görsellerde decode + boyut + küçük önizleme üretilir.
 	kind, ok := mediaKindByExt(hdr.Filename)
 	if !ok {
-		return mediaUploadResult{}, errors.New("Desteklenmeyen dosya türü: " + hdr.Filename + " (jpg/png/webp, ses, video, pdf/office).")
+		return mediaUploadResult{}, errors.New("Desteklenmeyen dosya türü: " + hdr.Filename + " (jpg/png/webp/svg, ses, video, pdf/office).")
 	}
 	var width, height int
 	var thumbPath *string
-	if kind == "image" {
+	if kind == "image" && strings.HasSuffix(strings.ToLower(hdr.Filename), ".svg") {
+		// SVG: raster decode YOK (görsel değil, XML). Beyaz liste
+		// temizliğinden geçirilir; temizlik başarısızsa dosya REDDEDİLİR
+		// — "temizleyemedim ama saklayayım" depolanmış XSS kapısıdır.
+		temiz, w, h, err := platform.SanitizeSVGBoyut(data)
+		if err != nil {
+			return mediaUploadResult{}, errors.New("SVG reddedildi: " + err.Error())
+		}
+		data = temiz
+		width, height = w, h // 0 olabilir: belgede ölçü yok
+		// Küçük önizleme üretilmez: SVG zaten her ölçekte net; raster
+		// kopya üretmek vektörün tek avantajını silerdi.
+	} else if kind == "image" {
 		decoded, err := platform.DecodeImage(data)
 		if err != nil {
 			return mediaUploadResult{}, errors.New("Desteklenmeyen görsel: " + hdr.Filename + " (jpg/png/webp).")

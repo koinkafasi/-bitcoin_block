@@ -1487,6 +1487,19 @@ func (s *Server) handleMedia(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", ct)
 	w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
 	w.Header().Set("Content-Length", strconv.Itoa(len(data)))
+	// SVG: İKİNCİ SAVUNMA KATMANI (11 Kasım 2026).
+	//
+	// Yüklerken platform.SanitizeSVG beyaz liste temizliği yapıyor; bu
+	// başlık, temizlik bir gün atlansa/atlatılsa bile SVG BELGESİ içinde
+	// hiçbir script, dış kaynak ya da form eylemi çalışmamasını garanti
+	// eder (`default-src 'none'`). SVG ayrı sekmede açılırsa da zararsız.
+	//
+	// `sandbox` bilinçli olarak YOK: dosya <img src> ile yükleniyor,
+	// sandbox'lı SVG bazı tarayıcılarda hiç çizilmiyor (logo kaybolurdu).
+	if ct == "image/svg+xml" {
+		w.Header().Set("Content-Security-Policy",
+			"default-src 'none'; style-src 'unsafe-inline'; img-src data:")
+	}
 	w.Write(data)
 }
 
@@ -1511,6 +1524,14 @@ func (s *Server) serveMediaThumb(w http.ResponseWriter, r *http.Request, id int6
 		w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
 		w.Write(mediaKindIcon(m.Kind))
 		return
+	}
+	// SVG: raster küçük görsel ÜRETİLMEZ (vektörün avantajı silinirdi);
+	// dosyanın kendisi servis edilir — her ölçekte net.
+	if strings.HasSuffix(strings.ToLower(m.Path), ".svg") {
+		if data, err := platform.ReadMedia(m.Path); err == nil {
+			writeMediaBytes(w, data)
+			return
+		}
 	}
 	if m.ThumbPath != nil && *m.ThumbPath != "" {
 		if data, err := platform.ReadMedia(*m.ThumbPath); err == nil {
