@@ -178,6 +178,8 @@ func (s *Server) handleCDHome(w http.ResponseWriter, r *http.Request) {
 		// MODÜLER YERLEŞİM (9 Kasım 2026): sayfa tasarımcısının yazdığı
 		// `cd_*` blokları. Liste boşsa şablon varsayılan sırayı uygular.
 		Moduller: s.cdModuller(r.Context(), r),
+		// Giriş hero'su: gerçek piyasa verisi (CoinGecko + alternative.me).
+		Giris: s.cdGirisOlustur(ctx),
 		// CoinDesk ana sayfa sınıflandırması.
 		PageCategory:    "homepage",
 		ContentCategory: "homepage",

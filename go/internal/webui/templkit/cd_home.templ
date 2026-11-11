@@ -749,11 +749,17 @@ templ CDHome(v CDHomeView) {
 				SiteName: v.Shell.SiteName, RSSFeed: "/rss.xml", JSONLD: v.JSONLD,
 				Locale: v.Locale, PageCategory: v.PageCategory, BaseURL: v.BaseURL,
 				ContentCategory: v.ContentCategory,
+				EkCSS: []string{"/static/cd-giris.css"},
 				LCPGorsel: cdLCPOnYukle(v.Lead)})
 		</head>
 		<body class="cd">
 			@cdTopbar(v.Shell)
 			@cdTicker(v.Shell)
+			<!-- GİRİŞ HERO (11 Kasım 2026): şerit ile üç kolon manşet
+			     arasında. Yerleşim ghost.bitcosar.com `.ch-hero`'dan
+			     ölçülerek alındı; veri gerçek (CoinGecko + alternative.me).
+			     Veri yoksa modül hiç basılmaz. -->
+			@cdGirisHero(v.Giris)
 			<main class="cd-wrap cd-main">
 				<!-- MODÜLER YERLEŞİM (9 Kasım 2026): sayfa tasarımcısı yeni
 				     tasarımın alanlarını ayrı bloklar olarak yönetir. Düzen

@@ -154,6 +154,9 @@ type CDHomeView struct {
 	// Explore "Explore more from CoinDesk" yatay şeridi (bölüm
 	// panelleriyle). Boşsa modül basılmaz.
 	Explore CDExplore
+	// Giris: ana sayfanın GİRİŞ HERO'su (11 Kasım 2026) — şerit ile
+	// üç kolon manşet arasında durur. Veri yoksa (Hazir=false) basılmaz.
+	Giris CDGiris
 	// Moduller: sayfa tasarımcısından gelen modül sırası (9 Kasım 2026).
 	// BOŞSA `cd_home.templ` varsayılan sabit sırayı uygular — düzen
 	// yazılmamış sitelerde görünüm birebir aynı kalır.

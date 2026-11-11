@@ -70,6 +70,12 @@ type CDHead struct {
 	Metas []CDMeta
 	// BaseURL göreli görsel yolunu og:image için mutlaklaştırır.
 	BaseURL string
+	// EkCSS sayfaya özel ek stil dosyaları (/static/... yolu).
+	//
+	// NEDEN: cd.css 200 KB bütçeye tabi (cd_tasarim_test.go). Ana sayfa
+	// giriş hero'sunun ~9 KB'ı oraya eklenirse bütçe aşılırdı; hero
+	// yalnız ana sayfada basıldığı için stil de yalnız orada yükleniyor.
+	EkCSS []string
 }
 
 // CDMeta tek bir `<meta name="…" content="…">` satırı.
@@ -200,6 +206,9 @@ templ cdHead(h CDHead) {
 	<link rel="stylesheet" href={ "/static/cd.css?v=" + cdVarlik() }/>
 	<!-- Mega menü: cd.css'in üstüne biner, kendi jetonunu tanımlamaz. -->
 	<link rel="stylesheet" href={ "/static/cd-menu.css?v=" + cdVarlik() }/>
+	for _, ek := range h.EkCSS {
+		<link rel="stylesheet" href={ ek + "?v=" + cdVarlik() }/>
+	}
 	<!-- CSP uyumlu delege dinleyiciler (data-* öznitelikleri) -->
 	<script src={ "/static/csp-delegated.js?v=" + cdVarlik() } defer></script>
 	<!-- Tema başlangıcı — BLOKLAYICI ve head'de olmalı: gövde boyanmadan

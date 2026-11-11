@@ -1,0 +1,225 @@
+package templkit
+
+// cdGirisHero — ana sayfanın giriş hero'su.
+//
+// YERLEŞİM ghost.bitcosar.com `.ch-hero`'dan birebir (11 Kasım 2026
+// ölçümü): 3 sütun (metin · BTC paneli · iki gösterge), gap 30,
+// dikey dolgu 56/60, görsel yuvası min-height 400.
+//
+// JS YOK: sparkline ve yaylar SUNUCUDA üretiliyor (CSP script-src 'self'
+// ve harici bağımlılık yasağı). Ghost bu değerleri JS ile yazıyordu.
+templ cdGirisHero(g CDGiris) {
+	if g.Hazir {
+		<section class="cd-giris" aria-labelledby="cd-giris-baslik">
+			<div class="cd-wrap cd-giris__in">
+				<div class="cd-giris__metin">
+					<span class="cd-giris__eyebrow">
+						<svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+							<path d="M13 2L4 14h6l-1 8 9-12h-6z"></path>
+						</svg>
+						{ g.Eyebrow }
+					</span>
+					<h1 class="cd-giris__baslik" id="cd-giris-baslik">
+						{ g.BaslikOnce }<em>{ g.BaslikVurgu }</em>{ g.BaslikSonra }
+					</h1>
+					<p class="cd-giris__desc">{ g.Aciklama }</p>
+					<div class="cd-giris__cta">
+						<a class="cd-giris__btn cd-giris__btn--altin" href={ g.Cta1Href }>
+							<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+								<path d="M13 2L4 14h6l-1 8 9-12h-6z"></path>
+							</svg>
+							<span>{ g.Cta1Ad }</span>
+						</a>
+						<a class="cd-giris__btn cd-giris__btn--hayalet" href={ g.Cta2Href }>
+							<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+								stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+								<polyline points="3 17 9 11 13 15 21 7"></polyline>
+								<polyline points="15 7 21 7 21 13"></polyline>
+							</svg>
+							<span>{ g.Cta2Ad }</span>
+						</a>
+					</div>
+					if len(g.Maddeler) > 0 {
+						<div class="cd-giris__maddeler">
+							for _, m := range g.Maddeler {
+								<div>
+									<span class="cd-giris__madde-no">{ m.No }</span>
+									<span>{ m.Metin }</span>
+								</div>
+							}
+						</div>
+					}
+				</div>
+
+				<div class="cd-giris__viz">
+					<div class="cd-giris__panel">
+						<div class="cd-giris__panel-bas">
+							<span class="cd-giris__coin" style="background:#F7931A" aria-hidden="true">₿</span>
+							<span class="cd-giris__parite">BTC / USDT<small>Bitcoin · Spot</small></span>
+							if g.Guncelleme != "" {
+								<span class="cd-giris__taze">
+									<span class="cd-giris__taze-nokta" aria-hidden="true"></span>
+									{ g.Guncelleme }
+								</span>
+							}
+						</div>
+						<div class="cd-giris__fiyat">
+							<b>{ g.BTCFiyat }</b>
+							if g.BTCDegisim != "" {
+								if g.BTCUp {
+									<span class="cd-yukari">{ g.BTCDegisim }</span>
+								} else {
+									<span class="cd-asagi">{ g.BTCDegisim }</span>
+								}
+							}
+						</div>
+						if g.BTCYol != "" {
+							<svg class="cd-giris__grafik" width="100%" height="120" viewBox="0 0 320 120"
+								preserveAspectRatio="none" role="img" aria-label="Bitcoin son 7 gün fiyat grafiği">
+								<defs>
+									<linearGradient id="cdGirisAlan" x1="0" y1="0" x2="0" y2="1">
+										<stop offset="0%" stop-color="rgba(252,195,52,0.35)"></stop>
+										<stop offset="100%" stop-color="rgba(252,195,52,0)"></stop>
+									</linearGradient>
+								</defs>
+								<line x1="0" y1="30" x2="320" y2="30" class="cd-giris__izgara"></line>
+								<line x1="0" y1="65" x2="320" y2="65" class="cd-giris__izgara"></line>
+								<line x1="0" y1="100" x2="320" y2="100" class="cd-giris__izgara"></line>
+								<path d={ g.BTCAlan } fill="url(#cdGirisAlan)"></path>
+								<path d={ g.BTCYol } fill="none" stroke="#C9A227" stroke-width="2.4"
+									stroke-linecap="round" stroke-linejoin="round"></path>
+							</svg>
+						}
+						<div class="cd-giris__panel-istat">
+							if g.Hacim != "" {
+								<span><small>24S HACİM</small><b>{ g.Hacim }</b></span>
+							}
+							if g.Dominans != "" {
+								<span><small>BTC DOMİNANS</small><b>{ g.Dominans }</b></span>
+							}
+							if g.Endeks != "" {
+								<span><small>ENDEKS</small>
+									if g.EndeksUp {
+										<b class="cd-yukari">{ g.Endeks }</b>
+									} else {
+										<b class="cd-asagi">{ g.Endeks }</b>
+									}
+								</span>
+							}
+						</div>
+					</div>
+
+					if g.ETHFiyat != "" {
+						<div class="cd-giris__yuzen cd-giris__yuzen--1">
+							<span class="cd-giris__coin" style="background:#627EEA" aria-hidden="true">Ξ</span>
+							<span>
+								<b>{ g.ETHFiyat }</b>
+								if g.ETHDegisim != "" {
+									if g.ETHUp {
+										<i class="cd-yukari">{ g.ETHDegisim }</i>
+									} else {
+										<i class="cd-asagi">{ g.ETHDegisim }</i>
+									}
+								}
+							</span>
+						</div>
+					}
+					if g.SOLFiyat != "" {
+						<div class="cd-giris__yuzen cd-giris__yuzen--2">
+							<span class="cd-giris__coin cd-giris__coin--sol" aria-hidden="true">S</span>
+							<span>
+								<b>{ g.SOLFiyat }</b>
+								if g.SOLDegisim != "" {
+									if g.SOLUp {
+										<i class="cd-yukari">{ g.SOLDegisim }</i>
+									} else {
+										<i class="cd-asagi">{ g.SOLDegisim }</i>
+									}
+								}
+							</span>
+						</div>
+					}
+				</div>
+
+				if g.FNGVar || g.RSIVar {
+					<div class="cd-giris__gostergeler">
+						if g.FNGVar {
+							<div class="cd-giris__gosterge">
+								<div class="cd-giris__gosterge-ad">Korku &amp; Açgözlülük Endeksi</div>
+								<div class="cd-giris__gosterge-kap">
+									<svg width="170" height="96" viewBox="0 0 200 110" role="img"
+										aria-label={ "Korku ve açgözlülük endeksi: " + g.FNGEtiket }>
+										<defs>
+											<linearGradient id="cdGirisFNG" x1="0" y1="0" x2="1" y2="0">
+												<stop offset="0%" stop-color="#DC2626"></stop>
+												<stop offset="40%" stop-color="#E8A020"></stop>
+												<stop offset="70%" stop-color="#D4AF37"></stop>
+												<stop offset="100%" stop-color="#16A34A"></stop>
+											</linearGradient>
+										</defs>
+										<path d="M 16 100 A 84 84 0 0 1 184 100" fill="none"
+											stroke="var(--cd-border)" stroke-width="14" stroke-linecap="round"></path>
+										<path d="M 16 100 A 84 84 0 0 1 184 100" fill="none"
+											stroke="url(#cdGirisFNG)" stroke-width="14" stroke-linecap="round"
+											stroke-dasharray={ cdGirisYay(g.FNGDeger) }></path>
+										<circle cx={ cdGirisNoktaX(g.FNGDeger) } cy={ cdGirisNoktaY(g.FNGDeger) }
+											r="8" fill="var(--cd-bg)" stroke="#C9A227" stroke-width="3"></circle>
+									</svg>
+									<div class="cd-giris__gosterge-deger">
+										<div>{ g.FNGDeger }</div>
+										if g.FNGUp {
+											<div class="cd-yukari">{ g.FNGEtiket }</div>
+										} else {
+											<div class="cd-asagi">{ g.FNGEtiket }</div>
+										}
+									</div>
+								</div>
+								<div class="cd-giris__gosterge-alt">
+									if g.FNGDun > 0 {
+										<span>Dün: <b>{ g.FNGDun }</b></span>
+									}
+									if g.FNGHafta > 0 {
+										<span>Geçen Hafta: <b>{ g.FNGHafta }</b></span>
+									}
+								</div>
+							</div>
+						}
+						if g.RSIVar {
+							<div class="cd-giris__gosterge">
+								<div class="cd-giris__gosterge-ad">Bitcoin RSI (14 gün)</div>
+								<div class="cd-giris__gosterge-kap">
+									<svg width="170" height="96" viewBox="0 0 200 110" role="img"
+										aria-label={ "Bitcoin 14 günlük RSI: " + g.RSIEtiket }>
+										<defs>
+											<linearGradient id="cdGirisRSI" x1="0" y1="0" x2="1" y2="0">
+												<stop offset="0%" stop-color="#16A34A"></stop>
+												<stop offset="30%" stop-color="#D4AF37"></stop>
+												<stop offset="70%" stop-color="#E8A020"></stop>
+												<stop offset="100%" stop-color="#DC2626"></stop>
+											</linearGradient>
+										</defs>
+										<path d="M 16 100 A 84 84 0 0 1 184 100" fill="none"
+											stroke="var(--cd-border)" stroke-width="14" stroke-linecap="round"></path>
+										<path d="M 16 100 A 84 84 0 0 1 184 100" fill="none"
+											stroke="url(#cdGirisRSI)" stroke-width="14" stroke-linecap="round"
+											stroke-dasharray={ cdGirisYay(g.RSI) }></path>
+										<circle cx={ cdGirisNoktaX(g.RSI) } cy={ cdGirisNoktaY(g.RSI) }
+											r="8" fill="var(--cd-bg)" stroke="#C9A227" stroke-width="3"></circle>
+									</svg>
+									<div class="cd-giris__gosterge-deger">
+										<div>{ g.RSI }</div>
+										<div class="cd-notr">{ g.RSIEtiket }</div>
+									</div>
+								</div>
+								<div class="cd-giris__gosterge-alt">
+									<span>Aşırı Satım: &lt;30</span>
+									<span>Aşırı Alım: &gt;70</span>
+								</div>
+							</div>
+						}
+					</div>
+				}
+			</div>
+		</section>
+	}
+}
