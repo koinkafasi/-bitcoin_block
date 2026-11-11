@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  bitcosar video bandı deseni — KENDİ TASARIMIMIZ (döşenebilir / tileable).
+
+  NEDEN İNCE ÇİZGİ: bant zemininde hem solda (oynatıcı + başlık) hem sağda
+  ("Sıradaki" listesi) metin var. Dolu bloklarla denendi ve üç kez kötü
+  sonuç verdi (ölçüldü, ekran görüntüleriyle): düşük opaklıkta parlak sarı
+  HAKİ/ÇAMUR rengine dönüşüp metin arkasında leke gibi duruyor.
+  İnce çizgi + küçük kare ise doku gibi okunuyor ve hiçbir yazının önüne
+  geçmiyor. Renk tek: marka sarısı (#fcc334).
+
+  240×240 karo, kenarlardan taşan çizgiler karşı karşıya gelince devam eder
+  (background-repeat ile kesintisiz).
+-->
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="240" viewBox="0 0 240 240">
+  <g fill="none" stroke="#fcc334" stroke-width="1" opacity="0.55">
+    <!-- ızgara çizgileri: karonun dört kenarına da değer, döşenince süreklidir -->
+    <path d="M60 0V240 M120 0V240 M180 0V240 M0 60H240 M0 120H240 M0 180H240"/>
+  </g>
+
+  <g fill="#fcc334">
+    <!-- küçük vurgu kareleri: düğüm noktalarında, seyrek -->
+    <rect x="56" y="56" width="8" height="8" opacity="0.9"/>
+    <rect x="176" y="116" width="8" height="8" opacity="0.9"/>
+    <rect x="116" y="176" width="8" height="8" opacity="0.9"/>
+    <rect x="236" y="236" width="8" height="8" opacity="0.9"/>
+    <rect x="-4" y="236" width="8" height="8" opacity="0.9"/>
+    <rect x="236" y="-4" width="8" height="8" opacity="0.9"/>
+
+    <!-- birkaç iri, içi boş kare: ritmi kırar, tekdüzeliği önler -->
+    <rect x="124" y="4" width="112" height="52" fill="none" stroke="#fcc334" stroke-width="1" opacity="0.55"/>
+    <rect x="4" y="124" width="52" height="112" fill="none" stroke="#fcc334" stroke-width="1" opacity="0.55"/>
+  </g>
+</svg>

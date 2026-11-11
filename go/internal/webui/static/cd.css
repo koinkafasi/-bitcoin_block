@@ -3456,17 +3456,23 @@ html.dark .cd-google { color: var(--cd-fg); }
 .cd-canli__baslik:hover { text-decoration: underline; text-underline-offset: 3px; }
 
 /* ---- Üst bant: siyah, tam genişlik ----
-   ARKA PLAN DESENİ: CoinDesk'in videos sayfasında bant zemininde sarı/açık
-   yeşil bloklardan oluşan geometrik bir desen var (CorelDRAW'dan gelen
-   vektör; `static/cd-vband-desen.svg`). Desen `::before` katmanında,
-   içeriğin ARKASINDA duruyor:
+   ARKA PLAN DESENİ: kendi tasarımımız (`static/cd-vband-desen.svg`) —
+   marka sarısıyla ince ızgara + küçük vurgu kareleri, 240×240 döşenir.
+   CoinDesk'in videos sayfasında böyle bir desen YOK (gerçek tarayıcıda
+   ölçüldü: sayfada SVG arka plan 0, hero düz siyah rgb(0,0,0)); yani bu
+   bilinçli bir ekleme, referans taklidi değil.
+
+   KATMAN: `::before`, içeriğin ARKASINDA:
      - `position:relative` + `overflow:hidden` → desen bandın dışına taşmaz,
      - `z-index:-1` + bandın `isolation:isolate`'i → negatif katman bandın
        kendi siyah zemininin ÜSTÜNDE, metnin ALTINDA kalır (yalıtım olmasa
        desen sayfanın arkasına düşerdi),
-     - `pointer-events:none` → tıklamayı engellemez,
-     - `opacity` düşük: desen süs, metin okunurluğu öncelikli. Tam doygunlukta
-       "Sıradaki" listesinin beyaz metni sarı bloklar üzerinde okunmuyordu. */
+     - `pointer-events:none` → tıklamayı engellemez.
+
+   NEDEN %18: bantta hem solda (oynatıcı + başlık + spot) hem sağda
+   ("Sıradaki" listesi) metin var. En kötü durumda desen pikseli
+   sarı×0.18 ≈ rgb(45,35,9); beyaz metnin buna kontrastı ~14:1
+   (WCAG AA sınırı 4,5). Yani doku hissedilir, okunurluk bozulmaz. */
 .cd-vband {
   background: #000;
   color: #fff;
@@ -3479,26 +3485,15 @@ html.dark .cd-google { color: var(--cd-fg); }
   position: absolute;
   z-index: -1;
   inset: 0;
-  /* DESEN = MASKE, RENK = BİZİM.
-     Kaynak SVG'nin dolguları parlak sarı (#FFCC00/#FFEE00) ve açık yeşil
-     (#DDE8B5). Siyah zeminde düşük opaklıkta bunlar HAKİ/ÇAMUR rengine
-     dönüşüyor ve "Sıradaki" satırlarının arkasında leke gibi duruyordu
-     (üç deneme ekran görüntüsüyle doğrulandı: %22 sağ-orta, %85 sağ-üst,
-     %16 tam bant — hiçbiri tasarım öğesi gibi okunmadı).
-     Doğru araç `mask-image`: SVG'nin ALFA kanalı şekli verir, rengi biz
-     seçeriz. Böylece desen tek tonlu ince bir doku oluyor, marka rengiyle
-     çakışmıyor ve hiçbir yazının kontrastını bozmuyor. */
-  background-color: #fff;
-  opacity: 0.055;
-  -webkit-mask-image: url("cd-vband-desen.svg");
-  mask-image: url("cd-vband-desen.svg");
-  -webkit-mask-repeat: no-repeat;
-  mask-repeat: no-repeat;
-  -webkit-mask-position: center right;
-  mask-position: center right;
-  -webkit-mask-size: 82% auto;
-  mask-size: 82% auto;
+  background-image: url("cd-vband-desen.svg");
+  background-repeat: repeat;
+  background-size: 240px 240px;
+  opacity: 0.18;
   pointer-events: none;
+  /* Alt kenara doğru soldur: başlık/spot bloğunun arkasında desen
+     yoğunlaşmasın, bant alta doğru sakinleşsin. */
+  -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 62%, transparent 100%);
+  mask-image: linear-gradient(to bottom, #000 0%, #000 62%, transparent 100%);
 }
 
 /* SAĞ KOLON YAN YANA — 11 Kasım 2026.
@@ -4255,13 +4250,9 @@ html.dark .cd-google { color: var(--cd-fg); }
 /* ---- Duyarlı ---- */
 @media (max-width: 1283px) {
   .cd-vband__sag { display: none; }
-  /* Sağ sütun gizlenince desen oynatıcının arkasına düşüyor: küçült ve
-     soluklaştır ki oynatıcı kenarı desenle karışmasın. */
-  .cd-vband::before {
-    background-position: right -18% center;
-    background-size: min(64%, 560px) auto;
-    opacity: 0.14;
-  }
+  /* Sağ sütun gizlenince oynatıcı genişliyor; deseni biraz irileştir ki
+     doku seyrekleşmesin. */
+  .cd-vband::before { background-size: 200px 200px; }
 }
 @media (max-width: 1023px) {
   .cd-vizgara { grid-template-columns: repeat(3, minmax(0, 1fr)); }
@@ -4269,12 +4260,8 @@ html.dark .cd-google { color: var(--cd-fg); }
 }
 @media (max-width: 767px) {
   .cd-vband { padding: 16px 0; }
-  /* Telefonda bant zaten dar; desen yalnız üst köşede bir iz olarak kalır. */
-  .cd-vband::before {
-    background-position: right -30% top -10%;
-    background-size: 88% auto;
-    opacity: 0.12;
-  }
+  /* Telefonda bant dar ve metin yoğun: deseni seyrelt. */
+  .cd-vband::before { background-size: 160px 160px; opacity: 0.13; }
   .cd-vband__etiket { margin-bottom: 16px; font-size: 14px; line-height: 24px; }
   .cd-vband__baslik { font-size: 24px; line-height: 32px; margin-top: 16px; }
   .cd-vband__spot { font-size: 16px; line-height: 24px; }
