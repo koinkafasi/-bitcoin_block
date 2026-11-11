@@ -392,6 +392,8 @@ func (s *Server) cdShellCtx(ctx context.Context, r *http.Request, aktif string) 
 			return v
 		}
 		sh.LogoURL = u(bc.ImageID)
+		sh.LogoSimgeURL = u(bc.IconID)
+		sh.LogoSimgeYukseklik = bc.IconYukseklik
 		sh.LogoAcikURL = u(bc.ImageAcikID)
 		sh.FaviconURL = u(bc.FaviconID)
 		sh.LogoHedefYukseklik = bc.LogoYukseklik

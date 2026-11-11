@@ -111,3 +111,63 @@ func TestCdHeadFaviconVarsayilan(t *testing.T) {
 	assert.Contains(t, html, "/static/icon-192.png")
 	assert.NotContains(t, html, `sizes="any"`, "varsayılanda yüklenen favicon yok")
 }
+
+func TestCdLogosimgeKilidi(t *testing.T) {
+	// Kullanıcı isteği (11 Kasım 2026): "logodaki nesneleri 2'ye böl,
+	// soldaki site simgesi yuvarlak, sağdaki yazı; sloganı da altına koy".
+	// Yapı: .cd-logo__kilit > (simge, .cd-logo__grup > yazı + slogan).
+	// Slogan YAZININ sütununda olmalı — B harfinin altına hizalanması
+	// bu yapıdan gelir, ölçü/girinti tahmininden değil.
+	html := logoRender(t, CDShell{
+		SiteName: "BitCoŞaR",
+		LogoURL:  "/media/yazi.svg", LogoSimgeURL: "/media/simge.svg",
+		Tagline: "paranın geleceği",
+	})
+	require.Contains(t, html, `class="cd-logo__kilit"`, "üçlü kilit olmalı")
+	require.Contains(t, html, "/media/simge.svg", "simge basılmalı")
+	require.Contains(t, html, "/media/yazi.svg", "yazı basılmalı")
+
+	kilit := strings.Index(html, `class="cd-logo__kilit"`)
+	simge := strings.Index(html, `class="cd-logo__simge"`)
+	grup := strings.Index(html, `class="cd-logo__grup"`)
+	yazi := strings.Index(html, "/media/yazi.svg")
+	slogan := strings.Index(html, `class="cd-logo__slogan"`)
+	assert.Greater(t, simge, kilit, "simge kilidin içinde")
+	assert.Greater(t, grup, simge, "yazı sütunu simgeden SONRA")
+	assert.Greater(t, yazi, grup, "yazı sütunun içinde")
+	assert.Greater(t, slogan, yazi,
+		"slogan yazıdan sonra → aynı sütunda ALTINDA (B hizası)")
+}
+
+func TestCdLogoYalnizSimgeKirikGorselYok(t *testing.T) {
+	// Yalnız simge yüklendiyse yazı yuvası boş kalır. `src=""` basmak
+	// tarayıcıda kırık görsel simgesi çizer — şablon bunu atlamalı.
+	html := logoRender(t, CDShell{
+		SiteName: "X", LogoSimgeURL: "/media/simge.svg",
+		Tagline: "slogan",
+	})
+	assert.Contains(t, html, "/media/simge.svg")
+	// Yalnız simge görseli olmalı; boş src'li ikinci <img> kırık simge çizer.
+	assert.Equal(t, 1, strings.Count(html, "<img"), "tek görsel (simge) olmalı")
+	assert.NotContains(t, html, "cd-logo__img--koyu cd-logo__img--yuklenen",
+		"yazı yoksa yazı görseli basılmamalı")
+	assert.Contains(t, html, "cd-logo__slogan", "slogan yine görünmeli")
+}
+
+func TestCdSimgeStilSinirlari(t *testing.T) {
+	// Simge yüksekliği: ayrı değer yoksa logo yüksekliğine düşer.
+	assert.Equal(t, "--cd-simge-h:32px", cdSimgeStil(0, 0))
+	assert.Equal(t, "--cd-simge-h:48px", cdSimgeStil(0, 48))
+	assert.Equal(t, "--cd-simge-h:40px", cdSimgeStil(40, 48))
+	assert.Equal(t, "--cd-simge-h:32px", cdSimgeStil(9999, 48), "üst sınır kırpılır")
+	assert.Equal(t, "--cd-simge-h:32px", cdSimgeStil(-5, 0), "negatif varsayılana döner")
+}
+
+func TestCdLogosimgeYuksekligiStileYazilir(t *testing.T) {
+	html := logoRender(t, CDShell{
+		SiteName: "X", LogoURL: "/m.svg", LogoSimgeURL: "/s.svg",
+		LogoHedefYukseklik: 40, LogoSimgeYukseklik: 56,
+	})
+	assert.Contains(t, html, "--cd-simge-h:56px", "simge kendi yüksekliğini kullanmalı")
+	assert.Contains(t, html, "--cd-logo-h:40px", "yazı kendi yüksekliğini korumalı")
+}

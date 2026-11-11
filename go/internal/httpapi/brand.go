@@ -21,6 +21,16 @@ import (
 type BrandConfig struct {
 	Mode string `json:"mode"`
 	Text string `json:"text"`
+	// IconID SİMGE (soldaki yuvarlak işaret).
+	//
+	// NEDEN AYRI (kullanıcı isteği, 11 Kasım 2026): tek dosyalık logoda
+	// simge ile yazı aynı tuvalde olduğu için slogan yazının başladığı
+	// yere hizalanamıyordu (sunucu SVG içeriğini yorumlayamaz; girinti
+	// tahmini kırılgan). Parçalar ayrılınca slogan YAZININ ALTINDA aynı
+	// sütunda durur: hizalama yapısal olur, ölçü tahmini gerekmez.
+	IconID *int64 `json:"iconId"`
+	// IconYukseklik simgenin çizim yüksekliği (px). 0 → LogoYukseklik.
+	IconYukseklik int `json:"iconYukseklik,omitempty"`
 	// ImageID KOYU tema logosu (varsayılan).
 	ImageID *int64 `json:"imageId"`
 	// ImageAcikID AÇIK tema logosu. Boşsa ImageID iki temada da kullanılır.
@@ -232,9 +242,15 @@ func (s *Server) handleBrandSave(w http.ResponseWriter, r *http.Request) {
 	if r.Form.Has("slogan_girinti") {
 		cfg.SloganGirinti = sinirlaInt(r.FormValue("slogan_girinti"), 0, 600, 0)
 	}
+	if r.Form.Has("icon_yukseklik") {
+		cfg.IconYukseklik = sinirlaInt(r.FormValue("icon_yukseklik"), 16, 120, 0)
+	}
 
 	if r.FormValue("remove_logo") != "" {
 		cfg.ImageID = nil
+	}
+	if r.FormValue("remove_icon") != "" {
+		cfg.IconID = nil
 	}
 	if r.FormValue("remove_logo_acik") != "" {
 		cfg.ImageAcikID = nil
@@ -252,7 +268,7 @@ func (s *Server) handleBrandSave(w http.ResponseWriter, r *http.Request) {
 		id, err := s.saveBrandImage(r, field)
 		if err == nil {
 			*dst = &id
-			if field == "logo" {
+			if field == "logo" || field == "icon" {
 				ustlendiLogo = true
 			}
 			return
@@ -263,6 +279,7 @@ func (s *Server) handleBrandSave(w http.ResponseWriter, r *http.Request) {
 			hatalar = append(hatalar, field+": "+err.Error())
 		}
 	}
+	set("icon", &cfg.IconID)
 	set("logo", &cfg.ImageID)
 	set("logo_acik", &cfg.ImageAcikID)
 	set("favicon", &cfg.FaviconID)
@@ -274,7 +291,7 @@ func (s *Server) handleBrandSave(w http.ResponseWriter, r *http.Request) {
 		cfg.Mode = "image"
 	}
 	// Görsel modu seçili ama görsel yoksa metin moduna düş (resim yokken yazı logo)
-	if cfg.Mode == "image" && cfg.ImageID == nil {
+	if cfg.Mode == "image" && cfg.ImageID == nil && cfg.IconID == nil {
 		cfg.Mode = "text"
 	}
 

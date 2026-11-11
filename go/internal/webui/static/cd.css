@@ -5621,6 +5621,7 @@ textarea.cd-girdi { resize: vertical; min-height: 88px; }
 .cd-topbar__sol,
 .cd-mobil-arama,
 .cd-mobil-giris,
+.cd-mobil-giris-menu,
 .cd-mobil-hesap { display: none; }
 
 /* Masaüstünde "Canlı Piyasalar" etiketi ile sekmeler doğrudan şeridin
@@ -5675,21 +5676,17 @@ textarea.cd-girdi { resize: vertical; min-height: 88px; }
 
   .cd-topbar__actions { display: none; }
 
-  .cd-mobil-giris {
-    display: inline-flex;
-    align-items: center;
-    margin-left: auto;
-    height: 40px;
-    padding: 0 16px;
-    border-radius: var(--cd-radius);
-    font-size: 16px;
-    line-height: 24px;
-    font-weight: 400;
-    color: var(--cd-fg);
-    white-space: nowrap;
-  }
-  .cd-mobil-giris:hover { background: var(--cd-surface-soft); text-decoration: none; }
+  /* İKON DÜĞMESİ (metin 113 px yer kaplayıp logoyla çakışıyordu). */
+  .cd-mobil-giris{display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;padding:0;border-radius:var(--cd-radius);color:var(--cd-fg);cursor:pointer;list-style:none}
+  .cd-mobil-giris::-webkit-details-marker{display:none}
+  .cd-mobil-giris .ti{width:22px;height:22px}
+  .cd-mobil-giris:hover{background:var(--cd-surface-soft)}
+  .cd-mobil-giris-menu{margin-left:auto;position:relative}
+  .cd-mobil-giris-menu[open] > .cd-mobil-giris{background:var(--cd-surface-soft)}
+  .cd-mobil-giris__panel{min-width:168px}
+  .cd-mobil-giris__panel .cd-hesap-ac__satir + .cd-hesap-ac__satir{border-top:1px solid var(--cd-border)}
   .cd-mobil-hesap { display: flex; align-items: center; margin-left: auto; }
+  .cd-mobil-giris-menu { display: block; }
 
   /* Şerit mobilde akışta (CoinDesk): iki yapışkan katman ekran yiyordu. */
   .cd-ticker { position: static; }
@@ -5955,3 +5952,10 @@ html.light .cd-logo .cd-logo__img--yuklenen.cd-logo__img--acik { display: block;
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+/* MARKA KİLİDİ: simge|yazı+slogan; slogan yazının sütununda → hizalama yapısal. */
+.cd-logo__kilit{display:flex;align-items:center;gap:8px;flex:none}
+.cd-logo__simge{display:flex;flex:none}
+.cd-logo .cd-logo__simge-img{height:var(--cd-simge-h,32px);width:auto;max-width:none;object-fit:contain}
+
+@media (max-width:767px){.cd-logo__kilit{gap:5px;max-width:44vw}.cd-logo__grup{min-width:0}.cd-logo .cd-logo__simge-img{height:calc(var(--cd-simge-h,32px)*.68)}.cd-logo .cd-logo__img--yuklenen{height:calc(var(--cd-logo-h,32px)*.68);max-width:100%}}

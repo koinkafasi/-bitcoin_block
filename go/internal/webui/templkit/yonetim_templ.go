@@ -22,6 +22,12 @@ type MarkaView struct {
 	Text      string
 	Tagline   string
 	LogoURL   string
+	// LogoSimgeURL soldaki yuvarlak SİMGE (ayrı dosya). Doluysa üst
+	// çubukta "simge | yazı + slogan" kilidi kurulur ve slogan yazının
+	// altına (B harfinin hizasına) YAPISAL olarak hizalanır.
+	LogoSimgeURL string
+	// LogoSimgeYukseklik simgenin çizim yüksekliği (px). 0 → LogoYukseklik.
+	LogoSimgeYukseklik int
 	// LogoAcikURL açık tema logosu (koyu renkli sürüm). Boşsa LogoURL
 	// iki temada da kullanılır — açık temada logo kaybolmaz.
 	LogoAcikURL string
@@ -90,7 +96,7 @@ func MarkaPanel(v MarkaView) templ.Component {
 			var templ_7745c5c3_Var4 string
 			templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(v.FlashText)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/yonetim.templ`, Line: 35, Col: 52}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/yonetim.templ`, Line: 41, Col: 52}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 			if templ_7745c5c3_Err != nil {
@@ -112,7 +118,7 @@ func MarkaPanel(v MarkaView) templ.Component {
 		var templ_7745c5c3_Var5 string
 		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.ResolveAttributeValue(v.SiteBaslik)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/yonetim.templ`, Line: 55, Col: 83}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/yonetim.templ`, Line: 61, Col: 83}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var5)
 		if templ_7745c5c3_Err != nil {
@@ -125,7 +131,7 @@ func MarkaPanel(v MarkaView) templ.Component {
 		var templ_7745c5c3_Var6 string
 		templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.ResolveAttributeValue(v.Slogan)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/yonetim.templ`, Line: 60, Col: 69}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/yonetim.templ`, Line: 66, Col: 69}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var6)
 		if templ_7745c5c3_Err != nil {
@@ -158,7 +164,7 @@ func MarkaPanel(v MarkaView) templ.Component {
 		var templ_7745c5c3_Var7 string
 		templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.ResolveAttributeValue(v.Text)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/yonetim.templ`, Line: 75, Col: 63}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/yonetim.templ`, Line: 81, Col: 63}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var7)
 		if templ_7745c5c3_Err != nil {
@@ -171,207 +177,253 @@ func MarkaPanel(v MarkaView) templ.Component {
 		var templ_7745c5c3_Var8 string
 		templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.ResolveAttributeValue(v.Tagline)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/yonetim.templ`, Line: 80, Col: 72}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/yonetim.templ`, Line: 86, Col: 72}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var8)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "\" placeholder=\"Slogan\"><p class=\"hint\">Header ve footer'da logonun altında görünür.</p></div><hr style=\"margin:14px 0;border:0;border-top:1px dashed var(--border)\"><div class=\"input-row\" style=\"align-items:flex-start;gap:20px;flex-wrap:wrap\"><div class=\"field\" style=\"min-width:260px\"><label>Logo — Koyu tema <small>(açık zeminde görünmez; aşağıdakiyle birlikte kullanın)</small></label> ")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "\" placeholder=\"Slogan\"><p class=\"hint\">Header ve footer'da logonun altında görünür.</p></div><hr style=\"margin:14px 0;border:0;border-top:1px dashed var(--border)\"><div class=\"input-row\" style=\"align-items:flex-start;gap:20px;flex-wrap:wrap\"><div class=\"field\" style=\"min-width:220px\"><label>Site simgesi <small>(yuvarlak işaret — ayrı dosya)</small></label> ")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		if v.LogoURL != "" {
+		if v.LogoSimgeURL != "" {
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "<img src=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var9 string
-			templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.ResolveAttributeValue(templ.SafeURL(v.LogoURL))
+			templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.ResolveAttributeValue(templ.SafeURL(v.LogoSimgeURL))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/yonetim.templ`, Line: 88, Col: 41}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/yonetim.templ`, Line: 94, Col: 46}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var9)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "\" alt=\"logo (koyu tema)\" style=\"max-height:44px;background:#18181b;border-radius:6px;padding:6px;display:block;margin-bottom:6px\"> ")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "\" alt=\"site simgesi\" style=\"max-height:52px;max-width:52px;object-fit:contain;background:#18181b;border-radius:6px;padding:6px;display:block;margin-bottom:6px\"> ")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "<input class=\"input\" type=\"file\" name=\"logo\" accept=\"image/jpeg,image/png,image/webp,image/svg+xml,.svg\" aria-label=\"Logo görseli (koyu tema)\"> ")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "<input class=\"input\" type=\"file\" name=\"icon\" accept=\"image/jpeg,image/png,image/webp,image/svg+xml,.svg\" aria-label=\"Site simgesi (yuvarlak işaret)\"> ")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		if v.LogoSimgeURL != "" {
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, "<label class=\"tag\" style=\"cursor:pointer;margin-top:6px\"><input type=\"checkbox\" name=\"remove_icon\"> Simgeyi kaldır</label>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "<p class=\"hint\" style=\"margin:4px 0 0\">Yüklenirse üst çubukta <b>simge | yazı + slogan</b> üçlüsü kurulur; slogan yazının altına hizalanır (tek parça görünür).</p></div><div class=\"field\" style=\"min-width:260px\"><label>Logo — Koyu tema <small>(açık zeminde görünmez; aşağıdakiyle birlikte kullanın)</small></label> ")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		if v.LogoURL != "" {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, "<label class=\"tag\" style=\"cursor:pointer;margin-top:6px\"><input type=\"checkbox\" name=\"remove_logo\"> Mevcut görseli kaldır</label>")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "</div><div class=\"field\" style=\"min-width:260px\"><label>Logo — Açık tema <small>(isteğe bağlı)</small></label> ")
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		if v.LogoAcikURL != "" {
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, "<img src=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var10 string
-			templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.ResolveAttributeValue(templ.SafeURL(v.LogoAcikURL))
+			templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.ResolveAttributeValue(templ.SafeURL(v.LogoURL))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/yonetim.templ`, Line: 98, Col: 45}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/yonetim.templ`, Line: 107, Col: 41}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var10)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 20, "\" alt=\"logo (açık tema)\" style=\"max-height:44px;background:#fff;border-radius:6px;padding:6px;display:block;margin-bottom:6px\"> ")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 20, "\" alt=\"logo (koyu tema)\" style=\"max-height:44px;background:#18181b;border-radius:6px;padding:6px;display:block;margin-bottom:6px\"> ")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 21, "<input class=\"input\" type=\"file\" name=\"logo_acik\" accept=\"image/jpeg,image/png,image/webp,image/svg+xml,.svg\" aria-label=\"Logo görseli (açık tema)\"> ")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 21, "<input class=\"input\" type=\"file\" name=\"logo\" accept=\"image/jpeg,image/png,image/webp,image/svg+xml,.svg\" aria-label=\"Logo görseli (koyu tema)\"> ")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		if v.LogoURL != "" {
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 22, "<label class=\"tag\" style=\"cursor:pointer;margin-top:6px\"><input type=\"checkbox\" name=\"remove_logo\"> Mevcut görseli kaldır</label>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 23, "</div><div class=\"field\" style=\"min-width:260px\"><label>Logo — Açık tema <small>(isteğe bağlı)</small></label> ")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		if v.LogoAcikURL != "" {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 22, "<label class=\"tag\" style=\"cursor:pointer;margin-top:6px\"><input type=\"checkbox\" name=\"remove_logo_acik\"> Kaldır</label>")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 23, "<p class=\"hint\" style=\"margin:4px 0 0\">Boş bırakılırsa koyu tema logosu iki temada da kullanılır.</p></div><div class=\"field\" style=\"min-width:180px\"><label>Favicon / uygulama ikonu</label> ")
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		if v.FaviconURL != "" {
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 24, "<img src=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var11 string
-			templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.ResolveAttributeValue(templ.SafeURL(v.FaviconURL))
+			templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.ResolveAttributeValue(templ.SafeURL(v.LogoAcikURL))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/yonetim.templ`, Line: 109, Col: 44}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/yonetim.templ`, Line: 117, Col: 45}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var11)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 25, "\" alt=\"favicon\" style=\"width:40px;height:40px;object-fit:contain;background:#fff;border-radius:6px;padding:4px;display:block;margin-bottom:6px\"> ")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 25, "\" alt=\"logo (açık tema)\" style=\"max-height:44px;background:#fff;border-radius:6px;padding:6px;display:block;margin-bottom:6px\"> ")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 26, "<input class=\"input\" type=\"file\" name=\"favicon\" accept=\"image/jpeg,image/png,image/webp,image/svg+xml,.svg\" aria-label=\"Favicon / uygulama ikonu\"> ")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 26, "<input class=\"input\" type=\"file\" name=\"logo_acik\" accept=\"image/jpeg,image/png,image/webp,image/svg+xml,.svg\" aria-label=\"Logo görseli (açık tema)\"> ")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		if v.LogoAcikURL != "" {
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 27, "<label class=\"tag\" style=\"cursor:pointer;margin-top:6px\"><input type=\"checkbox\" name=\"remove_logo_acik\"> Kaldır</label>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 28, "<p class=\"hint\" style=\"margin:4px 0 0\">Boş bırakılırsa koyu tema logosu iki temada da kullanılır.</p></div><div class=\"field\" style=\"min-width:180px\"><label>Favicon / uygulama ikonu</label> ")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		if v.FaviconURL != "" {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 27, "<label class=\"tag\" style=\"cursor:pointer;margin-top:6px\"><input type=\"checkbox\" name=\"remove_favicon\"> Kaldır</label>")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 28, "</div><div class=\"field\" style=\"min-width:200px\"><label>OG görseli (paylaşım)</label> ")
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		if v.OGURL != "" {
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 29, "<img src=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var12 string
-			templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.ResolveAttributeValue(templ.SafeURL(v.OGURL))
+			templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.ResolveAttributeValue(templ.SafeURL(v.FaviconURL))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/yonetim.templ`, Line: 119, Col: 39}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/yonetim.templ`, Line: 128, Col: 44}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var12)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 30, "\" alt=\"og\" style=\"max-height:70px;background:#18181b;border-radius:6px;padding:4px;display:block;margin-bottom:6px\"> ")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 30, "\" alt=\"favicon\" style=\"width:40px;height:40px;object-fit:contain;background:#fff;border-radius:6px;padding:4px;display:block;margin-bottom:6px\"> ")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 31, "<input class=\"input\" type=\"file\" name=\"og\" accept=\"image/jpeg,image/png,image/webp,image/svg+xml,.svg\" aria-label=\"OG paylaşım görseli\"> ")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 31, "<input class=\"input\" type=\"file\" name=\"favicon\" accept=\"image/jpeg,image/png,image/webp,image/svg+xml,.svg\" aria-label=\"Favicon / uygulama ikonu\"> ")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		if v.FaviconURL != "" {
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 32, "<label class=\"tag\" style=\"cursor:pointer;margin-top:6px\"><input type=\"checkbox\" name=\"remove_favicon\"> Kaldır</label>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 33, "</div><div class=\"field\" style=\"min-width:200px\"><label>OG görseli (paylaşım)</label> ")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		if v.OGURL != "" {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 32, "<label class=\"tag\" style=\"cursor:pointer;margin-top:6px\"><input type=\"checkbox\" name=\"remove_og\"> Kaldır</label>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 34, "<img src=\"")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var13 string
+			templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.ResolveAttributeValue(templ.SafeURL(v.OGURL))
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/yonetim.templ`, Line: 138, Col: 39}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var13)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 35, "\" alt=\"og\" style=\"max-height:70px;background:#18181b;border-radius:6px;padding:4px;display:block;margin-bottom:6px\"> ")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 33, "</div></div><div class=\"input-row\" style=\"gap:20px;flex-wrap:wrap;margin-top:6px\"><div class=\"field\" style=\"min-width:190px\"><label for=\"f_logo_h\">Logo yüksekliği (px)</label> <input id=\"f_logo_h\" class=\"input\" type=\"number\" name=\"logo_yukseklik\" min=\"16\" max=\"120\" step=\"1\" value=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 36, "<input class=\"input\" type=\"file\" name=\"og\" accept=\"image/jpeg,image/png,image/webp,image/svg+xml,.svg\" aria-label=\"OG paylaşım görseli\"> ")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var13 string
-		templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.ResolveAttributeValue(itoaOlcu(v.LogoYukseklik))
-		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/yonetim.templ`, Line: 131, Col: 67}
+		if v.OGURL != "" {
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 37, "<label class=\"tag\" style=\"cursor:pointer;margin-top:6px\"><input type=\"checkbox\" name=\"remove_og\"> Kaldır</label>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var13)
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 34, "\" placeholder=\"32\"><p class=\"hint\">16–120. Boş = 32 px (varsayılan).</p></div><div class=\"field\" style=\"min-width:190px\"><label for=\"f_logo_w\">En fazla genişlik (px)</label> <input id=\"f_logo_w\" class=\"input\" type=\"number\" name=\"logo_genislik\" min=\"40\" max=\"600\" step=\"1\" value=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 38, "</div></div><div class=\"input-row\" style=\"gap:20px;flex-wrap:wrap;margin-top:6px\"><div class=\"field\" style=\"min-width:190px\"><label for=\"f_icon_h\">Simge yüksekliği (px)</label> <input id=\"f_icon_h\" class=\"input\" type=\"number\" name=\"icon_yukseklik\" min=\"16\" max=\"120\" step=\"1\" value=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var14 string
-		templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.ResolveAttributeValue(itoaOlcu(v.LogoGenislikAzami))
+		templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.ResolveAttributeValue(itoaOlcu(v.LogoSimgeYukseklik))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/yonetim.templ`, Line: 138, Col: 71}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/yonetim.templ`, Line: 150, Col: 72}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var14)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 35, "\" placeholder=\"260\"><p class=\"hint\">40–600. Boş = 260 px. Yatay logo bu sınıra kadar uzar.</p></div><div class=\"field\" style=\"min-width:210px\"><label for=\"f_slogan_g\">Slogan hizası (px)</label> <input id=\"f_slogan_g\" class=\"input\" type=\"number\" name=\"slogan_girinti\" min=\"0\" max=\"600\" step=\"1\" value=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 39, "\" placeholder=\"32\"><p class=\"hint\">16–120. Boş = logo yüksekliği. Simge kare kalır (genişlik otomatik).</p></div><div class=\"field\" style=\"min-width:190px\"><label for=\"f_logo_h\">Logo yüksekliği (px)</label> <input id=\"f_logo_h\" class=\"input\" type=\"number\" name=\"logo_yukseklik\" min=\"16\" max=\"120\" step=\"1\" value=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var15 string
-		templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.ResolveAttributeValue(itoaOlcu(v.SloganGirinti))
+		templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.ResolveAttributeValue(itoaOlcu(v.LogoYukseklik))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/yonetim.templ`, Line: 145, Col: 66}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/yonetim.templ`, Line: 158, Col: 67}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var15)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 36, "\" placeholder=\"0\"><p class=\"hint\">Sloganı logodaki <b>yazının ilk harfinin</b> altına oturtmak için girinti. Logoda solda simge varsa simgenin genişliği kadar girin (ör. 64). 0 = en soldan.</p></div></div><button class=\"btn\" type=\"submit\" style=\"margin-top:12px\">Kaydet</button><p class=\"hint\" style=\"margin-top:8px\">İpucu: görsel yüklediğinizde logo modu otomatik olarak <b>Görsel Logo</b>'ya geçer. Değişiklik site tarafında ~1 dakika içinde görünür (önbellek) — hemen görmek için sayfayı yenileyin (Ctrl+F5).</p></form><div class=\"card card-pad\" style=\"max-width:760px;margin-top:14px\"><h2 style=\"margin-top:0;font-size:1.1rem\">Panel Markası (yönetim arayüzü)</h2><p class=\"hint\" style=\"margin-top:0\">Bu bölüm yalnızca <b>yönetim panelinin</b> görünümünü etkiler; okuyucuların gördüğü site logosu yukarıdaki bölümdür.</p><form method=\"post\" action=\"/admin/gorunum\" enctype=\"multipart/form-data\" style=\"display:flex;gap:14px;align-items:flex-end;flex-wrap:wrap\"><div class=\"field\"><label for=\"f_logo\">Panel logosu</label> ")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 40, "\" placeholder=\"32\"><p class=\"hint\">16–120. Boş = 32 px (varsayılan).</p></div><div class=\"field\" style=\"min-width:190px\"><label for=\"f_logo_w\">En fazla genişlik (px)</label> <input id=\"f_logo_w\" class=\"input\" type=\"number\" name=\"logo_genislik\" min=\"40\" max=\"600\" step=\"1\" value=\"")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var16 string
+		templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.ResolveAttributeValue(itoaOlcu(v.LogoGenislikAzami))
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/yonetim.templ`, Line: 165, Col: 71}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var16)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 41, "\" placeholder=\"260\"><p class=\"hint\">40–600. Boş = 260 px. Yatay logo bu sınıra kadar uzar.</p></div><div class=\"field\" style=\"min-width:210px\"><label for=\"f_slogan_g\">Slogan hizası (px)</label> <input id=\"f_slogan_g\" class=\"input\" type=\"number\" name=\"slogan_girinti\" min=\"0\" max=\"600\" step=\"1\" value=\"")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var17 string
+		templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.ResolveAttributeValue(itoaOlcu(v.SloganGirinti))
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/yonetim.templ`, Line: 172, Col: 66}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var17)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 42, "\" placeholder=\"0\"><p class=\"hint\">Yapısal hizalama sayesinde slogan <b>yazının sol kenarında</b> (B harfinin altında) başlar; bu alan yalnız ince ayar içindir. Genellikle <b>0</b>.</p></div></div><button class=\"btn\" type=\"submit\" style=\"margin-top:12px\">Kaydet</button><p class=\"hint\" style=\"margin-top:8px\">İpucu: görsel yüklediğinizde logo modu otomatik olarak <b>Görsel Logo</b>'ya geçer. Değişiklik site tarafında ~1 dakika içinde görünür (önbellek) — hemen görmek için sayfayı yenileyin (Ctrl+F5).</p></form><div class=\"card card-pad\" style=\"max-width:760px;margin-top:14px\"><h2 style=\"margin-top:0;font-size:1.1rem\">Panel Markası (yönetim arayüzü)</h2><p class=\"hint\" style=\"margin-top:0\">Bu bölüm yalnızca <b>yönetim panelinin</b> görünümünü etkiler; okuyucuların gördüğü site logosu yukarıdaki bölümdür.</p><form method=\"post\" action=\"/admin/gorunum\" enctype=\"multipart/form-data\" style=\"display:flex;gap:14px;align-items:flex-end;flex-wrap:wrap\"><div class=\"field\"><label for=\"f_logo\">Panel logosu</label> ")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		if v.PanelLogo != "" {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 37, "<img src=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 43, "<img src=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var16 string
-			templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.ResolveAttributeValue(templ.SafeURL(v.PanelLogo))
+			var templ_7745c5c3_Var18 string
+			templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.ResolveAttributeValue(templ.SafeURL(v.PanelLogo))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/yonetim.templ`, Line: 166, Col: 43}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/yonetim.templ`, Line: 193, Col: 43}
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var16)
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var18)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 38, "\" alt=\"panel logosu\" style=\"max-height:36px;display:block;margin-bottom:4px\"> ")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 44, "\" alt=\"panel logosu\" style=\"max-height:36px;display:block;margin-bottom:4px\"> ")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 39, "<input id=\"f_logo\" class=\"input\" type=\"file\" name=\"logo\" accept=\"image/*\" aria-label=\"Logo görseli\"></div><div class=\"field\"><label for=\"f_icon\">Panel simgesi</label> <input id=\"f_icon\" class=\"input\" type=\"file\" name=\"icon\" accept=\"image/*\"></div><button class=\"btn small\" type=\"submit\">Panel Markasını Kaydet</button> <a class=\"btn ghost small\" href=\"/admin/gorunum\"><svg class=\"ti\" aria-hidden=\"true\"><use href=\"/static/vendor/tabler-icons.svg?v=b89545a6#ti-palette\"></use></svg> Renk &amp; Font Ayarları</a></form></div></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 45, "<input id=\"f_logo\" class=\"input\" type=\"file\" name=\"logo\" accept=\"image/*\" aria-label=\"Logo görseli\"></div><div class=\"field\"><label for=\"f_icon\">Panel simgesi</label> <input id=\"f_icon\" class=\"input\" type=\"file\" name=\"icon\" accept=\"image/*\"></div><button class=\"btn small\" type=\"submit\">Panel Markasını Kaydet</button> <a class=\"btn ghost small\" href=\"/admin/gorunum\"><svg class=\"ti\" aria-hidden=\"true\"><use href=\"/static/vendor/tabler-icons.svg?v=b89545a6#ti-palette\"></use></svg> Renk &amp; Font Ayarları</a></form></div></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -434,48 +486,48 @@ func KumelerPanel(v KumelerView) templ.Component {
 			}()
 		}
 		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var17 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var17 == nil {
-			templ_7745c5c3_Var17 = templ.NopComponent
+		templ_7745c5c3_Var19 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var19 == nil {
+			templ_7745c5c3_Var19 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 40, "<div id=\"kumeler-panel\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 46, "<div id=\"kumeler-panel\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		if v.FlashText != "" {
-			var templ_7745c5c3_Var18 = []any{"flash", v.FlashKind}
-			templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var18...)
+			var templ_7745c5c3_Var20 = []any{"flash", v.FlashKind}
+			templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var20...)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 41, "<div class=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 47, "<div class=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var19 string
-			templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.ResolveAttributeValue(templ.CSSClasses(templ_7745c5c3_Var18).String())
+			var templ_7745c5c3_Var21 string
+			templ_7745c5c3_Var21, templ_7745c5c3_Err = templ.ResolveAttributeValue(templ.CSSClasses(templ_7745c5c3_Var20).String())
 			if templ_7745c5c3_Err != nil {
 				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/yonetim.templ`, Line: 1, Col: 0}
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var19)
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var21)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 42, "\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 48, "\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var20 string
-			templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.JoinStringErrs(v.FlashText)
+			var templ_7745c5c3_Var22 string
+			templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.JoinStringErrs(v.FlashText)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/yonetim.templ`, Line: 223, Col: 52}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/yonetim.templ`, Line: 250, Col: 52}
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var20))
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var22))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 43, "</div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 49, "</div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -484,298 +536,298 @@ func KumelerPanel(v KumelerView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 44, "<div class=\"grid-2\" style=\"grid-template-columns:300px 1fr;align-items:start\"><div class=\"gap\"><form method=\"post\" action=\"/admin/kumeler/ekle\" class=\"card card-pad\" hx-post=\"/admin/kumeler/ekle\" hx-target=\"#kumeler-panel\" hx-swap=\"outerHTML\" hx-indicator=\"#kumeler-yukleniyor\" hx-on::after-request=\"if (event.detail.successful) this.reset();\"><h2 style=\"margin:0 0 8px;font-size:1.05rem\">Yeni Küme</h2><div class=\"field\"><label for=\"f_name\">Ad</label> <input id=\"f_name\" class=\"input\" name=\"name\" required></div><div class=\"field\"><label for=\"f_intent\">Ni yet</label> <select id=\"f_intent\" class=\"input\" name=\"intent\"><option value=\"bilgi\">Bilgi</option> <option value=\"ticari\">Ticari</option> <option value=\"nav\">Navigasyon</option></select></div><button class=\"btn\" type=\"submit\">＋ Ekle</button></form><div class=\"card card-pad\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 50, "<div class=\"grid-2\" style=\"grid-template-columns:300px 1fr;align-items:start\"><div class=\"gap\"><form method=\"post\" action=\"/admin/kumeler/ekle\" class=\"card card-pad\" hx-post=\"/admin/kumeler/ekle\" hx-target=\"#kumeler-panel\" hx-swap=\"outerHTML\" hx-indicator=\"#kumeler-yukleniyor\" hx-on::after-request=\"if (event.detail.successful) this.reset();\"><h2 style=\"margin:0 0 8px;font-size:1.05rem\">Yeni Küme</h2><div class=\"field\"><label for=\"f_name\">Ad</label> <input id=\"f_name\" class=\"input\" name=\"name\" required></div><div class=\"field\"><label for=\"f_intent\">Ni yet</label> <select id=\"f_intent\" class=\"input\" name=\"intent\"><option value=\"bilgi\">Bilgi</option> <option value=\"ticari\">Ticari</option> <option value=\"nav\">Navigasyon</option></select></div><button class=\"btn\" type=\"submit\">＋ Ekle</button></form><div class=\"card card-pad\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		if len(v.Clusters) == 0 {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 45, "<p class=\"muted small\">Henüz küme yok.</p>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 51, "<p class=\"muted small\">Henüz küme yok.</p>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		}
 		for _, c := range v.Clusters {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 46, "<div style=\"display:flex;gap:6px;align-items:center;padding:6px 0;border-bottom:1px dashed var(--border)\"><a href=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 52, "<div style=\"display:flex;gap:6px;align-items:center;padding:6px 0;border-bottom:1px dashed var(--border)\"><a href=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var21 templ.SafeURL
-			templ_7745c5c3_Var21, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL("/admin/kumeler?kus=" + c.ID))
+			var templ_7745c5c3_Var23 templ.SafeURL
+			templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL("/admin/kumeler?kus=" + c.ID))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/yonetim.templ`, Line: 260, Col: 58}
-			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var21))
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 47, "\" hx-get=\"")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			var templ_7745c5c3_Var22 string
-			templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.ResolveAttributeValue("/admin/kumeler?kus=" + c.ID)
-			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/yonetim.templ`, Line: 261, Col: 45}
-			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var22)
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 48, "\" hx-target=\"#kumeler-panel\" hx-swap=\"outerHTML\" hx-indicator=\"#kumeler-yukleniyor\" style=\"flex:1\">")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			var templ_7745c5c3_Var23 string
-			templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.JoinStringErrs(c.Name)
-			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/yonetim.templ`, Line: 266, Col: 16}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/yonetim.templ`, Line: 287, Col: 58}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var23))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 49, " <span class=\"badge\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 53, "\" hx-get=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var24 string
-			templ_7745c5c3_Var24, templ_7745c5c3_Err = templ.JoinStringErrs(itoaT(c.Count))
+			templ_7745c5c3_Var24, templ_7745c5c3_Err = templ.ResolveAttributeValue("/admin/kumeler?kus=" + c.ID)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/yonetim.templ`, Line: 266, Col: 55}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/yonetim.templ`, Line: 288, Col: 45}
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var24))
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var24)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 50, "</span></a> <a class=\"btn danger small\" href=\"#\" data-confirm=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 54, "\" hx-target=\"#kumeler-panel\" hx-swap=\"outerHTML\" hx-indicator=\"#kumeler-yukleniyor\" style=\"flex:1\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var25 string
-			templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.ResolveAttributeValue("/admin/kumeler/" + c.ID + "/sil")
+			templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.JoinStringErrs(c.Name)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/yonetim.templ`, Line: 270, Col: 56}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/yonetim.templ`, Line: 293, Col: 16}
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var25)
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var25))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 51, "\" hx-post=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 55, " <span class=\"badge\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var26 string
-			templ_7745c5c3_Var26, templ_7745c5c3_Err = templ.ResolveAttributeValue("/admin/kumeler/" + c.ID + "/sil")
+			templ_7745c5c3_Var26, templ_7745c5c3_Err = templ.JoinStringErrs(itoaT(c.Count))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/yonetim.templ`, Line: 271, Col: 51}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/yonetim.templ`, Line: 293, Col: 55}
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var26)
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 52, "\" hx-target=\"#kumeler-panel\" hx-swap=\"outerHTML\" hx-confirm=\"Bu küme silinsin mi?\" hx-indicator=\"#kumeler-yukleniyor\"><svg class=\"ti\" aria-hidden=\"true\"><use href=\"/static/vendor/tabler-icons.svg?v=b89545a6#ti-x\"></use></svg></a></div>")
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var26))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 53, "</div></div><div class=\"gap\">")
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		if v.HasActive {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 54, "<div class=\"card card-pad\"><h2 style=\"margin:0;font-size:1.1rem\">Küme: ")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 56, "</span></a> <a class=\"btn danger small\" href=\"#\" data-confirm=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var27 string
-			templ_7745c5c3_Var27, templ_7745c5c3_Err = templ.JoinStringErrs(v.ActiveName)
+			templ_7745c5c3_Var27, templ_7745c5c3_Err = templ.ResolveAttributeValue("/admin/kumeler/" + c.ID + "/sil")
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/yonetim.templ`, Line: 284, Col: 65}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/yonetim.templ`, Line: 297, Col: 56}
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var27))
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var27)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 55, " <span class=\"badge\" style=\"background:var(--surface-2);color:var(--text-2)\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 57, "\" hx-post=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var28 string
-			templ_7745c5c3_Var28, templ_7745c5c3_Err = templ.JoinStringErrs(v.ActiveIntent)
+			templ_7745c5c3_Var28, templ_7745c5c3_Err = templ.ResolveAttributeValue("/admin/kumeler/" + c.ID + "/sil")
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/yonetim.templ`, Line: 285, Col: 99}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/yonetim.templ`, Line: 298, Col: 51}
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var28))
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var28)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 56, "</span></h2><form method=\"post\" action=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 58, "\" hx-target=\"#kumeler-panel\" hx-swap=\"outerHTML\" hx-confirm=\"Bu küme silinsin mi?\" hx-indicator=\"#kumeler-yukleniyor\"><svg class=\"ti\" aria-hidden=\"true\"><use href=\"/static/vendor/tabler-icons.svg?v=b89545a6#ti-x\"></use></svg></a></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var29 templ.SafeURL
-			templ_7745c5c3_Var29, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL("/admin/kumeler/" + v.ActiveID + "/icerik/-1"))
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 59, "</div></div><div class=\"gap\">")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		if v.HasActive {
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 60, "<div class=\"card card-pad\"><h2 style=\"margin:0;font-size:1.1rem\">Küme: ")
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/yonetim.templ`, Line: 286, Col: 95}
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var29 string
+			templ_7745c5c3_Var29, templ_7745c5c3_Err = templ.JoinStringErrs(v.ActiveName)
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/yonetim.templ`, Line: 311, Col: 65}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var29))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 57, "\" style=\"display:none\" id=\"kume-ekle-fake\"></form>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 61, " <span class=\"badge\" style=\"background:var(--surface-2);color:var(--text-2)\">")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var30 string
+			templ_7745c5c3_Var30, templ_7745c5c3_Err = templ.JoinStringErrs(v.ActiveIntent)
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/yonetim.templ`, Line: 312, Col: 99}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var30))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 62, "</span></h2><form method=\"post\" action=\"")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var31 templ.SafeURL
+			templ_7745c5c3_Var31, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL("/admin/kumeler/" + v.ActiveID + "/icerik/-1"))
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/yonetim.templ`, Line: 313, Col: 95}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var31))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 63, "\" style=\"display:none\" id=\"kume-ekle-fake\"></form>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			if len(v.Warnings) > 0 {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 58, "<div class=\"flash error\" style=\"margin-top:8px\"><strong><svg class=\"ti ti-metin\" aria-hidden=\"true\"><use href=\"/static/vendor/tabler-icons.svg?v=b89545a6#ti-alert-triangle\"></use></svg> İçerik çakışması (cannibalization):</strong> ")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 64, "<div class=\"flash error\" style=\"margin-top:8px\"><strong><svg class=\"ti ti-metin\" aria-hidden=\"true\"><use href=\"/static/vendor/tabler-icons.svg?v=b89545a6#ti-alert-triangle\"></use></svg> İçerik çakışması (cannibalization):</strong> ")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				for _, w := range v.Warnings {
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 59, "<div style=\"padding:3px 0\"><svg class=\"ti\" aria-hidden=\"true\"><use href=\"/static/vendor/tabler-icons.svg?v=b89545a6#ti-player-play\"></use></svg> <a href=\"")
-					if templ_7745c5c3_Err != nil {
-						return templ_7745c5c3_Err
-					}
-					var templ_7745c5c3_Var30 templ.SafeURL
-					templ_7745c5c3_Var30, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL("/admin/icerikler/" + w.A))
-					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/yonetim.templ`, Line: 291, Col: 204}
-					}
-					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var30))
-					if templ_7745c5c3_Err != nil {
-						return templ_7745c5c3_Err
-					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 60, "\">")
-					if templ_7745c5c3_Err != nil {
-						return templ_7745c5c3_Err
-					}
-					var templ_7745c5c3_Var31 string
-					templ_7745c5c3_Var31, templ_7745c5c3_Err = templ.JoinStringErrs(w.TitleA)
-					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/yonetim.templ`, Line: 291, Col: 217}
-					}
-					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var31))
-					if templ_7745c5c3_Err != nil {
-						return templ_7745c5c3_Err
-					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 61, "</a> ↔ <a href=\"")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 65, "<div style=\"padding:3px 0\"><svg class=\"ti\" aria-hidden=\"true\"><use href=\"/static/vendor/tabler-icons.svg?v=b89545a6#ti-player-play\"></use></svg> <a href=\"")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
 					var templ_7745c5c3_Var32 templ.SafeURL
-					templ_7745c5c3_Var32, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL("/admin/icerikler/" + w.B))
+					templ_7745c5c3_Var32, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL("/admin/icerikler/" + w.A))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/yonetim.templ`, Line: 291, Col: 278}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/yonetim.templ`, Line: 318, Col: 204}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var32))
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 62, "\">")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 66, "\">")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
 					var templ_7745c5c3_Var33 string
-					templ_7745c5c3_Var33, templ_7745c5c3_Err = templ.JoinStringErrs(w.TitleB)
+					templ_7745c5c3_Var33, templ_7745c5c3_Err = templ.JoinStringErrs(w.TitleA)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/yonetim.templ`, Line: 291, Col: 291}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/yonetim.templ`, Line: 318, Col: 217}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var33))
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 63, "</a> <span class=\"small muted\">(")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 67, "</a> ↔ <a href=\"")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					var templ_7745c5c3_Var34 string
-					templ_7745c5c3_Var34, templ_7745c5c3_Err = templ.JoinStringErrs(w.Overlap)
+					var templ_7745c5c3_Var34 templ.SafeURL
+					templ_7745c5c3_Var34, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL("/admin/icerikler/" + w.B))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/yonetim.templ`, Line: 291, Col: 336}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/yonetim.templ`, Line: 318, Col: 278}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var34))
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 64, " ortak kelime)</span></div>")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 68, "\">")
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					var templ_7745c5c3_Var35 string
+					templ_7745c5c3_Var35, templ_7745c5c3_Err = templ.JoinStringErrs(w.TitleB)
+					if templ_7745c5c3_Err != nil {
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/yonetim.templ`, Line: 318, Col: 291}
+					}
+					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var35))
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 69, "</a> <span class=\"small muted\">(")
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					var templ_7745c5c3_Var36 string
+					templ_7745c5c3_Var36, templ_7745c5c3_Err = templ.JoinStringErrs(w.Overlap)
+					if templ_7745c5c3_Err != nil {
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/yonetim.templ`, Line: 318, Col: 336}
+					}
+					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var36))
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 70, " ortak kelime)</span></div>")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 65, "</div>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 71, "</div>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 66, "<div style=\"display:flex;gap:8px;margin:12px 0\"><select class=\"input\" id=\"kume-pool\" style=\"flex:1\" aria-label=\"Kümeye eklenecek içerik\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 72, "<div style=\"display:flex;gap:8px;margin:12px 0\"><select class=\"input\" id=\"kume-pool\" style=\"flex:1\" aria-label=\"Kümeye eklenecek içerik\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			if len(v.Pool) == 0 {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 67, "<option>— eklenecek içerik yok —</option> ")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 73, "<option>— eklenecek içerik yok —</option> ")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 			}
 			for _, p := range v.Pool {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 68, "<option value=\"")
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				var templ_7745c5c3_Var35 string
-				templ_7745c5c3_Var35, templ_7745c5c3_Err = templ.ResolveAttributeValue(p.ID)
-				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/yonetim.templ`, Line: 301, Col: 29}
-				}
-				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var35)
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 69, "\">")
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				var templ_7745c5c3_Var36 string
-				templ_7745c5c3_Var36, templ_7745c5c3_Err = templ.JoinStringErrs(p.Title)
-				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/yonetim.templ`, Line: 301, Col: 41}
-				}
-				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var36))
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 70, " (id=")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 74, "<option value=\"")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var37 string
-				templ_7745c5c3_Var37, templ_7745c5c3_Err = templ.JoinStringErrs(p.ID)
+				templ_7745c5c3_Var37, templ_7745c5c3_Err = templ.ResolveAttributeValue(p.ID)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/yonetim.templ`, Line: 301, Col: 54}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/yonetim.templ`, Line: 328, Col: 29}
 				}
-				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var37))
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 71, ")</option>")
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var37)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 75, "\">")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var38 string
+				templ_7745c5c3_Var38, templ_7745c5c3_Err = templ.JoinStringErrs(p.Title)
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/yonetim.templ`, Line: 328, Col: 41}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var38))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 76, " (id=")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var39 string
+				templ_7745c5c3_Var39, templ_7745c5c3_Err = templ.JoinStringErrs(p.ID)
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/yonetim.templ`, Line: 328, Col: 54}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var39))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 77, ")</option>")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 72, "</select> <button class=\"btn small\" id=\"kume-ekle\" data-kus=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 78, "</select> <button class=\"btn small\" id=\"kume-ekle\" data-kus=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var38 string
-			templ_7745c5c3_Var38, templ_7745c5c3_Err = templ.ResolveAttributeValue(v.ActiveID)
+			var templ_7745c5c3_Var40 string
+			templ_7745c5c3_Var40, templ_7745c5c3_Err = templ.ResolveAttributeValue(v.ActiveID)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/yonetim.templ`, Line: 304, Col: 69}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/yonetim.templ`, Line: 331, Col: 69}
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var38)
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var40)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 73, "\">＋ Ekle</button></div><table class=\"table\"><thead><tr><th>İçerik</th><th>Durum</th><th><span class=\"muted small\">—</span></th></tr></thead> <tbody>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 79, "\">＋ Ekle</button></div><table class=\"table\"><thead><tr><th>İçerik</th><th>Durum</th><th><span class=\"muted small\">—</span></th></tr></thead> <tbody>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -786,109 +838,109 @@ func KumelerPanel(v KumelerView) templ.Component {
 				}
 			}
 			for _, it := range v.Items {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 74, "<tr><td><a href=\"")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 80, "<tr><td><a href=\"")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				var templ_7745c5c3_Var39 templ.SafeURL
-				templ_7745c5c3_Var39, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL("/admin/icerikler/" + it.ID))
+				var templ_7745c5c3_Var41 templ.SafeURL
+				templ_7745c5c3_Var41, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL("/admin/icerikler/" + it.ID))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/yonetim.templ`, Line: 316, Col: 66}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/yonetim.templ`, Line: 343, Col: 66}
 				}
-				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var39))
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 75, "\">")
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var41))
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				var templ_7745c5c3_Var40 string
-				templ_7745c5c3_Var40, templ_7745c5c3_Err = templ.JoinStringErrs(it.Title)
-				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/yonetim.templ`, Line: 316, Col: 79}
-				}
-				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var40))
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 76, "</a></td><td>")
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				var templ_7745c5c3_Var41 = []any{"status-pill", "st-" + it.Status}
-				templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var41...)
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 77, "<span class=\"")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 81, "\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var42 string
-				templ_7745c5c3_Var42, templ_7745c5c3_Err = templ.ResolveAttributeValue(templ.CSSClasses(templ_7745c5c3_Var41).String())
+				templ_7745c5c3_Var42, templ_7745c5c3_Err = templ.JoinStringErrs(it.Title)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/yonetim.templ`, Line: 1, Col: 0}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/yonetim.templ`, Line: 343, Col: 79}
 				}
-				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var42)
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 78, "\">")
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var42))
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				var templ_7745c5c3_Var43 string
-				templ_7745c5c3_Var43, templ_7745c5c3_Err = templ.JoinStringErrs(it.Status)
-				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/yonetim.templ`, Line: 317, Col: 74}
-				}
-				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var43))
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 82, "</a></td><td>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 79, "</span></td><td><a class=\"btn ghost small\" href=\"#\" data-toggle=\"")
+				var templ_7745c5c3_Var43 = []any{"status-pill", "st-" + it.Status}
+				templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var43...)
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 83, "<span class=\"")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var44 string
-				templ_7745c5c3_Var44, templ_7745c5c3_Err = templ.ResolveAttributeValue("/admin/kumeler/" + v.ActiveID + "/icerik/" + it.ID + "?islem=cikar")
+				templ_7745c5c3_Var44, templ_7745c5c3_Err = templ.ResolveAttributeValue(templ.CSSClasses(templ_7745c5c3_Var43).String())
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/yonetim.templ`, Line: 322, Col: 94}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/yonetim.templ`, Line: 1, Col: 0}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var44)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 80, "\" hx-post=\"")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 84, "\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var45 string
-				templ_7745c5c3_Var45, templ_7745c5c3_Err = templ.ResolveAttributeValue("/admin/kumeler/" + v.ActiveID + "/icerik/" + it.ID + "?islem=cikar")
+				templ_7745c5c3_Var45, templ_7745c5c3_Err = templ.JoinStringErrs(it.Status)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/yonetim.templ`, Line: 323, Col: 90}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/yonetim.templ`, Line: 344, Col: 74}
 				}
-				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var45)
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var45))
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 81, "\" hx-target=\"#kumeler-panel\" hx-swap=\"outerHTML\" hx-indicator=\"#kumeler-yukleniyor\">çıkar</a></td></tr>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 85, "</span></td><td><a class=\"btn ghost small\" href=\"#\" data-toggle=\"")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var46 string
+				templ_7745c5c3_Var46, templ_7745c5c3_Err = templ.ResolveAttributeValue("/admin/kumeler/" + v.ActiveID + "/icerik/" + it.ID + "?islem=cikar")
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/yonetim.templ`, Line: 349, Col: 94}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var46)
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 86, "\" hx-post=\"")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var47 string
+				templ_7745c5c3_Var47, templ_7745c5c3_Err = templ.ResolveAttributeValue("/admin/kumeler/" + v.ActiveID + "/icerik/" + it.ID + "?islem=cikar")
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/yonetim.templ`, Line: 350, Col: 90}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var47)
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 87, "\" hx-target=\"#kumeler-panel\" hx-swap=\"outerHTML\" hx-indicator=\"#kumeler-yukleniyor\">çıkar</a></td></tr>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 82, "</tbody></table></div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 88, "</tbody></table></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		} else {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 83, "<p class=\"muted\">Küme seç.</p>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 89, "<p class=\"muted\">Küme seç.</p>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 84, "</div></div></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 90, "</div></div></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -928,48 +980,48 @@ func AdSensePanel(v AdsenseView) templ.Component {
 			}()
 		}
 		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var46 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var46 == nil {
-			templ_7745c5c3_Var46 = templ.NopComponent
+		templ_7745c5c3_Var48 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var48 == nil {
+			templ_7745c5c3_Var48 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 85, "<div id=\"adsense-panel\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 91, "<div id=\"adsense-panel\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		if v.FlashText != "" {
-			var templ_7745c5c3_Var47 = []any{"flash", v.FlashKind}
-			templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var47...)
+			var templ_7745c5c3_Var49 = []any{"flash", v.FlashKind}
+			templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var49...)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 86, "<div class=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 92, "<div class=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var48 string
-			templ_7745c5c3_Var48, templ_7745c5c3_Err = templ.ResolveAttributeValue(templ.CSSClasses(templ_7745c5c3_Var47).String())
+			var templ_7745c5c3_Var50 string
+			templ_7745c5c3_Var50, templ_7745c5c3_Err = templ.ResolveAttributeValue(templ.CSSClasses(templ_7745c5c3_Var49).String())
 			if templ_7745c5c3_Err != nil {
 				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/yonetim.templ`, Line: 1, Col: 0}
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var48)
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var50)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 87, "\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 93, "\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var49 string
-			templ_7745c5c3_Var49, templ_7745c5c3_Err = templ.JoinStringErrs(v.FlashText)
+			var templ_7745c5c3_Var51 string
+			templ_7745c5c3_Var51, templ_7745c5c3_Err = templ.JoinStringErrs(v.FlashText)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/yonetim.templ`, Line: 361, Col: 52}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/yonetim.templ`, Line: 388, Col: 52}
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var49))
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var51))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 88, "</div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 94, "</div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -978,142 +1030,142 @@ func AdSensePanel(v AdsenseView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 89, "<div class=\"card card-pad\" style=\"display:flex;gap:16px;flex-wrap:wrap;align-items:center\"><div><div class=\"small muted\">Durum</div><div class=\"big\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 95, "<div class=\"card card-pad\" style=\"display:flex;gap:16px;flex-wrap:wrap;align-items:center\"><div><div class=\"small muted\">Durum</div><div class=\"big\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		if v.Connected {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 90, "<span style=\"color:var(--ok)\"><svg class=\"ti\" aria-hidden=\"true\"><use href=\"/static/vendor/tabler-icons.svg?v=b89545a6#ti-circle-dot\"></use></svg> Bağlı</span>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 96, "<span style=\"color:var(--ok)\"><svg class=\"ti\" aria-hidden=\"true\"><use href=\"/static/vendor/tabler-icons.svg?v=b89545a6#ti-circle-dot\"></use></svg> Bağlı</span>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		} else {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 91, "<span class=\"muted\"><svg class=\"ti\" aria-hidden=\"true\"><use href=\"/static/vendor/tabler-icons.svg?v=b89545a6#ti-circle-dot\"></use></svg> Bağlı değil</span>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 97, "<span class=\"muted\"><svg class=\"ti\" aria-hidden=\"true\"><use href=\"/static/vendor/tabler-icons.svg?v=b89545a6#ti-circle-dot\"></use></svg> Bağlı değil</span>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 92, "</div></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 98, "</div></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		if v.AccountName != "" {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 93, "<div><div class=\"small muted\">AdSense Hesabı</div><div class=\"big\">")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			var templ_7745c5c3_Var50 string
-			templ_7745c5c3_Var50, templ_7745c5c3_Err = templ.JoinStringErrs(v.AccountName)
-			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/yonetim.templ`, Line: 376, Col: 87}
-			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var50))
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 94, "</div></div>")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-		}
-		if v.TokenExpiry != "" {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 95, "<div><div class=\"small muted\">Token geçerlilik</div><div class=\"big\">")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			var templ_7745c5c3_Var51 string
-			templ_7745c5c3_Var51, templ_7745c5c3_Err = templ.JoinStringErrs(v.TokenExpiry)
-			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/yonetim.templ`, Line: 379, Col: 89}
-			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var51))
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 96, "</div></div>")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-		}
-		if v.SonSenkron != "" {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 97, "<div><div class=\"small muted\">Son senkron</div><div class=\"big\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 99, "<div><div class=\"small muted\">AdSense Hesabı</div><div class=\"big\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var52 string
-			templ_7745c5c3_Var52, templ_7745c5c3_Err = templ.JoinStringErrs(v.SonSenkron)
+			templ_7745c5c3_Var52, templ_7745c5c3_Err = templ.JoinStringErrs(v.AccountName)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/yonetim.templ`, Line: 382, Col: 82}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/yonetim.templ`, Line: 403, Col: 87}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var52))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 98, "</div></div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 100, "</div></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 99, "<div style=\"margin-left:auto;display:flex;gap:6px;flex-wrap:wrap\"><a class=\"btn small\" href=\"/admin/adsense/baglan\"><svg class=\"ti\" aria-hidden=\"true\"><use href=\"/static/vendor/tabler-icons.svg?v=b89545a6#ti-link\"></use></svg> Bağlan (Google)</a><form method=\"post\" action=\"/admin/adsense/senkron\" hx-post=\"/admin/adsense/senkron\" hx-target=\"#adsense-panel\" hx-swap=\"outerHTML\" hx-indicator=\"#adsense-yukleniyor\"><button class=\"btn small\" type=\"submit\"")
+		if v.TokenExpiry != "" {
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 101, "<div><div class=\"small muted\">Token geçerlilik</div><div class=\"big\">")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var53 string
+			templ_7745c5c3_Var53, templ_7745c5c3_Err = templ.JoinStringErrs(v.TokenExpiry)
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/yonetim.templ`, Line: 406, Col: 89}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var53))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 102, "</div></div>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+		}
+		if v.SonSenkron != "" {
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 103, "<div><div class=\"small muted\">Son senkron</div><div class=\"big\">")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var54 string
+			templ_7745c5c3_Var54, templ_7745c5c3_Err = templ.JoinStringErrs(v.SonSenkron)
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/yonetim.templ`, Line: 409, Col: 82}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var54))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 104, "</div></div>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 105, "<div style=\"margin-left:auto;display:flex;gap:6px;flex-wrap:wrap\"><a class=\"btn small\" href=\"/admin/adsense/baglan\"><svg class=\"ti\" aria-hidden=\"true\"><use href=\"/static/vendor/tabler-icons.svg?v=b89545a6#ti-link\"></use></svg> Bağlan (Google)</a><form method=\"post\" action=\"/admin/adsense/senkron\" hx-post=\"/admin/adsense/senkron\" hx-target=\"#adsense-panel\" hx-swap=\"outerHTML\" hx-indicator=\"#adsense-yukleniyor\"><button class=\"btn small\" type=\"submit\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		if !v.Connected {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 100, " disabled")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 106, " disabled")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 101, ">⟳ Senkronize Et</button></form><form method=\"post\" action=\"/admin/adsense/kes\" hx-post=\"/admin/adsense/kes\" hx-target=\"#adsense-panel\" hx-swap=\"outerHTML\" hx-confirm=\"Bağlantı kaldırılsın mı?\" hx-indicator=\"#adsense-yukleniyor\"><button class=\"btn small danger\" type=\"submit\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 107, ">⟳ Senkronize Et</button></form><form method=\"post\" action=\"/admin/adsense/kes\" hx-post=\"/admin/adsense/kes\" hx-target=\"#adsense-panel\" hx-swap=\"outerHTML\" hx-confirm=\"Bağlantı kaldırılsın mı?\" hx-indicator=\"#adsense-yukleniyor\"><button class=\"btn small danger\" type=\"submit\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		if !v.Connected {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 102, " disabled")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 108, " disabled")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 103, ">Bağlantıyı Kes</button></form></div></div><h2 style=\"font-size:1.05rem;margin-top:20px\">OAuth İstemci Bilgileri (Google Cloud Console)</h2><form method=\"post\" action=\"/admin/adsense/ayar\" class=\"card card-pad\" hx-post=\"/admin/adsense/ayar\" hx-target=\"#adsense-panel\" hx-swap=\"outerHTML\" hx-indicator=\"#adsense-yukleniyor\"><div style=\"display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:6px\"><input class=\"input\" name=\"client_id\" value=\"")
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		var templ_7745c5c3_Var53 string
-		templ_7745c5c3_Var53, templ_7745c5c3_Err = templ.ResolveAttributeValue(v.ClientID)
-		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/yonetim.templ`, Line: 401, Col: 60}
-		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var53)
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 104, "\" placeholder=\"OAuth İstemci Kimliği\" aria-label=\"OAuth İstemci Kimliği\"> <input class=\"input\" type=\"password\" name=\"client_secret\" placeholder=\"OAuth İstemci Sırrı (boş = değişmez)\" aria-label=\"OAuth İstemci Sırrı (boş = değişmez)\"> <input class=\"input\" name=\"ga_property\" value=\"")
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		var templ_7745c5c3_Var54 string
-		templ_7745c5c3_Var54, templ_7745c5c3_Err = templ.ResolveAttributeValue(v.GAProperty)
-		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/yonetim.templ`, Line: 403, Col: 64}
-		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var54)
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 105, "\" placeholder=\"GA4 mülk kimliği (örn. 123456789) — properties/ öneki de kabul edilir\" aria-label=\"GA4 Property ID\"></div><p class=\"hint\" style=\"margin:.6em 0\">Yetkili yönlendirme URI'si (Google Cloud Console'a ekleyin):<br><code>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 109, ">Bağlantıyı Kes</button></form></div></div><h2 style=\"font-size:1.05rem;margin-top:20px\">OAuth İstemci Bilgileri (Google Cloud Console)</h2><form method=\"post\" action=\"/admin/adsense/ayar\" class=\"card card-pad\" hx-post=\"/admin/adsense/ayar\" hx-target=\"#adsense-panel\" hx-swap=\"outerHTML\" hx-indicator=\"#adsense-yukleniyor\"><div style=\"display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:6px\"><input class=\"input\" name=\"client_id\" value=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var55 string
-		templ_7745c5c3_Var55, templ_7745c5c3_Err = templ.JoinStringErrs(v.RedirectURI)
+		templ_7745c5c3_Var55, templ_7745c5c3_Err = templ.ResolveAttributeValue(v.ClientID)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/yonetim.templ`, Line: 405, Col: 128}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/yonetim.templ`, Line: 428, Col: 60}
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var55))
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var55)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 106, "</code></p><p class=\"hint\" style=\"margin:.4em 0\">Kapsam: <code>https://www.googleapis.com/auth/adsense.readonly</code> (salt-okunur).</p><button class=\"btn\" type=\"submit\">Kaydet</button></form><p class=\"hint\" style=\"margin-top:14px\">Bağlantı kurulmadan gelir verileri <b>kural tabanlı tahmin</b> (RPM × gösterim) olarak gösterilir ve \"demo\" rozeti taşır. OAuth tamamlanınca AdSense'ten gerçek hesap doğrulanır; sonraki adım gerçek RPM/gelir çekimidir. Gelir özeti: <a href=\"/admin/raporlar\">/admin/raporlar</a>.</p></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 110, "\" placeholder=\"OAuth İstemci Kimliği\" aria-label=\"OAuth İstemci Kimliği\"> <input class=\"input\" type=\"password\" name=\"client_secret\" placeholder=\"OAuth İstemci Sırrı (boş = değişmez)\" aria-label=\"OAuth İstemci Sırrı (boş = değişmez)\"> <input class=\"input\" name=\"ga_property\" value=\"")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var56 string
+		templ_7745c5c3_Var56, templ_7745c5c3_Err = templ.ResolveAttributeValue(v.GAProperty)
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/yonetim.templ`, Line: 430, Col: 64}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var56)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 111, "\" placeholder=\"GA4 mülk kimliği (örn. 123456789) — properties/ öneki de kabul edilir\" aria-label=\"GA4 Property ID\"></div><p class=\"hint\" style=\"margin:.6em 0\">Yetkili yönlendirme URI'si (Google Cloud Console'a ekleyin):<br><code>")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var57 string
+		templ_7745c5c3_Var57, templ_7745c5c3_Err = templ.JoinStringErrs(v.RedirectURI)
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/yonetim.templ`, Line: 432, Col: 128}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var57))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 112, "</code></p><p class=\"hint\" style=\"margin:.4em 0\">Kapsam: <code>https://www.googleapis.com/auth/adsense.readonly</code> (salt-okunur).</p><button class=\"btn\" type=\"submit\">Kaydet</button></form><p class=\"hint\" style=\"margin-top:14px\">Bağlantı kurulmadan gelir verileri <b>kural tabanlı tahmin</b> (RPM × gösterim) olarak gösterilir ve \"demo\" rozeti taşır. OAuth tamamlanınca AdSense'ten gerçek hesap doğrulanır; sonraki adım gerçek RPM/gelir çekimidir. Gelir özeti: <a href=\"/admin/raporlar\">/admin/raporlar</a>.</p></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

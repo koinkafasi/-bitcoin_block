@@ -22,10 +22,14 @@ func (s *Server) markaViewFrom(d *tmplData) templkit.MarkaView {
 		if c.ImageID != nil {
 			v.LogoURL = s.mediaURL(c.ImageID)
 		}
+		if c.IconID != nil {
+			v.LogoSimgeURL = s.mediaURL(c.IconID)
+		}
 		if c.ImageAcikID != nil {
 			v.LogoAcikURL = s.mediaURL(c.ImageAcikID)
 		}
 		v.LogoYukseklik = c.LogoYukseklik
+		v.LogoSimgeYukseklik = c.IconYukseklik
 		v.LogoGenislikAzami = c.LogoGenislikAzami
 		v.SloganGirinti = c.SloganGirinti
 		if c.FaviconID != nil {

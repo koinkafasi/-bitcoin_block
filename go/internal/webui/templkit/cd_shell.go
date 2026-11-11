@@ -92,6 +92,11 @@ type CDShell struct {
 	// Artık: LogoURL doluysa O kullanılır; boşsa eski statik PNG/SVG
 	// üçlemesine düşülür (geri uyumlu, dosya silinmişse kırık görsel yok).
 	LogoURL string
+	// LogoSimgeURL soldaki SİMGE. Doluysa kilit "simge | yazı+slogan"
+	// olarak kurulur ve slogan yazının altına YAPISAL olarak hizalanır.
+	LogoSimgeURL string
+	// LogoSimgeYukseklik simgenin çizim yüksekliği (px). 0 → LogoHedefYukseklik.
+	LogoSimgeYukseklik int
 
 	// LogoAcikURL açık tema için ayrı logo (markanın koyu renkli sürümü).
 	// Boşsa LogoURL iki temada da kullanılır.
@@ -304,4 +309,19 @@ func itoaOlcu(n int) string {
 		return ""
 	}
 	return strconv.Itoa(n)
+}
+
+// cdSimgeStil simgenin CSS değişkenlerini üretir.
+//
+// Simge için ayrı yükseklik verilmediyse logo yüksekliği kullanılır
+// (kilit oranlı dursun). Genişlik sınırlanmaz: yuvarlak simge kare olur.
+func cdSimgeStil(simgeH, logoH int) string {
+	h := simgeH
+	if h <= 0 {
+		h = logoH
+	}
+	if h <= 0 || h > 120 {
+		h = 32
+	}
+	return "--cd-simge-h:" + strconv.Itoa(h) + "px"
 }

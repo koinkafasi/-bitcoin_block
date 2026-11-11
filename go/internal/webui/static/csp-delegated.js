@@ -311,7 +311,9 @@
   // özet düğmesine tekrar basılana kadar açık kalır — kullanıcıyı
   // kilitlemez.
   (function () {
-    var kutular = document.querySelectorAll('[data-hesap]');
+    // `data-giris-menu`: ANONİM mobil giriş paneli (ayrı semantik —
+    // oturum yokken "hesap menüsü" basılmaz kuralını bozmaz).
+    var kutular = document.querySelectorAll('[data-hesap],[data-giris-menu]');
     if (!kutular.length) return;
 
     document.addEventListener('click', function (e) {
