@@ -32,10 +32,19 @@ type CDVideoSatir struct {
 	VideoID string
 	Baslik  string
 	Image   string
-	Sure    string
-	Zaman   string
-	Href    string
-	Canli   bool
+	// Srcset 16:9 kapak adayları (genişlik tanımlayıcılı). Boşsa yalnız
+	// Image kullanılır (shorts: tek dikey dosya).
+	Srcset string
+	// ImageYedek yüksek çözünürlüklü kapak 404 verirse düşülecek adres.
+	ImageYedek string
+	// Dikey içerik (short). Satır görseli 142x80 (16:9) yerine 80x142
+	// (9:16) olur — aksi hâlde 1080x1920 kapak 16:9 kutuya kırpılıyor ve
+	// yalnız ortasındaki ince şerit görünüyordu (ölçüldü, ekran görüntüsü).
+	Dikey bool
+	Sure  string
+	Zaman string
+	Href  string
+	Canli bool
 }
 
 // CDVideoKutu ızgara kartı.
@@ -43,9 +52,13 @@ type CDVideoKutu struct {
 	VideoID string
 	Baslik  string
 	Image   string
-	Sure    string
-	Zaman   string
-	Href    string
+	// Srcset 16:9 kapak adayları; boşsa yalnız Image (shorts).
+	Srcset string
+	// ImageYedek kapak 404 verirse düşülecek adres.
+	ImageYedek string
+	Sure       string
+	Zaman      string
+	Href       string
 	// Dikey 9:16 kart (shorts).
 	Dikey bool
 	Canli bool

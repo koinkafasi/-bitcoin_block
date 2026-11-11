@@ -3455,12 +3455,59 @@ html.dark .cd-google { color: var(--cd-fg); }
 }
 .cd-canli__baslik:hover { text-decoration: underline; text-underline-offset: 3px; }
 
-/* ---- Üst bant: siyah, tam genişlik ---- */
+/* ---- Üst bant: siyah, tam genişlik ----
+   ARKA PLAN DESENİ: CoinDesk'in videos sayfasında bant zemininde sarı/açık
+   yeşil bloklardan oluşan geometrik bir desen var (CorelDRAW'dan gelen
+   vektör; `static/cd-vband-desen.svg`). Desen `::before` katmanında,
+   içeriğin ARKASINDA duruyor:
+     - `position:relative` + `overflow:hidden` → desen bandın dışına taşmaz,
+     - `z-index:-1` + bandın `isolation:isolate`'i → negatif katman bandın
+       kendi siyah zemininin ÜSTÜNDE, metnin ALTINDA kalır (yalıtım olmasa
+       desen sayfanın arkasına düşerdi),
+     - `pointer-events:none` → tıklamayı engellemez,
+     - `opacity` düşük: desen süs, metin okunurluğu öncelikli. Tam doygunlukta
+       "Sıradaki" listesinin beyaz metni sarı bloklar üzerinde okunmuyordu. */
 .cd-vband {
   background: #000;
   color: #fff;
   padding: 32px 0;
+  position: relative;
+  overflow: hidden;
 }
+.cd-vband::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  /* DESEN = MASKE, RENK = BİZİM.
+     Kaynak SVG'nin dolguları parlak sarı (#FFCC00/#FFEE00) ve açık yeşil
+     (#DDE8B5). Siyah zeminde düşük opaklıkta bunlar HAKİ/ÇAMUR rengine
+     dönüşüyor ve "Sıradaki" satırlarının arkasında leke gibi duruyordu
+     (üç deneme ekran görüntüsüyle doğrulandı: %22 sağ-orta, %85 sağ-üst,
+     %16 tam bant — hiçbiri tasarım öğesi gibi okunmadı).
+     Doğru araç `mask-image`: SVG'nin ALFA kanalı şekli verir, rengi biz
+     seçeriz. Böylece desen tek tonlu ince bir doku oluyor, marka rengiyle
+     çakışmıyor ve hiçbir yazının kontrastını bozmuyor. */
+  background-color: #fff;
+  opacity: 0.055;
+  -webkit-mask-image: url("cd-vband-desen.svg");
+  mask-image: url("cd-vband-desen.svg");
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center right;
+  mask-position: center right;
+  -webkit-mask-size: 82% auto;
+  mask-size: 82% auto;
+  pointer-events: none;
+}
+
+/* SAĞ KOLON YAN YANA — 11 Kasım 2026.
+   BURADA FAZLA BİR KAPANIŞ PARANTEZİ VARDI ve `.cd-vband__ic` kuralı hiç
+   uygulanmıyordu: tarayıcı fazla kapanıştan sonraki kuralı atıyor,
+   `display:flex` hiç devreye girmiyordu. Ölçüm (tarayıcı): computed display
+   "block", sol ve sağ kolon ikisi de 1377 px — yani sağ kolon ALTTA, yan
+   yana değil. Kullanıcı "sağda scroll yok / sağdaki içerikler akıyor" dedi;
+   sorunun kaynağı buydu: sağ kolon aslında hiç sağda değildi. */
 .cd-vband__ic {
   display: flex;
   align-items: flex-start;
@@ -3967,13 +4014,65 @@ html.dark .cd-google { color: var(--cd-fg); }
 .cd-vplayer__son-sayac { font-size: 12px; line-height: 18px; color: #a6a6a6; }
 
 /* ---- Sıradaki listesi ---- */
+/* ---- SAĞ KOLON AKIŞI (11 Kasım 2026, CoinDesk referansı) ----
+   Kullanıcı isteği: "sağda scroll yok ve sağdaki video alta yukarı doğru bir
+   hafif transparan geçiş var tasarımda ve sağdaki içerikler mouse ile alta
+   doğru çok profesyonel bir akış alıyor".
+
+   1) KAYDIRMA ÇUBUĞU GİZLİ — `scrollbar-width: none` + WebKit kuralı.
+      Çubuk gizlenince listenin kaydırılabilir olduğu anlaşılmıyordu; bunu
+      üst/alttaki SAYDAM GEÇİŞ (maske) anlatıyor: kenardaki satır siliniyor,
+      "devamı var" hissi veriyor. Ayrıca fare tekerleği + klavye çalışıyor
+      (cd-vkaydir.js), liste odaklanabilir.
+
+   2) MASKE — `mask-image` gradyanı. `overflow` tek başına bunu yapmaz.
+      Üst 28 px, alt 56 px saydam: alt geçiş daha GENİŞ çünkü bir sonraki
+      satırın bir kısmı görünüp akışı davet ediyor.
+
+   3) YUMUŞAK AKIŞ — JS (cd-vkaydir.js). CSS `scroll-behavior: smooth`
+      yalnız programatik kaydırmayı etkiler, tekerleği DEĞİL; tekerlek
+      sıçramaya devam ederdi.
+*/
 .cd-vband__liste {
   display: flex;
   flex-direction: column;
   max-height: 620px;
   overflow-y: auto;
-  scrollbar-width: thin;
-  scrollbar-color: #404040 transparent;
+  /* Kaydırma çubuğu YOK. */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  /* Üst/altta saydam geçiş. -webkit- öneki Safari için gerekli. */
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent 0,
+    #000 28px,
+    #000 calc(100% - 56px),
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0,
+    #000 28px,
+    #000 calc(100% - 56px),
+    transparent 100%
+  );
+  /* Kaydırma performansı: GPU katmanı + zincirleme kaydırmayı kapat
+     (tekerlek uçlarda sayfaya devredilsin, JS karar veriyor). */
+  overscroll-behavior: contain;
+  will-change: scroll-position;
+  outline: none;
+  /* Klavye odağı görünür olsun ama çirkin halka olmasın. */
+  scroll-padding-block: 28px;
+}
+.cd-vband__liste:focus-visible {
+  outline: 2px solid #4d4d4d;
+  outline-offset: 2px;
+  border-radius: var(--cd-radius);
+}
+/* WebKit: çubuğu tamamen kaldır (Firefox kuralı yukarıda). */
+.cd-vband__liste::-webkit-scrollbar {
+  width: 0;
+  height: 0;
 }
 .cd-vsatir {
   display: flex;
@@ -3994,6 +4093,16 @@ html.dark .cd-google { color: var(--cd-fg); }
   background: #111;
 }
 .cd-vsatir__gorsel img { width: 100%; height: 100%; object-fit: cover; display: block; }
+/* DİKEY (short) SATIR — 11 Kasım 2026.
+   Shorts kapakları 1080x1920 (oar2.jpg). 142x80'lik 16:9 kutuya
+   `object-fit: cover` ile konunca kapağın yalnız ortasındaki dar şerit
+   görünüyor, başlık/yazı kesiliyordu. Satır görseli 9:16'ya çevriliyor:
+   80x142 — metin sütununa daha çok yer kalıyor, kırpma sorunu bitiyor. */
+.cd-vsatir--dikey .cd-vsatir__gorsel {
+  flex: 0 0 80px;
+  width: 80px;
+  aspect-ratio: 9 / 16;
+}
 .cd-vsatir__sure {
   position: absolute;
   left: 4px;
@@ -4146,6 +4255,13 @@ html.dark .cd-google { color: var(--cd-fg); }
 /* ---- Duyarlı ---- */
 @media (max-width: 1283px) {
   .cd-vband__sag { display: none; }
+  /* Sağ sütun gizlenince desen oynatıcının arkasına düşüyor: küçült ve
+     soluklaştır ki oynatıcı kenarı desenle karışmasın. */
+  .cd-vband::before {
+    background-position: right -18% center;
+    background-size: min(64%, 560px) auto;
+    opacity: 0.14;
+  }
 }
 @media (max-width: 1023px) {
   .cd-vizgara { grid-template-columns: repeat(3, minmax(0, 1fr)); }
@@ -4153,6 +4269,12 @@ html.dark .cd-google { color: var(--cd-fg); }
 }
 @media (max-width: 767px) {
   .cd-vband { padding: 16px 0; }
+  /* Telefonda bant zaten dar; desen yalnız üst köşede bir iz olarak kalır. */
+  .cd-vband::before {
+    background-position: right -30% top -10%;
+    background-size: 88% auto;
+    opacity: 0.12;
+  }
   .cd-vband__etiket { margin-bottom: 16px; font-size: 14px; line-height: 24px; }
   .cd-vband__baslik { font-size: 24px; line-height: 32px; margin-top: 16px; }
   .cd-vband__spot { font-size: 16px; line-height: 24px; }

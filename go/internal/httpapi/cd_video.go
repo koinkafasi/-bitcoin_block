@@ -50,16 +50,33 @@ func ytZaman(k repo.YoutubeKayit) string {
 }
 
 // ytKutu kaydı ızgara kartına çevirir.
+//
+// GÖRSEL KALİTESİ (11 Kasım 2026): kapağı DB'deki `gorsel` alanından
+// almak yetmiyordu — o alan ESKİ kayıtlarda `hqdefault` (480x360) taşıyor.
+// Bu yüzden adres BURADA türden yeniden üretiliyor:
+//
+//	short → oar2.jpg (1080x1920, 9:16)
+//	diğer → maxresdefault.jpg (1280x720) + srcset/yedek
+//
+// DB'deki değer yalnızca video kimliği yoksa (çok eski kayıt) kullanılır.
 func ytKutu(k repo.YoutubeKayit) templkit.CDVideoKutu {
+	img := k.Gorsel
+	if k.VideoID != "" {
+		if u := youtube.GorselURL(k.VideoID, k.Tur); u != "" {
+			img = u
+		}
+	}
 	return templkit.CDVideoKutu{
-		VideoID: k.VideoID,
-		Baslik:  k.Baslik,
-		Image:   k.Gorsel,
-		Sure:    youtube.Sure(k.SureSn),
-		Zaman:   ytZaman(k),
-		Href:    ytHref(k),
-		Dikey:   k.Tur == "short",
-		Canli:   k.Canli,
+		VideoID:    k.VideoID,
+		Baslik:     k.Baslik,
+		Image:      img,
+		Srcset:     youtube.GorselSrcset(k.VideoID, k.Tur),
+		ImageYedek: youtube.GorselYedek(k.VideoID, k.Tur),
+		Sure:       youtube.Sure(k.SureSn),
+		Zaman:      ytZaman(k),
+		Href:       ytHref(k),
+		Dikey:      k.Tur == "short",
+		Canli:      k.Canli,
 	}
 }
 
@@ -72,20 +89,35 @@ func ytKutular(kayitlar []repo.YoutubeKayit) []templkit.CDVideoKutu {
 	return out
 }
 
-// ytSatir "Sıradaki" satırı.
+// ytSatir "Sıradaki" satırı (ytKutu ile aynı görsel kuralları).
 func ytSatir(k repo.YoutubeKayit) templkit.CDVideoSatir {
+	img := k.Gorsel
+	if k.VideoID != "" {
+		if u := youtube.GorselURL(k.VideoID, k.Tur); u != "" {
+			img = u
+		}
+	}
 	return templkit.CDVideoSatir{
-		VideoID: k.VideoID,
-		Baslik:  k.Baslik,
-		Image:   k.Gorsel,
-		Sure:    youtube.Sure(k.SureSn),
-		Zaman:   ytZaman(k),
-		Href:    ytHref(k),
-		Canli:   k.Canli,
+		VideoID:    k.VideoID,
+		Baslik:     k.Baslik,
+		Image:      img,
+		Srcset:     youtube.GorselSrcset(k.VideoID, k.Tur),
+		ImageYedek: youtube.GorselYedek(k.VideoID, k.Tur),
+		Sure:       youtube.Sure(k.SureSn),
+		Zaman:      ytZaman(k),
+		Href:       ytHref(k),
+		Canli:      k.Canli,
+		Dikey:      k.Tur == "short",
 	}
 }
 
 // ytSatirlar toplu çeviri (en fazla adet).
+//
+// ADET 12 (11 Kasım 2026): 6 satırla sağ kolon 620 px'lik kutuyu neredeyse
+// dolduruyordu (ölçüm: 629 px içerik / 620 px kutu = 9 px kaydırma). Kullanıcı
+// "mouse ile alta doğru akış" istedi; 9 px'lik kaydırma akış hissi vermiyor,
+// tekerlek boşa basılmış gibi duruyor. 12 satırla gerçek bir akış oluşuyor
+// ve üst/alttaki saydam geçiş anlam kazanıyor.
 func ytSatirlar(kayitlar []repo.YoutubeKayit, haric string, adet int) []templkit.CDVideoSatir {
 	out := make([]templkit.CDVideoSatir, 0, adet)
 	for _, k := range kayitlar {
@@ -194,7 +226,7 @@ func (s *Server) handleCDVideos(w http.ResponseWriter, r *http.Request) {
 	havuz = append(havuz, videolar...)
 	havuz = append(havuz, yayinlar...)
 	havuz = append(havuz, shorts...)
-	siradaki := ytSatirlar(havuz, heroID, 6)
+	siradaki := ytSatirlar(havuz, heroID, 12)
 	ytSonraki(&hero, siradaki)
 
 	v := templkit.CDVideoPage{
@@ -242,7 +274,7 @@ func (s *Server) handleCDShorts(w http.ResponseWriter, r *http.Request) {
 	havuz := make([]repo.YoutubeKayit, 0, len(shorts)+len(videolar))
 	havuz = append(havuz, shorts...)
 	havuz = append(havuz, videolar...)
-	siradaki := ytSatirlar(havuz, heroID, 6)
+	siradaki := ytSatirlar(havuz, heroID, 12)
 	ytSonraki(&hero, siradaki)
 
 	v := templkit.CDVideoPage{
@@ -330,7 +362,7 @@ func (s *Server) handleCDCanli(w http.ResponseWriter, r *http.Request) {
 		Baslik:          "Canlı Yayın",
 		Sekmeler:        s.cdVideoSekmeler("canli"),
 		Hero:            hero,
-		Siradaki:        ytSatirlar(yayinlar, heroID, 6),
+		Siradaki:        ytSatirlar(yayinlar, heroID, 12),
 		Yayinlar:        ytGridHeroHariç(yayinlar, heroID, 12),
 		KanalID:         kanalID,
 		CanliYayinAktif: canliVar,
@@ -358,7 +390,7 @@ func (s *Server) handleCDVideoWatch(w http.ResponseWriter, r *http.Request) {
 	// "Sıradaki" ve alt ızgara aynı türden gelir.
 	ayni, _ := repo.YoutubeListele(ctx, s.pool, k.Tur, 24)
 	hero := ytHero(*k, videoTurEtiket(k.Tur))
-	siradaki := ytSatirlar(ayni, k.VideoID, 6)
+	siradaki := ytSatirlar(ayni, k.VideoID, 12)
 	ytSonraki(&hero, siradaki)
 
 	var videolar, shorts []repo.YoutubeKayit

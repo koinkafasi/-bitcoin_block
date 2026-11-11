@@ -203,10 +203,30 @@ templ cdVPlayerCanli(kanalID, baslik string, canli bool) {
 
 // cdVSatir "Sıradaki" satırı: solda 142×80 kapak, sağda başlık.
 templ cdVSatir(s CDVideoSatir) {
-	<a class="cd-vsatir" href={ s.Href }>
+	<!-- Dikey (short) içerik AYRI sınıf alır: satır görseli 9:16 olur.
+	     Aksi hâlde 1080x1920 kapak 16:9 kutuya kırpılıp yalnız ortasındaki
+	     dar şerit görünüyordu (ölçüldü, 11 Kasım 2026). -->
+	if s.Dikey {
+		<a class="cd-vsatir cd-vsatir--dikey" href={ s.Href }>
+			@cdVSatirGovde(s)
+		</a>
+	} else {
+		<a class="cd-vsatir" href={ s.Href }>
+			@cdVSatirGovde(s)
+		</a>
+	}
+}
+
+// cdVSatirGovde satırın içeriği (iki varyant aynı gövdeyi paylaşır).
+templ cdVSatirGovde(s CDVideoSatir) {
 		<span class="cd-vsatir__gorsel">
 			if s.Image != "" {
-				<img src={ s.Image } alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer"/>
+				<!-- 142 px genişlik: tarayıcı srcset'ten 480w sürümünü seçer,
+				     büyük ızgara kartı 1280w'ı. Yedek: maxres 404 verirse
+				     hqdefault (csp-delegated.js, tek seferlik). -->
+				<img src={ s.Image } srcset={ s.Srcset } sizes="142px"
+					data-yedek={ s.ImageYedek }
+					alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer"/>
 			}
 			if s.Sure != "" && !s.Canli {
 				<span class="cd-vsatir__sure">{ s.Sure }</span>
@@ -215,13 +235,12 @@ templ cdVSatir(s CDVideoSatir) {
 				<span class="cd-vsatir__canli">CANLI</span>
 			}
 		</span>
-		<span class="cd-vsatir__metin">
-			<span class="cd-vsatir__baslik">{ s.Baslik }</span>
-			if s.Zaman != "" {
-				<span class="cd-vsatir__zaman">{ s.Zaman }</span>
-			}
-		</span>
-	</a>
+	<span class="cd-vsatir__metin">
+		<span class="cd-vsatir__baslik">{ s.Baslik }</span>
+		if s.Zaman != "" {
+			<span class="cd-vsatir__zaman">{ s.Zaman }</span>
+		}
+	</span>
 }
 
 // cdVKart ızgara kartı (16/9 veya 9/16).
@@ -229,7 +248,17 @@ templ cdVKart(k CDVideoKutu) {
 	<article class={ cdVKartSinif(k.Dikey) }>
 		<a class="cd-vkart__gorsel" href={ k.Href } tabindex="-1" aria-hidden="true">
 			if k.Image != "" {
-				<img src={ k.Image } alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer"/>
+				<!-- sizes: dikey (shorts) kart tam sütun, yatay kart ~1/3.
+				     Shorts'ta srcset boş → src (oar2 1080x1920) kullanılır. -->
+				if k.Dikey {
+					<img src={ k.Image } data-yedek={ k.ImageYedek }
+						alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer"/>
+				} else {
+					<img src={ k.Image } srcset={ k.Srcset }
+						sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 420px"
+						data-yedek={ k.ImageYedek }
+						alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer"/>
+				}
 			}
 			if k.Sure != "" && !k.Canli {
 				<span class="cd-vkart__sure">{ k.Sure }</span>
@@ -312,9 +341,14 @@ templ CDVideoPageView(v CDVideoPage) {
 							}
 						</div>
 						if len(v.Siradaki) > 0 {
+							<!-- SAĞ KOLON AKIŞI (11 Kasım 2026): kaydırma çubuğu YOK,
+							     üst/altta saydam geçiş (maske) ve fare tekerleğiyle
+							     yumuşak akış. Yapı: cd-vkaydir.js + .cd-vband__liste
+							     CSS'i. Liste odaklanabilir (klavye ile de kayar). -->
 							<aside class="cd-vband__sag">
 								<p class="cd-vband__etiket">Sıradaki</p>
-								<div class="cd-vband__liste">
+								<div class="cd-vband__liste" tabindex="0"
+									aria-label="Sıradaki videolar (tekerlekle kaydırılır)">
 									for _, s := range v.Siradaki {
 										@cdVSatir(s)
 									}
@@ -350,6 +384,7 @@ templ CDVideoPageView(v CDVideoPage) {
 			</main>
 			@cdFooter(v.Shell)
 			<script src={ "/static/cd-player.js?v=" + cdVarlik() } defer></script>
+			<script src={ "/static/cd-vkaydir.js?v=" + cdVarlik() } defer></script>
 		</body>
 	</html>
 }
@@ -378,9 +413,14 @@ templ CDVideoWatchView(v CDVideoWatch) {
 							}
 						</div>
 						if len(v.Siradaki) > 0 {
+							<!-- SAĞ KOLON AKIŞI (11 Kasım 2026): kaydırma çubuğu YOK,
+							     üst/altta saydam geçiş (maske) ve fare tekerleğiyle
+							     yumuşak akış. Yapı: cd-vkaydir.js + .cd-vband__liste
+							     CSS'i. Liste odaklanabilir (klavye ile de kayar). -->
 							<aside class="cd-vband__sag">
 								<p class="cd-vband__etiket">Sıradaki</p>
-								<div class="cd-vband__liste">
+								<div class="cd-vband__liste" tabindex="0"
+									aria-label="Sıradaki videolar (tekerlekle kaydırılır)">
 									for _, s := range v.Siradaki {
 										@cdVSatir(s)
 									}
@@ -413,6 +453,7 @@ templ CDVideoWatchView(v CDVideoWatch) {
 			</main>
 			@cdFooter(v.Shell)
 			<script src={ "/static/cd-player.js?v=" + cdVarlik() } defer></script>
+			<script src={ "/static/cd-vkaydir.js?v=" + cdVarlik() } defer></script>
 		</body>
 	</html>
 }

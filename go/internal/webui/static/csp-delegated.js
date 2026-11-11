@@ -25,6 +25,28 @@
 (function () {
   'use strict';
 
+  // data-yedek: <img> yüklenemezse bir kez yedek adrese geç.
+  //
+  // NEDEN: YouTube kapaklarında `maxresdefault.jpg` çok eski/düşük
+  // çözünürlüklü yüklemelerde 404 döner (ölçüldü). Satır içi `onerror`
+  // CSP `script-src 'self'` altında ÇALIŞMAZ; bu delege dinleyici aynı işi
+  // yapar. Yalnız BİR KEZ dener (döngüye girmesin) ve yedek de yoksa
+  // öğeyi gizler (kırık görsel simgesi kalmasın).
+  document.addEventListener('error', function (e) {
+    var el = e.target;
+    if (!el || el.tagName !== 'IMG') return;
+    var yedek = el.getAttribute('data-yedek');
+    if (!yedek) return;
+    if (el.dataset.yedekDenendi === '1') {
+      el.style.visibility = 'hidden';
+      return;
+    }
+    el.dataset.yedekDenendi = '1';
+    // srcset varsa kaldır: yoksa tarayıcı onu yeniden seçip 404'te ısrar eder.
+    el.removeAttribute('srcset');
+    el.src = yedek;
+  }, true); // capture: error olayı kabarmaz
+
   function htmxVar() {
     return typeof window.htmx !== 'undefined' && window.htmx !== null;
   }

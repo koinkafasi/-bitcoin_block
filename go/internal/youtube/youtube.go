@@ -404,21 +404,73 @@ func CanliVideoID(html string) string {
 
 // ---- yardımcılar ----
 
-// GorselURL türe göre küçük görsel adresi üretir.
+// GorselURL türe göre kapak görseli adresi üretir.
 //
-//   - video/stream: 16:9 kapak (maxresdefault yoksa hqdefault'a düşer; <img>
-//     onerror kullanmıyoruz, bu yüzden hqdefault her zaman var olan seçenek).
-//   - short: 9:16 kırpılmış kapak (`oar2.jpg`) — dikey kartlarda kenarlar
-//     kırpılmış görünmesin.
+// ÖLÇÜLDÜ (11 Kasım 2026, gerçek video kimlikleriyle; boyutlar
+// Image.open ile okundu):
+//
+//	iPG7pIB-P1c (short)  hqdefault  480x360  18 KB   ← dikey kartta KÖTÜ
+//	                     oar2      1080x1920 205 KB   ← 9:16, doğrusu
+//	8oVvSLjkMv8 (video)  hqdefault  480x360  18 KB   ← büyük kartta bulanık
+//	                     maxres    1280x720 140 KB   ← doğrusu
+//
+// ESKİ HATA: short'lar da hqdefault (480x360 YATAY) ile kayıtlıydı. 9:16
+// dikey kartta bu görselin yalnız ~200x360'lık ortası kullanılıyor, kalan
+// alan büyütülüyordu → "shorts küçük resimleri çok kötü" (kullanıcı
+// bildirimi). oar2.jpg YouTube'un DİKEY kırpılmış 1080x1920 sürümü.
+//
+// `hqdefault` her videoda VAR; `maxresdefault` çok eski/düşük çözünürlüklü
+// yüklemelerde 404 dönebilir. Bu yüzden şablon `data-yedek` ile hqdefault'a
+// tek seferlik düşer (bkz. csp-delegated.js) — JS'siz durumda da görsel
+// görünür kalır, çünkü src zaten bir geçerli adres.
 func GorselURL(id, tur string) string {
+	if id == "" {
+		return ""
+	}
 	if tur == "short" {
 		return "https://i.ytimg.com/vi/" + id + "/oar2.jpg"
 	}
+	return "https://i.ytimg.com/vi/" + id + "/maxresdefault.jpg"
+}
+
+// GorselYedek maxresdefault yoksa kullanılacak her zaman var olan kapak.
+//
+// `data-yedek` özniteliğine yazılır; <img> hata verirse csp-delegated.js
+// bir kez bu adrese geçer (CSP `script-src 'self'` ile uyumlu, satır içi
+// onerror yok).
+func GorselYedek(id, tur string) string {
+	// Boş kimlik: adres ÜRETİLMEZ. Aksi hâlde "…/vi//hqdefault.jpg" gibi
+	// bozuk bir adres basılıyordu (test yakaladı, 11 Kasım 2026).
+	if id == "" {
+		return ""
+	}
+	// short: oar2 de 404 verirse yatay kapağa düşmek, hiç görsel
+	// göstermemekten iyidir (kart kırık kalmasın).
 	return "https://i.ytimg.com/vi/" + id + "/hqdefault.jpg"
+}
+
+// GorselSrcset 16:9 kapak için genişlik tanımlayıcılı aday listesi.
+//
+// NEDEN: yan kolondaki 142 px'lik satır görseli için 1280 px'lik dosyayı
+// (140 KB) indirmek israftı; büyük ızgara kartı için de 480 px bulanıktı.
+// Tarayıcı kendi seçer. YouTube varyantları 16:9'da AYNI kırpımdır, farklı
+// ölçekleri olduğu için srcset güvenli.
+//
+// Shorts için BOŞ döner: oar2'nin ölçekli sürümü yok, tek dosya var.
+func GorselSrcset(id, tur string) string {
+	if id == "" || tur == "short" {
+		return ""
+	}
+	return "https://i.ytimg.com/vi/" + id + "/hqdefault.jpg 480w, " +
+		"https://i.ytimg.com/vi/" + id + "/sddefault.jpg 640w, " +
+		"https://i.ytimg.com/vi/" + id + "/maxresdefault.jpg 1280w"
 }
 
 // BuyukGorselURL video sayfası kahraman görseli için yüksek çözünürlük.
 func BuyukGorselURL(id string) string {
+	if id == "" {
+		return ""
+	}
 	return "https://i.ytimg.com/vi/" + id + "/maxresdefault.jpg"
 }
 
