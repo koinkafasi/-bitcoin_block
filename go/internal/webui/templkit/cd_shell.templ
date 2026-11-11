@@ -42,20 +42,49 @@ templ cdLogoMark(sh CDShell) {
 
 			     width/height GERÇEK ölçüden gelir (CLS). Bilinmiyorsa
 			     146×32'ye düşülür — eski logonun ölçüsü. -->
-			<img class="cd-logo__img cd-logo__img--koyu cd-logo__img--yuklenen"
-				src={ sh.LogoURL }
-				width={ cdLogoOlcu(sh.LogoGenislik, 146) }
-				height={ cdLogoOlcu(sh.LogoYukseklik, 32) }
-				alt={ sh.SiteName } decoding="async"/>
-			if sh.LogoAcikURL != "" {
-				<img class="cd-logo__img cd-logo__img--acik" src={ sh.LogoAcikURL }
+			<!-- DİKEY GRUP (11 Kasım 2026).
+			     ÖNCE: slogan `.cd-logo`nun doğrudan çocuğuydu; ata öğe
+			     `inline-flex + align-items:center` olduğu için slogan
+			     logonun YANINA düşüyordu (ölçüm: görsel 12–60,
+			     slogan 32–43 → aynı satır).
+			     ŞİMDİ: görsel + slogan tek sütunlu grupta; grup sola
+			     hizalı olduğu için slogan, logonun ilk harfinin (B)
+			     TAM ALTINA geliyor. -->
+			<!-- Stil GRUPTA, görselde değil: CSS değişkenleri ancak ATA
+			     öğeden miras alınır. Görsele yazınca slogan (kardeş öğe)
+			     değişkeni görmüyordu → girinti uygulanmıyordu
+			     (ölçüldü: imgDegisken 64px, sloganDegisken ""). -->
+			<span class="cd-logo__grup"
+				style={ cdLogoStil(sh.LogoHedefYukseklik, sh.LogoAzamiGenislik, sh.SloganGirinti) }>
+				<!-- KOYU tema görseli. AÇIK tema görseli yüklenmemişse BU
+				     görsel iki temada da gösterilir (aşağıdaki else dalı):
+				     aksi hâlde açık temada hiçbir logo görünmüyordu
+				     (kullanıcı bildirimi, 11 Kasım 2026). -->
+				<img class="cd-logo__img cd-logo__img--koyu cd-logo__img--yuklenen"
+					src={ sh.LogoURL }
 					width={ cdLogoOlcu(sh.LogoGenislik, 146) }
 					height={ cdLogoOlcu(sh.LogoYukseklik, 32) }
-					alt="" aria-hidden="true" decoding="async"/>
-			}
-			if cdDolu(sh.Tagline) {
-				<span class="cd-logo__slogan">{ cdKirp(sh.Tagline) }</span>
-			}
+					alt={ sh.SiteName } decoding="async"/>
+				if sh.LogoAcikURL != "" {
+					<img class="cd-logo__img cd-logo__img--acik cd-logo__img--yuklenen"
+						src={ sh.LogoAcikURL }
+						style={ cdLogoStil(sh.LogoHedefYukseklik, sh.LogoAzamiGenislik, sh.SloganGirinti) }
+						width={ cdLogoOlcu(sh.LogoGenislik, 146) }
+						height={ cdLogoOlcu(sh.LogoYukseklik, 32) }
+						alt="" aria-hidden="true" decoding="async"/>
+				} else {
+					<!-- Açık tema dosyası YOK: koyu görsel her iki temada kalsın. -->
+					<img class="cd-logo__img cd-logo__img--acik cd-logo__img--yuklenen"
+						src={ sh.LogoURL }
+						style={ cdLogoStil(sh.LogoHedefYukseklik, sh.LogoAzamiGenislik, sh.SloganGirinti) }
+						width={ cdLogoOlcu(sh.LogoGenislik, 146) }
+						height={ cdLogoOlcu(sh.LogoYukseklik, 32) }
+						alt="" aria-hidden="true" decoding="async"/>
+				}
+				if cdDolu(sh.Tagline) {
+					<span class="cd-logo__slogan">{ cdKirp(sh.Tagline) }</span>
+				}
+			</span>
 		} else {
 			<img class="cd-logo__img cd-logo__img--koyu" src="/static/img/logo-bitcosar-2x.png"
 				srcset="/static/img/logo-bitcosar-1x.png 1x, /static/img/logo-bitcosar-2x.png 2x, /static/img/logo-bitcosar-3x.png 3x"

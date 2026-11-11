@@ -12,6 +12,15 @@ type MarkaView struct {
 	Text        string
 	Tagline     string
 	LogoURL     string
+	// LogoAcikURL açık tema logosu (koyu renkli sürüm). Boşsa LogoURL
+	// iki temada da kullanılır — açık temada logo kaybolmaz.
+	LogoAcikURL string
+	// LogoYukseklik / LogoGenislikAzami panelden ayarlanan çizim ölçüsü.
+	LogoYukseklik     int
+	LogoGenislikAzami int
+	// SloganGirinti sloganın soldan girintisi (px) — logodaki yazının
+	// başladığı yere hizalamak için.
+	SloganGirinti int
 	FaviconURL  string
 	OGURL       string
 	SiteBaslik  string
@@ -73,15 +82,26 @@ templ MarkaPanel(v MarkaView) {
 			</div>
 			<hr style="margin:14px 0;border:0;border-top:1px dashed var(--border)"/>
 			<div class="input-row" style="align-items:flex-start;gap:20px;flex-wrap:wrap">
-				<div class="field" style="min-width:220px">
-					<label>Logo Görseli (header + footer)</label>
+				<div class="field" style="min-width:260px">
+					<label>Logo — Koyu tema <small>(açık zeminde görünmez; aşağıdakiyle birlikte kullanın)</small></label>
 					if v.LogoURL != "" {
-						<img src={ templ.SafeURL(v.LogoURL) } alt="logo" style="max-height:44px;background:#18181b;border-radius:6px;padding:6px;display:block;margin-bottom:6px"/>
+						<img src={ templ.SafeURL(v.LogoURL) } alt="logo (koyu tema)" style="max-height:44px;background:#18181b;border-radius:6px;padding:6px;display:block;margin-bottom:6px"/>
 					}
-					<input class="input" type="file" name="logo" accept="image/jpeg,image/png,image/webp,image/svg+xml,.svg" aria-label="Logo görseli"/>
+					<input class="input" type="file" name="logo" accept="image/jpeg,image/png,image/webp,image/svg+xml,.svg" aria-label="Logo görseli (koyu tema)"/>
 					if v.LogoURL != "" {
 						<label class="tag" style="cursor:pointer;margin-top:6px"><input type="checkbox" name="remove_logo"/> Mevcut görseli kaldır</label>
 					}
+				</div>
+				<div class="field" style="min-width:260px">
+					<label>Logo — Açık tema <small>(isteğe bağlı)</small></label>
+					if v.LogoAcikURL != "" {
+						<img src={ templ.SafeURL(v.LogoAcikURL) } alt="logo (açık tema)" style="max-height:44px;background:#fff;border-radius:6px;padding:6px;display:block;margin-bottom:6px"/>
+					}
+					<input class="input" type="file" name="logo_acik" accept="image/jpeg,image/png,image/webp,image/svg+xml,.svg" aria-label="Logo görseli (açık tema)"/>
+					if v.LogoAcikURL != "" {
+						<label class="tag" style="cursor:pointer;margin-top:6px"><input type="checkbox" name="remove_logo_acik"/> Kaldır</label>
+					}
+					<p class="hint" style="margin:4px 0 0">Boş bırakılırsa koyu tema logosu iki temada da kullanılır.</p>
 				</div>
 				<div class="field" style="min-width:180px">
 					<label>Favicon / uygulama ikonu</label>
@@ -102,6 +122,31 @@ templ MarkaPanel(v MarkaView) {
 					if v.OGURL != "" {
 						<label class="tag" style="cursor:pointer;margin-top:6px"><input type="checkbox" name="remove_og"/> Kaldır</label>
 					}
+				</div>
+			</div>
+			<div class="input-row" style="gap:20px;flex-wrap:wrap;margin-top:6px">
+				<div class="field" style="min-width:190px">
+					<label for="f_logo_h">Logo yüksekliği (px)</label>
+					<input id="f_logo_h" class="input" type="number" name="logo_yukseklik"
+						min="16" max="120" step="1" value={ itoaOlcu(v.LogoYukseklik) }
+						placeholder="32"/>
+					<p class="hint">16–120. Boş = 32 px (varsayılan).</p>
+				</div>
+				<div class="field" style="min-width:190px">
+					<label for="f_logo_w">En fazla genişlik (px)</label>
+					<input id="f_logo_w" class="input" type="number" name="logo_genislik"
+						min="40" max="600" step="1" value={ itoaOlcu(v.LogoGenislikAzami) }
+						placeholder="260"/>
+					<p class="hint">40–600. Boş = 260 px. Yatay logo bu sınıra kadar uzar.</p>
+				</div>
+				<div class="field" style="min-width:210px">
+					<label for="f_slogan_g">Slogan hizası (px)</label>
+					<input id="f_slogan_g" class="input" type="number" name="slogan_girinti"
+						min="0" max="600" step="1" value={ itoaOlcu(v.SloganGirinti) }
+						placeholder="0"/>
+					<p class="hint">Sloganı logodaki <b>yazının ilk harfinin</b> altına
+						oturtmak için girinti. Logoda solda simge varsa simgenin
+						genişliği kadar girin (ör. 64). 0 = en soldan.</p>
 				</div>
 			</div>
 			<button class="btn" type="submit" style="margin-top:12px">Kaydet</button>

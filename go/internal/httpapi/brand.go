@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"theblock/site/internal/platform"
@@ -18,12 +19,41 @@ import (
 //	ImageID/FaviconID/OGImageID: medya id'leri (nil = yok)
 //	Tagline: header/footer altı slogan
 type BrandConfig struct {
-	Mode      string `json:"mode"`
-	Text      string `json:"text"`
-	ImageID   *int64 `json:"imageId"`
-	FaviconID *int64 `json:"faviconId"`
-	OGImageID *int64 `json:"ogImageId"`
-	Tagline   string `json:"tagline"`
+	Mode string `json:"mode"`
+	Text string `json:"text"`
+	// ImageID KOYU tema logosu (varsayılan).
+	ImageID *int64 `json:"imageId"`
+	// ImageAcikID AÇIK tema logosu. Boşsa ImageID iki temada da kullanılır.
+	//
+	// NEDEN AYRI ALAN (kullanıcı bildirimi, 11 Kasım 2026: "dark moda
+	// görünen logo light moda göstermiyor"): koyu tema için hazırlanmış
+	// (açık renkli) bir logo açık zeminde görünmüyordu. Şablonda ikinci
+	// görsel yuvası VARDI ama hiç doldurulmuyordu; CSS açık temada koyu
+	// görseli gizleyince geriye hiçbir şey kalmıyordu.
+	ImageAcikID *int64 `json:"imageAcikId"`
+	FaviconID   *int64 `json:"faviconId"`
+	OGImageID   *int64 `json:"ogImageId"`
+	Tagline     string `json:"tagline"`
+
+	// LogoYukseklik üst çubukta logonun çizileceği yükseklik (px).
+	// 0 = varsayılan 32 (eski logonun ölçüsü). Üst sınır 120: daha
+	// büyüğü 73 px'lik üst çubuğu taşırır.
+	LogoYukseklik int `json:"logoYukseklik,omitempty"`
+	// SloganGirinti sloganın soldan girintisi (px). 0 = 0.
+	//
+	// NEDEN (kullanıcı isteği, 11 Kasım 2026: "yuvarlak simgenin altına
+	// ekledin, o simgenin kendi BİTCOŞAR yazısındaki B harfinin altına
+	// getir"): logo dosyasının içinde solda yuvarlak simge, sağda yazı
+	// var. Sloganı yazının başladığı yere oturtmak için yazının dosya
+	// içindeki yatay konumunu bilmek gerekir — sunucu SVG'nin içeriğini
+	// yorumlayamaz (yazı path olabilir, ölçek değişebilir). Bu yüzden
+	// girinti PANELDEN ayarlanıyor; önizleme canlı gösteriliyor.
+	SloganGirinti int `json:"sloganGirinti,omitempty"`
+	// LogoGenislikAzami logonun en fazla genişliği (px). 0 = 260.
+	// Yatay logolar için: yükseklik sabit kalır, genişlik bu sınıra
+	// kadar doğal oranında uzar; aşarsa `object-fit: contain` ile
+	// kırpılmadan küçülür.
+	LogoGenislikAzami int `json:"logoGenislikAzami,omitempty"`
 }
 
 type brandEditData struct {
@@ -191,8 +221,23 @@ func (s *Server) handleBrandSave(w http.ResponseWriter, r *http.Request) {
 	cfg.Text = strings.TrimSpace(r.FormValue("text"))
 	cfg.Tagline = strings.TrimSpace(r.FormValue("tagline"))
 
+	// LOGO ÖLÇÜSÜ (kullanıcı isteği, 11 Kasım 2026). Boş/bozuk giriş
+	// varsayılana döner; aralık dışı değer KIRPILIR (uydurma değer yok).
+	if r.Form.Has("logo_yukseklik") {
+		cfg.LogoYukseklik = sinirlaInt(r.FormValue("logo_yukseklik"), 16, 120, 0)
+	}
+	if r.Form.Has("logo_genislik") {
+		cfg.LogoGenislikAzami = sinirlaInt(r.FormValue("logo_genislik"), 40, 600, 0)
+	}
+	if r.Form.Has("slogan_girinti") {
+		cfg.SloganGirinti = sinirlaInt(r.FormValue("slogan_girinti"), 0, 600, 0)
+	}
+
 	if r.FormValue("remove_logo") != "" {
 		cfg.ImageID = nil
+	}
+	if r.FormValue("remove_logo_acik") != "" {
+		cfg.ImageAcikID = nil
 	}
 	if r.FormValue("remove_favicon") != "" {
 		cfg.FaviconID = nil
@@ -219,6 +264,7 @@ func (s *Server) handleBrandSave(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	set("logo", &cfg.ImageID)
+	set("logo_acik", &cfg.ImageAcikID)
 	set("favicon", &cfg.FaviconID)
 	set("og", &cfg.OGImageID)
 
@@ -257,6 +303,12 @@ func (s *Server) handleBrandSave(w http.ResponseWriter, r *http.Request) {
 	// taşıdığı için burada açıkça düşürülüyor.
 	s.invalidateContentCache()
 	s.cdShellCache.Clear()
+	// TAM SAYFA önbelleği de temizlenmeli: logo/marka HER sayfada
+	// görünüyor; sayfa önbelleği (10 sn) temizlenmezse kullanıcı
+	// kaydettikten sonra eski logoyu görmeye devam ediyordu.
+	if s.sayfaCache != nil {
+		s.sayfaCache.temizle()
+	}
 	if len(hatalar) > 0 {
 		s.brandResult(w, r, "error", "Kısmen kaydedildi — yüklenemeyen: "+strings.Join(hatalar, "; "))
 		return
@@ -275,4 +327,27 @@ func mustJSON(v any) []byte {
 		return []byte("{}")
 	}
 	return b
+}
+
+// sinirlaInt form değerini güvenli tam sayıya çevirir.
+//
+// Boş/bozuk giriş `varsayilan` döner; aralık dışı KIRPILIR. Logo ölçüsü
+// gibi kullanıcı girdileri CSS'e gittiği için sınırsız bırakmak üst
+// çubuğu taşırır ya da logoyu görünmez yapar.
+func sinirlaInt(ham string, alt, ust, varsayilan int) int {
+	ham = strings.TrimSpace(ham)
+	if ham == "" {
+		return varsayilan
+	}
+	n, err := strconv.Atoi(ham)
+	if err != nil {
+		return varsayilan
+	}
+	if n < alt {
+		return alt
+	}
+	if n > ust {
+		return ust
+	}
+	return n
 }

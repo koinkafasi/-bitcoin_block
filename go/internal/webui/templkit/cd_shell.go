@@ -103,6 +103,18 @@ type CDShell struct {
 	LogoGenislik  int
 	LogoYukseklik int
 
+	// LogoHedefYukseklik panelden ayarlanan ÇİZİM yüksekliği (px).
+	// 0 = 32 (varsayılan). `width/height` özniteliği değil CSS
+	// yüksekliği: yatay logo doğal oranında uzasın.
+	LogoHedefYukseklik int
+	// LogoAzamiGenislik panelden ayarlanan en fazla genişlik (px).
+	// 0 = 260.
+	LogoAzamiGenislik int
+	// SloganGirinti sloganın soldan girintisi (px). Logo dosyasında
+	// simge solda, yazı sağda olduğu için sloganı yazının başladığı
+	// harfin altına oturtmak panelden ayarlanıyor.
+	SloganGirinti int
+
 	// Tagline logonun altındaki slogan (marka ayarından).
 	Tagline string
 
@@ -258,3 +270,38 @@ func cdDolu(s string) bool { return strings.TrimSpace(s) != "" }
 
 // cdKirp baştaki/sondaki boşluğu atar (templ'den çağrılıyor).
 func cdKirp(s string) string { return strings.TrimSpace(s) }
+
+// cdLogoStil logo ölçüsünü CSS değişkenlerine çevirir.
+//
+// NEDEN DEĞİŞKEN: yükseklik hem masaüstünde hem mobilde aynı kalsın ama
+// yatay logo doğal oranında uzasın. width/height ÖZNİTELİĞİ sabit oran
+// dayatır; CSS `height` + `width:auto` doğru davranış.
+//
+// Değerler panelden geliyor ve sunucuda kırpılıyor (16..120 / 40..600);
+// yine de burada son bir kez sınırlanıyor — şablon enjeksiyonu değil ama
+// bozuk bir ayar satırı tüm üst çubuğu bozmasın.
+func cdLogoStil(h, w, girinti int) string {
+	if h <= 0 || h > 120 {
+		h = 32
+	}
+	if w <= 0 || w > 600 {
+		w = 260
+	}
+	if girinti < 0 || girinti > 600 {
+		girinti = 0
+	}
+	return "--cd-logo-h:" + strconv.Itoa(h) + "px;--cd-logo-max:" + strconv.Itoa(w) +
+		"px;--cd-logo-indent:" + strconv.Itoa(girinti) + "px"
+}
+
+// itoaOlcu form alanı için ölçü yazar; 0 = "boş" (varsayılan gösterilir).
+//
+// NEDEN: `0` yazmak kullanıcıyı "ölçü sıfır mı?" diye düşündürüyor ve
+// kaydedince 0 gönderip varsayılana düşürüyordu. Boş bırakmak doğru:
+// placeholder varsayılanı gösterir, sunucu boşu varsayılan sayar.
+func itoaOlcu(n int) string {
+	if n <= 0 {
+		return ""
+	}
+	return strconv.Itoa(n)
+}

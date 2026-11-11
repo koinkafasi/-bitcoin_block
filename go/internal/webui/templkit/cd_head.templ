@@ -70,6 +70,13 @@ type CDHead struct {
 	Metas []CDMeta
 	// BaseURL göreli görsel yolunu og:image için mutlaklaştırır.
 	BaseURL string
+	// FaviconURL panelden yüklenen favicon (/media/... ya da /static/...).
+	//
+	// NEDEN GEREKLİ (kullanıcı bildirimi, 11 Kasım 2026: "favicon svg
+	// yükledim ama browserda göstermedi"): aşağıdaki <link rel="icon">
+	// satırları SABİT yazılıydı; yüklenen dosya hiçbir yerde kullanılmıyordu.
+	// Doluysa yüklenen kullanılır, boşsa gömülü simgelere düşülür.
+	FaviconURL string
 	// EkCSS sayfaya özel ek stil dosyaları (/static/... yolu).
 	//
 	// NEDEN: cd.css 200 KB bütçeye tabi (cd_tasarim_test.go). Ana sayfa
@@ -195,10 +202,20 @@ templ cdHead(h CDHead) {
 	     istenir; bağlantı verilmezse her sayfa yüklemesinde 404 üretir
 	     (ölçüldü, 6 Kasım 2026: tek 404 kaynağı buydu). SVG + PNG birlikte
 	     veriliyor: SVG modern tarayıcıda keskin, PNG eski/bot yolunda. -->
-	<link rel="icon" href="/static/icon-192.png" sizes="192x192" type="image/png"/>
-	<link rel="icon" href="/static/favicon.svg" type="image/svg+xml"/>
-	<link rel="icon" href="/static/icon-512.png" sizes="512x512" type="image/png"/>
-	<link rel="apple-touch-icon" href="/static/icon-192.png"/>
+	if h.FaviconURL != "" {
+		<!-- YÜKLENEN FAVICON. `sizes="any"` SVG'ye özgü: tarayıcıya
+		     "her ölçekte geçerli" der. PNG yolunu da bırakıyoruz çünkü
+		     bazı bot/eski tarayıcılar SVG favicon'u yok sayar ve o
+		     durumda gömülü PNG devreye girer (404 üretmez). -->
+		<link rel="icon" href={ h.FaviconURL } sizes="any"/>
+		<link rel="icon" href="/static/icon-192.png" sizes="192x192" type="image/png"/>
+		<link rel="apple-touch-icon" href={ h.FaviconURL }/>
+	} else {
+		<link rel="icon" href="/static/icon-192.png" sizes="192x192" type="image/png"/>
+		<link rel="icon" href="/static/favicon.svg" type="image/svg+xml"/>
+		<link rel="icon" href="/static/icon-512.png" sizes="512x512" type="image/png"/>
+		<link rel="apple-touch-icon" href="/static/icon-192.png"/>
+	}
 	<link rel="manifest" href="/manifest.webmanifest"/>
 	<!-- WebSub hub: yayın bildirimi (CoinDesk de `rel="hub"` basıyor).
 	     Google/Bing beslemeyi bu uçtan anında öğrenir. -->

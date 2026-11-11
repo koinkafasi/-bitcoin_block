@@ -550,3 +550,16 @@ func sayfaGirdiCikar(cw *cacheWriter) (*sayfaGirdi, bool) {
 		govde:  cw.govde,
 	}, true
 }
+
+// temizle tüm sayfa önbelleğini boşaltır.
+//
+// NEDEN: marka/logo gibi HER SAYFADA görünen bir ayar değiştiğinde
+// yalnız kabuk (cdShellCache) değil, TAM SAYFA önbelleği de eskir.
+// Ölçüm (11 Kasım 2026): logo kaydedildikten sonra ana sayfa 4 saniye
+// boyunca eski logoyu gösterdi — sayfa önbelleği TTL'i 10 sn.
+func (p *sayfaOnbellek) temizle() {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	p.m = map[[32]byte]*sayfaGirdi{}
+	p.sira = nil
+}

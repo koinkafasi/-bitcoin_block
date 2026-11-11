@@ -392,7 +392,11 @@ func (s *Server) cdShellCtx(ctx context.Context, r *http.Request, aktif string) 
 			return v
 		}
 		sh.LogoURL = u(bc.ImageID)
+		sh.LogoAcikURL = u(bc.ImageAcikID)
 		sh.FaviconURL = u(bc.FaviconID)
+		sh.LogoHedefYukseklik = bc.LogoYukseklik
+		sh.LogoAzamiGenislik = bc.LogoGenislikAzami
+		sh.SloganGirinti = bc.SloganGirinti
 		// Trim: yalnız boşluk taşıyan slogan boş `<span>` basıyordu
 		// (test yakaladı, 11 Kasım 2026).
 		sh.Tagline = strings.TrimSpace(bc.Tagline)
