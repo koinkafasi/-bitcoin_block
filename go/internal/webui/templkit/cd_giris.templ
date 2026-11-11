@@ -57,19 +57,19 @@ templ cdGirisHero(g CDGiris) {
 							<span class="cd-giris__coin" style="background:#F7931A" aria-hidden="true">₿</span>
 							<span class="cd-giris__parite">BTC / USDT<small>Bitcoin · Spot</small></span>
 							if g.Guncelleme != "" {
-								<span class="cd-giris__taze">
+								<span class="cd-giris__taze" title="Verinin sunucudaki yaşı">
 									<span class="cd-giris__taze-nokta" aria-hidden="true"></span>
-									{ g.Guncelleme }
+									<span data-cg="yas">{ g.Guncelleme }</span>
 								</span>
 							}
 						</div>
 						<div class="cd-giris__fiyat">
-							<b>{ g.BTCFiyat }</b>
+							<b data-cg="btc-fiyat">{ g.BTCFiyat }</b>
 							if g.BTCDegisim != "" {
 								if g.BTCUp {
-									<span class="cd-yukari">{ g.BTCDegisim }</span>
+									<span class="cd-yukari" data-cg="btc-degisim">{ g.BTCDegisim }</span>
 								} else {
-									<span class="cd-asagi">{ g.BTCDegisim }</span>
+									<span class="cd-asagi" data-cg="btc-degisim">{ g.BTCDegisim }</span>
 								}
 							}
 						</div>
@@ -85,24 +85,24 @@ templ cdGirisHero(g CDGiris) {
 								<line x1="0" y1="30" x2="320" y2="30" class="cd-giris__izgara"></line>
 								<line x1="0" y1="65" x2="320" y2="65" class="cd-giris__izgara"></line>
 								<line x1="0" y1="100" x2="320" y2="100" class="cd-giris__izgara"></line>
-								<path d={ g.BTCAlan } fill="url(#cdGirisAlan)"></path>
-								<path d={ g.BTCYol } fill="none" stroke="#C9A227" stroke-width="2.4"
+								<path data-cg="alan" d={ g.BTCAlan } fill="url(#cdGirisAlan)"></path>
+								<path data-cg="cizgi" d={ g.BTCYol } fill="none" stroke="#C9A227" stroke-width="2.4"
 									stroke-linecap="round" stroke-linejoin="round"></path>
 							</svg>
 						}
 						<div class="cd-giris__panel-istat">
 							if g.Hacim != "" {
-								<span><small>24S HACİM</small><b>{ g.Hacim }</b></span>
+								<span><small>24S HACİM</small><b data-cg="hacim">{ g.Hacim }</b></span>
 							}
 							if g.Dominans != "" {
-								<span><small>BTC DOMİNANS</small><b>{ g.Dominans }</b></span>
+								<span><small>BTC DOMİNANS</small><b data-cg="dominans">{ g.Dominans }</b></span>
 							}
 							if g.Endeks != "" {
 								<span><small>ENDEKS</small>
 									if g.EndeksUp {
-										<b class="cd-yukari">{ g.Endeks }</b>
+										<b class="cd-yukari" data-cg="endeks">{ g.Endeks }</b>
 									} else {
-										<b class="cd-asagi">{ g.Endeks }</b>
+										<b class="cd-asagi" data-cg="endeks">{ g.Endeks }</b>
 									}
 								</span>
 							}
@@ -113,12 +113,12 @@ templ cdGirisHero(g CDGiris) {
 						<div class="cd-giris__yuzen cd-giris__yuzen--1">
 							<span class="cd-giris__coin" style="background:#627EEA" aria-hidden="true">Ξ</span>
 							<span>
-								<b>{ g.ETHFiyat }</b>
+								<b data-cg="eth-fiyat">{ g.ETHFiyat }</b>
 								if g.ETHDegisim != "" {
 									if g.ETHUp {
-										<i class="cd-yukari">{ g.ETHDegisim }</i>
+										<i class="cd-yukari" data-cg="eth-degisim">{ g.ETHDegisim }</i>
 									} else {
-										<i class="cd-asagi">{ g.ETHDegisim }</i>
+										<i class="cd-asagi" data-cg="eth-degisim">{ g.ETHDegisim }</i>
 									}
 								}
 							</span>
@@ -128,12 +128,12 @@ templ cdGirisHero(g CDGiris) {
 						<div class="cd-giris__yuzen cd-giris__yuzen--2">
 							<span class="cd-giris__coin cd-giris__coin--sol" aria-hidden="true">S</span>
 							<span>
-								<b>{ g.SOLFiyat }</b>
+								<b data-cg="sol-fiyat">{ g.SOLFiyat }</b>
 								if g.SOLDegisim != "" {
 									if g.SOLUp {
-										<i class="cd-yukari">{ g.SOLDegisim }</i>
+										<i class="cd-yukari" data-cg="sol-degisim">{ g.SOLDegisim }</i>
 									} else {
-										<i class="cd-asagi">{ g.SOLDegisim }</i>
+										<i class="cd-asagi" data-cg="sol-degisim">{ g.SOLDegisim }</i>
 									}
 								}
 							</span>
@@ -159,27 +159,27 @@ templ cdGirisHero(g CDGiris) {
 										</defs>
 										<path d="M 16 100 A 84 84 0 0 1 184 100" fill="none"
 											stroke="var(--cd-border)" stroke-width="14" stroke-linecap="round"></path>
-										<path d="M 16 100 A 84 84 0 0 1 184 100" fill="none"
+										<path data-cg="fng-yay" d="M 16 100 A 84 84 0 0 1 184 100" fill="none"
 											stroke="url(#cdGirisFNG)" stroke-width="14" stroke-linecap="round"
 											stroke-dasharray={ cdGirisYay(g.FNGDeger) }></path>
-										<circle cx={ cdGirisNoktaX(g.FNGDeger) } cy={ cdGirisNoktaY(g.FNGDeger) }
+										<circle data-cg="fng-nokta" cx={ cdGirisNoktaX(g.FNGDeger) } cy={ cdGirisNoktaY(g.FNGDeger) }
 											r="8" fill="var(--cd-bg)" stroke="#C9A227" stroke-width="3"></circle>
 									</svg>
 									<div class="cd-giris__gosterge-deger">
-										<div>{ g.FNGDeger }</div>
+										<div data-cg="fng-deger">{ g.FNGDeger }</div>
 										if g.FNGUp {
-											<div class="cd-yukari">{ g.FNGEtiket }</div>
+											<div class="cd-yukari" data-cg="fng-etiket">{ g.FNGEtiket }</div>
 										} else {
-											<div class="cd-asagi">{ g.FNGEtiket }</div>
+											<div class="cd-asagi" data-cg="fng-etiket">{ g.FNGEtiket }</div>
 										}
 									</div>
 								</div>
 								<div class="cd-giris__gosterge-alt">
 									if g.FNGDun > 0 {
-										<span>Dün: <b>{ g.FNGDun }</b></span>
+										<span>Dün: <b data-cg="fng-dun">{ g.FNGDun }</b></span>
 									}
 									if g.FNGHafta > 0 {
-										<span>Geçen Hafta: <b>{ g.FNGHafta }</b></span>
+										<span>Geçen Hafta: <b data-cg="fng-hafta">{ g.FNGHafta }</b></span>
 									}
 								</div>
 							</div>
@@ -200,15 +200,15 @@ templ cdGirisHero(g CDGiris) {
 										</defs>
 										<path d="M 16 100 A 84 84 0 0 1 184 100" fill="none"
 											stroke="var(--cd-border)" stroke-width="14" stroke-linecap="round"></path>
-										<path d="M 16 100 A 84 84 0 0 1 184 100" fill="none"
+										<path data-cg="rsi-yay" d="M 16 100 A 84 84 0 0 1 184 100" fill="none"
 											stroke="url(#cdGirisRSI)" stroke-width="14" stroke-linecap="round"
 											stroke-dasharray={ cdGirisYay(g.RSI) }></path>
-										<circle cx={ cdGirisNoktaX(g.RSI) } cy={ cdGirisNoktaY(g.RSI) }
+										<circle data-cg="rsi-nokta" cx={ cdGirisNoktaX(g.RSI) } cy={ cdGirisNoktaY(g.RSI) }
 											r="8" fill="var(--cd-bg)" stroke="#C9A227" stroke-width="3"></circle>
 									</svg>
 									<div class="cd-giris__gosterge-deger">
-										<div>{ g.RSI }</div>
-										<div class="cd-notr">{ g.RSIEtiket }</div>
+										<div data-cg="rsi-deger">{ g.RSI }</div>
+										<div class="cd-notr" data-cg="rsi-etiket">{ g.RSIEtiket }</div>
 									</div>
 								</div>
 								<div class="cd-giris__gosterge-alt">

@@ -45,7 +45,7 @@ func cdGirisHero(g CDGiris) templ.Component {
 			var templ_7745c5c3_Var2 string
 			templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(g.Eyebrow)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_giris.templ`, Line: 20, Col: 17}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/cd_giris.templ`, Line: 20, Col: 17}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
 			if templ_7745c5c3_Err != nil {
@@ -58,7 +58,7 @@ func cdGirisHero(g CDGiris) templ.Component {
 			var templ_7745c5c3_Var3 string
 			templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(g.BaslikOnce)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_giris.templ`, Line: 23, Col: 20}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/cd_giris.templ`, Line: 23, Col: 20}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 			if templ_7745c5c3_Err != nil {
@@ -71,7 +71,7 @@ func cdGirisHero(g CDGiris) templ.Component {
 			var templ_7745c5c3_Var4 string
 			templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(g.BaslikVurgu)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_giris.templ`, Line: 23, Col: 41}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/cd_giris.templ`, Line: 23, Col: 41}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 			if templ_7745c5c3_Err != nil {
@@ -84,7 +84,7 @@ func cdGirisHero(g CDGiris) templ.Component {
 			var templ_7745c5c3_Var5 string
 			templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(g.BaslikSonra)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_giris.templ`, Line: 23, Col: 63}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/cd_giris.templ`, Line: 23, Col: 63}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 			if templ_7745c5c3_Err != nil {
@@ -97,7 +97,7 @@ func cdGirisHero(g CDGiris) templ.Component {
 			var templ_7745c5c3_Var6 string
 			templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(g.Aciklama)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_giris.templ`, Line: 25, Col: 43}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/cd_giris.templ`, Line: 25, Col: 43}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 			if templ_7745c5c3_Err != nil {
@@ -110,7 +110,7 @@ func cdGirisHero(g CDGiris) templ.Component {
 			var templ_7745c5c3_Var7 templ.SafeURL
 			templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinURLErrs(g.Cta1Href)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_giris.templ`, Line: 27, Col: 69}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/cd_giris.templ`, Line: 27, Col: 69}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 			if templ_7745c5c3_Err != nil {
@@ -123,7 +123,7 @@ func cdGirisHero(g CDGiris) templ.Component {
 			var templ_7745c5c3_Var8 string
 			templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(g.Cta1Ad)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_giris.templ`, Line: 31, Col: 23}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/cd_giris.templ`, Line: 31, Col: 23}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 			if templ_7745c5c3_Err != nil {
@@ -136,7 +136,7 @@ func cdGirisHero(g CDGiris) templ.Component {
 			var templ_7745c5c3_Var9 templ.SafeURL
 			templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinURLErrs(g.Cta2Href)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_giris.templ`, Line: 33, Col: 71}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/cd_giris.templ`, Line: 33, Col: 71}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 			if templ_7745c5c3_Err != nil {
@@ -149,7 +149,7 @@ func cdGirisHero(g CDGiris) templ.Component {
 			var templ_7745c5c3_Var10 string
 			templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(g.Cta2Ad)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_giris.templ`, Line: 39, Col: 23}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/cd_giris.templ`, Line: 39, Col: 23}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 			if templ_7745c5c3_Err != nil {
@@ -172,7 +172,7 @@ func cdGirisHero(g CDGiris) templ.Component {
 					var templ_7745c5c3_Var11 string
 					templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(m.No)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_giris.templ`, Line: 46, Col: 48}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/cd_giris.templ`, Line: 46, Col: 48}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 					if templ_7745c5c3_Err != nil {
@@ -185,7 +185,7 @@ func cdGirisHero(g CDGiris) templ.Component {
 					var templ_7745c5c3_Var12 string
 					templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(m.Metin)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_giris.templ`, Line: 47, Col: 24}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/cd_giris.templ`, Line: 47, Col: 24}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 					if templ_7745c5c3_Err != nil {
@@ -206,32 +206,32 @@ func cdGirisHero(g CDGiris) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			if g.Guncelleme != "" {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, "<span class=\"cd-giris__taze\"><span class=\"cd-giris__taze-nokta\" aria-hidden=\"true\"></span> ")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, "<span class=\"cd-giris__taze\" title=\"Verinin sunucudaki yaşı\"><span class=\"cd-giris__taze-nokta\" aria-hidden=\"true\"></span> <span data-cg=\"yas\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var13 string
 				templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(g.Guncelleme)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_giris.templ`, Line: 62, Col: 23}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/cd_giris.templ`, Line: 62, Col: 43}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "</span>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "</span></span>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, "</div><div class=\"cd-giris__fiyat\"><b>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, "</div><div class=\"cd-giris__fiyat\"><b data-cg=\"btc-fiyat\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var14 string
 			templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(g.BTCFiyat)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_giris.templ`, Line: 67, Col: 22}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/cd_giris.templ`, Line: 67, Col: 42}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
 			if templ_7745c5c3_Err != nil {
@@ -243,14 +243,14 @@ func cdGirisHero(g CDGiris) templ.Component {
 			}
 			if g.BTCDegisim != "" {
 				if g.BTCUp {
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 21, "<span class=\"cd-yukari\">")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 21, "<span class=\"cd-yukari\" data-cg=\"btc-degisim\">")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
 					var templ_7745c5c3_Var15 string
 					templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(g.BTCDegisim)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_giris.templ`, Line: 70, Col: 47}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/cd_giris.templ`, Line: 70, Col: 69}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
 					if templ_7745c5c3_Err != nil {
@@ -261,14 +261,14 @@ func cdGirisHero(g CDGiris) templ.Component {
 						return templ_7745c5c3_Err
 					}
 				} else {
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 23, "<span class=\"cd-asagi\">")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 23, "<span class=\"cd-asagi\" data-cg=\"btc-degisim\">")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
 					var templ_7745c5c3_Var16 string
 					templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(g.BTCDegisim)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_giris.templ`, Line: 72, Col: 46}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/cd_giris.templ`, Line: 72, Col: 68}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
 					if templ_7745c5c3_Err != nil {
@@ -285,27 +285,27 @@ func cdGirisHero(g CDGiris) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			if g.BTCYol != "" {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 26, "<svg class=\"cd-giris__grafik\" width=\"100%\" height=\"120\" viewBox=\"0 0 320 120\" preserveAspectRatio=\"none\" role=\"img\" aria-label=\"Bitcoin son 7 gün fiyat grafiği\"><defs><linearGradient id=\"cdGirisAlan\" x1=\"0\" y1=\"0\" x2=\"0\" y2=\"1\"><stop offset=\"0%\" stop-color=\"rgba(252,195,52,0.35)\"></stop> <stop offset=\"100%\" stop-color=\"rgba(252,195,52,0)\"></stop></linearGradient></defs> <line x1=\"0\" y1=\"30\" x2=\"320\" y2=\"30\" class=\"cd-giris__izgara\"></line> <line x1=\"0\" y1=\"65\" x2=\"320\" y2=\"65\" class=\"cd-giris__izgara\"></line> <line x1=\"0\" y1=\"100\" x2=\"320\" y2=\"100\" class=\"cd-giris__izgara\"></line> <path d=\"")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 26, "<svg class=\"cd-giris__grafik\" width=\"100%\" height=\"120\" viewBox=\"0 0 320 120\" preserveAspectRatio=\"none\" role=\"img\" aria-label=\"Bitcoin son 7 gün fiyat grafiği\"><defs><linearGradient id=\"cdGirisAlan\" x1=\"0\" y1=\"0\" x2=\"0\" y2=\"1\"><stop offset=\"0%\" stop-color=\"rgba(252,195,52,0.35)\"></stop> <stop offset=\"100%\" stop-color=\"rgba(252,195,52,0)\"></stop></linearGradient></defs> <line x1=\"0\" y1=\"30\" x2=\"320\" y2=\"30\" class=\"cd-giris__izgara\"></line> <line x1=\"0\" y1=\"65\" x2=\"320\" y2=\"65\" class=\"cd-giris__izgara\"></line> <line x1=\"0\" y1=\"100\" x2=\"320\" y2=\"100\" class=\"cd-giris__izgara\"></line> <path data-cg=\"alan\" d=\"")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var17 string
 				templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.ResolveAttributeValue(g.BTCAlan)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_giris.templ`, Line: 88, Col: 27}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/cd_giris.templ`, Line: 88, Col: 42}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var17)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 27, "\" fill=\"url(#cdGirisAlan)\"></path> <path d=\"")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 27, "\" fill=\"url(#cdGirisAlan)\"></path> <path data-cg=\"cizgi\" d=\"")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var18 string
 				templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.ResolveAttributeValue(g.BTCYol)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_giris.templ`, Line: 89, Col: 26}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/cd_giris.templ`, Line: 89, Col: 42}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var18)
 				if templ_7745c5c3_Err != nil {
@@ -321,14 +321,14 @@ func cdGirisHero(g CDGiris) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			if g.Hacim != "" {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 30, "<span><small>24S HACİM</small><b>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 30, "<span><small>24S HACİM</small><b data-cg=\"hacim\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var19 string
 				templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinStringErrs(g.Hacim)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_giris.templ`, Line: 95, Col: 51}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/cd_giris.templ`, Line: 95, Col: 67}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var19))
 				if templ_7745c5c3_Err != nil {
@@ -340,14 +340,14 @@ func cdGirisHero(g CDGiris) templ.Component {
 				}
 			}
 			if g.Dominans != "" {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 32, "<span><small>BTC DOMİNANS</small><b>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 32, "<span><small>BTC DOMİNANS</small><b data-cg=\"dominans\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var20 string
 				templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.JoinStringErrs(g.Dominans)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_giris.templ`, Line: 98, Col: 57}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/cd_giris.templ`, Line: 98, Col: 76}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var20))
 				if templ_7745c5c3_Err != nil {
@@ -364,14 +364,14 @@ func cdGirisHero(g CDGiris) templ.Component {
 					return templ_7745c5c3_Err
 				}
 				if g.EndeksUp {
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 35, "<b class=\"cd-yukari\">")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 35, "<b class=\"cd-yukari\" data-cg=\"endeks\">")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
 					var templ_7745c5c3_Var21 string
 					templ_7745c5c3_Var21, templ_7745c5c3_Err = templ.JoinStringErrs(g.Endeks)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_giris.templ`, Line: 103, Col: 41}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/cd_giris.templ`, Line: 103, Col: 58}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var21))
 					if templ_7745c5c3_Err != nil {
@@ -382,14 +382,14 @@ func cdGirisHero(g CDGiris) templ.Component {
 						return templ_7745c5c3_Err
 					}
 				} else {
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 37, "<b class=\"cd-asagi\">")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 37, "<b class=\"cd-asagi\" data-cg=\"endeks\">")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
 					var templ_7745c5c3_Var22 string
 					templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.JoinStringErrs(g.Endeks)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_giris.templ`, Line: 105, Col: 40}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/cd_giris.templ`, Line: 105, Col: 57}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var22))
 					if templ_7745c5c3_Err != nil {
@@ -410,14 +410,14 @@ func cdGirisHero(g CDGiris) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			if g.ETHFiyat != "" {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 41, "<div class=\"cd-giris__yuzen cd-giris__yuzen--1\"><span class=\"cd-giris__coin\" style=\"background:#627EEA\" aria-hidden=\"true\">Ξ</span> <span><b>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 41, "<div class=\"cd-giris__yuzen cd-giris__yuzen--1\"><span class=\"cd-giris__coin\" style=\"background:#627EEA\" aria-hidden=\"true\">Ξ</span> <span><b data-cg=\"eth-fiyat\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var23 string
 				templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.JoinStringErrs(g.ETHFiyat)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_giris.templ`, Line: 116, Col: 23}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/cd_giris.templ`, Line: 116, Col: 43}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var23))
 				if templ_7745c5c3_Err != nil {
@@ -429,14 +429,14 @@ func cdGirisHero(g CDGiris) templ.Component {
 				}
 				if g.ETHDegisim != "" {
 					if g.ETHUp {
-						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 43, "<i class=\"cd-yukari\">")
+						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 43, "<i class=\"cd-yukari\" data-cg=\"eth-degisim\">")
 						if templ_7745c5c3_Err != nil {
 							return templ_7745c5c3_Err
 						}
 						var templ_7745c5c3_Var24 string
 						templ_7745c5c3_Var24, templ_7745c5c3_Err = templ.JoinStringErrs(g.ETHDegisim)
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_giris.templ`, Line: 119, Col: 45}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/cd_giris.templ`, Line: 119, Col: 67}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var24))
 						if templ_7745c5c3_Err != nil {
@@ -447,14 +447,14 @@ func cdGirisHero(g CDGiris) templ.Component {
 							return templ_7745c5c3_Err
 						}
 					} else {
-						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 45, "<i class=\"cd-asagi\">")
+						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 45, "<i class=\"cd-asagi\" data-cg=\"eth-degisim\">")
 						if templ_7745c5c3_Err != nil {
 							return templ_7745c5c3_Err
 						}
 						var templ_7745c5c3_Var25 string
 						templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.JoinStringErrs(g.ETHDegisim)
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_giris.templ`, Line: 121, Col: 44}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/cd_giris.templ`, Line: 121, Col: 66}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var25))
 						if templ_7745c5c3_Err != nil {
@@ -472,14 +472,14 @@ func cdGirisHero(g CDGiris) templ.Component {
 				}
 			}
 			if g.SOLFiyat != "" {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 48, "<div class=\"cd-giris__yuzen cd-giris__yuzen--2\"><span class=\"cd-giris__coin cd-giris__coin--sol\" aria-hidden=\"true\">S</span> <span><b>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 48, "<div class=\"cd-giris__yuzen cd-giris__yuzen--2\"><span class=\"cd-giris__coin cd-giris__coin--sol\" aria-hidden=\"true\">S</span> <span><b data-cg=\"sol-fiyat\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var26 string
 				templ_7745c5c3_Var26, templ_7745c5c3_Err = templ.JoinStringErrs(g.SOLFiyat)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_giris.templ`, Line: 131, Col: 23}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/cd_giris.templ`, Line: 131, Col: 43}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var26))
 				if templ_7745c5c3_Err != nil {
@@ -491,14 +491,14 @@ func cdGirisHero(g CDGiris) templ.Component {
 				}
 				if g.SOLDegisim != "" {
 					if g.SOLUp {
-						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 50, "<i class=\"cd-yukari\">")
+						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 50, "<i class=\"cd-yukari\" data-cg=\"sol-degisim\">")
 						if templ_7745c5c3_Err != nil {
 							return templ_7745c5c3_Err
 						}
 						var templ_7745c5c3_Var27 string
 						templ_7745c5c3_Var27, templ_7745c5c3_Err = templ.JoinStringErrs(g.SOLDegisim)
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_giris.templ`, Line: 134, Col: 45}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/cd_giris.templ`, Line: 134, Col: 67}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var27))
 						if templ_7745c5c3_Err != nil {
@@ -509,14 +509,14 @@ func cdGirisHero(g CDGiris) templ.Component {
 							return templ_7745c5c3_Err
 						}
 					} else {
-						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 52, "<i class=\"cd-asagi\">")
+						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 52, "<i class=\"cd-asagi\" data-cg=\"sol-degisim\">")
 						if templ_7745c5c3_Err != nil {
 							return templ_7745c5c3_Err
 						}
 						var templ_7745c5c3_Var28 string
 						templ_7745c5c3_Var28, templ_7745c5c3_Err = templ.JoinStringErrs(g.SOLDegisim)
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_giris.templ`, Line: 136, Col: 44}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/cd_giris.templ`, Line: 136, Col: 66}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var28))
 						if templ_7745c5c3_Err != nil {
@@ -550,33 +550,33 @@ func cdGirisHero(g CDGiris) templ.Component {
 					var templ_7745c5c3_Var29 string
 					templ_7745c5c3_Var29, templ_7745c5c3_Err = templ.ResolveAttributeValue("Korku ve açgözlülük endeksi: " + g.FNGEtiket)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_giris.templ`, Line: 151, Col: 72}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/cd_giris.templ`, Line: 151, Col: 72}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var29)
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 58, "\"><defs><linearGradient id=\"cdGirisFNG\" x1=\"0\" y1=\"0\" x2=\"1\" y2=\"0\"><stop offset=\"0%\" stop-color=\"#DC2626\"></stop> <stop offset=\"40%\" stop-color=\"#E8A020\"></stop> <stop offset=\"70%\" stop-color=\"#D4AF37\"></stop> <stop offset=\"100%\" stop-color=\"#16A34A\"></stop></linearGradient></defs> <path d=\"M 16 100 A 84 84 0 0 1 184 100\" fill=\"none\" stroke=\"var(--cd-border)\" stroke-width=\"14\" stroke-linecap=\"round\"></path> <path d=\"M 16 100 A 84 84 0 0 1 184 100\" fill=\"none\" stroke=\"url(#cdGirisFNG)\" stroke-width=\"14\" stroke-linecap=\"round\" stroke-dasharray=\"")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 58, "\"><defs><linearGradient id=\"cdGirisFNG\" x1=\"0\" y1=\"0\" x2=\"1\" y2=\"0\"><stop offset=\"0%\" stop-color=\"#DC2626\"></stop> <stop offset=\"40%\" stop-color=\"#E8A020\"></stop> <stop offset=\"70%\" stop-color=\"#D4AF37\"></stop> <stop offset=\"100%\" stop-color=\"#16A34A\"></stop></linearGradient></defs> <path d=\"M 16 100 A 84 84 0 0 1 184 100\" fill=\"none\" stroke=\"var(--cd-border)\" stroke-width=\"14\" stroke-linecap=\"round\"></path> <path data-cg=\"fng-yay\" d=\"M 16 100 A 84 84 0 0 1 184 100\" fill=\"none\" stroke=\"url(#cdGirisFNG)\" stroke-width=\"14\" stroke-linecap=\"round\" stroke-dasharray=\"")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
 					var templ_7745c5c3_Var30 string
 					templ_7745c5c3_Var30, templ_7745c5c3_Err = templ.ResolveAttributeValue(cdGirisYay(g.FNGDeger))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_giris.templ`, Line: 164, Col: 52}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/cd_giris.templ`, Line: 164, Col: 52}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var30)
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 59, "\"></path> <circle cx=\"")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 59, "\"></path> <circle data-cg=\"fng-nokta\" cx=\"")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
 					var templ_7745c5c3_Var31 string
 					templ_7745c5c3_Var31, templ_7745c5c3_Err = templ.ResolveAttributeValue(cdGirisNoktaX(g.FNGDeger))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_giris.templ`, Line: 165, Col: 48}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/cd_giris.templ`, Line: 165, Col: 68}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var31)
 					if templ_7745c5c3_Err != nil {
@@ -589,20 +589,20 @@ func cdGirisHero(g CDGiris) templ.Component {
 					var templ_7745c5c3_Var32 string
 					templ_7745c5c3_Var32, templ_7745c5c3_Err = templ.ResolveAttributeValue(cdGirisNoktaY(g.FNGDeger))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_giris.templ`, Line: 165, Col: 81}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/cd_giris.templ`, Line: 165, Col: 101}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var32)
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 61, "\" r=\"8\" fill=\"var(--cd-bg)\" stroke=\"#C9A227\" stroke-width=\"3\"></circle></svg><div class=\"cd-giris__gosterge-deger\"><div>")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 61, "\" r=\"8\" fill=\"var(--cd-bg)\" stroke=\"#C9A227\" stroke-width=\"3\"></circle></svg><div class=\"cd-giris__gosterge-deger\"><div data-cg=\"fng-deger\">")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
 					var templ_7745c5c3_Var33 string
 					templ_7745c5c3_Var33, templ_7745c5c3_Err = templ.JoinStringErrs(g.FNGDeger)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_giris.templ`, Line: 169, Col: 27}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/cd_giris.templ`, Line: 169, Col: 47}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var33))
 					if templ_7745c5c3_Err != nil {
@@ -613,14 +613,14 @@ func cdGirisHero(g CDGiris) templ.Component {
 						return templ_7745c5c3_Err
 					}
 					if g.FNGUp {
-						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 63, "<div class=\"cd-yukari\">")
+						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 63, "<div class=\"cd-yukari\" data-cg=\"fng-etiket\">")
 						if templ_7745c5c3_Err != nil {
 							return templ_7745c5c3_Err
 						}
 						var templ_7745c5c3_Var34 string
 						templ_7745c5c3_Var34, templ_7745c5c3_Err = templ.JoinStringErrs(g.FNGEtiket)
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_giris.templ`, Line: 171, Col: 47}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/cd_giris.templ`, Line: 171, Col: 68}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var34))
 						if templ_7745c5c3_Err != nil {
@@ -631,14 +631,14 @@ func cdGirisHero(g CDGiris) templ.Component {
 							return templ_7745c5c3_Err
 						}
 					} else {
-						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 65, "<div class=\"cd-asagi\">")
+						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 65, "<div class=\"cd-asagi\" data-cg=\"fng-etiket\">")
 						if templ_7745c5c3_Err != nil {
 							return templ_7745c5c3_Err
 						}
 						var templ_7745c5c3_Var35 string
 						templ_7745c5c3_Var35, templ_7745c5c3_Err = templ.JoinStringErrs(g.FNGEtiket)
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_giris.templ`, Line: 173, Col: 46}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/cd_giris.templ`, Line: 173, Col: 67}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var35))
 						if templ_7745c5c3_Err != nil {
@@ -654,14 +654,14 @@ func cdGirisHero(g CDGiris) templ.Component {
 						return templ_7745c5c3_Err
 					}
 					if g.FNGDun > 0 {
-						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 68, "<span>Dün: <b>")
+						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 68, "<span>Dün: <b data-cg=\"fng-dun\">")
 						if templ_7745c5c3_Err != nil {
 							return templ_7745c5c3_Err
 						}
 						var templ_7745c5c3_Var36 string
 						templ_7745c5c3_Var36, templ_7745c5c3_Err = templ.JoinStringErrs(g.FNGDun)
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_giris.templ`, Line: 179, Col: 35}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/cd_giris.templ`, Line: 179, Col: 53}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var36))
 						if templ_7745c5c3_Err != nil {
@@ -673,14 +673,14 @@ func cdGirisHero(g CDGiris) templ.Component {
 						}
 					}
 					if g.FNGHafta > 0 {
-						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 70, "<span>Geçen Hafta: <b>")
+						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 70, "<span>Geçen Hafta: <b data-cg=\"fng-hafta\">")
 						if templ_7745c5c3_Err != nil {
 							return templ_7745c5c3_Err
 						}
 						var templ_7745c5c3_Var37 string
 						templ_7745c5c3_Var37, templ_7745c5c3_Err = templ.JoinStringErrs(g.FNGHafta)
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_giris.templ`, Line: 182, Col: 45}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/cd_giris.templ`, Line: 182, Col: 65}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var37))
 						if templ_7745c5c3_Err != nil {
@@ -704,33 +704,33 @@ func cdGirisHero(g CDGiris) templ.Component {
 					var templ_7745c5c3_Var38 string
 					templ_7745c5c3_Var38, templ_7745c5c3_Err = templ.ResolveAttributeValue("Bitcoin 14 günlük RSI: " + g.RSIEtiket)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_giris.templ`, Line: 192, Col: 64}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/cd_giris.templ`, Line: 192, Col: 64}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var38)
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 74, "\"><defs><linearGradient id=\"cdGirisRSI\" x1=\"0\" y1=\"0\" x2=\"1\" y2=\"0\"><stop offset=\"0%\" stop-color=\"#16A34A\"></stop> <stop offset=\"30%\" stop-color=\"#D4AF37\"></stop> <stop offset=\"70%\" stop-color=\"#E8A020\"></stop> <stop offset=\"100%\" stop-color=\"#DC2626\"></stop></linearGradient></defs> <path d=\"M 16 100 A 84 84 0 0 1 184 100\" fill=\"none\" stroke=\"var(--cd-border)\" stroke-width=\"14\" stroke-linecap=\"round\"></path> <path d=\"M 16 100 A 84 84 0 0 1 184 100\" fill=\"none\" stroke=\"url(#cdGirisRSI)\" stroke-width=\"14\" stroke-linecap=\"round\" stroke-dasharray=\"")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 74, "\"><defs><linearGradient id=\"cdGirisRSI\" x1=\"0\" y1=\"0\" x2=\"1\" y2=\"0\"><stop offset=\"0%\" stop-color=\"#16A34A\"></stop> <stop offset=\"30%\" stop-color=\"#D4AF37\"></stop> <stop offset=\"70%\" stop-color=\"#E8A020\"></stop> <stop offset=\"100%\" stop-color=\"#DC2626\"></stop></linearGradient></defs> <path d=\"M 16 100 A 84 84 0 0 1 184 100\" fill=\"none\" stroke=\"var(--cd-border)\" stroke-width=\"14\" stroke-linecap=\"round\"></path> <path data-cg=\"rsi-yay\" d=\"M 16 100 A 84 84 0 0 1 184 100\" fill=\"none\" stroke=\"url(#cdGirisRSI)\" stroke-width=\"14\" stroke-linecap=\"round\" stroke-dasharray=\"")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
 					var templ_7745c5c3_Var39 string
 					templ_7745c5c3_Var39, templ_7745c5c3_Err = templ.ResolveAttributeValue(cdGirisYay(g.RSI))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_giris.templ`, Line: 205, Col: 47}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/cd_giris.templ`, Line: 205, Col: 47}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var39)
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 75, "\"></path> <circle cx=\"")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 75, "\"></path> <circle data-cg=\"rsi-nokta\" cx=\"")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
 					var templ_7745c5c3_Var40 string
 					templ_7745c5c3_Var40, templ_7745c5c3_Err = templ.ResolveAttributeValue(cdGirisNoktaX(g.RSI))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_giris.templ`, Line: 206, Col: 43}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/cd_giris.templ`, Line: 206, Col: 63}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var40)
 					if templ_7745c5c3_Err != nil {
@@ -743,33 +743,33 @@ func cdGirisHero(g CDGiris) templ.Component {
 					var templ_7745c5c3_Var41 string
 					templ_7745c5c3_Var41, templ_7745c5c3_Err = templ.ResolveAttributeValue(cdGirisNoktaY(g.RSI))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_giris.templ`, Line: 206, Col: 71}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/cd_giris.templ`, Line: 206, Col: 91}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var41)
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 77, "\" r=\"8\" fill=\"var(--cd-bg)\" stroke=\"#C9A227\" stroke-width=\"3\"></circle></svg><div class=\"cd-giris__gosterge-deger\"><div>")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 77, "\" r=\"8\" fill=\"var(--cd-bg)\" stroke=\"#C9A227\" stroke-width=\"3\"></circle></svg><div class=\"cd-giris__gosterge-deger\"><div data-cg=\"rsi-deger\">")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
 					var templ_7745c5c3_Var42 string
 					templ_7745c5c3_Var42, templ_7745c5c3_Err = templ.JoinStringErrs(g.RSI)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_giris.templ`, Line: 210, Col: 22}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/cd_giris.templ`, Line: 210, Col: 42}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var42))
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 78, "</div><div class=\"cd-notr\">")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 78, "</div><div class=\"cd-notr\" data-cg=\"rsi-etiket\">")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
 					var templ_7745c5c3_Var43 string
 					templ_7745c5c3_Var43, templ_7745c5c3_Err = templ.JoinStringErrs(g.RSIEtiket)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_giris.templ`, Line: 211, Col: 44}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/cd_giris.templ`, Line: 211, Col: 65}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var43))
 					if templ_7745c5c3_Err != nil {

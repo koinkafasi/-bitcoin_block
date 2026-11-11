@@ -33,6 +33,9 @@ type CDGiris struct {
 	// Guncelleme: verinin yaşı ("3 dk önce"). "CANLI" yazmıyoruz:
 	// veri 10 dakikalık önbellekten geliyor, canlı demek yanlış olurdu.
 	Guncelleme string
+	// Cekildi fiyatın çekildiği an (UNIX). Tarayıcı "az önce" yazısını
+	// buradan hesaplar; sunucu saatiyle birlikte gönderilir (/canli/giris).
+	Cekildi int64
 
 	// BTC paneli — gerçek CoinGecko verisi.
 	BTCFiyat   string

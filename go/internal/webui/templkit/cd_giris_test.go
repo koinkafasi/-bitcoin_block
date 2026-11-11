@@ -72,8 +72,8 @@ func TestCdGirisHeroGerçekDegerleriBasar(t *testing.T) {
 	assert.Contains(t, html, ">29<", "FNG değeri")
 	assert.Contains(t, html, "Korku")
 	assert.Contains(t, html, "Aşırı Satım")
-	assert.Contains(t, html, "Dün: <b>32</b>")
-	assert.Contains(t, html, "Geçen Hafta: <b>34</b>")
+	assert.Contains(t, html, `data-cg="fng-dun">32</b>`)
+	assert.Contains(t, html, `data-cg="fng-hafta">34</b>`)
 	// Sparkline yolu SVG'ye girmeli (sunucu tarafı; JS yok).
 	assert.Contains(t, html, "M8.00 60.00L312.00 72.00")
 }
