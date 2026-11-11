@@ -15,7 +15,7 @@ kod yazıldı
    │                       Semgrep · zizmor · npm audit · cargo audit
    ├─ ci.yml / uygulama    gofmt · vet · test · derleme
    ├─ kalite.yml / lint    golangci-lint — YENİ KOD kapısı
-   ├─ kalite.yml / kapsam  test + kapsam çıtı (%17)
+   ├─ kalite.yml / kapsam  test + kapsam çıtı (%16,5)
    ├─ codeql.yml           CodeQL security-and-quality (Go, JS)
    │
    ▼
@@ -233,7 +233,7 @@ Depo **public** olduğu için CodeQL ve secret scanning ücretsizdir.
 | `golangci-lint` tam depo | 236 → **2** bulgu |
 | `golangci-lint` yeni kod | **0** |
 | Go testleri | tümü geçti |
-| Kapsam | %17,1 (çıt %17,0) |
+| Kapsam | %16,9 (çıt %16,5) |
 | SonarQube kalite kapısı | OK — 0 hata, 0 açık, 0 koku, güvenlik A |
 | zizmor | 0 bulgu (5 workflow) |
 | Action SHA doğrulaması | 23/23 geçerli |
