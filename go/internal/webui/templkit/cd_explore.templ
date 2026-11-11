@@ -102,7 +102,9 @@ templ cdExplorePanel(p CDExplorePanel) {
 							<a class="cd-explore__video" href={ v.Href }>
 								<span class="cd-explore__kucuk-gorsel">
 									if v.Image != "" {
-										<img src={ v.Image } alt="" loading="lazy" decoding="async"
+										<img src={ v.Image } srcset={ v.Srcset }
+											sizes="168px" data-yedek={ v.ImageYedek }
+											alt="" loading="lazy" decoding="async"
 											referrerpolicy="no-referrer"/>
 									}
 									if v.Sure != "" {
@@ -121,7 +123,8 @@ templ cdExplorePanel(p CDExplorePanel) {
 							<a class="cd-explore__klip" href={ k.Href }>
 								<span class="cd-explore__klip-gorsel">
 									if k.Image != "" {
-										<img src={ k.Image } alt="" loading="lazy" decoding="async"
+										<img src={ k.Image } data-yedek={ k.ImageYedek }
+											alt="" loading="lazy" decoding="async"
 											referrerpolicy="no-referrer"/>
 									}
 									<span class="cd-explore__oynat" aria-hidden="true">

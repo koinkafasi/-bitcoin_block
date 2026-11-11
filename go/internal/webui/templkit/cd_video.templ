@@ -46,7 +46,10 @@ templ cdVPlayer(v CDVideoHero, dikey bool) {
 			     fare hareketini biz yakalarız. -->
 			<div class="cd-vplayer__katman" data-cd-katman aria-hidden="true"></div>
 			if v.Image != "" {
-				<img class="cd-vplayer__kapak" data-cd-kapak src={ v.Image } alt=""
+				<!-- Poster: yüksek çözünürlük + yedek zinciri (maxres 404 ise
+				     sddefault → hqdefault). -->
+				<img class="cd-vplayer__kapak" data-cd-kapak src={ v.Image }
+					data-yedek={ v.ImageYedek } alt=""
 					loading="eager" fetchpriority="high" decoding="async"
 					referrerpolicy="no-referrer"/>
 			}
@@ -314,7 +317,7 @@ templ CDVideoPageView(v CDVideoPage) {
 	<html lang="tr">
 		<head>
 			@cdHead(CDHead{Title: v.Title, Desc: v.Desc, Canonical: v.Canonical,
-				OGType: "website", Image: v.Hero.Image, SiteName: v.Shell.SiteName,
+				OGType: "website", Image: v.Hero.Image, SiteName: v.Shell.SiteName, FaviconURL: v.Shell.FaviconURL,
 				RSSFeed: "/rss.xml", JSONLD: v.JSONLD})
 		</head>
 		<body class="cd">
@@ -395,7 +398,7 @@ templ CDVideoWatchView(v CDVideoWatch) {
 	<html lang="tr">
 		<head>
 			@cdHead(CDHead{Title: v.Title, Desc: v.Desc, Canonical: v.Canonical,
-				OGType: "video.other", Image: v.Video.Image, SiteName: v.Shell.SiteName,
+				OGType: "video.other", Image: v.Video.Image, SiteName: v.Shell.SiteName, FaviconURL: v.Shell.FaviconURL,
 				RSSFeed: "/rss.xml", JSONLD: v.JSONLD})
 		</head>
 		<body class="cd">
@@ -467,12 +470,15 @@ templ cdCanliModul(c CDCanli) {
 	if c.VideoID != "" || c.Href != "" {
 		<section class="cd-ray cd-canli">
 			<a class="cd-ray__bas" href={ c.Href }>
+				@cdBasSimge()
 				Canlı Yayın
 				@cdRayOk()
 			</a>
 			<a class="cd-canli__gorsel" href={ c.Href } tabindex="-1" aria-hidden="true">
 				if c.Image != "" {
-					<img src={ c.Image } alt="" loading="eager" fetchpriority="high"
+					<!-- Kahraman görseli: yüksek çözünürlük + yedek zinciri. -->
+					<img src={ c.Image } data-yedek={ c.ImageYedek }
+						alt="" loading="eager" fetchpriority="high"
 						decoding="async" referrerpolicy="no-referrer"/>
 				}
 				if c.Canli {

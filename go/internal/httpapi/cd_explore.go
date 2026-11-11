@@ -131,12 +131,22 @@ func (s *Server) cdExploreVideolar(r *http.Request, adet int) []templkit.CDVideo
 			if etiket == "" {
 				etiket = "Video"
 			}
+			// Kapak kimlikten üretilir; DB'deki hqdefault (480×360)
+			// bulanıktı (bkz. cd_video.go aynı düzeltme).
+			img := k.Gorsel
+			if k.VideoID != "" {
+				if u := youtube.GorselURL(k.VideoID, k.Tur); u != "" {
+					img = u
+				}
+			}
 			out = append(out, templkit.CDVideo{
-				Etiket: etiket,
-				Baslik: k.Baslik,
-				Image:  k.Gorsel,
-				Href:   ytHref(k),
-				Sure:   youtube.Sure(k.SureSn),
+				Etiket:     etiket,
+				Baslik:     k.Baslik,
+				Image:      img,
+				Href:       ytHref(k),
+				Sure:       youtube.Sure(k.SureSn),
+				Srcset:     youtube.GorselSrcset(k.VideoID, k.Tur),
+				ImageYedek: youtube.GorselYedekZincir(k.VideoID, k.Tur),
 			})
 		}
 	}

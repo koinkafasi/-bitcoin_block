@@ -1645,20 +1645,34 @@ html.cd-arama-acik, html.cd-arama-acik body { overflow: hidden; }
 #cd-video-7:checked ~ .cd-video__alt .cd-video__durum-7,
 #cd-video-8:checked ~ .cd-video__alt .cd-video__durum-8 { display: inline-flex; align-items: center; }
 
-/* ---- Sağ ray: Öne Çıkan Araştırma (ölçüldü 290×503) ----
-   Dev metrik 56/56 w500, sarı zeminli 16/22 w400 başlık, 16/23 w500
-   açıklama, ince ayırıcı, 16/22 rapor adı ve 11/16 etiket pill'leri. */
+/* Sağ ray: Öne Çıkan Araştırma (ölçüldü 290×503). */
 .cd-arastirma { gap: 20px; }
 .cd-arastirma__kart {
+  position: relative;
+  overflow: hidden;
+  /* Yığın bağlamı: desen (::before, z-index -1) içeriğin ALTINDA kalır. */
+  isolation: isolate;
   display: flex;
   flex-direction: column;
   gap: 20px;
   padding: 16px;
   border: 1px solid var(--cd-border);
   border-radius: var(--cd-radius);
-  /* CoinDesk kart zemini saydam (ölçüm: rgba(0,0,0,0)); kutu yalnız
-     çizgiyle ayrılıyor. Eski surface-soft zemini kaldırıldı. */
   background: transparent;
+}
+/* DESEN (12 Kasım 2026): backs.svg mozaiği çerçevenin arka planında.
+   MASKE: SVG beyaz dolgu → renk `--cd-fg`'den gelir, iki temada doğru.
+   Opaklık düşük kaldı (metin üstünde okunabilirlik). */
+.cd-arastirma__kart::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--cd-fg);
+  -webkit-mask: url(/static/img/desen-arastirma.svg) center/cover no-repeat;
+  mask: url(/static/img/desen-arastirma.svg) center/cover no-repeat;
+  opacity: 0.11;
+  pointer-events: none;
 }
 /* Metrik + başlık + açıklama tek blok: iç aralık 10 px (ölçüldü). */
 .cd-arastirma__ust {
@@ -1666,11 +1680,8 @@ html.cd-arama-acik, html.cd-arama-acik body { overflow: hidden; }
   flex-direction: column;
   gap: 10px;
 }
-/* Metrik bloğu — CoinDesk ölçümü (6 Kasım 2026, kart 386):
-   dış kap 256×96 (margin-left -4, w-fit max-w-full); vurgu span'ı inline
-   56/26 ve sarı bant gradyanlı; sayı 56/56 w500 ls -1px; birim 18/26 w500
-   inline-block olup ALT SATIRA sarıyor. Ayrı sarı çip YOK — eski
-   `.cd-arastirma__baslik` kaldırıldı. */
+/* Metrik (ölçüldü): kap 256×96, sayı 56/56 w500 ls -1px, birim
+   18/26 w500 alt satıra sarar; sarı bant = arka plan gradyanı. */
 .cd-arastirma__metrik-kap {
   width: fit-content;
   max-width: 100%;

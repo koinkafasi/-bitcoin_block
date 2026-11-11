@@ -71,7 +71,7 @@ func ytKutu(k repo.YoutubeKayit) templkit.CDVideoKutu {
 		Baslik:     k.Baslik,
 		Image:      img,
 		Srcset:     youtube.GorselSrcset(k.VideoID, k.Tur),
-		ImageYedek: youtube.GorselYedek(k.VideoID, k.Tur),
+		ImageYedek: youtube.GorselYedekZincir(k.VideoID, k.Tur),
 		Sure:       youtube.Sure(k.SureSn),
 		Zaman:      ytZaman(k),
 		Href:       ytHref(k),
@@ -102,7 +102,7 @@ func ytSatir(k repo.YoutubeKayit) templkit.CDVideoSatir {
 		Baslik:     k.Baslik,
 		Image:      img,
 		Srcset:     youtube.GorselSrcset(k.VideoID, k.Tur),
-		ImageYedek: youtube.GorselYedek(k.VideoID, k.Tur),
+		ImageYedek: youtube.GorselYedekZincir(k.VideoID, k.Tur),
 		Sure:       youtube.Sure(k.SureSn),
 		Zaman:      ytZaman(k),
 		Href:       ytHref(k),
@@ -177,6 +177,8 @@ func ytHero(k repo.YoutubeKayit, etiket string) templkit.CDVideoHero {
 		Etiket:  etiket,
 		Href:    ytHref(k),
 		Canli:   k.Canli,
+		// Poster yüklenemezse (maxres 404) zincir devreye girer.
+		ImageYedek: youtube.GorselYedekZincir(k.VideoID, k.Tur),
 	}
 }
 
@@ -460,12 +462,28 @@ func (s *Server) cdYoutubeVideolar(r *http.Request, adet int) []templkit.CDVideo
 		if etiket == "" {
 			etiket = "Video"
 		}
+		// KAPAK: DB'deki `gorsel` DEĞİL, kimlikten üretilen yüksek
+		// çözünürlüklü adres (kullanıcı bildirimi, 12 Kasım 2026: "Öne
+		// Çıkan Araştırma'daki video kapak kalitesi çok düşük").
+		//
+		// ÖLÇÜM: DB'de kayıtlı değer çoğu kayıtta `hqdefault.jpg`
+		// (480×360); anasayfa modülü onu DOĞRUDAN basıyordu, 290×163
+		// kartta 1.8× büyütme → bulanık. Video SAYFASI (ytKutu) 11
+		// Kasım'da düzeltilmişti, anasayfa modülleri atlanmıştı.
+		img := k.Gorsel
+		if k.VideoID != "" {
+			if u := youtube.GorselURL(k.VideoID, k.Tur); u != "" {
+				img = u
+			}
+		}
 		out = append(out, templkit.CDVideo{
-			Etiket: etiket,
-			Baslik: k.Baslik,
-			Image:  k.Gorsel,
-			Href:   ytHref(k),
-			Sure:   youtube.Sure(k.SureSn),
+			Etiket:     etiket,
+			Baslik:     k.Baslik,
+			Image:      img,
+			Href:       ytHref(k),
+			Sure:       youtube.Sure(k.SureSn),
+			Srcset:     youtube.GorselSrcset(k.VideoID, k.Tur),
+			ImageYedek: youtube.GorselYedekZincir(k.VideoID, k.Tur),
 		})
 	}
 	return out
@@ -483,10 +501,19 @@ func (s *Server) cdYoutubeKlipler(r *http.Request, adet int) []templkit.CDKlip {
 	}
 	out := make([]templkit.CDKlip, 0, len(kayitlar))
 	for _, k := range kayitlar {
+		// Dikey kart: oar2 (1080×1920) → maxres → hq yedeği. DB'deki
+		// hqdefault 480×360 dikey alanda 1.4× büyütülüyordu (bulanık).
+		img := k.Gorsel
+		if k.VideoID != "" {
+			if u := youtube.GorselURL(k.VideoID, k.Tur); u != "" {
+				img = u
+			}
+		}
 		out = append(out, templkit.CDKlip{
-			Baslik: k.Baslik,
-			Image:  k.Gorsel,
-			Href:   ytHref(k),
+			Baslik:     k.Baslik,
+			Image:      img,
+			Href:       ytHref(k),
+			ImageYedek: youtube.GorselYedekZincir(k.VideoID, k.Tur),
 		})
 	}
 	return out
@@ -535,14 +562,23 @@ func (s *Server) cdYoutubeCanli(r *http.Request) templkit.CDCanli {
 	} else if zaman != "" {
 		zaman = "Son yayın · " + zaman
 	}
+	// Kapak kimlikten üretilir (DB'deki değer eski kayıtlarda hqdefault
+	// 480×360 taşıyor → kahraman kartında bulanık).
+	img := secim.Gorsel
+	if secim.VideoID != "" {
+		if u := youtube.GorselURL(secim.VideoID, secim.Tur); u != "" {
+			img = u
+		}
+	}
 	return templkit.CDCanli{
-		VideoID: secim.VideoID,
-		Baslik:  secim.Baslik,
-		Image:   secim.Gorsel,
-		Href:    "/canli-yayin",
-		Zaman:   zaman,
-		Sure:    youtube.Sure(secim.SureSn),
-		Canli:   secim.Canli,
+		VideoID:    secim.VideoID,
+		Baslik:     secim.Baslik,
+		Image:      img,
+		Href:       "/canli-yayin",
+		Zaman:      zaman,
+		Sure:       youtube.Sure(secim.SureSn),
+		Canli:      secim.Canli,
+		ImageYedek: youtube.GorselYedekZincir(secim.VideoID, secim.Tur),
 	}
 }
 

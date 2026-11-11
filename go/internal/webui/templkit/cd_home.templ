@@ -42,6 +42,7 @@ templ cdHeroSolRay(items []CDStory) {
 	if len(items) > 0 {
 		<section class="cd-ray">
 			<a class="cd-ray__bas" href="/latest-crypto-news">
+				@cdBasSimge()
 				Son Haberler
 				@cdRayOk()
 			</a>
@@ -67,6 +68,7 @@ templ cdHeroSolRay(items []CDStory) {
 templ cdDusunceModul(d CDDusunce) {
 	<section class="cd-ray cd-ray--cizgili cd-dusunce">
 		<a class="cd-ray__bas" href="/sponsored-content">
+			@cdBasSimge()
 			Düşünce Liderliği
 			@cdRayOk()
 		</a>
@@ -240,7 +242,7 @@ templ cdBasinSlider(items []CDBasin) {
 templ cdVideoModul(items []CDVideo) {
 	if len(items) > 0 {
 		<section class="cd-ray cd-video">
-			<h2 class="cd-ray__duz">Bugünün Videoları</h2>
+			<h2 class="cd-ray__duz">@cdBasSimge() Bugünün Videoları</h2>
 			<!-- Radyo düğmeleri TEK VİDEODA DA basılır: slayt görünürlüğü
 			     yalnız `#cd-video-N:checked` kuralından geliyor. Kural
 			     `len(items) > 1` iken basıldığında, tek video girdisinde
@@ -262,8 +264,22 @@ templ cdVideoModul(items []CDVideo) {
 					for _, v := range items {
 						<article class="cd-video__slayt">
 							<a class="cd-video__gorsel" href={ v.Href } tabindex="-1" aria-hidden="true">
-								<img src={ v.Image } alt="" loading="lazy" decoding="async"
-									referrerpolicy="no-referrer"/>
+								<!-- KAPAK KALİTESİ (12 Kasım 2026): src kimlikten üretilen
+								     yüksek çözünürlüklü adres (DB'deki hqdefault 480×360
+								     kartta bulanıktı). srcset varsa tarayıcı kart ölçüsüne
+								     göre seçer; `data-yedek` virgüllü ZİNCİRDİR
+								     (maxres → sd → hq), her 404'te bir sonrakine geçer. -->
+								if v.Srcset != "" {
+									<img src={ v.Image } srcset={ v.Srcset }
+										sizes="(max-width:1023px) 92vw, 290px"
+										data-yedek={ v.ImageYedek }
+										alt="" loading="lazy" decoding="async"
+										referrerpolicy="no-referrer"/>
+								} else {
+									<img src={ v.Image } data-yedek={ v.ImageYedek }
+										alt="" loading="lazy" decoding="async"
+										referrerpolicy="no-referrer"/>
+								}
 								if v.Sure != "" {
 									<span class="cd-video__sure">{ v.Sure }</span>
 								}
@@ -322,7 +338,7 @@ templ cdVideoModul(items []CDVideo) {
 templ cdArastirmaModul(items []CDArastirma) {
 	if len(items) > 0 {
 		<section class="cd-ray cd-ray--cizgili cd-arastirma">
-			<h2 class="cd-ray__duz">Öne Çıkan Araştırma</h2>
+			<h2 class="cd-ray__duz">@cdBasSimge() Öne Çıkan Araştırma</h2>
 			<!-- Tek kartta da radyo basılır — gerekçe cdVideoModul'de. -->
 			for i := range items {
 				if i == 0 {
@@ -417,6 +433,7 @@ templ cdKlipler(items []CDKlip) {
 	if len(items) > 0 {
 		<section class="cd-ray cd-ray--cizgili cd-klipler">
 			<a class="cd-ray__bas" href="/videos">
+				@cdBasSimge()
 				Bugünün Klipleri
 				@cdRayOk()
 			</a>
@@ -438,7 +455,11 @@ templ cdKlipler(items []CDKlip) {
 					for _, k := range items {
 						<a class="cd-klip" href={ k.Href }>
 							if k.Image != "" {
-								<img src={ k.Image } alt="" loading="lazy" decoding="async"
+								<!-- DİKEY KART (9:16): kapak oar2 (1080×1920).
+								     `data-yedek` zinciri oar2 → maxres → hq; oar2 her
+								     short'ta yok (ölçüldü: 404). -->
+								<img src={ k.Image } data-yedek={ k.ImageYedek }
+									alt="" loading="lazy" decoding="async"
 									referrerpolicy="no-referrer"/>
 							}
 							if k.Baslik != "" {
@@ -584,6 +605,7 @@ templ cdBloklar(sections []CDSection) {
 templ cdBlokHucre(sec CDSection) {
 	<section class="cd-blok">
 		<a class="cd-blok__bas" href={ sec.Href }>
+			@cdBasSimge()
 			{ sec.Title }
 			<svg class="cd-blok__ok" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
 				<path d="M6 3.5 10.5 8 6 12.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
@@ -675,7 +697,7 @@ templ cdIkili(yorum []CDUzman, enCok []CDStory) {
 templ cdMostRead(items []CDStory) {
 	if len(items) > 0 {
 		<section class="cd-panel">
-			<h2>En Çok Okunan</h2>
+			<h2>@cdBasSimge() En Çok Okunan</h2>
 			<div class="cd-most">
 				<div class="cd-most__kart">
 					@cdCard(items[0], false, YuvaEnCokOkunan)
@@ -704,7 +726,7 @@ templ cdMostRead(items []CDStory) {
 templ cdOpinion(items []CDUzman) {
 	if len(items) > 0 {
 		<section class="cd-panel">
-			<h2>Görüş</h2>
+			<h2>@cdBasSimge() Görüş</h2>
 			<div class="cd-opinion">
 				for i, u := range items {
 					if i == 0 {
@@ -746,10 +768,13 @@ templ CDHome(v CDHomeView) {
 		<head>
 			@cdHead(CDHead{Title: v.Title, Desc: v.Desc, Canonical: v.Canonical,
 				OGType: "website", Image: v.Lead.Image, Hreflang: v.Hreflang,
-				SiteName: v.Shell.SiteName, RSSFeed: "/rss.xml", JSONLD: v.JSONLD,
+				SiteName: v.Shell.SiteName, FaviconURL: v.Shell.FaviconURL, RSSFeed: "/rss.xml", JSONLD: v.JSONLD,
 				Locale: v.Locale, PageCategory: v.PageCategory, BaseURL: v.BaseURL,
 				ContentCategory: v.ContentCategory,
 				EkCSS: []string{"/static/cd-giris.css"},
+				// Hero'nun ışık izi katmanı. `defer` ile basılıyor;
+				// yüklenmezse CSS katmanı görünür kalır.
+				EkJS: []string{"/static/cd-giris-prizma.js"},
 				LCPGorsel: cdLCPOnYukle(v.Lead)})
 		</head>
 		<body class="cd">
@@ -806,7 +831,7 @@ templ cdNewsletter() {
 	<section class="cd-mod">
 		<div class="cd-news">
 			<div>
-				<h2>Günlük bülten</h2>
+				<h2>@cdBasSimge() Günlük bülten</h2>
 				<p class="cd-card__spot">Günün en önemli kripto haberleri, her sabah e-postanızda. Ücretsiz.</p>
 			</div>
 			<form class="cd-news__form" method="post" action="/bulten">

@@ -25,26 +25,33 @@
 (function () {
   'use strict';
 
-  // data-yedek: <img> yüklenemezse bir kez yedek adrese geç.
+  // data-yedek: <img> yüklenemezse yedek adaya geç. Değer VİRGÜLLE
+  // ayrılmış ZİNCİR olabilir ("a.jpg,b.jpg,c.jpg"); her hata bir sonrakine
+  // geçer, zincir bitince öğe gizlenir (kırık görsel simgesi kalmasın).
   //
-  // NEDEN: YouTube kapaklarında `maxresdefault.jpg` çok eski/düşük
-  // çözünürlüklü yüklemelerde 404 döner (ölçüldü). Satır içi `onerror`
-  // CSP `script-src 'self'` altında ÇALIŞMAZ; bu delege dinleyici aynı işi
-  // yapar. Yalnız BİR KEZ dener (döngüye girmesin) ve yedek de yoksa
-  // öğeyi gizler (kırık görsel simgesi kalmasın).
+  // NEDEN ZİNCİR (ölçüldü, 12 Kasım 2026): YouTube'un dikey kırpımı
+  // `oar2.jpg` HER short'ta yok (bazı kimliklerde 404). Tek kademeli yedek
+  // o short'ları 480x360 `hqdefault`'a düşürüyordu → dikey kartta 1.4x
+  // büyütme, bulanık kapak. Artık sıra: oar2 → maxres → hqdefault.
+  //
+  // Satır içi `onerror` CSP `script-src 'self'` altında ÇALIŞMAZ; bu delege
+  // dinleyici aynı işi yapar.
   document.addEventListener('error', function (e) {
     var el = e.target;
     if (!el || el.tagName !== 'IMG') return;
-    var yedek = el.getAttribute('data-yedek');
-    if (!yedek) return;
-    if (el.dataset.yedekDenendi === '1') {
+    var zincir = el.getAttribute('data-yedek');
+    if (!zincir) return;
+    var adaylar = zincir.split(',');
+    var i = parseInt(el.dataset.yedekSirasi || '0', 10);
+    if (!(i >= 0)) i = 0;
+    if (i >= adaylar.length) {
       el.style.visibility = 'hidden';
       return;
     }
-    el.dataset.yedekDenendi = '1';
+    el.dataset.yedekSirasi = String(i + 1);
     // srcset varsa kaldır: yoksa tarayıcı onu yeniden seçip 404'te ısrar eder.
     el.removeAttribute('srcset');
-    el.src = yedek;
+    el.src = adaylar[i];
   }, true); // capture: error olayı kabarmaz
 
   function htmxVar() {

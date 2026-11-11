@@ -25,6 +25,8 @@ type CDVideoHero struct {
 	// oynat" çıkar.
 	SonrakiID     string
 	SonrakiBaslik string
+	// ImageYedek poster yüklenemezse denenecek ZİNCİR (virgüllü).
+	ImageYedek string
 }
 
 // CDVideoSatir "Sıradaki" listesinin tek satırı (küçük kapak + başlık).
@@ -124,6 +126,8 @@ type CDCanli struct {
 	Zaman   string
 	Sure    string
 	Canli   bool
+	// ImageYedek kapak yüklenemezse denenecek ZİNCİR (virgüllü).
+	ImageYedek string
 }
 
 // cdVPlayerSinif oynatıcı sınıfı (dikey varyant ayrı sınıf alır).

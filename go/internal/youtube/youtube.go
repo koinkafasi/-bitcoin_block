@@ -433,20 +433,34 @@ func GorselURL(id, tur string) string {
 	return "https://i.ytimg.com/vi/" + id + "/maxresdefault.jpg"
 }
 
-// GorselYedek maxresdefault yoksa kullanılacak her zaman var olan kapak.
+// GorselYedekZincir kapak için VİRGÜLLE ayrılmış yedek zinciri.
 //
-// `data-yedek` özniteliğine yazılır; <img> hata verirse csp-delegated.js
-// bir kez bu adrese geçer (CSP `script-src 'self'` ile uyumlu, satır içi
-// onerror yok).
-func GorselYedek(id, tur string) string {
+// NEDEN ZİNCİR (ölçüldü, 12 Kasım 2026 — gerçek kimliklerle, HTTP + boyut):
+//
+//	MctQ1WmwSaA  oar2 404 (1097 B) · maxres 200 (215 KB) · hq 200
+//	AsUek7xsy9M  oar2 404           · maxres 200 (120 KB) · hq 200
+//	KfLVTp9jlyU  oar2 200 (112 KB)  · maxres 200          · hq 200
+//
+// Yani `oar2` HER short'ta YOK. Tek kademeli yedek (oar2 → hqdefault)
+// oar2'si olmayan short'u 480x360'a düşürüyordu: dikey kartta (290x516)
+// 1.4x büyütme → "kapak çok bulanık". Doğru sıra:
+//
+//	short : oar2 (1080x1920, tam 9:16) → maxresdefault (1280x720) → hqdefault
+//	diğer : maxresdefault (1280x720) → sddefault (640x480) → hqdefault
+//
+// `maxresdefault` ölçülen 7/7 videoda vardı; `hqdefault` her videoda var,
+// bu yüzden zincirin SONU hqdefault (kart asla kırık kalmaz).
+func GorselYedekZincir(id, tur string) string {
 	// Boş kimlik: adres ÜRETİLMEZ. Aksi hâlde "…/vi//hqdefault.jpg" gibi
 	// bozuk bir adres basılıyordu (test yakaladı, 11 Kasım 2026).
 	if id == "" {
 		return ""
 	}
-	// short: oar2 de 404 verirse yatay kapağa düşmek, hiç görsel
-	// göstermemekten iyidir (kart kırık kalmasın).
-	return "https://i.ytimg.com/vi/" + id + "/hqdefault.jpg"
+	taban := "https://i.ytimg.com/vi/" + id + "/"
+	if tur == "short" {
+		return taban + "maxresdefault.jpg," + taban + "hqdefault.jpg"
+	}
+	return taban + "sddefault.jpg," + taban + "hqdefault.jpg"
 }
 
 // GorselSrcset 16:9 kapak için genişlik tanımlayıcılı aday listesi.

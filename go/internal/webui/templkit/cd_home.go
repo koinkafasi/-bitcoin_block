@@ -65,6 +65,10 @@ type CDVideo struct {
 	Image  string
 	Href   string
 	Sure   string
+	// Srcset 16:9 kapak için genişlik adayları (tarayıcı seçer).
+	Srcset string
+	// ImageYedek kapak yüklenemezse denenecek adres ZİNCİRİ (virgüllü).
+	ImageYedek string
 }
 
 // CDArastirma "Öne Çıkan Araştırma" metrik kartı (sağ ray).
@@ -82,6 +86,8 @@ type CDKlip struct {
 	Baslik string
 	Image  string
 	Href   string
+	// ImageYedek dikey kart yedek ZİNCİRİ (oar2 → maxres → hq).
+	ImageYedek string
 }
 
 // CDBasin "Basın Bültenleri" slider slaytı.

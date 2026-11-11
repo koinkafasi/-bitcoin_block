@@ -49,13 +49,45 @@ func TestGorselSrcsetYalnizYatayda(t *testing.T) {
 	assert.Empty(t, GorselSrcset("", "video"))
 }
 
-func TestGorselYedekHerZamanVarOlan(t *testing.T) {
-	// maxresdefault 404 verirse hqdefault'a düşülür (her videoda var).
-	assert.Equal(t, "https://i.ytimg.com/vi/8oVvSLjkMv8/hqdefault.jpg",
-		GorselYedek("8oVvSLjkMv8", "video"))
-	assert.Equal(t, "https://i.ytimg.com/vi/iPG7pIB-P1c/hqdefault.jpg",
-		GorselYedek("iPG7pIB-P1c", "short"))
-	assert.Empty(t, GorselYedek("", "video"))
+// TestGorselYedekZinciri — YEDEK ZİNCİRİ (12 Kasım 2026).
+//
+// Kullanıcı bildirimi: "Öne Çıkan Araştırma'daki video kapak kalitesi çok
+// düşük ... sitede bunun gibi düşük çözünürlüklü resim kalmasın".
+//
+// ÖLÇÜM (gerçek kimlikler, HTTP + boyut):
+//
+//	MctQ1WmwSaA  oar2 404 (1097 B) · maxres 200 (215 KB) · hq 200 (20 KB)
+//	KfLVTp9jlyU  oar2 200 (112 KB) · maxres 200 (101 KB) · hq 200 (13 KB)
+//
+// Yani `oar2` HER short'ta YOK. Tek kademeli yedek (oar2 → hqdefault)
+// oar2'si olmayan short'u 480×360'a düşürüyordu; dikey kart 290×516 olduğu
+// için 1.4× büyütme = bulanık kapak. Zincir ifadesi bunu sabitler.
+func TestGorselYedekZinciriShortMaxresIceriyor(t *testing.T) {
+	ad := strings.Split(GorselYedekZincir("iPG7pIB-P1c", "short"), ",")
+	if len(ad) != 2 {
+		t.Fatalf("short zinciri 2 aday olmalı, %d geldi", len(ad))
+	}
+	// KRİTİK: ilk yedek maxresdefault (1280×720) olmalı, hqdefault DEĞİL.
+	assert.Contains(t, ad[0], "maxresdefault.jpg",
+		"oar2 yoksa 1280×720'ye düşülmeli; hqdefault 480×360 → bulanık")
+	// Son çare: her videoda var olan hqdefault (kart asla kırık kalmaz).
+	assert.Contains(t, ad[1], "hqdefault.jpg")
+}
+
+func TestGorselYedekZinciriYatay(t *testing.T) {
+	ad := strings.Split(GorselYedekZincir("8oVvSLjkMv8", "video"), ",")
+	if len(ad) != 2 {
+		t.Fatalf("2 aday bekleniyordu, %d geldi", len(ad))
+	}
+	assert.Contains(t, ad[0], "sddefault.jpg", "maxres yoksa 640×480")
+	assert.Contains(t, ad[1], "hqdefault.jpg")
+	assert.NotContains(t, ad[0], "maxresdefault", "zaten maxres src'de")
+}
+
+func TestGorselYedekZinciriBosKimlik(t *testing.T) {
+	// Eski hata: "…/vi//hqdefault.jpg" gibi bozuk adres basılıyordu.
+	assert.Empty(t, GorselYedekZincir("", "video"))
+	assert.Empty(t, GorselYedekZincir("", "short"))
 }
 
 func TestBuyukGorselURL(t *testing.T) {
