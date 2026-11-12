@@ -96,8 +96,14 @@ func TestCDTasarimKurallari(t *testing.T) {
 	css := cdCSS(t)
 	for _, satir := range strings.Split(css, "\n") {
 		s := strings.TrimSpace(satir)
-		if strings.HasPrefix(s, "box-shadow:") && !strings.Contains(s, "var(--cd-shadow-overlay)") {
-			t.Errorf("gölge yalnız --cd-shadow-overlay jetonuyla kullanılmalı: %s", s)
+		// Gölge yalnız jetonla verilir. İki jeton var: overlay (dar,
+		// her yöne) ve sheet (mobil alt sayfası, yukarı doğru geniş).
+		// Serbest rgba değeri yazmak yine yasak — amaç gölgelerin
+		// sayfa sayfa dağılmasını önlemek.
+		if strings.HasPrefix(s, "box-shadow:") &&
+			!strings.Contains(s, "var(--cd-shadow-overlay)") &&
+			!strings.Contains(s, "var(--cd-shadow-sheet)") {
+			t.Errorf("gölge yalnız --cd-shadow-* jetonuyla kullanılmalı: %s", s)
 		}
 	}
 	assert.Contains(t, css, "--cd-shadow-overlay: 0 0 10px rgba(0, 0, 0, 0.4)")
@@ -242,6 +248,59 @@ func TestCDOzetKutusu(t *testing.T) {
 	assert.Contains(t, blok, "border-radius: 9999px")
 	// JS'siz: <details> kullanılmalı, buton+state değil.
 	assert.Contains(t, css, ".cd-ozet[open]")
+
+	// AÇILMA ANİMASYONU — "ilk açınca renkler patlıyor" (12 Kasım 2026).
+	//
+	// KÖK NEDEN: eski animasyon `opacity: 0 → 1` idi. Gövde yarı şeffafken
+	// alttaki mavi→pembe gradient çerçeve sızıyordu (ölçüldü: 150 ms'de
+	// opacity 0.50, o karede gradient görünür). Ayrıca `translateY(-2px)`
+	// gövdeyi yukarı kaydırıp başlık satırına bindiriyordu (ölçüldü: 2 px).
+	// Çözüm: yalnız clip-path — şeffaflık yok, kayma yok.
+	i = strings.Index(css, "@keyframes cd-ozet-ac {")
+	require.GreaterOrEqual(t, i, 0, "açılma animasyonu yok")
+	kare := css[i:]
+	kare = kare[:strings.Index(kare, "}\n}")+3]
+	assert.Contains(t, kare, "clip-path: inset(0 0 100% 0)")
+	assert.Contains(t, kare, "clip-path: inset(0 0 0 0)")
+	// Yasak özellikler YORUMSUZ metinde aranır: kuralın neden böyle
+	// olduğunu anlatan yorumda "opacity" geçmesi ihlal değil.
+	kareKod := cdYorumsuz(kare)
+	assert.NotContains(t, kareKod, "opacity", "şeffaflık gradient'i sızdırıyordu")
+	assert.NotContains(t, kareKod, "translateY", "kayma başlık satırına biniyordu")
+}
+
+// TestCDOzetMobilSheet: mobilde özet ALT SHEET olarak açılır (12 Kasım 2026).
+//
+// Kullanıcı isteği: "coindesk de tıklayınca mobilde altan yukarı doğru kart
+// gibi geliyor". Masaüstü satır içi açılmaya devam eder; kırılma noktası
+// sitenin geri kalanıyla aynı (767 px).
+func TestCDOzetMobilSheet(t *testing.T) {
+	css := cdCSS(t)
+
+	// Mobil kural bloğu var olmalı.
+	i := strings.Index(css, "@media (max-width: 767px) {\n  /* Önizleme mobilde")
+	require.GreaterOrEqual(t, i, 0, "mobil özet bloğu yok")
+
+	// Sheet: sabit konum, alttan yapışık, yukarı kayan animasyon.
+	assert.Contains(t, css, ".cd-ozet[open] .cd-ozet__govde {")
+	assert.Contains(t, css, "position: fixed")
+	assert.Contains(t, css, "bottom: 0")
+	assert.Contains(t, css, "@keyframes cd-ozet-sheet")
+	assert.Contains(t, css, "from { transform: translateY(100%); }")
+
+	// Perde + tutamaç + kapat düğmesi.
+	assert.Contains(t, css, ".cd-ozet[open] .cd-ozet__perde {")
+	assert.Contains(t, css, "z-index: 90")
+	assert.Contains(t, css, "z-index: 91")
+	assert.Contains(t, css, ".cd-ozet__tutamac {")
+
+	// Açıkken arkadaki gradient çerçeve sönmeli: perdenin içinden sızıp
+	// "renkler patlıyor" görüntüsü veriyordu.
+	assert.Contains(t, css, ".cd-ozet[open] { background-image: none; }")
+	assert.Contains(t, css, ".cd-ozet[open] .cd-ozet__ic {")
+
+	// Sayfa kaymasın.
+	assert.Contains(t, css, "html.cd-ozet-kilit")
 }
 
 // TestCDEylemPilleri: 32 px yüksek, 9999 px yarıçap (spec §10.2.3).

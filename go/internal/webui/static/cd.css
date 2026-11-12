@@ -96,6 +96,9 @@
 
   
   --cd-shadow-overlay: 0 0 10px rgba(0, 0, 0, 0.4);
+  /* Alt sayfa (mobil özet kartı): yukarı doğru, geniş.
+     Overlay jetonu bu iş için fazla dar kalıyor. */
+  --cd-shadow-sheet: 0 -18px 44px rgba(0, 0, 0, .38);
 
   
   --cd-header-h: 73px;
@@ -1865,9 +1868,105 @@ html.dark .cd-google { color: var(--cd-fg); }
   background: var(--cd-muted);
 }
 @keyframes cd-ozet-ac {
-  from { opacity: 0; transform: translateY(-2px); }
-  to { opacity: 1; transform: none; }
+  from { clip-path: inset(0 0 100% 0); }
+  to { clip-path: inset(0 0 0 0); }
 }
+
+/* ---- Mobil: özet ALT SHEET olarak açılır (CoinDesk deseni) ---- */
+.cd-ozet__perde,
+.cd-ozet__sheet-bas { display: none; }
+
+@media (max-width: 767px) {
+  /* Önizleme mobilde tek satırda anlamsız kalıyordu. */
+  .cd-ozet__onizleme {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    white-space: normal;
+    text-overflow: clip;
+  }
+
+  .cd-ozet[open] { border-radius: var(--cd-radius-ozet); }
+
+  .cd-ozet[open] { background-image: none; }
+  .cd-ozet[open] .cd-ozet__ic {
+    opacity: 0;
+    visibility: hidden;
+  }
+
+  /* Perde: sayfanın kalanı karartılır ve dokunuşu yutar. */
+  .cd-ozet[open] .cd-ozet__perde {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 90;
+    background: rgba(0, 0, 0, .55);
+    animation: cd-ozet-perde 200ms ease-out;
+  }
+
+  /* Kart: ekranın altından yukarı kayar, en fazla %82 yükseklik. */
+  .cd-ozet[open] .cd-ozet__govde {
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 91;
+    max-height: 82vh;
+    padding: 0 20px calc(24px + env(safe-area-inset-bottom, 0px));
+    border-radius: 18px 18px 0 0;
+    border-top: 1px solid var(--cd-border);
+    box-shadow: var(--cd-shadow-sheet);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    animation: cd-ozet-sheet 260ms cubic-bezier(.22, .68, .28, 1);
+  }
+
+  .cd-ozet[open] .cd-ozet__govde ul {
+    padding-left: 0;
+    margin-bottom: 0;
+  }
+
+  .cd-ozet__sheet-bas { display: block; flex: none; }
+  .cd-ozet__tutamac {
+    display: block;
+    width: 38px;
+    height: 4px;
+    margin: 10px auto 4px;
+    border-radius: 999px;
+    background: var(--cd-border-strong);
+  }
+  .cd-ozet__sheet-kapat {
+    display: block;
+    width: 100%;
+    padding: 10px 0 12px;
+    border: 0;
+    border-bottom: 1px solid var(--cd-border);
+    margin-bottom: 14px;
+    background: transparent;
+    color: var(--cd-muted);
+    font: inherit;
+    font-size: 14px;
+    line-height: 20px;
+    font-weight: 600;
+    text-align: center;
+    cursor: pointer;
+  }
+}
+
+@keyframes cd-ozet-perde {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes cd-ozet-sheet {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+/* Sheet açıkken sayfa kaymasın (JS sınıfı). */
+html.cd-ozet-kilit,
+html.cd-ozet-kilit body { overflow: hidden; }
 
 .cd-source {
   margin-top: 32px;
@@ -5297,3 +5396,195 @@ html:not(.dark) .cd-kapak__harf { opacity: .3; }
   color: #1a1408;
 }
 .cd-kilit__btn--birincil:hover { filter: brightness(1.06); background: var(--cd-brand); }
+
+/* ---- yazı içi varlık rozeti ----
+   Gövdede geçen coin adının ardına eklenen küçük hap: sembol + güncel
+   fiyat + 24 saatlik değişim. Satır yüksekliğini bozmaması için
+   `vertical-align` ile oturtuluyor; metin akışını kesmiyor. */
+.cd-varlik {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  margin: 0 2px 0 6px;
+  padding: 2px 9px 3px;
+  border: 1px solid var(--cd-border);
+  border-radius: 999px;
+  background: var(--cd-surface-soft);
+  font-family: var(--cd-font);
+  font-size: .78em;
+  line-height: 1.5;
+  white-space: nowrap;
+  text-decoration: none;
+  vertical-align: baseline;
+  transition: border-color .15s ease, background .15s ease;
+}
+.cd-varlik:hover { background: var(--cd-surface-action); border-color: var(--cd-border-strong); }
+.cd-varlik__sym { font-weight: 700; color: var(--cd-fg-strong); letter-spacing: .02em; }
+.cd-varlik__fiyat { font-weight: 600; color: var(--cd-fg); font-variant-numeric: tabular-nums; }
+.cd-varlik__degisim { font-weight: 600; font-variant-numeric: tabular-nums; }
+.cd-varlik--yukselis .cd-varlik__degisim { color: var(--cd-up); }
+.cd-varlik--dusus .cd-varlik__degisim { color: var(--cd-down); }
+@media (max-width: 560px) {
+  /* Dar ekranda yüzde düşüyor: rozet satırı taşırmasın. */
+  .cd-varlik__degisim { display: none; }
+}
+
+/* ---- makale yorum bölümü ----
+   Üyelik zorunlu: oturum yoksa form yerine davet basılıyor. Yorumlar
+   "en beğenilen" sırasında; ilk yorumlar genelde en zayıf olanlar ve
+   "en yeni" sırası sayfayı onlarla açıyordu. */
+.cd-yorum {
+  margin: 40px 0 0;
+  padding-top: 28px;
+  border-top: 1px solid var(--cd-border);
+}
+.cd-yorum__baslik {
+  margin: 0 0 18px;
+  font-family: var(--cd-font);
+  font-size: clamp(18px, 2vw, 22px);
+  line-height: 1.25;
+  font-weight: 600;
+  color: var(--cd-fg-strong);
+}
+
+/* --- yazma alanı --- */
+.cd-yorum__form { margin-bottom: 26px; }
+.cd-yorum__etiket {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--cd-muted-strong);
+}
+.cd-yorum__alan {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid var(--cd-border-strong);
+  border-radius: 12px;
+  background: var(--cd-surface-soft);
+  color: var(--cd-fg);
+  font-family: inherit;
+  font-size: 15px;
+  line-height: 1.6;
+  resize: vertical;
+}
+.cd-yorum__alan:focus {
+  outline: 2px solid var(--cd-brand);
+  outline-offset: 1px;
+  border-color: transparent;
+}
+/* Bot tuzağı: ekranda yok ama `display:none` değil — bazı botlar onu
+   atlıyor. Ekran okuyucudan da gizli (aria-hidden + tabindex -1). */
+.cd-yorum__tuzak {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+.cd-yorum__eylem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 10px;
+}
+.cd-yorum__not { font-size: 12px; color: var(--cd-muted); }
+.cd-yorum__gonder {
+  margin-left: auto;
+  font-family: var(--cd-font);
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1;
+  padding: 11px 22px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--cd-brand);
+  color: #1a1408;
+  cursor: pointer;
+}
+.cd-yorum__gonder:hover { filter: brightness(1.06); }
+
+/* --- giriş daveti --- */
+.cd-yorum__davet {
+  margin-bottom: 26px;
+  padding: 20px;
+  border: 1px solid var(--cd-border);
+  border-radius: 14px;
+  background: var(--cd-surface-soft);
+  text-align: center;
+}
+.cd-yorum__davet-metin {
+  margin: 0 0 14px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--cd-fg-strong);
+}
+.cd-yorum__davet-eylem { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+.cd-yorum__btn {
+  font-family: var(--cd-font);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1;
+  padding: 11px 20px;
+  border: 1px solid var(--cd-border-strong);
+  border-radius: 999px;
+  color: var(--cd-fg);
+  text-decoration: none;
+}
+.cd-yorum__btn:hover { background: var(--cd-surface-action); }
+.cd-yorum__btn--birincil { background: var(--cd-brand); border-color: var(--cd-brand); color: #1a1408; }
+
+/* --- liste --- */
+.cd-yorum__liste, .cd-yorum__yanitlar { list-style: none; margin: 0; padding: 0; }
+.cd-yorum__oge { margin-bottom: 18px; }
+.cd-yorum__yanitlar {
+  margin: 14px 0 0 18px;
+  padding-left: 16px;
+  border-left: 2px solid var(--cd-border);
+}
+.cd-yorum__kimlik {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 6px;
+}
+.cd-yorum__harf {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--cd-surface-action);
+  font-family: var(--cd-font);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--cd-fg-strong);
+}
+.cd-yorum__ad { font-size: 14px; font-weight: 700; color: var(--cd-fg-strong); }
+.cd-yorum__zaman { font-size: 12px; color: var(--cd-muted); margin-left: auto; }
+.cd-yorum__metin {
+  margin: 0 0 8px 37px;
+  font-size: 15px;
+  line-height: 1.65;
+  color: var(--cd-fg);
+  overflow-wrap: anywhere;
+}
+.cd-yorum__begeni { margin: 0 0 0 37px; }
+.cd-yorum__begeni-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border: 1px solid var(--cd-border);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--cd-muted-strong);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.cd-yorum__begeni-btn:hover { background: var(--cd-surface-action); color: var(--cd-fg); }
+.cd-yorum__sayi { font-variant-numeric: tabular-nums; color: var(--cd-brand); }
+.cd-yorum__begeni-salt { margin-left: 37px; font-size: 12px; color: var(--cd-muted); }
