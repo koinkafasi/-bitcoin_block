@@ -165,6 +165,13 @@ func main() {
 	// olandan daha güvenilir; eşiği geçenler insan onayı beklemeden
 	// çıkabilir. Tur başına bir içerik + günlük limit ile doğal ritim.
 	go scheduler.RunOtomatikYayin(workerCtx, pool, logger, 10*time.Minute)
+	// Faz 214 — eski WordPress göçünden kalan sınır dışı SEO başlıkları.
+	// Ölçüm (13 Kasım 2026): 1491 yayın içeriğinin seo_title'ı Google'ın
+	// kestiği sınırın üstünde; 788'i 70+ karakter, en uzunu 141. Hepsi 90
+	// günden eski ve 782'sinde seo_title = title (göçte kopyalanmış).
+	// Yeni üretim sorunsuz: son haftanın 460 başlığından 458'i <=60.
+	// Bu işçi geçmişi günde 20 içerikle onarır (kırpmaz, yeniden üretir).
+	go aieditor.RunSeoOnarim(workerCtx, pool, aiclient, logger, 15*time.Minute)
 	go scheduler.RunPodcast(workerCtx, pool, logger)
 	go app.RunGazeteJobs(workerCtx, time.Minute)
 	go aieditor.StartWorker(workerCtx, pool, aiclient, logger, time.Second)
