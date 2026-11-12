@@ -13,7 +13,7 @@ package templkit
 templ CDArticle(v CDArticleView) {
 	<!doctype html>
 	// Dil sabit değil: İngilizce içerik <html lang="tr"> ile basılıyordu.
-	<html lang="tr">
+	<html lang={ cdDilKodu(v.Locale) }>
 		<head>
 			@cdHead(CDHead{Title: v.Title, Desc: v.Desc, Canonical: v.Canonical,
 				OGType: "article", Image: v.Image, ImageAlt: v.ImageAlt,
@@ -209,6 +209,24 @@ templ CDArticle(v CDArticleView) {
 					// ABONELİK KİLİDİ: gövde yukarıda kesildi, devamı burada
 					// isteniyor. Kutu gövdenin hemen ardında duruyor ki
 					// kesilen metinle arasında kopukluk olmasın.
+					if v.Kilitli {
+						<aside class="cd-kilit" aria-labelledby="cd-kilit-bas">
+							<span class="cd-kilit__rozet">Abonelere özel</span>
+							<h2 class="cd-kilit__baslik" id="cd-kilit-bas">Yazının devamı abonelere açık</h2>
+							if v.KilitKatman != "" {
+								<p class="cd-kilit__metin">
+									Bu içeriği okumak için <strong>{ v.KilitKatman }</strong> ve üzeri bir aboneliğiniz olması gerekiyor.
+								</p>
+							} else {
+								<p class="cd-kilit__metin">Bu içeriği okumak için aboneliğiniz olması gerekiyor.</p>
+							}
+							<div class="cd-kilit__eylem">
+								<a class="cd-kilit__btn cd-kilit__btn--birincil" href="/abonelik">Abonelik seçeneklerine bak</a>
+								<a class="cd-kilit__btn" href="/giris?redirect=abonelik">Zaten aboneyim, giriş yap</a>
+							</div>
+						</aside>
+					}
+
 										// Kaynak atfı: toplayıcı sitede ZORUNLU ve görünür
 					if v.SourceName != "" {
 						<div class="cd-source">
@@ -266,6 +284,7 @@ templ CDArticle(v CDArticleView) {
 
 				// Yorumlar ilgili haberlerden ÖNCE: okuyucu yazıyı bitirince
 				// önce tartışmayı görsün, sonra başka yazıya geçsin.
+				@cdYorumBolumu(v.Yorum)
 
 				if len(v.Related) > 0 {
 					<section class="cd-mod">

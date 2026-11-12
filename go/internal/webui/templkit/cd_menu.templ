@@ -99,7 +99,7 @@ templ cdMenuSutun(s CDShell, sut CDMenuColumn) {
 		<ul class="cd-mega__sutun">
 			for _, it := range sut.Items {
 				if it.Kind == "baslik" {
-					<li class="cd-mega__baslik">@cdBasSimge() { it.Label }</li>
+					<li class="cd-mega__baslik"><span class="cd-vurgu">{ it.Label }</span></li>
 				} else if it.Kind == "tumu" {
 					<li class="cd-mega__tumu">
 						<a href={ templ.SafeURL(s.LangBase + it.Href) }>{ it.Label }</a>

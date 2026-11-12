@@ -470,8 +470,7 @@ templ cdCanliModul(c CDCanli) {
 	if c.VideoID != "" || c.Href != "" {
 		<section class="cd-ray cd-canli">
 			<a class="cd-ray__bas" href={ c.Href }>
-				@cdBasSimge()
-				Canlı Yayın
+								<span class="cd-vurgu">Canlı Yayın</span>
 				@cdRayOk()
 			</a>
 			<a class="cd-canli__gorsel" href={ c.Href } tabindex="-1" aria-hidden="true">

@@ -1,0 +1,36 @@
+# bitcosar için ayrı namespace.
+#
+# Küme tek düğümlü ve üzerinde başka üretim yükleri var (bitcosar/wordpress,
+# supabase, ibrahimcosar, omniroute). Hiçbirine dokunulmuyor; bitcosar
+# tamamen kendi namespace'inde duruyor.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: bitcosar-site
+  labels:
+    app.kubernetes.io/part-of: bitcosar
+
+---
+# Namespace genelinde kaynak tavanı: bitcosar yanlış yapılandırılsa bile
+# düğümdeki diğer yükleri aç bırakamaz.
+#
+# Ölçüm (2026-11-04): düğüm 6 CPU / 11.3Gi allocatable, gerçek kullanım
+# 3.5Gi (%31). Aşağıdaki tavan en kötü durumda ~3.4Gi ekler.
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: bitcosar-kota
+  namespace: bitcosar-site
+spec:
+  hard:
+    # Gerçek koruma REQUESTS tarafıdır: planlayıcı bunları düğümden ayırır.
+    # Ölçülen toplam istek 425m / 1216Mi, yani aşağıdaki tavanın çok altında.
+    requests.cpu: "2"
+    requests.memory: 2Gi
+    # Limit toplamı: postgres 2 + site 2 + image-svc 1 + search-svc 1
+    #              + redis 0.5 + collab 0.5 = 7 CPU.
+    # CPU sıkıştırılabilir bir kaynaktır (aşılırsa kısılır, OOM olmaz),
+    # bu yüzden limitlerin düğüm çekirdeğini aşması sorun değil.
+    limits.cpu: "8"
+    limits.memory: 4Gi
+    persistentvolumeclaims: "6"

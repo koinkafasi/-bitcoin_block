@@ -204,6 +204,9 @@ type IcerikFormView struct {
 	AiScore       string
 	CommentAcik   bool
 	IsExclusive   bool
+	// ImageGrayscale: kapak görseli LİSTELERDE siyah-beyaz basılır,
+	// yazı sayfasında renkli kalır.
+	ImageGrayscale bool
 	MinTierWeight int
 	SourceURL     string
 	SourceName    string
@@ -1178,6 +1181,7 @@ templ IcerikFormPanel(v IcerikFormView) {
 						<label>Abonelik kilidi</label>
 						<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
 							<label class="tag" style="cursor:pointer"><input type="checkbox" name="is_exclusive" checked?={ v.IsExclusive }/> <svg class="ti ti-metin" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-lock"></use></svg> Abonelere özel</label>
+							<label class="tag" style="cursor:pointer" title="Görsel ana sayfada ve listelerde siyah-beyaz görünür; yazı sayfasında renkli açılır"><input type="checkbox" name="image_grayscale" checked?={ v.ImageGrayscale }/> <svg class="ti ti-metin" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-contrast"></use></svg> Listelerde siyah-beyaz</label>
 							<label class="small">Asgari katman
 								<select class="input" name="min_tier_weight" style="max-width:220px">
 									<option value="1" selected?={ v.MinTierWeight == 1 }>Filiz (1) ve üzeri</option>
@@ -1332,6 +1336,7 @@ templ IcerikFormPanel(v IcerikFormView) {
 									<input id="f_seo_baslik" class="input" name="seo_baslik" value={ v.SeoTitle } data-src="seo_title"/>
 									<button type="button" class="btn ghost small" data-ai="seo_title" data-from="#f_title" data-target="[name=seo_baslik]" data-id={ v.ContentID } hx-vals={ v.SeoTitleVals } hx-include="#f_title" hx-swap="none" hx-indicator="#ai-durum" aria-label="AI ile SEO başlığı öner" title="AI ile öner"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-sparkles"></use></svg></button>
 								</div>
+								<div class="hint" id="seoBaslikSayac" aria-live="polite"></div>
 							</div>
 							<div class="field">
 								<label for="f_seo_aciklama">Meta Açıklama</label>
@@ -1339,6 +1344,7 @@ templ IcerikFormPanel(v IcerikFormView) {
 									<textarea id="f_seo_aciklama" class="textarea" name="seo_aciklama" style="min-height:60px" data-src="seo_desc">{ v.SeoDesc }</textarea>
 									<button type="button" class="btn ghost small" data-ai="seo_description" data-from="#f_spot" data-target="[name=seo_aciklama]" data-id={ v.ContentID } hx-vals={ v.SeoDescVals } hx-include="#f_spot" hx-swap="none" hx-indicator="#ai-durum" aria-label="AI ile SEO açıklaması öner" title="AI ile öner"><svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-sparkles"></use></svg></button>
 								</div>
+								<div class="hint" id="seoAciklamaSayac" aria-live="polite"></div>
 							</div>
 							<div class="serp">
 								<div class="u" data-bind="url">{ v.SiteLabel() }</div>

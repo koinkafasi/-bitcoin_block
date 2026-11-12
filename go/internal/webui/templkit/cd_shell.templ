@@ -597,8 +597,7 @@ templ cdBasSimge() {
 templ cdSectionHead(title, href string) {
 	<div class="cd-section-head">
 		<h2>
-			@cdBasSimge()
-			{ title }
+						<span class="cd-vurgu">{ title }</span>
 		</h2>
 		if href != "" {
 			<a href={ href }>Tümü →</a>

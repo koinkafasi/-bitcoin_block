@@ -3,6 +3,7 @@ package httpapi
 import (
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"theblock/site/internal/webui/templkit"
@@ -26,6 +27,13 @@ func aiKaynakViewFrom(a *aiSourceData, fl *flashMsg) templkit.AIKaynakView {
 	v := templkit.AIKaynakView{FlashKind: kind, FlashText: text}
 	if a == nil {
 		return v
+	}
+	v.AISaglayici = a.AISaglayici
+	if a.CeviriBekleyen > 0 {
+		v.CeviriBekleyen = strconv.Itoa(a.CeviriBekleyen)
+	}
+	if a.CeviriHatali > 0 {
+		v.CeviriHatali = strconv.Itoa(a.CeviriHatali)
 	}
 	v.TotalItems = strconv.Itoa(a.TotalItems)
 	v.ClusterCount = strconv.Itoa(len(a.Clusters))
@@ -88,6 +96,18 @@ func aiKaynakViewFrom(a *aiSourceData, fl *flashMsg) templkit.AIKaynakView {
 			Aktif:        f.Aktif,
 			LastStatus:   f.LastStatus,
 			LastError:    f.LastError,
+			Dil:          strings.ToUpper(f.Dil),
+			OtomatikKapandi: f.OtomatikKapandi,
+			KapanmaNedeni:   feedKapanmaNedeni(f.Notes),
+		}
+		if f.GorselOran != nil {
+			row.GorselOran = strconv.Itoa(*f.GorselOran)
+		}
+		if f.LastOkAt != nil {
+			row.SonBasari = f.LastOkAt.Local().Format("02.01 15:04")
+		}
+		if f.ArdisikHata > 0 {
+			row.ArdisikHata = strconv.Itoa(f.ArdisikHata)
 		}
 		if f.LastCheckedAt != nil {
 			row.LastChecked = f.LastCheckedAt.Local().Format("02.01 15:04")
@@ -179,4 +199,23 @@ func (s *Server) renderAISohbetPanelV2(w http.ResponseWriter, r *http.Request, d
 
 func (s *Server) renderAISohbetPageV2(w http.ResponseWriter, r *http.Request, d *tmplData) {
 	s.renderTemplPage(w, r, d, templkit.AISohbetPanel(aiSohbetViewFrom(d.AISohbet, d.Flash)))
+}
+
+// feedKapanmaNedeni notes alanından kısa etiket çıkarır.
+//
+// Kapalı bir kaynağın NEDEN kapalı olduğu listede görünmüyordu:
+// 12 Kasım 2026 denetiminde 22 kapalı kaynağın hangisinin sağlam,
+// hangisinin bozuk olduğu ancak tek tek çekilerek anlaşılabildi.
+func feedKapanmaNedeni(notes string) string {
+	switch {
+	case strings.HasPrefix(notes, "KONU DISI"):
+		return "konu dışı"
+	case strings.HasPrefix(notes, "BOZUK"):
+		return "bozuk"
+	case strings.Contains(notes, "bot korumasi"):
+		return "bot koruması"
+	case strings.Contains(notes, "ACILABILIR"):
+		return "açılabilir"
+	}
+	return ""
 }

@@ -166,7 +166,7 @@ templ cdTagSatir(s CDStory) {
 			}
 		</div>
 		if s.Image != "" {
-			<a class="cd-tag-satir__gorsel" href={ s.Href } tabindex="-1" aria-hidden="true">
+			<a class={ cdGriSinif("cd-tag-satir__gorsel", s.Gri) } href={ s.Href } tabindex="-1" aria-hidden="true">
 				@cdGorselImg(s.Image, YuvaKatSatir, false)
 			</a>
 		}

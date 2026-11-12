@@ -1,6 +1,7 @@
 package httpapi
 
 import (
+	"context"
 	"html/template"
 	"net/http"
 	"strconv"
@@ -12,7 +13,7 @@ import (
 
 // iceriklerViewFromContents contentsData → templkit.IceriklerView eşlemesi.
 // Eski contents_panel şablonunun veri bağlamına birebir karşılık üretir.
-func (s *Server) iceriklerViewFromContents(c *contentsData) templkit.IceriklerView {
+func (s *Server) iceriklerViewFromContents(ctx context.Context, c *contentsData) templkit.IceriklerView {
 	eksenler := c.Eksenler
 	v := templkit.IceriklerView{
 		Status:      c.Status,
@@ -52,6 +53,19 @@ func (s *Server) iceriklerViewFromContents(c *contentsData) templkit.IceriklerVi
 			Selected: c.Kategori == cat.ID,
 			Nested:   strVal(cat.ParentSlug) != "",
 		})
+	}
+	// Toplu erişim ayarı için abonelik kademeleri. Liste veritabanından
+	// geliyor; kademe adları değiştirilebildiği için sabitlenemez.
+	if kademeler, err := repo.ListTiers(ctx, s.pool, true); err == nil {
+		for _, k := range kademeler {
+			if k.Weight <= 0 {
+				continue // ağırlıksız kademe kilit anlamına gelmiyor
+			}
+			v.Kademeler = append(v.Kademeler, templkit.IFiltre{
+				Value: strconv.Itoa(k.Weight),
+				Label: k.Name,
+			})
+		}
 	}
 	v.Gunler = []templkit.IFiltre{
 		{Value: "", Label: "Tüm zamanlar", Selected: c.Gun == 0},
@@ -158,7 +172,7 @@ func (s *Server) iceriklerViewFromContents(c *contentsData) templkit.IceriklerVi
 
 // renderIceriklerPanel içerik listesi panelini (templ) HTMX fragment'ı olarak yazar.
 func (s *Server) renderIceriklerPanel(w http.ResponseWriter, r *http.Request, d *tmplData) {
-	v := s.iceriklerViewFromContents(d.Contents)
+	v := s.iceriklerViewFromContents(r.Context(), d.Contents)
 	if d.Flash != nil {
 		v.FlashKind = d.Flash.Kind
 		v.FlashText = d.Flash.Text
@@ -176,7 +190,7 @@ func (s *Server) renderIceriklerPanel(w http.ResponseWriter, r *http.Request, d 
 
 // renderIceriklerPage içerik listesini tam sayfa (admin kabuğu + panel) yazar.
 func (s *Server) renderIceriklerPage(w http.ResponseWriter, r *http.Request, d *tmplData) {
-	v := s.iceriklerViewFromContents(d.Contents)
+	v := s.iceriklerViewFromContents(r.Context(), d.Contents)
 	if d.Flash != nil {
 		v.FlashKind = d.Flash.Kind
 		v.FlashText = d.Flash.Text

@@ -109,14 +109,19 @@
     if (!serit || !liste) return;
     for (var i = 0; i < liste.length; i++) {
       var it = liste[i];
-      var k = serit.querySelector('[data-cg-sym="' + it.sym + '"]');
-      if (!k) continue;
-      yaz($('.cd-ticker__px', k), it.fiyat);
-      var ch = $('.cd-up, .cd-down', k);
-      if (ch) {
-        yaz(ch, it.degisim);
-        ch.classList.toggle('cd-up', !!it.up);
-        ch.classList.toggle('cd-down', !it.up);
+      // Şerit kalemleri İKİ kez basılıyor (kesintisiz akış için kopya).
+      // Tek eşleşme güncellenirse kopya takım eski fiyatta kalır ve
+      // döngüde fiyat zıplar; bu yüzden HEPSİ güncellenir.
+      var kalemler = serit.querySelectorAll('[data-cg-sym="' + it.sym + '"]');
+      for (var j = 0; j < kalemler.length; j++) {
+        var k = kalemler[j];
+        yaz($('.cd-ticker__px', k), it.fiyat);
+        var ch = $('.cd-up, .cd-down', k);
+        if (ch) {
+          yaz(ch, it.degisim);
+          ch.classList.toggle('cd-up', !!it.up);
+          ch.classList.toggle('cd-down', !it.up);
+        }
       }
     }
   }

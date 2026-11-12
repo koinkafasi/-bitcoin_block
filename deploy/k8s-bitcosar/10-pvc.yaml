@@ -1,0 +1,69 @@
+# Kalıcı diskler.
+#
+# StorageClass `local-path` (küme varsayılanı): tek düğümde node diskine
+# yazar, ReclaimPolicy=Retain, WaitForFirstConsumer ve
+# ALLOWVOLUMEEXPANSION=false.
+#
+# Genişletme KAPALI olduğu için boyutlar baştan bol seçildi — sonradan
+# büyütmek yeni PVC + kopyalama demek. Düğümde 415Gi efemeral alan var.
+#
+# Mevcut boyutlar (2026-11-04 ölçümü):
+#   postgres veritabanı  409 MB
+#   storage/             276 MB   (media 230M, gazete 33M, logos 15M)
+#   storage-private/      23 MB
+#   arama indeksi        (yeniden üretilebilir)
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: bitcosar-pgdata
+  namespace: bitcosar-site
+spec:
+  accessModes: [ReadWriteOnce]
+  storageClassName: local-path
+  resources:
+    requests:
+      storage: 40Gi
+
+---
+# storage/ ve storage-private/ aynı PVC'de: kod ikincisini birincinin
+# kardeşi olarak türetiyor (internal/platform/storage.go).
+# Yalnız `site` pod'u bağlar — image-svc görselleri HTTP gövdesinde alır,
+# diske erişmez.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: bitcosar-media
+  namespace: bitcosar-site
+spec:
+  accessModes: [ReadWriteOnce]
+  storageClassName: local-path
+  resources:
+    requests:
+      storage: 60Gi
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: bitcosar-search-index
+  namespace: bitcosar-site
+spec:
+  accessModes: [ReadWriteOnce]
+  storageClassName: local-path
+  resources:
+    requests:
+      storage: 10Gi
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: bitcosar-redis
+  namespace: bitcosar-site
+spec:
+  accessModes: [ReadWriteOnce]
+  storageClassName: local-path
+  resources:
+    requests:
+      storage: 5Gi

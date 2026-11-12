@@ -1,0 +1,209 @@
+package templkit
+
+// Yazar dizini (/yazarlar) ve yazar profili (/yazar/{slug}) — CoinDesk
+// düzeniyle (referans: coindesk.com/author/will-canny, 12 Kasım 2026).
+//
+// DÜZEN: profil sayfasında üstte kimlik bloğu (avatar + ad + unvan + kısa
+// biyografi + sosyal bağlantı), altında "Son yazılar" başlıklı tek sütun
+// akış. Akış satırları makale sayfasıyla aynı dil: kategori etiketi, başlık,
+// spot, göreli zaman ve sağda küçük kapak.
+
+// CDYazarKart dizindeki tek yazar.
+type CDYazarKart struct {
+	Ad         string
+	Unvan      string
+	Bio        string
+	Href       string
+	AvatarURL  string
+	BasHarf    string
+	YaziSayisi int
+}
+
+// CDSosyalBag tek sosyal bağlantı (X, LinkedIn, web…).
+type CDSosyalBag struct {
+	Ad   string
+	Href string
+}
+
+// CDYazarlarPage /yazarlar verisi.
+type CDYazarlarPage struct {
+	Shell           CDShell
+	Title           string
+	Desc            string
+	Canonical       string
+	Kisiler         []CDYazarKart
+	PageCategory    string
+	ContentCategory string
+	Locale          string
+	BaseURL         string
+}
+
+// CDYazarPage /yazar/{slug} verisi.
+type CDYazarPage struct {
+	Shell           CDShell
+	Title           string
+	Desc            string
+	Canonical       string
+	Ad              string
+	Unvan           string
+	Bio             string
+	AvatarURL       string
+	BasHarf         string
+	YaziSayisi      int
+	Sosyal          []CDSosyalBag
+	Yazilar         []CDStory
+	BosMetin        string
+	OncekiURL       string
+	SonrakiURL      string
+	JSONLD          string
+	Image           string
+	PageCategory    string
+	ContentCategory string
+	Locale          string
+	BaseURL         string
+}
+
+templ CDYazarlarPageView(v CDYazarlarPage) {
+	<!doctype html>
+	<html lang="tr">
+		<head>
+			@cdHead(CDHead{Title: v.Title, Desc: v.Desc, Canonical: v.Canonical,
+				OGType: "website", SiteName: v.Shell.SiteName, FaviconURL: v.Shell.FaviconURL,
+				RSSFeed: "/rss.xml", Locale: v.Locale, PageCategory: v.PageCategory,
+				BaseURL: v.BaseURL, ContentCategory: v.ContentCategory,
+				EkCSS: []string{"/static/cd-yazar.css"}})
+		</head>
+		<body class="cd">
+			@cdTopbar(v.Shell)
+			@cdTicker(v.Shell)
+			<main class="cd-wrap">
+				<div class="cd-yzl">
+					<header class="cd-yzl-bas">
+						<p class="cd-yzl-etiket">Ekip</p>
+						<h1 class="cd-yzl-h1">Yazarlar ve Editörler</h1>
+						<p class="cd-yzl-aciklama">Haberleri kaleme alan yazarlar, muhabirler ve editörler.</p>
+					</header>
+					if len(v.Kisiler) == 0 {
+						<p class="cd-yzp-bos">Yazar listesi şu an alınamıyor.</p>
+					} else {
+						<div class="cd-yzl-izgara">
+							for _, k := range v.Kisiler {
+								<a class="cd-yzl-kart" href={ templ.SafeURL(k.Href) }>
+									@cdYazarAvatar(k.AvatarURL, k.BasHarf, k.Ad, "cd-yzl-kart__avatar")
+									<div class="cd-yzl-kart__govde">
+										<h2 class="cd-yzl-kart__ad">{ k.Ad }</h2>
+										if k.Unvan != "" {
+											<p class="cd-yzl-kart__unvan">{ k.Unvan }</p>
+										}
+										if k.Bio != "" {
+											<p class="cd-yzl-kart__bio">{ k.Bio }</p>
+										}
+										if k.YaziSayisi > 0 {
+											<p class="cd-yzl-kart__sayi">{ k.YaziSayisi } yazı</p>
+										}
+									</div>
+								</a>
+							}
+						</div>
+					}
+				</div>
+			</main>
+			@cdFooter(v.Shell)
+		</body>
+	</html>
+}
+
+templ CDYazarPageView(v CDYazarPage) {
+	<!doctype html>
+	<html lang="tr">
+		<head>
+			@cdHead(CDHead{Title: v.Title, Desc: v.Desc, Canonical: v.Canonical,
+				OGType: "profile", Image: v.Image, ImageAlt: v.Ad,
+				SiteName: v.Shell.SiteName, FaviconURL: v.Shell.FaviconURL,
+				RSSFeed: "/rss.xml", JSONLD: v.JSONLD, Locale: v.Locale,
+				PageCategory: v.PageCategory, BaseURL: v.BaseURL,
+				ContentCategory: v.ContentCategory,
+				EkCSS: []string{"/static/cd-yazar.css"}})
+		</head>
+		<body class="cd">
+			@cdTopbar(v.Shell)
+			@cdTicker(v.Shell)
+			<main class="cd-wrap">
+				<div class="cd-yzp">
+					<header class="cd-yzp-kimlik">
+						<div class="cd-yzp-metin">
+							<h1 class="cd-yzp-ad">{ v.Ad }</h1>
+							if v.Unvan != "" {
+								<p class="cd-yzp-unvan">{ v.Unvan }</p>
+							}
+							if v.Bio != "" {
+								<p class="cd-yzp-bio">{ v.Bio }</p>
+							}
+							if len(v.Sosyal) > 0 {
+								<div class="cd-yzp-sosyal">
+									for _, s := range v.Sosyal {
+										<a href={ templ.SafeURL(s.Href) } rel="nofollow noopener" target="_blank">{ s.Ad }</a>
+									}
+								</div>
+							}
+						</div>
+						<div class="cd-yzp-gorsel">
+							@cdYazarAvatar(v.AvatarURL, v.BasHarf, v.Ad, "cd-yzp-avatar")
+						</div>
+					</header>
+					<section class="cd-yzp-akis" aria-labelledby="cd-yzp-akis-baslik">
+						<h2 class="cd-yzp-akis-baslik" id="cd-yzp-akis-baslik">Son yazılar</h2>
+						if len(v.Yazilar) == 0 {
+							<p class="cd-yzp-bos">{ v.BosMetin }</p>
+						} else {
+							for _, y := range v.Yazilar {
+								@CDYazarSatir(y)
+							}
+						}
+						if v.OncekiURL != "" || v.SonrakiURL != "" {
+							<nav class="cd-yzp-sayfalama" aria-label="Sayfalar">
+								if v.OncekiURL != "" {
+									<a class="cd-yzp-sayfa-dugme" href={ templ.SafeURL(v.OncekiURL) } rel="prev">Önceki</a>
+								}
+								if v.SonrakiURL != "" {
+									<a class="cd-yzp-sayfa-dugme" href={ templ.SafeURL(v.SonrakiURL) } rel="next">Sonraki</a>
+								}
+							</nav>
+						}
+					</section>
+				</div>
+			</main>
+			@cdFooter(v.Shell)
+		</body>
+	</html>
+}
+
+templ CDYazarSatir(y CDStory) {
+	<a class={ "cd-yzp-satir", templ.KV("cd-yzp-satir--gorselsiz", y.Image == "") } href={ templ.SafeURL(y.Href) }>
+		<div class="cd-yzp-satir__metin">
+			if y.Kicker != "" {
+				<span class="cd-yzp-satir__kategori">{ y.Kicker }</span>
+			}
+			<h3 class="cd-yzp-satir__baslik">{ y.Title }</h3>
+			if y.Spot != "" {
+				<p class="cd-yzp-satir__spot">{ y.Spot }</p>
+			}
+			if y.Time != "" {
+				<span class="cd-yzp-satir__zaman">{ y.Time }</span>
+			}
+		</div>
+		<div class="cd-yzp-satir__gorsel">
+			if y.Image != "" {
+				<img class="cd-yzp-satir__kapak" src={ templ.SafeURL(y.Image) } alt="" loading="lazy" decoding="async"/>
+			}
+		</div>
+	</a>
+}
+
+templ cdYazarAvatar(url, harf, ad, sinif string) {
+	if url != "" {
+		<img class={ sinif } src={ templ.SafeURL(url) } alt={ ad } loading="lazy" decoding="async"/>
+	} else {
+		<span class={ sinif, "cd-yzl-harf" } aria-hidden="true">{ harf }</span>
+	}
+}

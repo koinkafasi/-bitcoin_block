@@ -155,7 +155,12 @@ templ cdHead(h CDHead) {
 			<link rel="alternate" hreflang={ dil } href={ url }/>
 		}
 	}
-	<link rel="alternate" hreflang="x-default" href={ h.Canonical }/>
+	// x-default: dil eşleşmesi kurulamayan ziyaretçinin gideceği sürüm.
+	// Tüm dil sürümlerinde AYNI adresi göstermeli — sitenin ana dili
+	// Türkçe olduğu için TR sürümü. Eskiden her sayfa kendi kanonik
+	// adresini basıyordu: İngilizce sayfa x-default'u kendisi diye
+	// bildiriyor, Türkçe sayfa da kendisi diyordu (çelişki).
+	<link rel="alternate" hreflang="x-default" href={ cdXDefault(h) }/>
 
 	<meta property="og:site_name" content={ h.SiteName }/>
 	<meta property="og:locale" content={ cdOGDil(h.Locale) }/>

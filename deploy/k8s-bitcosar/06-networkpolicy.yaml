@@ -1,0 +1,235 @@
+# Ağ politikaları — "varsayılan reddet" modeli.
+#
+# NEDEN: bugün her pod her pod'a konuşabiliyor. Bir saldırgan `site`
+# container'ına girdiğinde postgres'e, redis'e, mikroservislere doğrudan
+# erişir. Segmentasyon, yatay hareketi durdurur (defense in depth).
+#
+# MODEL:
+#   1) `varsayilan-reddet` — bitcosar namespace'inde TÜM giriş/çıkış yasak.
+#   2) Her servis için YALNIZ gereken akışı açan politika.
+#
+# DNS İSTİSNASI ZORUNLU: politika `Egress` seçerse DNS çözümlemesi de
+# kapanır ve her şey "name resolution failed" verir. Bu, ağ politikasının
+# en sık tuzağı — bu yüzden DNS ayrı ve en üstte.
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: varsayilan-reddet
+  namespace: bitcosar-site
+spec:
+  podSelector: {}
+  policyTypes: [Ingress, Egress]
+---
+# DNS: her pod kube-dns'e sorabilmeli (UDP+TCP 53).
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: dns-izin
+  namespace: bitcosar-site
+spec:
+  podSelector: {}
+  policyTypes: [Egress]
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+      ports:
+        - { protocol: UDP, port: 53 }
+        - { protocol: TCP, port: 53 }
+---
+# INGRESS CONTROLLER -> site / collab
+# Traefik ingress controller'dan gelen HTTP ve WebSocket.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: ingress-site
+  namespace: bitcosar-site
+spec:
+  podSelector:
+    matchLabels: { app: bitcosar-site }
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+      ports:
+        - { protocol: TCP, port: 8070 }
+    # Yedek Job'ı site'ın /data'sını okur mu? Hayır — yedek ayrı PVC
+    # kullanıyor. site'a içeriden erişim yalnız aşağıdaki iki servis.
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: ingress-collab
+  namespace: bitcosar-site
+spec:
+  podSelector:
+    matchLabels: { app: bitcosar-collab }
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+      ports:
+        - { protocol: TCP, port: 1234 }
+    # site'ın kendi sunucusu collab'a bağlanır (canlı düzenleme köprüsü).
+    - from:
+        - podSelector:
+            matchLabels: { app: bitcosar-site }
+      ports:
+        - { protocol: TCP, port: 1234 }
+---
+# SITE -> postgres / redis / image-svc / search-svc / collab
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: site-cikis
+  namespace: bitcosar-site
+spec:
+  podSelector:
+    matchLabels: { app: bitcosar-site }
+  policyTypes: [Egress]
+  egress:
+    - to:
+        - podSelector:
+            matchLabels: { app: bitcosar-postgres }
+      ports: [{ protocol: TCP, port: 5432 }]
+    - to:
+        - podSelector:
+            matchLabels: { app: bitcosar-redis }
+      ports: [{ protocol: TCP, port: 6379 }]
+    - to:
+        - podSelector:
+            matchLabels: { app: bitcosar-image-svc }
+      ports: [{ protocol: TCP, port: 8170 }]
+    - to:
+        - podSelector:
+            matchLabels: { app: bitcosar-search-svc }
+      ports: [{ protocol: TCP, port: 8171 }]
+    - to:
+        - podSelector:
+            matchLabels: { app: bitcosar-collab }
+      ports: [{ protocol: TCP, port: 1234 }]
+---
+# SITE DIŞ DÜNYA ÇIKIŞI — sınırlı.
+#
+# DİKKAT: site dış API'lere çıkıyor (CoinGecko, CryptoQuant, YouTube, RSS
+# kaynakları, SMTP, AI sağlayıcıları). Bunları IP ile listelemek kırılgan
+# (CDN IP'leri değişir). Bu yüzden dış çıkış AÇIK bırakılıyor ama
+# `except` ile özel ağlar ve bulut metadata ucu KAPATILIYOR — SSRF
+# istismarının en değerli hedefi 169.254.169.254 (bulut kimliği).
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: site-dis-cikis
+  namespace: bitcosar-site
+spec:
+  podSelector:
+    matchLabels: { app: bitcosar-site }
+  policyTypes: [Egress]
+  egress:
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+            except:
+              - 10.0.0.0/8        # küme içi — yukarıdaki kurallarla açıldı
+              - 172.16.0.0/12
+              - 192.168.0.0/16
+              - 169.254.0.0/16    # link-local + bulut metadata
+---
+# POSTGRES: yalnız site ve yedek Job'ı bağlanır.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: postgres-giris
+  namespace: bitcosar-site
+spec:
+  podSelector:
+    matchLabels: { app: bitcosar-postgres }
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels: { app: bitcosar-site }
+      ports: [{ protocol: TCP, port: 5432 }]
+    - from:
+        - podSelector:
+            matchLabels: { app: bitcosar-yedek-db }
+      ports: [{ protocol: TCP, port: 5432 }]
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: redis-giris
+  namespace: bitcosar-site
+spec:
+  podSelector:
+    matchLabels: { app: bitcosar-redis }
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels: { app: bitcosar-site }
+      ports: [{ protocol: TCP, port: 6379 }]
+---
+# MİKROSERVİSLER: yalnız site bağlanır.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: image-svc-giris
+  namespace: bitcosar-site
+spec:
+  podSelector:
+    matchLabels: { app: bitcosar-image-svc }
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels: { app: bitcosar-site }
+      ports: [{ protocol: TCP, port: 8170 }]
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: search-svc-giris
+  namespace: bitcosar-site
+spec:
+  podSelector:
+    matchLabels: { app: bitcosar-search-svc }
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels: { app: bitcosar-site }
+      ports: [{ protocol: TCP, port: 8171 }]
+---
+# YEDEK: postgres'e ve dışına (S3/uzak depo) çıkar; site'a girmez.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: yedek-cikis
+  namespace: bitcosar-site
+spec:
+  podSelector:
+    matchExpressions:
+      - key: app
+        operator: In
+        values: [bitcosar-yedek-db, bitcosar-yedek-medya]
+  policyTypes: [Egress]
+  egress:
+    - to:
+        - podSelector:
+            matchLabels: { app: bitcosar-postgres }
+      ports: [{ protocol: TCP, port: 5432 }]
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+            except:
+              - 10.0.0.0/8
+              - 172.16.0.0/12
+              - 192.168.0.0/16
+              - 169.254.0.0/16

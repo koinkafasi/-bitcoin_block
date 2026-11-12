@@ -1,0 +1,140 @@
+# Kyverno — küme kapısı (admission control).
+#
+# NEDEN GEREKLİ: `imaj.yml` imajı imzalıyor ve SBOM'u bağlıyor. Ama küme
+# bunu BİLMEZ — biri `kubectl apply` ile imzasız bir imaj sürerse pod
+# kalkar. Kyverno, imza doğrulamasını KÜMEYE taşır: imzasız/digest'siz
+# imaj reddedilir. Yani "imzaladık" iddiası ancak burada anlam kazanır.
+#
+# KURULUM (bir kez):
+#   helm repo add kyverno https://kyverno.github.io/kyverno/
+#   helm repo update
+#   helm install kyverno kyverno/kyverno -n kyverno --create-namespace \
+#     --set replicas=1 --version 3.4.4
+#
+# SONRA: kubectl apply -f deploy/k8s/05-kyverno.yaml
+#
+# POLİTİKA MODU: `Enforce`. Önce `Audit` ile bir hafta izlemek isteyen
+# `validationFailureAction` alanını `Audit` yapsın — ama bu depo tek kişilik
+# ve imaj hattı ZATEN imzalıyor, bu yüzden doğrudan Enforce.
+---
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: bitcosar-imza-zorunlu
+  annotations:
+    policies.kyverno.io/title: İmzalı imaj zorunlu
+    policies.kyverno.io/description: >-
+      bitcosar-* imajları cosign keyless imzalı olmalı. İmzasız imaj pod
+      olarak kalkamaz; imza GitHub Actions OIDC kimliğiyle doğrulanır.
+spec:
+  validationFailureAction: Enforce
+  background: true
+  rules:
+    - name: cosign-imza-dogrula
+      match:
+        any:
+          - resources:
+              kinds: [Pod]
+              namespaces: [bitcosar-site]
+      verifyImages:
+        - imageReferences:
+            - "ghcr.io/koinkafasi/theblock-*"
+          # SBOM attestation'ı da bu anahtarla imzalandı; `mutateDigest`
+          # etiketi digest'e çevirir, yani kümede ÇALIŞAN imaj tam olarak
+          # imzalanan baytlardır.
+          mutateDigest: true
+          verifyDigest: true
+          required: true
+          attestors:
+            - entries:
+                - keyless:
+                    # İmzanın hangi iş akışından geldiği: yalnız `main`
+                    # dalındaki `imaj.yml`. Başka bir workflow imzalarsa
+                    # (ör. bir PR) küme kabul etmez.
+                    subject: "https://github.com/koinkafasi/-bitcoin_block/.github/workflows/imaj.yml@refs/heads/main"
+                    issuer: "https://token.actions.githubusercontent.com"
+                    rekor:
+                      url: https://rekor.sigstore.dev
+---
+# Etiket zorunlu: `:latest` yasak. Kimin koştuğu bilinmeyen imaj, geri
+# dönülemeyen ve taranamayan imajdır (bkz. deploy/scripts/k8s-sevk.sh
+# başındaki uzun not — bu tam olarak bir kez yaşandı).
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: bitcosar-latest-yasak
+  annotations:
+    policies.kyverno.io/title: ":latest yasak"
+    policies.kyverno.io/description: >-
+      bitcosar imajları sürüm etiketi ya da digest ile gelmeli. `latest`
+      geri dönüşü ve imaj taramasını anlamsız kılar.
+spec:
+  validationFailureAction: Enforce
+  background: true
+  rules:
+    - name: latest-kullanma
+      match:
+        any:
+          - resources:
+              kinds: [Pod]
+              namespaces: [bitcosar-site]
+      validate:
+        message: "':latest' etiketi yasak — sürüm etiketi (sha-abc1234) veya digest kullanın."
+        pattern:
+          spec:
+            containers:
+              - image: "!*:latest"
+            # initContainers da aynı kurala tabi (migrate initContainer'ı
+            # da imaj çeker; atlanırsa kapı delinir).
+            initContainers:
+              - image: "!*:latest"
+---
+# Ayrıcalık yükseltme ve root yasak — manifest yanlışlıkla gelirse küme
+# reddeder. Mevcut manifest'ler bunu zaten sağlıyor; politika, gelecekte
+# eklenecek bir pod'un sessizce gevşetmesini engeller.
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: bitcosar-pod-sertlestirme
+  annotations:
+    policies.kyverno.io/title: Pod sertleştirme tabanı
+    policies.kyverno.io/description: >-
+      root yasak, ayrıcalık yükseltme yasak, tüm yetenekler düşürülmeli,
+      salt-okunur kök dosya sistemi. PSS `restricted` seviyesinin
+      zorunlu kısmı.
+spec:
+  validationFailureAction: Enforce
+  background: true
+  rules:
+    - name: root-yasak
+      match:
+        any:
+          - resources:
+              kinds: [Pod]
+              namespaces: [bitcosar-site]
+      validate:
+        message: "Pod root olarak çalışamaz (runAsNonRoot: true veya runAsUser > 0)."
+        anyPattern:
+          - spec:
+              securityContext:
+                runAsNonRoot: true
+          - spec:
+              securityContext:
+                runAsUser: ">0"
+          - spec:
+              containers:
+                - securityContext:
+                    runAsNonRoot: true
+    - name: ayricalik-yukseltme-yasak
+      match:
+        any:
+          - resources:
+              kinds: [Pod]
+              namespaces: [bitcosar-site]
+      validate:
+        message: "allowPrivilegeEscalation: false zorunlu."
+        pattern:
+          spec:
+            containers:
+              - securityContext:
+                  allowPrivilegeEscalation: false

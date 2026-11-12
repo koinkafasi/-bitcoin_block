@@ -192,8 +192,9 @@ func ScanAISources(ctx context.Context, pool *pgxpool.Pool, siteID int64) (int, 
 	for res := range results {
 		f := res.feed
 		if res.err != nil {
-			_, _ = pool.Exec(ctx, `UPDATE feeds SET last_checked_at=now(), last_status='hata', last_error=$2, last_item_count=0 WHERE id=$1`,
-				f.ID, truncateRunes(res.err.Error(), 300))
+			// Ardışık hata sayacı ve eşiğe gelince otomatik kapatma
+			// burada işliyor; düz UPDATE geçmiş tutmuyordu.
+			_, _ = FeedBasarisiz(ctx, pool, f.ID, truncateRunes(res.err.Error(), 300))
 			continue
 		}
 		items := res.items
@@ -241,8 +242,19 @@ func ScanAISources(ctx context.Context, pool *pgxpool.Pool, siteID int64) (int, 
 				inserted++
 			}
 		}
-		_, _ = pool.Exec(ctx, `UPDATE feeds SET last_checked_at=now(), last_status='ok', last_error='', last_item_count=$2 WHERE id=$1`,
-			f.ID, len(items))
+		// Görsel oranı kalite ölçütü: görselsiz kaynak kart düzenini
+		// bozuyor (sitede 96% görselsiz içerik sorunu ölçülmüştü).
+		gorselli := 0
+		for _, it := range items {
+			if strings.TrimSpace(it.Image) != "" {
+				gorselli++
+			}
+		}
+		oran := 0
+		if len(items) > 0 {
+			oran = gorselli * 100 / len(items)
+		}
+		_ = FeedBasarili(ctx, pool, f.ID, len(items), oran)
 	}
 	return inserted, nil
 }
@@ -523,11 +535,21 @@ func CreateDraftFromCluster(ctx context.Context, pool *pgxpool.Pool, siteID, clu
 		sourceURL = &items[0].URL
 		sourceName = &items[0].SourceName
 	}
+
+	// Taslağın dili KAYNAĞIN dilinden gelir, sabit "tr" değil.
+	//
+	// Eskiden her taslak Türkçe işaretleniyordu: İngilizce kaynaktan
+	// gelen haber Türkçe sitede İngilizce başlıkla yayımlanıyordu.
+	// 12 Kasım 2026'da 25 CoinDesk haberi bu yüzden elle düzeltildi.
+	// Artık İngilizce içerik `en` olarak açılıyor; Türkçeye çeviri
+	// ayrı bir adım (çeviri kuyruğu).
+	dil := kumeDili(ctx, pool, clusterID)
+
 	content := &Content{
 		SiteID: siteID, TypeKey: "haber", Status: "taslak", Title: c.Title,
 		Spot: truncateRunes(c.Summary, 240), Detail: detail, Slug: &slug,
 		CategoryID: c.CategoryID, AuthorID: authorID,
-		SourceURL: sourceURL, SourceName: sourceName, CommentStatus: "acik", Locale: "tr",
+		SourceURL: sourceURL, SourceName: sourceName, CommentStatus: "acik", Locale: dil,
 	}
 	id, err := CreateContent(ctx, pool, content)
 	if err != nil {
@@ -592,4 +614,46 @@ func topTokens(t map[string]bool, n int) []string {
 		out = out[:n]
 	}
 	return out
+}
+
+// kumeDili kümeyi besleyen kaynakların diline bakar.
+//
+// Bir kümede birden çok kaynak olabilir (aynı haber farklı yayınlarda).
+// ÇOĞUNLUK kuralı uygulanır; eşitlikte Türkçe kazanır, çünkü sitenin
+// ana dili Türkçe ve yanlış yönde hata çeviri işi yaratmaz — tersi
+// Türkçe siteye İngilizce başlık sokar.
+//
+// Kaynak bulunamazsa "tr" döner (eski davranış).
+func kumeDili(ctx context.Context, pool *pgxpool.Pool, clusterID int64) string {
+	rows, err := pool.Query(ctx, `
+		SELECT COALESCE(f.dil, 'tr'), count(*)
+		  FROM ai_source_items i
+		  JOIN ai_story_cluster_items ci ON ci.item_id = i.id
+		  LEFT JOIN feeds f ON f.id = i.feed_id
+		 WHERE ci.cluster_id = $1
+		 GROUP BY 1`, clusterID)
+	if err != nil {
+		return "tr"
+	}
+	defer rows.Close()
+
+	sayim := map[string]int{}
+	for rows.Next() {
+		var dil string
+		var n int
+		if err := rows.Scan(&dil, &n); err != nil {
+			continue
+		}
+		sayim[dil] += n
+	}
+	if len(sayim) == 0 {
+		return "tr"
+	}
+	kazanan, enCok := "tr", 0
+	for dil, n := range sayim {
+		if n > enCok || (n == enCok && dil == "tr") {
+			kazanan, enCok = dil, n
+		}
+	}
+	return kazanan
 }

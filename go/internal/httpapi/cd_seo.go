@@ -1,7 +1,6 @@
 package httpapi
 
 import (
-	"encoding/json"
 	"html/template"
 	"strings"
 
@@ -137,7 +136,13 @@ func cdFiyatListesiJSONLD(name string, items []cdLDItem) template.HTML {
 	})
 }
 
-func cdKisiJSONLD(siteName, canonical, name, rol, aciklama, gorsel string, sameAs []string) template.JS {
+// cdKisiJSONLD yazar profili yapısal verisi.
+//
+// SARMALAYICI ÜRETİR (`jsonldScript`): sonuç doğrudan `cdHead.JSONLD`
+// alanına konuyor ve templ onu `@templ.Raw` ile basıyor. Sarmalayıcısız
+// döndürüldüğünde JSON sayfanın en üstünde DÜZ METİN olarak görünüyordu
+// (12 Kasım 2026, /yazar/bitcosar).
+func cdKisiJSONLD(siteName, canonical, name, rol, aciklama, gorsel string, sameAs []string) template.HTML {
 	kisi := map[string]any{
 		"@type": "Person",
 		"name":  name,
@@ -171,11 +176,7 @@ func cdKisiJSONLD(siteName, canonical, name, rol, aciklama, gorsel string, sameA
 		},
 		"mainEntity": kisi,
 	}
-	b, err := json.Marshal(blok)
-	if err != nil {
-		return ""
-	}
-	return template.JS(b)
+	return jsonldScript(blok)
 }
 
 // cdYuzdeSayi "+2,17" / "-0.20%" → 2.17 / -0.2. Ondalık virgül de kabul.

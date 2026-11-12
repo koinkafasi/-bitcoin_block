@@ -51,6 +51,11 @@ type makaleLDGirdi struct {
 	// Gorsel og:image / JSON-LD için MUTLAK görsel adresi (göreli
 	// `/kg/...` Open Graph'ta geçersizdir).
 	Gorsel string
+	// Kilitli içerik abonelik gerektiriyor mu. Google, paywall'lu
+	// içeriğin BİLDİRİLMESİNİ istiyor: aksi hâlde Googlebot'un gördüğü
+	// tam metinle kullanıcının gördüğü kesik metin arasındaki fark
+	// "cloaking" sayılabiliyor.
+	Kilitli bool
 }
 
 func makaleJSONLD(g makaleLDGirdi) template.HTML {
@@ -66,6 +71,9 @@ func makaleJSONLD(g makaleLDGirdi) template.HTML {
 		"url":              v.Canonical,
 		"headline":         v.Headline,
 		"abstract":         v.Desc,
+		// Ücretsiz erişim durumu HER ZAMAN yazılıyor: `true` olduğunda da
+		// açık bir sinyal, Google için belirsizlik bırakmıyor.
+		"isAccessibleForFree": !g.Kilitli,
 		"mainEntityOfPage": v.Canonical,
 		"articleSection":   v.SectionName,
 		"author":           []any{yazar},

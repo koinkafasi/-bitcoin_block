@@ -186,13 +186,38 @@ func (s *Server) cdMakaleGoster(w http.ResponseWriter, r *http.Request, c repo.C
 	if !c.UpdatedAt.IsZero() {
 		guncelISO = c.UpdatedAt.UTC().Format("2006-01-02T15:04:05Z")
 	}
+	// Kilit JSON-LD'DEN ÖNCE hesaplanıyor: yapısal veri
+	// `isAccessibleForFree` alanını buradan okuyor.
+	// Yazıda geçen varlıkları canlı fiyat rozetiyle işaretle (referans
+	// davranış: coindesk makale gövdesi). Fiyat gövdeye yazılmıyor, her
+	// render'da güncel veriden üretiliyor.
+	if fiyatlar := repo.Fiyatlar(ctx, s.pool); len(fiyatlar) > 0 {
+		v.BodyHTML = cdVarlikRozetle(v.BodyHTML, s.cdVarlikListesi(fiyatlar, 12))
+	}
+
+	v.ContentID = itoa64(c.ID)
+	v.Yorum = s.cdYorumVerisi(r, c)
+
+	// ABONELİK KİLİDİ: gövde kesilir ve kilit kutusu basılır. Karar
+	// `cd_kilit.go` içinde; burada yalnız sonuç uygulanıyor.
+	//
+	// ÖNİZLEME 3 PARAGRAF: okuyucunun konuyu anlamasına yetecek kadar,
+	// yazının tamamını vermeyecek kadar. Ghost ve CoinDesk de ilk bölümü
+	// açık bırakıyor; sıfır önizleme hem okuyucuyu hem arama motorunu
+	// kör bırakırdı.
+	if kilit := s.cdKilitHesapla(r, c); kilit.Kilitli {
+		v.Kilitli = true
+		v.KilitKatman = kilit.Katman
+		v.BodyHTML = cdOnizlemeKes(v.BodyHTML, 3)
+	}
+
 	v.JSONLD = string(makaleJSONLD(makaleLDGirdi{
 		View: v, YayinISO: yayinISO, GuncelISO: guncelISO,
 		ID: itoa64(c.ID), YazarSlug: yazarSlug, Keywords: anahtar,
+		Kilitli: v.Kilitli,
 		GorselAlt: v.ImageCredit,
 		Gorsel:    s.mutlakGorsel(s.kanonikKok(r), v.Image),
 	}))
-	v.ContentID = itoa64(c.ID)
 	v.BreadcrumbJSONLD = string(makaleBreadcrumbJSONLD(v))
 	// SSS bölümü olan rehberlerde FAQPage. Metin gövdeden çıkarılır;
 	// bölüm yoksa ya da ikiden az soru varsa blok hiç basılmaz.
@@ -213,14 +238,28 @@ func (s *Server) cdMakaleGoster(w http.ResponseWriter, r *http.Request, c repo.C
 		YayinSaat:  yayinSaatKisa(c),
 		Etiketler:  anahtar,
 	})
-	diller := map[string]string{"tr": v.Canonical}
+	// Sayfanın dili İÇERİKTEN gelir, sabit "tr" değil.
+	//
+	// Eskiden her makale Türkçe varsayılıyordu: İngilizce içerik kendi
+	// URL'sini hreflang="tr" diye bildiriyor, gerçek Türkçe çevirisi de
+	// `t.Locale == "tr"` kontrolüne takılıp hiç basılmıyordu. Sonuç:
+	// karşılıklı olmayan hreflang (Google bunu bütünüyle yok sayar) ve
+	// İngilizce sayfada <html lang="tr">. 12 Kasım 2026'da ölçüldü.
+	icerikDil := strings.TrimSpace(c.Locale)
+	if icerikDil == "" {
+		icerikDil = "tr"
+	}
+	diller := map[string]string{icerikDil: v.Canonical}
 	if trs, err := repo.TranslationsOf(ctx, s.pool, c.TranslationRootID()); err == nil {
 		for _, t := range trs {
-			if t.ID == c.ID || t.Status != "yayinda" || t.Locale == "tr" {
+			if t.ID == c.ID || t.Status != "yayinda" || t.Locale == icerikDil {
 				continue
 			}
-			diller[t.Locale] = s.kanonikKok(r) +
-				publicArticleURL(t.Locale, t.DisplaySlug(), t.ID)
+			// hreflang, hedefin KANONİK adresini göstermeli.
+			// publicArticleURL kısa biçimi (id'li) üretiyordu; hedef
+			// sayfa kendini kategori+tarih yoluyla kanonikleştirdiği
+			// için iki adres uyuşmuyor ve Google eşleşmeyi kuramıyordu.
+			diller[t.Locale] = s.kanonikKok(r) + makaleURL(t)
 		}
 	}
 	if len(diller) > 1 {
@@ -228,7 +267,7 @@ func (s *Server) cdMakaleGoster(w http.ResponseWriter, r *http.Request, c repo.C
 	}
 	v.PageCategory = "article_page"
 	v.ContentCategory = bolumSlug
-	v.Locale = "tr"
+	v.Locale = icerikDil
 	v.ImageAlt = s.mediaAlt(ctx, c.CoverMediaID)
 	if v.ImageAlt == "" {
 		v.ImageAlt = s.mediaAlt(ctx, c.MansetMediaID)
@@ -254,9 +293,32 @@ func (s *Server) cdMakaleGoster(w http.ResponseWriter, r *http.Request, c repo.C
 // cdMakaleBaslik SEO başlığı: seo_title → başlık + site adı.
 func cdMakaleBaslik(c repo.Content) string {
 	if c.SeoTitle != nil && strings.TrimSpace(*c.SeoTitle) != "" {
-		return *c.SeoTitle
+		return cdSiteSonekiAt(*c.SeoTitle)
 	}
-	return c.Title
+	return cdSiteSonekiAt(c.Title)
+}
+
+// cdSiteSonekiAt başlık sonundaki "| BitCoŞaR" ekini kaldırır.
+//
+// NEDEN: eski sistem site adını başlığın İÇİNE yazıyordu. Google
+// başlığı ~60 karakterde kestiği için site adı arama sonucunda zaten
+// görünmüyor; sadece yer kaplayıp başlığın anlamlı kısmını dışarı
+// itiyor. Veritabanı 12 Kasım 2026'da temizlendi (3.074 satır); bu
+// savunma, eski alışkanlıkla yeniden yazılırsa sayfayı korur.
+//
+// Yalnız SON ek atılır — "(BİTCOŞAR Kripto Bülteni)" gibi başlığın
+// gerçek parçası olan kullanımlar korunur.
+func cdSiteSonekiAt(baslik string) string {
+	s := strings.TrimSpace(baslik)
+	i := strings.LastIndex(s, "|")
+	if i <= 0 {
+		return s
+	}
+	kuyruk := strings.TrimSpace(s[i+1:])
+	if !strings.EqualFold(kuyruk, "bitcoşar") && !strings.EqualFold(kuyruk, "bitcosar") {
+		return s
+	}
+	return strings.TrimSpace(s[:i])
 }
 
 // cdMakaleAciklama meta açıklama: seo_description → spot → kırpılmış gövde.
@@ -271,12 +333,16 @@ func cdMakaleAciklama(c repo.Content) string {
 }
 
 // cdOkumaDakika 200 kelime/dk varsayımıyla okuma süresi (en az 1).
+//
+// YUKARI yuvarlanır. Aşağı yuvarlama 399 kelimelik bir yazıya "1 dk"
+// diyordu: okuyucu iki dakikalık metni bir dakika sanıp giriyor,
+// beklentisi tutmuyor. 201 kelime ikinci dakikaya girmiştir.
 func cdOkumaDakika(spot, govde string) int {
 	kelime := len(strings.Fields(spot)) + len(strings.Fields(govde))
 	if kelime <= 0 {
 		return 1
 	}
-	d := kelime / 200
+	d := (kelime + 199) / 200
 	if d < 1 {
 		return 1
 	}

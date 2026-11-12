@@ -34,6 +34,10 @@ type aiSourceData struct {
 	TotalItems    int
 	EnrichPending int
 	Cats          []repo.Category
+	// AI sağlayıcı ve çeviri kuyruğu durumu: panelin başında görünür.
+	AISaglayici    string
+	CeviriBekleyen int
+	CeviriHatali   int
 }
 
 func (s *Server) buildAISourceData(r *http.Request) *tmplData {
@@ -108,6 +112,17 @@ func (s *Server) buildAISourceData(r *http.Request) *tmplData {
 			}
 		}
 	}
+	// AI sağlayıcı durumu: yapılandırılmamışsa AI işleri (çeviri,
+	// taslak yazımı) sessizce mock yanıt üretiyor — panelde görünmeli.
+	if s.ai != nil && s.ai.Enabled() {
+		data.AISaglayici = strings.Join(s.ai.Providers(), ", ")
+	}
+	// Çeviri kuyruğu: toplu çeviri isteklerinin ilerleyişi.
+	_ = s.pool.QueryRow(ctx, `
+		SELECT count(*) FILTER (WHERE durum = 'bekliyor'),
+		       count(*) FILTER (WHERE durum = 'hata')
+		  FROM ceviri_istek`).Scan(&data.CeviriBekleyen, &data.CeviriHatali)
+
 	d.AISource = data
 	return d
 }
@@ -317,4 +332,43 @@ func aiPlanInstruction(p repo.AICategoryPlan) string {
 	default:
 		return base + " Kategoriye uygun sade bir editoryal ton kullan."
 	}
+}
+
+// handleAIFeedDurum kaynağı açar/kapatır.
+//
+// NEDEN YENİ: `repo.SetFeedAktif` yazılmıştı ama hiçbir uç onu
+// çağırmıyordu — kaynak açıp kapatmak ancak veritabanına elle
+// girilerek yapılabiliyordu (12 Kasım 2026 denetimi).
+//
+// AÇARKEN `FeedYenidenAc` kullanılıyor: ardışık hata sayacını da
+// sıfırlıyor. Sıfırlanmasaydı, bot tarafından kapatılmış bir kaynak
+// elle açıldıktan sonra İLK hatada yeniden kapanırdı; kullanıcı
+// "açıyorum ama kapanıyor" derdi.
+func (s *Server) handleAIFeedDurum(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	id := parseID(r.PathValue("id"))
+	if id == 0 {
+		s.renderAISourcePanel(w, r, "error", "Kaynak bulunamadı.")
+		return
+	}
+	ac := r.FormValue("durum") != "kapat"
+
+	var err error
+	if ac {
+		err = repo.FeedYenidenAc(ctx, s.pool, id)
+	} else {
+		err = repo.SetFeedAktif(ctx, s.pool, id, false)
+	}
+	if err != nil {
+		s.renderAISourcePanel(w, r, "error", "Kaynak durumu değiştirilemedi: "+err.Error())
+		return
+	}
+
+	if ac {
+		s.audit(r, "kaynak_ac", "feed id="+itoa(int(id)))
+		s.renderAISourcePanel(w, r, "info", "Kaynak açıldı; hata sayacı sıfırlandı.")
+		return
+	}
+	s.audit(r, "kaynak_kapat", "feed id="+itoa(int(id)))
+	s.renderAISourcePanel(w, r, "info", "Kaynak kapatıldı.")
 }

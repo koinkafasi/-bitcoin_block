@@ -365,6 +365,8 @@ func (s *Server) cdStoryCevir(c repo.Content, simdi time.Time) templkit.CDStory 
 		Spot:  c.Spot,
 		Href:  makaleURL(c),
 		Image: s.cdKapakGorsel(c),
+		// Siyah-beyaz yalnız LİSTELERDE; yazı sayfası renkli.
+		Gri: c.ImageGrayscale,
 	}
 	if c.PublishedAt != nil {
 		st.Time = trGoreliZaman(*c.PublishedAt, simdi)

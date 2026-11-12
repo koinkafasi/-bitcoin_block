@@ -1,0 +1,103 @@
+# bitcosar.com → ingress-nginx → bitcosar-site
+#
+# TLS:
+#   Küme'de cert-manager YOK (ibrahimcosar elle certbot pod'u kullanıyor).
+#   bitcosar.com Cloudflare arkasında olduğu için TLS'i Cloudflare
+#   sonlandırır. İki seçenek:
+#
+#   a) Cloudflare SSL = "Full (strict)"  ← ÖNERİLEN
+#      Cloudflare panelinden Origin Certificate üret (ücretsiz, 15 yıl),
+#      sonra:
+#        kubectl -n bitcosar create secret tls bitcosar-tls \
+#          --cert=origin.pem --key=origin.key
+#      ve aşağıdaki `tls:` bloğunun yorumunu kaldır.
+#
+#   b) Cloudflare SSL = "Flexible"
+#      TLS yalnız tarayıcı↔Cloudflare arasında olur; Cloudflare↔sunucu
+#      düz HTTP'dir. Hızlı ama zayıf — yalnız geçici olarak kullanın.
+#
+# Gövde boyutu: medya yükleme 1 MB'lık nginx varsayılanına takılır.
+# WebSocket: /collab Hocuspocus bağlantısı uzun ömürlüdür, zaman aşımı
+# açıkça uzatıldı.
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: bitcosar-site
+  namespace: bitcosar-site
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-body-size: "64m"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "60"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "60"
+    # Cloudflare önde olduğu için gerçek ziyaretçi IP'si CF-Connecting-IP
+    # başlığında gelir; ingress-nginx'in kendi X-Forwarded-For'u korunur.
+    nginx.ingress.kubernetes.io/use-forwarded-headers: "true"
+spec:
+  ingressClassName: nginx
+  # tls:
+  #   - hosts: [bitcosar.com, www.bitcosar.com]
+  #     secretName: bitcosar-tls
+  rules:
+    # DNS'e dokunmadan uçtan uca doğrulama için: zone'da zaten
+    # `*.bitcosar.com A 173.249.30.38 (proxied)` kaydı var, bu yüzden
+    # bu ad ek kayıt gerektirmeden gerçek Cloudflare yolundan geçer.
+    # Apex geçişi tamamlanıp bir süre sorunsuz çalıştıktan sonra silinebilir.
+    - host: k8s.bitcosar.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: bitcosar-site
+                port: { number: 8070 }
+    - host: bitcosar.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: bitcosar-site
+                port: { number: 8070 }
+    - host: www.bitcosar.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: bitcosar-site
+                port: { number: 8070 }
+
+---
+# Ortak düzenleme WebSocket'i: /collab/<belge> → collab:/
+#
+# Hocuspocus yol adını BELGE ADI olarak kullanır, bu yüzden /collab öneki
+# kesilmeli. rewrite-target $2 ile ikinci yakalama grubu geçirilir.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: bitcosar-collab
+  namespace: bitcosar-site
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    # WebSocket uzun ömürlü: 10 dakikalık boşluk toleransı.
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "600"
+spec:
+  ingressClassName: nginx
+  # tls:
+  #   - hosts: [bitcosar.com]
+  #     secretName: bitcosar-tls
+  rules:
+    - host: bitcosar.com
+      http:
+        paths:
+          - path: /collab(/|$)(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: bitcosar-collab
+                port: { number: 1234 }

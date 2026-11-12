@@ -5698,3 +5698,58 @@ html:not(.dark) .cd-kapak__harf { opacity: .3; }
 .cd-yorum__begeni-btn:hover { background: var(--cd-surface-action); color: var(--cd-fg); }
 .cd-yorum__sayi { font-variant-numeric: tabular-nums; color: var(--cd-brand); }
 .cd-yorum__begeni-salt { margin-left: 37px; font-size: 12px; color: var(--cd-muted); }
+
+/* ---- listelerde siyah-beyaz görsel ----
+   Admin'de "Listelerde siyah-beyaz" işaretlenen haberin kapak görseli
+   ana sayfada, kategori ve etiket listelerinde gri basılır; okuyucu
+   yazıya girdiğinde AYNI dosya renkli açılır (yazı sayfasında bu sınıf
+   hiç basılmıyor). Görselin ikinci bir kopyası üretilmiyor. */
+.cd-gri img {
+  filter: grayscale(1);
+}
+/* Üzerine gelince renk geri geliyor: kart tıklanabilir olduğunu
+   belli ediyor ve yazının renkli hâlini önceden gösteriyor. */
+.cd-gri:hover img,
+.cd-gri:focus-visible img {
+  filter: grayscale(0);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .cd-gri img { transition: filter 220ms ease; }
+}
+
+/* ---- bölüm başlığı vurgusu ----
+   Başlıkların solundaki SVG simgesinin yerini aldı (12 Kasım 2026).
+   Teknik "Öne Çıkan Araştırma" metriğinden alındı: metnin ALT kısmına
+   denk gelen bir gradient bandı — fosforlu kalem etkisi.
+
+   `display: inline` zorunlu: blok elemanda gradient tüm kutuyu kaplar
+   ve vurgu değil arka plan olur. `box-decoration-break: clone` ise
+   başlık iki satıra düştüğünde bandın her satırda sürmesini sağlıyor;
+   olmazsa yalnız ilk satır vurgulanırdı. */
+.cd-vurgu {
+  display: inline;
+  padding: 0 4px 0.06em;
+  /* Bant ÖLÇÜSÜ `em` ile: yüzde tabanlı gradient font boyutuna
+     ölçeklenmiyordu — 56px'lik metrikte doğru duran bant 14px'lik
+     bölüm başlığında metni yutuyordu (12 Kasım 2026'da ölçüldü).
+     `em` her başlık boyutunda aynı oranı koruyor. */
+  background-image: linear-gradient(var(--cd-brand), var(--cd-brand));
+  /* Oran referanstan: "Öne Çıkan Araştırma" metriğinde bant, metin
+     kutusunun ~%34'ü. `em` ile her başlık boyutunda aynı oran.
+
+     ALTTAN hizalı: üstten (`0 0.78em`) hizalayınca bandın yeri
+     line-height'a bağlı kalıyor ve satır yüksekliği farklı olan
+     başlıklarda metnin ortasından geçiyordu ("Piyasa Nabzı",
+     12 Kasım 2026). Alt kenar sabit olunca bant her zaman metnin
+     altına oturuyor. */
+  background-size: 100% 0.34em;
+  /* 4 DEĞERLİ sözdizimi zorunlu: `0 bottom 0.08em` (3 değer)
+     geçersizdir, tarayıcı sessizce `0% 0%`e düşer ve bant metnin
+     ÜSTÜNDE kalır (12 Kasım 2026: ölçülen değer `0% 0%` idi). */
+  background-position: left 0 bottom 0.08em;
+  background-repeat: no-repeat;
+  /* Başlık iki satıra düşerse bant her satırda sürer; olmazsa yalnız
+     ilk satır vurgulanırdı. */
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}

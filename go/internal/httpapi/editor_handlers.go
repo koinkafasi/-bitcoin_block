@@ -236,7 +236,9 @@ func (s *Server) handleInternalLinkSearch(w http.ResponseWriter, r *http.Request
 		s.writeJSON(w, http.StatusOK, map[string]any{"ok": true, "items": []any{}})
 		return
 	}
-	items, err := repo.SearchPublishedContentLinks(r.Context(), s.pool, s.curSiteID(r), q, 12)
+	// Seçili metin genelde bir cümle parçası; tam alt dize araması
+	// sonuçsuz kalıyordu. Kelime bazlı, skorlu öneri kullanılıyor.
+	items, err := repo.OneriliContentLinks(r.Context(), s.pool, s.curSiteID(r), q, 12)
 	if err != nil {
 		s.writeJSON(w, http.StatusInternalServerError, map[string]any{"ok": false, "error": "arama başarısız"})
 		return

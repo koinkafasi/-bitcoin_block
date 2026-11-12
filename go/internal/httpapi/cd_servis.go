@@ -3,7 +3,6 @@ package httpapi
 import (
 	"context"
 	"net/http"
-	"strconv"
 	"strings"
 
 	"theblock/site/internal/repo"
@@ -103,38 +102,6 @@ func (s *Server) cdResmiIlanGovde(ctx context.Context, r *http.Request, siteID i
 
 // ---- Yazarlar ----
 
-// cdYazarlarGovde yazar/editör kart ızgarası.
-func (s *Server) cdYazarlarGovde(ctx context.Context) templkit.SafeHTML {
-	people, _ := repo.ListPeople(ctx, s.pool, []string{"Yönetici", "Editör", "Muhabir", "Yazar"})
-	if len(people) == 0 {
-		return templkit.SafeHTML(`<p class="cd-card__spot">Yazar listesi şu an alınamıyor.</p>`)
-	}
-	var b strings.Builder
-	b.WriteString(`<div class="cd-grid cd-grid--3 cd-yazarlar">`)
-	for _, p := range people {
-		b.WriteString(`<a class="cd-basit__kart cd-basit__kart--bag" href="/yazar/` +
-			htmlEscape(p.Slug) + `">`)
-		if p.AvatarMediaID != nil {
-			b.WriteString(`<img class="cd-basit__avatar" src="/medya/` +
-				strconv.FormatInt(*p.AvatarMediaID, 10) + `" alt="` + htmlEscape(p.Name) +
-				`" loading="lazy" decoding="async">`)
-		} else {
-			b.WriteString(`<span class="cd-basit__avatar cd-basit__avatar--harf" aria-hidden="true">` +
-				htmlEscape(ilkHarf(p.Name)) + `</span>`)
-		}
-		b.WriteString(`<h2 class="cd-basit__kart-ad">` + htmlEscape(p.Name) + `</h2>`)
-		if p.Title != "" {
-			b.WriteString(`<p class="cd-card__spot">` + htmlEscape(p.Title) + `</p>`)
-		}
-		if p.ArticleCount > 0 {
-			b.WriteString(`<p class="cd-card__meta">` + strconv.Itoa(p.ArticleCount) + ` yazı</p>`)
-		}
-		b.WriteString(`</a>`)
-	}
-	b.WriteString(`</div>`)
-	return templkit.SafeHTML(b.String())
-}
-
 // cdResmiIlanSayfasi /resmi-ilanlar
 func (s *Server) cdResmiIlanSayfasi(w http.ResponseWriter, r *http.Request, siteID int64) {
 	v := s.cdSayfaKabuk(r, "resmi-ilanlar",
@@ -143,18 +110,6 @@ func (s *Server) cdResmiIlanSayfasi(w http.ResponseWriter, r *http.Request, site
 		"Resmi İlanlar", "Basın İlan Kurumu resmi ilanları.",
 		s.kanonikKok(r)+"/resmi-ilanlar")
 	v.Govde = s.cdResmiIlanGovde(r.Context(), r, siteID)
-	v.Serit = true
-	s.cdBasitRender(w, r, v)
-}
-
-// cdYazarlarSayfasi /yazarlar
-func (s *Server) cdYazarlarSayfasi(w http.ResponseWriter, r *http.Request) {
-	v := s.cdSayfaKabuk(r, "yazarlar",
-		"Yazarlar ve Editörler — "+s.siteName,
-		"Haberleri kaleme alan yazarlar, muhabirler ve editörler.",
-		"Yazarlar ve Editörler", "Haberleri kaleme alan yazarlar, muhabirler ve editörler.",
-		s.kanonikKok(r)+"/yazarlar")
-	v.Govde = s.cdYazarlarGovde(r.Context())
 	v.Serit = true
 	s.cdBasitRender(w, r, v)
 }

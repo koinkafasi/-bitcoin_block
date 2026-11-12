@@ -54,6 +54,10 @@ type Content struct {
 	// ImageURL kaynağın verdiği kapak görseli (mutlak http/https URL).
 	// Toplanan içerikte dolu; editörün yüklediği görsel cover_media_id'dedir.
 	ImageURL string
+	// ImageGrayscale true ise kapak görseli LİSTELERDE siyah-beyaz
+	// basılır; yazı sayfasında renkli kalır. Dosyaya dokunulmaz,
+	// değişiklik yalnız sunum katmanında (CSS filtresi).
+	ImageGrayscale bool
 
 	// join (opsiyonel dolu)
 	CategoryName *string
@@ -119,7 +123,7 @@ const contentCols = `c.id, c.type_key, c.status, c.title, COALESCE(c.spot,''), c
 	c.seo_title, c.seo_description, c.canonical_url,
 	c.publish_at, c.published_at, c.version, c.created_at, c.updated_at, c.locale, c.translation_of, c.site_id,
 	c.is_ymyl, c.ymyl_uzman, c.ymyl_durumu, c.ai_score,
-	c.image_url,
+	c.image_url, c.image_grayscale,
 	cat.name, cat.slug, u.name, m.name`
 
 // ScanContent satırı Content'e aktarır.
@@ -135,7 +139,7 @@ func scanContent(row pgx.Row) (Content, error) {
 		&c.SeoTitle, &c.SeoDesc, &c.CanonicalURL,
 		&c.PublishAt, &c.PublishedAt, &c.Version, &c.CreatedAt, &c.UpdatedAt, &c.Locale, &c.TranslationOf, &c.SiteID,
 		&c.IsYMYL, &c.YMYLUzman, &c.YMYLDurumu, &c.AiScore,
-		&c.ImageURL,
+		&c.ImageURL, &c.ImageGrayscale,
 		&catName, &catSlug, &c.AuthorName, &mahrepName,
 	)
 	if errors.Is(err, pgx.ErrNoRows) {
@@ -300,7 +304,7 @@ func UpdateContent(ctx context.Context, pool *pgxpool.Pool, c *Content) error {
 			source_url=$16, source_name=$17, comment_status=$18, is_exclusive=$19,
 			seo_title=$20, seo_description=$21, canonical_url=$22, publish_at=$23,
 			is_ymyl=$24, ymyl_uzman=$25, ymyl_durumu=$26, version=version+1,
-			min_tier_weight=$29
+			min_tier_weight=$29, image_grayscale=$30
 		WHERE id=$27 AND ($28=0 OR version=$28)
 		RETURNING version`,
 		c.TypeKey, c.Title, c.Spot, orEmptyJSON(c.Detail), nullableInt(c.CategoryID), nullableInt(c.MahrepID),
@@ -309,7 +313,7 @@ func UpdateContent(ctx context.Context, pool *pgxpool.Pool, c *Content) error {
 		nullableText(c.SourceURL), nullableText(c.SourceName), c.CommentStatus, c.IsExclusive,
 		nullableText(c.SeoTitle), nullableText(c.SeoDesc), nullableText(c.CanonicalURL),
 		c.PublishAt, c.IsYMYL, nullableText(c.YMYLUzman), c.YMYLDurumu, c.ID, c.Version,
-		c.MinTierWeight,
+		c.MinTierWeight, c.ImageGrayscale,
 	).Scan(&version)
 	if errors.Is(err, pgx.ErrNoRows) {
 		var exists bool
@@ -673,7 +677,7 @@ func scanContentWithTotal(row pgx.Row) (contentRow, error) {
 		&c.SeoTitle, &c.SeoDesc, &c.CanonicalURL,
 		&c.PublishAt, &c.PublishedAt, &c.Version, &c.CreatedAt, &c.UpdatedAt, &c.Locale, &c.TranslationOf, &c.SiteID,
 		&c.IsYMYL, &c.YMYLUzman, &c.YMYLDurumu, &c.AiScore,
-		&c.ImageURL,
+		&c.ImageURL, &c.ImageGrayscale,
 		&catName, &catSlug, &c.AuthorName, &mahrepName, &total,
 	)
 	if err != nil {

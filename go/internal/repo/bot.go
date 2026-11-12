@@ -44,6 +44,12 @@ type Feed struct {
 	LastStatus    string
 	LastError     string
 	LastItemCount int
+	// Sağlık ve kalite (0125_kaynak_saglik).
+	ArdisikHata     int
+	LastOkAt        *time.Time
+	GorselOran      *int
+	Dil             string
+	OtomatikKapandi bool
 }
 
 // CreateFeed yeni feed ekler.
@@ -62,7 +68,9 @@ func ListFeeds(ctx context.Context, pool *pgxpool.Pool) ([]Feed, error) {
 		SELECT id, site_id, name, url, category_id, author_id, aktif, sort_order,
 		       COALESCE(homepage,''), COALESCE(kind,'rss'), COALESCE(trust,50), COALESCE(notes,''),
 		       last_checked_at, COALESCE(last_status,''), COALESCE(last_error,''), COALESCE(last_item_count,0),
-		       aggregator
+		       aggregator,
+		       COALESCE(ardisik_hata,0), last_ok_at, gorsel_oran,
+		       COALESCE(dil,'en'), COALESCE(otomatik_kapandi,false)
 		FROM feeds ORDER BY aggregator, trust DESC, sort_order, name`)
 	if err != nil {
 		return nil, err
@@ -73,7 +81,8 @@ func ListFeeds(ctx context.Context, pool *pgxpool.Pool) ([]Feed, error) {
 		var f Feed
 		if err := rows.Scan(&f.ID, &f.SiteID, &f.Name, &f.URL, &f.CategoryID, &f.AuthorID, &f.Aktif, &f.SortOrder,
 			&f.Homepage, &f.Kind, &f.Trust, &f.Notes, &f.LastCheckedAt, &f.LastStatus, &f.LastError, &f.LastItemCount,
-			&f.Aggregator); err != nil {
+			&f.Aggregator,
+			&f.ArdisikHata, &f.LastOkAt, &f.GorselOran, &f.Dil, &f.OtomatikKapandi); err != nil {
 			return nil, err
 		}
 		out = append(out, f)
@@ -675,10 +684,19 @@ func CrawlFeed(ctx context.Context, pool *pgxpool.Pool, f *Feed, rules []WordRul
 
 // markFeedCheck feed'in son çekim sonucunu yazar. Hata yutulur: bu bir
 // gözlemlenebilirlik kaydıdır, içerik akışını durdurmamalıdır.
+//
+// Sağlık alanlarını (ardışık hata, son başarı) da buradan geçiriyoruz:
+// iki ayrı yazma yolu vardı ve bu yol onları atlıyordu — `last_ok_at`
+// geride kalıyor, otomatik kapatma sayacı hiç artmıyordu (12 Kasım
+// 2026'da ölçüldü: son kontrol 14:53, son başarı 14:51).
+//
+// Görsel oranı -1 geçiliyor: bu çekim yolu görsel bilgisi taşımıyor,
+// mevcut ölçüm korunmalı.
 func markFeedCheck(ctx context.Context, pool *pgxpool.Pool, feedID int64, status, errMsg string, count int) error {
-	_, err := pool.Exec(ctx, `
-		UPDATE feeds SET last_checked_at = now(), last_status = $2, last_error = $3, last_item_count = $4
-		WHERE id = $1`, feedID, status, errMsg, count)
+	if status == "ok" {
+		return FeedBasarili(ctx, pool, feedID, count, -1)
+	}
+	_, err := FeedBasarisiz(ctx, pool, feedID, errMsg)
 	return err
 }
 

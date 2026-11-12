@@ -228,9 +228,47 @@ func MostCommented(ctx context.Context, pool *pgxpool.Pool, siteID int64, limit 
 // AddComment yeni yorum ekler (önce incelemeye girer). IP saklanır (Faz 35 —
 // spam/hız sınırı için; inet sütunu boş kalıyordu). parentID>0 ise yanıt (Faz 36).
 func AddComment(ctx context.Context, pool *pgxpool.Pool, contentID int64, authorName, body, clientIP string, parentID int64) error {
-	_, err := pool.Exec(ctx, `INSERT INTO comments (content_id, author_name, body, ip, parent_id)
-		VALUES ($1,$2,$3, NULLIF($4,'')::inet, NULLIF($5,0))`, contentID, authorName, body, clientIP, parentID)
+	return AddCommentAsUser(ctx, pool, contentID, 0, authorName, body, clientIP, parentID)
+}
+
+// AddCommentAsUser yorumu ÜYE KİMLİĞİYLE kaydeder.
+//
+// NEDEN AYRI: yorum artık üyelik istiyor (12 Kasım 2026). Kimliği
+// kaydetmek üç şeyi mümkün kılıyor: üyenin kendi yorumlarını görmesi,
+// moderasyonda geçmişe bakılması ve aynı kişinin adını her seferinde
+// yeniden yazmaması. `user_id` 0 ise eski davranış (misafir) korunur —
+// mevcut çağıranlar kırılmıyor.
+func AddCommentAsUser(ctx context.Context, pool *pgxpool.Pool, contentID, userID int64, authorName, body, clientIP string, parentID int64) error {
+	// GÜVENİLİR ÜYE OTOMATİK GEÇER (12 Kasım 2026): daha önce onaylanmış
+	// yorumu olan üyenin yeni yorumu beklemeden yayımlanır. İlk yorum
+	// her zaman onaya düşer — spam ve reklam hesapları ilk yorumda
+	// yakalanıyor, düzenli okuyucu ise her seferinde kuyrukta beklemiyor.
+	//
+	// Moderatör bir yorumu silerse üye "güvenilir" olmaktan çıkmaz; o
+	// karar `UyeYorumGuveniniKaldir` ile ayrıca verilir.
+	durum := "onay_bekliyor"
+	if userID > 0 && UyeGuvenilirYorumcu(ctx, pool, userID) {
+		durum = "onayli"
+	}
+	_, err := pool.Exec(ctx, `INSERT INTO comments (content_id, user_id, author_name, body, ip, parent_id, status)
+		VALUES ($1, NULLIF($2,0), $3, $4, NULLIF($5,'')::inet, NULLIF($6,0), $7)`,
+		contentID, userID, authorName, body, clientIP, parentID, durum)
 	return err
+}
+
+// UyeGuvenilirYorumcu üyenin daha önce onaylanmış yorumu var mı.
+func UyeGuvenilirYorumcu(ctx context.Context, pool *pgxpool.Pool, userID int64) bool {
+	if userID <= 0 {
+		return false
+	}
+	var n int
+	if err := pool.QueryRow(ctx, `
+		SELECT count(*) FROM comments
+		WHERE user_id = $1 AND status = 'onayli'
+		LIMIT 1`, userID).Scan(&n); err != nil {
+		return false
+	}
+	return n > 0
 }
 
 func LikeComment(ctx context.Context, pool *pgxpool.Pool, commentID int64, clientIP string) (likes int, newVote bool, err error) {

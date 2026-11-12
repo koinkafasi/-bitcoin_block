@@ -1,0 +1,168 @@
+# bitcosar Go web/API — SSR + yönetim + API.
+#
+# Tek kopya, çünkü:
+#   · medya PVC'si ReadWriteOnce (local-path),
+#   · süreç içinde zamanlayıcı/arka plan işçileri var (eczane, hava, finans,
+#     trend, AI kuyruğu); iki kopya aynı işi iki kez yapar.
+# Ölçekleme istenirse işçiler ayrı bir Deployment'a alınmalı.
+#
+# ÖNEMLİ — imaj etiketi: `${IMAJ_ETIKETI}` bir YER TUTUCUDUR, k8s onu
+# çözmez. Bu dosya `kubectl apply -f` ile DOĞRUDAN uygulanmaz; sevk
+# betiği yer tutucuyu doldurur:
+#
+#     bash deploy/scripts/k8s-sevk.sh            # HEAD commit'inin etiketi
+#     bash deploy/scripts/k8s-sevk.sh sha-abc1234
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bitcosar-site
+  namespace: bitcosar-site
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate          # RWO medya diski
+  selector:
+    matchLabels: { app: bitcosar-site }
+  template:
+    metadata:
+      labels: { app: bitcosar-site }
+    spec:
+      # Service Account token'i POD'A BAGLAMA (Sonar S6865): pod'lar
+      # Kubernetes API'sini kullanmiyor; token mount edilirse ele gecirilen
+      # bir container kume API'sine konusabilir.
+      serviceAccountName: bitcosar-site
+      automountServiceAccountToken: false
+      imagePullSecrets: [{ name: ghcr }]
+      securityContext:
+        runAsUser: 10001
+        runAsNonRoot: true
+        fsGroup: 10001
+        seccompProfile: { type: RuntimeDefault }
+      # Şema göçü uygulamadan önce koşar; migrate binary'si aynı imajda.
+      initContainers:
+        - name: migrate
+          image: ghcr.io/koinkafasi/theblock-site:${IMAJ_ETIKETI}
+          command: ["/app/migrate"]
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: { drop: ["ALL"] }
+          envFrom:
+            - secretRef: { name: bitcosar-env }
+          env:
+            - name: DATABASE_URL
+              value: postgres://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@bitcosar-postgres:5432/$(POSTGRES_DB)?sslmode=verify-full&sslrootcert=/etc/pg-tls/ca.crt
+          volumeMounts:
+            - { name: tmp, mountPath: /tmp }
+            # verify-full bu CA'ya bakar; eksikse göç bağlantısı reddedilir.
+            - { name: pg-tls, mountPath: /etc/pg-tls, readOnly: true }
+          resources:
+            requests: { cpu: 50m, memory: 64Mi, ephemeral-storage: 1Gi }
+            limits: { cpu: "1",  memory: 256Mi, ephemeral-storage: 1Gi }
+      containers:
+        - name: site
+          image: ghcr.io/koinkafasi/theblock-site:${IMAJ_ETIKETI}
+          securityContext:
+            allowPrivilegeEscalation: false
+            # Salt-okunur kök: imajın dosyaları çalışma anında değiştirilemez.
+            # Yazılabilir iki yol var:
+            #   /data — medya PVC'si (storage + storage-private)
+            #   /tmp  — emptyDir; ffmpeg/ffprobe geçici dosyaları ve Go'nun
+            #           os.CreateTemp'i buraya yazar (os.TempDir() = /tmp).
+            # Doğrulandı: `--read-only --tmpfs /tmp` ile migrate geçiyor ve
+            # site /healthz 200 veriyor.
+            readOnlyRootFilesystem: true
+            capabilities: { drop: ["ALL"] }
+          # Sırların tamamı deploy/.env'den üretilen Secret'tan gelir.
+          envFrom:
+            - secretRef: { name: bitcosar-env }
+          env:
+            # Küme içi adresler .env'deki 127.0.0.1 değerlerini EZER:
+            # envFrom'dan sonra geldiği için bunlar kazanır.
+            - name: APP_ENV
+              value: production
+            - name: PORT
+              value: "8070"
+            - name: APP_BASE_URL
+              value: https://bitcosar.com
+            - name: DATABASE_URL
+              value: postgres://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@bitcosar-postgres:5432/$(POSTGRES_DB)?sslmode=verify-full&sslrootcert=/etc/pg-tls/ca.crt
+            - name: REDIS_URL
+              value: redis://bitcosar-redis:6379/0
+            - name: SEARCH_SVC_URL
+              value: http://bitcosar-search-svc:8171
+            - name: IMAGE_SVC_URL
+              value: http://bitcosar-image-svc:8170
+            # AI yönlendirici: küme içi OmniRoute (omniroute namespace'i).
+            # .env'deki değer 172.18.128.1 (WSL host) idi ve kümeden
+            # erişilemiyordu — her AI çağrısı i/o timeout veriyordu.
+            # Küme içi adres internete çıkmaz, ingress'e de bağımlı değil.
+            - name: OMNIROUTE_BASE_URL
+              value: http://omniroute.omniroute.svc.cluster.local:20128/v1
+            # Tarayıcıdan açılır; CSP connect-src buradan türetilir.
+            - name: COLLAB_URL
+              value: wss://bitcosar.com/collab
+            - name: STORAGE_DIR
+              value: /data/storage
+            - name: PRIVATE_STORAGE_DIR
+              value: /data/storage-private
+            # Bellek emniyeti: pod limiti 256Mi. Go varsayılanı yalnız
+            # tahsis edilen heap'i görür, konteyner limitini bilmez; limit
+            # aşılınca süreç GC'ye değil OOMKill'e gider. GOMEMLIMIT'i
+            # limitin ALTINA koymak GC'yi erken ve yumuşak devreye sokar.
+            # Ölçüm (8 Kasım 2026, yerel): boşta 30-32 MB, yük altında tepe
+            # ~55 MB. 220MiB, normal kullanımın çok üstünde; kırpma değil
+            # emniyet kemeri.
+            - name: GOMEMLIMIT
+              value: 220MiB
+          ports:
+            - { name: http, containerPort: 8070 }
+          volumeMounts:
+            - { name: media, mountPath: /data }
+            - { name: tmp, mountPath: /tmp }
+            - { name: pg-tls, mountPath: /etc/pg-tls, readOnly: true }
+          readinessProbe:
+            httpGet: { path: /healthz, port: 8070 }
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 5
+          livenessProbe:
+            httpGet: { path: /healthz, port: 8070 }
+            initialDelaySeconds: 60
+            periodSeconds: 30
+            timeoutSeconds: 10
+            failureThreshold: 3
+          # Kapanışta uçuştaki istekler bitsin (config.ShutdownTimeout).
+          lifecycle:
+            preStop:
+              exec: { command: ["sleep", "5"] }
+          resources:
+            requests: { cpu: 200m, memory: 512Mi, ephemeral-storage: 4Gi }
+            limits: { cpu: "2",  memory: 1Gi, ephemeral-storage: 4Gi }
+      terminationGracePeriodSeconds: 45
+      volumes:
+        - name: media
+          persistentVolumeClaim: { claimName: bitcosar-media }
+        # Salt-okunur kökün yazılabilir penceresi. ffmpeg transkripsiyon
+        # için büyük geçici dosya yazabilir; emptyDir düğüm diskinde durur
+        # (tmpfs DEĞİL), yoksa bellek limitini yer.
+        - name: tmp
+          emptyDir: {}
+        # Postgres CA'si. Yalnız ca.crt — istemci sunucu anahtarını görmez.
+        # Secret `deploy/scripts/pg-tls-uret.sh` tarafından yazılır.
+        - name: pg-tls
+          secret:
+            secretName: bitcosar-pg-tls
+            defaultMode: 0444
+            items:
+              - { key: ca.crt, path: ca.crt }
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: bitcosar-site
+  namespace: bitcosar-site
+spec:
+  selector: { app: bitcosar-site }
+  ports: [{ name: http, port: 8070, targetPort: 8070 }]

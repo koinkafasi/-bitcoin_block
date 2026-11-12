@@ -53,13 +53,16 @@ func TestCDKoleksiyonJSONLD(t *testing.T) {
 	assert.Equal(t, "CollectionPage", v["@type"])
 }
 
-func TestCDKisiJSONLDSarmalayicisiz(t *testing.T) {
-	// templ `<script>` içine ham yazar; bu yüzden JSON gövdesi SARMALAYICISIZ
-	// olmak zorunda (çift script etiketi 7 Kasım 2026'da sayfayı bozdu).
+func TestCDKisiJSONLDSarmalayicili(t *testing.T) {
+	// cdHead.JSONLD `@templ.Raw` ile basılıyor; sarmalayıcıyı üretici
+	// eklemek zorunda. Sarmalayıcısız döndüğünde JSON sayfanın en üstünde
+	// düz metin olarak görünüyordu (12 Kasım 2026).
 	js := string(cdKisiJSONLD("BitCoŞaR", "https://x.test/yazar/a", "A", "Muhabir", "bio", "", nil))
-	assert.False(t, strings.Contains(js, "<script"), "gövde script etiketi içermemeli")
+	require.Contains(t, js, `<script type="application/ld+json">`)
+	require.Contains(t, js, `</script>`)
+	govde := strings.TrimSuffix(strings.TrimPrefix(js, `<script type="application/ld+json">`), `</script>`)
 	var v map[string]any
-	require.NoError(t, json.Unmarshal([]byte(js), &v))
+	require.NoError(t, json.Unmarshal([]byte(govde), &v))
 	assert.Equal(t, "WebPage", v["@type"])
 	me, _ := v["mainEntity"].(map[string]any)
 	require.NotNil(t, me)

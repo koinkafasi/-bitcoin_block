@@ -1,0 +1,136 @@
+# PostgreSQL 17 — deploy/compose.yml ile aynı sürüm.
+#
+# Tek kopya (Deployment, replicas:1) ve RWO disk: local-path tek düğümde
+# ReadWriteMany veremez, zaten tek düğümlü küme. strategy Recreate:
+# RollingUpdate iki pod'u aynı anda ayağa kaldırıp aynı diski bağlamaya
+# çalışır ve takılır.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bitcosar-postgres
+  namespace: bitcosar-site
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels: { app: bitcosar-postgres }
+  template:
+    metadata:
+      labels: { app: bitcosar-postgres }
+    spec:
+      # Service Account token'i POD'A BAGLAMA (Sonar S6865): pod'lar
+      # Kubernetes API'sini kullanmiyor; token mount edilirse ele gecirilen
+      # bir container kume API'sine konusabilir.
+      serviceAccountName: bitcosar-postgres
+      automountServiceAccountToken: false
+      securityContext:
+        # postgres:17-alpine gercek kimlik: uid 70 / gid 70 (dogrulandi).
+        # fsGroup PVC'yi bu gruba verir; entrypoint root degilse chown'u
+        # atlar ve dogrudan calisir.
+        runAsUser: 70
+        runAsGroup: 70
+        fsGroup: 70
+        runAsNonRoot: true
+        seccompProfile: { type: RuntimeDefault }
+      containers:
+        - name: postgres
+          image: postgres:17-alpine
+          securityContext:
+            allowPrivilegeEscalation: false
+            # Salt-okunur kök: imajın kendi dosyaları çalışma anında
+            # değiştirilemez. Postgres'in yazması gereken İKİ yol emptyDir
+            # olarak veriliyor (aşağıdaki volumeMounts):
+            #   /var/run/postgresql — unix soketi; olmadan başlamıyor
+            #   /tmp                — geçici dosyalar
+            # PGDATA zaten PVC'de, o yüzden listede yok.
+            # Doğrulandı: `--read-only` ile konteyner ayağa kalkıyor,
+            # pg_isready ve `select 1` geçiyor.
+            readOnlyRootFilesystem: true
+            capabilities: { drop: ["ALL"] }
+          env:
+            - name: POSTGRES_USER
+              valueFrom: { secretKeyRef: { name: bitcosar-env, key: POSTGRES_USER } }
+            - name: POSTGRES_PASSWORD
+              valueFrom: { secretKeyRef: { name: bitcosar-env, key: POSTGRES_PASSWORD } }
+            - name: POSTGRES_DB
+              valueFrom: { secretKeyRef: { name: bitcosar-env, key: POSTGRES_DB } }
+            # PGDATA'yı alt dizine al: local-path kökünde lost+found vb.
+            # kalırsa initdb "dizin boş değil" diye reddediyor.
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
+          # TLS ZORUNLU (sslmode=verify-full). Sertifikalar
+          # `deploy/scripts/pg-tls-uret.sh` tarafından üretilip
+          # `bitcosar-pg-tls` Secret'ına yazılır; `k8s-sevk.sh` bunu
+          # otomatik koşar. Secret yoksa postgres BAŞLAMAZ — bilinçli:
+          # şifresiz başlamaktansa hiç başlamamak doğru (fail closed).
+          args:
+            - "-c"
+            - "ssl=on"
+            - "-c"
+            - "ssl_cert_file=/etc/pg-tls/server.crt"
+            - "-c"
+            - "ssl_key_file=/etc/pg-tls/server.key"
+            - "-c"
+            - "ssl_ca_file=/etc/pg-tls/ca.crt"
+            # Yalnız TLS'li bağlantı kabul et: `hostssl` istemciler için
+            # `host` (düz) satırları REDDET. Şifresiz istemci kazara
+            # bağlanırsa fark edilsin.
+            - "-c"
+            - "hba_file=/etc/pg-tls/pg_hba.conf"
+          ports:
+            - { name: postgres, containerPort: 5432 }
+          volumeMounts:
+            - { name: pgdata, mountPath: /var/lib/postgresql/data }
+            - { name: run, mountPath: /var/run/postgresql }
+            - { name: tmp, mountPath: /tmp }
+            # defaultMode 0640 + fsGroup 70: postgres anahtarı okuyabilir
+            # ama dünya okuyamaz. Postgres kuralı: anahtar root'a aitse
+            # grup-okuma serbest, diğer her durumda 0600 gerekir.
+            - { name: pg-tls, mountPath: /etc/pg-tls, readOnly: true }
+          readinessProbe:
+            exec:
+              command: ["sh", "-c", "pg_isready -U \"$POSTGRES_USER\" -d \"$POSTGRES_DB\""]
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 3
+          livenessProbe:
+            exec:
+              command: ["sh", "-c", "pg_isready -U \"$POSTGRES_USER\" -d \"$POSTGRES_DB\""]
+            initialDelaySeconds: 30
+            periodSeconds: 20
+            timeoutSeconds: 5
+          resources:
+            requests: { cpu: 100m, memory: 384Mi, ephemeral-storage: 1Gi }
+            limits: { cpu: "2",  memory: 1Gi, ephemeral-storage: 1Gi }
+      volumes:
+        - name: pgdata
+          persistentVolumeClaim: { claimName: bitcosar-pgdata }
+        # Salt-okunur kökün yazılabilir pencereleri. Bellekte değil diskte
+        # (medium boş): soket dizini küçük, /tmp'ye sıralama dosyası düşebilir.
+        - name: run
+          emptyDir: {}
+        - name: tmp
+          emptyDir: {}
+        # TLS materyali. `optional: false` (varsayılan): Secret yoksa pod
+        # beklemede kalır — sessizce şifresiz başlamaz.
+        - name: pg-tls
+          secret:
+            secretName: bitcosar-pg-tls
+            defaultMode: 0640
+            items:
+              - { key: ca.crt, path: ca.crt }
+              - { key: server.crt, path: server.crt }
+              - { key: server.key, path: server.key }
+              - { key: pg_hba.conf, path: pg_hba.conf }
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: bitcosar-postgres
+  namespace: bitcosar-site
+spec:
+  selector: { app: bitcosar-postgres }
+  ports:
+    - { name: postgres, port: 5432, targetPort: 5432 }

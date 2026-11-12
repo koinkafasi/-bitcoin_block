@@ -347,8 +347,28 @@
       const el = box.querySelector("[data-bind=" + key + "]");
       if (el) el.textContent = val;
     };
-    setBind("title", t || "Başlık burada görünür");
-    setBind("desc", s || "Açıklama burada görünür…");
+    // Google başlığı ~60, açıklamayı ~160 karakterde keser. Önizleme
+    // tam metni gösterirse yazar kesilmeyi GÖREMİYOR — sitede 2.359
+    // başlık bu yüzden kesik yayımlanmıştı (12 Kasım 2026 ölçümü).
+    // Önizleme artık aramada görüneni gösteriyor.
+    const KES_BASLIK = 60, KES_ACIKLAMA = 160;
+    const kes = function (metin, sinir) {
+      const d = Array.from(String(metin));
+      return d.length > sinir ? d.slice(0, sinir).join("").trim() + "…" : metin;
+    };
+    setBind("title", kes(t, KES_BASLIK) || "Başlık burada görünür");
+    setBind("desc", kes(s, KES_ACIKLAMA) || "Açıklama burada görünür…");
+    // Sayaç: kaç karakter ve kesiliyor mu.
+    const sayac = function (sec, uzunluk, sinir, ad) {
+      const el = document.querySelector(sec);
+      if (!el) return;
+      const kesik = uzunluk > sinir;
+      el.textContent = uzunluk + " karakter" +
+        (uzunluk === 0 ? "" : kesik ? " — aramada kesilecek (sınır " + sinir + ")" : " — tam görünür");
+      el.classList.toggle("uyari", kesik);
+    };
+    sayac("#seoBaslikSayac", Array.from(t).length, KES_BASLIK, "başlık");
+    sayac("#seoAciklamaSayac", Array.from(s).length, KES_ACIKLAMA, "açıklama");
     setBind("url", window.location.origin + "/haber-" + slugify(t) + "-0");
     const social = document.querySelector("[data-social-preview]");
     if (social) {
@@ -359,7 +379,9 @@
     }
     let pts = 0;
     const add = function (on, w) { if (on) pts += w; };
-    add(t.length >= 40 && t.length <= 70, 20);
+    // Eşik 60: Google'ın kestiği yer. 70'e kadar ödüllendirmek yazarı
+    // kesilen başlık yazmaya yönlendiriyordu.
+    add(t.length >= 40 && t.length <= 60, 20);
     add(s.length >= 120 && s.length <= 160, 15);
     add(t.length > 0, 25); // yer tutucu + başlık varlığı
     add(s.length > 0, 15);

@@ -1,4 +1,5 @@
 import { Editor, Node, Mark, Extension, mergeAttributes } from '@tiptap/core'
+import { temizlePastedHTML, duzeltMetin } from './temizle.js'
 import { Plugin, PluginKey } from '@tiptap/pm/state'
 import StarterKit from '@tiptap/starter-kit'
 import Link from '@tiptap/extension-link'
@@ -1756,9 +1757,17 @@ function setInternalLinkFromDialog(editor) {
   const results = document.getElementById('editorLinkResults')
   if (!dialog || !input || !results) return
   dialog.hidden = false
-  input.value = ''
+  // SEÇİLİ METNİ SORGU OLARAK KULLAN (12 Kasım 2026): diyalog boş
+  // açılıyordu ve yazar aradığı haberin başlığını tahmin edip elle
+  // yazmak zorunda kalıyordu. Seçili ifade zaten konuyu söylüyor;
+  // arama onunla başlasın, yazar gerekirse daraltsın.
+  const seciliMetin = editor.state.doc
+    .textBetween(editor.state.selection.from, editor.state.selection.to, ' ')
+    .trim()
+  input.value = seciliMetin.length > 80 ? seciliMetin.slice(0, 80) : seciliMetin
   results.innerHTML = '<p class="small muted">Haber başlığı yazın…</p>'
   input.focus()
+  input.select()
   let timer = null
   let seq = 0
   const search = () => {
@@ -1799,6 +1808,9 @@ function setInternalLinkFromDialog(editor) {
     clearTimeout(timer)
     timer = setTimeout(search, 220)
   }
+  // Seçimle açıldıysa aramayı hemen başlat: yazar tuşa basmadan
+  // önerileri görsün.
+  if (input.value.trim().length >= 2) search()
   document.getElementById('editorLinkCancel').onclick = () => closeDialog('editorLinkDialog')
 }
 
@@ -2067,15 +2079,53 @@ async function uploadEditorFiles(editor, files) {
   return true
 }
 
-function cleanPastedHTML(html) {
-  const doc = new DOMParser().parseFromString(html || '', 'text/html')
-  doc.querySelectorAll('script,style,meta,link').forEach((el) => el.remove())
-  doc.querySelectorAll('*').forEach((el) => {
-    el.removeAttribute('style')
-    el.removeAttribute('class')
-    el.removeAttribute('id')
+// Yapıştırma temizliği `temizle.js`'e taşındı: yalnız script/style silen
+// eski sürüm, kaynak sitenin div yığınlarını ve bozuk tipografisini
+// gövdeye bırakıyordu (kullanıcı bildirimi, 12 Kasım 2026).
+// metniDuzelt gövdedeki METİN düğümlerini yerinde düzeltir.
+//
+// NEDEN DOĞRUDAN DOM DEĞİL: TipTap belgesini dışarıdan değiştirmek geri
+// alma geçmişini bozuyor. Burada tek bir işlem (transaction) kuruluyor;
+// Ctrl+Z düzeltmenin tamamını birden geri alıyor.
+//
+// SEÇİM VARSA yalnız seçili aralık düzeltilir — yazar bir paragrafı
+// denemek isterse tüm yazıyı değiştirmek zorunda kalmasın.
+function metniDuzelt(editor) {
+  const { state, view } = editor
+  const { from, to, empty } = state.selection
+  const bas = empty ? 0 : from
+  const son = empty ? state.doc.content.size : to
+
+  const tr = state.tr
+  let degisen = 0
+  state.doc.nodesBetween(bas, son, (node, pos) => {
+    if (!node.isText || !node.text) return
+    const yeni = duzeltMetin(node.text)
+    if (yeni === node.text) return
+    const a = Math.max(pos, bas)
+    const b = Math.min(pos + node.text.length, son)
+    if (a >= b) return
+    const parca = yeni.slice(a - pos, (a - pos) + (b - a))
+    tr.insertText(parca, tr.mapping.map(a), tr.mapping.map(b))
+    degisen++
   })
-  return doc.body.innerHTML
+
+  if (!degisen) {
+    bildir('Düzeltilecek bir şey bulunamadı.')
+    return
+  }
+  view.dispatch(tr.setMeta('addToHistory', true))
+  bildir(degisen + ' yerde düzeltme yapıldı. Geri almak için Ctrl+Z.')
+}
+
+function bildir(mesaj) {
+  const el = document.querySelector('[data-editor-durum]')
+  if (el) { el.textContent = mesaj; return }
+  if (window.console) window.console.info('[editör]', mesaj)
+}
+
+function cleanPastedHTML(html) {
+  return temizlePastedHTML(html)
 }
 
 function aiBlocks(value) {
@@ -2127,7 +2177,7 @@ function buildToolbar() {
     [['•', 'Madde listesi', 'bullet'], ['1.', 'Numaralı liste', 'ordered'], ['“', 'Alıntı', 'blockquote'], ['@microphone', 'Sesle yaz (dikte)', 'dictate']],
     [['</>', 'Kod bloğu', 'codeblock'], ['—', 'Yatay çizgi', 'hr'], ['@table', 'Tablo', 'table']],
     [['@message-2', 'Callout', 'callout'], ['@chevron-right', 'Toggle', 'toggle'], ['@photo', 'Görsel', 'image'], ['@world', 'Uzak görsel', 'remoteimage'], ['@layout-grid', 'Galeri', 'gallery'], ['@bookmark', 'Yer imi', 'bookmark'], ['@file-text', 'Dosya', 'filecard'], ['@music', 'Ses', 'audiocard'], ['@video', 'Video', 'videocard'], ['@player-play', 'Embed', 'embed'], ['@box-multiple', 'Blok seçimi', 'blockselect']],
-    [['@link', 'Bağlantı', 'link'], ['@arrow-up-right', 'İç link', 'internallink'], ['@message-circle', 'Editör notları', 'comments'], ['@pencil', 'Öneri modu', 'suggestion'], ['@focus-2', 'Odak modu', 'focus'], ['@history', 'Sürüm geçmişi', 'history'], ['@eraser', 'Biçimi temizle', 'clear'], ['@keyboard', 'Klavye kısayolları', 'shortcuts']],
+    [['@link', 'Bağlantı', 'link'], ['@arrow-up-right', 'İç link', 'internallink'], ['@message-circle', 'Editör notları', 'comments'], ['@pencil', 'Öneri modu', 'suggestion'], ['@focus-2', 'Odak modu', 'focus'], ['@history', 'Sürüm geçmişi', 'history'], ['@eraser', 'Biçimi temizle', 'clear'], ['@wand', 'Metni düzelt (tipografi + yazım)', 'duzelt'], ['@keyboard', 'Klavye kısayolları', 'shortcuts']],
   ]
   groups.forEach((group, gi) => {
     if (gi > 0) {
@@ -2222,6 +2272,7 @@ function handleCommand(editor, cmd) {
   else if (cmd === 'focus') toggleFocusMode()
   else if (cmd === 'shortcuts') openShortcuts()
   else if (cmd === 'clear') editor.chain().focus().unsetAllMarks().clearNodes().run()
+  else if (cmd === 'duzelt') metniDuzelt(editor)
   else if (cmd === 'history') {
     const b = document.querySelector('#aiEditor [data-ai-history]')
     if (b) b.click()

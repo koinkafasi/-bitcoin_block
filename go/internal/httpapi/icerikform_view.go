@@ -71,6 +71,7 @@ func (s *Server) icerikFormViewFrom(d *tmplData) templkit.IcerikFormView {
 	v.AiScore = strconv.Itoa(f.Content.AiScore)
 	v.CommentAcik = f.Content.CommentStatus != "kapali"
 	v.IsExclusive = f.Content.IsExclusive
+	v.ImageGrayscale = f.Content.ImageGrayscale
 	v.MinTierWeight = f.Content.MinTierWeight
 	v.SourceURL = derefStr(f.Content.SourceURL)
 	v.SourceName = derefStr(f.Content.SourceName)

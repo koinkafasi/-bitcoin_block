@@ -114,8 +114,15 @@ templ cdKatLead(s CDStory) {
 			@cdMetaSatir(s)
 		</div>
 		if s.Image != "" {
-			<a class="cd-kat-lead__gorsel" href={ s.Href } tabindex="-1" aria-hidden="true">
+			<a class={ cdGriSinif("cd-kat-lead__gorsel", s.Gri) } href={ s.Href } tabindex="-1" aria-hidden="true">
 				@cdGorselImg(s.Image, YuvaKatLeadYatay, true)
+			</a>
+		} else {
+			// Görselsiz haber: ilk harfli tipografik kapak. RSS'ten
+			// gelen içeriklerin bir kısmı görselsiz; kart boş
+			// kalınca liste düzeni bozuluyordu.
+			<a class="cd-kat-lead__gorsel" href={ s.Href } tabindex="-1" aria-hidden="true">
+				@cdKapakYok(s)
 			</a>
 		}
 	</article>
@@ -127,8 +134,15 @@ templ cdKatLead(s CDStory) {
 templ cdKatAltKart(s CDStory) {
 	<article class="cd-kat-alt__kart">
 		if s.Image != "" {
-			<a class="cd-kat-alt__gorsel" href={ s.Href } tabindex="-1" aria-hidden="true">
+			<a class={ cdGriSinif("cd-kat-alt__gorsel", s.Gri) } href={ s.Href } tabindex="-1" aria-hidden="true">
 				@cdGorselImg(s.Image, YuvaKatAlt, false)
+			</a>
+		} else {
+			// Görselsiz haber: ilk harfli tipografik kapak. RSS'ten
+			// gelen içeriklerin bir kısmı görselsiz; kart boş
+			// kalınca liste düzeni bozuluyordu.
+			<a class="cd-kat-alt__gorsel" href={ s.Href } tabindex="-1" aria-hidden="true">
+				@cdKapakYok(s)
 			</a>
 		}
 		<h3><a href={ s.Href }>{ s.Title }</a></h3>
@@ -159,8 +173,15 @@ templ cdKatSatir(s CDStory) {
 			@cdMetaSatir(s)
 		</div>
 		if s.Image != "" {
-			<a class="cd-kat-satir__gorsel" href={ s.Href } tabindex="-1" aria-hidden="true">
+			<a class={ cdGriSinif("cd-kat-satir__gorsel", s.Gri) } href={ s.Href } tabindex="-1" aria-hidden="true">
 				@cdGorselImg(s.Image, YuvaKatSatir, false)
+			</a>
+		} else {
+			// Görselsiz haber: ilk harfli tipografik kapak. RSS'ten
+			// gelen içeriklerin bir kısmı görselsiz; kart boş
+			// kalınca liste düzeni bozuluyordu.
+			<a class="cd-kat-satir__gorsel" href={ s.Href } tabindex="-1" aria-hidden="true">
+				@cdKapakYok(s)
 			</a>
 		}
 	</article>

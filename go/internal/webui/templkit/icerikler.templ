@@ -91,6 +91,9 @@ type IceriklerView struct {
 	Types     []IFiltre
 	Cats      []IFiltre
 	Gunler    []IFiltre
+	// Kademeler toplu erişim ayarı için abonelik kademeleri.
+	// Boşsa (kademe tanımlı değilse) yalnız "herkese açık" basılır.
+	Kademeler []IFiltre
 	Tip       string
 	Kategori  string
 	Baslangic string
@@ -290,6 +293,18 @@ templ IceriklerPanel(v IceriklerView) {
 					<option value="kapat">Kapat</option>
 				</select>
 				<button class="btn ghost small" type="submit" name="islem" value="rozet">Rozet Uygula</button>
+				<select class="input" name="kademe" aria-label="Erişim kademesi" style="max-width:170px">
+					<option value="0">Herkese açık</option>
+					for _, o := range v.Kademeler {
+						<option value={ o.Value }>{ o.Label } ve üstü</option>
+					}
+				</select>
+				<button class="btn ghost small" type="submit" name="islem" value="erisim">Erişimi Uygula</button>
+				<select class="input" name="hedef_dil" aria-label="Çeviri hedef dili" style="max-width:130px">
+					<option value="tr">Türkçe'ye</option>
+					<option value="en">İngilizce'ye</option>
+				</select>
+				<button class="btn ghost small" type="submit" name="islem" value="cevir" title="Seçili içerikleri çeviri kuyruğuna alır; çeviri arka planda üretilir">AI Çeviri</button>
 				<select class="input" name="kategori" style="max-width:190px" aria-label="Kategori taşı">
 					<option value="">Kategori seç…</option>
 					<option value="0">— Kategorisiz —</option>

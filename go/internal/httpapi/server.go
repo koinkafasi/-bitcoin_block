@@ -675,6 +675,7 @@ func (s *Server) routes() {
 		{"POST", "/admin/bot/{id}/cek", s.handleBotCek},
 		{"GET", "/admin/ai-kaynak", s.handleAISourceGet},
 		{"POST", "/admin/ai-kaynak/tara", s.handleAISourceScan},
+		{"POST", "/admin/ai-kaynak/feed/{id}/durum", s.handleAIFeedDurum},
 		{"POST", "/admin/ai-kaynak/zenginlestir", s.handleAISourceEnrich},
 		{"POST", "/admin/ai-kaynak/plan/{id}", s.handleAISourcePlanSave},
 		{"POST", "/admin/ai-kaynak/plan/{id}/calistir", s.handleAISourcePlanRun},

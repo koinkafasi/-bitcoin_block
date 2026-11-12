@@ -15,6 +15,9 @@ type CDStory struct {
 	Tags      []string
 	// Paylasim/sosyal: makale altindaki dugmeler icin.
 	ShareURL string
+	// Gri true ise bu kartin gorseli siyah-beyaz basilir. Yazi
+	// sayfasinda uygulanmaz: okuyucu habere girince gorsel renkli acilir.
+	Gri bool
 }
 
 // CDSection ana sayfadaki bölüm hücresi (Markets / Policy / Tech / Finance).
@@ -176,6 +179,14 @@ type CDArticleView struct {
 	// SummaryMaddeler açıldığında listelenen maddeler (cümlelere bölünmüş).
 	SummaryMaddeler []string
 	BodyHTML        string // güvenilir, sunucuda üretilmiş
+	// Kilitli: içerik abonelik kademesi gerektiriyor ve ziyaretçinin
+	// erişimi yok. Gövde kesilmiş olarak basılır, altına kilit kutusu
+	// gelir.
+	Kilitli bool
+	// KilitKatman gereken katmanın adı ("Gümüş"). Boşsa genel ifade.
+	KilitKatman string
+	// Yorum makale altındaki yorum bölümü (üyelik zorunlu).
+	Yorum CDYorumBolumu
 	Image           string
 	ImageCredit     string
 	SourceName      string

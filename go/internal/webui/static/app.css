@@ -368,3 +368,11 @@ main.page,.page{padding:22px 0 72px}
 @keyframes be-dict-pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(.8)}}
 @keyframes ses-up-spin{to{transform:rotate(360deg)}}
 .ses-up-error{border-color:#fca5a5;background:color-mix(in srgb,#dc2626 7%,var(--surface-2))}
+
+/* SEO sayaçları: sınır aşılınca uyarı rengi. Yazar başlığın aramada
+   kesileceğini form alanının hemen altında görür. */
+.field .hint.uyari { color: var(--uyari, #b45309); font-weight: 600; }
+
+/* Kaynak bankasında düşük görsel oranı: kart düzenini bozacak
+   kaynakları listede görünür kılar (eşik %30). */
+.feed-gorsel-dusuk { color: var(--uyari, #b45309); font-weight: 600; }

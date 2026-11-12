@@ -803,6 +803,7 @@ func (s *Server) handleContentSave(w http.ResponseWriter, r *http.Request) {
 	}
 	c.YMYLUzman = optStr(r.FormValue("ymyl_uzman"))
 	c.IsExclusive = r.FormValue("is_exclusive") != ""
+	c.ImageGrayscale = r.FormValue("image_grayscale") != ""
 	// Icerik bazli katman kilidi (kategori varsayilani dahil).
 	var categoryDefault int
 	if isNew && c.CategoryID != nil {
@@ -1217,6 +1218,70 @@ func (s *Server) handleContentsBulk(w http.ResponseWriter, r *http.Request) {
 				continue
 			}
 			basarili++
+		}
+	case "cevir":
+		// Toplu çeviri: seçili içerikler için çeviri kuyruğuna istek
+		// yazılır. Çeviriyi burada ÜRETMİYORUZ — kuyruk işleyicisi
+		// sırayla alıyor. Yoksa 50 içerik seçen kullanıcı isteği
+		// zaman aşımına uğrardı ve yarıda kalan çeviriler olurdu.
+		hedefDil := strings.TrimSpace(r.FormValue("hedef_dil"))
+		if hedefDil == "" {
+			hedefDil = "tr"
+		}
+		if s.ai == nil || !s.ai.Enabled() {
+			geri("error", "AI sağlayıcısı yapılandırılmadı (Ayarlar → Yapay Zeka).")
+			return
+		}
+		atlandiDil := 0
+		for _, id := range ids {
+			c, err := repo.GetContent(ctx, s.pool, id)
+			if err != nil {
+				atlandi++
+				continue
+			}
+			// Zaten hedef dildeyse çeviri anlamsız.
+			if strings.EqualFold(c.Locale, hedefDil) {
+				atlandiDil++
+				continue
+			}
+			if err := ceviri.IstekEkle(ctx, s.pool, id, hedefDil); err != nil {
+				atlandi++
+				continue
+			}
+			basarili++
+		}
+		s.audit(r, "toplu_ceviri", hedefDil+": "+itoa(basarili)+" içerik")
+		if atlandiDil > 0 {
+			defer func() {
+				s.logger.Info("toplu çeviri: zaten hedef dilde olanlar atlandı",
+					"adet", atlandiDil, "dil", hedefDil)
+			}()
+		}
+	case "erisim":
+		// Toplu erişim kademesi (12 Kasım 2026): "herkese açık" ya da
+		// belirli bir abonelik kademesi. Kilitler elle tek tek
+		// işaretlendiği için aralarında rastgele kalanlar oluyordu —
+		// SEO için açık tutulması gereken evergreen rehber bile
+		// kilitlenmişti (ölçüldü).
+		agirlik := 0
+		if v := strings.TrimSpace(r.FormValue("kademe")); v != "" {
+			agirlik = parseIntOr(v)
+		}
+		if agirlik < 0 || agirlik > 5 {
+			geri("error", "Geçersiz abonelik kademesi.")
+			return
+		}
+		for _, id := range ids {
+			if err := repo.SetContentErisim(ctx, s.pool, id, agirlik); err != nil {
+				atlandi++
+				continue
+			}
+			basarili++
+		}
+		if agirlik == 0 {
+			s.audit(r, "icerik_erisim", "toplu herkese acik: "+itoa(len(ids)))
+		} else {
+			s.audit(r, "icerik_erisim", "toplu kademe "+itoa(agirlik)+": "+itoa(len(ids)))
 		}
 	case "sil":
 		for _, id := range ids {

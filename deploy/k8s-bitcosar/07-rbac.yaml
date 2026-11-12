@@ -1,0 +1,130 @@
+# ServiceAccount + PodDisruptionBudget.
+#
+# SERVİCE ACCOUNT: pod'lar şu an `default` SA ile koşuyor ve zaten
+# `automountServiceAccountToken: false`. Adlandırılmış SA, pod'un
+# KİMLİĞİNİ denetim kaydında ve ileride eklenecek RBAC'ta görünür kılar
+# ("hangi pod bu işlemi yaptı" sorusu cevaplanabilir olur).
+#
+# Hiçbir SA'ya ClusterRole BAĞLANMAZ: pod'lar Kubernetes API'sini
+# kullanmıyor (token da mount edilmiyor). Yetki vermemek, yetkiyi doğru
+# yönetmekten daha güvenli.
+#
+# PDB: tek düğümlü kümede etkisi sınırlı ama `minAvailable` ile düğüm
+# bakımı (drain) sırasında Kubernetes'in pod'u ne zaman tahliye edeceğini
+# bilmesini sağlar. PDB olmadan drain her şeyi siler.
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: bitcosar-site
+  namespace: bitcosar-site
+  labels: { app: bitcosar-site }
+automountServiceAccountToken: false
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: bitcosar-postgres
+  namespace: bitcosar-site
+  labels: { app: bitcosar-postgres }
+automountServiceAccountToken: false
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: bitcosar-redis
+  namespace: bitcosar-site
+  labels: { app: bitcosar-redis }
+automountServiceAccountToken: false
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: bitcosar-image-svc
+  namespace: bitcosar-site
+  labels: { app: bitcosar-image-svc }
+automountServiceAccountToken: false
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: bitcosar-search-svc
+  namespace: bitcosar-site
+  labels: { app: bitcosar-search-svc }
+automountServiceAccountToken: false
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: bitcosar-collab
+  namespace: bitcosar-site
+  labels: { app: bitcosar-collab }
+automountServiceAccountToken: false
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: bitcosar-yedek
+  namespace: bitcosar-site
+  labels: { app: bitcosar-yedek }
+automountServiceAccountToken: false
+---
+# SITE: replika 1 olduğu için minAvailable 0. Replika artırıldığında
+# bu değer 1'e çekilmeli (aksi hâlde drain sırasında kesinti olur).
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: bitcosar-site
+  namespace: bitcosar-site
+spec:
+  minAvailable: 0
+  selector:
+    matchLabels: { app: bitcosar-site }
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: bitcosar-postgres
+  namespace: bitcosar-site
+spec:
+  # Veritabanı TEK replika + RWO disk: drain sırasında kesinti kaçınılmaz.
+  # PDB yine de kaydı tutar; `maxUnavailable: 1` bilinçli tercih.
+  maxUnavailable: 1
+  selector:
+    matchLabels: { app: bitcosar-postgres }
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: bitcosar-redis
+  namespace: bitcosar-site
+spec:
+  maxUnavailable: 1
+  selector:
+    matchLabels: { app: bitcosar-redis }
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: bitcosar-image-search
+  namespace: bitcosar-site
+spec:
+  # image-svc ve search-svc site'ın yardımcıları; biri düşerse site
+  # çalışmaya devam eder (image-svc düşerse görseller orijinal boyutta
+  # servis edilir, search-svc düşerse SQL aramasına düşer).
+  minAvailable: 0
+  selector:
+    matchExpressions:
+      - key: app
+        operator: In
+        values: [bitcosar-image-svc, bitcosar-search-svc]
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: bitcosar-collab
+  namespace: bitcosar-site
+spec:
+  minAvailable: 0
+  selector:
+    matchLabels: { app: bitcosar-collab }

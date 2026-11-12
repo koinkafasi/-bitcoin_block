@@ -74,6 +74,22 @@ type AIKaynakFeed struct {
 	LastError    string
 	LastChecked  string
 	LastItems    string
+	// --- sağlık ve kalite (12 Kasım 2026) ---
+	// Dil: kaynağın yayın dili rozeti ("TR"/"EN").
+	Dil string
+	// GorselOran son çekimde görselli öğe yüzdesi ("" = ölçülmemiş).
+	// Görselsiz kaynak kart düzenini bozuyor; listede görünmeli.
+	GorselOran string
+	// SonBasari son BAŞARILI çekim; boşsa kaynak hiç çalışmamış.
+	SonBasari string
+	// ArdisikHata üst üste hata sayısı (0 ise boş).
+	ArdisikHata string
+	// OtomatikKapandi true ise kaynağı bot kapattı, kullanıcı değil.
+	OtomatikKapandi bool
+	// KapanmaNedeni notes alanından çıkarılan kısa etiket
+	// ("KONU DIŞI", "BOZUK"); kapalı kaynağın neden kapalı olduğu
+	// listede görünmezse kimse yanıtlayamıyordu.
+	KapanmaNedeni string
 }
 
 // AIKaynakPlan kategori üretim planı satırı.
@@ -117,6 +133,15 @@ type AIKaynakPlanSatir struct {
 type AIKaynakView struct {
 	FlashKind     string
 	FlashText     string
+	// --- AI sağlayıcı ve çeviri kuyruğu (12 Kasım 2026) ---
+	// AISaglayici bağlı sağlayıcıların adı ("omniroute" gibi);
+	// boşsa yapılandırılmamış ve AI işleri (çeviri, taslak yazımı)
+	// sessizce mock yanıt üretiyor demektir.
+	AISaglayici string
+	// CeviriBekleyen kuyrukta bekleyen çeviri isteği sayısı.
+	CeviriBekleyen string
+	// CeviriHatali başarısız çeviri sayısı.
+	CeviriHatali string
 	TotalItems    string
 	ClusterCount  string
 	FeedCount     string
@@ -144,6 +169,26 @@ templ AIKaynakPanel(v AIKaynakView) {
 					if v.EnrichPending != "" {
 						<p class="small muted" style="margin:6px 0 0">{ v.EnrichPending } kaynak öğesi özet/kategori kontrolü bekliyor.</p>
 					}
+					// AI sağlayıcı durumu: yapılandırılmamışsa çeviri ve
+					// taslak yazımı sessizce MOCK yanıt üretir — bu
+					// panelde görünmezse kimse fark etmiyor.
+					<p class="small" style="margin:8px 0 0">
+						if v.AISaglayici != "" {
+							<span class="tag">AI: { v.AISaglayici }</span>
+						} else {
+							<span class="tag" style="color:var(--uyari,#b45309)">AI yapılandırılmadı</span>
+							<span class="muted"> · çeviri ve taslak yazımı örnek yanıt üretir · </span>
+							<a href="/admin/ayarlar#yapay-zeka">Ayarlar → Yapay Zeka</a>
+						}
+						if v.CeviriBekleyen != "" {
+							<span class="muted"> · </span>
+							<span class="tag">{ v.CeviriBekleyen } çeviri kuyrukta</span>
+						}
+						if v.CeviriHatali != "" {
+							<span class="muted"> · </span>
+							<span class="tag" style="color:var(--uyari,#b45309)">{ v.CeviriHatali } çeviri hatası</span>
+						}
+					</p>
 				</div>
 				<div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end">
 					<form method="post" action="/admin/ai-kaynak/tara" hx-post="/admin/ai-kaynak/tara" hx-target="#ai-source-panel" hx-swap="outerHTML" hx-indicator="#ai-source-yukleniyor">
@@ -272,11 +317,11 @@ templ AIKaynakPanel(v AIKaynakView) {
 			<p class="hint" style="margin-top:0">Site adresi, doğrulanmış RSS/HTML kaynağı, kategori, güven puanı ve son tarama durumu.</p>
 			<table class="table" style="width:100%">
 				<thead>
-					<tr><th>Kaynak</th><th>Site</th><th>Kategori</th><th>Tür</th><th>Güven</th><th>Durum</th><th>Son tarama</th></tr>
+					<tr><th>Kaynak</th><th>Dil</th><th>Kategori</th><th>Güven</th><th>Görsel</th><th>Durum</th><th>Son tarama</th><th>Son başarı</th><th></th></tr>
 				</thead>
 				<tbody>
 					if len(v.Feeds) == 0 {
-						@TabloBos(7, "rss", "Kaynak yok", "AI beslemek için bir kaynak ekleyin.", "", "")
+						@TabloBos(9, "rss", "Kaynak yok", "AI beslemek için bir kaynak ekleyin.", "", "")
 					}
 					for _, f := range v.Feeds {
 						<tr>
@@ -288,23 +333,34 @@ templ AIKaynakPanel(v AIKaynakView) {
 									</div>
 								}
 							</td>
-							<td>
-								if f.Homepage != "" {
-									<a href={ templ.SafeURL(f.Homepage) } target="_blank" rel="noopener">site</a>
+							<td><span class="tag">{ feedDilEtiketi(f.Dil) }</span></td>
+							<td>{ f.CategoryName }</td>
+							<td>{ f.Trust }</td>
+							<td class={ feedGorselSinifi(f.GorselOran) } title="Son çekimde görseli olan öğelerin yüzdesi; düşük oran kart düzenini bozar">
+								if f.GorselOran != "" {
+									%{ f.GorselOran }
 								} else {
 									—
 								}
 							</td>
-							<td>{ f.CategoryName }</td>
-							<td>{ f.KindLabel }</td>
-							<td>{ f.Trust }</td>
 							<td>
 								if !f.Aktif {
-									pasif
+									<span class="tag">{ feedPasifEtiketi(f) }</span>
+									if f.OtomatikKapandi {
+										<div class="small" style="color:var(--uyari,#b45309)">
+											{ f.ArdisikHata } ardışık hata sonrası bot kapattı
+										</div>
+									}
+									if f.LastError != "" {
+										<div class="small muted" title={ f.LastError }>{ kirpEtiket(f.LastError, 48) }</div>
+									}
 								} else if f.LastStatus != "" {
 									{ f.LastStatus }
+									if f.ArdisikHata != "" {
+										<span class="small" style="color:var(--uyari,#b45309)" title="Üst üste başarısız çekim">· { f.ArdisikHata } hata</span>
+									}
 									if f.LastError != "" {
-										<div class="small muted" title={ f.LastError }>{ f.LastError }</div>
+										<div class="small muted" title={ f.LastError }>{ kirpEtiket(f.LastError, 48) }</div>
 									}
 								} else {
 									bekliyor
@@ -317,8 +373,28 @@ templ AIKaynakPanel(v AIKaynakView) {
 									—
 								}
 								if f.LastItems != "" {
-									· { f.LastItems }
+									· { f.LastItems } öğe
 								}
+							</td>
+							<td class="small muted" title="Son BAŞARILI çekim: kaynağın ne zamandır ölü olduğunu gösterir">
+								if f.SonBasari != "" {
+									{ f.SonBasari }
+								} else {
+									hiç
+								}
+							</td>
+							<td>
+								<form method="post" action={ templ.SafeURL("/admin/ai-kaynak/feed/" + f.ID + "/durum") }
+									hx-post={ "/admin/ai-kaynak/feed/" + f.ID + "/durum" }
+									hx-target="#ai-source-panel" hx-swap="outerHTML"
+									hx-indicator="#ai-source-yukleniyor">
+									if f.Aktif {
+										<input type="hidden" name="durum" value="kapat"/>
+										<button class="btn ghost small" type="submit">Kapat</button>
+									} else {
+										<button class="btn small" type="submit" title="Açar ve hata sayacını sıfırlar">Aç</button>
+									}
+								</form>
 							</td>
 						</tr>
 					}
