@@ -8,12 +8,28 @@
   var perde = ozet.querySelector("[data-ozet-kapat]");
   var mobil = window.matchMedia("(max-width: 767px)");
 
+  var kok = document.documentElement;
+  var yedekPad = "";
+
   function kilitAc() {
     if (mobil.matches && ozet.open) {
-      document.documentElement.classList.add("cd-ozet-kilit");
+      // Kaydırma çubuğu kaybı görünümü genişletip sayfayı titretmesin.
+      // Ölçüt gövde genişliği: `clientWidth` gutter ayrıldığında da tam
+      // döner, o yüzden yanıltıcı (bkz. csp-delegated.js aynı not).
+      var once = Math.round(document.body.getBoundingClientRect().width);
+      kok.classList.add("cd-ozet-kilit");
+      var fark = Math.round(document.body.getBoundingClientRect().width) - once;
+      if (fark > 0) {
+        yedekPad = kok.style.paddingRight;
+        kok.style.paddingRight = fark + "px";
+      }
       if (govde) govde.scrollTop = 0;
     } else {
-      document.documentElement.classList.remove("cd-ozet-kilit");
+      kok.classList.remove("cd-ozet-kilit");
+      if (yedekPad !== "") {
+        kok.style.paddingRight = yedekPad;
+        yedekPad = "";
+      }
     }
   }
 

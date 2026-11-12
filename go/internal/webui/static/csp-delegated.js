@@ -234,9 +234,40 @@
     var kok = document.documentElement;
     var mobilMenu = document.querySelector('[data-mobil-menu]');
 
+    // Kaydırma çubuğu telafisi.
+    //
+    // `scrollbar-gutter: stable` modern tarayıcılarda yeri zaten ayırır.
+    // Desteklemeyen tarayıcıda çubuk kaybolur ve görünüm 15 px genişleyerek
+    // sayfayı titretir (ölçüldü, 12 Kasım 2026).
+    //
+    // ÖLÇÜT `clientWidth` DEĞİL: gutter ayrıldığında bile clientWidth tam
+    // görünür (1440) döner, çünkü gutter clientWidth'e sayılmaz. İlk sürüm
+    // bu yüzden gereksiz yere 15 px daha ekleyip içeriği 1410'a düşürdü.
+    // Gerçek ölçü, sayfa gövdesinin genişliği.
+    var yedekPad = '';
+    function govdeGenislik() {
+      return Math.round(document.body.getBoundingClientRect().width);
+    }
+    function kilitKur() {
+      var once = govdeGenislik();
+      kok.classList.add('cd-arama-acik');
+      var fark = govdeGenislik() - once;
+      if (fark > 0) {
+        yedekPad = kok.style.paddingRight;
+        kok.style.paddingRight = fark + 'px';
+      }
+    }
+    function kilitCoz() {
+      kok.classList.remove('cd-arama-acik');
+      if (yedekPad !== '') {
+        kok.style.paddingRight = yedekPad;
+        yedekPad = '';
+      }
+    }
+
     function ac() {
       panel.hidden = false;
-      kok.classList.add('cd-arama-acik');
+      kilitKur();
       // Mobil menü açıksa kapanır: panel onun üstünü örtüyor.
       if (mobilMenu && mobilMenu.open) mobilMenu.open = false;
       for (var i = 0; i < acDugmeler.length; i++) {
@@ -246,7 +277,7 @@
     }
     function kapat() {
       panel.hidden = true;
-      kok.classList.remove('cd-arama-acik');
+      kilitCoz();
       for (var i = 0; i < acDugmeler.length; i++) {
         acDugmeler[i].setAttribute('aria-expanded', 'false');
       }

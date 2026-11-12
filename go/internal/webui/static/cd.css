@@ -99,6 +99,9 @@
   /* Alt sayfa (mobil özet kartı): yukarı doğru, geniş.
      Overlay jetonu bu iş için fazla dar kalıyor. */
   --cd-shadow-sheet: 0 -18px 44px rgba(0, 0, 0, .38);
+  /* Yüzen panel (arama sonuçları, açılır kutular): sayfadan
+     net biçimde ayrılması için iki katmanlı. */
+  --cd-shadow-panel: 0 24px 64px rgba(0, 0, 0, .34), 0 2px 10px rgba(0, 0, 0, .16);
 
   
   --cd-header-h: 73px;
@@ -174,6 +177,12 @@ html { scroll-padding-top: calc(var(--cd-sticky-h) + 8px); }
 html, body { margin: 0; padding: 0; }
 
 html { overflow-x: clip; }
+
+/* Kaydırma çubuğu yeri HER ZAMAN ayrılır. Aksi hâlde bir katman sayfayı
+   kilitleyince (arama paneli, özet sheet'i) çubuk kayboluyor, görünüm
+   15 px genişliyor ve sayfa titriyordu — ölçüldü 12 Kasım 2026:
+   kilit öncesi 1425 px, sonrası 1440 px. */
+html { scrollbar-gutter: stable; }
 
 .cd {
   background: var(--cd-bg);
@@ -735,8 +744,12 @@ html.dark .cd-tema__gunes { display: block; }
 .cd-arama__perde {
   position: absolute;
   inset: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(8, 9, 12, .42);
+  -webkit-backdrop-filter: blur(14px) saturate(130%);
+  backdrop-filter: blur(14px) saturate(130%);
+  animation: cd-arama-perde-gir 180ms ease-out;
 }
+html.light .cd-arama__perde { background: rgba(243, 241, 233, .55); }
 .cd-arama__panel {
   position: relative;
   width: min(560px, calc(100vw - 32px));
@@ -745,12 +758,59 @@ html.dark .cd-tema__gunes { display: block; }
   display: flex;
   flex-direction: column;
   background: var(--cd-surface-panel);
+  background: color-mix(in srgb, var(--cd-surface-panel) 84%, transparent);
   border: 1px solid var(--cd-border);
   border-radius: 16px;
   
-  box-shadow: var(--cd-shadow-overlay);
+  box-shadow: var(--cd-shadow-panel);
+  -webkit-backdrop-filter: blur(26px) saturate(140%);
+  backdrop-filter: blur(26px) saturate(140%);
   overflow: hidden;
   color: var(--cd-fg);
+  animation: cd-arama-panel-gir 240ms cubic-bezier(.2, .7, .3, 1);
+}
+@keyframes cd-arama-perde-gir {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes cd-arama-panel-gir {
+  from { opacity: 0; transform: translateY(-12px) scale(.985); }
+  to { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cd-arama__perde, .cd-arama__panel { animation: none; }
+}
+
+/* Mobil: panel ALT SHEET olarak açılır (CoinDesk deseni, 12 Kasım 2026).
+   Üstten 64 px boşlukla açılan modal 705 px yükseklikte ekranı kaplıyor
+   ve klavye açılınca taşıyordu; alttan sheet tam genişlik veriyor. */
+@media (max-width: 767px) {
+  .cd-arama__panel {
+    width: 100%;
+    max-height: 88vh;
+    margin: auto 0 0;
+    border-radius: 18px 18px 0 0;
+    border-bottom: 0;
+    animation-name: cd-arama-sheet-gir;
+  }
+  .cd-arama { display: flex; flex-direction: column; justify-content: flex-end; }
+  .cd-arama__ust { height: 56px; padding: 0 16px; gap: 12px; }
+  .cd-arama__cipler { padding: 12px 16px 0; }
+  .cd-arama__govde { padding: 8px 16px calc(20px + env(safe-area-inset-bottom, 0px)); }
+  .cd-arama__panel::before {
+    content: "";
+    display: block;
+    width: 38px;
+    height: 4px;
+    margin: 8px auto 0;
+    border-radius: 999px;
+    background: var(--cd-border-strong);
+    flex: none;
+  }
+}
+@keyframes cd-arama-sheet-gir {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
 }
 .cd-arama__form { display: flex; flex-direction: column; min-height: 0; }
 .cd-arama__ust {
@@ -807,7 +867,13 @@ html.dark .cd-tema__gunes { display: block; }
 }
 .cd-arama__cip:hover { background: var(--cd-surface-action); }
 .cd-arama__cip--aktif { background: var(--cd-fg-strong); color: var(--cd-bg); }
-.cd-arama__govde { overflow-y: auto; padding: 8px 24px 24px; }
+.cd-arama__govde {
+  overflow-y: auto;
+  padding: 8px 24px 24px;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+}
+.cd-arama__govde::-webkit-scrollbar { display: none; }
 .cd-arama__grup[hidden] { display: none; }
 .cd-arama__baslik {
   margin: 16px 0 4px;

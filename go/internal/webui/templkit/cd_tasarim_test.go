@@ -102,7 +102,8 @@ func TestCDTasarimKurallari(t *testing.T) {
 		// sayfa sayfa dağılmasını önlemek.
 		if strings.HasPrefix(s, "box-shadow:") &&
 			!strings.Contains(s, "var(--cd-shadow-overlay)") &&
-			!strings.Contains(s, "var(--cd-shadow-sheet)") {
+			!strings.Contains(s, "var(--cd-shadow-sheet)") &&
+			!strings.Contains(s, "var(--cd-shadow-panel)") {
 			t.Errorf("gölge yalnız --cd-shadow-* jetonuyla kullanılmalı: %s", s)
 		}
 	}
