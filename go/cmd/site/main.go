@@ -158,6 +158,13 @@ func main() {
 	// önerilerini üretir (yayına yazmaz; onay paneldedir).
 	go aieditor.RunYenidenYazim(workerCtx, pool, aiclient, logger, 10*time.Second)
 	go scheduler.RunGSC(workerCtx, pool, logger, 6*time.Hour)
+	// Faz 213 — skor eşiğini geçen taslakları kademeli yayına al.
+	// AYAR KAPALIYKEN HİÇBİR ŞEY YAPMAZ (otomatik_yayin.aktif).
+	// Ölçüm (13 Kasım 2026): 1869 taslak birikmiş, güven ortalaması 62,6
+	// — yayındaki içeriğin ortalaması 51,4. Yani bekleyen içerik yayında
+	// olandan daha güvenilir; eşiği geçenler insan onayı beklemeden
+	// çıkabilir. Tur başına bir içerik + günlük limit ile doğal ritim.
+	go scheduler.RunOtomatikYayin(workerCtx, pool, logger, 10*time.Minute)
 	go scheduler.RunPodcast(workerCtx, pool, logger)
 	go app.RunGazeteJobs(workerCtx, time.Minute)
 	go aieditor.StartWorker(workerCtx, pool, aiclient, logger, time.Second)
