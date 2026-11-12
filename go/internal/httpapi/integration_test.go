@@ -219,9 +219,7 @@ func TestPublicPages(t *testing.T) {
 		path string
 	}{
 		{"anasayfa", "/"},
-		{"fikstur", "/fikstur"},
 		{"borsa", "/borsa"},
-		{"hava durumu", "/hava-durumu"},
 		{"arama", "/arama?q=test"},
 		{"robots", "/robots.txt"},
 		{"rss", "/rss.xml"},
@@ -309,33 +307,6 @@ func TestJSONAPIErrorShape(t *testing.T) {
 	assert.Equal(t, http.StatusNotFound, resp.StatusCode)
 	assert.Contains(t, body, `"ok":false`)
 	assert.Contains(t, resp.Header.Get("Content-Type"), "application/json")
-}
-
-// ---- fikstür sorgu parametreleri ---------------------------------
-
-func TestFiksturQueryParams(t *testing.T) {
-	skipIfNoDB(t)
-	cases := []struct {
-		name string
-		path string
-	}{
-		{"varsayilan", "/fikstur"},
-		{"gecerli lig", "/fikstur?lig=bundesliga"},
-		{"gecersiz lig -> varsayilan", "/fikstur?lig=olmayan-lig"},
-		{"bos lig", "/fikstur?lig="},
-		{"gecerli hafta", "/fikstur?hafta=5"},
-		{"sezon disi hafta", "/fikstur?hafta=9999"},
-		{"sayi olmayan hafta", "/fikstur?hafta=abc"},
-		{"negatif hafta", "/fikstur?hafta=-5"},
-		{"birlik", "/fikstur?lig=premierlig&hafta=1"},
-	}
-	for _, c := range cases {
-		t.Run(c.name, func(t *testing.T) {
-			resp, body := get(t, c.path)
-			assert.Equal(t, http.StatusOK, resp.StatusCode, "body: %s", firstN(body, 200))
-			assert.Contains(t, body, "Puan Durumu", "fikstür sayfası puan durumu içermeli")
-		})
-	}
 }
 
 func TestPublicCSSHasNoBareFrTracks(t *testing.T) {

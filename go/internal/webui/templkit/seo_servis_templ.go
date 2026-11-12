@@ -620,20 +620,20 @@ func ServislerPanel(v ServislerView) templ.Component {
 			}
 		}
 		for _, w := range v.Weather {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 50, "<tr><td><a href=\"/hava-durumu\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 50, "<tr><td>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var29 string
 			templ_7745c5c3_Var29, templ_7745c5c3_Err = templ.JoinStringErrs(w.City)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/seo_servis.templ`, Line: 228, Col: 44}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/seo_servis.templ`, Line: 228, Col: 21}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var29))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 51, "</a></td><td>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 51, "</td><td>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -843,7 +843,7 @@ func ServislerPanel(v ServislerView) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 73, "</tbody></table><p class=\"hint\" style=\"margin-top:8px\">Yaklaşan maçlar (TheSportsDB). Sonuçlar <a href=\"/fikstur\">/fikstur</a> sayfasında.</p><form method=\"post\" action=\"/admin/servisler/ayar\" style=\"margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;align-items:center\" hx-post=\"/admin/servisler/ayar\" hx-target=\"#servisler-panel\" hx-swap=\"outerHTML\" hx-indicator=\"#servisler-yukleniyor\"><label class=\"small muted\">TheSportsDB API anahtarı</label> <input class=\"input\" name=\"fikstur_key\" value=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 73, "</tbody></table><p class=\"hint\" style=\"margin-top:8px\">Yaklaşan maçlar (TheSportsDB).</p><form method=\"post\" action=\"/admin/servisler/ayar\" style=\"margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;align-items:center\" hx-post=\"/admin/servisler/ayar\" hx-target=\"#servisler-panel\" hx-swap=\"outerHTML\" hx-indicator=\"#servisler-yukleniyor\"><label class=\"small muted\">TheSportsDB API anahtarı</label> <input class=\"input\" name=\"fikstur_key\" value=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -944,7 +944,7 @@ func ServislerPanel(v ServislerView) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 82, "</tbody></table></div><p class=\"hint\" style=\"margin-top:8px\">Günlük burç yorumları <a href=\"/astroloji\">/astroloji</a> sayfasında.</p></div></div></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 82, "</tbody></table></div><p class=\"hint\" style=\"margin-top:8px\">Günlük burç yorumları.</p></div></div></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

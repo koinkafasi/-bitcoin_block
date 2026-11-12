@@ -2,8 +2,6 @@ package httpapi
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -42,180 +40,13 @@ func (s *Server) cdSayfaKabuk(r *http.Request, aktif, title, desc, baslik, acikl
 
 // ---- Hava durumu ----
 
-func (s *Server) cdHavaGovde(ctx context.Context) templkit.SafeHTML {
-	cities, _ := repo.ListCities(ctx, s.pool)
-	rows, _ := repo.CacheList(ctx, s.pool, "hava")
-	byKey := map[string]repo.CacheRow{}
-	for _, row := range rows {
-		byKey[row.Key] = row
-	}
-	if len(cities) == 0 {
-		return templkit.SafeHTML(`<p class="cd-card__spot">Şehir listesi alınamadı.</p>`)
-	}
-
-	var b strings.Builder
-	b.WriteString(`<div class="cd-grid cd-grid--3 cd-hava">`)
-	dolu := 0
-	for _, c := range cities {
-		val, ok := "—", false
-		if rw, var_ := byKey[strconv.Itoa(c.Plaka)]; var_ {
-			var w repo.WeatherInfo
-			if json.Unmarshal(rw.Data, &w) == nil {
-				val, ok = fmt.Sprintf("%.0f° %s", w.Sicaklik, w.Aciklama), true
-			}
-		}
-		if ok {
-			dolu++
-		}
-		b.WriteString(`<div class="cd-basit__satir"><strong>` + htmlEscape(c.Name) +
-			`</strong><span>` + htmlEscape(val) + `</span></div>`)
-	}
-	b.WriteString(`</div>`)
-	if dolu == 0 {
-		b.WriteString(`<p class="cd-card__spot">Hava verisi şu an alınamıyor; birkaç dakika sonra yeniden deneyin.</p>`)
-	}
-	return templkit.SafeHTML(b.String())
-}
-
 // ---- Namaz vakitleri ----
-
-// cdNamazGovde illerin bugünkü vakitleri (öğle/ikindi/akşam/yatsı).
-func (s *Server) cdNamazGovde(ctx context.Context) templkit.SafeHTML {
-	cities, _ := repo.ListCities(ctx, s.pool)
-	rows, _ := repo.CacheList(ctx, s.pool, "namaz")
-	byKey := map[string]repo.CacheRow{}
-	for _, row := range rows {
-		byKey[row.Key] = row
-	}
-	if len(cities) == 0 {
-		return templkit.SafeHTML(`<p class="cd-card__spot">Şehir listesi alınamadı.</p>`)
-	}
-
-	var b strings.Builder
-	b.WriteString(`<div class="cd-tablo-sarmal"><table class="cd-table"><thead><tr>` +
-		`<th>Şehir</th><th>İmsak</th><th>Güneş</th><th class="num">Öğle</th>` +
-		`<th class="num">İkindi</th><th class="num">Akşam</th><th class="num">Yatsı</th>` +
-		`</tr></thead><tbody>`)
-	for _, c := range cities {
-		v := repo.NamazVakit{}
-		if rw, ok := byKey[strconv.Itoa(c.Plaka)]; ok {
-			_ = json.Unmarshal(rw.Data, &v)
-		}
-		b.WriteString(`<tr><td><strong>` + htmlEscape(c.Name) + `</strong></td>`)
-		for _, s := range []string{v.Imsak, v.Gunes, v.Ogle, v.Ikindi, v.Aksam, v.Yatsi} {
-			b.WriteString(`<td class="num">` + htmlEscape(bosIseTire(s)) + `</td>`)
-		}
-		b.WriteString(`</tr>`)
-	}
-	b.WriteString(`</tbody></table></div>`)
-	return templkit.SafeHTML(b.String())
-}
 
 // ---- İmsakiye ----
 
-// cdImsakiyeGovde ramazan imsakiyesi (30 gün).
-func (s *Server) cdImsakiyeGovde(ctx context.Context) templkit.SafeHTML {
-	var list []repo.NamazVakit
-	if b, err := repo.CacheGet(ctx, s.pool, "imsakiye", "6"); err == nil {
-		_ = json.Unmarshal(b, &list)
-	}
-	if len(list) == 0 {
-		return templkit.SafeHTML(`<p class="cd-card__spot">İmsakiye verisi şu an alınamıyor.</p>`)
-	}
-	var b strings.Builder
-	b.WriteString(`<div class="cd-tablo-sarmal"><table class="cd-table"><thead><tr>` +
-		`<th>Tarih</th><th>İmsak</th><th>Güneş</th><th class="num">Öğle</th>` +
-		`<th class="num">İkindi</th><th class="num">Akşam</th><th class="num">Yatsı</th>` +
-		`</tr></thead><tbody>`)
-	for _, v := range list {
-		b.WriteString(`<tr><td>` + strconv.Itoa(v.Gun) + ". gün" + `</td>`)
-		for _, x := range []string{v.Imsak, v.Gunes, v.Ogle, v.Ikindi, v.Aksam, v.Yatsi} {
-			b.WriteString(`<td class="num">` + htmlEscape(bosIseTire(x)) + `</td>`)
-		}
-		b.WriteString(`</tr>`)
-	}
-	b.WriteString(`</tbody></table></div>`)
-	return templkit.SafeHTML(b.String())
-}
-
 // ---- Astroloji ----
 
-// cdAstrolojiGovde 12 burcun günlük yorumu.
-func (s *Server) cdAstrolojiGovde(ctx context.Context) templkit.SafeHTML {
-	ad := repo.AstrolojiOf(ctx, s.pool)
-	if len(ad.Burclar) == 0 {
-		return templkit.SafeHTML(`<p class="cd-card__spot">Burç yorumları şu an alınamıyor.</p>`)
-	}
-	var b strings.Builder
-	b.WriteString(`<div class="cd-grid cd-grid--3">`)
-	for _, burc := range ad.Burclar {
-		b.WriteString(`<article class="cd-basit__kart"><h2 class="cd-basit__kart-ad">` +
-			htmlEscape(burc.Ad) + `</h2><p class="cd-card__spot">` + htmlEscape(burc.Tarih) +
-			`</p><p>` + htmlEscape(burc.Yorum) + `</p></article>`)
-	}
-	b.WriteString(`</div>`)
-	return templkit.SafeHTML(b.String())
-}
-
 // ---- Fikstür / puan durumu ----
-
-// cdFiksturGovde lig puan tablosu + haftanın maçları.
-func (s *Server) cdFiksturGovde(ctx context.Context, r *http.Request) templkit.SafeHTML {
-	lg := repo.LeagueByKey(strings.TrimSpace(r.URL.Query().Get("lig")))
-	standings := repo.StandingsOfLeague(ctx, s.pool, lg).Rows
-	meta := repo.LeagueMetaOf(ctx, s.pool, lg)
-	round := parseFiksturRound(r.URL.Query().Get("hafta"), meta)
-	fx := repo.FiksturRoundOf(ctx, s.pool, lg, meta.Season, round)
-
-	var b strings.Builder
-	// Lig seçici.
-	b.WriteString(`<nav class="cd-basit__cipler" aria-label="Lig seçimi">`)
-	for _, l := range repo.Leagues {
-		sinif := "cd-basit__cip"
-		if l.Key == lg.Key {
-			sinif += " cd-basit__cip--aktif"
-		}
-		b.WriteString(`<a class="` + sinif + `" href="?lig=` + htmlEscape(l.Key) + `">` +
-			htmlEscape(l.Name) + `</a>`)
-	}
-	b.WriteString(`</nav>`)
-
-	if len(standings) > 0 {
-		b.WriteString(`<h2 class="cd-hisse__baslik">Puan Durumu</h2>`)
-		b.WriteString(`<div class="cd-tablo-sarmal"><table class="cd-table"><thead><tr>` +
-			`<th>#</th><th>Takım</th><th class="num">O</th><th class="num">G</th>` +
-			`<th class="num">B</th><th class="num">M</th><th class="num">P</th></tr></thead><tbody>`)
-		for i, t := range standings {
-			b.WriteString(`<tr><td>` + strconv.Itoa(i+1) + `</td><td><strong>` +
-				htmlEscape(t.Team) + `</strong></td>` +
-				`<td class="num">` + strconv.Itoa(t.Played) + `</td>` +
-				`<td class="num">` + strconv.Itoa(t.Win) + `</td>` +
-				`<td class="num">` + strconv.Itoa(t.Draw) + `</td>` +
-				`<td class="num">` + strconv.Itoa(t.Loss) + `</td>` +
-				`<td class="num"><strong>` + strconv.Itoa(t.Points) + `</strong></td></tr>`)
-		}
-		b.WriteString(`</tbody></table></div>`)
-	}
-
-	if len(fx.Matches) > 0 {
-		b.WriteString(`<h2 class="cd-hisse__baslik">` + strconv.Itoa(round) + `. Hafta</h2>`)
-		b.WriteString(`<div class="cd-grid cd-grid--2">`)
-		for _, m := range fx.Matches {
-			skor := "—"
-			if m.HomeScore != nil && m.AwayScore != nil {
-				skor = strconv.Itoa(*m.HomeScore) + " - " + strconv.Itoa(*m.AwayScore)
-			}
-			b.WriteString(`<div class="cd-basit__satir"><span>` + htmlEscape(m.Home) +
-				`</span><strong>` + htmlEscape(skor) + `</strong><span>` +
-				htmlEscape(m.Away) + `</span></div>`)
-		}
-		b.WriteString(`</div>`)
-	}
-	if b.Len() == 0 || (len(standings) == 0 && len(fx.Matches) == 0) {
-		b.WriteString(`<p class="cd-card__spot">Puan durumu ve fikstür verisi şu an alınamıyor.</p>`)
-	}
-	return templkit.SafeHTML(b.String())
-}
 
 // bosIseTire boş metni "—" yapar (tablo hücresi boş kalmasın).
 func bosIseTire(v string) string {
@@ -226,66 +57,6 @@ func bosIseTire(v string) string {
 }
 
 // ---- Sayfa sarmalayıcıları ----
-
-// cdHavaSayfasi /hava-durumu
-func (s *Server) cdHavaSayfasi(w http.ResponseWriter, r *http.Request) {
-	v := s.cdSayfaKabuk(r, "hava-durumu",
-		"Hava Durumu — "+s.siteName,
-		"81 ilin güncel hava durumu ve sıcaklık bilgisi.",
-		"Hava Durumu", "81 ilin güncel sıcaklığı ve hava durumu.",
-		s.kanonikKok(r)+"/hava-durumu")
-	v.Govde = s.cdHavaGovde(r.Context())
-	v.Serit = true
-	s.cdBasitRender(w, r, v)
-}
-
-// cdNamazSayfasi /namaz-vakitleri
-func (s *Server) cdNamazSayfasi(w http.ResponseWriter, r *http.Request) {
-	v := s.cdSayfaKabuk(r, "namaz-vakitleri",
-		"Namaz Vakitleri — "+s.siteName,
-		"81 il için günlük namaz vakitleri: imsak, güneş, öğle, ikindi, akşam, yatsı.",
-		"Namaz Vakitleri", "81 il için bugünün namaz vakitleri.",
-		s.kanonikKok(r)+"/namaz-vakitleri")
-	v.Govde = s.cdNamazGovde(r.Context())
-	v.Serit = true
-	s.cdBasitRender(w, r, v)
-}
-
-// cdImsakiyeSayfasi /imsakiye
-func (s *Server) cdImsakiyeSayfasi(w http.ResponseWriter, r *http.Request) {
-	v := s.cdSayfaKabuk(r, "imsakiye",
-		"İmsakiye — "+s.siteName,
-		"Ramazan imsakiyesi: 30 günlük imsak, güneş, öğle, ikindi, akşam ve yatsı vakitleri.",
-		"İmsakiye", "Ramazan ayı boyunca günlük vakitler.",
-		s.kanonikKok(r)+"/imsakiye")
-	v.Govde = s.cdImsakiyeGovde(r.Context())
-	v.Serit = true
-	s.cdBasitRender(w, r, v)
-}
-
-// cdAstrolojiSayfasi /astroloji
-func (s *Server) cdAstrolojiSayfasi(w http.ResponseWriter, r *http.Request) {
-	v := s.cdSayfaKabuk(r, "astroloji",
-		"Astroloji — Günlük Burç Yorumları — "+s.siteName,
-		"12 burcun günlük yorumu, elementi, uğurlu sayısı ve rengi.",
-		"Astroloji", "12 burcun günlük yorumu.",
-		s.kanonikKok(r)+"/astroloji")
-	v.Govde = s.cdAstrolojiGovde(r.Context())
-	v.Serit = true
-	s.cdBasitRender(w, r, v)
-}
-
-// cdFiksturSayfasi /fikstur
-func (s *Server) cdFiksturSayfasi(w http.ResponseWriter, r *http.Request) {
-	v := s.cdSayfaKabuk(r, "fikstur",
-		"Puan Durumu ve Fikstür — "+s.siteName,
-		"Süper Lig puan durumu, haftanın maç programı ve sonuçları.",
-		"Puan Durumu ve Fikstür", "Lig puan durumu ve haftanın maçları.",
-		s.kanonikKok(r)+"/fikstur")
-	v.Govde = s.cdFiksturGovde(r.Context(), r)
-	v.Serit = true
-	s.cdBasitRender(w, r, v)
-}
 
 // ---- Resmi ilanlar (BİK) ----
 

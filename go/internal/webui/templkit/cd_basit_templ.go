@@ -10,8 +10,7 @@ import templruntime "github.com/a-h/templ/runtime"
 
 // Basit içerik sayfaları (hizmet/yardımcı sayfalar) — YENİ KABUK.
 //
-// NEDEN VAR: /hava-durumu, /namaz-vakitleri, /imsakiye, /astroloji,
-// /fikstur, /resmi-ilanlar, /yazarlar hâlâ theblock kabuğunu
+// NEDEN VAR: /resmi-ilanlar, /yazarlar hâlâ theblock kabuğunu
 // (site_header/site_footer) kullanıyordu (ölçüldü, 9 Kasım 2026).
 // Her biri için ayrı tasarım şablonu yazmak yerine ORTAK iskelet:
 // kabuk + başlık + içerik yuvası. Böylece üst çubuk, şerit, alt bilgi ve
@@ -95,7 +94,7 @@ func CDBasitSayfaView(v CDBasitSayfa) templ.Component {
 		var templ_7745c5c3_Var2 string
 		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(v.Baslik)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/cd_basit.templ`, Line: 53, Col: 19}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/cd_basit.templ`, Line: 52, Col: 19}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
 		if templ_7745c5c3_Err != nil {
@@ -113,7 +112,7 @@ func CDBasitSayfaView(v CDBasitSayfa) templ.Component {
 			var templ_7745c5c3_Var3 string
 			templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(v.Aciklama)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/cd_basit.templ`, Line: 55, Col: 43}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/cd_basit.templ`, Line: 54, Col: 43}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 			if templ_7745c5c3_Err != nil {

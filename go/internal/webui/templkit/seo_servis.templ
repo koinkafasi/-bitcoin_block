@@ -225,7 +225,7 @@ templ ServislerPanel(v ServislerView) {
 							}
 							for _, w := range v.Weather {
 								<tr>
-									<td><a href="/hava-durumu">{ w.City }</a></td>
+									<td>{ w.City }</td>
 									<td>{ w.Sicak }</td>
 									<td class="small">
 										{ w.Aciklama }
@@ -290,7 +290,7 @@ templ ServislerPanel(v ServislerView) {
 						}
 					</tbody>
 				</table>
-				<p class="hint" style="margin-top:8px">Yaklaşan maçlar (TheSportsDB). Sonuçlar <a href="/fikstur">/fikstur</a> sayfasında.</p>
+				<p class="hint" style="margin-top:8px">Yaklaşan maçlar (TheSportsDB).</p>
 				<form method="post" action="/admin/servisler/ayar" style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;align-items:center" hx-post="/admin/servisler/ayar" hx-target="#servisler-panel" hx-swap="outerHTML" hx-indicator="#servisler-yukleniyor">
 					<label class="small muted">TheSportsDB API anahtarı</label>
 					<input class="input" name="fikstur_key" value={ v.FiksturKey } placeholder="boş = test anahtarı (123)" style="min-width:240px" aria-label="TheSportsDB API anahtarı"/>
@@ -322,7 +322,7 @@ templ ServislerPanel(v ServislerView) {
 						</tbody>
 					</table>
 				</div>
-				<p class="hint" style="margin-top:8px">Günlük burç yorumları <a href="/astroloji">/astroloji</a> sayfasında.</p>
+				<p class="hint" style="margin-top:8px">Günlük burç yorumları.</p>
 			</div>
 		</div>
 	</div>

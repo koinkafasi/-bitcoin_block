@@ -129,11 +129,7 @@ func (s *Server) footerConfig(ctx context.Context) *FooterConfig {
 			{Title: "Sayfalar", Links: []FootLink{
 				{Label: "Akış", URL: "/akis"},
 				{Label: "Arşiv", URL: "/arsiv"},
-				{Label: "Hava Durumu", URL: "/hava-durumu"},
-				{Label: "Namaz Vakitleri", URL: "/namaz-vakitleri"},
 				{Label: "Piyasa ve Borsa", URL: "/borsa"},
-				{Label: "Fikstür", URL: "/fikstur"},
-				{Label: "Astroloji", URL: "/astroloji"},
 			}},
 			{Title: "Kurumsal", Links: []FootLink{
 				{Label: "Çerez Politikası", URL: "/cerez-politikasi"},

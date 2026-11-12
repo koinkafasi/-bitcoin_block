@@ -346,22 +346,12 @@ func (s *Server) handlePublicSegment(w http.ResponseWriter, r *http.Request) {
 		s.handleBreakingPage(w, r)
 	case seg == "arsiv":
 		s.handleArchive(w, r)
-	case seg == "hava-durumu":
-		s.handleHavaDurumu(w, r)
-	case seg == "namaz-vakitleri":
-		s.handleNamazDurumu(w, r)
-	case seg == "imsakiye":
-		s.handleImsakiye(w, r)
 	case seg == "borsa" && i+1 < len(segs) && segs[i+1] == "hisseler":
 		s.handleHisselerPage(w, r)
 	case seg == "borsa" && i+1 < len(segs) && segs[i+1] == "kripto":
 		s.handleKriptoPage(w, r)
 	case seg == "borsa":
 		s.handleBorsaPage(w, r)
-	case seg == "fikstur":
-		s.handleFiksturPage(w, r)
-	case seg == "astroloji":
-		s.handleAstrolojiPage(w, r)
 	case seg == "etkinlikler":
 		s.handleEventsPublic(w, r)
 	case seg == "anketler":
@@ -1026,10 +1016,24 @@ func (s *Server) handleAddComment(w http.ResponseWriter, r *http.Request) {
 	// yol sonundaki id'yi al: /yorum/{id} veya /{lang}/yorum/{id}
 	parts := strings.Split(strings.Trim(r.URL.Path, "/"), "/")
 	id := parseID(parts[len(parts)-1])
-	name := strings.TrimSpace(r.FormValue("isim"))
 	body := strings.TrimSpace(r.FormValue("metin"))
 	ip := clientIP(r)
-	if id == 0 || name == "" || body == "" {
+
+	// ÜYELİK ZORUNLU (12 Kasım 2026): yorum artık isim kutusuyla değil
+	// oturumla geliyor. Kripto sitelerinde misafir yorumu dolandırıcılık
+	// ve pump reklamı için açık kapı; üyelik hem sorumluluk hem de
+	// moderasyonda geçmişe bakma imkânı veriyor.
+	kullanici, uyeHata := s.currentUser(r)
+	if uyeHata != nil || kullanici.ID <= 0 {
+		s.flashRedirect(w, r, "/giris?redirect=yorum", "error",
+			"Yorum yazmak için giriş yapmanız gerekiyor.")
+		return
+	}
+	name := strings.TrimSpace(kullanici.Name)
+	if name == "" {
+		name = "Üye"
+	}
+	if id == 0 || body == "" {
 		s.flashRedirect(w, r, s.ayniSiteYolu(r, r.Referer()), "error", "Yorum eklenemedi.")
 		return
 	}
@@ -1069,11 +1073,19 @@ func (s *Server) handleAddComment(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := repo.AddComment(ctx, s.pool, id, name, body, ip, parentID); err != nil {
+	// Mesaj kullanıcının GERÇEK durumunu söylemeli: güvenilir üyenin
+	// yorumu anında yayımlanıyorsa "onay sonrası yayınlanacak" demek
+	// yanlış bilgi olurdu.
+	otomatik := repo.UyeGuvenilirYorumcu(ctx, s.pool, kullanici.ID)
+	if err := repo.AddCommentAsUser(ctx, s.pool, id, kullanici.ID, name, body, ip, parentID); err != nil {
 		geri("error", "Hata.")
 		return
 	}
-	geri("info", "Yorumunuz onay sonrası yayınlanacak.")
+	if otomatik {
+		geri("info", "Yorumunuz yayımlandı.")
+		return
+	}
+	geri("info", "İlk yorumunuz olduğu için onaydan sonra yayımlanacak.")
 }
 
 func (s *Server) handleHit(w http.ResponseWriter, r *http.Request) {
@@ -1133,7 +1145,7 @@ func (s *Server) handleSitemap(w http.ResponseWriter, r *http.Request) {
 	}
 	sb.WriteString(`<xhtml:link rel="alternate" hreflang="x-default" href="` + abs + `/"/></url>`)
 	// statik hizmet sayfaları
-	for _, p := range []string{"/bulten", "/ping", "/yazarlar", "/arsiv", "/borsa", "/fikstur", "/astroloji", "/etkinlikler", "/anketler", "/sinemalar", "/resmi-ilanlar", "/akis", "/hava-durumu", "/namaz-vakitleri", "/imsakiye", "/nobetci-eczaneler", "/rss-listesi"} {
+	for _, p := range []string{"/bulten", "/ping", "/yazarlar", "/arsiv", "/borsa", "/etkinlikler", "/anketler", "/sinemalar", "/resmi-ilanlar", "/akis", "/nobetci-eczaneler", "/rss-listesi"} {
 		sb.WriteString("<url><loc>" + abs + p + "</loc></url>")
 	}
 	cs, _ := repo.ListCategories(ctx, s.pool, site.ID)
