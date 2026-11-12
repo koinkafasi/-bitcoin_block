@@ -88,11 +88,11 @@ func GorselIndirmeBasarisiz(ctx context.Context, pool DB, hash, hata string) {
 
 // GorselIndirmeOzeti panel/günlük için tek satırlık durum.
 type GorselIndirmeOzeti struct {
-	Toplam       int
-	Indirilmis   int
-	Bekleyen     int
-	Vazgecilen   int // deneme sınırına ulaşmış
-	ToplamBayt   int64
+	Toplam     int
+	Indirilmis int
+	Bekleyen   int
+	Vazgecilen int // deneme sınırına ulaşmış
+	ToplamBayt int64
 }
 
 // GorselIndirmeDurumu indirme ilerleyişini döndürür.

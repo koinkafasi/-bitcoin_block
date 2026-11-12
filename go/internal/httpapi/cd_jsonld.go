@@ -66,17 +66,17 @@ func makaleJSONLD(g makaleLDGirdi) template.HTML {
 	}
 
 	makale := map[string]any{
-		"@type":            "NewsArticle",
-		"inLanguage":       "tr",
-		"url":              v.Canonical,
-		"headline":         v.Headline,
-		"abstract":         v.Desc,
+		"@type":      "NewsArticle",
+		"inLanguage": "tr",
+		"url":        v.Canonical,
+		"headline":   v.Headline,
+		"abstract":   v.Desc,
 		// Ücretsiz erişim durumu HER ZAMAN yazılıyor: `true` olduğunda da
 		// açık bir sinyal, Google için belirsizlik bırakmıyor.
 		"isAccessibleForFree": !g.Kilitli,
-		"mainEntityOfPage": v.Canonical,
-		"articleSection":   v.SectionName,
-		"author":           []any{yazar},
+		"mainEntityOfPage":    v.Canonical,
+		"articleSection":      v.SectionName,
+		"author":              []any{yazar},
 		"publisher": map[string]any{
 			"@type": "NewsMediaOrganization",
 			"name":  v.Shell.SiteName,

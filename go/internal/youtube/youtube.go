@@ -437,12 +437,12 @@ func iki(n int) string {
 // YouTube'un kendi arayüzünde hover'da gösterdiği dosya: 6 saniyelik,
 // sessiz, animasyonlu WebP. Neden bunu seçtik:
 //
-//   · <video> gerekmiyor — tek <img> kaynağı değişiyor, DOM'a eleman
-//     eklenmiyor, ses/otomatik oynatma izni sorunu yok.
-//   · Dosya küçük (~100-300 KB) ve TEK istek; gerçek videoda parça
-//     parça indirme + çözücü maliyeti olurdu.
-//   · İstek YALNIZ hover'da yapılır; liste sayfasının ilk yüklemesine
-//     hiçbir ağırlık eklemez.
+//	· <video> gerekmiyor — tek <img> kaynağı değişiyor, DOM'a eleman
+//	  eklenmiyor, ses/otomatik oynatma izni sorunu yok.
+//	· Dosya küçük (~100-300 KB) ve TEK istek; gerçek videoda parça
+//	  parça indirme + çözücü maliyeti olurdu.
+//	· İstek YALNIZ hover'da yapılır; liste sayfasının ilk yüklemesine
+//	  hiçbir ağırlık eklemez.
 //
 // Uç nokta YouTube'un belgelenmiş API'si DEĞİL. Bu yüzden çağıran taraf
 // yüklenememeyi sessizce karşılamalı (statik kapakta kalır) — kart

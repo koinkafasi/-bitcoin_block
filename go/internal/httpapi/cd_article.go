@@ -222,7 +222,7 @@ func (s *Server) cdMakaleGoster(w http.ResponseWriter, r *http.Request, c repo.C
 	v.JSONLD = string(makaleJSONLD(makaleLDGirdi{
 		View: v, YayinISO: yayinISO, GuncelISO: guncelISO,
 		ID: itoa64(c.ID), YazarSlug: yazarSlug, Keywords: anahtar,
-		Kilitli: v.Kilitli,
+		Kilitli:   v.Kilitli,
 		GorselAlt: v.ImageCredit,
 		Gorsel:    s.mutlakGorsel(s.kanonikKok(r), v.Image),
 	}))

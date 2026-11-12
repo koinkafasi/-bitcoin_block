@@ -86,17 +86,17 @@ func aiKaynakViewFrom(a *aiSourceData, fl *flashMsg) templkit.AIKaynakView {
 	}
 	for _, f := range a.Feeds {
 		row := templkit.AIKaynakFeed{
-			ID:           strconv.FormatInt(f.ID, 10),
-			Name:         f.Name,
-			URL:          f.URL,
-			Homepage:     f.Homepage,
-			CategoryName: f.CategoryName,
-			KindLabel:    feedKindLabel(f.Kind),
-			Trust:        strconv.Itoa(f.Trust),
-			Aktif:        f.Aktif,
-			LastStatus:   f.LastStatus,
-			LastError:    f.LastError,
-			Dil:          strings.ToUpper(f.Dil),
+			ID:              strconv.FormatInt(f.ID, 10),
+			Name:            f.Name,
+			URL:             f.URL,
+			Homepage:        f.Homepage,
+			CategoryName:    f.CategoryName,
+			KindLabel:       feedKindLabel(f.Kind),
+			Trust:           strconv.Itoa(f.Trust),
+			Aktif:           f.Aktif,
+			LastStatus:      f.LastStatus,
+			LastError:       f.LastError,
+			Dil:             strings.ToUpper(f.Dil),
 			OtomatikKapandi: f.OtomatikKapandi,
 			KapanmaNedeni:   feedKapanmaNedeni(f.Notes),
 		}

@@ -45,8 +45,32 @@ kirildi() {
   [ "$RAPOR" = 1 ] || BASARISIZ=1
 }
 
+# ------------------------------------------------------------- 0) gofmt
+# NEDEN AYRI VE ILK: CI bu kontrolu yapiyordu, kapi yapmiyordu. Sonuc:
+# kapi gecti, CI dustu (11-13 Kasim 2026 arasi her kosu kirmizi).
+#
+# gofmt GOROOT'tan sabitlenir, PATH'ten DEGIL: PATH'teki gofmt baska bir
+# Go kurulumuna dusebiliyor ve surum farki "yerelde temiz, CI'da kirli"
+# uretiyor. CI de ayni yontemi kullaniyor (.github/workflows/ci.yml).
+adim "0/6  gofmt (GOROOT'tan sabit)"
+GF="$(cd go && go env GOROOT)/bin/gofmt"
+if [ ! -x "$GF" ]; then
+  echo "  gofmt bulunamadi: $GF"
+  kirildi "gofmt"
+else
+  BOZUK="$(cd go && "$GF" -l . 2>/dev/null)"
+  if [ -n "$BOZUK" ]; then
+    echo "  bicimi bozuk dosyalar:"
+    echo "$BOZUK" | sed 's/^/    /'
+    echo "  duzeltmek icin: cd go && \"$GF\" -w ."
+    kirildi "gofmt"
+  else
+    gecti "gofmt"
+  fi
+fi
+
 # ---------------------------------------------------------------- 1) derleme
-adim "1/5  derleme (templ + go build)"
+adim "1/6  derleme (templ + go build)"
 if make templ >/dev/null 2>&1 && (cd go && go build ./... 2>&1 | head -5); then
   # `go build` sessizse başarılı; çıktı varsa hata.
   if (cd go && go build ./... 2>&1 | grep -q .); then
@@ -59,7 +83,7 @@ else
 fi
 
 # ---------------------------------------------------------------- 2) unit test + kapsam
-adim "2/5  unit test + kapsam çıtı (${KAPSAM_ESIGI}%)"
+adim "2/6  unit test + kapsam çıtı (${KAPSAM_ESIGI}%)"
 # Kapsam ORİJİNAL profilden okunur: `go/` öneki silinmiş kopyada
 # `cmd/backfill` stdlib sanılıp "is not in std" hatası veriyordu.
 if (cd go && go vet ./... 2>&1 | head -5 | grep -q .); then
@@ -83,7 +107,7 @@ else
 fi
 
 # ---------------------------------------------------------------- 3) lint
-adim "3/5  lint (yeni kodda 0 bulgu)"
+adim "3/6  lint (yeni kodda 0 bulgu)"
 if bash deploy/scripts/lint.sh --kapi >/tmp/kapi-lint.log 2>&1; then
   gecti "lint"
 else
@@ -92,7 +116,7 @@ else
 fi
 
 # ---------------------------------------------------------------- 4) güvenlik
-adim "4/5  güvenlik (CVE, SAST, sır, workflow)"
+adim "4/6  güvenlik (CVE, SAST, sır, workflow)"
 GUV_BAYRAK=()
 [ "$RAPOR" = 1 ] && GUV_BAYRAK+=(--rapor)
 [ "$TAM" = 1 ] && GUV_BAYRAK+=(--imaj)
@@ -105,7 +129,7 @@ else
 fi
 
 # ---------------------------------------------------------------- 5) e2e
-adim "5/5  e2e"
+adim "5/6  e2e"
 if [ "$TAM" = 1 ]; then
   # E2E ÜRETİME KOŞMAZ: e2e-uretim-korumasi.sh hedefi doğrular.
   if bash deploy/scripts/e2e-izole.sh > /tmp/kapi-e2e.log 2>&1; then

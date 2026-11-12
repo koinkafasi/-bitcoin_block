@@ -41,10 +41,10 @@ func TestIndirilecekGorsellerSiniriUygular(t *testing.T) {
 			`DELETE FROM source_images WHERE hash LIKE $1`, onek+"%")
 	})
 
-	yeni := ekle("a", 0, "")             // hiç denenmemiş → gelmeli
-	eski := ekle("b", 2, "10 hours")     // denenmiş ama bekleme doldu → gelmeli
-	taze := ekle("c", 1, "5 minutes")    // az önce denendi → GELMEMELİ
-	biten := ekle("d", 5, "10 hours")    // sınır doldu → GELMEMELİ
+	yeni := ekle("a", 0, "")          // hiç denenmemiş → gelmeli
+	eski := ekle("b", 2, "10 hours")  // denenmiş ama bekleme doldu → gelmeli
+	taze := ekle("c", 1, "5 minutes") // az önce denendi → GELMEMELİ
+	biten := ekle("d", 5, "10 hours") // sınır doldu → GELMEMELİ
 
 	liste, err := repo.IndirilecekGorseller(ctx, pool, 500)
 	require.NoError(t, err)
