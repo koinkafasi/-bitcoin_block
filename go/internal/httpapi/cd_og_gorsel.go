@@ -10,7 +10,7 @@ import (
 	"sync"
 )
 
-// Varsayılan Open Graph görseli — 1200×630 (Facebook/X önerilen ölçü).
+// Varsayılan Open Graph görseli — 1200×675 (16:9; CoinDesk ile aynı).
 //
 // NEDEN GEREKLİ: görseli olmayan makalelerde `og:image` hiç basılmıyordu ve
 // Twitter kartı `summary_large_image` olduğu hâlde görselsiz kalıyordu;
@@ -38,9 +38,9 @@ func varsayilanOGPng() []byte {
 	return varsayilanOGBayt
 }
 
-// varsayilanOGCiz 1200×630 markalı kartı çizer.
+// varsayilanOGCiz 1200×675 markalı kartı çizer.
 func varsayilanOGCiz() []byte {
-	const G, Y = 1200, 630
+	const G, Y = 1200, 675
 	img := image.NewRGBA(image.Rect(0, 0, G, Y))
 
 	krem := color.RGBA{243, 241, 233, 255} // --cd-bg (açık tema)

@@ -514,7 +514,7 @@ func cdHead(h CDHead) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 40, "\"><meta property=\"og:image:width\" content=\"1200\"><meta property=\"og:image:height\" content=\"630\"><meta property=\"og:image:alt\" content=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 40, "\"><meta property=\"og:image:width\" content=\"1200\"><meta property=\"og:image:height\" content=\"675\"><meta property=\"og:image:alt\" content=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -630,7 +630,7 @@ func cdHead(h CDHead) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 52, "\"><meta name=\"twitter:image:width\" content=\"1200\"><meta name=\"twitter:image:height\" content=\"630\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 52, "\"><meta name=\"twitter:image:width\" content=\"1200\"><meta name=\"twitter:image:height\" content=\"675\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
