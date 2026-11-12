@@ -19,39 +19,42 @@ import (
 // sürekli ilerlemek: sunucuları boğmadan arşivi kendi diskimize almak.
 
 const (
-	// gorselOnIndirAralik: iki tur arası. Sık olması gerekmiyor —
-	// kuyruk uzun ömürlü, acelesi olan görsel zaten istekte iniyor.
-	gorselOnIndirAralik = 3 * time.Minute
+	// gorselOnIndirAralik: iki tur arası.
+	//
+	// ÖLÇÜM (12 Kasım 2026): 3 dakikada 12 görsel = saatte 240. Kuyrukta
+	// 4.700'den fazla görsel varken bu ~20 saat demekti; içerik o süre
+	// boyunca UZAK kaynağa bağımlı kalıyor (kaynak 403 verirse görsel
+	// kaybolur). 1 dakika + 40'lık grup ~2 saate indiriyor.
+	gorselOnIndirAralik = 1 * time.Minute
 
-	// gorselOnIndirGrup: tur başına görsel. Küçük tutuldu; büyük grup
-	// tek turda çok sayıda dış isteğe yol açar ve kaynak sunucular hız
-	// sınırına takılır (sonra o adresler "başarısız" sayılırdı).
-	gorselOnIndirGrup = 12
+	// gorselOnIndirGrup: tur başına görsel. 40, nezaket sınırının
+	// üstünde değil: tur başına en çok 40 dış istek, aralarında 300 ms
+	// bekleme var. Daha büyük grup kaynak sunucularda hız sınırına
+	// takılıyor ve sağlam adresler "başarısız" sayılıyordu.
+	gorselOnIndirGrup = 40
 
 	// gorselOnIndirBekleme: ardışık iki indirme arası nezaket aralığı.
-	gorselOnIndirBekleme = 700 * time.Millisecond
+	gorselOnIndirBekleme = 300 * time.Millisecond
 )
 
 // GorselOnIndiriciBaslat arka planda kaynak görsellerini indirir.
 // Bağlam iptal edilince durur.
 func (s *Server) GorselOnIndiriciBaslat(ctx context.Context) {
 	go func() {
-		// İlk tur için kısa gecikme: açılışta site zaten DB, şablon ve
-		// zamanlayıcı kuruyor; dış indirme o yoğunluğa eklenmesin.
+		// İlk tur kısa gecikmeyle: açılışta site DB/şablon kuruyor,
+		// dış indirme o yoğunluğa eklenmesin.
 		select {
 		case <-ctx.Done():
 			return
-		case <-time.After(30 * time.Second):
+		case <-time.After(15 * time.Second):
 		}
 
-		tik := time.NewTicker(gorselOnIndirAralik)
-		defer tik.Stop()
 		for {
 			s.gorselOnIndirTur(ctx)
 			select {
 			case <-ctx.Done():
 				return
-			case <-tik.C:
+			case <-time.After(gorselOnIndirAralik):
 			}
 		}
 	}()
