@@ -230,7 +230,21 @@ templ cdHead(h CDHead) {
 		<link rel="alternate" type="application/rss+xml" title={ h.SiteName + " RSS" } href={ h.RSSFeed }/>
 		<link rel="self" type="application/rss+xml" href={ h.RSSFeed }/>
 	}
-	<link rel="hub" href="https://pubsubhubbub.appspot.com/"/>
+	// WebSub hub'ları: yayın bildirimi. Panelden yönetilir (beyaz liste),
+	// hub yoksa varsayılan Google hub'ı basılır — yayın bildirimi kesilmesin.
+	if e := CDEntegrasyonOku(); e != nil && len(e.WebSubHubs) > 0 {
+		for _, hub := range e.WebSubHubs {
+			<link rel="hub" href={ hub }/>
+		}
+	} else {
+		<link rel="hub" href="https://pubsubhubbub.appspot.com/"/>
+	}
+
+	// Google Search Console doğrulaması. Yalnız TOKEN basılır; panelde
+	// tam etiket yapıştırılsa bile httpapi tarafında ayıklanıp doğrulanır.
+	if e := CDEntegrasyonOku(); e != nil && e.GSCVerification != "" {
+		<meta name="google-site-verification" content={ e.GSCVerification }/>
+	}
 
 	<link rel="stylesheet" href={ "/static/cd.css?v=" + cdVarlik() }/>
 		// Mega menü: cd.css'in üstüne biner, kendi jetonunu tanımlamaz.
@@ -247,10 +261,27 @@ templ cdHead(h CDHead) {
 	// betik de her sayfada. Akış yalnız sayfada canlı yüzey varsa açılır
 	// (cd-canli.js ilk satırda kendini kontrol eder).
 	<script src={ "/static/cd-canli.js?v=" + cdVarlik() } defer></script>
-		// CANLI PİYASA (11 Kasım 2026): üst şerit HER sayfada olduğu için
-	// betik de her sayfada. Akış yalnız sayfada canlı yüzey varsa açılır
-	// (cd-canli.js ilk satırda kendini kontrol eder).
-	<script src={ "/static/cd-canli.js?v=" + cdVarlik() } defer></script>
+	// ÜÇÜNCÜ TARAF ENTEGRASYONLAR — satır içi KOD YOK.
+	//
+	// GA4 / GTM / Coinzilla / Cointraffic kimlikleri `data-*` ile geçilir;
+	// gtag ve reklam betiklerini cd-entegrasyon.js ÇALIŞMA ANINDA yükler.
+	// Neden böyle:
+	//   1) CSP: satır içi blokların sha256'sı önceden hesaplanıyor
+	//      (buildCSP). Panelden değişen bir kimlik hash'i bozar, GA sessizce
+	//      ölürdü. Kendi dosyamız `script-src 'self'` ile her zaman geçerli.
+	//   2) Güvenlik: panelden serbest kod enjekte edilemez; yalnız
+	//      doğrulanmış kimlik taşınır.
+	if e := CDEntegrasyonOku(); e != nil && (e.GA4ID != "" || e.GTMID != "" || e.ReklamAktif || e.CointrafficKey != "") {
+		<script
+			src={ "/static/cd-entegrasyon.js?v=" + cdVarlik() }
+			defer
+			data-ga4={ e.GA4ID }
+			data-gtm={ e.GTMID }
+			data-reklam-zone={ e.ReklamZone }
+			data-reklam-aktif={ cdBoolAttr(e.ReklamAktif) }
+			data-cointraffic={ e.CointrafficKey }
+		></script>
+	}
 		// Tema başlangıcı — BLOKLAYICI ve head'de olmalı: gövde boyanmadan
 	// önce html sınıfı yazılmazsa koyu tema seçen kullanıcı bir kare
 	// beyaz görür (FOUC). CSP satır içi betiğe izin veriyor çünkü

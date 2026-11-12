@@ -570,6 +570,23 @@ templ cdFooter(s CDShell) {
 				<span>© 2026 bitcosar — Tüm hakları saklıdır.</span>
 				<span>Kaynaklar atıf ile gösterilir; tam metin yayınlanmaz.</span>
 			</div>
+
+			// BOT TUZAĞI (honeypot) — 12 Kasım 2026.
+			//
+			// robots.txt bu yolları YASAKLIYOR; iyi botlar hiç gelmez.
+			// robots'u yok sayan kazıyıcılar ise sayfadaki bağlantıları
+			// takip eder: bu linkler CSS ile ekran dışına itilir, insan
+			// görmez/tıklamaz, kazıyıcı takip eder → 410 + IP engeli.
+			//
+			// `rel="nofollow"` bilinçli: uyumlu botlar izlemesin. Zaten
+			// robots'u çiğneyen bot nofollow'u da çiğner — hedef kitle o.
+			// `aria-hidden` + `tabindex="-1"`: ekran okuyucu ve klavye
+			// kullanıcısı da denk gelmez (erişilebilirlik ihlali olmasın).
+			<div class="cd-tuzak" aria-hidden="true">
+				<a href="/arsiv/dizin" rel="nofollow" tabindex="-1">Arşiv dizini</a>
+				<a href="/gizli-dizin" rel="nofollow" tabindex="-1">Tüm arşiv</a>
+				<a href="/tum-haberler-dizin" rel="nofollow" tabindex="-1">Tüm haberler dizini</a>
+			</div>
 		</div>
 	</footer>
 }

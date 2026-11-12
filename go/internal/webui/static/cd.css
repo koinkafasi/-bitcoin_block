@@ -5753,3 +5753,23 @@ html:not(.dark) .cd-kapak__harf { opacity: .3; }
   -webkit-box-decoration-break: clone;
   box-decoration-break: clone;
 }
+/* BOT TUZAĞI (honeypot) — 12 Kasım 2026.
+   robots.txt /arsiv/dizin, /gizli-dizin ve /tum-haberler-dizin yollarını
+   yasaklıyor; uyumlu botlar hiç gelmez. robots'u yok sayan kazıyıcılar ise
+   sayfadaki bağlantıları izler. Bu blok ekran dışına itilir: insan görmez,
+   ekran okuyucu ve klavye (aria-hidden + tabindex=-1) denk gelmez,
+   kazıyıcı takip eder → 410 Gone + IP engeli.
+
+   `position:absolute` + negatif konum BİLİNÇLİ: `display:none` ve
+   `visibility:hidden` kullanan kazıyıcılar bağlantıyı atlar (klasik
+   honeypot tuzağı). Ekran dışında ama DOM'da ve "görünür" kalmalı. */
+.cd-tuzak {
+  position: absolute;
+  left: -9999px;
+  top: auto;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
