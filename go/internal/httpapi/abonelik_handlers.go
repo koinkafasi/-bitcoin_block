@@ -11,6 +11,7 @@ import (
 	"theblock/site/internal/auth"
 	"theblock/site/internal/platform"
 	"theblock/site/internal/repo"
+	"theblock/site/internal/webui/templkit"
 )
 
 // ---- Abonelik katmanları: fiyat sayfası, iyzico checkout, dönüş ----
@@ -119,7 +120,7 @@ func (s *Server) handleAbonelikPage(w http.ResponseWriter, r *http.Request) {
 		ab.SelectedSlug = v
 	}
 	d.Abonelik = ab
-	s.renderPublic(w, r, "abonelik", d, cacheControlPublic)
+	s.cdAbonelikRender(w, r, d, false)
 }
 
 const sozlesmeSurumu = "mesafeli-satis-sozlesmesi@v1"
@@ -237,7 +238,7 @@ func (s *Server) handleAbonelikOdeme(w http.ResponseWriter, r *http.Request) {
 	d := s.abonelikViewData(r, "Ödeme")
 	d.Abonelik.Info = "Ödeme sayfası hazırlanıyor…"
 	d.Abonelik.CheckoutHTML = template.HTML(res.CheckoutForm)
-	s.renderPublic(w, r, "abonelik-odeme", d, "no-store")
+	s.cdAbonelikRender(w, r, d, true)
 }
 
 // POST /abonelik/geri-donus — iyzico callback (token ile doğrulama).
@@ -349,7 +350,7 @@ func (s *Server) abonelikViewData(r *http.Request, title string) *tmplData {
 func (s *Server) abonelikHata(w http.ResponseWriter, r *http.Request, msg string) {
 	d := s.abonelikViewData(r, "Abonelik")
 	d.Abonelik.Error = msg
-	s.renderPublic(w, r, "abonelik", d, "no-store")
+	s.cdAbonelikRender(w, r, d, false)
 }
 
 func normalizeCycle(v string) string {
@@ -435,4 +436,70 @@ func formatTL(v float64) string {
 		b.WriteRune(r)
 	}
 	return b.String() + "," + parts[1]
+}
+
+// cdAbonelikRender /abonelik ve ödeme adımını CoinDesk kabuğuyla basar.
+//
+// VERİ KAYNAĞI: abonelikData (katmanlar, oturum, iyzico formu) DEĞİŞMEDİ;
+// yalnız görünüm katmanı yeni kabuğa taşındı. Ödeme akışı aynı kalır.
+func (s *Server) cdAbonelikRender(w http.ResponseWriter, r *http.Request, d *tmplData, odeme bool) {
+	ctx := r.Context()
+	ab := d.Abonelik
+	if ab == nil {
+		ab = &abonelikData{}
+	}
+
+	v := templkit.CDAbonelikSayfa{
+		Shell:           s.cdShellCtx(ctx, r, "abonelik"),
+		Title:           "Abonelik Paketleri — " + s.siteName,
+		Desc:            "Ayrıcalıklı haberlere, analizlere ve reklamsız okuma deneyimine erişin.",
+		Canonical:       s.kanonikKok(r) + "/abonelik",
+		GirisYapildi:    ab.IsLoggedIn,
+		GirisHref:       "/giris?redirect=abonelik",
+		Hata:            ab.Error,
+		Bilgi:           ab.Info,
+		OdemeAdimi:      odeme,
+		CheckoutHTML:    string(ab.CheckoutHTML),
+		Locale:          "tr",
+		BaseURL:         s.kanonikKok(r),
+		PageCategory:    "section_landing_page",
+		ContentCategory: "abonelik",
+	}
+
+	for _, t := range ab.Tiers {
+		plan := templkit.CDAbonelikPlan{
+			Slug:     t.Slug,
+			Ad:       t.Name,
+			Aciklama: t.Description,
+			Renk:     t.ColorHex,
+			Aylik:    strconv.FormatFloat(t.MonthlyPrice, 'f', -1, 64),
+			Yillik:   strconv.FormatFloat(t.AnnualPrice, 'f', -1, 64),
+			Perks:    t.Perks,
+			Mevcut:   t.ID == ab.CurrentID,
+		}
+		// "2 ay hediye" YALNIZ gerçekten öyleyse: yıllık tutar 10 aylık
+		// fiyata eşit ya da altındaysa. Uydurma etiket basılmıyor.
+		if t.MonthlyPrice > 0 && t.AnnualPrice > 0 &&
+			t.AnnualPrice <= t.MonthlyPrice*10+0.01 {
+			plan.YillikEtiket = "2 ay hediye"
+		}
+		v.Planlar = append(v.Planlar, plan)
+	}
+
+	var urunler []cdLDItem
+	for _, p := range v.Planlar {
+		urunler = append(urunler, cdLDItem{Headline: p.Ad + " aboneliği", URL: v.Canonical})
+	}
+	v.JSONLD = string(cdCollectionJSONLD(s.siteName, s.kanonikKok(r), "Abonelik Paketleri", v.Canonical, urunler))
+
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	if odeme {
+		// Ödeme adımı kişisel veri taşır: asla önbelleğe girmez.
+		w.Header().Set("Cache-Control", "no-store")
+	} else {
+		w.Header().Set("Cache-Control", cacheControlPublic)
+	}
+	if err := templkit.CDAbonelikSayfaView(v).Render(ctx, w); err != nil {
+		s.logger.Error("cd abonelik render", "error", err)
+	}
 }

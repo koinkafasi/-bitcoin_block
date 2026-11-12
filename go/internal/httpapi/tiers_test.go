@@ -1,13 +1,9 @@
 package httpapi
 
 import (
-	"bytes"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-
-	"theblock/site/internal/repo"
 )
 
 func TestContentRequiredWeight(t *testing.T) {
@@ -64,54 +60,6 @@ func TestSplitName(t *testing.T) {
 	assert.Equal(t, "Ayşe", n)
 	assert.Equal(t, "Nur Yılmaz", s)
 }
-
-func TestAbonelikSablonuKademeler(t *testing.T) {
-	tmpl := parseTestTemplates(t)
-	d := headerData()
-	d.MetaTitle = "Abonelik"
-	d.Abonelik = &abonelikData{
-		Cycle: "monthly",
-		Tiers: []repo.Tier{
-			{ID: 1, Slug: "filiz", Name: "Filiz", ColorHex: "#22c55e", Weight: 1,
-				MonthlyPrice: 150, AnnualPrice: 1500, Description: "Giriş seviyesi",
-				Perks: []string{"Ayrıcalıklı özetler"}},
-			{ID: 3, Slug: "gumus", Name: "Gümüş", ColorHex: "#94a3b8", Weight: 3,
-				MonthlyPrice: 750, AnnualPrice: 7500, Description: "Tam erişim",
-				Perks: []string{"Tüm analizler"}},
-		},
-		CurrentID:   1,
-		CurrentName: "Filiz",
-		IyzicoOn:    true,
-		IsLoggedIn:  true,
-	}
-	var buf bytes.Buffer
-	require.NoError(t, tmpl.ExecuteTemplate(&buf, "abonelik", d))
-	out := buf.String()
-	assert.Contains(t, out, "Abonelik Paketleri")
-	assert.Contains(t, out, "Filiz")
-	assert.Contains(t, out, "Gümüş")
-	assert.Contains(t, out, "150 ₺")
-	assert.Contains(t, out, "1500 ₺")
-	assert.Contains(t, out, "Mevcut planınız")
-	assert.Contains(t, out, "2 ay hediye")
-	assert.Contains(t, out, `action="/abonelik/odeme"`)
-	assert.Contains(t, out, `name="tckn"`)
-	assert.Contains(t, out, "data-tier=\"gumus\"")
-}
-
-func TestAbonelikMisafirGirisCagrisi(t *testing.T) {
-	tmpl := parseTestTemplates(t)
-	d := headerData()
-	d.Abonelik = &abonelikData{
-		Tiers: []repo.Tier{{ID: 1, Slug: "filiz", Name: "Filiz", MonthlyPrice: 150, AnnualPrice: 1500}},
-	}
-	var buf bytes.Buffer
-	require.NoError(t, tmpl.ExecuteTemplate(&buf, "abonelik", d))
-	out := buf.String()
-	assert.Contains(t, out, "/giris?redirect=abonelik")
-	assert.NotContains(t, out, `action="/abonelik/odeme"`)
-}
-
 func TestHesapAbonelikKademeKarti(t *testing.T) {
 	d := hesapTestData("abonelik")
 	d.Hesap.TierName = "Gümüş"

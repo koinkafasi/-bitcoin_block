@@ -1,0 +1,324 @@
+/* cd-abonelik.css — /abonelik sayfası (12 Kasım 2026).
+   Ayrı dosya: cd.css 204 KB bütçeye tabi (TestCDButce), bu kurallar
+   yalnız bu sayfada kullanılıyor. */
+
+.cd-abn-bas {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  flex-wrap: wrap;
+  margin: 8px 0 28px;
+}
+.cd-abn-bas h1 {
+  margin: 0 0 8px;
+  font-family: var(--cd-serif);
+  font-size: 40px;
+  line-height: 48px;
+  font-weight: 700;
+  color: var(--cd-fg-strong);
+}
+.cd-abn-bas .cd-card__spot { margin: 0; max-width: 62ch; }
+
+.cd-abn-donem {
+  display: inline-flex;
+  padding: 4px;
+  gap: 2px;
+  border: 1px solid var(--cd-border);
+  border-radius: 999px;
+  background: var(--cd-surface-soft);
+}
+.cd-abn-donem__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 34px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--cd-fg);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.cd-abn-donem__btn.is-secili {
+  background: var(--cd-fg);
+  color: var(--cd-bg);
+}
+.cd-abn-hediye {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: var(--cd-brand);
+  color: var(--cd-dark);
+}
+
+.cd-abn-uyari,
+.cd-abn-bilgi {
+  margin: 0 0 20px;
+  padding: 12px 16px;
+  border-radius: var(--cd-radius);
+  border: 1px solid var(--cd-border);
+  font-size: 14px;
+  line-height: 22px;
+}
+.cd-abn-uyari {
+  border-color: #b42318;
+  background: rgba(180, 35, 24, .08);
+  color: #f97066;
+}
+.cd-abn-bilgi { background: var(--cd-surface-soft); }
+
+/* ---- plan ızgarası ---- */
+.cd-abn-izgara {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 16px;
+  align-items: stretch;
+}
+.cd-abn-kart {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 22px 20px 20px;
+  border: 1px solid var(--cd-border);
+  border-radius: var(--cd-radius);
+  background: var(--cd-surface);
+  border-top: 3px solid var(--abn-renk, var(--cd-border));
+}
+.cd-abn-kart.is-mevcut {
+  border-color: var(--abn-renk, var(--cd-border-strong));
+  background: var(--cd-surface-soft);
+}
+.cd-abn-rozet {
+  position: absolute;
+  top: -11px;
+  left: 20px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--abn-renk, var(--cd-fg));
+  color: var(--cd-dark);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .02em;
+}
+.cd-abn-kart__ad {
+  margin: 0;
+  font-family: var(--cd-serif);
+  font-size: 22px;
+  line-height: 28px;
+  font-weight: 700;
+  color: var(--cd-fg-strong);
+}
+.cd-abn-kart__aciklama {
+  margin: 0;
+  min-height: 60px;
+  font-size: 13px;
+  line-height: 20px;
+  color: var(--cd-muted);
+}
+.cd-abn-fiyat {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  font-family: var(--cd-serif);
+  font-size: 30px;
+  line-height: 36px;
+  font-weight: 700;
+  color: var(--cd-fg-strong);
+  font-variant-numeric: tabular-nums;
+}
+.cd-abn-fiyat small {
+  font-family: var(--cd-sans);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--cd-muted);
+}
+.cd-abn-fiyat__not {
+  margin-top: -6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--cd-brand);
+}
+.cd-abn-perks {
+  margin: 6px 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+}
+.cd-abn-perks li {
+  position: relative;
+  padding-left: 20px;
+  font-size: 13px;
+  line-height: 20px;
+  color: var(--cd-fg);
+}
+.cd-abn-perks li::before {
+  content: "";
+  position: absolute;
+  left: 2px;
+  top: 7px;
+  width: 9px;
+  height: 5px;
+  border-left: 2px solid var(--abn-renk, var(--cd-fg));
+  border-bottom: 2px solid var(--abn-renk, var(--cd-fg));
+  transform: rotate(-45deg);
+}
+.cd-abn-cta {
+  margin-top: 14px;
+  width: 100%;
+  justify-content: center;
+  height: 42px;
+}
+button.cd-abn-cta[disabled] {
+  opacity: .55;
+  cursor: default;
+}
+
+/* ---- SSS ---- */
+.cd-abn-sss {
+  margin: 56px 0 72px;
+  max-width: 760px;
+}
+.cd-abn-sss h2 {
+  margin: 0 0 12px;
+  font-family: var(--cd-serif);
+  font-size: 26px;
+  line-height: 34px;
+  font-weight: 700;
+  color: var(--cd-fg-strong);
+}
+.cd-abn-sss details {
+  border-bottom: 1px solid var(--cd-border);
+  padding: 14px 0;
+}
+.cd-abn-sss summary {
+  cursor: pointer;
+  font-size: 15px;
+  line-height: 24px;
+  font-weight: 600;
+  color: var(--cd-fg-strong);
+}
+.cd-abn-sss details p {
+  margin: 10px 0 0;
+  font-size: 14px;
+  line-height: 23px;
+  color: var(--cd-muted-strong);
+}
+
+/* ---- ödeme formu (modal) ---- */
+.cd-abn-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(0, 0, 0, .62);
+  overflow-y: auto;
+}
+.cd-abn-modal[hidden] { display: none; }
+.cd-abn-modal__kart {
+  width: 100%;
+  max-width: 460px;
+  padding: 24px;
+  border: 1px solid var(--cd-border);
+  border-radius: var(--cd-radius);
+  background: var(--cd-bg);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.cd-abn-modal__bas {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.cd-abn-modal__bas h2 {
+  margin: 0;
+  font-family: var(--cd-serif);
+  font-size: 22px;
+  line-height: 28px;
+}
+.cd-abn-modal__kapat {
+  border: 0;
+  background: transparent;
+  color: var(--cd-muted);
+  font-size: 26px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 4px;
+}
+.cd-abn-ozet {
+  margin: 0;
+  font-size: 13px;
+  line-height: 20px;
+  color: var(--cd-muted-strong);
+}
+.cd-abn-alan {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--cd-fg);
+}
+.cd-abn-alan input {
+  height: 40px;
+  padding: 0 12px;
+  border: 1px solid var(--cd-border);
+  border-radius: var(--cd-radius);
+  background: var(--cd-surface);
+  color: var(--cd-fg);
+  font: inherit;
+  font-size: 14px;
+}
+.cd-abn-onay {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  font-size: 13px;
+  line-height: 20px;
+  color: var(--cd-muted-strong);
+}
+.cd-abn-onay input { margin-top: 3px; }
+.cd-abn-dipnot {
+  margin: 0;
+  font-size: 12px;
+  line-height: 19px;
+  color: var(--cd-muted);
+}
+.cd-abn-dipnot a { color: var(--cd-fg); text-decoration: underline; }
+
+/* ---- ödeme adımı ---- */
+.cd-abn-odeme {
+  max-width: 720px;
+  margin: 16px 0 72px;
+}
+.cd-abn-odeme h1 {
+  margin: 0 0 8px;
+  font-family: var(--cd-serif);
+  font-size: 32px;
+  line-height: 40px;
+  font-weight: 700;
+}
+.cd-abn-odeme__yuva { margin: 20px 0; }
+
+@media (max-width: 767px) {
+  .cd-abn-bas { gap: 16px; margin-bottom: 22px; }
+  .cd-abn-bas h1 { font-size: 30px; line-height: 38px; }
+  .cd-abn-izgara { grid-template-columns: 1fr; }
+  .cd-abn-kart__aciklama { min-height: 0; }
+  .cd-abn-sss { margin: 40px 0 56px; }
+  .cd-abn-modal { padding: 12px; align-items: flex-start; }
+}
