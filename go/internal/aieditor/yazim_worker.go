@@ -129,12 +129,22 @@ func yazimTuru(ctx context.Context, pool *pgxpool.Pool, aiclient *ai.Client, log
 	}
 
 	// 2) Hız sınırı: son 1 dakikada eklenen iş sayısı.
-	kota := ayar.Dakika - repo.YazimSayaciSonDakika(ctx, pool, 1)
+	//
+	// GECE PENCERESİ: sağlayıcı kotası 03:00'te sıfırlanıyor ve ölçümde
+	// (13 Kasım 2026) 03:00-09:00 arası hiç 429 görülmedi — o pencerede
+	// dakika hedefi GeceCarpani katına çıkar. Aynı ölçümde o saatlerde
+	// hat saatte 2-8 iş üretiyordu, akşam 81; bedava kapasite boş
+	// geçiyordu.
+	dakikaHedefi := ayar.Dakika
+	if ai.KotaBolPencere(time.Now()) {
+		dakikaHedefi *= YazimGeceCarpani
+	}
+	kota := dakikaHedefi - repo.YazimSayaciSonDakika(ctx, pool, 1)
 	if kota <= 0 {
 		return
 	}
-	if kota > YazimTurLimiti {
-		kota = YazimTurLimiti
+	if kota > YazimTurLimiti*catBoyutCarpani(dakikaHedefi, ayar.Dakika) {
+		kota = YazimTurLimiti * catBoyutCarpani(dakikaHedefi, ayar.Dakika)
 	}
 
 	liste, err := repo.YazimBekleyenTaslaklar(ctx, pool, 1, kota)
@@ -276,4 +286,32 @@ func bodyParagraflari(body string) []string {
 		}
 	}
 	return out
+}
+
+// YazimGeceCarpani kota penceresinde dakika hedefinin çarpanıdır.
+//
+// ceviri.GeceCarpani ile aynı gerekçe ve aynı değer: ölçülen boş pencereyi
+// kapatmaya yetiyor, sağlayıcıyı yeniden 429'a sokmayacak kadar ölçülü.
+// Kota yine biterse ai.Client kısa devresi devreye girer ve iş kuyrukta
+// bekler (kaybolmaz).
+const YazimGeceCarpani = 4
+
+// catBoyutCarpani tur limitinin gece penceresinde kaça katlanacağını verir.
+//
+// Dakika hedefi 4 katına çıkınca tur limiti de büyümeli, yoksa döngü
+// hedefe ulaşmadan limite takılır ve pencere yine boş geçer. Ama parti
+// boyutunu sınırsız büyütmek tek turda çok iş açıp belleği ve sağlayıcıyı
+// zorlardı; bu yüzden orana bağlı ve en çok YazimGeceCarpani kadar.
+func catBoyutCarpani(hedef, temel int) int {
+	if temel <= 0 || hedef <= temel {
+		return 1
+	}
+	kat := hedef / temel
+	if kat > YazimGeceCarpani {
+		kat = YazimGeceCarpani
+	}
+	if kat < 1 {
+		kat = 1
+	}
+	return kat
 }

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log/slog"
@@ -39,11 +40,18 @@ type Client struct {
 	logger     *slog.Logger
 	providers  []Provider
 	httpClient *http.Client
+	// kota sağlayıcının günlük kota durumunu hatırlar: tükendiyse boşa
+	// HTTP çağrısı yapılmaz (eskiden her iş için 429 alınıyordu).
+	kota *KotaIzleyici
 }
 
 // NewClient env'den sağlayıcıları kurar; anahtar yoksa Mock ekler.
 func NewClient(logger *slog.Logger) *Client {
-	c := &Client{logger: logger, httpClient: &http.Client{Timeout: aiHTTPTimeout()}}
+	c := &Client{
+		logger:     logger,
+		httpClient: &http.Client{Timeout: aiHTTPTimeout()},
+		kota:       NewKotaIzleyici(),
+	}
 	key := os.Getenv("OMNIROUTE_API_KEY")
 	base := os.Getenv("OMNIROUTE_BASE_URL")
 	if base == "" {
@@ -102,7 +110,22 @@ func (c *Client) Chat(ctx context.Context, messages []Msg) (string, error) {
 	if c == nil {
 		return "", fmt.Errorf("AI istemcisi yapılandırılmamış")
 	}
+	// KOTA KISA DEVRESİ: kota tükenmişse hiç çağrı yapma. Eskiden her iş
+	// için istek atılıyor, 429 alınıyor ve iş kaybediliyordu; ölçümde
+	// 01:00-02:00 arası 60 çağrının TAMAMI böyle boşa gitti.
+	simdi := time.Now()
+	if c.kota != nil {
+		if c.kota.Temizle(simdi) {
+			c.logger.Info("ai kotası döndü (sıfırlama geçildi)")
+		}
+		if c.kota.Tukendi(simdi) {
+			return "", fmt.Errorf("%w; sıfırlamaya kalan: %s",
+				ErrKotaDoldu, c.kota.BeklemeSuresi(simdi).Round(time.Minute))
+		}
+	}
+
 	var lastErr error
+	var kotaErr error // kota hatası ayrı tutulur: zincirde kaybolmasın
 	for _, p := range c.providers {
 		if err := ctx.Err(); err != nil {
 			lastErr = err
@@ -116,7 +139,18 @@ func (c *Client) Chat(ctx context.Context, messages []Msg) (string, error) {
 			return out, nil
 		}
 		lastErr = err
+		if errors.Is(err, ErrKotaDoldu) {
+			kotaErr = err
+			if c.kota != nil {
+				c.kota.Isaretle(simdi)
+			}
+		}
 		c.logger.Warn("ai provider başarısız, sıradakine geçiliyor", "provider", p.Name(), "error", err)
+	}
+	// Kota hatası varsa ONU döndür: çağıran taraf işi kuyrukta bırakmalı,
+	// başarısız saymamalı. Başka bir hatayla sarmalamak bu ayrımı yok eder.
+	if kotaErr != nil {
+		return "", kotaErr
 	}
 	return "", fmt.Errorf("tüm AI sağlayıcıları başarısız: %w", lastErr)
 }
@@ -181,6 +215,13 @@ func (p *httpProvider) Chat(ctx context.Context, messages []Msg) (string, error)
 	defer resp.Body.Close()
 	raw, _ := io.ReadAll(io.LimitReader(resp.Body, 1<<20))
 	if resp.StatusCode != http.StatusOK {
+		// KOTA AYRI BİR HATA: 429/402 geldiğinde iş BAŞARISIZ değildir —
+		// içerik bir sonraki sıfırlamada üretilebilir. Eskiden hepsi tek
+		// tip hataydı ve çağıran taraf işi `failed` işaretleyip atıyordu;
+		// ölçümde 24 saatte 118 iş (toplamın ~%22'si) böyle kayboldu.
+		if kerr := kotaHatasi(resp.StatusCode, clip(raw, 200)); kerr != nil {
+			return "", kerr
+		}
 		return "", fmt.Errorf("AI uç noktası %d: %s", resp.StatusCode, clip(raw, 300))
 	}
 	var cr chatCompletionResp

@@ -368,8 +368,26 @@ func (s *Service) ProcessJob(ctx context.Context, jobID int64) (Result, error) {
 
 func (s *Service) failJob(ctx context.Context, jobID int64, cause error) error {
 	// İstemci bağlantısı kopsa veya worker iptal edilse bile kayıt running kalmasın.
-	fctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	fctx, cancel := context.WithTimeout(context.WithoutCancel(ctx), 5*time.Second)
 	defer cancel()
+
+	// KOTA HATASI İŞİ BİTİRMEZ, ERTELER.
+	//
+	// Ölçüm (13 Kasım 2026, canlı ai_jobs son 24 saat): 118 iş `failed`
+	// işaretlendi ve kayboldu; hepsi 429'du. Sağlayıcının kotası her gece
+	// 03:00'te sıfırlanıyor, yani o içerikler ertesi turda üretilebilirdi.
+	// Artık iş kuyruğa geri döner ve kota dönünce kendiliğinden işlenir.
+	if errors.Is(cause, ai.ErrKotaDoldu) {
+		if err := repo.KuyrugaGeriKoy(fctx, s.pool, jobID, cause.Error()); err != nil {
+			s.logger.Warn("kota işi kuyruğa geri konamadı", "job", jobID, "error", err)
+			// Geri koyamadıysak `running` asılı kalmasın: bitir.
+			_ = repo.FinishAIJob(fctx, s.pool, jobID, "failed", nil, cause.Error(), "", "", PromptVersion, 0, 0, 0)
+			return cause
+		}
+		s.logger.Info("ai işi kota nedeniyle ertelendi", "job", jobID)
+		return cause
+	}
+
 	_ = repo.FinishAIJob(fctx, s.pool, jobID, "failed", nil, cause.Error(), "", "", PromptVersion, 0, 0, 0)
 	return cause
 }

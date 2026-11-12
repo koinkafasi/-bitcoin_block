@@ -32,6 +32,20 @@ const MaksDakika = 120
 // TurLimiti tek turda işlenecek en fazla içerik.
 const TurLimiti = 10
 
+// GeceCarpani kota penceresinde (sıfırlamadan sonraki ilk saatler) dakika
+// hedefinin kaç katına çıkarılacağıdır.
+//
+// NEDEN: sağlayıcı kotası her gece 03:00'te sıfırlanıyor ve ölçümde
+// (13 Kasım 2026, canlı ai_jobs) 03:00-09:00 arası HİÇ 429 görülmedi —
+// yani o pencere bedava kapasite. Aynı ölçümde o saatlerde hat saatte
+// yalnız 2-8 iş üretiyordu, akşam 18:00'de 81. En bol pencere boş
+// geçiyordu.
+//
+// 4 seçildi: 8 çeviri/dk hedefi 32'ye çıkar. Daha yükseği (ör. 10x)
+// sağlayıcıyı tekrar 429'a sokma riski taşır; 4x ölçülen boşluğu
+// kapatmaya yetiyor ve kota biterse zaten kısa devre devreye girer.
+const GeceCarpani = 4
+
 // Ayarlar otomatik çevirinin açık/kapalı, hedef dil ve hız bilgisidir.
 type Ayarlar struct {
 	Aktif  bool
@@ -773,12 +787,39 @@ func Run(ctx context.Context, pool *pgxpool.Pool, aiclient *ai.Client, logger *s
 			}
 			continue
 		}
+
+		// KOTA TÜKENDİYSE BOŞA DÖNME. Eskiden döngü her dakika deneyip
+		// 429 alıyordu: ölçümde 01:00-02:00 arası 60 çağrının tamamı boşa
+		// gitti. Sıfırlamaya kadar bekle — ama en çok 15 dakika, yoksa
+		// panelden yapılan ayar değişikliği saatlerce fark edilmezdi.
+		if aiclient.KotaTukendi() {
+			kalan := aiclient.KotaBeklemesi()
+			if kalan > 15*time.Minute {
+				kalan = 15 * time.Minute
+			}
+			if kalan <= 0 {
+				kalan = time.Minute
+			}
+			logger.Info("ceviri: kota doldu, bekleniyor", "sure", kalan.Round(time.Second))
+			if !bekle(ctx, kalan) {
+				return
+			}
+			continue
+		}
+
+		// GECE PENCERESİ: kota tazeyken hedefi yükselt (bkz. GeceCarpani).
+		dakikaHedefi := a.Dakika
+		gece := ai.KotaBolPencere(time.Now())
+		if gece {
+			dakikaHedefi *= GeceCarpani
+		}
+
 		bas := time.Now()
 		n := calistir(ctx, pool, aiclient, logger, siteID, a, TurLimiti, hata)
 		if n > 0 {
-			logger.Info("ceviri turu", "cevrilen", n, "dakika_hedefi", a.Dakika)
+			logger.Info("ceviri turu", "cevrilen", n, "dakika_hedefi", dakikaHedefi, "gece_penceresi", gece)
 		}
-		if sure := Bekleme(a.Dakika, n, time.Since(bas)); sure > 0 {
+		if sure := Bekleme(dakikaHedefi, n, time.Since(bas)); sure > 0 {
 			if !bekle(ctx, sure) {
 				return
 			}
