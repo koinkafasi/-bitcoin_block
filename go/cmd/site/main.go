@@ -132,6 +132,13 @@ func main() {
 	go scheduler.RunTrendScore(workerCtx, pool, logger, 15*time.Minute)
 	go scheduler.RunIcerikSkor(workerCtx, pool, logger, 15*time.Minute)
 	go scheduler.RunAISource(workerCtx, pool, logger, 15*time.Minute)
+	// KAYNAK GÖRSELLERİNİ ÖNDEN İNDİR (12 Kasım 2026): `/kg/` tembel
+	// çalışıyordu — görsel ancak biri sayfayı açınca iniyordu ve 4.918
+	// kayıttan yalnız 136'sı diskteydi (%3). Kaynak sunucu görseli
+	// taşıyınca/silince içerik kalıcı görselsiz kalıyor; eski WordPress
+	// görsellerinde yaşandı (cdn.bitcosar.com artık 403). Bu işçi
+	// arşivi küçük gruplar hâlinde kendi diskimize alır.
+	app.GorselOnIndiriciBaslat(workerCtx)
 	// YouTube video arşivi: kanal RSS'i + /streams + /live periyodik çekilir
 	// (aralık panelden: settings/youtube.dakika). /videos, /videos/shorts,
 	// /canli-yayin ve ana sayfa modülleri bu tablodan beslenir.

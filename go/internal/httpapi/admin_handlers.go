@@ -1010,6 +1010,10 @@ func (s *Server) handleContentSave(w http.ResponseWriter, r *http.Request) {
 	if c.Status == "yayinda" {
 		s.autoIndex(ctx, s.curSiteID(r), c.ID)
 	}
+	// WebSub: yeni yayını hub'lara bildir (beslemeyi anında tazeletir).
+	if c.Status == "yayinda" {
+		go s.websubYayinBildir(context.Background(), []int64{c.ID})
+	}
 	s.publishContentLive(ctx, c.ID, c.SiteID, false)
 	s.publishEditorSaved(ctx, c.ID, c.SiteID, 0)
 	s.contentFormResult(w, r, c.ID, "info", msg)

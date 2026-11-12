@@ -125,3 +125,16 @@ func TestSure(t *testing.T) {
 		}
 	}
 }
+
+func TestOnizlemeURL(t *testing.T) {
+	istenen := "https://i.ytimg.com/an_webp/abc123/mqdefault_6s.webp"
+	if got := OnizlemeURL("abc123"); got != istenen {
+		t.Errorf("OnizlemeURL = %q, istenen %q", got, istenen)
+	}
+
+	// Boş kimlikte adres ÜRETİLMEZ: "…/an_webp//…" bozuk bir istek
+	// olurdu (aynı hata GorselYedekZincir'de yaşanmıştı).
+	if got := OnizlemeURL(""); got != "" {
+		t.Errorf("boş kimlikte adres üretildi: %q", got)
+	}
+}

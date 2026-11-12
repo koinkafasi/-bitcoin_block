@@ -25,18 +25,26 @@ type settingsData struct {
 	GCode         string
 	GVerification string
 	AdSense       string
-	RobotsHTML    string
-	AIProvider    string
-	AIModel       string
-	AIBaseURL     string
-	AIEnabled     bool
-	Types         []repo.ContentType
-	IzinKeys      []string
-	IzinMap       map[string][]string
-	Logs          []repo.LogRow
-	Kunye         []bikKunyeAlan
-	KunyeEksik    []string
-	KunyeYedek    map[string]string
+	// GTMID / GTMNoScript / Reklam* / WebSubHubs: üçüncü taraf
+	// entegrasyonları. Yalnız DOĞRULANMIŞ kimlik taşınır; ham kod YOK.
+	GTMID          string
+	GTMNoScript    bool
+	ReklamAktif    bool
+	ReklamZone     string
+	CointrafficKey string
+	WebSubHubs     []string
+	RobotsHTML     string
+	AIProvider     string
+	AIModel        string
+	AIBaseURL      string
+	AIEnabled      bool
+	Types          []repo.ContentType
+	IzinKeys       []string
+	IzinMap        map[string][]string
+	Logs           []repo.LogRow
+	Kunye          []bikKunyeAlan
+	KunyeEksik     []string
+	KunyeYedek     map[string]string
 }
 
 // handleSettingsGet ayarları yükler ve sekmeyi gösterir.
@@ -88,6 +96,15 @@ func (s *Server) buildSettingsData(r *http.Request) *tmplData {
 	}
 	sc.AdSense = jsonStr(bag["adsense"])
 	sc.RobotsHTML = jsonStr(bag["robots_html"])
+	// Entegrasyon kimlikleri: kayıtlı VE doğrulanmış hâli gösterilir, böylece
+	// panelde "kaydettim ama çalışmıyor" durumu görünür olur.
+	ent := s.cdEntegrasyonCoz(ctx)
+	sc.GTMID = ent.GTMID
+	sc.GTMNoScript = ent.GTMNoScript
+	sc.ReklamAktif = ent.ReklamAktif
+	sc.ReklamZone = ent.ReklamZone
+	sc.CointrafficKey = ent.CointrafficKey
+	sc.WebSubHubs = ent.WebSubHubs
 	sc.AIProvider = jsonStr(aiSet["default_provider"])
 	sc.AIModel = jsonStr(aiSet["model"])
 	sc.AIBaseURL = jsonStr(aiSet["base_url"])
@@ -208,14 +225,41 @@ func (s *Server) handleSettingsSave(w http.ResponseWriter, r *http.Request) {
 	}
 	set("baglantilar", "meta", map[string]string{
 		"g_code": r.FormValue("g_code"), "g_verification": strings.TrimSpace(r.FormValue("g_verification")),
+		"gtm_id": validGTM(r.FormValue("gtm_id")),
+		"gtm_noscript": func() string {
+			if r.Form.Has("gtm_noscript") {
+				return "1"
+			}
+			return ""
+		}(),
 	})
 	set("baglantilar", "adsense", r.FormValue("adsense"))
 	set("baglantilar", "robots_html", r.FormValue("robots_html"))
+
+	// Entegrasyon kimlikleri DOĞRULANARAK yazılır: geçersiz değer boş
+	// kaydedilir, böylece panelden yanlış/kötü niyetli bir dize geçemez.
+	set("baglantilar", "reklam_zone", validReklamZone(r.FormValue("reklam_zone")))
+	set("baglantilar", "cointraffic_key", validCointraffic(r.FormValue("cointraffic_key")))
+	set("baglantilar", "reklam_aktif", func() string {
+		if r.Form.Has("reklam_aktif") {
+			return "1"
+		}
+		return ""
+	}())
+	hubs, reddedilen := validWebSubHubs(r.FormValue("websub_hubs"))
+	set("baglantilar", "websub_hubs", strings.Join(hubs, ","))
+	if len(reddedilen) > 0 {
+		s.logger.Warn("websub hub reddedildi (beyaz liste)", "adresler", reddedilen)
+	}
 	// yapay zeka (api anahtarı DB'ye yazılmaz; env — burada yalnız not)
 	set("yapay_zeka", "default_provider", r.FormValue("ai_provider"))
 	set("yapay_zeka", "model", r.FormValue("ai_model"))
 
 	s.saveKunyeSettings(r, set)
+
+	// Entegrasyon kimlikleri templkit'e YENİDEN yayınlanır: değişiklik
+	// sunucu yeniden başlatılmadan sonraki istekte görünür.
+	s.CDEntegrasyonYenile(ctx)
 
 	s.audit(r, "ayar_kaydet", "Ayarlar güncellendi")
 	s.settingsResult(w, r, "info", "Ayarlar kaydedildi.")

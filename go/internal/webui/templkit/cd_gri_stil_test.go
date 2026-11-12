@@ -16,7 +16,12 @@ func TestCDGriStiliVar(t *testing.T) {
 	require.GreaterOrEqual(t, i, 0, "gri görsel kuralı yok")
 	blok := css[i:]
 	blok = blok[:strings.Index(blok, "}")+1]
-	assert.Contains(t, blok, "filter: grayscale(1)")
+	// Gri dönüşüm, sitenin ortak ton jetonuyla BİRLİKTE yazılır: tek
+	// `filter` kazandığı için yalnız `grayscale(1)` yazılsaydı gri
+	// görseller ortak kontrast ayarını kaybederdi.
+	assert.Contains(t, blok, "grayscale(1)")
+	assert.Contains(t, blok, "var(--cd-gorsel-ton)",
+		"gri görsel ortak tonu da uygulamalı")
 
 	// Üzerine gelince renk geri geliyor.
 	assert.Contains(t, css, ".cd-gri:hover img")

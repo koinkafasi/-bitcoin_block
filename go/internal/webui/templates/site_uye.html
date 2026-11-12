@@ -1,6 +1,11 @@
 {{define "uye-giris"}}<!doctype html><html lang="{{.Lang}}" {{if .RTL}}dir="rtl"{{end}} data-theme="{{.Theme}}"><head>{{template "public_head" .}}
+<link rel="stylesheet" href="{{asset "cd.css"}}">
 <link rel="stylesheet" href="{{asset "uye-giris.css"}}">
-<script>document.documentElement.classList.add('js');</script>
+<script>document.documentElement.classList.add('js');
+(function(){try{var t=localStorage.getItem('tema');
+var koyu=t==='dark'||(t!=='light'&&window.matchMedia('(prefers-color-scheme: dark)').matches);
+document.documentElement.classList.add(koyu?'dark':'light');
+document.documentElement.classList.add('cd-js');}catch(e){}})();</script>
 </head>
 <body class="auth-page">
 {{template "uye-auth-kabuk" .}}
@@ -8,8 +13,13 @@
 </body></html>{{end}}
 
 {{define "uye-kayit"}}<!doctype html><html lang="{{.Lang}}" {{if .RTL}}dir="rtl"{{end}} data-theme="{{.Theme}}"><head>{{template "public_head" .}}
+<link rel="stylesheet" href="{{asset "cd.css"}}">
 <link rel="stylesheet" href="{{asset "uye-giris.css"}}">
-<script>document.documentElement.classList.add('js');</script>
+<script>document.documentElement.classList.add('js');
+(function(){try{var t=localStorage.getItem('tema');
+var koyu=t==='dark'||(t!=='light'&&window.matchMedia('(prefers-color-scheme: dark)').matches);
+document.documentElement.classList.add(koyu?'dark':'light');
+document.documentElement.classList.add('cd-js');}catch(e){}})();</script>
 </head>
 <body class="auth-page">
 {{template "uye-auth-kabuk" .}}
@@ -409,8 +419,13 @@
 {{end}}
 
 {{define "uye-sifremi-unuttum"}}<!doctype html><html lang="{{.Lang}}" {{if .RTL}}dir="rtl"{{end}} data-theme="{{.Theme}}"><head>{{template "public_head" .}}
+<link rel="stylesheet" href="{{asset "cd.css"}}">
 <link rel="stylesheet" href="{{asset "uye-giris.css"}}">
-<script>document.documentElement.classList.add('js');</script>
+<script>document.documentElement.classList.add('js');
+(function(){try{var t=localStorage.getItem('tema');
+var koyu=t==='dark'||(t!=='light'&&window.matchMedia('(prefers-color-scheme: dark)').matches);
+document.documentElement.classList.add(koyu?'dark':'light');
+document.documentElement.classList.add('cd-js');}catch(e){}})();</script>
 </head>
 <body class="auth-page">
 {{template "uye-auth-kabuk" .}}
@@ -418,8 +433,13 @@
 </body></html>{{end}}
 
 {{define "uye-sifre-sifirla"}}<!doctype html><html lang="{{.Lang}}" {{if .RTL}}dir="rtl"{{end}} data-theme="{{.Theme}}"><head>{{template "public_head" .}}
+<link rel="stylesheet" href="{{asset "cd.css"}}">
 <link rel="stylesheet" href="{{asset "uye-giris.css"}}">
-<script>document.documentElement.classList.add('js');</script>
+<script>document.documentElement.classList.add('js');
+(function(){try{var t=localStorage.getItem('tema');
+var koyu=t==='dark'||(t!=='light'&&window.matchMedia('(prefers-color-scheme: dark)').matches);
+document.documentElement.classList.add(koyu?'dark':'light');
+document.documentElement.classList.add('cd-js');}catch(e){}})();</script>
 </head>
 <body class="auth-page">
 {{template "uye-auth-kabuk" .}}
@@ -427,8 +447,13 @@
 </body></html>{{end}}
 
 {{define "uye-sifre-tamam"}}<!doctype html><html lang="{{.Lang}}" {{if .RTL}}dir="rtl"{{end}} data-theme="{{.Theme}}"><head>{{template "public_head" .}}
+<link rel="stylesheet" href="{{asset "cd.css"}}">
 <link rel="stylesheet" href="{{asset "uye-giris.css"}}">
-<script>document.documentElement.classList.add('js');</script>
+<script>document.documentElement.classList.add('js');
+(function(){try{var t=localStorage.getItem('tema');
+var koyu=t==='dark'||(t!=='light'&&window.matchMedia('(prefers-color-scheme: dark)').matches);
+document.documentElement.classList.add(koyu?'dark':'light');
+document.documentElement.classList.add('cd-js');}catch(e){}})();</script>
 </head>
 <body class="auth-page">
 {{template "uye-auth-kabuk" .}}
@@ -436,8 +461,13 @@
 </body></html>{{end}}
 
 {{define "uye-onay"}}<!doctype html><html lang="{{.Lang}}" {{if .RTL}}dir="rtl"{{end}} data-theme="{{.Theme}}"><head>{{template "public_head" .}}
+<link rel="stylesheet" href="{{asset "cd.css"}}">
 <link rel="stylesheet" href="{{asset "uye-giris.css"}}">
-<script>document.documentElement.classList.add('js');</script>
+<script>document.documentElement.classList.add('js');
+(function(){try{var t=localStorage.getItem('tema');
+var koyu=t==='dark'||(t!=='light'&&window.matchMedia('(prefers-color-scheme: dark)').matches);
+document.documentElement.classList.add(koyu?'dark':'light');
+document.documentElement.classList.add('cd-js');}catch(e){}})();</script>
 </head>
 <body class="auth-page">
 {{template "uye-auth-kabuk" .}}

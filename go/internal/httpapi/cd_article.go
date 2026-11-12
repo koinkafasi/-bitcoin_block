@@ -198,6 +198,14 @@ func (s *Server) cdMakaleGoster(w http.ResponseWriter, r *http.Request, c repo.C
 	v.ContentID = itoa64(c.ID)
 	v.Yorum = s.cdYorumVerisi(r, c)
 
+	// Paylaşım görseli: içerikte yoksa üretilen varsayılana düşer.
+	// Boş bırakmak kartı düz bağlantıya çevirir; ölü adres vermek ise
+	// kartı hiç oluşturmaz. Her iki durumda da paylaşım görünmez olur.
+	v.OGImage = s.mutlakGorsel(s.kanonikKok(r), v.Image)
+	if strings.TrimSpace(v.OGImage) == "" {
+		v.OGImage = s.kanonikKok(r) + varsayilanOGYol()
+	}
+
 	// ABONELİK KİLİDİ: gövde kesilir ve kilit kutusu basılır. Karar
 	// `cd_kilit.go` içinde; burada yalnız sonuç uygulanıyor.
 	//

@@ -57,6 +57,9 @@ type CDVideo struct {
 	Srcset string
 	// ImageYedek kapak yüklenemezse denenecek adres ZİNCİRİ (virgüllü).
 	ImageYedek string
+	// Onizleme kart üstüne gelince oynayan kısa hareketli kapak.
+	// Boşsa kart statik kalır — eksiklik değil, sessiz düşüş.
+	Onizleme string
 }
 
 // CDArastirma "Öne Çıkan Araştırma" metrik kartı (sağ ray).
@@ -76,6 +79,8 @@ type CDKlip struct {
 	Href   string
 	// ImageYedek dikey kart yedek ZİNCİRİ (oar2 → maxres → hq).
 	ImageYedek string
+	// Onizleme kart üstüne gelince oynayan kısa hareketli kapak.
+	Onizleme string
 }
 
 // CDBasin "Basın Bültenleri" slider slaytı.
@@ -187,16 +192,21 @@ type CDArticleView struct {
 	KilitKatman string
 	// Yorum makale altındaki yorum bölümü (üyelik zorunlu).
 	Yorum CDYorumBolumu
-	Image           string
-	ImageCredit     string
-	SourceName      string
-	SourceURL       string
-	Tags            []CDTag
-	Related         []CDStory
-	PrevHref        string
-	PrevTitle       string
-	NextHref        string
-	NextTitle       string
+	// OGImage paylaşım görseli (MUTLAK URL). Sayfadaki `Image`'dan
+	// ayrı: görseli olmayan yazıda sayfa tipografik kapak basar ama
+	// paylaşımda görsel ZORUNLU — og:image boş kalırsa Twitter/Facebook
+	// kartı düz bağlantıya düşer, 404 verirse kart hiç oluşmaz.
+	OGImage     string
+	Image       string
+	ImageCredit string
+	SourceName  string
+	SourceURL   string
+	Tags        []CDTag
+	Related     []CDStory
+	PrevHref    string
+	PrevTitle   string
+	NextHref    string
+	NextTitle   string
 	// BaseURL yapısal veri (breadcrumb) için mutlak kök.
 	BaseURL string
 	// JSONLD Go tarafında üretilmiş NewsArticle + BreadcrumbList.

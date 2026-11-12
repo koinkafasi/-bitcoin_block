@@ -1,3 +1,8 @@
+/* KOYU TEMA SÖZLEŞMESİ: `html.dark`.
+   Bu dosya eskiden `[data-theme="dark"]` kullanıyordu; sitenin geri
+   kalanı `html.dark` yazıyor (cd_head.templ'deki init betiği). İki ayrı
+   sözleşme yüzünden üyelik sayfaları tema düğmesine tepki vermiyor,
+   açık/koyu arasında siteden farklı davranıyordu (12 Kasım 2026). */
 
 
 body.auth-page {
@@ -47,7 +52,7 @@ body.auth-page {
   text-rendering: optimizeLegibility;
 }
 
-html[data-theme="dark"] body.auth-page {
+htmlhtml.dark body.auth-page {
   
   --a-card: #0a0b0e;
   --a-art-1: #16181d;
@@ -174,7 +179,7 @@ html[data-theme="dark"] body.auth-page {
   opacity: .55;
   pointer-events: none;
 }
-html[data-theme="dark"] .auth__art::before {
+htmlhtml.dark .auth__art::before {
   background-image: repeating-linear-gradient(90deg, rgba(255, 255, 255, .05) 0 1px, transparent 1px 34px);
 }
 
@@ -886,7 +891,7 @@ body.auth-page {
   font-family: var(--hp-font);
 }
 
-html[data-theme="dark"] body.auth-page {
+htmlhtml.dark body.auth-page {
   
   --a-bg: #0a0b0e;
   --a-bg-2: #0a0b0e;
@@ -916,8 +921,8 @@ html[data-theme="dark"] body.auth-page {
 .auth-brand__logo { display: block; height: 32px; width: auto; }
 
 .auth-brand .auth-brand__logo--acik { display: none; }
-html[data-theme="dark"] .auth-brand .auth-brand__logo--koyu { display: none; }
-html[data-theme="dark"] .auth-brand .auth-brand__logo--acik { display: block; }
+htmlhtml.dark .auth-brand .auth-brand__logo--koyu { display: none; }
+htmlhtml.dark .auth-brand .auth-brand__logo--acik { display: block; }
 .auth-brand .auth-brand__logo { height: 32px; }
 .auth-brand b { color: inherit; font-weight: inherit; }
 
@@ -991,7 +996,7 @@ html[data-theme="dark"] .auth-brand .auth-brand__logo--acik { display: block; }
   border-color: #000000;
   box-shadow: none;
 }
-html[data-theme="dark"] .auth-form input:focus { border-color: #ffffff; }
+htmlhtml.dark .auth-form input:focus { border-color: #ffffff; }
 
 .auth-form button[type="submit"],
 .auth-form .panel__submit,
@@ -1012,21 +1017,21 @@ html[data-theme="dark"] .auth-form input:focus { border-color: #ffffff; }
   border-color: #262626;
   color: #ffffff;
 }
-html[data-theme="dark"] .auth-form button[type="submit"],
-html[data-theme="dark"] .auth-form .btn {
+htmlhtml.dark .auth-form button[type="submit"],
+htmlhtml.dark .auth-form .btn {
   background: #ffffff;
   border-color: #ffffff;
   color: #000000;
 }
-html[data-theme="dark"] .auth-form button[type="submit"]:hover,
-html[data-theme="dark"] .auth-form .btn:hover {
+htmlhtml.dark .auth-form button[type="submit"]:hover,
+htmlhtml.dark .auth-form .btn:hover {
   background: #d9d9d9;
   border-color: #d9d9d9;
 }
 
 .auth-form a { color: var(--a-text); text-decoration: underline; text-underline-offset: 3px; }
 .auth-form a:hover { color: #000000; }
-html[data-theme="dark"] .auth-form a:hover { color: #ffffff; }
+htmlhtml.dark .auth-form a:hover { color: #ffffff; }
 
 .auth-alert { border-radius: var(--hp-radius); }
 .panel__ok { border-radius: var(--hp-radius); }

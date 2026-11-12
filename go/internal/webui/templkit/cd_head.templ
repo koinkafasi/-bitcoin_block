@@ -181,6 +181,15 @@ templ cdHead(h CDHead) {
 		if h.ImageAlt != "" {
 			<meta property="og:image:alt" content={ h.ImageAlt }/>
 		}
+	} else {
+		// GÖRSELSİZ SAYFA: markalı varsayılan kart. Boş bırakıldığında
+		// `summary_large_image` görselsiz kalıp paylaşım boş kart olarak
+		// çıkıyordu (12 Kasım 2026'da ölçüldü: makalelerin çoğunda og:image
+		// hiç basılmıyordu).
+		<meta property="og:image" content={ cdOGGorsel(h) }/>
+		<meta property="og:image:width" content="1200"/>
+		<meta property="og:image:height" content="630"/>
+		<meta property="og:image:alt" content={ h.SiteName }/>
 	}
 	<meta name="twitter:card" content="summary_large_image"/>
 	<meta name="twitter:title" content={ h.Title }/>
@@ -192,6 +201,13 @@ templ cdHead(h CDHead) {
 		}
 		<meta name="twitter:image:width" content="1200"/>
 		<meta name="twitter:image:height" content="675"/>
+	} else {
+		// og:image ile AYNI adres: X görseli ayrı bir alandan okuyor,
+		// birini doldurup diğerini boş bırakmak kartı yine bozardı.
+		<meta name="twitter:image" content={ cdMutlak(cdOGGorsel(h), h.BaseURL) }/>
+		<meta name="twitter:image:alt" content={ h.SiteName }/>
+		<meta name="twitter:image:width" content="1200"/>
+		<meta name="twitter:image:height" content="630"/>
 	}
 
 		// Sayfaya özel makine-okur alanlar (CoinDesk Arc/Parse.ly seti)

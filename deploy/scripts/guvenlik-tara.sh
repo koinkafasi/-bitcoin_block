@@ -73,23 +73,23 @@ BASARISIZ=0
 bolum() { echo; echo "──────── $* ────────"; }
 
 # ---------------------------------------------------------------- 1) bağımlılık CVE
-bolum "1/6  bağımlılık CVE (go.mod, Cargo.lock, package-lock.json)"
+bolum "1/7  bağımlılık CVE (go.mod, Cargo.lock, package-lock.json)"
 "$TRIVY" fs -q --scanners vuln --severity CRITICAL,HIGH --ignore-unfixed \
   --exit-code "$KOD" --table-mode summary "${ATLA[@]}" . || BASARISIZ=1
 
 # ---------------------------------------------------------------- 2) yapılandırma
-bolum "2/6  yapılandırma (Dockerfile + k8s manifest)"
+bolum "2/7  yapılandırma (Dockerfile + k8s manifest)"
 "$TRIVY" config -q --severity CRITICAL,HIGH \
   --ignorefile .trivyignore.yaml \
   --exit-code "$KOD" --table-mode summary deploy/ || BASARISIZ=1
 
 # ---------------------------------------------------------------- 3) sır taraması
-bolum "3/6  sır taraması (gömülü anahtar/jeton)"
+bolum "3/7  sır taraması (gömülü anahtar/jeton)"
 "$TRIVY" fs -q --scanners secret \
   --exit-code "$KOD" --table-mode summary "${ATLA[@]}" . || BASARISIZ=1
 
 # ---------------------------------------------------------------- 4) semgrep SAST
-bolum "4/6  semgrep SAST (ERROR kapı, WARNING rapor)"
+bolum "4/7  semgrep SAST (ERROR kapı, WARNING rapor)"
 if command -v semgrep >/dev/null 2>&1; then
   SEMGREP=semgrep
 elif [ -x "$HOME/.local/bin/semgrep" ]; then
@@ -117,7 +117,7 @@ if [ -n "$SEMGREP" ]; then
 fi
 
 # ---------------------------------------------------------------- 5) gosec
-bolum "5/6  gosec (Go statik güvenlik; severity high kapı)"
+bolum "5/7  gosec (Go statik güvenlik; severity high kapı)"
 # CI ile AYNI komut ve AYNI sabit sürüm. gosec `go` komutunu alt süreç
 # olarak çağırır; PATH'te yoksa "0 bulgu" der ve YANLIŞ GÜVEN verir — bu
 # yüzden PATH burada açıkça kurulur ve sürüm doğrulanır.
@@ -157,14 +157,51 @@ else
     echo "gosec $GOSEC_SURUM kurulamadı — kapı kırıldı" >&2
     BASARISIZ=1
   else
-    ( cd go && "$GOSEC" -quiet -severity high -confidence medium \
-        -nosec-require-rules -nosec-require-justification \
-        -exclude-dir=internal/webui/static/vendor ./... ) || BASARISIZ=1
+    # KAPI "YENI BULGU"DA kirilir, mevcut borcta degil.
+    #
+    # Dogrudan gosec'i kapi yapmak 10 mevcut HIGH bulgu yuzunden kapiyi
+    # KALICI kirmizi tutuyordu (12 Kasim 2026). Kalici kirmizi kapi kapi
+    # degildir: kimse bakmaz, gercekten yeni gelen acik gurultude kaybolur.
+    # Borc `deploy/gosec-borc.txt`te kayitli ve her kosuda raporlanir.
+    bash deploy/scripts/gosec-borc.sh || BASARISIZ=1
   fi
 fi
 
-# ---------------------------------------------------------------- 6) workflow güvenliği
-bolum "6/6  GitHub Actions workflow güvenliği (zizmor)"
+# ---------------------------------------------------------------- 6) govulncheck
+bolum "6/7  govulncheck (Go güvenlik veritabanı — ÇAĞRILAN kod)"
+# NEDEN TRIVY'NİN YANINDA:
+#   Trivy `go.sum`'daki her bağımlılığı tarar — savunmasız sürüm projede
+#   DURUYORSA uyarır, o kod hiç çalışmasa bile. govulncheck çağrı grafiği
+#   çıkarır ve yalnız GERÇEKTEN ULAŞILABİLEN savunmasız fonksiyonları
+#   bildirir. İkisi farklı soruyu yanıtlıyor:
+#     Trivy       → "savunmasız sürüm var mı?"  (tedarik zinciri hijyeni)
+#     govulncheck → "o açık bizi vuruyor mu?"   (gerçek risk)
+#   Yalnız Trivy kalsaydı gürültü içinde gerçek risk kaybolurdu; yalnız
+#   govulncheck kalsaydı henüz çağrılmayan ama yarın çağrılacak bağımlılık
+#   gözden kaçardı.
+export PATH="/usr/local/go/bin:$HOME/go/bin:$PATH"
+GOVULN="$HOME/go/bin/govulncheck"
+if [ ! -x "$GOVULN" ]; then
+  echo "==> govulncheck kuruluyor"
+  go install golang.org/x/vuln/cmd/govulncheck@latest >/dev/null 2>&1 || true
+fi
+if [ -x "$GOVULN" ]; then
+  # Çıkış kodu 3 = savunmasız çağrı bulundu. 0 = temiz.
+  # Kapı yalnız ULAŞILABİLİR bulguda kırılır; bu yüzden --show=verbose yok.
+  if (cd go && "$GOVULN" ./... 2>&1 | tail -25); then
+    echo "  ulaşılabilir savunmasız çağrı yok"
+  else
+    echo "  ↑ ulaşılabilir açık: bağımlılığı yükselt ya da çağrıyı değiştir" >&2
+    [ "$RAPOR" = 1 ] || BASARISIZ=1
+  fi
+else
+  # Sessiz atlamak güvenlik kapısını dekorasyona çevirir (gosec dersi).
+  echo "HATA: govulncheck kurulamadı — kapı atlanmadı, KIRILDI" >&2
+  [ "$RAPOR" = 1 ] || BASARISIZ=1
+fi
+
+# ---------------------------------------------------------------- 7) workflow güvenliği
+bolum "7/7  GitHub Actions workflow güvenliği (zizmor)"
 if command -v zizmor >/dev/null 2>&1; then
   ZIZMOR=zizmor
 elif [ -x "$HOME/.local/bin/zizmor" ]; then

@@ -16,13 +16,13 @@ templ CDArticle(v CDArticleView) {
 	<html lang={ cdDilKodu(v.Locale) }>
 		<head>
 			@cdHead(CDHead{Title: v.Title, Desc: v.Desc, Canonical: v.Canonical,
-				OGType: "article", Image: v.Image, ImageAlt: v.ImageAlt,
+				OGType: "article", Image: v.OGImage, ImageAlt: v.ImageAlt,
 				SiteName: v.Shell.SiteName, FaviconURL: v.Shell.FaviconURL, Locale: v.Locale,
 				PageCategory: v.PageCategory, ContentCategory: v.ContentCategory,
 				Metas: v.Metas, JSONLD: v.JSONLD,
 				BreadcrumbJSONLD: v.BreadcrumbJSONLD, FAQJSONLD: v.FAQJSONLD, BaseURL: v.BaseURL,
 				// Tepki çubuğunu açan betik; `defer` ile basılır.
-				EkJS: []string{"/static/cd-tepki.js", "/static/cd-ozet.js"},
+				EkJS: []string{"/static/cd-tepki.js", "/static/cd-ozet.js", "/static/cd-kristal.js"},
 				Hreflang: v.Hreflang})
 		</head>
 		<body class="cd">
@@ -136,7 +136,7 @@ templ CDArticle(v CDArticleView) {
 					</div>
 
 					if v.Image != "" {
-						<figure class="cd-article__cover">
+						<figure class="cd-article__cover cd-kristal">
 							if cdKgOlcekli(v.Image) {
 								<img src={ cdKgSrc(v.Image, YuvaMakaleKapak) }
 									srcset={ cdKgSrcset(v.Image, YuvaMakaleKapak) }
@@ -150,6 +150,14 @@ templ CDArticle(v CDArticleView) {
 							if v.ImageCredit != "" {
 								<figcaption>{ v.ImageCredit }</figcaption>
 							}
+						</figure>
+					} else {
+						// Görselsiz yazı: kategori listelerindeki tipografik
+						// kapağın aynısı. Resim eklenince bu dal çalışmaz.
+						// Boş bırakmak başlık ile metni birbirine yapıştırıyor
+						// ve sayfa gri bir metin duvarına dönüyordu.
+						<figure class="cd-article__cover cd-article__cover--uretilmis cd-kristal">
+							@cdKapakYok(CDStory{Title: v.Headline, Kicker: v.Kicker})
 						</figure>
 					}
 
@@ -205,6 +213,11 @@ templ CDArticle(v CDArticleView) {
 					<div class="cd-article__body">
 						@templ.Raw(v.BodyHTML)
 					</div>
+
+					// REKLAM (728×90): gövdenin hemen ardında, abonelik
+					// kilidinden ÖNCE. Kilitliyse reklamı kilidin altına
+					// koymak "reklamı görmek için öde" gibi okunurdu.
+					@cdReklam(728, 90)
 
 					// ABONELİK KİLİDİ: gövde yukarıda kesildi, devamı burada
 					// isteniyor. Kutu gövdenin hemen ardında duruyor ki

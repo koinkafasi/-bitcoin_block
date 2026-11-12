@@ -2,6 +2,7 @@ package httpapi
 
 import (
 	"bytes"
+	"context"
 	"io"
 	"net/http"
 	"os"
@@ -19,6 +20,11 @@ const (
 	kaynakGorselTimeout = 12 * time.Second
 )
 
+// ogSabitTarih varsayılan OG görselinin Last-Modified değeri.
+// Sabit: içerik derlemede belirleniyor, sunucu her açılışta değişmemeli
+// (değişirse tarayıcı/CDN önbelleği gereksiz tazelenir).
+var ogSabitTarih = time.Date(2026, 11, 12, 0, 0, 0, 0, time.UTC)
+
 func gecerliKaynakGorselHash(h string) bool {
 	return len(h) == 32 && yalnizHex(h)
 }
@@ -31,10 +37,31 @@ func (s *Server) handleKaynakGorsel(w http.ResponseWriter, r *http.Request) {
 	}
 	b, ct, ok := s.kaynakGorselAsil(r, hash)
 	if !ok {
+		// Hash VERİTABANINDA var ama kaynak görsel indirilemiyor (hotlink
+		// 403, zaman aşımı, SSRF koruması). 404 yerine markalı yer tutucu
+		// sunuyoruz: `og:image` bu adrese işaret ediyor ve sosyal botlar
+		// 404'ü kalıcı önbelleğe alıp bir daha denemiyordu.
+		if repo.KaynakGorselURL(r.Context(), s.pool, hash) != "" {
+			s.varsayilanGorselSun(w, r)
+			return
+		}
 		http.NotFound(w, r)
 		return
 	}
 	s.kaynakGorselSun(w, r, b, ct)
+}
+
+// varsayilanGorselSun markalı OG kartını görsel yerine sunar.
+func (s *Server) varsayilanGorselSun(w http.ResponseWriter, r *http.Request) {
+	b := varsayilanOGPng()
+	if len(b) == 0 {
+		http.NotFound(w, r)
+		return
+	}
+	// Kısa önbellek: kaynak görsel sonradan indirilebilir hâle gelebilir,
+	// o yüzden `immutable` DEĞİL.
+	w.Header().Set("Cache-Control", "public, max-age=3600")
+	s.kaynakGorselSun(w, r, b, "image/png")
 }
 
 func (s *Server) kaynakGorselAsil(r *http.Request, hash string) ([]byte, string, bool) {
@@ -79,6 +106,12 @@ func (s *Server) handleKaynakGorselOlcekli(w http.ResponseWriter, r *http.Reques
 
 	asil, ct, ok := s.kaynakGorselAsil(r, hash)
 	if !ok {
+		// Ölçekli istekte de aynı kural: hash tanımlıysa 404 yerine
+		// markalı yer tutucu (bkz. handleKaynakGorsel).
+		if repo.KaynakGorselURL(r.Context(), s.pool, hash) != "" {
+			s.varsayilanGorselSun(w, r)
+			return
+		}
 		http.NotFound(w, r)
 		return
 	}
@@ -119,7 +152,18 @@ func (s *Server) kaynakGorselSun(w http.ResponseWriter, r *http.Request, b []byt
 
 // kaynakGorselIndir görseli SSRF korumalı istemciyle indirir.
 func kaynakGorselIndir(r *http.Request, rawURL string) ([]byte, string, error) {
-	resp, err := platform.DogrulaVeCekUA(r.Context(), rawURL, kaynakGorselTimeout,
+	return kaynakGorselIndirCtx(r.Context(), rawURL)
+}
+
+// kaynakGorselIndirCtx istekten BAĞIMSIZ indirme.
+//
+// Önden indirme işçisinin elinde `*http.Request` yok; tek ihtiyacı olan
+// şey zaten istek bağlamıydı. İki yol aynı doğrulama ve sınırları
+// kullansın diye gövde buraya alındı — ayrı bir indirici yazılsaydı
+// SVG reddi, boyut sınırı ve SSRF doğrulaması iki yerde ayrı ayrı
+// bakılırdı.
+func kaynakGorselIndirCtx(ctx context.Context, rawURL string) ([]byte, string, error) {
+	resp, err := platform.DogrulaVeCekUA(ctx, rawURL, kaynakGorselTimeout,
 		"Mozilla/5.0 (compatible; bitcosar/1.0; +https://bitcosar.com)")
 	if err != nil {
 		return nil, "", err

@@ -43,6 +43,17 @@ type AyarlarView struct {
 	Locales      []IOpt
 	BakimModu    bool
 	BakimMesaji  string
+	// Google Tag Manager ve reklam alanı ayarları.
+	// (Şablon bu alanları kullanıyordu ama struct'ta yoktular; build
+	// kırıktı — 12 Kasım 2026. Tipler şablondaki kullanımdan çıkarıldı:
+	// `value={...}` → string, `if ... { checked }` → bool.)
+	GTMID        string
+	GTMNoScript  bool
+	ReklamAktif  bool
+	ReklamZone   string
+	CointrafficKey string
+	// WebSubHubs: `joinComma` ile basılıyor → dizi.
+	WebSubHubs   []string
 	Renkler      []AyarRenk
 	KoyuRenkler  []AyarRenk
 	Fonts        []AyarFont
@@ -209,6 +220,51 @@ templ AyarlarPanel(v AyarlarView) {
 					<span class="small muted">Search Console → HTML etiketi yöntemindeki <code>content</code> değeri. Tüm sayfaların <code>&lt;head&gt;</code>'ine meta etiketi olarak basılır.</span>
 				</div>
 				<div class="field"><label for="f_adsense">AdSense (pub-id)</label><input id="f_adsense" class="input" name="adsense" value={ v.AdSense }/></div>
+
+				<h3 style="margin:22px 0 4px;font-size:1rem">Google Tag Manager</h3>
+				<p class="hint" style="margin-top:0">
+					GA4 ile birlikte kullanılabilir. Yalnız <b>kimlik</b> girilir; betiği
+					site kendisi üretir (panelden serbest kod yapıştırılamaz — güvenlik).
+				</p>
+				<div class="field">
+					<label for="f_gtm_id">GTM kapsayıcı kimliği</label>
+					<input id="f_gtm_id" class="input" name="gtm_id" value={ v.GTMID } placeholder="GTM-XXXXXXX"/>
+				</div>
+				<div class="field">
+					<label><input type="checkbox" name="gtm_noscript" if v.GTMNoScript { checked }/> Ayrıca <code>&lt;noscript&gt;</code> iframe'i bas (JS kapalı ziyaretçiler)</label>
+				</div>
+
+				<h3 style="margin:22px 0 4px;font-size:1rem">Reklam Ağları</h3>
+				<p class="hint" style="margin-top:0">
+					Coinzilla bölge kimliği ve Cointraffic anahtarı. Reklam alanları
+					<b>boş yuva</b> olarak basılır; görsel yalnız ağ isteği geldiğinde yüklenir.
+				</p>
+				<div class="field">
+					<label><input type="checkbox" name="reklam_aktif" if v.ReklamAktif { checked }/> Reklam alanlarını göster</label>
+				</div>
+				<div class="field">
+					<label for="f_reklam_zone">Coinzilla bölge kimliği</label>
+					<input id="f_reklam_zone" class="input" name="reklam_zone" value={ v.ReklamZone } placeholder="345f78d37c7e19e740"/>
+					<span class="small muted">Yalnız harf/rakam. Coinzilla panelindeki <code>data-zone</code> değerinin <code>C-</code> sonrası.</span>
+				</div>
+				<div class="field">
+					<label for="f_cointraffic">Cointraffic wkey</label>
+					<input id="f_cointraffic" class="input" name="cointraffic_key" value={ v.CointrafficKey } placeholder="WP3qEbVT6S"/>
+				</div>
+
+				<h3 style="margin:22px 0 4px;font-size:1rem">WebSub (yayın bildirimi)</h3>
+				<p class="hint" style="margin-top:0">
+					Yeni içerik yayınlandığında hub'lara bildirim gider; arama motorları
+					beslemeyi anında görür. Virgülle ayırın. Boş bırakılırsa Google hub'ı
+					kullanılır.
+				</p>
+				<div class="field">
+					<label for="f_websub">Hub adresleri</label>
+					<textarea id="f_websub" class="textarea" name="websub_hubs" style="min-height:70px" placeholder="https://pubsubhubbub.appspot.com/">{
+						joinComma(v.WebSubHubs)
+					}</textarea>
+					<span class="small muted">Yalnız <b>https</b> ve bilinen hub alan adları kabul edilir.</span>
+				</div>
 				<div class="field"><label for="f_robots_html">Özel robots.html</label><textarea id="f_robots_html" class="textarea" name="robots_html" style="min-height:70px">{ v.RobotsHTML }</textarea></div>
 			</section>
 			<section class="card card-pad animate-in" data-sek="kunye" style="display:none">

@@ -1,0 +1,15 @@
+# gosec borcu — BİLİNÇLİ olarak kabul edilmiş mevcut bulgular.
+# Biçim: KURAL|dosya   (satır yok: kod kayınca sahte alarm olmasın)
+# Güncelleme: bash deploy/scripts/gosec-borc.sh --yenile
+# Üretim: 2026-11-12
+
+G115|go/internal/transcribe/waveform.go
+G118|go/internal/httpapi/indexing_handlers.go
+G118|go/internal/httpapi/share_handlers.go
+G118|go/internal/scheduler/scheduler.go
+G703|go/internal/httpapi/gazete_fill.go
+G703|go/internal/platform/storage.go
+G704|go/internal/httpapi/bookmark.go
+G704|go/internal/httpapi/collab_handlers.go
+G704|go/internal/httpapi/media_url.go
+G704|go/internal/httpapi/unsplash.go

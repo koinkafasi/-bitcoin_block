@@ -151,6 +151,11 @@ func NewServerApp(cfg config.Config, logger *slog.Logger, pool *pgxpool.Pool, bu
 	s.siteName = s.initialSiteName()
 	templkit.VarlikSurum = s.assetVer
 
+	// Üçüncü taraf entegrasyon kimliklerini yayına al (GA4, GTM, GSC,
+	// reklam, WebSub). Veritabanı hazır değilse boş kalır — sayfa düşmez;
+	// ayar kaydedildiğinde yeniden yüklenir.
+	s.CDEntegrasyonYenile(context.Background())
+
 	funcs := templateFuncs()
 	funcs["mediaURL"] = s.mediaURL
 	funcs["mediaThumbURL"] = s.mediaThumbURL
@@ -291,6 +296,8 @@ func (s *Server) routes() {
 	s.mux.HandleFunc("GET /kg/{hash}", s.handleKaynakGorsel)
 	// Ölçekli kaynak görsel; genişlik kapalı listeden (bkz. cd_gorsel.go).
 	s.mux.HandleFunc("GET /kg/{hash}/{genislik}", s.handleKaynakGorselOlcekli)
+	// Varsayılan Open Graph kartı: görseli olmayan sayfaların og:image'ı.
+	s.mux.HandleFunc("GET /og-varsayilan.png", s.handleVarsayilanOG)
 	for _, b := range []string{"markets", "business", "tech", "policy", "opinion",
 		"news-analysis", "latest-crypto-news", "focus", "research",
 		"press-release", "learn"} {

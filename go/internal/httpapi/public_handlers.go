@@ -1240,7 +1240,7 @@ func (s *Server) handleRobots(w http.ResponseWriter, r *http.Request) {
 	for _, yol := range []string{
 		"/api/", "/admin/", "/internal/", "/hits/", "/webhooks/",
 		"/arama?q=", "/?q=", "/?s=", "/giris", "/kayit", "/admin/giris",
-		"/arsiv/dizin", "/gizli-dizin", "/*/amp",
+		"/arsiv/dizin", "/gizli-dizin", "/tum-haberler-dizin", "/*/amp",
 	} {
 		sb.WriteString("Disallow: " + yol + "\n")
 	}

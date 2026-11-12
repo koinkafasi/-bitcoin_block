@@ -31,7 +31,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  GO_SURUM: "1.27.3"
+  GO_SURUM: "1.27.4"
   GOLANGCI_SURUM: "v2.15.0"
   # Kapsam ÇITI (hedef değil): bugünkü ölçümün altına düşmeyi engeller.
   # Ölçüm 11 Kasım 2026 (canlı piyasa işi dahil): %16,9. Çıt bir tık
@@ -147,8 +147,11 @@ jobs:
           go test -count=1 -covermode=set -coverprofile=/tmp/cover.out ./... | tee /tmp/test.log
           # Sonar ve raporlar depo köküne göre yol bekler.
           sed -e 's|^theblock/site/|go/|' /tmp/cover.out > ../coverage.out
-          sed 's|^go/||' ../coverage.out > /tmp/cov_local.out
-          TOPLAM=$(go tool cover -func=/tmp/cov_local.out | tail -1 | awk '{print $NF}' | tr -d '%')
+          # Kapsam ORİJİNAL profilden okunur. `go/` öneki silinmiş
+          # kopyadan okunursa `cmd/backfill` yolu paket olarak çözülemez
+          # ve `go tool cover` "is not in std" diye düşer (12 Kasım 2026).
+          # Önek kaldırma yalnız Sonar'ın beklediği yol biçimi için.
+          TOPLAM=$(go tool cover -func=/tmp/cover.out | tail -1 | awk '{print $NF}' | tr -d '%')
           echo "kapsam: ${TOPLAM}%  çıt: ${KAPSAM_ESIGI}%"
           echo "### Kapsam: ${TOPLAM}% (çıt ${KAPSAM_ESIGI}%)" >> "$GITHUB_STEP_SUMMARY"
           awk -v t="$TOPLAM" -v e="$KAPSAM_ESIGI" 'BEGIN { exit (t < e) }' || {

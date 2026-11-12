@@ -16,6 +16,17 @@
 }
 
 :root {
+  /* ---- içerik görsellerinde ortak ton ----
+     Görseller üç ayrı kaynaktan geliyor (ölçüm, 12 Kasım 2026: kendi
+     sunucumuz 15, i.ytimg.com 16, cdn.sanity.io 5). Her kaynağın kendi
+     doygunluk/kontrast işlemesi var; yan yana dizilince kartlar farklı
+     "sıcaklıkta" görünüyordu.
+
+     Değerler bilerek KÜÇÜK: amaç görseli yeniden renklendirmek değil,
+     uçları birbirine yaklaştırmak. Agresif bir duotone marka kimliği
+     verirdi ama haber fotoğrafını bozar — kırmızı grafik ile mavi grafik
+     aynı tona düşerse veri yanlış okunur. */
+  --cd-gorsel-ton: saturate(0.94) contrast(1.045);
   
   
   --cd-bg: #f3f1e9;              
@@ -5705,7 +5716,10 @@ html:not(.dark) .cd-kapak__harf { opacity: .3; }
    yazıya girdiğinde AYNI dosya renkli açılır (yazı sayfasında bu sınıf
    hiç basılmıyor). Görselin ikinci bir kopyası üretilmiyor. */
 .cd-gri img {
-  filter: grayscale(1);
+  /* Ortak ton + gri: tek `filter` kazanır, bu yüzden ikisi BİRLİKTE
+     yazılmalı. Yalnız `grayscale(1)` yazılsaydı gri görseller sitenin
+     ortak kontrast ayarını kaybederdi. */
+  filter: var(--cd-gorsel-ton) grayscale(1);
 }
 /* Üzerine gelince renk geri geliyor: kart tıklanabilir olduğunu
    belli ediyor ve yazının renkli hâlini önceden gösteriyor. */
@@ -5772,4 +5786,144 @@ html:not(.dark) .cd-kapak__harf { opacity: .3; }
   overflow: hidden;
   opacity: 0;
   pointer-events: none;
+}
+
+/* Görselsiz yazının üretilmiş kapağı: gerçek kapakla aynı oran ve
+   boşluk, böylece resim eklenince düzen kaymaz (CLS yok). */
+.cd-article__cover--uretilmis .cd-kapak {
+  display: flex;
+  aspect-ratio: 16 / 9;
+  width: 100%;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+/* ---- yazı sayfası görsellerinde kristal/cam hover ----
+   CoreWeave'in bento kutularındaki etkiden esinlenildi; oradaki
+   uygulama <canvas> tabanlı, bu tamamen CSS + 2 satır JS.
+
+   TASARIM: iki katman üst üste.
+     1) faset deseni — sabit, repeating-conic-gradient ile kristal yüzey
+     2) parlama      — imlecin konumuna göre hareket eden radial gradient
+   İkisi de `mix-blend-mode: overlay` ile görselle kaynaşıyor; ayrı bir
+   beyaz tabaka gibi durmuyor, görselin kendi renklerini parlatıyor.
+
+   PERFORMANS: animasyonlanan tek özellik `opacity` (compositor'da çalışır,
+   layout/paint tetiklemez). `backdrop-filter` BİLEREK kullanılmadı: cam
+   hissini güçlendirirdi ama her karede arka planı yeniden filtreler ve
+   büyük kapak görselinde kaydırmayı tutukluyor. */
+.cd-kristal {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;            /* blend yalnız kendi içinde kalsın */
+}
+.cd-kristal::before,
+.cd-kristal::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 260ms ease;
+  z-index: 2;
+}
+/* 1) kristal faset yüzeyi */
+.cd-kristal::before {
+  background:
+    repeating-conic-gradient(
+      from 30deg at 50% 50%,
+      rgba(255, 255, 255, .10) 0deg 12deg,
+      rgba(255, 255, 255, 0)   12deg 30deg
+    ),
+    repeating-linear-gradient(
+      115deg,
+      rgba(255, 255, 255, .07) 0 2px,
+      rgba(255, 255, 255, 0)   2px 9px
+    );
+  mix-blend-mode: overlay;
+}
+/* 2) imleci izleyen parlama */
+.cd-kristal::after {
+  background: radial-gradient(
+    420px circle at var(--cd-mx, 50%) var(--cd-my, 50%),
+    rgba(255, 255, 255, .34),
+    rgba(255, 255, 255, .10) 32%,
+    transparent 62%
+  );
+  mix-blend-mode: overlay;
+}
+.cd-kristal:hover::before { opacity: 1; }
+.cd-kristal:hover::after  { opacity: 1; }
+
+/* Klavye kullanıcısı da görsün: odakta faset açılır (parlama imlece
+   bağlı olduğu için odakta anlamsız). */
+.cd-kristal:focus-within::before { opacity: 1; }
+
+@media (prefers-reduced-motion: reduce) {
+  .cd-kristal::before,
+  .cd-kristal::after { transition: none; }
+}
+/* Dokunmatikte hover "yapışıp" kalıyor; efekt yalnız imleçli cihazlarda. */
+@media (hover: none) {
+  .cd-kristal::before,
+  .cd-kristal::after { display: none; }
+}
+
+/* Ton YALNIZ içerik görsellerine: logo, ikon ve avatar hariç.
+   `:where()` özgüllüğü sıfırlar; tek sınıflı bir istisna bile bu kuralı
+   ezebilir (örn. aşağıdaki .cd-gri). */
+:where(
+  [class*="__gorsel"],
+  .cd-article__cover,
+  .cd-kapak,
+  .cd-vkart,
+  .cd-klip,
+  .cd-tekgorsel,
+  .cd-akis
+) img {
+  filter: var(--cd-gorsel-ton);
+}
+
+/* Koyu temada görseller biraz daha açık: koyu zeminde aynı fotoğraf
+   gözde daha sönük duruyor (basit simultane kontrast). */
+@media (prefers-color-scheme: dark) {
+  :root { --cd-gorsel-ton: saturate(0.94) contrast(1.045) brightness(1.04); }
+}
+/* Sözleşme `html.dark` (cd_head.templ'deki bloklayıcı init betiği bu
+   sınıfı yazar). `[data-tema]` DÜĞME seçicisidir, tema durumu değil —
+   oraya yazılan kural hiç çalışmaz. */
+html.dark {
+  --cd-gorsel-ton: saturate(0.94) contrast(1.045) brightness(1.04);
+}
+/* Reklam yuvası (Coinzilla) — 12 Kasım 2026.
+   Yükseklik AYRILIR: reklam gelene kadar yer tutulur, geldiğinde sayfa
+   sıçramaz (CLS). Genişlik ortalanır; mobilde taşmasın diye ölçeklenir.
+
+   Kimlik yoksa yuva hiç basılmaz (bkz. cdReklam) — boş çerçeve bırakmak
+   düzeni bozar. */
+.cd-reklam {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: 728px;
+  min-height: var(--cd-reklam-h, 90px);
+  margin: 28px auto;
+  overflow: hidden;
+  background: var(--cd-surface-soft);
+  border-radius: var(--cd-radius);
+}
+
+/* Reklam metni/etiketi rengi temaya uysun; ağ kendi stilini basarsa
+   bu kurallar ezilir (zararsız). */
+.cd-reklam iframe {
+  max-width: 100%;
+  border: 0;
+}
+
+@media (max-width: 767px) {
+  .cd-reklam {
+    max-width: 100%;
+    margin: 20px auto;
+  }
 }

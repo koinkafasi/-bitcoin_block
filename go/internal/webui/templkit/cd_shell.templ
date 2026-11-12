@@ -628,3 +628,21 @@ templ cdAd(etiket string) {
 		{ etiket }
 	</div>
 }
+
+// cdReklam gerçek reklam yuvası (Coinzilla).
+//
+// NEDEN BOŞ KUTU + data-*: reklamı `cd-entegrasyon.js` yükler. Sunucu yalnız
+// yuvanın yerini ve ölçüsünü basar. Kimlik yoksa (panelden kapatıldı) hiçbir
+// şey basılmaz — boş çerçeve bırakmak CLS'i bozar.
+//
+// `min-height` ÖLÇÜLEN yükseklik: reklam gelene kadar yer ayrılır, geldiğinde
+// sayfa sıçramaz (Core Web Vitals: CLS).
+templ cdReklam(genislik, yukseklik int) {
+	if e := CDEntegrasyonOku(); e != nil && e.ReklamAktif && e.ReklamZone != "" {
+		<div class="cd-reklam" data-zone={ e.ReklamZone }
+			data-genislik={ itoaT(genislik) } data-yukseklik={ itoaT(yukseklik) }
+			style={ "--cd-reklam-h: " + itoaT(yukseklik) + "px" }
+			role="complementary" aria-label="Reklam">
+		</div>
+	}
+}

@@ -118,6 +118,7 @@ func (s *Server) cdExploreVideolar(r *http.Request, adet int) []templkit.CDVideo
 				Sure:       youtube.Sure(k.SureSn),
 				Srcset:     youtube.GorselSrcset(k.VideoID, k.Tur),
 				ImageYedek: youtube.GorselYedekZincir(k.VideoID, k.Tur),
+				Onizleme:   youtube.OnizlemeURL(k.VideoID),
 			})
 		}
 	}

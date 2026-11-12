@@ -428,6 +428,7 @@ func (s *Server) cdYoutubeVideolar(r *http.Request, adet int) []templkit.CDVideo
 			Sure:       youtube.Sure(k.SureSn),
 			Srcset:     youtube.GorselSrcset(k.VideoID, k.Tur),
 			ImageYedek: youtube.GorselYedekZincir(k.VideoID, k.Tur),
+			Onizleme:   youtube.OnizlemeURL(k.VideoID),
 		})
 	}
 	return out
@@ -458,6 +459,7 @@ func (s *Server) cdYoutubeKlipler(r *http.Request, adet int) []templkit.CDKlip {
 			Image:      img,
 			Href:       ytHref(k),
 			ImageYedek: youtube.GorselYedekZincir(k.VideoID, k.Tur),
+			Onizleme:   youtube.OnizlemeURL(k.VideoID),
 		})
 	}
 	return out

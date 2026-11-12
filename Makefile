@@ -5,6 +5,15 @@ yardim: ## Bu listeyi göster
 	@grep -hE '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) \
 	  | awk 'BEGIN{FS=":.*?## "}{printf "  \033[36m%-18s\033[0m %s\n", $$1, $$2}'
 
+kapi: ## TEK KAPI: derleme + test + kapsam + lint + güvenlik (her değişiklikte)
+	@bash deploy/scripts/kapi.sh
+
+kapi-tam: ## Tek kapı + e2e + imaj taraması (sevk öncesi)
+	@bash deploy/scripts/kapi.sh --tam
+
+kapi-rapor: ## Tek kapı, hiçbir şeyi kırmadan (borcu gör)
+	@bash deploy/scripts/kapi.sh --rapor
+
 guvenlik-tara: ## Güvenlik kapıları (CI ile birebir aynı; kırmızıysa çıkış 1)
 	@bash deploy/scripts/guvenlik-tara.sh
 

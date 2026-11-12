@@ -103,7 +103,7 @@ templ cdExplorePanel(p CDExplorePanel) {
 								<span class="cd-explore__kucuk-gorsel">
 									if v.Image != "" {
 										<img src={ v.Image } srcset={ v.Srcset }
-											sizes="168px" data-yedek={ v.ImageYedek }
+											sizes="168px" data-yedek={ v.ImageYedek } data-onizleme={ v.Onizleme }
 											alt={ v.Baslik } loading="lazy" decoding="async"
 											referrerpolicy="no-referrer"/>
 									}
@@ -123,7 +123,7 @@ templ cdExplorePanel(p CDExplorePanel) {
 							<a class="cd-explore__klip" href={ k.Href }>
 								<span class="cd-explore__klip-gorsel">
 									if k.Image != "" {
-										<img src={ k.Image } data-yedek={ k.ImageYedek }
+										<img src={ k.Image } data-yedek={ k.ImageYedek } data-onizleme={ k.Onizleme }
 											alt={ k.Baslik } loading="lazy" decoding="async"
 											referrerpolicy="no-referrer"/>
 									}

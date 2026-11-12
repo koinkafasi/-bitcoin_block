@@ -272,11 +272,11 @@ templ cdVideoModul(items []CDVideo) {
 								if v.Srcset != "" {
 									<img src={ v.Image } srcset={ v.Srcset }
 										sizes="(max-width:1023px) 92vw, 290px"
-										data-yedek={ v.ImageYedek }
+										data-yedek={ v.ImageYedek } data-onizleme={ v.Onizleme }
 										alt="" loading="lazy" decoding="async"
 										referrerpolicy="no-referrer"/>
 								} else {
-									<img src={ v.Image } data-yedek={ v.ImageYedek }
+									<img src={ v.Image } data-yedek={ v.ImageYedek } data-onizleme={ v.Onizleme }
 										alt={ v.Baslik } loading="lazy" decoding="async"
 										referrerpolicy="no-referrer"/>
 								}
@@ -780,7 +780,7 @@ templ CDHome(v CDHomeView) {
 				EkCSS: []string{"/static/cd-giris.css"},
 				// Hero'nun ışık izi katmanı. `defer` ile basılıyor;
 				// yüklenmezse CSS katmanı görünür kalır.
-				EkJS: []string{"/static/cd-giris-prizma.js"},
+				EkJS: []string{"/static/cd-giris-prizma.js", "/static/cd-onizleme.js"},
 				LCPGorsel: cdLCPOnYukle(v.Lead)})
 		</head>
 		<body class="cd">
