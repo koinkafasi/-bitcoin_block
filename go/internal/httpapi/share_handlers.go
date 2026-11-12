@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"strings"
+	"time"
 
 	"theblock/site/internal/platform"
 	"theblock/site/internal/repo"
@@ -348,6 +349,13 @@ func (s *Server) autoShare(ctx context.Context, siteID, contentID int64) {
 		return
 	}
 	go func() {
-		_, _ = s.shareContent(context.Background(), siteID, contentID)
+		// İstek bağlamı KASITLI kullanılmıyor: HTTP yanıtı dönünce
+		// r.Context() iptal olur ve bu iş yarıda kesilirdi. Ama çıplak
+		// Background() de doğru değil — iptal ve süre sınırı olmadan
+		// goroutine sunucu kapanırken asılı kalabiliyor (gosec G118).
+		// Sınırlı bir bağlam ikisini de çözüyor.
+		bg, iptal := context.WithTimeout(context.WithoutCancel(ctx), 60*time.Second)
+		defer iptal()
+		_, _ = s.shareContent(bg, siteID, contentID)
 	}()
 }

@@ -120,6 +120,9 @@ func SaveMedia(data []byte, filename string) (string, error) {
 	}
 	name := randHex(8) + ext
 	p := filepath.Join(dir, name)
+	// #nosec G703 -- yol traversal yok: dosya adı randHex(8) + uzantı,
+	// dizin sabit (storage/media/YYYYMM). Uzantı filepath.Ext ile
+	// alınıyor; Ext yol ayracı görünce durur, yani ayraç içeremez.
 	if err := os.WriteFile(p, data, 0o644); err != nil {
 		return "", err
 	}

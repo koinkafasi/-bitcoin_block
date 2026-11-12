@@ -1012,7 +1012,15 @@ func (s *Server) handleContentSave(w http.ResponseWriter, r *http.Request) {
 	}
 	// WebSub: yeni yayını hub'lara bildir (beslemeyi anında tazeletir).
 	if c.Status == "yayinda" {
-		go s.websubYayinBildir(context.Background(), []int64{c.ID})
+		go func() {
+			// İstek bağlamı KASITLI kullanılmıyor: HTTP yanıtı dönünce
+			// iptal olur ve bildirim yarıda kesilirdi. Çıplak Background()
+			// ise bağlam değerlerini de kaybediyor ve süresiz çalışıyordu
+			// (gosec G118). Sınırlı bağlam ikisini de çözüyor.
+			bg, iptal := context.WithTimeout(context.WithoutCancel(ctx), 30*time.Second)
+			defer iptal()
+			s.websubYayinBildir(bg, []int64{c.ID})
+		}()
 	}
 	s.publishContentLive(ctx, c.ID, c.SiteID, false)
 	s.publishEditorSaved(ctx, c.ID, c.SiteID, 0)

@@ -35,6 +35,9 @@ func collabServiceUp(raw string) bool {
 	if !strings.Contains(host, ":") {
 		host += ":80"
 	}
+	// #nosec G704 -- adres COLLAB_URL ortam değişkeninden geliyor, yani
+	// operatörün kendi yapılandırması. Kullanıcı girdisi bu yola hiç
+	// ulaşmıyor; sağlık yoklamasından ibaret.
 	conn, err := net.DialTimeout("tcp", host, 400*time.Millisecond)
 	if err != nil {
 		return false

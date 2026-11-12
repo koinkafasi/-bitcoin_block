@@ -35,6 +35,11 @@ func (s *Server) handleMediaURLUpload(w http.ResponseWriter, r *http.Request) {
 	}
 	ctx, cancel := context.WithTimeout(r.Context(), 20*time.Second)
 	defer cancel()
+	// #nosec G704 -- adres validateBookmarkURL'den geçti (şema, kullanıcı
+	// bilgisi, localhost ve özel ağ reddi) ve istek safeRemoteHTTPClient
+	// ile atılıyor: DialContext her bağlantıda DNS'i yeniden çözüp özel
+	// IP'yi reddediyor, sonra çözülen IP'ye doğrudan bağlanıyor — DNS
+	// rebinding penceresi kapalı.
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, target.String(), nil)
 	if err != nil {
 		mediaErr("Adres geçersiz.")

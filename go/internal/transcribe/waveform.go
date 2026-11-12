@@ -58,6 +58,9 @@ func peaksFromPCM(pcm []byte, buckets int) []float64 {
 		}
 		peak := 0.0
 		for j := start; j < end; j++ {
+			// #nosec G115 -- taşma değil, KASITLI yeniden yorumlama: PCM
+			// örnekleri işaretli 16-bit. Uint16 ile okunup int16'ya
+			// çevrilmesi doğru davranış; her iki tip de 16 bit.
 			v := int16(binary.LittleEndian.Uint16(pcm[j*bytesPerSample : j*bytesPerSample+bytesPerSample]))
 			a := math.Abs(float64(v)) / 32768.0
 			if a > peak {

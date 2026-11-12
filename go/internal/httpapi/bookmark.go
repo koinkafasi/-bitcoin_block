@@ -40,6 +40,9 @@ func (s *Server) handleBookmarkPreview(w http.ResponseWriter, r *http.Request) {
 	}
 	ctx, cancel := context.WithTimeout(r.Context(), 7*time.Second)
 	defer cancel()
+	// #nosec G704 -- media_url.go ile aynı gerekçe: validateBookmarkURL +
+	// safeRemoteHTTPClient (her bağlantıda DNS yeniden çözülür, özel ağ
+	// reddedilir, çözülen IP'ye doğrudan bağlanılır).
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, target.String(), nil)
 	if err != nil {
 		s.writeJSON(w, http.StatusBadRequest, map[string]any{"ok": false, "error": "bağlantı geçersiz"})

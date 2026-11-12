@@ -261,7 +261,11 @@ func submitIndexNowPromoted(ctx context.Context, pool *pgxpool.Pool, logger *slo
 		return
 	}
 	go func() {
-		bg := context.Background()
+		// Zamanlayıcı turu bitince iş yarıda kalmasın diye tur bağlamı
+		// kullanılmıyor; süresiz Background() ise goroutine'i asılı
+		// bırakabiliyordu (gosec G118). Sınırlı bağlam ikisini çözüyor.
+		bg, iptal := context.WithTimeout(context.WithoutCancel(ctx), 60*time.Second)
+		defer iptal()
 		code, err := platform.SubmitIndexNow(bg, endpoint, host, key, keyLoc, urls)
 		for _, u := range urls {
 			if err != nil {

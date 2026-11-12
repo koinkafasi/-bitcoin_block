@@ -52,6 +52,9 @@ func (s *Server) handleUnsplashSearch(w http.ResponseWriter, r *http.Request) {
 		query = string(runes[:120])
 	}
 	endpoint := "https://api.unsplash.com/search/photos?per_page=12&orientation=landscape&content_filter=high&query=" + url.QueryEscape(query)
+	// #nosec G704 -- SSRF yok: host SABİT (api.unsplash.com). Kullanıcı
+	// girdisi yalnız `query` ve o da url.QueryEscape ile kaçırılıyor;
+	// şema/host hiçbir zaman dışarıdan gelmiyor.
 	req, err := http.NewRequestWithContext(r.Context(), http.MethodGet, endpoint, nil)
 	if err != nil {
 		s.writeJSON(w, http.StatusBadGateway, map[string]any{"ok": false, "error": "Unsplash isteği hazırlanamadı."})

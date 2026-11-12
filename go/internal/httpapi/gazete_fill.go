@@ -639,6 +639,8 @@ func (s *Server) gazeteDogrula(ctx context.Context, siteID, issueID int64) ([]ga
 	htmlPath := filepath.Join(tmpDir, "olcum.html")
 	// #nosec G703 -- Yol, os.MkdirTemp'in ürettiği geçici dizin + SABİT
 	// dosya adı ("olcum.html"). Dış girdi yola girmiyor.
+	// #nosec G703 -- htmlPath = MkdirTemp dizini + SABİT dosya adı
+	// ("baski.html"); dizin de ad da kullanıcı girdisinden gelmiyor.
 	if err := os.WriteFile(htmlPath, []byte(gazeteBaskiMedyaMutlak(htmlDoc)), 0o644); err != nil {
 		return nil, err
 	}
@@ -686,6 +688,8 @@ func gazeteTasmaAyikla(dom string) ([]gazeteTasma, error) {
 // findChrome baskı motoru için kullanılacak Chromium ikilisini arar.
 func findChrome() string {
 	if v := os.Getenv("GAZETE_CHROME"); v != "" {
+		// #nosec G703 -- yol ortam değişkeninden, yani operatörün kendi
+		// yapılandırması. Kullanıcı girdisi bu yola ulaşmıyor.
 		if _, err := os.Stat(v); err == nil {
 			return v
 		}
@@ -738,6 +742,8 @@ func (s *Server) gazeteGeneratePDF(ctx context.Context, siteID, issueID int64) (
 	defer func() { _ = os.RemoveAll(tmpDir) }()
 	htmlPath := filepath.Join(tmpDir, "baski.html")
 	pdfPath := filepath.Join(tmpDir, "gazete.pdf")
+	// #nosec G703 -- htmlPath = MkdirTemp dizini + SABİT dosya adı
+	// ("baski.html"); dizin de ad da kullanıcı girdisinden gelmiyor.
 	if err := os.WriteFile(htmlPath, []byte(gazeteBaskiMedyaMutlak(htmlDoc)), 0o644); err != nil {
 		return "", err
 	}
