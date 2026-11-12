@@ -375,4 +375,59 @@
       if (ozet) ozet.focus();
     });
   })();
+
+  // --- data-ticker-akis: kesintisiz fiyat şeridi -----------------------
+  //
+  // Kalemler JS ile GEREKTİĞİ KADAR çoğaltılır ve kayma TAM BİR TAKIM
+  // boyu yapılır. Sabit iki kopya yetmiyordu: kalemler ekrandan dar
+  // olabiliyor (ölçüldü: tek takım 913 px, görünür alan 1193 px), o
+  // yüzden animasyon bitince sağda boşluk kalıyordu.
+  //
+  // Kopyalar `aria-hidden` taşır — ekran okuyucu aynı fiyatı N kez okumaz.
+  (function () {
+    var akis = document.querySelector('[data-ticker-akis]');
+    if (!akis) return;
+    var serit = akis.querySelector('[data-ticker-serit]');
+    var grup = akis.querySelector('[data-ticker-grup]');
+    if (!serit || !grup) return;
+
+    var HIZ = 25; // piksel/saniye — sabit görsel hız, kalem sayısından bağımsız
+    var zaman = null;
+
+    function kur() {
+      // Önce eski kopyaları temizle (yeniden boyutlandırmada tekrar kurulur).
+      var eski = serit.querySelectorAll('[data-ticker-grup][aria-hidden="true"]');
+      for (var i = 0; i < eski.length; i++) eski[i].parentNode.removeChild(eski[i]);
+      serit.classList.remove('is-akis');
+
+      var tek = grup.getBoundingClientRect().width;
+      var alan = akis.getBoundingClientRect().width;
+      if (tek <= 0 || alan <= 0) return;
+
+      // Alanı dolduracak kadar kopya: en az 1 tur + ekran genişliği kadar
+      // içerik her an görünür olsun diye +1 pay.
+      var adet = Math.ceil(alan / tek) + 1;
+      for (var k = 1; k < adet; k++) {
+        var kopya = grup.cloneNode(true);
+        kopya.setAttribute('aria-hidden', 'true');
+        kopya.removeAttribute('data-ticker-grup');
+        serit.appendChild(kopya);
+      }
+
+      serit.style.setProperty('--cd-ticker-adim', tek + 'px');
+      serit.style.setProperty('--cd-ticker-sure', (tek / HIZ).toFixed(1) + 's');
+      serit.classList.add('is-akis');
+    }
+
+    function yeniden() {
+      if (zaman) clearTimeout(zaman);
+      zaman = setTimeout(kur, 150);
+    }
+
+    // Görseller/fontlar yüklendikten sonra genişlik değişebilir.
+    kur();
+    window.addEventListener('load', yeniden);
+    window.addEventListener('resize', yeniden);
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(yeniden);
+  })();
 })();

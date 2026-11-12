@@ -106,15 +106,12 @@ templ cdTicker(s CDShell) {
 	<div class="cd-ticker" role="region" aria-label="Piyasa şeridi">
 		<div class="cd-wrap">
 			<div class="cd-ticker__inner">
-								// Mobilde "Canlı Piyasalar" etiketi sekmelerin ÜSTÜNE
-				// çıkar (CoinDesk mobil ölçümü: sol küme 122×59,
-				// etiket 10/15 + 8 px + sekmeler 36). Masaüstünde
-				// ikisi yan yana kalır.
+				// SOL KÜME SABİT (12 Kasım 2026, kullanıcı isteği):
+				// "Canlı Piyasalar yazısını kaldır, kripto ve hisse
+				// butonları sabitlensin, kur bilgileri sola doğru aksın".
+				// Sekmeler kaymaz; akan şerit onların ALTINDAN geçer ve
+				// sol kenarda gölgeli geçişle söner (CSS mask).
 				<div class="cd-ticker__sol">
-					<span class="cd-ticker__canli">
-						<span class="cd-ticker__nokta" aria-hidden="true"></span>
-						Canlı Piyasalar
-					</span>
 					<div class="cd-ticker__tabs" role="tablist">
 						if s.TickerTab == "stocks" {
 							<a class="cd-ticker__tab" role="tab" aria-selected="false" href="?serit=markets">Kripto</a>
@@ -125,53 +122,68 @@ templ cdTicker(s CDShell) {
 						}
 					</div>
 				</div>
-								// data-cg-sym: canlı akış (/canli/piyasa, SSE) bu kalemi
-				// sembolle bulup fiyatını DEĞİŞTİĞİ ANDA tazeler
-				// (cd-canli.js). Yorum döngünün DIŞINDA: içeride her
-				// kalem için tekrarlanıp HTML'i şişiriyordu.
-								// data-cg-sym: canlı akış (/canli/piyasa, SSE) bu kalemi
-				// sembolle bulup fiyatını DEĞİŞTİĞİ ANDA tazeler
-				// (cd-canli.js). Yorum döngünün DIŞINDA: içeride her
-				// kalem için tekrarlanıp HTML'i şişiriyordu.
-				for i, it := range s.Ticker {
-					if i > 0 {
-												// Kalemler arası dikey ayırıcı — CoinDesk'te
-						// 1×32 px `role="separator"` (ölçüldü).
-						<div class="cd-ticker__ayirici" role="separator"
-							aria-orientation="vertical"></div>
-					}
-										// HREF: kripto kalemleri /price/{slug}'a, BIST kalemleri
-					// /markets'e gider. `Href` boşsa bağlantı kurulmaz
-					// (ölü "/price/BIST" adresi basılmaz).
-					if it.Href != "" {
-						<a class="cd-ticker__item" data-cg-sym={ it.Sym } href={ templ.SafeURL(it.Href) }>
-							<span class="cd-ticker__sym">{ it.Sym }</span>
-							<span class="cd-ticker__alt">
-								<span class="cd-ticker__px">{ it.Price }</span>
-								if it.Up {
-									<span class="cd-up">{ it.Change }</span>
-								} else {
-									<span class="cd-down">{ it.Change }</span>
-								}
-							</span>
-						</a>
-					} else {
-						<span class="cd-ticker__item" data-cg-sym={ it.Sym }>
-							<span class="cd-ticker__sym">{ it.Sym }</span>
-							<span class="cd-ticker__alt">
-								<span class="cd-ticker__px">{ it.Price }</span>
-								if it.Up {
-									<span class="cd-up">{ it.Change }</span>
-								} else {
-									<span class="cd-down">{ it.Change }</span>
-								}
-							</span>
+				// AKAN ŞERİT: kalemler JS ile GEREKTİĞİ KADAR çoğaltılır.
+				//
+				// NEDEN SABİT 2 KOPYA DEĞİL: kalemler ekrandan dar olabiliyor
+				// (ölçüldü 12 Kasım 2026: tek takım 913 px, görünür alan
+				// 1193 px). İki kopyayla animasyon bitince sağda boşluk
+				// kalıyordu. JS tek takımın genişliğini ölçüp alanı dolduracak
+				// kadar kopya ekler ve kaymayı TAM BİR TAKIM boyu yapar —
+				// döngü dikişsiz olur.
+				//
+				// JS YOKSA: animasyon hiç başlamaz, şerit yatay kaydırılır
+				// (veri yine erişilebilir, boşluk görünmez).
+				<div class="cd-ticker__akis" data-ticker-akis>
+					<div class="cd-ticker__serit" data-ticker-serit>
+						<span class="cd-ticker__grup" data-ticker-grup>
+							@cdTickerKalemler(s.Ticker)
 						</span>
-					}
-				}
+					</div>
+				</div>
 			</div>
 		</div>
 	</div>
+}
+
+// cdTickerKalemler şeritteki fiyat kalemlerini basar.
+//
+// data-cg-sym: canlı akış (/canli/piyasa, SSE) bu kalemi sembolle bulup
+// fiyatını DEĞİŞTİĞİ ANDA tazeler (cd-canli.js). Kopya takımlar da aynı
+// sembolü taşıdığı için güncelleme HEPSİNE uygulanır.
+//
+// AYIRICI HER KALEMİN ÖNÜNDE (12 Kasım 2026): eskiden `i > 0` idi, yani
+// takımın başında çizgi yoktu. Akış döngüye girdiğinde son kalemle ilk
+// kalem bitişik görünüyordu ("sol ile BTC arasında ayırıcı eksik").
+// Artık her kalem kendi çizgisiyle başlıyor; döngü noktasında da çizgi var.
+templ cdTickerKalemler(items []CDTickerItem) {
+	for _, it := range items {
+		<div class="cd-ticker__ayirici" role="separator" aria-orientation="vertical"></div>
+		if it.Href != "" {
+			<a class="cd-ticker__item" data-cg-sym={ it.Sym } href={ templ.SafeURL(it.Href) }>
+				<span class="cd-ticker__sym">{ it.Sym }</span>
+				<span class="cd-ticker__alt">
+					<span class="cd-ticker__px">{ it.Price }</span>
+					if it.Up {
+						<span class="cd-up">{ it.Change }</span>
+					} else {
+						<span class="cd-down">{ it.Change }</span>
+					}
+				</span>
+			</a>
+		} else {
+			<span class="cd-ticker__item" data-cg-sym={ it.Sym }>
+				<span class="cd-ticker__sym">{ it.Sym }</span>
+				<span class="cd-ticker__alt">
+					<span class="cd-ticker__px">{ it.Price }</span>
+					if it.Up {
+						<span class="cd-up">{ it.Change }</span>
+					} else {
+						<span class="cd-down">{ it.Change }</span>
+					}
+				</span>
+			</span>
+		}
+	}
 }
 
 // cdTopbar üst gezinme. Mega menü Faz 2'de; burada birincil bağlantılar.

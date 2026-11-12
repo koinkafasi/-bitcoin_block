@@ -281,48 +281,95 @@ html.dark .cd-ticker { background: var(--cd-ticker-bg); }
 .cd-ticker__inner {
   display: flex;
   align-items: stretch;
-  justify-content: space-between;
-  gap: 12px;
-  overflow-x: auto;
-  scrollbar-width: none;
+  gap: 0;
   min-height: var(--cd-ticker-h);
   padding: 8px 0;
   white-space: nowrap;
 }
-.cd-ticker__inner::-webkit-scrollbar { display: none; }
+
+/* Sol küme SABİT: akan şerit bunun altından geçmez, üstünde durur.
+   Sağındaki dikey çizgi de SABİT kalır — akış kayarken kaybolmuyor. */
+.cd-ticker__sol {
+  display: flex;
+  align-items: center;
+  flex: none;
+  position: relative;
+  z-index: 2;
+  background: var(--cd-ticker-bg);
+}
+.cd-ticker__sol::after {
+  content: "";
+  flex: none;
+  width: 1px;
+  height: 32px;
+  margin-left: 12px;
+  background: var(--cd-border);
+}
+
+/* Akan şerit alanı. Sol kenarda (sekmelere doğru) gölgeli geçiş:
+   kalemler butonların altına girmeden yumuşakça sönüyor. Sağ kenarda
+   aynı etki ters yönde, böylece şerit iki uçta "kesilmiş" görünmüyor.
+   TEK katman: maske yeterli; üstüne ayrı bir gradyan katmanı eklemek
+   (ilk denemede vardı) geçişi iki kez uygulayıp fazla sertleştiriyordu. */
+.cd-ticker__akis {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  align-items: center;
+  -webkit-mask-image: linear-gradient(90deg,
+    transparent 0, #000 40px, #000 calc(100% - 48px), transparent 100%);
+  mask-image: linear-gradient(90deg,
+    transparent 0, #000 40px, #000 calc(100% - 48px), transparent 100%);
+}
+
+.cd-ticker__serit {
+  display: flex;
+  align-items: center;
+  flex: none;
+  width: max-content;
+}
+/* Animasyon YALNIZ JS hazırladıktan sonra (is-akis): kopya sayısı
+   ölçülmeden başlarsa döngü dikişsiz olmaz ve sağda boşluk kalır. */
+.cd-ticker__serit.is-akis {
+  animation: cd-ticker-akis var(--cd-ticker-sure, 64s) linear infinite;
+}
+.cd-ticker__serit:hover,
+.cd-ticker__serit:focus-within { animation-play-state: paused; }
+
+/* Tek takım. Kopyalar JS ile eklenir; her kopya aria-hidden olur. */
+.cd-ticker__grup {
+  display: flex;
+  align-items: center;
+  flex: none;
+}
+
+/* Kayma TAM BİR TAKIM boyu: son kare ilk karenin birebir aynısı,
+   döngüde sıçrama/boşluk olmaz. */
+@keyframes cd-ticker-akis {
+  from { transform: translateX(0); }
+  to { transform: translateX(calc(-1 * var(--cd-ticker-adim, 50%))); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cd-ticker__serit.is-akis { animation: none; }
+  .cd-ticker__akis { overflow-x: auto; scrollbar-width: none; }
+  .cd-ticker__akis::-webkit-scrollbar { display: none; }
+  .cd-ticker__akis [aria-hidden="true"] { display: none; }
+}
+
+@media (max-width: 767px) {
+  /* Mobilde daha yavaş akış: küçük ekranda hızlı şerit okunmuyor. */
+  .cd-ticker__serit.is-akis { animation-duration: var(--cd-ticker-sure, 78s); }
+  .cd-ticker__akis {
+    -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 32px, #000 100%);
+    mask-image: linear-gradient(90deg, transparent 0, #000 32px, #000 100%);
+  }
+}
 
 .cd-ticker__canli {
-  display: inline-flex;
-  align-items: center;
-  align-self: center;   
-  gap: 6px;
-  flex: none;
-  padding: 0 16px 0 0;
-  font-size: 10px;
-  line-height: 15px;
-  font-weight: 500;
-  color: var(--cd-fg);
-}
-
-.cd-ticker__nokta {
-  position: relative;
-  width: 8px;
-  height: 8px;
-  border-radius: 9999px;
-  background: var(--cd-up);
-  flex: none;
-}
-.cd-ticker__nokta::after {
-  content: "";
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 21px;
-  height: 21px;
-  transform: translate(-50%, -50%);
-  border-radius: 9999px;
-  background: var(--cd-up);
-  opacity: 0.18;
+  display: none;
 }
 
 .cd-ticker__tabs {
@@ -4981,8 +5028,6 @@ textarea.cd-girdi { resize: vertical; min-height: 88px; }
 .cd-mobil-giris-menu,
 .cd-mobil-hesap { display: none; }
 
-.cd-ticker__sol { display: contents; }
-
 @media (max-width: 1023px) {
   :root { --cd-header-h: 57px; }
 
@@ -5043,18 +5088,17 @@ textarea.cd-girdi { resize: vertical; min-height: 88px; }
 @media (max-width: 767px) {
   .cd-ticker__sol {
     display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 8px;
+    flex-direction: row;
+    align-items: center;
+    gap: 0;
     flex: none;
   }
   .cd-ticker__inner {
     justify-content: flex-start;
     align-items: center;
-    gap: 16px;
+    gap: 0;
   }
-  .cd-ticker__canli { align-self: flex-start; gap: 4px; padding: 0; }
-  .cd-ticker__tabs { margin-right: 0; }
+  .cd-ticker__tabs { margin-right: 10px; }
   .cd-ticker__tab {
     display: inline-flex;
     align-items: center;

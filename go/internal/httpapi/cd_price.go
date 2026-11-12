@@ -20,7 +20,28 @@ func (s *Server) cdTickerDoldur(r *http.Request) []templkit.CDTickerItem {
 	return s.cdTickerDoldurSekme(r.Context(), sekme)
 }
 
+// cdTickerOnemliHisse şeritte öncelikli gösterilecek BIST hisseleri.
+//
+// NEDEN SABİT LİSTE: "hisseler" önbelleği 631 satır ve fiyata göre sıralı;
+// ilk 20 satır ISATR/ISKUR gibi düşük likidite araçlarıyla doluyordu.
+// Şeritte "önemli" hisse görünmeli — hacim/piyasa değeri sırası elimizde
+// olmadığı için piyasa tarafından bilinen büyük şirketler listeleniyor.
+var cdTickerOnemliHisse = []string{
+	"THYAO", "ASELS", "BIMAS", "TUPRS", "KCHOL", "GARAN",
+	"AKBNK", "SISE", "EREGL", "SAHOL", "TCELL", "FROTO",
+	"TOASO", "PGSUS", "KRDMD", "EKGYO", "ARCLK", "SASA",
+}
+
+// cdTickerDoldurSekme fiyat şeridini doldurur.
+//
+// KALEM SAYISI (12 Kasım 2026, kullanıcı isteği "sürekli aynı veriler
+// dönmesin yeni coin ve bilgiler ekle"): eskiden 7 kalem vardı ve şerit
+// kısa olduğu için aynı 7 fiyat dönüp duruyordu. CoinGecko önbelleğinde
+// 25 coin var; 16'sı şeride giriyor. Hisse tarafında küratörlü 18 kod
+// öncelikli, yetmezse borsa önbelleğindeki diğer hisseler ekleniyor.
 func (s *Server) cdTickerDoldurSekme(ctx context.Context, sekme string) []templkit.CDTickerItem {
+	const istenenKalem = 16
+
 	if sekme == "stocks" {
 		// BIST verisi `services` işinin önbelleğinden gelir (Yahoo Finance).
 		// Önbellek boşsa şerit BOŞ kalır — uydurma fiyat basılmaz.
@@ -28,24 +49,84 @@ func (s *Server) cdTickerDoldurSekme(ctx context.Context, sekme string) []templk
 		if bd.Demo || len(bd.Rows) == 0 {
 			return nil
 		}
-		out := make([]templkit.CDTickerItem, 0, len(bd.Rows))
+
+		// Koddan satıra hızlı erişim (hem borsa hem hisseler önbelleği).
+		borsaSatir := map[string]repo.BorsaRow{}
+		var endeksler []repo.BorsaRow
 		for _, r := range bd.Rows {
-			if r.Kind == "kripto" {
+			if r.Kind == "kripto" || r.Value <= 0 {
 				continue
 			}
-			if r.Value <= 0 {
-				continue
+			kod := strings.TrimSuffix(r.Code, ".IS")
+			borsaSatir[kod] = r
+			if r.Kind == "endeks" {
+				endeksler = append(endeksler, r)
 			}
-			out = append(out, templkit.CDTickerItem{
-				Sym:    strings.TrimSuffix(r.Code, ".IS"),
-				Href:   "/price/stock/" + hisseBorsaKodu(r.Code),
-				Price:  repo.FiyatBicimP(r.Value, r.Para),
-				Change: repo.DegisimBicim(r.Delta),
-				Up:     r.Delta >= 0,
+		}
+
+		hisseSatir := map[string]repo.HisseRow{}
+		if hd := repo.HisselerOf(ctx, s.pool); len(hd.Rows) > 0 {
+			for _, r := range hd.Rows {
+				if r.Value > 0 {
+					hisseSatir[strings.TrimSuffix(r.Code, ".IS")] = r
+				}
+			}
+		}
+
+		ekle := func(out []templkit.CDTickerItem, kod, ad string, fiyat, delta float64, para string) []templkit.CDTickerItem {
+			if kod == "" || fiyat <= 0 {
+				return out
+			}
+			return append(out, templkit.CDTickerItem{
+				Sym:    kod,
+				Href:   "/price/stock/" + hisseBorsaKodu(kod),
+				Price:  repo.FiyatBicimP(fiyat, para),
+				Change: repo.DegisimBicim(delta),
+				Up:     delta >= 0,
 			})
-			if len(out) >= 7 {
+		}
+
+		var out []templkit.CDTickerItem
+		// 1) Endeksler (BIST 100 vb.) — şeridin başında bağlam verir.
+		for _, r := range endeksler {
+			out = ekle(out, strings.TrimSuffix(r.Code, ".IS"), r.Name, r.Value, r.Delta, r.Para)
+		}
+		// 2) Küratörlü önemli hisseler.
+		for _, kod := range cdTickerOnemliHisse {
+			if len(out) >= istenenKalem {
 				break
 			}
+			if r, ok := borsaSatir[kod]; ok {
+				out = ekle(out, kod, r.Name, r.Value, r.Delta, r.Para)
+				continue
+			}
+			if r, ok := hisseSatir[kod]; ok {
+				out = ekle(out, kod, r.Name, r.Value, r.Delta, "TRY")
+			}
+		}
+		// 3) Yetmezse borsa önbelleğindeki diğer hisseler.
+		for _, r := range bd.Rows {
+			if len(out) >= istenenKalem {
+				break
+			}
+			if r.Kind != "hisse" {
+				continue
+			}
+			kod := strings.TrimSuffix(r.Code, ".IS")
+			if _, varMi := borsaSatir[kod]; !varMi {
+				continue
+			}
+			zaten := false
+			for _, o := range out {
+				if o.Sym == kod {
+					zaten = true
+					break
+				}
+			}
+			if zaten {
+				continue
+			}
+			out = ekle(out, kod, r.Name, r.Value, r.Delta, r.Para)
 		}
 		return out
 	}
@@ -53,7 +134,7 @@ func (s *Server) cdTickerDoldurSekme(ctx context.Context, sekme string) []templk
 	fiyatlar := repo.Fiyatlar(ctx, s.pool)
 	var out []templkit.CDTickerItem
 	for _, f := range fiyatlar {
-		if len(out) >= 7 {
+		if len(out) >= istenenKalem {
 			break
 		}
 		slug := repo.CoinSlug(f.Name)
