@@ -114,8 +114,22 @@ templ CDArticle(v CDArticleView) {
 							href="https://www.google.com/preferences/source?q=bitcosar.com"
 							rel="noopener" target="_blank"
 							aria-label="Google'da bizi tercih edin">
-							<img class="cd-google__logo" src="/static/img/google-preferred.svg"
-								width="83" height="16" alt="" loading="lazy" decoding="async"/>
+							// Düğmenin başındaki işaret SİTENİN KENDİ markası.
+							// Öncelik: panelden yüklenen simge → yazı görseli →
+							// gömülü marka işareti. Hiçbiri yoksa düğme logosuz
+							// kalmaz; metin tek başına da anlamlı.
+							if v.Shell.LogoSimgeURL != "" {
+								<img class="cd-google__logo cd-google__logo--simge"
+									src={ v.Shell.LogoSimgeURL } alt=""
+									aria-hidden="true" decoding="async"/>
+							} else if v.Shell.LogoURL != "" {
+								<img class="cd-google__logo" src={ v.Shell.LogoURL }
+									alt="" aria-hidden="true" decoding="async"/>
+							} else {
+								<span class="cd-google__simge" aria-hidden="true">
+									@cdBasSimge()
+								</span>
+							}
 							<span class="cd-google__metin">'ı Google'da tercih edilen yap</span>
 						</a>
 					</div>
@@ -184,6 +198,27 @@ templ CDArticle(v CDArticleView) {
 					<div class="cd-article__body">
 						@templ.Raw(v.BodyHTML)
 					</div>
+
+					// ABONELİK KİLİDİ: gövde yukarıda kesildi, devamı burada
+					// isteniyor. Kutu gövdenin hemen ardında duruyor ki
+					// kesilen metinle arasında kopukluk olmasın.
+					if v.Kilitli {
+						<aside class="cd-kilit" aria-labelledby="cd-kilit-bas">
+							<span class="cd-kilit__rozet">Abonelere özel</span>
+							<h2 class="cd-kilit__baslik" id="cd-kilit-bas">Yazının devamı abonelere açık</h2>
+							if v.KilitKatman != "" {
+								<p class="cd-kilit__metin">
+									Bu içeriği okumak için <strong>{ v.KilitKatman }</strong> ve üzeri bir aboneliğiniz olması gerekiyor.
+								</p>
+							} else {
+								<p class="cd-kilit__metin">Bu içeriği okumak için aboneliğiniz olması gerekiyor.</p>
+							}
+							<div class="cd-kilit__eylem">
+								<a class="cd-kilit__btn cd-kilit__btn--birincil" href="/abonelik">Abonelik seçeneklerine bak</a>
+								<a class="cd-kilit__btn" href="/giris?redirect=abonelik">Zaten aboneyim, giriş yap</a>
+							</div>
+						</aside>
+					}
 
 										// Kaynak atfı: toplayıcı sitede ZORUNLU ve görünür
 					if v.SourceName != "" {

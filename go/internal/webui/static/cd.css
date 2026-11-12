@@ -1705,7 +1705,17 @@ html.cd-arama-acik, html.cd-arama-acik body { overflow: hidden; }
 }
 .cd-google:hover { background: var(--cd-surface-soft); text-decoration: none; }
 
-.cd-google__logo { display: block; flex: none; width: 83px; height: 16px; }
+.cd-google img.cd-google__logo {
+  display: block;
+  flex: 0 0 auto;
+  width: auto;
+  height: 18px;
+  max-width: 96px;
+  object-fit: contain;
+}
+.cd-google img.cd-google__logo--simge { height: 20px; max-width: 20px; }
+.cd-google__simge { display: flex; flex: none; align-items: center; }
+.cd-google .cd-google__simge .cd-bas-simge { height: 18px; width: 18px; }
 .cd-google__metin { white-space: nowrap; }
 @media (min-width: 1024px) {
   .cd-google { display: inline-flex; align-items: center; }
@@ -5215,3 +5225,75 @@ html:not(.dark) .cd-kapak__harf { opacity: .3; }
   .cd-tepki__dugmeler { margin-left: 0; width: 100%; }
   .cd-tepki__dugme { flex: 1; }
 }
+
+/* ---- abonelik kilidi (makale gövdesinin devamı) ----
+   Kutu kesilen metnin hemen ardında duruyor. Üstteki sönüm, gövdenin
+   "devamı var ama kapalı" hissini veriyor — sert bir kesik yerine. */
+.cd-kilit {
+  position: relative;
+  margin: 8px 0 0;
+  padding: 28px 24px 24px;
+  border: 1px solid var(--cd-border);
+  border-radius: 16px;
+  background: var(--cd-surface-soft);
+  text-align: center;
+}
+.cd-kilit::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -88px;
+  height: 88px;
+  pointer-events: none;
+  background: linear-gradient(180deg, transparent, var(--cd-bg));
+}
+.cd-kilit__rozet {
+  display: inline-block;
+  font-family: var(--cd-font);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+  color: var(--cd-brand);
+  margin-bottom: 8px;
+}
+.cd-kilit__baslik {
+  margin: 0 0 8px;
+  font-family: var(--cd-font);
+  font-size: clamp(19px, 2.2vw, 24px);
+  line-height: 1.25;
+  font-weight: 600;
+  color: var(--cd-fg-strong);
+}
+.cd-kilit__metin {
+  margin: 0 auto 18px;
+  max-width: 46ch;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--cd-muted-strong);
+}
+.cd-kilit__eylem {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+}
+.cd-kilit__btn {
+  font-family: var(--cd-font);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1;
+  padding: 12px 20px;
+  border-radius: 999px;
+  border: 1px solid var(--cd-border-strong);
+  color: var(--cd-fg);
+  text-decoration: none;
+}
+.cd-kilit__btn:hover { background: var(--cd-surface-action); }
+.cd-kilit__btn--birincil {
+  background: var(--cd-brand);
+  border-color: var(--cd-brand);
+  color: #1a1408;
+}
+.cd-kilit__btn--birincil:hover { filter: brightness(1.06); background: var(--cd-brand); }
