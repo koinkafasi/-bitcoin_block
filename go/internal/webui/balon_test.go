@@ -10,20 +10,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// Seçim balonu (.be-bubble) — Faz 185.
-//
-// NEDEN: JS balonu <body> sonuna ekliyor. CSS'te `position` yoktu ve öğe
-// varsayılan gizli değildi; akışta kaldığı için içerik formunun EN ALTINDA
-// tam genişlikte duruyordu. Ölçüm:
-//
-//	konum static · display flex · inline stil yok · w 1440 · y 2249 (sayfa sonu)
-//
-// Kullanıcı bunu "sayfanın en altında boydan boya harf seçme çubuğu" olarak
-// gördü (B / I / U / H2 / bağlantı düğmeleri).
-//
-// DOĞRUSU: konumlandırılmış + varsayılan `visibility:hidden`. `display:none`
-// kullanılamaz: TipTap balonu gösterirken satır içi `visibility: visible`
-// yazıyor, `display:none` olsa hiç görünmezdi.
 func TestSecimBalonuKonumlanmis(t *testing.T) {
 	b, err := os.ReadFile(filepath.Join("templkit", "icerikform.templ"))
 	require.NoError(t, err)

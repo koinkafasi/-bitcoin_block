@@ -1,0 +1,25 @@
+package templkit
+
+// ---- Görseli olmayan kartların tipografik kapağı ----
+//
+// NEDEN: ana sayfadaki 41 karttan 39'u görselsizdi (içeriğin %96'sında ne
+// kapak ne kaynak görseli var — veri denetimi, 12 Kasım 2026). Görsel
+// yuvası boş bırakılınca sayfa gri bir metin duvarına dönüyor; kartlar
+// birbirinden ayrışmıyor ve göz gezdirilemiyor.
+//
+// ÇÖZÜM: resim ÜRETMİYORUZ. Kapak tamamen CSS: marka deseni + kategori
+// adı + içeriğin baş harfi. Ek ağ isteği yok, CLS yok, her temada
+// çalışıyor ve kategori rengi karta kimlik veriyor.
+//
+// ERİŞİLEBİLİRLİK: kapak dekoratiftir (`aria-hidden`), çünkü taşıdığı
+// bilgi — kategori ve başlık — kartın kendi metninde zaten var.
+
+templ cdKapakYok(s CDStory) {
+	<span class="cd-kapak" data-kat={ cdKapakKategori(s) } aria-hidden="true">
+		<span class="cd-kapak__desen"></span>
+		<span class="cd-kapak__harf">{ cdKapakHarf(s.Title) }</span>
+		if s.Kicker != "" {
+			<span class="cd-kapak__kat">{ s.Kicker }</span>
+		}
+	</span>
+}

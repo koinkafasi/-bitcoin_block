@@ -15,16 +15,6 @@ import (
 	"theblock/site/internal/repo"
 )
 
-// Matbaa dosyası — specs/13-gazete-sayfa-duzenleyici.md K8 / Faz 7
-//
-// Dijital nüsha (Chromium çıktısı) ekran içindir: RGB, kesim payı yok,
-// çıktı amacı tanımsız. Matbaa ise genelde PDF/X, CMYK, kesim ve taşma
-// kutuları ister. Bu yüzden iki ayrı çıktı üretilir ve matbaa dosyası
-// dijitalin üstüne YAZMAZ.
-//
-// Zincir: taşma paylı baskı HTML'i → Chromium → Ghostscript (PDF/X + CMYK +
-// kutular) → preflight.
-
 const (
 	// mmPt bir milimetrenin punto karşılığı.
 	mmPt = 72.0 / 25.4
@@ -32,11 +22,6 @@ const (
 	gazeteMatbaaDosya = "gazete-matbaa.pdf"
 )
 
-// gazeteMatbaaAyar matbaanın istediği çıktı tanımı.
-//
-// Varsayılanlar bilinçli olarak "güvenli ve yaygın" seçildi ama matbaanın
-// onayı olmadan baskıya gönderilmemeli: yanlış profil renk kaymasına yol
-// açar ve telafisi matbaada olur.
 type gazeteMatbaaAyar struct {
 	PDFX    string // X-1a | X-3 | X-4
 	ICCYolu string // çıktı amacı profili; boş ise Ghostscript'in CMYK profili
@@ -94,11 +79,6 @@ func gazetePDFXAnahtari(surum string) string {
 	}
 }
 
-// gazeteMatbaaGeometri matbaa sayfasinin kutularini punto cinsinden verir.
-//
-// Sayfa kutusu = kesim olcusu + 2*(tasma payi + isaret alani). Isaret alani
-// gerekli: kesim isaretleri tasma payinin DISINDA durmali, yoksa gorselin
-// uzerine binerler ve kesimde ise yaramazlar.
 type gazeteMatbaaKutu struct {
 	Isaret           float64 // isaret alani (pt)
 	Tasma            float64 // tasma payi (pt)
@@ -125,11 +105,6 @@ func gazeteMatbaaGeometrisi(trimWmm, trimHmm, tasmaMm float64) gazeteMatbaaKutu 
 	}
 }
 
-// gazetePDFXTanimi Ghostscript'in -dPDFX icin istedigi PostScript tanimini
-// uretir: cikti amaci (OutputIntent) ve sayfa kutulari.
-//
-// Kutular burada yaziliyor cunku Chromium TrimBox/BleedBox uretmiyor;
-// matbaa kesimin nereden gecirilecegini bu kutulardan okur.
 func gazetePDFXTanimi(a gazeteMatbaaAyar, trimW, trimH, tasmaMm float64) string {
 	g := gazeteMatbaaGeometrisi(trimW, trimH, tasmaMm)
 
@@ -295,10 +270,6 @@ func gazeteMmSayi(s string) float64 {
 	return f
 }
 
-// gazeteMatbaaPreflight uretilen dosyayi matbaa gozuyle denetler.
-//
-// Sessiz gecmiyoruz: cikti amaci ya da gomulmemis font eksikse matbaa
-// dosyayi geri cevirir, bunu once biz gormeliyiz.
 func (s *Server) gazeteMatbaaPreflight(ctx context.Context, yol string, rap gazeteMatbaaRapor) gazeteMatbaaRapor {
 	ekle := func(f string, a ...any) { rap.Uyarilar = append(rap.Uyarilar, fmt.Sprintf(f, a...)) }
 
@@ -370,11 +341,6 @@ func (s *Server) gazeteMatbaaPreflight(ctx context.Context, yol string, rap gaze
 	return rap
 }
 
-// gazeteMatbaaHTML tasma payli ve kesim isaretli baski dokumanini uretir.
-//
-// Dijital nushadan farki: sayfa kutusu kesim olcusunden buyuk, icerik
-// ortalanmis ve koselerde kesim isaretleri var. Dijital nusha degismez
-// (SPEC K8): ekranda isaret gostermek anlamsiz, matbaada ise sart.
 func (s *Server) gazeteMatbaaHTML(ctx context.Context, siteID int64,
 	iss repo.GazeteIssue, belge gazeteSablonDoc, boyut gazeteSayfaBoyut,
 	tasmaMm float64) (string, error) {
@@ -422,16 +388,11 @@ const gazeteMatbaaCSS = `
 .gz-matbaa-sayfa:last-child { break-after: auto; page-break-after: auto; }
 .gz-matbaa-sayfa > .gazete-sayfa { position: absolute;
   left: var(--gz-matbaa-kenar); top: var(--gz-matbaa-kenar); }
-/* Kesim isaretleri: kesim kutusunun koselerinden disa dogru. */
 .gz-kesim-im { position: absolute; background: #000; }
 .gz-kesim-im.yatay { height: 0.25pt; width: 5mm; }
 .gz-kesim-im.dikey { width: 0.25pt; height: 5mm; }
 `
 
-// gazeteKesimIsaretleri dort kosede kesim isareti ciftleri uretir.
-//
-// Isaretler kesim cizgisinden 2mm uzakta baslar: tam kose uzerinde olsalar
-// kesim biciginin izi isarete biner ve operator cizgiyi goremez.
 func gazeteKesimIsaretleri() string {
 	const bosluk = "2mm"
 	kenar := "var(--gz-matbaa-kenar)"
@@ -460,10 +421,6 @@ func gazeteKesimIsaretleri() string {
 	return sb.String()
 }
 
-// handleGazeteMatbaa POST /admin/gazete/sayilar/{id}/matbaa
-//
-// Matbaa dosyasini uretir ve preflight raporunu doner. Dijital nushaya
-// (gazete.pdf) DOKUNMAZ: ayri anahtarla saklanir (SPEC K8).
 func (s *Server) handleGazeteMatbaa(w http.ResponseWriter, r *http.Request) {
 	if !s.requireGazete(w, r, gazeteActionEdit) {
 		return

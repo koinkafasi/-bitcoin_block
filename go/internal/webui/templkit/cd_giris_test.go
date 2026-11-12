@@ -1,19 +1,5 @@
 package templkit
 
-// Ana sayfa giriş hero'su (cd_giris) testleri.
-//
-// NEDEN AYRI DOSYA: hero'nun üç kırılgan noktası var ve üçü de sessizce
-// bozulabilir:
-//   1) Veri yokken modül BASILMAMALI (uydurma sayı yasak).
-//   2) Yay geometrisi: dasharray ve nokta konumu aynı yarıçaptan (84)
-//      türemeli; biri değişip diğeri unutulursa gösterge yanlış yeri
-//      gösterir ama hata vermez.
-//   3) Hero yüksekliği 532 px'e çakılı — kullanıcı isteği ("bu
-//      yükseklikte"). CSS'te min-height düşerse görünüm kayar.
-//
-// Ve bir bütçe kuralı: hero stili cd.css'e DEĞİL ayrı dosyaya yazılmalı
-// (cd.css kendi testinde 200 KB bütçeye tabi).
-
 import (
 	"bytes"
 	"context"

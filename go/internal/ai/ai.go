@@ -1,6 +1,3 @@
-// Package ai sağlayıcıdan bağımsız AI katmanıdır.
-// Varsayılan: OmniRoute (OpenAI-uyumlu /v1/chat/completions). Anahtar yoksa
-// kural tabanlı Mock sağlayıcı devreye girer (özellikler anahtarsız çalışır).
 package ai
 
 import (
@@ -46,12 +43,6 @@ type Client struct {
 
 // NewClient env'den sağlayıcıları kurar; anahtar yoksa Mock ekler.
 func NewClient(logger *slog.Logger) *Client {
-	// Zaman aşımı ölçülerek seçildi: aynı sağlayıcıda yanıt süresi 20–83 sn
-	// arasında değişiyor (auto/best-chat yönlendirmesi farklı modellere
-	// düşüyor). 60 sn'lik sabit sınır, sağlıklı yanıtları kesiyordu:
-	// canlı işte çağrıların ~%50'si "context deadline exceeded" ile
-	// başarısız oluyor, hem içerik doldurulamıyor hem de her başarısızlık
-	// bir sonraki içeriğin sırasını geciktiriyordu.
 	c := &Client{logger: logger, httpClient: &http.Client{Timeout: aiHTTPTimeout()}}
 	key := os.Getenv("OMNIROUTE_API_KEY")
 	base := os.Getenv("OMNIROUTE_BASE_URL")
@@ -75,10 +66,6 @@ func NewClient(logger *slog.Logger) *Client {
 	return c
 }
 
-// aiHTTPTimeout sağlayıcı çağrısı için üst sınırdır.
-//
-// AI_HTTP_TIMEOUT_SEC ile ayarlanır (saniye); varsayılan 120. Ölçüm:
-// yavaş yanıtlar 80 sn'yi buluyor, 120 sn güvenli üst sınır.
 func aiHTTPTimeout() time.Duration {
 	if v := strings.TrimSpace(os.Getenv("AI_HTTP_TIMEOUT_SEC")); v != "" {
 		if n, err := strconv.Atoi(v); err == nil && n >= 10 && n <= 600 {
@@ -88,9 +75,6 @@ func aiHTTPTimeout() time.Duration {
 	return 120 * time.Second
 }
 
-// Enabled sağlayıcı var mı (mock dışı).
-// Nil alıcı güvenli: NewServer'a nil istemci verildiğinde (test, AI kapalı
-// kurulum) panel sayfaları panic etmemeli, özellik kapalı görünmeli.
 func (c *Client) Enabled() bool {
 	if c == nil || len(c.providers) == 0 {
 		return false
@@ -111,10 +95,6 @@ func (c *Client) Providers() []string {
 	return out
 }
 
-// chatAttemptBudget etkileşimli sohbette sağlayıcı başına deneme bütçesidir.
-// Sağlayıcı asılı kalırsa kullanıcı dakikalarca beklemesin diye deneme bu
-// süre sonunda kesilir ve sıradaki (son çare: mock) denenir. Uzun soluklu
-// üretim çağrıları (complete.go) bu bütçeden bağımsızdır.
 const chatAttemptBudget = 15 * time.Second
 
 // Chat mesajları sırayla sağlayıcılarda dener; hepsi düşerse mock'a düşer.

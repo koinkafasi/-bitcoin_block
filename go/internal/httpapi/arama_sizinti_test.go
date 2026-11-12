@@ -12,13 +12,6 @@ import (
 	"theblock/site/internal/webui"
 )
 
-// Arama sonuç sayfası, hangi arama motorunun/veritabanının çalıştığını
-// KULLANICIYA GÖSTERMEMELİ.
-//
-// ÖLÇÜM (5 Kasım 2026, üretim): `/arama?q=test` sayfası
-// "Motor: PostgreSQL (pg_trgm) · 0 sonuç" basıyordu. Bu bir altyapı
-// sızıntısıdır: ziyaretçiye faydası yok, saldırgana sürüm/CVE hedeflemesi
-// için ipucu verir (PostgreSQL + pg_trgm = bilinen sürüm aralığı).
 func TestAramaSayfasiMotorAdiniSizdirmaz(t *testing.T) {
 	tmpl := parseTestTemplates(t)
 	slug := "bir-haber"

@@ -1,14 +1,5 @@
 package youtube
 
-// Kapak görseli seçimi testleri (11 Kasım 2026).
-//
-// NEDEN: Kullanıcı "shorts küçük resimleri çok kötü kalitede" dedi. Kök
-// neden ölçümle bulundu: short kayıtlarında `hqdefault.jpg` (480x360 YATAY)
-// kullanılıyordu; 9:16 dikey kartta bunun yalnız ~200x360'lık ortası
-// görünüp kalan alan büyütülüyordu. Bu testler doğru varyantı sabitler.
-//
-// Ağ GEREKMEZ: yalnız URL kuralları.
-
 import (
 	"strings"
 	"testing"
@@ -49,19 +40,6 @@ func TestGorselSrcsetYalnizYatayda(t *testing.T) {
 	assert.Empty(t, GorselSrcset("", "video"))
 }
 
-// TestGorselYedekZinciri — YEDEK ZİNCİRİ (12 Kasım 2026).
-//
-// Kullanıcı bildirimi: "Öne Çıkan Araştırma'daki video kapak kalitesi çok
-// düşük ... sitede bunun gibi düşük çözünürlüklü resim kalmasın".
-//
-// ÖLÇÜM (gerçek kimlikler, HTTP + boyut):
-//
-//	MctQ1WmwSaA  oar2 404 (1097 B) · maxres 200 (215 KB) · hq 200 (20 KB)
-//	KfLVTp9jlyU  oar2 200 (112 KB) · maxres 200 (101 KB) · hq 200 (13 KB)
-//
-// Yani `oar2` HER short'ta YOK. Tek kademeli yedek (oar2 → hqdefault)
-// oar2'si olmayan short'u 480×360'a düşürüyordu; dikey kart 290×516 olduğu
-// için 1.4× büyütme = bulanık kapak. Zincir ifadesi bunu sabitler.
 func TestGorselYedekZinciriShortMaxresIceriyor(t *testing.T) {
 	ad := strings.Split(GorselYedekZincir("iPG7pIB-P1c", "short"), ",")
 	if len(ad) != 2 {

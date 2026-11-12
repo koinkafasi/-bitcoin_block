@@ -152,15 +152,4 @@ func (c *Client) Stats(ctx context.Context) (map[string]any, error) {
 	return out, nil
 }
 
-// urlQueryEscape sorgu parametresini URL-güvenli biçime çevirir.
-//
-// Önceki elle yazılmış sürüm `fmt.Sprintf("%%%02X", r)` çağırıyordu. `%02X`
-// yalnız **rune kod noktasını** yazar, onu UTF-8 baytlarına çevirmez:
-// "ş" (U+015F) için `%15F` üretiyordu. Doğrusu `%C5%9F`. Sonuç: Türkçe
-// karakter içeren her arama sorgusu search-svc'ye bozuk gidiyor ve
-// Tantivy hiçbir şey bulamıyordu (pg_trgm yedeği ise düzgün çalıştığı
-// için hata maskeleniyordu).
-//
-// Standart kitaplığın kodlayıcısı aynı sözleşmeyi (boşluk → `+`,
-// alfanümerik + `-_.~` korunur) zaten uygular.
 func urlQueryEscape(s string) string { return url.QueryEscape(s) }

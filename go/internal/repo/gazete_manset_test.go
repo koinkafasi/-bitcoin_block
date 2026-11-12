@@ -9,15 +9,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// Faz 197 — gazete manşetleri: kaynak ayrıştırma.
-//
-// ÖLÇÜM (2 Kasım 2026, üretim sunucusu):
-//
-//	GET https://www.gazeteoku.com/  →  200 · 213 KB · 0.44 sn
-//	benzersiz kapak                 →  30 gazete
-//	900x1310 boy isteği             →  200 · 600 KB · image/jpeg
-//	300x437  boy isteği             →  200 ·  87 KB · image/jpeg
-
 // Gerçek sayfadan alınmış iki kapak (yapı birebir).
 const gazeteOrnekHTML = `<div><a href="/hurriyet"><img
   src="https://i.gazeteoku.com/3/255/365/storage/files/images/2026/11/02/hurriyet-2026-11-02-0bsu.jpg"
@@ -86,9 +77,6 @@ func TestGazeteSirasi(t *testing.T) {
 	}
 }
 
-// TestGazeteGercekSayfa gerçek (ağdan alınmış) sayfayla doğrulama.
-//
-// Elle: curl -s https://www.gazeteoku.com/ -o /tmp/gazeteoku.html
 func TestGazeteGercekSayfa(t *testing.T) {
 	ham, err := os.ReadFile("/tmp/gazeteoku.html")
 	if err != nil || len(ham) < 50000 {

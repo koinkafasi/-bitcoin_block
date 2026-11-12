@@ -1,13 +1,5 @@
 package templkit
 
-// Marka: açık/koyu tema logosu + favicon testleri (11 Kasım 2026).
-//
-// Kullanıcı bildirimleri:
-//   "Dark moda görünen logo light moda göstermiyor"
-//   "Favicon svg yükledim ama browserda göstermedi"
-//
-// İkisi de sessizce bozulur: hata vermez, sadece görünüm yanlış olur.
-
 import (
 	"bytes"
 	"context"
@@ -19,9 +11,6 @@ import (
 )
 
 func TestCdLogoAcikTemaDosyasiYoksaKoyuKullanilir(t *testing.T) {
-	// KRİTİK REGRESYON: açık tema dosyası yüklenmediyse şablon eskiden
-	// yalnız `--koyu` basıyordu; CSS açık temada onu gizleyince HİÇBİR
-	// logo kalmıyordu ("light moda göstermiyor").
 	html := logoRender(t, CDShell{
 		SiteName: "BitCoŞaR", LogoURL: "/media/koyu.svg",
 		LogoGenislik: 240, LogoYukseklik: 60,
@@ -71,9 +60,6 @@ func TestCdLogoStilSinirlama(t *testing.T) {
 }
 
 func TestCdLogoSloganLogonunAltinda(t *testing.T) {
-	// Slogan `.cd-logo__grup` (dikey sütun) İÇİNDE olmalı; doğrudan
-	// `.cd-logo` çocuğu olursa flex satırında logonun YANINA düşer
-	// (ölçüldü: görsel 12–60, slogan 32–43 = aynı satır).
 	html := logoRender(t, CDShell{
 		SiteName: "X", LogoURL: "/media/x.svg", Tagline: "paranın geleceği",
 	})
@@ -113,11 +99,6 @@ func TestCdHeadFaviconVarsayilan(t *testing.T) {
 }
 
 func TestCdLogosimgeKilidi(t *testing.T) {
-	// Kullanıcı isteği (11 Kasım 2026): "logodaki nesneleri 2'ye böl,
-	// soldaki site simgesi yuvarlak, sağdaki yazı; sloganı da altına koy".
-	// Yapı: .cd-logo__kilit > (simge, .cd-logo__grup > yazı + slogan).
-	// Slogan YAZININ sütununda olmalı — B harfinin altına hizalanması
-	// bu yapıdan gelir, ölçü/girinti tahmininden değil.
 	html := logoRender(t, CDShell{
 		SiteName: "BitCoŞaR",
 		LogoURL:  "/media/yazi.svg", LogoSimgeURL: "/media/simge.svg",

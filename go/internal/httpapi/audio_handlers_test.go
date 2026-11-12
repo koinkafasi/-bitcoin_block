@@ -14,10 +14,6 @@ import (
 	"theblock/site/internal/repo"
 )
 
-// TestHiddenAIActionsNotTriggerableFromSelectionForm gizli AI eylemlerinin
-// (ör. audio_draft) seçili metin formundan doğrudan çalıştırılamadığını
-// doğrular; bu eylemler yalnızca kendi panelinden başlatılmalı ve
-// handleAIEditorAction gizli eylemleri reddeder.
 func TestHiddenAIActionsNotTriggerableFromSelectionForm(t *testing.T) {
 	audio, ok := aieditor.ActionByID("audio_draft")
 	require.True(t, ok, "audio_draft eylemi tanımlı olmalı")

@@ -5,12 +5,6 @@ import (
 	"strings"
 )
 
-// Bu dosya alıntıların hangi transkript segmentinden geldiğini bulur.
-//
-// Neden: alıntı "kaynakta var" demek yeterli değil; editörün alıntının
-// saniyesini görüp kaydı oradan dinleyebilmesi gerekir. Böylece doğrulama
-// tıklanabilir bir kanıta dönüşür (E-E-A-T ve düzeltme maliyeti).
-
 // SourceSegment alıntı eşleştirmesi için transkript bölümüdür.
 type SourceSegment struct {
 	StartMS int64
@@ -30,11 +24,6 @@ type QuoteSource struct {
 	Overlap  float64 `json:"overlap"`
 }
 
-// AttributeQuotes her alıntıyı en iyi eşleşen segmente bağlar. Eşleşme
-// bulunamazsa Verified=false ve Segment=-1 döner.
-//
-// Eşik alıntı doğrulamasıyla aynıdır (verifyThreshold): segment metni
-// alıntının >=%85'ini sırayla içermelidir.
 func AttributeQuotes(quotes []string, segments []SourceSegment) []QuoteSource {
 	if len(quotes) == 0 {
 		return nil

@@ -1,15 +1,5 @@
 package templkit
 
-// Slogan girintisi testleri (11 Kasım 2026).
-//
-// Kullanıcı isteği: "yuvarlak simgenin altına ekledin, o simgenin kendi
-// BİTCOŞAR yazısındaki B harfinin altına getir".
-//
-// Logo dosyasının içinde solda simge, sağda yazı var; sunucu SVG'nin
-// içeriğini yorumlayamaz. Bu yüzden girinti PANELDEN ayarlanıyor ve
-// CSS değişkeniyle uygulanıyor. Bu testler değişkenin uçtan uca
-// taşındığını doğrular: ayar → cdLogoStil → inline style → CSS.
-
 import (
 	"strings"
 	"testing"

@@ -8,14 +8,6 @@ import (
 	"theblock/site/internal/repo"
 )
 
-// Kategori görünürlüğü (gorunum_kats) — kullanıcı isteği:
-// "özelik olarak spor yazısı sayfalarında göstermek için bir de geliştirme
-// ekle modüle seçenek, hangi yazı kategorilerinde yazılarda olması için".
-//
-// Kural: ayar boşsa blok her yerde; doluysa yalnız seçilen kategorilerin
-// YAZILARINDA basılır. Ana sayfa/kategori sayfalarında kısıt uygulanmaz —
-// orada düzeni kullanıcı ayrıca düzenler.
-
 func yaziSayfasi(slug string) *tmplData {
 	c := repo.Content{CategorySlug: &slug}
 	return &tmplData{Article: &articleData{Content: c}}
@@ -31,13 +23,6 @@ func TestBlokKategoriGorunumuOkuma(t *testing.T) {
 	assert.Equal(t, []string{"spor", "futbol"}, got)
 }
 
-// Tırnaklı eski kayıtlar onarılmalı.
-//
-// Gerçek olay (28 Ekim 2026): panelde kategori seçildiğinde değer JSON'a
-// `"spor"` (tırnaklar dahil) yazıldı. Sunucu `"spor"` okuduğu için yazının
-// slug'ı `spor` ile eşleşmedi ve modül spor yazılarında GÖRÜNMEDİ; üstelik
-// ekonomi yazılarında da gizlenmiyordu (hiçbir şeyle eşleşmediği için
-// sonuç "hiç görünmemek" oldu).
 func TestBlokKategoriGorunumuTirnakTemizler(t *testing.T) {
 	assert.Equal(t, []string{"spor"},
 		blokKategoriGorunumu(map[string]any{"gorunum_kats": `"spor"`}))

@@ -17,22 +17,14 @@ import (
 
 // botData Bot/Haber Akışı sayfa verisidir.
 type botData struct {
-	Feeds  []repo.Feed
-	Cats   []repo.Category
-	Rules  []repo.WordRule
-	Auto   bool
-	Dakika int
-	// SeoOtomatik / SeoDakika: çekilen haberlerin SEO alanları AI ile
-	// doldurulsun mu ve dakikada kaçı işlenecek (Faz 188). Boş alanlar
-	// doldurulur, dolu alanlar korunur.
+	Feeds       []repo.Feed
+	Cats        []repo.Category
+	Rules       []repo.WordRule
+	Auto        bool
+	Dakika      int
 	SeoOtomatik bool
 	// SeoDakika: dakikada kaç haberin SEO'su doldurulacak (hız).
-	SeoDakika int
-	// Faz 194 — otomatik AI ile yazım.
-	//
-	// YazimOtomatik açıksa kaynaklı yeni taslaklar AI'dan geçip gerçek haber
-	// metnine dönüşür (başlık, spot, gövde, SEO). Kapalıyken bot yalnız RSS
-	// özetini yazar (eski davranış).
+	SeoDakika     int
 	YazimOtomatik bool
 	YazimDakika   int
 	YazimBekleyen int
@@ -369,10 +361,6 @@ func (s *Server) handleTrendTaslak(w http.ResponseWriter, r *http.Request) {
 	s.flashRedirect(w, r, "/admin/icerikler/"+itoa(int(nid)), "info", "Gündem öğesi taslağa alındı.")
 }
 
-// yazimDurumMetni panelde tek satır durum metni üretir.
-//
-// Neden: anahtar açık ama işçi çalışmıyorsa kullanıcı bunu göremez.
-// "240 taslak bekliyor" yazıp hiçbir şey olmaması sessiz hatadır.
 func yazimDurumMetni(o repo.YazimDurumOzeti, a aieditor.YazimAyarlar) string {
 	if !a.Aktif {
 		return "kapalı — yeni taslaklar RSS özetiyle kalır"

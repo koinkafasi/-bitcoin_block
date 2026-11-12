@@ -1,21 +1,4 @@
-/* Çerez onayı ve analitiğin rıza kapısı.
- *
- * NEDEN BU KADAR SIKI: Kişisel Verileri Koruma Kurulu'nun 08.08.2024 tarihli
- * 2024/1361 sayılı kararı, kesinlikle gerekli olmayan bir analitik çerez için
- * açık rıza arandığını ve sitenin İLK GİRİŞİNDE bu rızayı alacak bir
- * mekanizma bulunmamasını ihlal saydı. Kurulun Çerez Rehberi de işlevsel,
- * performans-analitik ve reklam çerezleri için varsayılanın "çalışmıyor"
- * olduğu bir opt-in mekanizması istiyor.
- *
- * Google Consent Mode yeterli DEĞİL: o yöntemde gtag.js yine de yüklenir ve
- * tarayıcı Google'a (ABD) istek atar; bu, çerez yazılmasa bile ziyaretçinin
- * IP adresinin aktarılması demektir (6698 s.K. m.9). Bu yüzden burada tam
- * erteleme uygulanır — rıza gelmeden gtag.js sayfaya hiç eklenmez.
- *
- * Reddetmek kabul etmek kadar kolay olmalı: iki düğme aynı görünürlükte ve
- * aynı tıklama sayısında. Rıza hizmetin ön şartı değildir; reddeden kullanıcı
- * siteyi aynen kullanır.
- */
+
 (function () {
   'use strict';
 
@@ -104,7 +87,6 @@
       }
     } catch (e) {}
   }
-
 
   // --- Stil ---------------------------------------------------------------
   //

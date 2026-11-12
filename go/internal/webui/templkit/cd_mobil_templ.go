@@ -47,7 +47,7 @@ func cdMobilNav(s CDShell) templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<details class=\"cd-mobil\" data-mobil-menu><summary class=\"cd-mobil__dugme\" aria-label=\"Menü\"><!-- CoinDesk hamburger yolu (20×20 mobil, 24×24 md). --><svg class=\"cd-mobil__ikon\" viewBox=\"0 0 24 24\" width=\"20\" height=\"20\" aria-hidden=\"true\" focusable=\"false\" fill=\"none\"><path d=\"M3.5 17.6345V16.1347H20.5V17.6345H3.5ZM3.5 12.75V11.25H20.5V12.75H3.5ZM3.5 7.86523V6.36548H20.5V7.86523H3.5Z\" fill=\"currentColor\"></path></svg></summary><nav class=\"cd-mobil__panel\" aria-label=\"Menü\"><div class=\"cd-mobil__ic\"><ul class=\"cd-mobil__liste\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<details class=\"cd-mobil\" data-mobil-menu><summary class=\"cd-mobil__dugme\" aria-label=\"Menü\"><svg class=\"cd-mobil__ikon\" viewBox=\"0 0 24 24\" width=\"20\" height=\"20\" aria-hidden=\"true\" focusable=\"false\" fill=\"none\"><path d=\"M3.5 17.6345V16.1347H20.5V17.6345H3.5ZM3.5 12.75V11.25H20.5V12.75H3.5ZM3.5 7.86523V6.36548H20.5V7.86523H3.5Z\" fill=\"currentColor\"></path></svg></summary><nav class=\"cd-mobil__panel\" aria-label=\"Menü\"><div class=\"cd-mobil__ic\"><ul class=\"cd-mobil__liste\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -77,7 +77,7 @@ func cdMobilNav(s CDShell) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<div class=\"cd-mobil__ayrac\" aria-hidden=\"true\"></div><div class=\"cd-mobil__alt-blok\"><!-- DİL — CoinDesk \"Language\" satırı: 14/21 w500 etiket,\n\t\t\t\t\t     sağda hap (12/16 büyük harf, 1 px çerçeve, 9999\n\t\t\t\t\t     köşe). Tek dilde hap tıklanmaz (ölü menü yok);\n\t\t\t\t\t     çok dilde TÜM SATIR açılır (CoinDesk deseni). -->")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<div class=\"cd-mobil__ayrac\" aria-hidden=\"true\"></div><div class=\"cd-mobil__alt-blok\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -95,7 +95,7 @@ func cdMobilNav(s CDShell) templ.Component {
 					var templ_7745c5c3_Var2 string
 					templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(d.Kod)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_mobil.templ`, Line: 59, Col: 24}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/cd_mobil.templ`, Line: 59, Col: 24}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
 					if templ_7745c5c3_Err != nil {
@@ -119,7 +119,7 @@ func cdMobilNav(s CDShell) templ.Component {
 				var templ_7745c5c3_Var3 templ.SafeURL
 				templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL(d.Href))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_mobil.templ`, Line: 71, Col: 41}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/cd_mobil.templ`, Line: 71, Col: 41}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 				if templ_7745c5c3_Err != nil {
@@ -132,7 +132,7 @@ func cdMobilNav(s CDShell) templ.Component {
 				var templ_7745c5c3_Var4 string
 				templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(d.Ad)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_mobil.templ`, Line: 72, Col: 17}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/cd_mobil.templ`, Line: 72, Col: 17}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 				if templ_7745c5c3_Err != nil {
@@ -145,7 +145,7 @@ func cdMobilNav(s CDShell) templ.Component {
 				var templ_7745c5c3_Var5 string
 				templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(d.Kod)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_mobil.templ`, Line: 73, Col: 50}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/cd_mobil.templ`, Line: 73, Col: 50}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 				if templ_7745c5c3_Err != nil {
@@ -173,7 +173,7 @@ func cdMobilNav(s CDShell) templ.Component {
 				var templ_7745c5c3_Var6 string
 				templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(d.Kod)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_mobil.templ`, Line: 83, Col: 70}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/cd_mobil.templ`, Line: 83, Col: 70}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 				if templ_7745c5c3_Err != nil {
@@ -189,7 +189,7 @@ func cdMobilNav(s CDShell) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, "<!-- TEMA — CoinDesk \"Theme\" satırı: sağda iki seçenekli\n\t\t\t\t\t     segment (zemin surface-subtle, seçili olan beyaz +\n\t\t\t\t\t     gölge). data-tema-deger csp-delegated.js'te işlenir;\n\t\t\t\t\t     JS yoksa düğmeler yalnız görünür, tema sistemi\n\t\t\t\t\t     yine prefers-color-scheme ile çalışır. --><div class=\"cd-mobil__tema\"><span class=\"cd-mobil__etiket\" id=\"cd-mobil-tema\">Tema</span><div class=\"cd-mobil__tema-sec\" role=\"radiogroup\" aria-labelledby=\"cd-mobil-tema\"><button class=\"cd-mobil__tema-dugme\" type=\"button\" role=\"radio\" data-tema-deger=\"light\" aria-checked=\"false\" aria-label=\"Açık mod\"><svg viewBox=\"0 0 24 24\" width=\"16\" height=\"16\" aria-hidden=\"true\" focusable=\"false\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"12\" cy=\"12\" r=\"5\"></circle> <line x1=\"12\" y1=\"1\" x2=\"12\" y2=\"3\"></line> <line x1=\"12\" y1=\"21\" x2=\"12\" y2=\"23\"></line> <line x1=\"4.22\" y1=\"4.22\" x2=\"5.64\" y2=\"5.64\"></line> <line x1=\"18.36\" y1=\"18.36\" x2=\"19.78\" y2=\"19.78\"></line> <line x1=\"1\" y1=\"12\" x2=\"3\" y2=\"12\"></line> <line x1=\"21\" y1=\"12\" x2=\"23\" y2=\"12\"></line> <line x1=\"4.22\" y1=\"19.78\" x2=\"5.64\" y2=\"18.36\"></line> <line x1=\"18.36\" y1=\"5.64\" x2=\"19.78\" y2=\"4.22\"></line></svg></button> <button class=\"cd-mobil__tema-dugme\" type=\"button\" role=\"radio\" data-tema-deger=\"dark\" aria-checked=\"false\" aria-label=\"Koyu mod\"><svg viewBox=\"0 0 24 24\" width=\"16\" height=\"16\" aria-hidden=\"true\" focusable=\"false\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z\"></path></svg></button></div></div><!-- OTURUM — CoinDesk sırası: önce çerçeveli kayıt düğmesi,\n\t\t\t\t\t     sonra marka sarısı oturum düğmesi; ikisi de tam\n\t\t\t\t\t     genişlik 48 px. (Etiket metinleri yoruma YAZILMAZ:\n\t\t\t\t\t     templ yorumları HTML çıktısına düşüyor ve oturum\n\t\t\t\t\t     kapısı testleri çıplak metin arıyor.) --><div class=\"cd-mobil__oturum\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, "<div class=\"cd-mobil__tema\"><span class=\"cd-mobil__etiket\" id=\"cd-mobil-tema\">Tema</span><div class=\"cd-mobil__tema-sec\" role=\"radiogroup\" aria-labelledby=\"cd-mobil-tema\"><button class=\"cd-mobil__tema-dugme\" type=\"button\" role=\"radio\" data-tema-deger=\"light\" aria-checked=\"false\" aria-label=\"Açık mod\"><svg viewBox=\"0 0 24 24\" width=\"16\" height=\"16\" aria-hidden=\"true\" focusable=\"false\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"12\" cy=\"12\" r=\"5\"></circle> <line x1=\"12\" y1=\"1\" x2=\"12\" y2=\"3\"></line> <line x1=\"12\" y1=\"21\" x2=\"12\" y2=\"23\"></line> <line x1=\"4.22\" y1=\"4.22\" x2=\"5.64\" y2=\"5.64\"></line> <line x1=\"18.36\" y1=\"18.36\" x2=\"19.78\" y2=\"19.78\"></line> <line x1=\"1\" y1=\"12\" x2=\"3\" y2=\"12\"></line> <line x1=\"21\" y1=\"12\" x2=\"23\" y2=\"12\"></line> <line x1=\"4.22\" y1=\"19.78\" x2=\"5.64\" y2=\"18.36\"></line> <line x1=\"18.36\" y1=\"5.64\" x2=\"19.78\" y2=\"4.22\"></line></svg></button> <button class=\"cd-mobil__tema-dugme\" type=\"button\" role=\"radio\" data-tema-deger=\"dark\" aria-checked=\"false\" aria-label=\"Koyu mod\"><svg viewBox=\"0 0 24 24\" width=\"16\" height=\"16\" aria-hidden=\"true\" focusable=\"false\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z\"></path></svg></button></div></div><div class=\"cd-mobil__oturum\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -201,7 +201,7 @@ func cdMobilNav(s CDShell) templ.Component {
 			var templ_7745c5c3_Var7 templ.SafeURL
 			templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinURLErrs(s.UserHref)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_mobil.templ`, Line: 128, Col: 73}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/cd_mobil.templ`, Line: 128, Col: 73}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 			if templ_7745c5c3_Err != nil {
@@ -220,7 +220,7 @@ func cdMobilNav(s CDShell) templ.Component {
 				var templ_7745c5c3_Var8 templ.SafeURL
 				templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinURLErrs(s.SignupHref)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_mobil.templ`, Line: 134, Col: 52}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/cd_mobil.templ`, Line: 134, Col: 52}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 				if templ_7745c5c3_Err != nil {
@@ -243,7 +243,7 @@ func cdMobilNav(s CDShell) templ.Component {
 				var templ_7745c5c3_Var9 templ.SafeURL
 				templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinURLErrs(s.LoginHref)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_mobil.templ`, Line: 137, Col: 75}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/cd_mobil.templ`, Line: 137, Col: 75}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 				if templ_7745c5c3_Err != nil {
@@ -296,7 +296,7 @@ func cdMobilGrup(s CDShell, g CDMenuGroup) templ.Component {
 			var templ_7745c5c3_Var11 templ.SafeURL
 			templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL(s.LangBase + g.Href))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_mobil.templ`, Line: 154, Col: 69}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/cd_mobil.templ`, Line: 154, Col: 69}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 			if templ_7745c5c3_Err != nil {
@@ -309,7 +309,7 @@ func cdMobilGrup(s CDShell, g CDMenuGroup) templ.Component {
 			var templ_7745c5c3_Var12 string
 			templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(g.Label)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_mobil.templ`, Line: 154, Col: 81}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/cd_mobil.templ`, Line: 154, Col: 81}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 			if templ_7745c5c3_Err != nil {
@@ -327,7 +327,7 @@ func cdMobilGrup(s CDShell, g CDMenuGroup) templ.Component {
 			var templ_7745c5c3_Var13 string
 			templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(g.Label)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_mobil.templ`, Line: 161, Col: 47}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/cd_mobil.templ`, Line: 161, Col: 47}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 			if templ_7745c5c3_Err != nil {
@@ -347,7 +347,7 @@ func cdMobilGrup(s CDShell, g CDMenuGroup) templ.Component {
 						var templ_7745c5c3_Var14 string
 						templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(it.Label)
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_mobil.templ`, Line: 174, Col: 51}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/cd_mobil.templ`, Line: 174, Col: 51}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
 						if templ_7745c5c3_Err != nil {
@@ -365,7 +365,7 @@ func cdMobilGrup(s CDShell, g CDMenuGroup) templ.Component {
 						var templ_7745c5c3_Var15 templ.SafeURL
 						templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL(s.LangBase + it.Href))
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_mobil.templ`, Line: 177, Col: 54}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/cd_mobil.templ`, Line: 177, Col: 54}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
 						if templ_7745c5c3_Err != nil {
@@ -378,7 +378,7 @@ func cdMobilGrup(s CDShell, g CDMenuGroup) templ.Component {
 						var templ_7745c5c3_Var16 string
 						templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(it.Label)
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_mobil.templ`, Line: 177, Col: 67}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/cd_mobil.templ`, Line: 177, Col: 67}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
 						if templ_7745c5c3_Err != nil {

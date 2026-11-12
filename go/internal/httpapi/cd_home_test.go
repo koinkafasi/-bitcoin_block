@@ -7,16 +7,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// CoinDesk ana sayfası davranış kapısı.
-//
-// NEDEN: tasarım şablonu veri yokken ÇÖKMEMELİ ve boş modül BASMAMALI.
-// Boş kutu göstermek tasarımı bozuk gösterir (spec §6 notu).
-
-// TestTrGoreliZaman: CoinDesk "17 minutes ago" deseninin Türkçesi.
-//
-// Sınır değerleri test edilir: 59 sn → "az önce", 59 dk → dakika,
-// 60 dk → saat, 24 saat → gün. Sınırda "0 dakika önce" gibi saçma çıktı
-// olmamalı (58 dk 59 sn → 58 dakika).
 func TestTrGoreliZaman(t *testing.T) {
 	simdi := time.Date(2026, 11, 5, 12, 0, 0, 0, time.UTC)
 	vakalar := []struct {

@@ -7,42 +7,12 @@ import (
 	"sync"
 )
 
-// gzipPool büyük sayfalarda sürekli yeni writer üretmemek için kullanılır.
-//
-// SEVİYE ölçülerek seçildi (9 Kasım 2026, 77 KB gerçek ana sayfa gövdesi,
-// 60 tur, aynı makine):
-//
-//	seviye  çıktı    oran     cpu/istek
-//	1       18 KB    23,8%    0,37 ms   (BestSpeed)
-//	3       17 KB    22,7%    0,43 ms
-//	4       17 KB    22,2%    0,45 ms
-//	6       16 KB    21,2%    0,63 ms   (Go varsayılanı — ESKİ davranış)
-//	9       15 KB    20,6%    1,16 ms
-//
-// Varsayılan 6'dan 4'e inmek sıkıştırma CPU'sunu **%29** düşürüyor,
-// karşılığında gövde 16 → 17 KB (+%6) oluyor. Profil (yük altında, 10 sn):
-// flate CPU'nun %31'i — istek yolundaki EN PAHALI tek kalem. 1 KB'lik
-// aktarım farkı, Cloudflare'ın önbelleği ve kenar sıkıştırması düşünülünce
-// önemsiz; buna karşılık haber patlamalarında (ör. borsa çöküşü, bot
-// taraması) önbellek ıskalayan her istek bu CPU'yu ödüyor.
-//
-// `GZIP_LEVEL` ile değiştirilebilir (1–9). Geçersiz değer varsayılana döner.
 const varsayilanGzipSeviyesi = 4
 
 var (
 	gzipSeviyeMu sync.RWMutex
 	gzipSeviye   = varsayilanGzipSeviyesi
 
-	// SEVİYE BAŞINA AYRI HAVUZ.
-	//
-	// `gzip.Writer.Reset()` seviyeyi DEĞİŞTİRMEZ: seviye, writer
-	// oluşturulurken sabitlenir. Tek havuz kullanılsaydı seviye
-	// değiştiğinde havuzdan eski seviyeli bir writer alınır ve istenen
-	// seviye sessizce yok sayılırdı. Bunu bir test yakaladı
-	// (gzip_seviye_test.go: seviye 9 ile 1 aynı boyutu üretiyordu).
-	//
-	// Havuzlar 1..9 indekslidir (0 ve negatifler kullanılmaz), böylece
-	// indeks = seviye olur ve ayrı bir eşleme gerekmez.
 	gzipPools [gzip.BestCompression + 1]sync.Pool
 )
 
@@ -61,9 +31,6 @@ func init() {
 	}
 }
 
-// SetGzipLevel sıkıştırma seviyesini ayarlar (1–9). Aralık dışı yok sayılır.
-// -1 (DefaultCompression) ve -2 (HuffmanOnly) bilinçli olarak kabul edilmez:
-// yapılandırma değeri olarak 1–9 beklenir.
 func SetGzipLevel(n int) {
 	if n < gzip.BestSpeed || n > gzip.BestCompression {
 		return
@@ -127,11 +94,6 @@ func compressibleContentType(ct string) bool {
 	ct = strings.ToLower(strings.TrimSpace(strings.SplitN(ct, ";", 2)[0]))
 	switch ct {
 	case "text/html", "text/css", "text/plain", "text/xml", "text/event-stream",
-		// JavaScript'in İKİ kayıtlı türü var. Go 1.20'den beri `.js`
-		// dosyaları `text/javascript` olarak sunuluyor (WHATWG).
-		// Faz 172'ye kadar yalnız `application/javascript` listede olduğu
-		// için panelin HİÇBİR JS dosyası sıkıştırılmıyordu: editor.js
-		// 771 KB ham gidiyordu, gzip'li hâli 240 KB.
 		"text/javascript", "application/javascript", "application/x-javascript",
 		"application/json", "application/xml",
 		"application/manifest+json", "image/svg+xml":

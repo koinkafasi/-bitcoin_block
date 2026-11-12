@@ -8,12 +8,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// Faz 190 — İçerik düzenlemede "Dil / Çeviriler" paneli.
-//
-// Sahadaki sorun: panel 24 dilin 23'ünü "+" bağlantısı olarak gösteriyordu ve
-// hepsi GET ile açılıyordu; rota yalnız POST olduğu için her tıklama 404
-// dönüyordu (canlı ölçüm: 23 "+", 0 düzenlenebilir bağlantı).
-
 // TestCeviriRotaVeTiklama: şablon hx-post kullanmalı (GET 404 veriyordu).
 func TestCeviriRotaVeTiklama(t *testing.T) {
 	tpl := okuDosya(t, "../webui/templkit/icerikform.templ")
@@ -37,11 +31,6 @@ func TestCeviriRotaVeTiklama(t *testing.T) {
 	h := okuDosya(t, "admin_handlers.go")
 	assert.Contains(t, h, `if r.FormValue("ai") == "1"`)
 
-	// Faz 190b: AI çağrısı artık İSTEK İÇİNDE YAPILMAZ.
-	//
-	// Ölçüm: 28 paragraflık haberin çevirisi 160 sn sürdü; istek HTTP 000
-	// ile düştü (sunucu WriteTimeout 60 sn, Cloudflare ~100 sn). Düğme
-	// yalnız kuyruğa yazar, işi arka plan işçisi (ceviri.istekIsci) yapar.
 	assert.Contains(t, h, "ceviri.IstekEkle(")
 	assert.NotContains(t, h, "ceviri.UretTekrar(",
 		"AI çağrısı istek yolunda olmamalı (proxy zaman aşımı)")
@@ -52,10 +41,6 @@ func TestCeviriRotaVeTiklama(t *testing.T) {
 	assert.Contains(t, src, `{"GET", "/admin/icerikler/{id}/cevir/{lang}/durum", s.handleTranslationStatus}`)
 }
 
-// TestCeviriHTMXYonlendirme: HTMX isteğinde 302 izlenmez; HX-Redirect gerekir.
-//
-// Aksi hâlde AI çeviri bitse bile sayfa hiç değişmiyordu; kullanıcı
-// "çalışmıyor" der.
 func TestCeviriHTMXYonlendirme(t *testing.T) {
 	h := okuDosya(t, "admin_handlers.go")
 
@@ -76,14 +61,11 @@ func TestCeviriHTMXYonlendirme(t *testing.T) {
 	aiGovde := h[j : j+aiSon]
 	assert.Contains(t, aiGovde, "s.ceviriYonlendir(")
 
-	// Faz 190: "Boş taslak" düğmesi de HTMX ile gönderiyor. flashRedirect
-	// 302 döndürür; htmx takip edip tam editör sayfasını düğmenin içine
-	// yazardı. Çeviri oluşturma yolunda flash yönlendirmesi HTMX-güvenli
-	// yardımcıdan geçmeli.
 	i = strings.Index(h, "func (s *Server) handleCreateTranslation(")
 	assert.Greater(t, i, 0, "handleCreateTranslation bulunamadı")
-	son = strings.Index(h[i:], "\n// ceviriYonlendir")
+	son = strings.Index(h[i+10:], "\nfunc ")
 	require.Greater(t, son, 0)
+	son += 10
 	olustur := h[i : i+son]
 	assert.NotContains(t, olustur, "s.flashRedirect(",
 		"çeviri oluşturmada düz 302 kullanılmamalı (htmx takip eder)")
@@ -98,10 +80,6 @@ func TestCeviriHTMXYonlendirme(t *testing.T) {
 	assert.Contains(t, kGovde, "s.ceviriYonlendir(w, r, url)")
 }
 
-// TestCeviriKaynakKimligi: kaynak içerikte KaynakID kendi kimliği olmalı.
-//
-// Bu alan boş kalınca panel 24 satır gösterdi ama AI düğmesi hiç basılmadı
-// (canlı ölçüm: 24 satır, 0 düğme).
 func TestCeviriKaynakKimligi(t *testing.T) {
 	v := okuDosya(t, "icerikform_view.go")
 	assert.Contains(t, v, "v.KaynakID = strconv.FormatInt(f.Content.ID, 10)",
@@ -147,10 +125,6 @@ func TestCeviriCSS(t *testing.T) {
 	assert.Contains(t, css, "çevriliyor…")
 }
 
-// TestCeviriKuyrugu — Faz 190b: uzun AI işi istek yolundan çıkarıldı.
-//
-// Kök neden: senkron istek. Ölçüm: 28 paragraflık haber 160 sn sürdü,
-// istek HTTP 000 ile düştü. Sunucu WriteTimeout 60 sn, Cloudflare ~100 sn.
 func TestCeviriKuyrugu(t *testing.T) {
 	src := okuDosya(t, "../ceviri/istek.go")
 
@@ -172,11 +146,6 @@ func TestCeviriKuyrugu(t *testing.T) {
 	assert.Contains(t, src, "kayitHataMetni(err)")
 	assert.Contains(t, src, "foreign key")
 
-	// Editör istekleri AYRI döngüde işlenir.
-	//
-	// Ölçüm: aynı döngüde işlendiğinde otomatik tur bitene kadar istek
-	// "bekliyor" kaldı (2 dk sonra hâlâ bekliyordu). Editörün işi otomatik
-	// turun süresine bağlı olamaz.
 	run := okuDosya(t, "../ceviri/ceviri.go")
 	i := strings.Index(run, "func Run(")
 	require.Greater(t, i, 0)
@@ -261,16 +230,6 @@ func TestCeviriIstekTablosu(t *testing.T) {
 	assert.NotContains(t, down, "DELETE FROM contents")
 }
 
-// TestOtokayitKirliGuard — Faz 191.
-//
-// Belirti: izole ortamda hiçbir alana dokunulmadan "değişiklik var" yazıyor
-// ve gezinmede beforeunload diyaloğu çıkıyordu. Ölçüm (canlı, gerçek veri):
-// durum "Henüz otomatik kaydedilmedi" — yani üretimde parmak izi tutuyor.
-// Hata, ortak çalışma odasının sayfaya basılandan FARKLI belge döndürdüğü
-// durumda ortaya çıkıyor (izolede oda üretim verisini taşıyordu).
-//
-// Kural artık: KULLANICI dokunmadan kirli sayılmaz. Bu test kuralın
-// koddan sessizce kaybolmasını engeller; kaybolursa hata geri gelir.
 func TestOtokayitKirliGuard(t *testing.T) {
 	tpl := okuDosya(t, "../webui/templkit/icerikform.templ")
 
@@ -293,14 +252,6 @@ func TestOtokayitKirliGuard(t *testing.T) {
 	assert.Contains(t, govde, "if (p === sonParmak) return")
 }
 
-// TestGelismisPanelTureGore — Faz 192.
-//
-// Kullanıcı bildirimi: "içerik düzenle'de Gelişmiş alandaki türe özel alanlar
-// açılmıyor, bir şey göremedim".
-//
-// Ölçüm (üretim, HTTP): `haber` (13.486 içeriğin 13.470'i) için panel gövdesi
-// 424 bayt ve tek alan GİZLİ → görünen alan 0. `video` için 1 görünen alan.
-// Yani panel boş bir kutu olarak açılıyordu.
 func TestGelismisPanelTureGore(t *testing.T) {
 	// Tür→alan kararı tek yerde.
 	v := okuDosya(t, "icerikform_view.go")

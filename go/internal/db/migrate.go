@@ -28,11 +28,6 @@ type Migration struct {
 // Dosya adı kalıbı: {sürüm}_{ad}.{up|down}.sql
 func LoadMigrations() ([]Migration, error) { return loadFrom(migrations.FS) }
 
-// loadFrom aynı işi verilen dosya sisteminde yapar.
-//
-// Ayrıldı çünkü hata yolları (bozuk ad, bilinmeyen yön, okunamayan dosya)
-// embed edilmiş gerçek dizinle tetiklenemez. `fstest.MapFS` ile her kural
-// ayrı ayrı sınanabiliyor (Faz 208).
 func loadFrom(fsys fs.FS) ([]Migration, error) {
 	entries, err := fs.ReadDir(fsys, ".")
 	if err != nil {

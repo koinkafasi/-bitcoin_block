@@ -9,10 +9,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// Dil önekli üye adresleri gerçek kullanıcı akışıdır: şablonlar
-// `{{.LangBase}}/giris` gibi hedefler üretir ve bu yollar /tr/... olabilir.
-// Önek soyulmazsa giriş/kayıt/ödeme formları 404/405 döner.
-
 func TestLocaleAliasPath(t *testing.T) {
 	supported := func(l string) bool { return l == "tr" || l == "en" }
 	cases := []struct {

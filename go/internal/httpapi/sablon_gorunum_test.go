@@ -11,16 +11,6 @@ import (
 	"theblock/site/internal/webui"
 )
 
-// Şablon görünümü (blueprint) bölgeleri.
-//
-// Kullanıcı: "yaptım fakat şablon görünümde görünmüyor ve 🧱 Sayfa Şablonu
-// alanında yazı içeriği ve sağ sütun üstünde bir alan daha olmalı oraya
-// ekleyebilmem için".
-//
-// Kök neden: buildBP() yazı sayfası dalında zoneBox('ust') ÇAĞRILMIYORDU.
-// Bölge sunucuda tanımlıydı ve sayfada basılıyordu, ama panelin şablon
-// görünümünde kutusu olmadığı için blok oraya bırakılamıyor/görünmüyordu.
-
 func builderHTML(t *testing.T) string {
 	t.Helper()
 	b, err := fs.ReadFile(webui.FS, "templates/site_builder.html")

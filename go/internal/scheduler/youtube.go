@@ -1,9 +1,3 @@
-// YouTube senkronizasyon işi.
-//
-// NEDEN SCHEDULER: sayfalar YouTube'u HER istekte çağırmaz (gecikme + dış
-// servis bağımlılığı). Kanal RSS'i + /streams sayfası periyodik çekilir,
-// `youtube_icerik` tablosuna yazılır (migrations/0122). Yeni video düştüğünde
-// bir sonraki turda tablo güncellenir, sayfa kendiliğinden tazelenir.
 package scheduler
 
 import (
@@ -16,11 +10,6 @@ import (
 	"theblock/site/internal/youtube"
 )
 
-// RunYoutube ayar aralığına göre YouTube kanalını çeker.
-//
-// `every` yalnız YOKLAMA sıklığıdır; gerçek çekme aralığı panelden
-// (settings/youtube.dakika) gelir. Böylece panelden "5 dakika" seçilince
-// süreç yeniden başlatılmadan uygulanır.
 func RunYoutube(ctx context.Context, pool *pgxpool.Pool, logger *slog.Logger, every time.Duration) {
 	if every <= 0 {
 		every = time.Minute

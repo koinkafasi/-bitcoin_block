@@ -14,9 +14,6 @@ type PageText struct {
 	Value   string
 }
 
-// ListPageTexts bir sayfanın tüm dil ve anahtarlardaki override'larını
-// döndürür. Çözümleme (dil → taban sayfa → kod varsayılanı) çağıran tarafta
-// yapılır; böylece tek sorguyla bütün aday değerler elde edilir.
 func ListPageTexts(ctx context.Context, pool DB, siteID int64, pageKey string) ([]PageText, error) {
 	rows, err := pool.Query(ctx, `
 		SELECT page_key, text_key, locale, value FROM page_texts

@@ -9,15 +9,6 @@ import (
 	"theblock/site/internal/repo"
 )
 
-// Toplu AI ile yeniden yazım paneli (Faz 204).
-//
-// Ekranın işi: yayındaki ince içerikleri göstermek, pilot başlatmak ve
-// üretilen öneriyi eski metinle YAN YANA karşılaştırıp onaylamak/reddetmek.
-//
-// Kural: bu ekran yayına hiçbir şey yazmaz. "Onayla" düğmesi
-// `repo.YenidenYazimOnayla` üzerinden sürüm korumalı tek bir yazma yapar ve
-// eski hâli `content_revisions`a arşivler.
-
 // yenidenView panelin tek satırıdır (diff için hazır metin).
 type yenidenView struct {
 	ID            int64

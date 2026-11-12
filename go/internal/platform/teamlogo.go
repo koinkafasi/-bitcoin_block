@@ -10,19 +10,6 @@ import (
 	"time"
 )
 
-// Takım logoları — kendi altyapımızda barındırma.
-//
-// Sorun: puan durumu ve fikstür logoları dış CDN'lerden hotlink ediliyordu
-// (a.espncdn.com, r2.thesportsdb.com). Dış CDN'e bağımlılık üç şekilde
-// kırılıyor: CDN bizim IP'mizi engelleyebiliyor (ölçüm 28 Ekim 2026: 18/18
-// logo bağlantı sıfırlandı), takım kimliği değişince URL 404 oluyor, ve
-// tarayıcıda referer/CORS politikası değişebiliyor. Sonuç sayfada kırık
-// resim simgesi.
-//
-// Çözüm: logo bir kez indirilir, `storage/logos/teams/` altına yazılır ve
-// sonsuza kadar kendi alan adımızdan servis edilir. Dış CDN yalnızca
-// "tedarikçi" olur, çalışma zamanı bağımlılığı olmaktan çıkar.
-
 // TeamLogoDir takım logolarının disk köküdür.
 func TeamLogoDir() string {
 	return filepath.Join(storageDir, "logos", "teams")

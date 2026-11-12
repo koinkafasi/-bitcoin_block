@@ -15,19 +15,6 @@ import (
 // takıldığını bildirir.
 var ErrGuvenliOlmayanAdres = errors.New("güvenli olmayan kaynak adresi")
 
-// SafeFetchClient, KULLANICI KAYNAKLI adresler için SSRF korumalı HTTP
-// istemcisi döndürür.
-//
-// Neden: içerik kaynakları ("kaynak ekle") ve HTML/RSS akış adresleri
-// editör/yazar tarafından girilir ve sunucu bunları arka planda çeker.
-// Korumasız bir istemciyle bu adresler http://127.0.0.1:8070/admin,
-// http://169.254.169.254/ (bulut metadata) veya iç PostgreSQL'e
-// yönlendirilebilirdi — yani sunucunun kendi iç ağına istek attırılabilirdi.
-//
-// Kural: yalnız http/https, yalnız 80/443, yalnız genel (public) IP'ler,
-// en fazla 3 yönlendirme ve her yönlendirmede yeniden doğrulama.
-// DNS çözümlemesi ile bağlantı arasındaki TOCTOU farkını kapatmak için
-// çözümlenen IP doğrudan çevrilir (ikinci bir çözümleme yapılmaz).
 func SafeFetchClient(timeout time.Duration) *http.Client {
 	dialer := &net.Dialer{Timeout: 5 * time.Second, KeepAlive: 20 * time.Second}
 	transport := &http.Transport{
@@ -102,9 +89,6 @@ func OzelAdresMi(ip net.IP) bool {
 	return false
 }
 
-// ValidateOutboundURL kullanıcı kaynaklı bir adresi SSRF açısından doğrular.
-// Kaydetme anında çağrılabilir (erken geri bildirim) ve istemcinin
-// yönlendirme denetiminde yeniden kullanılır.
 func ValidateOutboundURL(u *url.URL) error {
 	if u == nil {
 		return fmt.Errorf("%w: boş adres", ErrGuvenliOlmayanAdres)
@@ -129,9 +113,6 @@ func ValidateOutboundURL(u *url.URL) error {
 	return nil
 }
 
-// DogrulaVeCek kullanıcı kaynaklı adresi doğrulayıp güvenli istemciyle çeker.
-// DogrulaVeCek SSRF korumalı GET. UA dışarıdan verilebilir (kaynak görsel
-// çekiminde tanıtıcı UA gerekir; bazı CDN'ler varsayılanı engelliyor).
 func DogrulaVeCek(ctx context.Context, rawURL string, timeout time.Duration) (*http.Response, error) {
 	return DogrulaVeCekUA(ctx, rawURL, timeout, "TheBlockBot/1.0 (+https://theblock.com.tr)")
 }

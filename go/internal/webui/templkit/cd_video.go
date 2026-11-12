@@ -2,27 +2,17 @@ package templkit
 
 import "strconv"
 
-// YouTube video sayfalarının veri tipleri (/videos, /videos/shorts,
-// /canli-yayin, /video/<id>).
-//
-// Tasarım referansı: coindesk.com/videos ve coindesk.com/videos/shorts
-// (ölçüldü 7 Kasım 2026). Ölçüler cd.css'te `.cd-vband*`, `.cd-vkart*`,
-// `.cd-vplayer*` bloklarında; burada yalnız yapı ve sınıf adları var.
-
 // CDVideoHero sayfa üstündeki büyük oynatıcı.
 type CDVideoHero struct {
-	VideoID string
-	Baslik  string
-	Spot    string
-	Image   string
-	Zaman   string
-	Sure    string
-	Etiket  string
-	Href    string
-	Canli   bool
-	// SonrakiID/SonrakiBaslik oynatıcının bitiş ekranında "sıradaki video"
-	// olarak gösterilir (5 sn geri sayımlı geçiş). Boşsa yalnız "tekrar
-	// oynat" çıkar.
+	VideoID       string
+	Baslik        string
+	Spot          string
+	Image         string
+	Zaman         string
+	Sure          string
+	Etiket        string
+	Href          string
+	Canli         bool
 	SonrakiID     string
 	SonrakiBaslik string
 	// ImageYedek poster yüklenemezse denenecek ZİNCİR (virgüllü).
@@ -39,14 +29,11 @@ type CDVideoSatir struct {
 	Srcset string
 	// ImageYedek yüksek çözünürlüklü kapak 404 verirse düşülecek adres.
 	ImageYedek string
-	// Dikey içerik (short). Satır görseli 142x80 (16:9) yerine 80x142
-	// (9:16) olur — aksi hâlde 1080x1920 kapak 16:9 kutuya kırpılıyor ve
-	// yalnız ortasındaki ince şerit görünüyordu (ölçüldü, ekran görüntüsü).
-	Dikey bool
-	Sure  string
-	Zaman string
-	Href  string
-	Canli bool
+	Dikey      bool
+	Sure       string
+	Zaman      string
+	Href       string
+	Canli      bool
 }
 
 // CDVideoKutu ızgara kartı.
@@ -90,10 +77,7 @@ type CDVideoPage struct {
 	Yayinlar  []CDVideoKutu
 	BosMetin  string
 	// Dikey hero (shorts): oynatıcı 9:16 açılır.
-	Dikey bool
-	// CanliSekme canlı sayfasında oynatıcı YouTube'un canlı akışına bağlanır
-	// (video kimliği yerine kanal kimliği) — böylece yayın değişse de doğru
-	// akış açılır.
+	Dikey   bool
 	KanalID string
 	// CanliYayinAktif şu an gerçekten canlı yayın var mı.
 	CanliYayinAktif bool

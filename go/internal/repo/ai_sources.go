@@ -67,10 +67,6 @@ func ScanAndClusterAISources(ctx context.Context, pool *pgxpool.Pool, siteID int
 	return items, clusters, merged, nil
 }
 
-// chooseRSSSection, RSS/Atom kategori etiketlerinden kanonik kategoriye
-// giden bölümü seçer. Feed kategorisiyle eşleşen etiket önceliklidir; yoksa
-// Gündem dışındaki ilk eşleşme kullanılır. Yalnızca genel "Gündem" etiketi
-// varsa ve feed daha özel bir kategorideyse feed kategorisi korunur.
 func chooseRSSSection(categories []string, catBySlug map[string]int64, feedCatID *int64) string {
 	gundemID := catBySlug["gundem"]
 	gundemRaw := ""
@@ -116,9 +112,6 @@ func chooseRSSSection(categories []string, catBySlug map[string]int64, feedCatID
 
 var aiSourceMu sync.Mutex
 
-// ScanAISources aktif RSS, HTML, sitemap ve Bing News kaynaklarını eşzamanlı
-// tarar ve yeni öğeleri staging tablosuna yazar. Ağ gecikmesi tek bir kaynağın
-// tüm taramayı kilitlemesini engellemek için sınırlı sayıda işçi kullanılır.
 func ScanAISources(ctx context.Context, pool *pgxpool.Pool, siteID int64) (int, error) {
 	if siteID <= 0 {
 		siteID = 1
@@ -511,13 +504,6 @@ func CreateDraftFromCluster(ctx context.Context, pool *pgxpool.Pool, siteID, clu
 	if err != nil {
 		return 0, err
 	}
-	// Gövdeye YALNIZ küme özeti yazılır.
-	//
-	// Neden kaynak listesi yazılmıyor: eski kod "Kaynaklar:" başlığı ve
-	// "• <kaynak>: <başlık>" satırlarını gövdeye ekliyordu (ölçüm: 38 blok).
-	// AI sonucu editör tarafından UYGULANMADAN yayınlanırsa bu iskelet canlıya
-	// çıkıyor — okuyucu haber yerine başlık listesi görür. Kaynaklar zaten
-	// `content_sources` tablosunda tutuluyor ve editörde ayrı gösteriliyor.
 	var blocks []map[string]any
 	if ozet := strings.TrimSpace(c.Summary); ozet != "" {
 		for _, p := range paragraflaraBol(ozet) {

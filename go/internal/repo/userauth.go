@@ -134,12 +134,6 @@ func VerifyEmail(ctx context.Context, pool *pgxpool.Pool, token string) (int64, 
 	return id, nil
 }
 
-// LoginRateLimited hız sınırı: son 10 dakikada AYNI IP'den aynı hesaba yapılan
-// başarısız giriş sayısı.
-//
-// Eskiden sayaç yalnız e-posta bazlıydı: saldırgan bilinen bir e-postaya 5
-// hatalı deneme yaparak hesabı 10 dakika kilitliyordu (hesap hedefli DoS).
-// ip boşsa eski davranışa düşülür (migration öncesi çağrılar/araçlar için).
 func LoginRateLimited(ctx context.Context, pool *pgxpool.Pool, email, ip string, max int) (bool, error) {
 	var n int
 	var err error

@@ -372,7 +372,7 @@
   $("#me-bg-media").addEventListener("change", function (e) {
     var id = e.target.value;
     mutate(function () { state.background.media_id = id ? Number.parseInt(id, 10) : null; });
-    if (id) fetch("/admin/manset-editor/media/" + id).then(function (r) { return r.json(); }).then(function (j) { if (j.ok) { var im = new Image(); im.onload = function () { bgImg = im; schedule(); }; im.src = j.url; } }).catch(function () { /* medya yuklenemedi: onceki zemin kalir */ });
+    if (id) fetch("/admin/manset-editor/media/" + id).then(function (r) { return r.json(); }).then(function (j) { if (j.ok) { var im = new Image(); im.onload = function () { bgImg = im; schedule(); }; im.src = j.url; } }).catch(function () {  });
     else { bgImg = null; schedule(); }
   });
   document.querySelectorAll("[data-preset]").forEach(function (b) {

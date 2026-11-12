@@ -12,12 +12,6 @@ import (
 	"theblock/site/internal/platform"
 )
 
-// Logoların kendi altyapımıza alınması (E-2'nin logo tarafı).
-//
-// Sorun: puan durumu ve fikstür logoları dış CDN'e hotlink ediliyordu; ölçümde
-// 18/18 ESPN logosu sunucudan bağlantı sıfırlanmasıyla döndü. Artık logo bir
-// kez indirilip kendi alan adımızdan servis ediliyor.
-
 func TestTeamLogoKeyESPNKimligi(t *testing.T) {
 	// ESPN URL'lerinde sayısal kimlik var; anahtar ondan üretilir. Böylece
 	// takım adı Türkçeye çevrilse de anahtar sabit kalır.
@@ -66,9 +60,6 @@ func TestTeamLogoURL(t *testing.T) {
 	assert.Equal(t, "", TeamLogoURL(""))
 }
 
-// testPNG indirmede kullanılan örnek gövdedir. Gerçek logolar 15–290 KB;
-// indirici 512 bayttan küçük gövdeyi "boş/202" sayıp yeniden denediği için
-// fikstür de bu boyutun üstünde olmalı.
 func testPNG() []byte {
 	return append([]byte{0x89, 'P', 'N', 'G', 0x0D, 0x0A, 0x1A, 0x0A}, make([]byte, 600)...)
 }

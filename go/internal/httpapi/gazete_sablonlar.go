@@ -180,9 +180,6 @@ func (s *Server) handleGazeteSayiSablonaKaydet(w http.ResponseWriter, r *http.Re
 // adminBilesenlerShell galeri sayfalarının ortak kabuğu (admin_bilesenler) için
 // kullanılır; ayrı bir define'a gerek yoktur.
 
-// handleGazeteSablonTohum POST /admin/gazete/sablonlar/tohum
-// Projeyle gelen hazir peyzajlari yukler. Isme gore esler: var olani
-// degistirmez, yalniz eksikleri ekler.
 func (s *Server) handleGazeteSablonTohum(w http.ResponseWriter, r *http.Request) {
 	if !s.requireGazete(w, r, gazeteActionEdit) {
 		return

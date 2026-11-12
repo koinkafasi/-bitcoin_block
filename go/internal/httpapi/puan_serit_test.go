@@ -12,11 +12,6 @@ import (
 	"theblock/site/internal/webui"
 )
 
-// Puan Durumu Şeridi — Habertürk spor yazısı düzeni.
-//
-// Referans: <h2>PUAN DURUMU</h2> + yatay çizgi, ardından yatay kaydırmalı
-// takım kartları: logo · kısa kod (GS) · puan (üstte ince çizgi).
-
 func TestTakimKisaReferansKodlari(t *testing.T) {
 	cases := map[string]string{
 		"Galatasaray":              "GS",

@@ -75,9 +75,6 @@ func tick(ctx context.Context, pool *pgxpool.Pool, logger *slog.Logger) error {
 		live.Default.Publish(ev)
 	}
 	if len(promoted) > 0 {
-		// Faz 34: otomatik yayınlananlar Tantivy arama indeksine de girmeli
-		// (eskiden yalnız form kaydetme indeksliyordu; zamanlanmış içerik
-		// hiç indekslenmiyordu).
 		indexPublished(ctx, pool, logger, promoted)
 		// Faz 38: zamanlanmış yayınlar IndexNow'a da bildirilir (auto_index
 		// ayarı açıkken) — Google News/haber sitemap tazeliği için.
@@ -146,24 +143,12 @@ func tick(ctx context.Context, pool *pgxpool.Pool, logger *slog.Logger) error {
 		logger.Info("ödeme mutabakatı: bekleyen ödemeler kapatıldı", "adet", n)
 	}
 
-	// 8) Servis önbelleğinde okunmayan/yetim satırları temizle.
-	//
-	// Kök neden (B6 artığı): anahtar şeması değiştiğinde eski satırlar
-	// (ör. puan|ana, fikstur|meta) tabloda kalıyor ve hiçbir sorgu onları
-	// okumuyor. Önbellek olduğu için silmek veri kaybı değildir; okunan bir
-	// anahtar silinirse ilk istekte yeniden doldurulur.
 	if err := repo.PurgeServiceCache(ctx, pool, 7); err != nil {
 		logger.Warn("servis önbelleği temizlenemedi", "error", err)
 	}
 	return nil
 }
 
-// indexPublished otomatik yayınlanan içerikleri search-svc'ye (Tantivy) ekler.
-//
-// httpapi'deki indexContent ile aynı amaçta; ama scheduler httpapi'ye bağımlı
-// olamaz, bu yüzden en küçük belgeyle yapar. Arama sonucu render edilirken
-// içerik DB'den (ID ile) yeniden çekildiğinden belgede yalnız eşleşme alanları
-// (başlık/özet/gövde/etiket) ve ID kritik — URL/ID zaten dolu tutulur.
 func indexPublished(ctx context.Context, pool *pgxpool.Pool, logger *slog.Logger, ids []int64) {
 	sc := searchsvc.NewClient(os.Getenv("SEARCH_SVC_URL"))
 	if sc == nil {
@@ -241,11 +226,6 @@ func seoSetting(ctx context.Context, pool *pgxpool.Pool, key string) string {
 	return v
 }
 
-// submitIndexNowPromoted zamanlanmış yayınlanan içerik URL'lerini IndexNow'a
-// bildirir (Faz 38). auto_index ayarı kapalıysa hiçbir şey yapmaz — görünürlük
-// panelden açılır/kapanır (httpapi autoIndex ile aynı kural). Scheduler
-// httpapi'ye bağımlı olamayacağı için aynı ayarlardan beslenir, en küçük
-// bildirimi yapar ve sonucu indexing_log'a yazar.
 func submitIndexNowPromoted(ctx context.Context, pool *pgxpool.Pool, logger *slog.Logger, ids []int64) {
 	if seoSetting(ctx, pool, "auto_index") != "1" {
 		return
@@ -280,10 +260,6 @@ func submitIndexNowPromoted(ctx context.Context, pool *pgxpool.Pool, logger *slo
 	if len(urls) == 0 {
 		return
 	}
-	// Dış ağ çağrısını bloğa takmamak için arka planda.
-	// #nosec G118 -- Bilinçli: istek context'i yanıtla birlikte iptal olur;
-	// IndexNow gönderimi yanıttan SONRA tamamlanmalı, bu yüzden bağımsız
-	// context kullanılıyor (kendi zaman aşımı SubmitIndexNow içinde).
 	go func() {
 		bg := context.Background()
 		code, err := platform.SubmitIndexNow(bg, endpoint, host, key, keyLoc, urls)

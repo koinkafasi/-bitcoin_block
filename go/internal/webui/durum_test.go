@@ -10,11 +10,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// Boş durum, iskelet ve yapışkan tablo başlığı (Faz 163–164).
-//
-// Önce: 31 ayrı yerde elle yazılmış boş-durum cümlesi, 16 yerde düz
-// "Yükleniyor…" metni, tablo başlığı kaydırmada kayboluyordu.
-
 func templMetni(t *testing.T, ad string) string {
 	t.Helper()
 	b, err := os.ReadFile(filepath.Join("templkit", ad))
@@ -33,11 +28,6 @@ func TestDurumBilesenleriTanimli(t *testing.T) {
 	assert.Contains(t, s, `aria-busy="true"`)
 }
 
-// Boş durum en az 8 ekranda kullanılmalı (elle yazılmış cümle yerine).
-//
-// Faz 174: tablo içi boş durumlar @TabloBos / @TabloBosMetin üzerinden
-// gidiyor; onlar da BosDurum'u çağırıyor. Sayım ikisini birlikte yapmalı,
-// yoksa "bileşen yaygınlaştı" ölçütü yanlış kırmızı verir.
 func TestBosDurumYaygin(t *testing.T) {
 	dizin, err := filepath.Glob(filepath.Join("templkit", "*.templ"))
 	require.NoError(t, err)

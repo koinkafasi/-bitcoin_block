@@ -13,23 +13,8 @@ import (
 	"theblock/site/internal/auth"
 )
 
-// sayfaOnbellekTTL tam sayfa önbelleğinin TAZE ömrü.
-//
-// HTTP yanıtı zaten `max-age=60, s-maxage=300` ile önbellekleniyor; 10 sn'lik
-// süreç içi katman kullanıcıya görünen tazeliği değiştirmez.
 var sayfaOnbellekTTL = 10 * time.Second
 
-// sayfaOnbellekBayatPencere taze ömür geçtikten sonra BAYAT gövdenin ne kadar
-// daha sunulacağı.
-//
-// NEDEN: ilk sürüm TTL dolunca önbelleği tamamen ıskalıyordu; 50 eşzamanlı
-// istek TTL anına denk gelirse hepsi aynı anda render + gzip yapıyordu
-// (ölçüm: p-max 700 ms sıçrama). Artık süresi dolmuş gövde HEMEN sunulur,
-// yenisini tek bir arka plan goroutine'i üretir — kullanıcı beklemez.
-//
-// 30 sn, HTTP `max-age=60`'ın altında: tarayıcı/kenar önbelleği zaten daha
-// eskisini sunmuyor. Haber içeriği dakikalar mertebesinde değiştiği için
-// görünür bir bayatlama yaratmıyor.
 var sayfaOnbellekBayatPencere = 30 * time.Second
 
 // sayfaOnbellekMaxGovde önbelleğe alınacak en büyük gövde.
@@ -41,11 +26,6 @@ const sayfaOnbellekMaxGiris = 400
 // sayfaOnbellekArkaPlanButce arka plan yenilemesinin üst süresi.
 const sayfaOnbellekArkaPlanButce = 20 * time.Second
 
-// sayfaOnbellekBasliklari replays'te kopyalanacak başlıklar.
-//
-// BEYAZ LİSTE bilinçli: `X-Request-Id` istek başına üretilir ve önbellekten
-// gelirse tüm istekler aynı kimliği taşır (log/tracing bozulur). `Set-Cookie`
-// asla kopyalanmaz — önbelleklenmiş bir oturum çerezi herkese dağıtılırdı.
 var sayfaOnbellekBasliklari = []string{
 	"Content-Type",
 	"Content-Encoding",
@@ -63,26 +43,13 @@ var sayfaOnbellekBasliklari = []string{
 
 // sayfaGirdi tek bir önbellek kaydı.
 type sayfaGirdi struct {
-	at     time.Time
-	durum  int
-	baslik map[string]string
-	govde  []byte
-	// okunmaID: gövdeyi üreten handler'ın bildirdiği içerik kimliği (makale
-	// sayfaları). İsabette okunma sayacı bununla artırılır; aksi hâlde
-	// önbellek, okunma sayılarını tümden durdururdu.
+	at       time.Time
+	durum    int
+	baslik   map[string]string
+	govde    []byte
 	okunmaID int64
 }
 
-// sayfaOnbellek tam sayfa (render + CSP + gzip) önbelleği.
-//
-// NEDEN EN DIŞTA: gzip ara katmanı da dışarıda kalırsa isabet eden istek
-// render, şablon, CSP hash üretimi VE sıkıştırmayı birlikte atlar. Profil
-// (9 Kasım 2026) gzip'i CPU'nun %31'i, şablon+CSP'yi ~%15'i olarak
-// gösteriyordu; ikisi birlikte istek başına CPU'nun yarısı.
-//
-// YALNIZ ANONİM: gövdeye oturum durumu (kullanıcı adı, okunmamış bildirim),
-// A/B varyantı gibi kişisel alanlar giriyor. `tb_session` çerezi olan istek
-// hiç önbelleğe alınmaz ve önbellekten okunmaz.
 type sayfaOnbellek struct {
 	mu    sync.Mutex
 	m     map[[32]byte]*sayfaGirdi
@@ -101,11 +68,6 @@ func newSayfaOnbellek() *sayfaOnbellek {
 	}
 }
 
-// sayfaAnahtar istekten önbellek anahtarı üretir.
-//
-// Host DAHİL: çok siteli kurulumda aynı yol farklı siteye hizmet eder.
-// Kodlama DAHİL: gzip'li ve ham gövde ayrı saklanır, aksi hâlde gzip
-// kabul etmeyen istemciye sıkıştırılmış bayt gitmiş olurdu.
 func sayfaAnahtar(host, yol, sorgu string, gzipIster bool) [32]byte {
 	k := host + "\x00" + yol + "\x00" + sorgu + "\x00"
 	if gzipIster {
@@ -116,12 +78,6 @@ func sayfaAnahtar(host, yol, sorgu string, gzipIster bool) [32]byte {
 	return sha256.Sum256([]byte(k))
 }
 
-// al kaydı ve tazelik durumunu döndürür.
-//
-//	varMi=false        → hiç yok (senkron üretim gerekir)
-//	varMi=true, taze   → hemen sun
-//	varMi=true, !taze  → bayat sun + arka planda yenile
-//	                        (bayat pencere aşıldıysa yine senkron üretim)
 func (p *sayfaOnbellek) al(anahtar [32]byte) (g *sayfaGirdi, taze bool, varMi bool) {
 	p.mu.Lock()
 	defer p.mu.Unlock()
@@ -153,10 +109,6 @@ func (p *sayfaOnbellek) koy(anahtar [32]byte, g *sayfaGirdi) {
 	p.m[anahtar] = g
 }
 
-// kilit tek-uçuş (singleflight) kilidi.
-//
-// lider=true → çağıran üretimi yapar ve birak() çağırmalıdır.
-// lider=false → bekle kanalı kapanana kadar beklenir.
 func (p *sayfaOnbellek) kilit(anahtar [32]byte) (lider bool, bekle chan struct{}) {
 	p.mu.Lock()
 	defer p.mu.Unlock()
@@ -177,10 +129,6 @@ func (p *sayfaOnbellek) birak(anahtar [32]byte) {
 	}
 }
 
-// SetSayfaOnbellekSuresi TTL ve bayat pencereyi ayarlar (ölçüm/işletim için).
-//
-// Sıfır veya negatif değer yok sayılır: yanlış yapılandırma önbelleği
-// kapatmasın (bayat pencere TTL'den kısa olamaz, kırpılır).
 func SetSayfaOnbellekSuresi(ttl, bayat time.Duration) {
 	if ttl <= 0 {
 		return
@@ -210,10 +158,6 @@ func sayfaOnbellegeUygun(r *http.Request) bool {
 	if r.Header.Get("Authorization") != "" {
 		return false
 	}
-	// HTMX/parça istekleri AYNI yolda FARKLI gövde döndürebilir (ör. panel
-	// parçaları). Bugün herkese açık CD yollarında HX-Request'e bakan bir
-	// dal yok, ama bu bir sözleşme değil: bir gün eklenirse önbellek tam
-	// sayfayı parça sanıp dağıtırdı. Kapıyı şimdi kapatmak bedava.
 	if r.Header.Get("HX-Request") != "" {
 		return false
 	}
@@ -225,24 +169,12 @@ func sayfaOnbellegeUygun(r *http.Request) bool {
 	return sayfaYoluOnbelleklenir(r.URL.Path)
 }
 
-// sayfaOnbellekHaricOnekler makale desenine benzese bile ASLA önbelleğe
-// girmeyecek kökler.
-//
-// NEDEN: makale deseni (4-5 segment + tarih) geniş; `/api/2026/11/05/x`
-// gibi bir yol da desene uyuyor. Bugün `/api` mux'ta ayrı çözülüyor (yani
-// pratikte buraya düşmez), ama rota değişirse kişisel/veri yolu önbelleğe
-// girerdi. Bu liste bir sözleşme değil, emniyet kemeri.
 var sayfaOnbellekHaricOnekler = []string{
 	"/api/", "/admin", "/media/", "/kg/", "/canli/", "/giris", "/hesabim",
 	"/static/", "/internal/", "/webhooks/", "/amp/", "/sitemap", "/indexnow/",
 	"/sw.js", "/robots.txt", "/ads.txt",
 }
 
-// sayfaYoluOnbelleklenir yalnız HERKESE AÇIK CD sayfaları.
-//
-// Yönetim paneli (/admin), API (/api), medya (/media, /kg), canlı akış
-// (/canli), oturum yolları (/giris, /hesabim…) ve sitemap/robots gibi
-// üretilen dosyalar bilinçli olarak DIŞARIDA: kişisel ya da ucuz.
 func sayfaYoluOnbelleklenir(yol string) bool {
 	for _, o := range sayfaOnbellekHaricOnekler {
 		if strings.HasPrefix(yol, o) {
@@ -270,18 +202,9 @@ func sayfaYoluOnbelleklenir(yol string) bool {
 		_, ok := cdSectionMeta[tekSegment]
 		return ok
 	}
-	// MAKALE sayfaları — bir haber sitesinde trafiğin çoğu burası.
-	// Ölçüm (9 Kasım 2026): makale 20-100 ms (cache dışı) → önbellekte
-	// 0,4 ms. Tarih deseni zorunlu: rastgele çok segmentli yollar
-	// (panel, hesap, API) buraya takılmasın.
 	return makaleYoluMu(yol)
 }
 
-// makaleYoluMu /{bolum}/{YYYY}/{MM}/{DD}/{slug} ve /{YYYY}/{MM}/{DD}/{slug}
-// desenlerini tanır.
-//
-// SON SEGMENT bilinçli olarak denetlenmez (slug serbest metin); kapsamı
-// daraltan şey tarih üçlüsü. Desen dışı her yol önbellek DIŞINDA kalır.
 func makaleYoluMu(yol string) bool {
 	s := strings.Split(strings.Trim(yol, "/"), "/")
 	switch len(s) {
@@ -367,10 +290,6 @@ func (w *yazmayanWriter) Header() http.Header {
 func (w *yazmayanWriter) Write(p []byte) (int, error) { return len(p), nil }
 func (w *yazmayanWriter) WriteHeader(int)             {}
 
-// withSayfaOnbellek herkese açık CD sayfalarını önbelleğe alır.
-//
-// Yerleşim: zincirin EN DIŞINDA (gzip ve HTMLCSP'nin üstünde). Böylece
-// isabet eden istek render + CSP + gzip işlerinin TAMAMINI atlar.
 func (s *Server) withSayfaOnbellek(next http.Handler) http.Handler {
 	if s.sayfaCache == nil {
 		return next
@@ -381,15 +300,6 @@ func (s *Server) withSayfaOnbellek(next http.Handler) http.Handler {
 			return
 		}
 
-		// BLOKLU IP KONTROLÜ — ÖNCE, İSABETTEN ÖNCE.
-		//
-		// Bu ara katman `withIPBlock`'un DIŞINDA duruyor (gzip'in de dışında
-		// olması gerekiyor: saklanan gövde zaten sıkıştırılmış, tekrar
-		// sıkıştırmak bozar). Dışarıda olmanın bedeli şu olurdu: bloklanmış
-		// bir IP önbellekteki sayfayı 200 ile alırdı — bot tuzağının
-		// (410 + otomatik blok) koruması delinirdi. Bu yüzden kontrol
-		// burada TEKRAR ediliyor. `isIPBlocked` 30 sn'lik bellek önbelleği
-		// kullanır: mutex + map bakışı, DB'ye gitmez.
 		if ip := clientIP(r); ip != "" && s.isIPBlocked(r.Context(), ip) {
 			w.Header().Set("X-Robots-Tag", "noindex")
 			w.Header().Set("Cache-Control", "no-store")
@@ -407,9 +317,6 @@ func (s *Server) withSayfaOnbellek(next http.Handler) http.Handler {
 			} else {
 				cache.bayat.Add(1)
 			}
-			// OKUNMA İSABETTE DE SAYILIR. Makale gövdesi önbellekten gelince
-			// handler çalışmaz; sayaç burada artırılmazsa popülerlik verisi
-			// (counters_hit/hit_daily) önbellek açıkken neredeyse dururdu.
 			if g.okunmaID != 0 {
 				okunmaTamponu.ekle(g.okunmaID)
 			}
@@ -422,9 +329,6 @@ func (s *Server) withSayfaOnbellek(next http.Handler) http.Handler {
 			return
 		}
 
-		// HİÇ YOK: tek lider üretir, eşzamanlı diğer istekler bekler.
-		// Beklemeden hepsi render etseydi TTL anında N kat CPU harcanırdı
-		// (ölçüm: 50 eşzamanlıda p-max 700 ms sıçrama).
 		cache.iska.Add(1)
 		lider, bekle := cache.kilit(anahtar)
 		if lider {
@@ -490,11 +394,6 @@ func (s *Server) sayfaSun(w http.ResponseWriter, r *http.Request, g *sayfaGirdi)
 	}
 }
 
-// sayfaArkaPlandaYenile bayat kaydı tek bir arka plan goroutine'inde tazeler.
-//
-// Bağlam: istek bağlamı istek bitince İPTAL OLUR. Arka plan işi ona
-// bağlanırsa yarıda kalır; bu yüzden WithoutCancel kullanılır ve ayrı bir
-// bütçe verilir.
 func (s *Server) sayfaArkaPlandaYenile(next http.Handler, r *http.Request, anahtar [32]byte, okunmaID int64) {
 	cache := s.sayfaCache
 	lider, _ := cache.kilit(anahtar)
@@ -523,10 +422,6 @@ func (s *Server) sayfaArkaPlandaYenile(next http.Handler, r *http.Request, anaht
 	}()
 }
 
-// sayfaGirdiCikar yakalanan yanıttan önbellek kaydı üretir.
-//
-// SAKLANMAZ: 200 dışı, taşmış, boş, çerez yazan veya yönlendiren yanıtlar.
-// Çerez yazan bir yanıt saklanırsa oturum çerezi herkese dağılırdı.
 func sayfaGirdiCikar(cw *cacheWriter) (*sayfaGirdi, bool) {
 	if cw.durum != http.StatusOK || cw.tasma || len(cw.govde) == 0 {
 		return nil, false
@@ -551,12 +446,6 @@ func sayfaGirdiCikar(cw *cacheWriter) (*sayfaGirdi, bool) {
 	}, true
 }
 
-// temizle tüm sayfa önbelleğini boşaltır.
-//
-// NEDEN: marka/logo gibi HER SAYFADA görünen bir ayar değiştiğinde
-// yalnız kabuk (cdShellCache) değil, TAM SAYFA önbelleği de eskir.
-// Ölçüm (11 Kasım 2026): logo kaydedildikten sonra ana sayfa 4 saniye
-// boyunca eski logoyu gösterdi — sayfa önbelleği TTL'i 10 sn.
 func (p *sayfaOnbellek) temizle() {
 	p.mu.Lock()
 	defer p.mu.Unlock()

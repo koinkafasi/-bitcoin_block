@@ -6,12 +6,6 @@ import (
 	"theblock/site/internal/quality"
 )
 
-// Faz 193b — dedupe'un kaçırdığı gerçek vakalar.
-//
-// ÖLÇÜM (üretim, son 7 gün): 194 grup / 416 fazla satır, en çok 6 kopya.
-// Aynı manşetin başlık benzerliği 1.00, spot benzerliği 0.51–0.77. Birleşik
-// metin eşiğinin (0.60) altında kaldığı için dedupe "farklı haber" diyordu.
-
 func TestAyniBaslikFarkliSpotMukerrer(t *testing.T) {
 	// Gerçek üretim verisinden (55583 / 55587 / 55591).
 	baslik := "Borsa İstanbul Genel Müdürü Korkmaz Enes Ergun gözaltına alındı"

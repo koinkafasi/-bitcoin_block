@@ -9,19 +9,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// Tema bazlı token bağı — SON katman (Faz 183 eki).
-//
-// NEDEN: admin-shadcn.css'te `--text` tema bazlı bağlandıktan sonra bile
-// yanlış çalışıyordu. Sebep yükleme sırası: **admin-pano.css daha sonra**
-// yükleniyor ve sabit `--text: var(--sh-fg)` yazarak bağı eziyordu.
-//
-//	canlı ölçüm: --text-dark #858585 üretiliyor, ama --text yine #f2f1ee
-//
-// Aynı hata `--accent-text` için de vardı: AdminCSS tek bir `--accent-text`
-// yazdığı için koyu temada da açık temanın tonu geçerliydi (2.9 kontrast).
-// Artık AdminCSS yalnız `-acik`/`-dark` adlarını yazar; seçimi tema blokları
-// yapar.
-
 func cssDosya(t *testing.T, ad string) string {
 	t.Helper()
 	b, err := os.ReadFile(filepath.Join("static", ad))

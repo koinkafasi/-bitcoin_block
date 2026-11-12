@@ -38,15 +38,6 @@ func BenchmarkResizeToWidthYerel(b *testing.B) {
 	}
 }
 
-// BenchmarkResizeToWidthImageSvc Rust servisi devredeyken ölçer.
-//
-// IMAGE_SVC_URL tanımlı değilse atlanır. Ölçüm (7 Kasım 2026, aynı makine):
-//
-//	yerel Go  : ~109 ms
-//	image-svc : ~45 ms  (yalnız işlem; HTTP turu dahil ~48 ms)
-//
-// Fark kodlayıcıdan: Go'nun image/jpeg'i saf Go, Rust tarafı SIMD'li
-// zune-jpeg kullanıyor.
 func BenchmarkResizeToWidthImageSvc(b *testing.B) {
 	u := os.Getenv("IMAGE_SVC_URL")
 	if u == "" {

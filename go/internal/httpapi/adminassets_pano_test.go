@@ -6,14 +6,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// Pano 2.0 panelin giriş sayfası oldu (/admin). Etkileşim katmanının tamamı
-// pano.js'te: ray katlama, segment kontrolü, grafik balonu, sürüklenebilir
-// yayın şeridi. Betik yüklenmezse sayfa DOĞRU GÖRÜNÜR ama hiçbir şey
-// çalışmaz — sessiz bir kırılma, çünkü konsola hata da düşmez.
-//
-// Bu tam olarak bir kez oldu: giriş sayfası /admin/pano'dan /admin'e
-// taşınınca eşleme güncellenmedi ve ray düğmesi tıklanınca hiçbir şey
-// yapmaz hâle geldi.
 func TestPanoBetigiGirisSayfasindaYukleniyor(t *testing.T) {
 	for _, yol := range []string{"/admin", "/admin/pano"} {
 		require.Containsf(t, adminScriptsFor(yol), "pano.js",

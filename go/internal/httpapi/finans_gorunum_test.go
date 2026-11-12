@@ -14,12 +14,6 @@ import (
 	"theblock/site/internal/webui"
 )
 
-// Finans modüllerinin köşe yarıçapı ve arka plan sözleşmesi.
-//
-// Kullanıcı isteği: modüllerin yuvarlak köşeleri değiştirilebilir olmalı;
-// site geneli köşeli seçildiğinde finans modülleri de düzleşmeli. Arka plan
-// kapatılabilmeli, değiştirilebilmeli ve saydam yapılabilmeli.
-
 func TestBuildStyleKoseYuvarlakligi(t *testing.T) {
 	// Açıkça 0: tamamen köşeli. Yerel değişkenler iç kartlara da geçer.
 	b := homeBlock{StRadiusSet: true, StRadius: 0}

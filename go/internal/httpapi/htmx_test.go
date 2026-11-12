@@ -36,9 +36,6 @@ func TestIsHTMX(t *testing.T) {
 	assert.False(t, IsHTMX(r))
 }
 
-// Partial'lar dahil tüm şablon ağacının parse edilebildiğini doğrular.
-// templateFuncs, NewServer'da eklenen mediaURL/asset/urlAbs/catIcon
-// fonksiyonlarını içermez; parse için yalnızca isimlerinin var olması yeterli.
 func TestAdminTemplatesParse(t *testing.T) {
 	funcs := templateFuncs()
 	for _, name := range []string{"mediaURL", "mediaThumbURL", "mediaVariantURL", "mediaSrcset", "asset", "urlAbs", "catIcon"} {
@@ -48,10 +45,6 @@ func TestAdminTemplatesParse(t *testing.T) {
 	require.NoError(t, err)
 }
 
-// TestWriteHTMXTriggerASCIISafe, HX-Trigger başlığının Türkçe karakter ve
-// emoji içeren JSON'u bozmadan (ASCII kaçışlarla) taşıdığını doğrular.
-// Başlıklar bayt düzeyinde ISO-8859-1 gibi çözüldüğünden ham UTF-8
-// gönderilirse tarayıcıda "Türkçe" → "TÃ¼rkÃ§e" olur.
 func TestWriteHTMXTriggerASCIISafe(t *testing.T) {
 	const want = "Türkçe şğüöçİı — \"alıntı\"\nyeni satır 🚀"
 

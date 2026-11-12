@@ -48,6 +48,8 @@ type CDHead struct {
 	// makalede tek blok basıyor; Google iki ayrı bloğu da kabul ediyor ve
 	// kırıntı yolu SERP'te yolu gösteriyor.
 	BreadcrumbJSONLD string
+	// FAQJSONLD üçüncü blok: gövdeden çıkarılmış FAQPage.
+	FAQJSONLD string
 	// LCPGorsel varsa <link rel="preload" as="image"> basılır.
 	//
 	// NEDEN: Lighthouse mobil profilinde LCP fazı TTFB + "load delay" +
@@ -111,18 +113,18 @@ templ cdHead(h CDHead) {
 	<meta name="viewport" content="width=device-width, initial-scale=1"/>
 	<title>{ h.Title }</title>
 	<meta name="description" content={ h.Desc }/>
-	<!-- CoinDesk robot yönergesi: zengin önizleme izinleri AÇIK
-	     (max-image-preview:large). Eksikken Google Haber kartları küçük
-	     görselle çıkıyordu. noindex sayfalarında bunun yerine robots
-	     satırı basılır — ikisi birlikte çelişkili sinyal olurdu. -->
+		// CoinDesk robot yönergesi: zengin önizleme izinleri AÇIK
+	// (max-image-preview:large). Eksikken Google Haber kartları küçük
+	// görselle çıkıyordu. noindex sayfalarında bunun yerine robots
+	// satırı basılır — ikisi birlikte çelişkili sinyal olurdu.
 	if h.NoIndex {
 		<meta name="robots" content="noindex,follow"/>
 	} else {
 		<meta name="googlebot" content="index, follow, max-video-preview:-1, max-image-preview:large, max-snippet:-1"/>
 	}
-	<!-- CoinDesk'in sayfa sınıflandırma seti (ölçüldü: tüm şablonlarda
-	     var). Reklam/analitik hedeflemesinin yanında `page_url` kanonik
-	     adresin ikinci beyanıdır. -->
+		// CoinDesk'in sayfa sınıflandırma seti (ölçüldü: tüm şablonlarda
+	// var). Reklam/analitik hedeflemesinin yanında `page_url` kanonik
+	// adresin ikinci beyanıdır.
 	<meta name="page_url" content={ h.Canonical }/>
 	<meta name="media_type" content="html"/>
 	if h.PageCategory != "" {
@@ -133,9 +135,9 @@ templ cdHead(h CDHead) {
 	}
 	<meta name="content_language" content={ cdDil(h.Locale) }/>
 	<link rel="canonical" href={ h.Canonical }/>
-	<!-- LCP görselini MÜMKÜN OLAN EN ERKEN anda başlat. `imagesrcset` ve
-	     `imagesizes`, <img> ile BİREBİR aynı olmalı; farklı olursa tarayıcı
-	     iki ayrı aday sayar ve aynı görsel iki kez indirilir. -->
+		// LCP görselini MÜMKÜN OLAN EN ERKEN anda başlat. `imagesrcset` ve
+	// `imagesizes`, <img> ile BİREBİR aynı olmalı; farklı olursa tarayıcı
+	// iki ayrı aday sayar ve aynı görsel iki kez indirilir.
 	if h.LCPGorsel != nil && h.LCPGorsel.Src != "" {
 		if h.LCPGorsel.Srcset != "" {
 			<link rel="preload" as="image" href={ h.LCPGorsel.Src }
@@ -147,7 +149,7 @@ templ cdHead(h CDHead) {
 	<meta name="theme-color" content="#f3f1e9" media="(prefers-color-scheme: light)"/>
 	<meta name="theme-color" content="#0a0b0e" media="(prefers-color-scheme: dark)"/>
 
-	<!-- hreflang: yalnız GERÇEK çeviriler + x-default -->
+		// hreflang: yalnız GERÇEK çeviriler + x-default
 	for _, dil := range cdDilSirasi {
 		if url, ok := h.Hreflang[dil]; ok && url != "" {
 			<link rel="alternate" hreflang={ dil } href={ url }/>
@@ -167,8 +169,8 @@ templ cdHead(h CDHead) {
 	<meta property="og:url" content={ h.Canonical }/>
 	if h.Image != "" {
 		<meta property="og:image" content={ cdMutlak(h.Image, h.BaseURL) }/>
-		<!-- Ölçü etiketleri: Facebook/X görseli kırpmadan önce boyutu
-		     bilir; eksikse kart düzeni sıçrar (CoinDesk 1200×675 basıyor). -->
+				// Ölçü etiketleri: Facebook/X görseli kırpmadan önce boyutu
+		// bilir; eksikse kart düzeni sıçrar (CoinDesk 1200×675 basıyor).
 		<meta property="og:image:width" content="1200"/>
 		<meta property="og:image:height" content="675"/>
 		if h.ImageAlt != "" {
@@ -187,26 +189,26 @@ templ cdHead(h CDHead) {
 		<meta name="twitter:image:height" content="675"/>
 	}
 
-	<!-- Sayfaya özel makine-okur alanlar (CoinDesk Arc/Parse.ly seti) -->
+		// Sayfaya özel makine-okur alanlar (CoinDesk Arc/Parse.ly seti)
 	for _, m := range h.Metas {
 		if m.Name != "" && m.Content != "" {
 			<meta name={ m.Name } content={ m.Content }/>
 		}
 	}
 
-	<!-- Görsel CDN'lerine erken bağlantı: LCP'yi ~50-100 ms iyileştirir -->
+		// Görsel CDN'lerine erken bağlantı: LCP'yi ~50-100 ms iyileştirir
 	<link rel="preconnect" href="https://cdn.sanity.io" crossorigin="anonymous"/>
 	<link rel="preconnect" href="https://assets.coingecko.com" crossorigin="anonymous"/>
 
-	<!-- İkonlar. favicon.ico birçok tarayıcı ve bot tarafından KÖKTEN
-	     istenir; bağlantı verilmezse her sayfa yüklemesinde 404 üretir
-	     (ölçüldü, 6 Kasım 2026: tek 404 kaynağı buydu). SVG + PNG birlikte
-	     veriliyor: SVG modern tarayıcıda keskin, PNG eski/bot yolunda. -->
+		// İkonlar. favicon.ico birçok tarayıcı ve bot tarafından KÖKTEN
+	// istenir; bağlantı verilmezse her sayfa yüklemesinde 404 üretir
+	// (ölçüldü, 6 Kasım 2026: tek 404 kaynağı buydu). SVG + PNG birlikte
+	// veriliyor: SVG modern tarayıcıda keskin, PNG eski/bot yolunda.
 	if h.FaviconURL != "" {
-		<!-- YÜKLENEN FAVICON. `sizes="any"` SVG'ye özgü: tarayıcıya
-		     "her ölçekte geçerli" der. PNG yolunu da bırakıyoruz çünkü
-		     bazı bot/eski tarayıcılar SVG favicon'u yok sayar ve o
-		     durumda gömülü PNG devreye girer (404 üretmez). -->
+				// YÜKLENEN FAVICON. `sizes="any"` SVG'ye özgü: tarayıcıya
+		// "her ölçekte geçerli" der. PNG yolunu da bırakıyoruz çünkü
+		// bazı bot/eski tarayıcılar SVG favicon'u yok sayar ve o
+		// durumda gömülü PNG devreye girer (404 üretmez).
 		<link rel="icon" href={ h.FaviconURL } sizes="any"/>
 		<link rel="icon" href="/static/icon-192.png" sizes="192x192" type="image/png"/>
 		<link rel="apple-touch-icon" href={ h.FaviconURL }/>
@@ -217,8 +219,8 @@ templ cdHead(h CDHead) {
 		<link rel="apple-touch-icon" href="/static/icon-192.png"/>
 	}
 	<link rel="manifest" href="/manifest.webmanifest"/>
-	<!-- WebSub hub: yayın bildirimi (CoinDesk de `rel="hub"` basıyor).
-	     Google/Bing beslemeyi bu uçtan anında öğrenir. -->
+		// WebSub hub: yayın bildirimi (CoinDesk de `rel="hub"` basıyor).
+	// Google/Bing beslemeyi bu uçtan anında öğrenir.
 	if h.RSSFeed != "" {
 		<link rel="alternate" type="application/rss+xml" title={ h.SiteName + " RSS" } href={ h.RSSFeed }/>
 		<link rel="self" type="application/rss+xml" href={ h.RSSFeed }/>
@@ -226,32 +228,32 @@ templ cdHead(h CDHead) {
 	<link rel="hub" href="https://pubsubhubbub.appspot.com/"/>
 
 	<link rel="stylesheet" href={ "/static/cd.css?v=" + cdVarlik() }/>
-	<!-- Mega menü: cd.css'in üstüne biner, kendi jetonunu tanımlamaz. -->
+		// Mega menü: cd.css'in üstüne biner, kendi jetonunu tanımlamaz.
 	<link rel="stylesheet" href={ "/static/cd-menu.css?v=" + cdVarlik() }/>
 	for _, ek := range h.EkCSS {
 		<link rel="stylesheet" href={ ek + "?v=" + cdVarlik() }/>
 	}
-	<!-- CSP uyumlu delege dinleyiciler (data-* öznitelikleri) -->
+		// CSP uyumlu delege dinleyiciler (data-* öznitelikleri)
 	<script src={ "/static/csp-delegated.js?v=" + cdVarlik() } defer></script>
 	for _, ek := range h.EkJS {
 		<script src={ ek + "?v=" + cdVarlik() } defer></script>
 	}
-	<!-- CANLI PİYASA (11 Kasım 2026): üst şerit HER sayfada olduğu için
-	     betik de her sayfada. Akış yalnız sayfada canlı yüzey varsa açılır
-	     (cd-canli.js ilk satırda kendini kontrol eder). -->
+		// CANLI PİYASA (11 Kasım 2026): üst şerit HER sayfada olduğu için
+	// betik de her sayfada. Akış yalnız sayfada canlı yüzey varsa açılır
+	// (cd-canli.js ilk satırda kendini kontrol eder).
 	<script src={ "/static/cd-canli.js?v=" + cdVarlik() } defer></script>
-	<!-- CANLI PİYASA (11 Kasım 2026): üst şerit HER sayfada olduğu için
-	     betik de her sayfada. Akış yalnız sayfada canlı yüzey varsa açılır
-	     (cd-canli.js ilk satırda kendini kontrol eder). -->
+		// CANLI PİYASA (11 Kasım 2026): üst şerit HER sayfada olduğu için
+	// betik de her sayfada. Akış yalnız sayfada canlı yüzey varsa açılır
+	// (cd-canli.js ilk satırda kendini kontrol eder).
 	<script src={ "/static/cd-canli.js?v=" + cdVarlik() } defer></script>
-	<!-- Tema başlangıcı — BLOKLAYICI ve head'de olmalı: gövde boyanmadan
-	     önce html sınıfı yazılmazsa koyu tema seçen kullanıcı bir kare
-	     beyaz görür (FOUC). CSP satır içi betiğe izin veriyor çünkü
-	     buildCSP her satır içi bloğun sha256'sını başlığa ekliyor;
-	     'unsafe-inline' gerekmiyor.
-	     DİKKAT: bu yorumda bilerek "script" etiketi YAZILMIYOR. CSP
-	     tarayıcısı yorum içindeki etiket metnini atlıyor (htmlYorumAtla)
-	     ama yorumu temiz tutmak ikinci savunma katmanı. -->
+		// Tema başlangıcı — BLOKLAYICI ve head'de olmalı: gövde boyanmadan
+	// önce html sınıfı yazılmazsa koyu tema seçen kullanıcı bir kare
+	// beyaz görür (FOUC). CSP satır içi betiğe izin veriyor çünkü
+	// buildCSP her satır içi bloğun sha256'sını başlığa ekliyor;
+	// 'unsafe-inline' gerekmiyor.
+	// DİKKAT: bu yorumda bilerek "script" etiketi YAZILMIYOR. CSP
+	// tarayıcısı yorum içindeki etiket metnini atlıyor (htmlYorumAtla)
+	// ama yorumu temiz tutmak ikinci savunma katmanı.
 	<script>
 		(function () {
 			try {
@@ -265,10 +267,13 @@ templ cdHead(h CDHead) {
 			}
 		})();
 	</script>
-	<!-- Organization + WebSite: templ script içini ham saydığı için Go'da üretilir -->
+		// Organization + WebSite: templ script içini ham saydığı için Go'da üretilir
 	@templ.Raw(h.JSONLD)
 	if h.BreadcrumbJSONLD != "" {
 		@templ.Raw(h.BreadcrumbJSONLD)
+	}
+	if h.FAQJSONLD != "" {
+		@templ.Raw(h.FAQJSONLD)
 	}
 }
 

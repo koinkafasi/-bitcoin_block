@@ -10,16 +10,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// Manşet editörü tuvali kuralları (Faz 178).
-//
-// NEDEN: sayfada `.me-*` sınıfları için HİÇ kural yoktu. Tarayıcıda ölçüldü:
-//
-//	.me-canvaswrap  position:static   (kaplamanın referansı yok)
-//	#me-grid-overlay height:0, background-image:none
-//	sonuç: "Izgara" düğmesi hiçbir şey çizmiyordu
-//
-// JS `backgroundSize` yazıyor ve `.on` sınıfını çeviriyordu; eksik olan
-// yalnızca CSS'ti. Kural sayfaya özel olduğu için manset.templ içinde.
 func TestMansetTuvalKurallari(t *testing.T) {
 	b, err := os.ReadFile(filepath.Join("templkit", "manset.templ"))
 	require.NoError(t, err)
@@ -43,9 +33,6 @@ func TestMansetTuvalKurallari(t *testing.T) {
 	assert.Contains(t, s, ".me-grid.on", "görünürlük sınıfı olmalı")
 }
 
-// TestMansetIzgaraKimligi: onay kutusu ile kaplama AYNI id'yi taşımamalı.
-// Taşıdığında `getElementById` ilk eşleşmeyi (onay kutusunu) döndürür ve
-// `backgroundSize` kutuya yazılır — kaplama hiç boyanmaz (Faz 177'de bulundu).
 func TestMansetIzgaraKimligi(t *testing.T) {
 	b, err := os.ReadFile(filepath.Join("templkit", "manset.templ"))
 	require.NoError(t, err)

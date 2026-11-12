@@ -11,12 +11,6 @@ import (
 	"theblock/site/internal/webui/templkit"
 )
 
-// handleCDArticle CoinDesk makale sayfası (§7).
-//
-// NEDEN AYRI: mevcut `handleArticle` theblock şablonunu (yorum, tepki,
-// rozet, sesli okuma…) kullanıyor. CoinDesk yapısı sade ve sabit:
-// breadcrumb → kicker → H1 → spot → yazar/tarih → gövde → kaynak atfı →
-// etiketler → ilgili haberler. Çok dilli yönlendirme ortak yardımcıdan.
 func (s *Server) handleCDArticle(w http.ResponseWriter, r *http.Request, lang, slug string, id int64) {
 	ctx := r.Context()
 	c, err := repo.ContentBySlugAndID(ctx, s.pool, slug, id)
@@ -45,12 +39,6 @@ func (s *Server) handleCDArticle(w http.ResponseWriter, r *http.Request, lang, s
 	s.cdMakaleGoster(w, r, c, false)
 }
 
-// handleCDArticleOnizleme /admin/icerikler/{id}/onizleme — editör önizlemesi.
-//
-// NEDEN: önizleme `handleArticle`ı (theblock şablonu) çağırıyordu; editör
-// yeni görseli ekledikten sonra önizlemede ESKİ tasarımı görüyordu
-// (kullanıcı bildirimi, 10 Kasım 2026). Artık canlı sayfayla AYNI şablon.
-// Farklar yalnız: durum kapısı yok (taslak da açılır) ve okunma sayılmaz.
 func (s *Server) handleCDArticleOnizleme(w http.ResponseWriter, r *http.Request) {
 	id := parseID(r.PathValue("id"))
 	c, err := repo.GetContent(r.Context(), s.pool, id)
@@ -65,9 +53,6 @@ func (s *Server) handleCDArticleOnizleme(w http.ResponseWriter, r *http.Request)
 func (s *Server) cdMakaleGoster(w http.ResponseWriter, r *http.Request, c repo.Content, onizleme bool) {
 	ctx := r.Context()
 	if !onizleme {
-		// Okunma sayımı: istek yolunda DB yazımı YOK. Sayı bellekte
-		// biriktirilir, ~2 sn'de bir tek turda yazılır (bkz. okunma.go).
-		// Ölçüm: iki UPSERT makale sayfasında c=8'de 24 rps → 80 rps.
 		s.okunmaKaydet(ctx, c.ID)
 	}
 
@@ -79,11 +64,6 @@ func (s *Server) cdMakaleGoster(w http.ResponseWriter, r *http.Request, c repo.C
 		bolumSlug = *c.CategorySlug
 	}
 
-	// KANONİK ÖNCELİĞİ: içerikte elle atanmış `canonical_url` varsa o kazanır.
-	// Kaynak sitede aynı haber birden çok kez yayınlanmış olabiliyor
-	// (WordPress aktarımında 3 böyle grup var); sendika/kopya içerikte
-	// kanonik adresi asıl yayına çevirmek yinelenen içeriği tek sayfada
-	// toplar. Alan boşsa bugüne kadarki davranış korunur.
 	kanonik := s.kanonikKok(r) + makaleURL(c)
 	if c.CanonicalURL != nil {
 		if elle := strings.TrimSpace(*c.CanonicalURL); elle != "" {
@@ -96,13 +76,10 @@ func (s *Server) cdMakaleGoster(w http.ResponseWriter, r *http.Request, c repo.C
 	}
 
 	v := templkit.CDArticleView{
-		Shell:     s.cdShellCtx(ctx, r, bolumSlug),
-		Title:     cdMakaleBaslik(c),
-		Desc:      cdMakaleAciklama(c),
-		Canonical: kanonik,
-		// Kicker: CoinDesk bölüm adını OLDUĞU GİBİ basıyor ("Markets"),
-		// büyük harfe çevirmiyor (ölçüldü: computed `text-transform: none`).
-		// Eskiden i18n.BuyukHarf uygulanıyordu ve "POLİTİKA" çıkıyordu.
+		Shell:       s.cdShellCtx(ctx, r, bolumSlug),
+		Title:       cdMakaleBaslik(c),
+		Desc:        cdMakaleAciklama(c),
+		Canonical:   kanonik,
 		Kicker:      bolumAd,
 		SectionName: bolumAd,
 		SectionHref: s.bolumHref(bolumSlug),
@@ -122,12 +99,6 @@ func (s *Server) cdMakaleGoster(w http.ResponseWriter, r *http.Request, c repo.C
 		v.PublishedAt = makaleTarih(*c.PublishedAt, c.Locale)
 		v.PublishedISO = c.PublishedAt.UTC().Format(time.RFC3339)
 	}
-	// "Güncellendi" yalnız GERÇEKTEN sonradan düzenlendiyse.
-	//
-	// NEDEN EŞİK: `updated_at` crawler'ın her upsert'ünde tazeleniyor; ham
-	// karşılaştırma 126/126 içeriği "güncellenmiş" gösteriyordu (ölçüldü,
-	// 6 Kasım 2026). Oysa içerik aynıydı. 1 saatlik eşik yalnız gerçek
-	// editoryal düzenlemeyi yakalar; altındaki fark tarama gürültüsüdür.
 	if !c.UpdatedAt.IsZero() && c.PublishedAt != nil &&
 		c.UpdatedAt.Sub(*c.PublishedAt) > time.Hour {
 		v.UpdatedAt = makaleTarih(c.UpdatedAt, c.Locale)
@@ -142,15 +113,6 @@ func (s *Server) cdMakaleGoster(w http.ResponseWriter, r *http.Request, c repo.C
 		v.SummaryIlkSatir = ilkCumle(ozet)
 		v.SummaryMaddeler = cumlelereBol(ozet, 3)
 	}
-	// ÇEVİRİ ETİKETİ (§10.2): yalnız GERÇEK çeviri kayıtlarında.
-	//
-	// "translation_of" dolu = bu içerik başka bir dildeki içerikten
-	// üretilmiş. Etiket okuyucuya sayfanın makine çevirisi olduğunu
-	// SÖYLER — bu bir dürüstlük yükümlülüğü, süs değil.
-	//
-	// Bağlantı ORİJİNAL makaleye gider: okuyucu kaynağı tek tıkla
-	// görebilmeli. Orijinal okunamazsa (silinmiş/taşınmış) etiket yine
-	// basılır ama bağlantısız (kırık bağlantı üretilmez).
 	if c.TranslationOf != nil {
 		v.CeviriEtiketi = v.Dil.Ceviri
 		if kok, err := repo.GetContent(ctx, s.pool, *c.TranslationOf); err == nil {
@@ -230,7 +192,11 @@ func (s *Server) cdMakaleGoster(w http.ResponseWriter, r *http.Request, c repo.C
 		GorselAlt: v.ImageCredit,
 		Gorsel:    s.mutlakGorsel(s.kanonikKok(r), v.Image),
 	}))
+	v.ContentID = itoa64(c.ID)
 	v.BreadcrumbJSONLD = string(makaleBreadcrumbJSONLD(v))
+	// SSS bölümü olan rehberlerde FAQPage. Metin gövdeden çıkarılır;
+	// bölüm yoksa ya da ikiden az soru varsa blok hiç basılmaz.
+	v.FAQJSONLD = string(faqJSONLD(faqCikar(c.Detail)))
 
 	// CoinDesk makale meta seti (Arc/Parse.ly). Yalnız gerçek veri.
 	v.Metas = cdMakaleMetas(s.siteName, makaleMetaGirdi{
@@ -247,9 +213,6 @@ func (s *Server) cdMakaleGoster(w http.ResponseWriter, r *http.Request, c repo.C
 		YayinSaat:  yayinSaatKisa(c),
 		Etiketler:  anahtar,
 	})
-	// hreflang: yalnız GERÇEK çeviriler. /en/... adresleri theblock
-	// şablonuyla servis ediliyor; adres biçimi publicArticleURL'den gelir.
-	// Çeviri yoksa yalnız x-default basılır (cdHead kuralı).
 	diller := map[string]string{"tr": v.Canonical}
 	if trs, err := repo.TranslationsOf(ctx, s.pool, c.TranslationRootID()); err == nil {
 		for _, t := range trs {
@@ -266,7 +229,13 @@ func (s *Server) cdMakaleGoster(w http.ResponseWriter, r *http.Request, c repo.C
 	v.PageCategory = "article_page"
 	v.ContentCategory = bolumSlug
 	v.Locale = "tr"
-	v.ImageAlt = v.ImageCredit
+	v.ImageAlt = s.mediaAlt(ctx, c.CoverMediaID)
+	if v.ImageAlt == "" {
+		v.ImageAlt = s.mediaAlt(ctx, c.MansetMediaID)
+	}
+	if v.ImageAlt == "" {
+		v.ImageAlt = c.Title
+	}
 
 	// Paylaşım bağlantıları: mutlak adres + başlık (URL-encoded).
 	v.ShareURL = v.Canonical
@@ -314,27 +283,11 @@ func cdOkumaDakika(spot, govde string) int {
 	return d
 }
 
-// cdKapakGorsel içeriğin kapak görselini çözer.
-//
-// ÖNCELİK SIRASI — editör kazanır:
-//  1. `cover_media_id` (medya yöneticisinden yüklenen görsel)
-//  2. `image_url` (kaynak siteden gelen görsel)
-//
-// NEDEN TERSİYDİ: önce `image_url` okunuyordu. Editör yeni görsel yükleyip
-// kaydettiğinde canlı sayfa HÂLÂ eski CDN görselini gösteriyordu
-// (kullanıcı bildirimi, 10 Kasım 2026: "yeni resim var ama eski resim
-// imaj yolu görünüyor"). Aynı hata liste kartlarını da vuruyordu:
-// category/section/tag/related kartları da `image_url` kullanıyordu.
-// Diğer çıktılar (RSS, JSON-LD, canlı içerik) zaten `cover_media_id`yi
-// önceleyiyordu — tek tutarsız yer buydu.
 func (s *Server) cdKapakGorsel(c repo.Content) string {
 	// 1) Kapak görseli (medya yöneticisinden yüklenen)
 	if u := s.medyaYoluCoz(c.CoverMediaID); u != "" {
 		return u
 	}
-	// 2) Manşet görseli — editör yalnız "Manşet" alanını doldurmuş olabilir.
-	//    Kapak boşken bu görseli göstermemek, elle yüklenen görseli yok
-	//    saymak olurdu (kullanıcı isteği: "kendi medyamız varsa onu görcek").
 	if u := s.medyaYoluCoz(c.MansetMediaID); u != "" {
 		return u
 	}
@@ -384,15 +337,6 @@ func kirpRune(s string, n int) string {
 	return strings.TrimSpace(string(r[:n])) + "…"
 }
 
-// makaleTarih makale tarihini SAYFA DİLİNE göre biçimler.
-//
-// İKİ KUSUR DÜZELTİLDİ (ölçüldü, 9 Kasım 2026):
-//  1. Biçim `"2 Ocak 2006 15:04 MST"` idi. Go'nun layout'unda ay belirteci
-//     "Jan"/"January"dır; **"Ocak" tanınmaz ve DÜZ METİN olarak basılır**.
-//     Sonuç: hangi ayda yayınlanırsa yayınlansın her Türkçe makale
-//     "6 Ocak 2026" gösteriyordu (Kasım'daki haber Ocak görünüyordu).
-//     Türkçe ay adları bu yüzden ELLE eşlenir.
-//  2. İngilizce çeviri sayfası da aynı Türkçe biçimi kullanıyordu.
 func makaleTarih(t time.Time, locale string) string {
 	if strings.EqualFold(locale, "en") {
 		return t.Format("Jan 2, 2006 3:04 PM MST")

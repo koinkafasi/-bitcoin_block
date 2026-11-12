@@ -11,14 +11,6 @@ import (
 // htmlTagRe kalite ölçümünden önce sökülen etiketler.
 var htmlTagRe = regexp.MustCompile(`<[^>]*>`)
 
-// cleanForQuality metni ölçüme hazırlar:
-//   - HTML varlıkları çözülür (&amp;nbsp; gibi çift kaçışlı olanlar dahil),
-//   - bölünmez boşluk (U+00A0) normal boşluğa çevrilir,
-//   - HTML etiketleri sökülür,
-//   - satır içi fazla boşluklar tekilleştirilir (paragraf araları korunur).
-//
-// Bu adım olmadan "&nbsp;" sözcük olarak sayılıyor ve tekrar/uzunluk
-// metrikleri yanlış çıkıyordu.
 func cleanForQuality(s string) string {
 	if s == "" {
 		return ""

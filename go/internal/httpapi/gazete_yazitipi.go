@@ -6,27 +6,6 @@ import (
 	"sync"
 )
 
-// Baskı yazı tipi — specs/13-gazete-sayfa-duzenleyici.md Faz 6
-//
-// Baskı CSS'i `Georgia, 'Times New Roman', serif` istiyordu. Georgia bu
-// sunucuda kurulu değil; çıktı sessizce DejaVu Serif'e düşüyordu. Yani gazete
-// amaçlanan yazı tipiyle basılmıyordu ve bunu ancak PDF'in font tablosuna
-// bakınca görüyorduk.
-//
-// Çözüm: yedeğe düşmeyi tesadüfe bırakmak yerine, sunucuda GERÇEKTEN kurulu
-// olanlar arasından seçip tek bir aile bildirmek. Hangi ailenin kullanıldığı
-// böylece belirli olur ve değiştiğinde test yakalar.
-
-// gazeteSerifTercihi baskı için tercih sırası.
-//
-// Sıralama gazete gövde metnine göre: küçük puntoda okunaklı ve EKONOMİK
-// olan önce gelir, çünkü sütun genişliği sabit ve satıra giren kelime sayısı
-// doğrudan sayfaya sığan haber sayısını belirler. Times ölçülü aileler
-// (Liberation Serif, Tinos) bu yüzden Noto Serif'in önünde: Noto daha geniş
-// set eder, aynı blokta daha az metin alır.
-//
-// Sonuncular güvenli liman: hemen her Linux'ta bulunur ama gazete dizgisi
-// için ideal değildir.
 var gazeteSerifTercihi = []string{
 	"Source Serif 4",   // ideal ama varsayılan depolarda yok
 	"Liberation Serif", // Times ölçülü, ekonomik, Türkçe tam
@@ -79,9 +58,6 @@ func gazeteBaskiYaziTipi() string {
 	return gazeteYaziTipiBir.ad
 }
 
-// gazeteYaziTipiCSS CSS font-family değeri üretir.
-// Şablon kendi ailesini bildirmişse o öne alınır; arkasına seçilen aile ve
-// genel serif konur, böylece bildirilen aile yoksa da okunur bir çıktı kalır.
 func gazeteYaziTipiCSS(sablonAilesi string) string {
 	var parcalar []string
 	if ad := strings.TrimSpace(sablonAilesi); ad != "" && gazeteAileGuvenli(ad) {
@@ -91,9 +67,6 @@ func gazeteYaziTipiCSS(sablonAilesi string) string {
 	return strings.Join(parcalar, ", ")
 }
 
-// gazeteAileGuvenli şablondan gelen aile adının CSS'e güvenle yazılabildiğini
-// denetler. Aile adı veri; tırnak veya noktalı virgül taşıyorsa kural
-// gövdesinden çıkıp başka bildirim enjekte edebilirdi.
 func gazeteAileGuvenli(ad string) bool {
 	if len(ad) > 64 {
 		return false

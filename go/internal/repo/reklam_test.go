@@ -2,12 +2,6 @@ package repo
 
 import "testing"
 
-// Reklam kapısının SÖZLEŞMESİ.
-//
-// Bu kapıda yanlış pozitif, yanlış negatiften pahalıdır: gerçek haberi
-// düşürür ve kimse farkı görmez (haber hiç görünmez). O yüzden testlerin
-// yarısı "bunu SAKIN işaretleme" diyor.
-
 // Tartışmasız reklam: yol işareti.
 func TestReklamYolIsareti(t *testing.T) {
 	for _, link := range []string{
@@ -93,9 +87,6 @@ func TestGercekHaberIsaretlenmez_KuzeyKore(t *testing.T) {
 	}
 }
 
-// Airdrop / presale / token sale KONUSU olan gerçek haberler.
-//
-// Bunlar tek başına işaretlenmemeli: gerçek kripto haberinin konusu.
 func TestAirdropPresaleHaberiIsaretlenmez(t *testing.T) {
 	for _, b := range []string{
 		"Zcash airdrop tarihi açıklandı",
@@ -132,10 +123,6 @@ func TestOrtaklikHaberiIsaretlenmez(t *testing.T) {
 	}
 }
 
-// Ölçülen dört kaynağın gerçek başlıklarından örnek: hiçbiri işaretlenmemeli.
-//
-// ÖLÇÜM (6 Kasım 2026): 97 öğede kapı 0 kez tetiklendi. Bu test o
-// sonucun özetidir; kapı genişletilirse burada kırılır.
 func TestGercekFeedOrnekleriIsaretlenmez(t *testing.T) {
 	ornekler := []struct{ link, baslik string }{
 		{"https://www.theblock.co/news/defi/2026-11-06-zcashs-nu7-goes-live-435",
@@ -158,10 +145,6 @@ func TestGercekFeedOrnekleriIsaretlenmez(t *testing.T) {
 	}
 }
 
-// Bu kapı bir ALAKA filtresi DEĞİL: kripto dışı ama meşru haber geçer.
-//
-// Gerekçe reklam.go başında: alaka kapısı toplayıcılara uygulanırsa
-// ölçülen %27 meşru haber düşüyor.
 func TestAlakaFiltresiDegil(t *testing.T) {
 	for _, b := range []string{
 		"Oil prices set for 12% weekly drop despite tanker attacks in Gulf",

@@ -63,10 +63,6 @@ func normalizeResult(act Action, m map[string]any, sources []Source) (Result, er
 	case "news", "research_news":
 		r.Title = str(m, "title")
 		spot, intro, body := str(m, "spot"), str(m, "intro"), str(m, "body")
-		// Faz 193c — model artık `paragraphs` dizisi döndürüyor. Gövdeye
-		// boş satır bırakılarak birleştirilir: düzenleyici textarea'ya iki
-		// satır sonuyla eklediği için bloklar gerçekten ayrı paragraf oluyor
-		// (eskiden tek blok kalıyordu; ölçüm: %99,6 tek paragraf).
 		if ps := strSlice(m, "paragraphs"); len(ps) > 0 {
 			body = strings.Join(ps, "\n\n")
 		}
@@ -97,9 +93,6 @@ func normalizeResult(act Action, m map[string]any, sources []Source) (Result, er
 		if ma := str(m, "meta_description"); ma != "" {
 			field("meta_description", seoTemizle(ma))
 		}
-		// ai_summary makale sayfasındaki özet kutusudur (spec §10.2.2).
-		// Cümle sayısı denetimi UYARI üretir, sonucu düşürmez: özet boşsa
-		// kutu hiç basılmaz, yanlış özet basmaktan iyidir.
 		if oz := str(m, "ai_summary"); oz != "" {
 			field("ai_summary", oz)
 			if n := len(sentenceRe.FindAllString(oz, -1)); n < 2 || n > 3 {

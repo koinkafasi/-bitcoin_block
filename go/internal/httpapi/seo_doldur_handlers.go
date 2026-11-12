@@ -10,13 +10,6 @@ import (
 	"theblock/site/internal/webui/templkit"
 )
 
-// handleSeoDoldur AI ile SEO başlığı ve meta açıklamasını üretir ve öneri
-// panelini döndürür (Faz 188).
-//
-// Akış bilinçli olarak iki adımlı: üret → göster → uygula. Panel doğrudan
-// forma yazmaz; kullanıcı metni görüp tek düğmeyle doldurur, kaydetmeyi
-// kendisi yapar. Otomatik haberlerde ise editör olmadığı için aynı üretim
-// arka planda (aieditor.RunSeoDoldurma) DB'ye yazılır.
 func (s *Server) handleSeoDoldur(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	id := parseID(r.PathValue("id"))
@@ -49,16 +42,6 @@ func (s *Server) handleSeoDoldur(w http.ResponseWriter, r *http.Request) {
 		})
 		return
 	}
-
-	// ÖNEMLİ: bu uç nokta DB'ye YAZMAZ.
-	//
-	// İlk sürümde "Yeniden üret" dolu alanların üzerine yazıyordu; oysa
-	// panel bir ÖNİZLEME. Kullanıcı metni görüp "İki alanı doldur" diyor,
-	// kaydetmeyi formun kendi düğmesiyle yapıyor. Önizleme sırasında
-	// yazmak, kullanıcının görmediği bir metni kaydetmek demekti.
-	//
-	// DB'ye yalnızca arka plan işi yazar (aieditor.RunSeoDoldurma) ve
-	// orada da force=false'tur: dolu alan korunur.
 
 	v.Baslik = oneri.Baslik
 	v.Aciklama = oneri.Aciklama

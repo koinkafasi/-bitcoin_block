@@ -1,28 +1,8 @@
-/* admin-ui.js — WiseCP tarzı admin redizayn etkileşimleri (Faz C–E)
- * Breadcrumb, katlanabilir/sabitlenebilir menü, tablo araçları (arama,
- * sıralama, sayfalama), onay modalı, kısayol yardımı. Bağımlılık yok. */
+
 (function () {
   "use strict";
 
-  /* ================= Tercihler: localStorage + sunucu (Faz 173, A-3) ====
-   *
-   * ÖNCEDEN: grup açık/kapalı durumu ve daralmış menü yalnız
-   * localStorage'daydı. Aynı editör başka bir cihazda (ya da gizli sekmede)
-   * her şeyi baştan açmak zorunda kalıyordu.
-   *
-   * ŞİMDİ: sunucu cihazlar arası doğruluk kaynağı, localStorage anlık
-   * önbellek. İkisinin de gerekçesi var:
-   *   - localStorage: ilk boyamada gecikme olmasın (FOUC) ve ağ yoksa da
-   *     panel çalışsın.
-   *   - sunucu: tercih cihazdan bağımsız olsun.
-   *
-   * Sayfa sunucudaki belgeyi <meta name="tb-prefs"> içinde taşır; burada
-   * yalnız önbellekte OLMAYAN ya da sunucudakiyle ÇELİŞEN anahtarlar
-   * yazılır. Çelişkide sunucu kazanır (son yazan zaten sunucuya yazmıştı).
-   *
-   * Yazma: localStorage hemen, sunucuya 400 ms geciktirilmiş (bir formda
-   * art arda grup açıp kapatmak istek yağmuru üretmesin).
-   */
+  
   var SUNUCU_ANAHTARLARI = null;
   try {
     var meta = document.querySelector('meta[name="tb-prefs"]');
@@ -99,7 +79,7 @@
     });
   }
 
-  /* ================= Breadcrumb ================= */
+  
   // İsimli fonksiyon: içerik AJAX ile değişince yeniden çalışması gerekiyor
   // (bkz. tbAdminInit). IIFE olsaydı yalnız ilk yüklemede kurulurdu.
   function tbCrumb() {
@@ -153,7 +133,7 @@
     }
   }
 
-  /* ================= Sidebar: katlanabilir gruplar + pin ================= */
+  
   (function sidebar() {
     var side = document.querySelector('.admin-side');
     if (!side) return;
@@ -263,7 +243,7 @@
     renderPins();
   })();
 
-  /* ================= Tablo araçları (arama / sıralama / sayfalama) ================= */
+  
   // tabloAdi: araç çubuğundaki arama kutusuna ayırt edici ad vermek için.
   // Önce tablo ÖNCESİNDEKİ en yakın başlık (h2/h3 ve <summary>), yoksa sütun
   // başlıklarından türetilmiş kısa bir ad, yoksa "tablo".
@@ -391,7 +371,7 @@
     });
   }
 
-  /* ================= Onay modalı (data-confirm) ================= */
+  
   (function confirmModal() {
     var modal = document.createElement('div');
     modal.className = 'ui-modal';
@@ -464,7 +444,7 @@
     }, true);
   })();
 
-  /* ================= Kısayol yardımı (?) ================= */
+  
   (function help() {
     var modal = document.createElement('div');
     modal.className = 'ui-modal';
@@ -488,9 +468,7 @@
     });
   })();
 
-  /* ================= Çalışma alanı sekme çubuğu (ADMIN-IA Faz A) =================
-   * 11 alanlı sade menünün alt sayfaları; her admin sayfasına otomatik enjekte
-   * edilir. URL'ler değişmez; derin linkler korunur. */
+  
   function tbWsTabs() {
     var WS = [
       { id: 'pano', label: 'Pano', match: [/^\/admin$/], items: [['Pano', '/admin']] },
@@ -522,8 +500,7 @@
         match: [/^\/admin\/ayarlar(\/|$)/, /^\/admin\/siteler(\/|$)/, /^\/admin\/bilesenler(\/|$)/, /^\/admin\/iletisim(\/|$)/],
         items: [['Ayarlar', '/admin/ayarlar'], ['İletişim & Form', '/admin/iletisim'], ['Siteler', '/admin/siteler'], ['Bileşenler', '/admin/bilesenler']] },
     ];
-    /* Yön hesabı için dışarı açık: sekme sırası bilgisi başka modülde
-       (içerik geçişi) gerekiyor. Kopyalamak yerine paylaşılıyor. */
+    
     window.tbWsListe = WS;
     var path = location.pathname.replace(/\/+$/, '') || '/';
     var ws = null;
@@ -602,27 +579,8 @@
     if (window.htmx && window.htmx.process) window.htmx.process(nav);
   }
 
-  /* ================= Kabuk korumalı gezinme (Faz 156) =================
-   *
-   * Ölçüm: her gezinmede 8 CSS + 12 JS (~262 KB) yeniden ayrıştırılıyor,
-   * admin-ui.js (42 KB) baştan koşuyordu (breadcrumb, sekmeler, 4 tablo
-   * aracı, hap). Sunucu 8–29 ms; yavaşlık yeniden YÜKLEMEDEN geliyordu.
-   *
-   * Çözüm: yan menü ve üst çubuk DOM'da kalır, yalnız #adminMain
-   * htmx ile değişir. Böylece:
-   *   - beyaz parlama yok (CSS zaten yüklü),
-   *   - yan menü titremiyor, kaydırma konumu korunuyor,
-   *   - sekme hapı eski yerinden yenisine akıyor (sessionStorage devri),
-   *   - JS yeniden çalışmıyor; yalnız bu fonksiyon gerekenleri tazeliyor.
-   *
-   * Ağır sayfalar (içerik formu, manşet editörü, ses ayarları) boost dışı:
-   * betikleri <head>'de ve boost head'i yenilemez.
-   */
-  /* ========== Yardım merkezi araması (Faz 165) ==========
-   * Maddeler sunucudan `data-ara` ile gelir (küçük harfe çevrilmiş başlık +
-   * gövde). Süzme istemcide: 40+ madde için sorgu atmak gereksiz.
-   * Gizleme `hidden` özniteliğiyle — CSS `display:none` verir.
-   */
+  
+  
   function tbYardim() {
     var kutu = document.getElementById('yardimAra');
     if (!kutu || kutu.__tbKuruldu) return;
@@ -659,11 +617,7 @@
     });
   }
 
-  /* ========== Genel "Yeni" menüsü (Faz 168) ==========
-   * <details> kendi açılıp kapanmasını yönetir; eksik olan iki şey var:
-   * dışarı tıklayınca ve Esc ile kapanmak. Ayrıca aynı anda açık kalmasın
-   * diye başka bir details açılınca kapanır.
-   */
+  
   function tbYeniMenu() {
     var hepsi = document.querySelectorAll('.new-dd');
     if (!hepsi.length) return;
@@ -770,26 +724,7 @@
     }
   });
 
-  /* ========== İçerik geçişi: yatay süzülme ==========================
-   *
-   * Kullanıcı isteği: sekme hapı yana kayarken (İçerikler → Kategoriler…)
-   * ALTTAKİ İÇERİK de aynı yönde "sürüklenerek" gelsin. Önce içerik
-   * yalnız 3 px dikey kayıyordu (pn-gir); hap yatay akarken içerik
-   * yerinde belirdiği için hareket kopuk duruyordu.
-   *
-   * Yön, ÇALIŞMA ALANI SEKME SIRASINDAN gelir (window.tbWsListe):
-   *   • hedef sekme sağdaysa içerik SAĞDAN gelir  (+1)
-   *   • hedef sekme soldaysa içerik SOLDAN gelir  (−1)
-   *   • farklı çalışma alanına geçişte yan menü sırası kullanılır
-   * Yön bilinmiyorsa (derin bağlantı, geri/ileri) +1 varsayılanı.
-   *
-   * Süre/eğri hap ile AYNI: 320 ms, --pn-ease = cubic-bezier(.22,1,.36,1).
-   * Hareketi azalt açıksa hiç animasyon kurulmaz.
-   *
-   * Neden yalnız içerik çocukları: üst çubuk, kırıntı yolu ve sekme
-   * çubuğu yerinde kalmalı — hap onların içinde akıyor. Yalnız
-   * .admin-main'in içerik çocukları süzülür.
-   */
+  
   (function icerikSuzulme() {
     var AZALT = null;
     try { AZALT = window.matchMedia('(prefers-reduced-motion: reduce)'); } catch (e) {}
@@ -800,8 +735,7 @@
     // Durum sekmesi gezinmesinde yön (0 = sekme gezinmesi değil).
     var sekmeYonu = 0;
 
-    /* Çubuktaki sekme sırası. hedefUrl verilmezse SUNUCUNUN işaretlediği
-     * (aria-current / .active / .on) sekmenin sırası döner. */
+    
     function sekmeIndeksi(ray, hedefUrl) {
       var kardes = [].slice.call(ray.children).filter(function (c) {
         return c.matches('a, button') && !c.classList.contains('tb-hap');
@@ -846,13 +780,7 @@
       yon = 1;
       sekmeYonu = 0;
 
-      /* Durum sekmeleri (İçerikler: Yayında/Taslak/…) TÜM paneli takas
-       * ediyor; hepsi AYNI yolu (`/admin/icerikler`) yalnız farklı `?durum=`
-       * ile çağırıyor.
-       *
-       * `detail.elt` burada işe yaramıyor: htmx onu tıklanan <a> değil,
-       * gösterge DIV'i olarak veriyor (ölçüldü: "DIV."). Bu yüzden yön,
-       * İSTEK ADRESİ ile çubuktaki sekme sırası karşılaştırılarak bulunur. */
+      
       var istek = (e.detail && e.detail.requestConfig && e.detail.requestConfig.path) || '';
       if (istek) {
         var ray = document.querySelector('#icerik-panel .tabs');
@@ -876,8 +804,7 @@
       else if (b[0] === a[0] && b[1] < a[1]) yon = -1;
     });
 
-    /* Bir kaptaki içerik çocuklarını yataktan süzülmeye sokar.
-     * `hariç`: yerinde kalacak seçici (sekme çubuğu). */
+    
     function suzul(kok, yonDeger, haric) {
       if (!kok || !kok.animate) return;
       if (AZALT && AZALT.matches) return;
@@ -930,10 +857,7 @@
           !!(tetik.closest && tetik.closest('[hx-target=".admin-main"]'));
       }
 
-      /* Durum sekmesi gezinmesi (İçerikler, reklamlar, SEO…): panelin
-       * kendisi takas edilir. Sekme çubuğu yerinde kalsın, altındaki
-       * içerik hapın gittiği yönden süzülsün — üst menüdeki davranışın
-       * aynısı. */
+      
       if (!kabukGezinmesi && sekmeYonu !== 0) {
         var panel = document.querySelector('#icerik-panel') ||
           (e.detail && e.detail.target && e.detail.target.isConnected ? e.detail.target : null);
@@ -963,14 +887,13 @@
     });
   })();
 
-  /* İlk kurulum: yukarıdaki üç kurucu artık isimli fonksiyon. */
+  
   tbAdminInit();
   tbBaslik();
-  /* Yan menü giriş animasyonu (Pacely mount efekti): yalnız TAM sayfa
-   * yüklemesinde; boost gezinmesinde menü DOM'da kaldığı için oynamaz. */
+  
   if (window.tbSbGiris) window.tbSbGiris();
 
-  /* ================= Tablo yoğunluğu (ADMIN-IA Faz D) ================= */
+  
   (function density() {
     var btn = document.getElementById('tblDenseBtn');
     var apply = function () {
@@ -983,19 +906,8 @@
       apply();
     });
   })();
-  /* ========== Yayına uygunluk puanı: sonuç + gerekçe (spec 11 U3) ==========
-   *
-   * Puan bir AI yargısı değil, üstveri eksiksizliği sezgiselidir
-   * (internal/scoring). Editöre 72 sayısını göstermek işe yaramıyordu —
-   * 34.156 taslağın %88'i 60-79 bandında, yani sayı tek başına ayırt
-   * etmiyor. Bu yüzden sunucu artık kalem kalem dökümü (`sinyaller`)
-   * gönderiyor ve burada "neyi düzeltirsen artar" listesi basılıyor.
-   *
-   * Bu blok app.js'ten buraya taşındı: yalnız panelde kullanılıyor ve
-   * app.js her ziyaretçiye iniyor (bkz. Faz 135, CSS'te aynı ayrım). */
-  /* Sınıf adları düz yazılır, birleştirilmez: 'skor-' + durum biçiminde
-   * üretilen ad hiçbir dosyada geçmediği için ne grep ne de CSS katman
-   * denetimi onu görebiliyor (bkz. internal/webui/admincss_test.go). */
+  
+  
   var DURUM_SINIF = {
     iyi: 'skor-iyi', orta: 'skor-orta', eksik: 'skor-eksik', bilgi: 'skor-bilgi'
   };
@@ -1035,59 +947,14 @@
       list.appendChild(li);
     });
   }
-  /* Satır içi yedek betik (htmx yokken) de aynı çizimi kullansın. */
+  
   window.tbSkorSonuc = tbSkorSonuc;
   document.body.addEventListener('aiScore', function (e) {
     tbSkorSonuc((e && e.detail) || {});
   });
 
-  /* ========== Yan menü rayı (Faz 151) ==========
-   *
-   * Pacely'nin katlanabilir rayı. Tercih pano ile AYNI anahtarda tutulur
-   * (`pn:rail`): pano ile diğer panel sayfaları arasında geçerken menünün
-   * genişliği zıplamasın. Daraltma yalnız görsel — menü öğeleri DOM'da
-   * kalır, erişilebilirlik ve klavye gezinmesi bozulmaz.
-   *
-   * İlk açılışta genişlikten türetilir (1280 px altı dar), sonra kullanıcı
-   * kararı kalıcı olur. */
-  /* ---- Ray geçişi: Pacely birebir (kullanıcı isteği) ----------------
-   *
-   * Kaynak: demo.codeandchill.store/pacely — `qt()` ve `Jt()` fonksiyonları
-   * (paket: assets/index-BlFqaHp6.js). Oradaki GSAP çağrıları birebir
-   * okunup burada Web Animations API'ye çevrildi; GSAP bağımlılığı yok.
-   *
-   * PACELY'DE OLAN (ve burada aynen uygulanan):
-   *
-   *  DARALTMA
-   *    1. yalnız etiketler soldurulur:  opacity 1→0, x 0→-8,
-   *       140 ms, power2.in
-   *    2. menü sağdan perdeyle kapanır: clip-path
-   *       inset(0 0 0 0) → inset(0 (genişlik-88)px 0 0),
-   *       300 ms, power3.in
-   *    3. perde bitince sınıf değişir (width ANLIK 88 px), clip-path ve
-   *       etiket stilleri temizlenir, ana kolon FLIP ile yerine oturur.
-   *
-   *  GENİŞLETME
-   *    1. sınıf hemen değişir (width anlık 252 px)
-   *    2. perde soldan açılır: clip-path
-   *       inset(0 (genişlik-88)px 0 0) → inset(0 0 0 0),
-   *       500 ms, expo.out
-   *    3. etiketler soldan sırayla gelir: opacity 0→1, x -10→0,
-   *       550 ms, power3.out, gecikme 120 ms, kademe 10 ms
-   *
-   *  ANA KOLON (her iki yönde) — "Jt": menü genişliği değişince içerik
-   *  sola/zıplar; bu zıplama ters yönde telafi edilip 600 ms expo.out ile
-   *  0'a getirilir. İçerik yer değiştirmez, "kayar".
-   *
-   * Eğri karşılıkları (GSAP → cubic-bezier):
-   *   power2.in  → cubic-bezier(.55,.085,.68,.53)
-   *   power3.in  → cubic-bezier(.55,.055,.675,.19)
-   *   power3.out → cubic-bezier(.215,.61,.355,1)
-   *   expo.out   → cubic-bezier(.19,1,.22,1)
-   *
-   * "Hareketi azalt" açıksa (Ee() karşılığı) animasyon hiç kurulmaz:
-   * sınıf anında değişir, tercih yine kaydedilir.
-   */
+  
+  
   var RAY_GENISLIK = 88; // Pacely --rail-w ile aynı
   var RAY_EGRI = {
     power2in: 'cubic-bezier(.55,.085,.68,.53)',
@@ -1098,12 +965,7 @@
   var RAY_HAREKET_AZALT = null;
   try { RAY_HAREKET_AZALT = window.matchMedia('(prefers-reduced-motion: reduce)'); } catch (e) {}
 
-  /* Perde animasyonunu oynatır.
-   *
-   * `fill:'both'` şart: GSAP gibi bitiş değerini TUTMALI, aksi hâlde perde
-   * bitmeden stil geri sıçrar (GSAP te "clearProps" o yüzden var).
-   * Bitince animasyon `cancel()` edilir: fill kalırsa eleman DOM'da kalıcı
-   * `clip-path` ile yaşar ve sonraki geçişte eski değer yarışır. */
+  
   function rayPerde(el, den, ye, sure, egri, bitince) {
     if (!el.animate) { bitince && bitince(); return null; }
     var a = el.animate(
@@ -1118,7 +980,7 @@
     return a;
   }
 
-  /* Aynı mantık: biten animasyonu iptal et, satır içi stili temizle. */
+  
   function rayBitir(a, el) {
     a.onfinish = function () {
       el.style.opacity = '';
@@ -1240,18 +1102,7 @@
     });
   })();
 
-  /* ========== İçerik formu: katlanabilir gruplar (spec 11 U2) ==========
-   *
-   * İki davranış ekler, ikisi de olmadan katlama editörü yavaşlatırdı:
-   *
-   * 1) Durum hatırlanır. Hep "Künye"yi açan bir editör her kayıtta yeniden
-   *    açmak zorunda kalmamalı. localStorage okunamazsa (gizli sekme,
-   *    çerez engeli) sessizce varsayılana düşer.
-   * 2) Gizli alandaki doğrulama hatası görünür kılınır. Kapalı bir
-   *    <details> içindeki geçersiz alan için tarayıcı hata balonunu
-   *    gösteremez ve kaydetme sessizce durur — editör neden kaydedilmediğini
-   *    anlayamaz. Böyle bir durumda grup açılır, alana odaklanılır ve grup
-   *    kısa süre vurgulanır. */
+  
   (function formGruplari() {
     var gruplar = document.querySelectorAll('details.form-grup');
     if (!gruplar.length) return;
@@ -1285,7 +1136,7 @@
       });
     });
 
-    /* invalid olayı balonlanmaz; yakalama evresinde dinlemek gerekiyor. */
+    
     document.addEventListener('invalid', function (e) {
       var alan = e.target;
       if (!alan || !alan.closest) return;
@@ -1298,23 +1149,9 @@
     }, true);
   })();
 
-  /* ========== Hareket ve geçiş katmanı (Faz 154) ==========
-   *
-   * Panelin HER sayfasında geçerli. Pano ile diğer sayfalar arasında
-   * davranış farkı kalmaması için ortak dosyaya konuldu.
-   *
-   * Dört iş:
-   *   1. Üst çubuk kaydırınca "yükselir" (.is-stuck) — okunabilirlik.
-   *   2. HTMX isteğinde ince ilerleme çubuğu — "dondu mu?" sorusunu kapatır.
-   *   3. window.tbToast: panelin her yerinden çağrılabilen tek balon sistemi.
-   *   4. Görünüm geçişleri: HTMX'e karışmadan, yalnız tam sayfa
-   *      gezinmelerde yumuşak çapraz geçiş.
-   *
-   * Hepsi savunmacı: biri hata verse bile diğerleri ve panelin kalanı
-   * çalışmaya devam eder (her blok kendi try/catch'inde).
-   */
+  
 
-  /* ---------- 1) Kaydırınca üst çubuk yükselir ---------- */
+  
   (function ustCubuk() {
     var top = document.querySelector('.admin-top');
     if (!top) return;
@@ -1331,7 +1168,7 @@
     guncelle();
   })();
 
-  /* ---------- 2) HTMX ilerleme çubuğu ---------- */
+  
   (function ilerleme() {
     if (!window.htmx) return;
     var cubuk = document.querySelector('.pn-progress');
@@ -1372,7 +1209,7 @@
     document.body.addEventListener('htmx:timeout', bitir);
   })();
 
-  /* ---------- 3) Ortak balon (toast) ---------- */
+  
   (function balonlar() {
     var kutu = document.getElementById('tbToasts');
     if (!kutu) {
@@ -1400,23 +1237,7 @@
     };
   })();
 
-  /* ---------- 4) Sayfa geçişi: kaldırıldı ----------
-   *
-   * Burada manuel `startViewTransition` vardı. Tam sayfa görünüm geçişi
-   * sekme hapının animasyonuyla çakışıyordu: tarayıcı geçiş boyunca
-   * DONDURULMUŞ görüntüyü gösterdiği için hap animasyonu görünmüyor,
-   * geçiş bitince hap çoktan varmış oluyordu. Ölçüm: aynı geçişte hap
-   * ya hiç kımıldamıyor ya da aniden zıplıyordu.
-   *
-   * Tek geçiş sistemi: hap (admin-ui.js kayganHap) + kartların kademeli
-   * girişi (admin-pano.css pn-gir). Referans da SPA olduğu için tam
-   * sayfa geçişi kullanmıyor.
-
-  /* ---------- 5) Form gönderiminde düğme durumu ----------
-   *
-   * Çift gönderimi engeller ve "bir şey oldu" geri bildirimi verir. HTMX
-   * formlarında HTMX zaten kendi göstergesini çalıştırıyor; orada
-   * dokunmuyoruz. */
+  
   (function formlar() {
     document.addEventListener('submit', function (e) {
       var f = e.target;
@@ -1435,25 +1256,7 @@
     }, true);
   })();
 
-  /* ========== Kayan "mürekkep hapı" (Faz 155) ==========
-   *
-   * Murmura'nın sekme geçişinin aynısı. Hap, İKİ KENARI BAĞIMSIZ hareket eden
-   * kırpılmış bir katmandır; içinde etiketlerin zıt renkli kopyaları durur.
-   * Kırpma penceresi etiketin üstüne geldiği anda renk tam kenarda değişir.
-   *
-   * Neden kopya: tek bir arka plan kutusunu büyütmek metni de ölçekler ve yazı
-   * titrer. İki kenarı ayrı sürmek hem "esneme" hissi verir hem yazıyı hiç
-   * ölçeklemez.
-   *
-   * Neden GSAP yok: referans power3 eğrilerini kullanıyor; küp eğri 3 satır.
-   * 60 KB'lık bir animasyon paketi yalnız bunun için inmesin.
-   *
-   * Kenar zamanlaması (referanstan):
-   *   sağa giderken  → sol (önde) 550ms inOut, sağ (arkada) 360ms out
-   *   sola giderken  → sol (arkada) 360ms out, sağ (önde) 550ms inOut
-   * Önde giden kenar yavaş başlar, arkada kalan hızlı kapanır: hap önce
-   * uzar, sonra toplanır.
-   */
+  
   (function kayganHap() {
     var azHareket = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     var ANAHTAR = 'tb:hap-gecis';
@@ -1473,10 +1276,7 @@
       })(t0);
     }
 
-    /* Kopya: ölçüyü AÇIKÇA kopyalar. CSS'te ortak sınıf paylaşmak yerine
-     * hesaplanmış değerleri yazıyoruz — sekme çubuğu 4 farklı yerde farklı
-     * puntoyla kullanılıyor (ayarlar .tabs, içerik .tabs, ws-tabs…). Ortak
-     * sınıf birinde kayarsa hepsinde kayar. */
+    
     function kopyala(a) {
       var s = document.createElement('span');
       s.className = 'tb-hap-kopya';
@@ -1505,18 +1305,7 @@
         if (c.classList.contains('tb-hap')) continue;
         if (c.matches(sec)) adaylar.push(c);
       }
-      /* Sıra: ÖNCE sunucunun işaretlediği sekme (aria-current / .active / .on).
-       *
-       * Önceden "tam yol eşleşmesi her zaman kazanır" kuralı ilk sıradaydı ve
-       * İçerikler'in durum sekmelerini bozuyordu: hepsi
-       * `/admin/icerikler?durum=…` adresine gidiyor, sorgu atıldığında hepsi
-       * `/admin/icerikler` oluyor ve o da location.pathname'e eşit. Sonuç:
-       * hap hangi sekme seçili olursa olsun HEP İLK sekmeye ("Yayında")
-       * oturuyordu (ölçüldü: clip 4 sekme boyunca hiç değişmedi).
-       *
-       * Tam yol eşleşmesi yalnız AYIRT EDİCİ olarak gerekli:
-       * /admin/icerikler/yeni sayfasında hem "İçerikler" (önek) hem
-       * "Yeni İçerik" (tam) işaretli oluyor; o durumda tam eşleşme kazanır. */
+      
       var yol = location.pathname.replace(/\/+$/, '') || '/';
       var isaretli = [];
       var j, a, href;
@@ -1561,8 +1350,7 @@
       try { sessionStorage.removeItem(ANAHTAR); } catch (e) {}
     }
 
-    /* Belirme animasyonunu kısa süre susturur; sonra sınıf kaldırılır ki
-     * sonraki takaslarda normal davranış geri gelsin. */
+    
     function rayonBelirmeSustur(ray, kap) {
       var hedefler = [ray];
       if (kap && kap !== ray) hedefler.push(kap);
@@ -1621,19 +1409,13 @@
       pill.style.opacity = '1';
     }
 
-    /* Hap kimliği: aynı sekme çubuğu iki farklı sayfada AYNI kimliği almalı,
-     * yoksa geçiş kaydı eşleşmez. Çalışma alanı çubuğu her sayfada tek;
-     * diğer çubuklar kendi id'siyle ayrışır. */
+    
     function kimlik(ray) {
       if (ray.classList.contains('ws-links')) return 'ws';
       // Açık kimlik: şablon `data-hap` verirse o kazanır.
       if (ray.dataset && ray.dataset.hap) return 'hap:' + ray.dataset.hap;
       if (ray.id) return 'ray:' + ray.id;
-      /* id'siz çubuklar (İçerikler durum sekmeleri, reklamlar, SEO…) her
-       * takasta YENİDEN doğuyor. Sabit bir 'adsiz' anahtarı bütün çubukları
-       * aynı kayda bağlar; bu yüzden kimlik ilk bağlantının YOLUNDAN
-       * türetiliyor: /admin/icerikler?durum=… → 'yol:/admin/icerikler'.
-       * Aynı çubuk iki sayfada aynı kimliği alır, kayıt eşleşir. */
+      
       var a = ray.querySelector('a[href]');
       var yol = '';
       if (a) {
@@ -1642,7 +1424,7 @@
       return 'yol:' + (yol || 'adsiz');
     }
 
-    /* ray: sekme çubuğu, sec: öğe seçicisi, radius: köşe yarıçapı */
+    
     function kur(ray, sec, radius) {
       if (!ray) return;
       sec = sec || 'a';
@@ -1698,10 +1480,7 @@
         pill.style.opacity = '1';
         canli = true;
         sil();
-        /* HTMX takasında kap `.htmx-added` sınıfıyla belirme animasyonu
-         * oynatır (pn-yenile: opacity .35→1). Hap o kabın İÇİNDE olduğu
-         * için kayarken sönük görünüyordu — ölçüldü: opacity 1 → 0 → 1.
-         * Kap ve ray bu süre boyunca belirme animasyonundan muaf tutulur. */
+        
         var kap = ray.closest('.htmx-added, .htmx-settling');
         rayonBelirmeSustur(ray, kap);
         // İlk kareyi bekle: yeni DOM'un yerleşimi otursun, ölçüm doğru olsun.
@@ -1720,10 +1499,7 @@
           if (!a || a.parentNode !== ray) return;
           var href = a.getAttribute('href') || '';
           if (!href || href.charAt(0) === '#' || a.getAttribute('target') === '_blank') return;
-          /* hx-get/hx-post sekmeleri de gezinmedir: panel takas edilir ve
-           * yeni çubuk hapı ESKİ yerinden devralmalı. Önce burada
-           * atlanıyordu; İçerikler'deki durum sekmeleri bu yüzden
-           * kaymıyor, sadece solup beliriyordu (ölçüldü). */
+          
           if (a.getAttribute('hx-target') && a.getAttribute('hx-target') === 'body') return;
           if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
           // Hapın O ANKİ konumu kaydedilir, tıklanan sekmenin değil:
@@ -1776,8 +1552,7 @@
 
     window.tbHapKur = kur;
 
-    /* Tüm sekme çubuklarını tara. ws-tabs JS ile sonradan eklendiği için
-     * bu tarama betiğin sonunda çalışır; HTMX değişimlerinde tekrarlanır. */
+    
     function tara() {
       document.querySelectorAll('.ws-links').forEach(function (ray) {
         if (ray.__tbKuruldu) return;
@@ -1823,31 +1598,7 @@
       });
     });
 
-    /* ========== Yan menü hapı: dikey kayma (Pacely birebir) ==========
-     *
-     * Kullanıcı isteği: Pacely sol menüsündeki geçiş/animasyon farkları.
-     *
-     * Referans (pacely/assets/index-BlFqaHp6.js → `Le(pill, hedef, …)`,
-     * paket yardımcısı `yo`):
-     *
-     *   • Hap `.nav__pill` tek bir span; `.side__scroll` içinde MUTLAK
-     *     konumlu, `background: var(--side-tile)`, `border-radius: 12px`,
-     *     `pointer-events: none`.
-     *   • Aktif menü öğesinin KENDİ zemini yok
-     *     (`.nav__item[aria-current=page]{background:0 0}`) — zemini hap
-     *     veriyor. Bizde aktif öğe kendi kart yüzeyini çiziyordu, yani
-     *     "kayan hap" değil "anında yanan kart" görünüyordu.
-     *   • Geçişte ÖNCE BASKIN EKSEN bulunur:
-     *       m = |Δt| > |Δl|   → dikey hareket
-     *     Sonra üç tween paralel oynar:
-     *       önde giden kenar   360 ms  power3.out
-     *       arkada kalan kenar 550 ms  power3.inOut
-     *       çapraz iki kenar   450 ms  power3.inOut
-     *     Yani hap dikey inerken önce uzar, sonra toplanır; yatay
-     *     sekmelerde de aynı kural (bizde iki kenar vardı, çapraz eksik).
-     *
-     * Kullanıcı isteği "birebir" olduğu için sayılar olduğu gibi alındı.
-     */
+    
     var SB_MS = { onde: 360, arkada: 550, capraz: 450 };
     var SB_YARICAP = 12;
 
@@ -1857,8 +1608,7 @@
       pill.__e = { l: e.l, r: e.r, t: e.t, b: e.b };
     }
 
-    /* Hapı hedefe yerleştirir. animate=false → anında (ilk yerleşim,
-     * ray değişimi, yeniden boyutlandırma). */
+    
     function sbYerlestir(pill, ray, hedef, animate) {
       if (!pill || !ray) return;
       if (!hedef || !hedef.offsetWidth) { pill.style.opacity = '0'; return; }
@@ -1932,7 +1682,7 @@
       pill.style.opacity = '1';
     }
 
-    /* Yan menü hapını kur: aktif öğeyi izle ve hapı kaydır. */
+    
     function sbKur() {
       var ray = document.querySelector('.admin-side .side-scroll');
       if (!ray) return null;
@@ -1978,20 +1728,7 @@
     }
     window.tbSbHapKur = sbKur;
 
-    /* ========== Yan menünün girişi (Pacely birebir) ==================
-     *
-     * Referans (aynı dosya, uygulama bağlanma efekti):
-     *   .side              x −28 → 0, opacity 0 → 1, 700 ms, expo.out
-     *   .side__head / .side__group / .nav__item / .side__foot > *
-     *                      opacity 0 → 1, x −12 → 0,
-     *                      500 ms, power3.out, kademe 25 ms, gecikme 100 ms
-     *   .nav__pill         scaleX .4 → 1, opacity 0 → 1,
-     *                      600 ms, back.out(2), origin 0% 50%, gecikme 450 ms
-     *
-     * Bizde panel kabuğu SSR olduğu ve boost yalnız .admin-main'i
-     * değiştirdiği için bu efekt yalnız TAM sayfa yüklemesinde bir kez
-     * oynar — Pacely'nin SPA "mount" anının karşılığı budur.
-     */
+    
     function sbGiris() {
       if (azHareket) return;
       if (window.innerWidth <= 760) return; // Pacely de dar ekranda atlıyor
@@ -2019,8 +1756,7 @@
       );
       temizle(yan, govde);
 
-      /* Pacely hedefleri: .side__head, .side__group, .nav__item,
-       * .side__foot > *. Bizde grup başlığı yok; menü öğeleri <a>. */
+      
       var ogeler = yan.querySelectorAll('.side-head, .menu a');
       Array.prototype.forEach.call(ogeler, function (el, i) {
         var a = el.animate(
@@ -2037,11 +1773,7 @@
           [{ transform: 'scaleX(.4)', opacity: 0 }, { transform: 'scaleX(1)', opacity: 1 }],
           { duration: 600, easing: BACK, delay: 450, fill: 'both' }
         );
-        /* DİKKAT: Pacely bu tweende `clearProps:'transform'` — yalnız
-         * transform temizlenir, opacity SATIR İÇİ 1 KALIR (CSS'te
-         * `.nav__pill{opacity:0}`). Bizde de aynısı olmalı: `temizle()`
-         * opacity'yi de silseydi hap CSS'teki 0'a düşer ve menüde hiç
-         * aktif zemin görünmezdi (ölçüldü: opacity 0). */
+        
         a.onfinish = function () {
           hap.style.transform = '';
           hap.style.opacity = '1';
@@ -2052,16 +1784,7 @@
     window.tbSbGiris = sbGiris;
   })();
 
-  /* ---------- 4) AI SEO önerisini uygula (Faz 188) ----------
-   *
-   * Öneri paneli formun içinde açılıyor. "İki alanı doldur" düğmesi SEO
-   * başlığı ve meta açıklamayı TEK adımda yazar; değerler düğmenin
-   * data-* özniteliklerinde taşınıyor, ek istek gerekmiyor.
-   *
-   * Neden `input` olayı da tetikleniyor: formda karakter sayacı, SERP
-   * önizlemesi ve sosyal kart önizlemesi `input` dinliyor. Yalnız value
-   * yazmak önizlemeyi eski değerde bırakıyordu.
-   */
+  
   (function seoOneri() {
     function alan(sec) { return document.querySelector(sec); }
 
@@ -2101,14 +1824,7 @@
     });
   })();
 
-  /* ================= Yan menü: ilk kurulum =================
-   *
-   * NEDEN BURADA: `tbAdminInit()` dosyanın ortasında (satır ~952) çağrılıyor
-   * ama `tbSbHapKur` / `tbSbGiris` çok sonra, `kayganHap` IIFE'sinin
-   * içinde tanımlanıyor. İlk çağrıda `window.tbSbHapKur` henüz yoktu,
-   * dolayısıyla hap sayfa yüklenirken HİÇ kurulmuyor; ancak bir gezinmeden
-   * sonra (afterSettle → tbAdminInit) ortaya çıkıyordu (ölçüldü).
-   * Kurulum dosyanın en sonunda, tanımlardan SONRA yapılır. */
+  
   if (window.tbSbHapKur) window.tbSbHapKur();
   if (window.tbSbGiris) window.tbSbGiris();
 

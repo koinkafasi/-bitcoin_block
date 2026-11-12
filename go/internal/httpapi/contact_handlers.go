@@ -1,12 +1,5 @@
 package httpapi
 
-// İletişim ayarları ve mesaj yönetimi ekranı (Faz 145).
-//
-// Tek yerden alan adı + e-posta adresleri + telefon/adres düzenlenir; alan
-// adı değiştiğinde eski alan adını taşıyan adresler otomatik yeni alan adına
-// geçer. Sayfalardaki metinler {domain} / {eposta_info} yer tutucularıyla
-// yazıldığı için tek kayıtla tüm site güncellenir.
-
 import (
 	"encoding/json"
 	"net/http"

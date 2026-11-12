@@ -1,13 +1,5 @@
 package repo
 
-// BIST hisse evreni (kod + kısa ad).
-//
-// Liste tek yerde tutulur: hisse şeridi, "Tüm Hisseler" sayfası ve
-// arama aynı evreni kullanır. Kaynak: BIST işlem gören payların kod/ad
-// listesi (finans.mynet.com/borsa/hisseler, 29 Ekim 2026 anlık görüntüsü).
-// Fiyatlar buradan DEĞİL, Yahoo Finance toplu uçtan okunur; liste yalnız
-// "hangi semboller var" sorusunu yanıtlar ve kod eklendiğinde/çıktığında
-// burada güncellenir.
 var bistEvreni = []HisseMeta{
 	{Code: "A1CAP", Name: "A1 CAPITAL YATIRIM"},
 	{Code: "A1YEN", Name: "A1 YENILENEBILIR ENERJI"},

@@ -22,7 +22,7 @@ package templkit
 templ cdMobilNav(s CDShell) {
 	<details class="cd-mobil" data-mobil-menu>
 		<summary class="cd-mobil__dugme" aria-label="Menü">
-			<!-- CoinDesk hamburger yolu (20×20 mobil, 24×24 md). -->
+						// CoinDesk hamburger yolu (20×20 mobil, 24×24 md).
 			<svg class="cd-mobil__ikon" viewBox="0 0 24 24" width="20" height="20"
 				aria-hidden="true" focusable="false" fill="none">
 				<path d="M3.5 17.6345V16.1347H20.5V17.6345H3.5ZM3.5 12.75V11.25H20.5V12.75H3.5ZM3.5 7.86523V6.36548H20.5V7.86523H3.5Z" fill="currentColor"/>
@@ -45,10 +45,10 @@ templ cdMobilNav(s CDShell) {
 				}
 				<div class="cd-mobil__ayrac" aria-hidden="true"></div>
 				<div class="cd-mobil__alt-blok">
-					<!-- DİL — CoinDesk "Language" satırı: 14/21 w500 etiket,
-					     sağda hap (12/16 büyük harf, 1 px çerçeve, 9999
-					     köşe). Tek dilde hap tıklanmaz (ölü menü yok);
-					     çok dilde TÜM SATIR açılır (CoinDesk deseni). -->
+										// DİL — CoinDesk "Language" satırı: 14/21 w500 etiket,
+					// sağda hap (12/16 büyük harf, 1 px çerçeve, 9999
+					// köşe). Tek dilde hap tıklanmaz (ölü menü yok);
+					// çok dilde TÜM SATIR açılır (CoinDesk deseni).
 					if len(s.Diller) > 1 {
 						<details class="cd-mobil__dil">
 							<summary class="cd-mobil__dil-ozet">
@@ -84,11 +84,11 @@ templ cdMobilNav(s CDShell) {
 							}
 						</div>
 					}
-					<!-- TEMA — CoinDesk "Theme" satırı: sağda iki seçenekli
-					     segment (zemin surface-subtle, seçili olan beyaz +
-					     gölge). data-tema-deger csp-delegated.js'te işlenir;
-					     JS yoksa düğmeler yalnız görünür, tema sistemi
-					     yine prefers-color-scheme ile çalışır. -->
+										// TEMA — CoinDesk "Theme" satırı: sağda iki seçenekli
+					// segment (zemin surface-subtle, seçili olan beyaz +
+					// gölge). data-tema-deger csp-delegated.js'te işlenir;
+					// JS yoksa düğmeler yalnız görünür, tema sistemi
+					// yine prefers-color-scheme ile çalışır.
 					<div class="cd-mobil__tema">
 						<span class="cd-mobil__etiket" id="cd-mobil-tema">Tema</span>
 						<div class="cd-mobil__tema-sec" role="radiogroup" aria-labelledby="cd-mobil-tema">
@@ -118,11 +118,11 @@ templ cdMobilNav(s CDShell) {
 							</button>
 						</div>
 					</div>
-					<!-- OTURUM — CoinDesk sırası: önce çerçeveli kayıt düğmesi,
-					     sonra marka sarısı oturum düğmesi; ikisi de tam
-					     genişlik 48 px. (Etiket metinleri yoruma YAZILMAZ:
-					     templ yorumları HTML çıktısına düşüyor ve oturum
-					     kapısı testleri çıplak metin arıyor.) -->
+										// OTURUM — CoinDesk sırası: önce çerçeveli kayıt düğmesi,
+					// sonra marka sarısı oturum düğmesi; ikisi de tam
+					// genişlik 48 px. (Etiket metinleri yoruma YAZILMAZ:
+					// templ yorumları HTML çıktısına düşüyor ve oturum
+					// kapısı testleri çıplak metin arıyor.)
 					<div class="cd-mobil__oturum">
 						if s.LoggedIn {
 							<a class="cd-mobil__btn cd-mobil__btn--birincil" href={ s.UserHref }>Hesabım</a>

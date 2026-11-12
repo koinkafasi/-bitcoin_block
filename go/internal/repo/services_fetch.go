@@ -101,12 +101,6 @@ func weatherCode(c int) string {
 	}
 }
 
-// RefreshForex dolar/euro (TRY) + gram altın; önbelleğe kur yazar.
-//
-// Birincil kaynak piyasa önbelleğidir (truncgil + Yahoo). Eski floatrates
-// kaynağı tek başına kaldığında HTTP/2 akış hataları yüzünden günlerce demo
-// değer (34,80 / 38,90) dönüyordu; servis bandı da gerçek döviz/altın
-// kalemlerini kaybediyordu. piyasa önbelleği boşsa floatrates yedeği denenir.
 func RefreshForex(ctx context.Context, pool DB) error {
 	out := map[string]float64{}
 	for _, k := range PiyasaOf(ctx, pool).Kalemler {
@@ -140,10 +134,6 @@ func RefreshForex(ctx context.Context, pool DB) error {
 			}
 		}
 	}
-	// Sahte fiyat YAZILMAZ. Eski davranış kaynak düştüğünde 34,80 / 38,90 /
-	// 2.980,00 gibi demo değerleri önbelleğe yazıyordu; bantta ve panelde
-	// günlerce "gerçek" sanılan bu sayılar görünüyordu. Artık değer yoksa 0
-	// yazılır, `demo` bayrağı kalkar ve tüketiciler kalemi hiç basmaz.
 	demo := out["usd"] <= 0 || out["eur"] <= 0
 	row := map[string]any{"dolar": out["usd"], "euro": out["eur"], "altin": out["altin"], "demo": demo}
 	b, _ := json.Marshal(row)
@@ -259,41 +249,17 @@ type EczaneSehir struct {
 	Plaka int    `json:"plaka"`
 	Sehir string `json:"sehir"`
 	Demo  bool   `json:"demo"`
-	// Tarih verinin çekildiği gün (YYYY-MM-DD). Nöbetçi eczane listesi gün
-	// içinde değişmediği için günde bir çekim yeterli; yenileme kararı bu
-	// alana bakar.
 	Tarih string `json:"tarih"`
 	// Kaynak: "ozel" | "eczaneler.org" | "demo". Sayfada hangi kaynağın
 	// kullanıldığı görünsün diye saklanır.
 	Kaynak string `json:"kaynak"`
 	// Saat verinin çekildiği saat (HH:MM). "Boş" ilde kaynak sonradan
 	// yayınlayabilir; 2 saatte bir yeniden denenir.
-	Saat string `json:"saat,omitempty"`
-	// Bos: kaynak ERİŞİLDİ ama o il için bugün veri YAYINLAMADI.
-	//
-	// Neden ayrı: Konya sayfası "Nöbetçi eczane bulunamadı" diyor (ölçüm).
-	// Bu durumda demo (uydurma) liste göstermek yanlış — okuyucuya var
-	// olmayan eczane gösterilirdi. Sayfa "bugün için veri yayınlanmadı" der.
+	Saat string   `json:"saat,omitempty"`
 	Bos  bool     `json:"bos,omitempty"`
 	List []Eczane `json:"list"`
 }
 
-// RefreshEczane 81 il için nöbetçi eczane listesini önbelleğe yazar.
-//
-// Kaynak sırası:
-//  1. `servis/eczane_kaynak` ayarı doluysa ({plaka} yer tutuculu JSON URL) — özel kaynak.
-//  2. RESMİ eczacı odası (il bazlı adaptör, bkz. eczane_aeo.go) — ÜCRETSİZ.
-//  3. NosyAPI (RapidAPI, şehir bazlı; `servis/eczane_api_key`) — il başına günde bir istek.
-//  4. eczaneler.org (izinli HTML sayfası; ÜCRETSİZ) — yalnız API'ye ulaşılamazsa.
-//  5. Hiçbiri olmazsa dürüst "ulaşılamadı" durumu — UYDURMA LİSTE YOK.
-//
-// GÜNDE BİR: nöbetçi eczane listesi gün içinde değişmiyor. Önceki sürüm her
-// 30 dakikada 81 ili yeniden çekiyordu; ücretsiz kaynakta bu 3.900 istek/gün
-// olurdu (kaba ve gereksiz). Artık yalnız BUGÜN çekilmemiş iller giderilir.
-//
-// ÖLÇÜM (üretim, 2 Kasım 2026): ayar boştu → 81 ilin tamamı demo'ydu
-// ("Merkez Eczanesi", "0 312 555 0023"). Yani sayfa okuyucuya var olmayan
-// eczane gösteriyordu.
 func RefreshEczane(ctx context.Context, pool DB) (int, error) {
 	if err := EnsureCities(ctx, pool); err != nil {
 		return 0, err
@@ -328,10 +294,6 @@ func RefreshEczane(ctx context.Context, pool DB) (int, error) {
 		}
 		anahtar := strconv.Itoa(c.Plaka)
 
-		// Bugün zaten GERÇEK veri yazıldıysa dokunma (demo satırı yenilenir).
-		// "Veri yok" (Bos) durumu ayrı: kaynak gün içinde yayınlayabilir, bu
-		// yüzden 2 saatte bir yeniden denenir. Aksi hâlde sabah boş olan il
-		// akşama kadar boş kalırdı; her denemede de vurulmaz.
 		if b, err := CacheGet(ctx, pool, "eczane", anahtar); err == nil && len(b) > 0 {
 			var mevcut EczaneSehir
 			if json.Unmarshal(b, &mevcut) == nil && mevcut.Tarih == bugun {
@@ -371,16 +333,6 @@ func RefreshEczane(ctx context.Context, pool DB) (int, error) {
 			}
 		}
 
-		// 2) RESMİ eczacı odası (il bazlı adaptör).
-		//
-		// Toplayıcıdan ÖNCE denenir, iki nedenle:
-		//   · Oda ASIL kaynaktır — nöbet listesini o yayınlar, toplayıcı
-		//     siteler ondan alır. Aradaki katman ne kadar azsa iyi.
-		//   · eczaneler.org küme çıkış IP'sinden erişilemiyor (Cloudflare
-		//     managed challenge, 403). Ayrıntı: eczane_aeo.go başı.
-		//
-		// Ölçüm (5 Kasım 2026, küme içinden): aeo.org.tr 200 / 57 eczane,
-		// eczaneler.org 403.
 		if list == nil {
 			if oda, ok := eczaneOdaKaynaklari[c.Plaka]; ok {
 				if l, ad, err := oda(ctx); err == nil && len(l) > 0 {
@@ -391,14 +343,6 @@ func RefreshEczane(ctx context.Context, pool DB) (int, error) {
 			}
 		}
 
-		// 3) NosyAPI (RapidAPI) — ŞEHİR BAZLI.
-		//
-		// Resmi odadan SONRA denenir: oda asıl kaynak ve ücretsiz.
-		// Ankara için oda kullanılır; diğer iller için API.
-		//
-		// Uç il başına bir istek (`?city={slug}`); yanıt il bazında gün
-		// boyu önbellekte. `hazir` = API'ye ulaşıldı. Ulaşıldı ama liste
-		// boşsa "o ilde bugün nöbetçi eczane yok"tur (demo değil).
 		apiHazir := false
 		if list == nil && apiAnahtar != "" && !apiKapali && c.Slug != "" {
 			l, hazir := eczaneAPISehir(ctx, pool, apiAnahtar, c.Slug, c.Plaka)
@@ -418,15 +362,6 @@ func RefreshEczane(ctx context.Context, pool DB) (int, error) {
 			}
 		}
 
-		// 4) eczaneler.org (ücretsiz, gerçek).
-		//
-		// Yalnız API'ye ULAŞILAMADIYSA denenir. API ulaşıldıysa kaynak
-		// zaten kesin; eczaneler.org küme IP'sinden 403 alıyor (boşa
-		// bekleme).
-		//
-		// Üç sonuç ayrılır: (a) liste var, (b) sayfa açıldı ama o il için
-		// bugün veri yok, (c) ulaşılamadı. (b) ile (c) aynı şey değil:
-		// (b)'de uydurma eczane göstermek yanlış, (c)'de demo dürüst.
 		if list == nil && !apiHazir && !orgKapali && c.Slug != "" {
 			if l, err := eczaneEczanelerOrg(ctx, c.Slug); err == nil {
 				orgArdardaHata = 0
@@ -447,39 +382,15 @@ func RefreshEczane(ctx context.Context, pool DB) (int, error) {
 		if demo {
 			switch {
 			case apiHazir:
-				// API'ye ulaşıldı ama bu ilde kayıt yok: "bugün nöbetçi
-				// eczane yok"tur, "kaynağa ulaşılamadı" değil. Demo
-				// listesi basılmaz.
 				bos = true
 				demo = false
 				list = nil
 				kaynak = eczaneRapidAPIKaynak
 			case kaynak == "eczaneler.org":
-				// Kaynak açıldı ama o il için bugün veri yayınlamamış.
-				//
-				// Demo=false: sayfa "demo (kaynak bekliyor)" rozetini
-				// göstermemeli — kaynak var, sadece bugünün listesi yok.
-				// İki sinyal (rozet + "veri yok" kartı) çelişirdi.
 				bos = true
 				demo = false
 				list = nil
 			default:
-				// Kaynağa HİÇ ULAŞILAMADI (ağ hatası, HTTP != 200, bot
-				// doğrulaması). "Veri yok"tan ayrı bir durum.
-				//
-				// ÖLÇÜM (üretim, 5 Kasım 2026): site 4 Kasım'da Kubernetes'e
-				// taşındıktan sonra küme çıkış IP'si (173.249.30.38, Contabo
-				// veri merkezi) eczaneler.org'un Cloudflare'inde "managed
-				// challenge" yiyip 403 alıyor. Birebir aynı istek ev IP'sinden
-				// 200 + 600 KB gerçek veri döndürüyor. Yani kod/başlık değil,
-				// çıkış IP'sinin itibarı sorun.
-				//
-				// ESKİ DAVRANIŞ (KALDIRILDI): demoEczaneler() uydurma liste
-				// basıyordu — "Merkez Eczanesi", "0 312 555 0100". Gece
-				// nöbetçi eczane arayan okuyucu var olmayan numarayı arar,
-				// olmayan adrese gider. Küçük bir "demo" rozeti bunu telafi
-				// etmez. Uydurma SAĞLIK verisi göstermektense hiç
-				// göstermemek doğrudur.
 				bos = true
 				demo = false
 				list = nil
@@ -508,10 +419,6 @@ func RefreshEczane(ctx context.Context, pool DB) (int, error) {
 	return ok, nil
 }
 
-// EczaneOf şehir nöbetçi eczane listesini döndürür.
-//
-// Liste okunurken de tekrarlar ayıklanır: düzeltmeden önce yazılmış önbellek
-// satırları (her eczane iki kez) yeniden çekilmeyi beklemeden tek satıra iner.
 func EczaneOf(ctx context.Context, pool DB, plaka string) (EczaneSehir, error) {
 	var es EczaneSehir
 	b, err := CacheGet(ctx, pool, "eczane", plaka)
@@ -689,19 +596,6 @@ func demoBorsa() []BorsaRow {
 	}
 }
 
-// ---- Hisseler: BIST hisse şeridi (Hisseler modülü) ----
-//
-// Habertürk'ün ekonomi sayfasındaki "HİSSELER" bölümü gibi, BIST'te işlem
-// gören hisselerin kod + fiyat (+ yön) bilgisini tek şeritte gösterir.
-//
-// Veri kaynağı bilinçli olarak piyasa özetinden (borsa/ana) AYRIDIR: şerit
-// 30-40 hisse gösterir, özet ise yalnız birkaç büyük hisse taşır. Ayrı
-// önbellek sayesinde şerit genişlese bile Kur & Borsa bandı şişmez.
-//
-// Demo/fake fiyat ÜRETİLMEZ: hisse fiyatı yanlış gösterilirse okuyucuya
-// doğrudan zarar verir. Hiçbir sembol gelmezse önbellek korunur ve modül
-// boş kalır (scheduler günlüğe nedeni yazar).
-
 // HisseRow tek hisse satırı.
 type HisseRow struct {
 	Code  string  `json:"code"`  // THYAO
@@ -722,10 +616,6 @@ type HisseMeta struct {
 	Name string
 }
 
-// HisseEvreni tüm BIST hisselerini (kod + ad) döndürür.
-//
-// Liste bistEvreni'nde (hisse_list.go) tek yerde tutulur; şerit, "Tüm
-// Hisseler" sayfası ve arama aynı evreni kullanır.
 func HisseEvreni() []HisseMeta {
 	out := make([]HisseMeta, len(bistEvreni))
 	copy(out, bistEvreni)
@@ -751,11 +641,6 @@ func hisseAd(code string) string {
 	return code
 }
 
-// hisseSparkURL toplu fiyat ucu: tek istekte en fazla 20 sembol.
-//
-// Yahoo'nun v8/spark ucu 20 sembolü kabul ediyor, 25+ için HTTP 400
-// dönüyor (29 Ekim 2026 ölçümü: 20 → 200, 25 → 400). Bu yüzden evren
-// 18'lik parçalara bölünür (pay bırakılır) ve eşzamanlılık 4 ile sınırlı.
 const hisseSparkURL = "https://query1.finance.yahoo.com/v8/finance/spark?symbols=%s&range=1d&interval=1d"
 
 var (
@@ -772,11 +657,6 @@ type hisseSparkParça struct {
 	ChartPreviousClose float64   `json:"chartPreviousClose"`
 }
 
-// hisseSparkFiyat parçadan fiyat ve yüzde değişimi çıkarır.
-//
-// close boş olabilir (işlem görmeyen sembol); o zaman fulldayPrice'a düşülür.
-// Değişim yüzdesi yoksa önceki kapanıştan hesaplanır — 0 göstermek yanlış
-// bilgi olurdu (yatay sanılır).
 func (p hisseSparkParça) fiyat() (float64, float64, bool) {
 	fiyat := 0.0
 	if len(p.Close) > 0 && p.Close[0] > 0 {
@@ -825,14 +705,6 @@ func fetchHisseChunk(codes []string, timeout time.Duration) map[string]HisseRow 
 	return out
 }
 
-// RefreshHisseler tüm BIST evreninin fiyatlarını önbelleğe yazar.
-//
-// Davranış piyasa özetiyle aynı: kısmi sonuç eski önbellekle birleştirilir
-// (tek sembolün/parçanın hatası şeritten hisse düşürmez); hiç veri gelmezse
-// önbellek korunur ve hata döner.
-//
-// 633 sembol / 18 = 36 istek; 4 eşzamanlı → ~9 tur. 30 dakikalık tur için
-// makul ve Yahoo'yu boğmaz.
 func RefreshHisseler(ctx context.Context, pool DB) error {
 	codes := make([]string, 0, len(bistEvreni))
 	for _, h := range bistEvreni {
@@ -929,9 +801,6 @@ type FiksturData struct {
 	Updated  time.Time    `json:"updated"`
 }
 
-// TheSportsDB v1 uçları (ücretsiz anahtar "3"; gerçek anahtar ayarla değiştirilebilir).
-//
-// var (const değil): testlerde httptest sunucusuna yönlendirilebilsin diye.
 var tsAPI = "https://www.thesportsdb.com/api/v1/json/%s/%s"
 
 type tsEvent struct {
@@ -1158,10 +1027,6 @@ func toStandingRow(s tsStanding) StandingRow {
 	}
 }
 
-// ESPN puan durumu — ücretsiz, anahtarsız, tam tablo + logolar.
-// Lig kodu ile parametrelenir (tur.1, ger.1, eng.1, esp.1, ita.1, fra.1).
-//
-// var (const değil): testlerde httptest sunucusuna yönlendirilebilsin diye.
 var espnStandingsBase = "https://site.api.espn.com/apis/v2/sports/soccer/%s/standings"
 
 type espnEntry struct {
@@ -1260,9 +1125,6 @@ func fetchESPNStandings(code string, timeout time.Duration) []StandingRow {
 	return rows
 }
 
-// localizeStandingBadges diskte logosu bulunan rozetleri yerel URL'e çevirir.
-// İstek yolunda kullanılır: ağa çıkmaz, yalnız var olanı kullanır. İndirme
-// scheduler'daki RefreshStandings'te yapılır (bkz. mirrorStandingBadges).
 func localizeStandingBadges(rows []StandingRow) {
 	for i := range rows {
 		if rows[i].Badge == "" {
@@ -1275,11 +1137,6 @@ func localizeStandingBadges(rows []StandingRow) {
 	}
 }
 
-// RefreshStandings tüm liglerin puan durumunu (takım logolarıyla) çeker.
-//
-// Eskiden yalnız varsayılan lig (Süper Lig) yenileniyordu; diğer liglerin
-// tablosu ilk ziyaretçide istek yolunda çekiliyordu. Bu, logoların o liglerde
-// yerelleşmemesine de yol açıyordu (yerelleştirme burada yapılıyor).
 func RefreshStandings(ctx context.Context, pool DB) error {
 	for _, lg := range Leagues {
 		rows := fetchESPNStandings(lg.ESPN, 12*time.Second)
@@ -1311,9 +1168,6 @@ func StandingsOf(ctx context.Context, pool DB) StandingsData {
 	return StandingsOfLeague(ctx, pool, LeagueByKey("superlig"))
 }
 
-// ManualStandings admin tarafından elle girilen puan durumunu döndürür.
-// Format (her satır): Takım | LogoURL | O | G | M | AV | P
-// (logo ve sonraki alanlar boş bırakılabilir). "#" ile başlayan satır yorum.
 func ManualStandings(ctx context.Context, pool DB) ([]StandingRow, bool) {
 	b, err := GetSetting(ctx, pool, "servis", "puan_manuel")
 	if err != nil || len(b) == 0 {

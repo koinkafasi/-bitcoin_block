@@ -13,12 +13,6 @@ import (
 	"theblock/site/internal/repo"
 )
 
-// ---- Sayfa boyu mega menü arka planı ----
-//
-// Yalnızca "Sayfa Boyu (Tam Ekran)" mega menü tasarımında kullanılır.
-// Görsel, medya kütüphanesine kaydedilir (PNG/JPG/WEBP/GIF/SVG); üzerine
-// okunabilirlik için ayarlanabilir beyaz bir katman bindirilir.
-
 const menuBgKey = "mega_arkaplan"
 
 type MenuBackgroundConfig struct {

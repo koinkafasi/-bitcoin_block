@@ -5,13 +5,6 @@ import (
 	"testing"
 )
 
-// Faz 193c — AI kaynak iskeleti kapısı.
-//
-// ÖLÇÜM: küme→taslak yolu gövdeye 38 blokluk iskelet yazıyordu:
-// küme özeti + "Kaynaklar:" + "• 10Haber: <başlık>" satırları.
-// AI sonucu editör tarafından uygulanmadan yayınlanırsa okuyucu haber yerine
-// başlık listesi görüyordu.
-
 func blokYap(metinler ...string) []byte {
 	var b []map[string]any
 	for _, m := range metinler {

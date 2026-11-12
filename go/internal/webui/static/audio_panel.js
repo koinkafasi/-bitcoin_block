@@ -1,6 +1,4 @@
-/* Ses / röportaj paneli — yükleme ilerlemesi, durum yoklaması, transkriptte
-   tıklayınca oynatıcıyı ilgili saniyeye sarma ve onaylı AI taslağı açma.
-   Hiçbir işlem içeriği otomatik kaydetmez. */
+
 (function () {
   "use strict";
   var pollTimer = null;
@@ -52,10 +50,7 @@
     bindUpload(host);
   }
 
-  /* ---- Yükleme ilerlemesi (XHR upload.onprogress) ----
-   * HTMX multipart yüklemede yüzde göstermez; büyük röportaj dosyalarında
-   * kullanıcı "dondu mu?" diye düşünüyordu. Formu XHR ile gönderip gerçek
-   * bayt ilerlemesini gösteriyoruz, yanıtı panele yazıyoruz. */
+  
   function fmtBytes(n) {
     if (!isFinite(n) || n <= 0) return "0 B";
     var units = ["B", "KB", "MB", "GB"];
@@ -227,11 +222,7 @@
     if (form) disableForm(form, false);
   }
 
-  /* seek(btn, word)
-     btn: tıklanan transkript satırı (segment). word: varsa satırın içinde
-     tıklanan kelime. Kelime verildiğinde segmentin başına değil tam o
-     kelimenin saniyesine sarılır (Faz 127). Tek seek yolu burasıdır;
-     oynatıcı kendi içinde ayrı bir dinleyici kurmaz. */
+  
   function seek(btn, word) {
     var mediaID = btn.getAttribute("data-audio-seek");
     var attr = word ? word.getAttribute("data-ms") : btn.getAttribute("data-start-ms");
@@ -244,7 +235,7 @@
       var p = player.play();
       if (p && p.catch) p.catch(function () {});
     } catch (err) {
-      /* oynatıcı hazır değilse sessizce geç */
+      
     }
     if (player.scrollIntoView) {
       player.scrollIntoView({ behavior: "smooth", block: "nearest" });

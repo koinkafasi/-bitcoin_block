@@ -12,9 +12,6 @@ import (
 	"theblock/site/internal/repo"
 )
 
-// TestPrivateAudioLifecycle gerçek şema üzerinde ses yaşam döngüsünü doğrular:
-// private medya + iş + transkript oluşturulur, listelenir, medya silinince
-// transkript ve iş kayıtları CASCADE ile birlikte gider.
 func TestPrivateAudioLifecycle(t *testing.T) {
 	pool := intPool(t)
 	ctx := context.Background()

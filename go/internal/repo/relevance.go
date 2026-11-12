@@ -11,23 +11,6 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-// ---- Alaka (relevance) motoru ----
-//
-// "İlginizi Çekebilir" ve "İlgili Haberler" listeleri tek bir seed içeriğe
-// göre puanlanır. Puan bileşenleri bilinçli olarak ağırlıklandırılır ve
-// test edilebilir saf fonksiyonda hesaplanır:
-//
-//	etiket örtüşmesi   2.5 * paylaşılan etiket (en fazla 5)
-//	başlık örtüşmesi   2.0 * Jaccard benzerliği
-//	kategori           3.0 aynı kategori
-//	popülerlik         0.8 * ln(1+okuma)
-//	tazelik            1.6 * exp(-gün/4)
-//	yazar               0.4 aynı yazar
-//	görsel tazelik      0.8 son 24 saat
-//
-// Etiketler henüz doldurulmadıysa bile başlık + kategori + popülerlik
-// bileşenleri anlamlı sonuç verir.
-
 // Alaka bileşen ağırlıkları.
 const (
 	wCategory = 3.0
@@ -59,9 +42,6 @@ var trStopWords = map[string]bool{
 	"yani": true, "yine": true, "yoksa": true, "zaten": true,
 }
 
-// normalizeWord küçük harfe indirir. Türkçe "İ" harfi ToLower ile
-// "i" + birleşen nokta (U+0307) üretir; bu, "LİG" ile "lig" eşleşmesini
-// bozduğu için birleşen nokta atılır. "ı" de "i"ye katlanır.
 func normalizeWord(w string) string {
 	s := strings.ToLower(strings.TrimSpace(w))
 	if strings.ContainsRune(s, '\u0307') {
@@ -117,10 +97,6 @@ func sharedTags(a, b map[int64]bool) int {
 	return n
 }
 
-// relevanceScore tek bir aday içerik için alaka puanını ve bileşenlerini üretir.
-//
-// seedTags/candTags verilmezse etiket bileşeni atlanır (etiketsiz çalışma
-// durumunda başlık benzerliği devreye girer).
 func relevanceScore(seed, cand Content, seedTags, candTags map[int64]bool, hits int64, now time.Time) (float64, map[string]float64) {
 	p := map[string]float64{}
 

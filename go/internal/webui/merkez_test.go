@@ -10,14 +10,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// Site Yönetim Merkezi (/admin/merkez) kaldırıldı (kullanılmıyordu:
-// her bölüm kendi gerçek sayfasına gidiyordu, kabuk yalnız iframe sarıyordu).
-//
-// Bu testler kalıntı bağlantı bırakmadığımızı doğruluyor: kaldırılan bir
-// sayfaya yan menüden/panodan/sekme çubuğundan giden bağlantı kalırsa
-// kullanıcı 404'e düşer — üstelik 301 yönlendirme olduğu için bunu
-// "çalışıyor" sanarak fark etmeyiz.
-
 func TestMerkezBaglantisiKalmadi(t *testing.T) {
 	// 1) Şablonlarda /admin/merkez bağlantısı olmamalı.
 	var kalan []string

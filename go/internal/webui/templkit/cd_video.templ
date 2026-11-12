@@ -38,16 +38,16 @@ templ cdVPlayer(v CDVideoHero, dikey bool) {
 		data-canli="0">
 		<div class="cd-vplayer__sahne">
 			<div class="cd-vplayer__cerceve" data-cd-cerceve></div>
-			<!-- Şeffaf etkileşim katmanı: iframe yüzeyin TAMAMINI kapladığı
-			     için fare olayları (pointermove/click) dış belgeye ulaşmıyor;
-			     bu yüzden kontrol çubuğu bir kez gizlendikten sonra geri
-			     gelmiyor ve kullanıcı videoyu duraklatamıyordu (ölçüldü,
-			     8 Kasım 2026). Katman iframe'in üstünde durur, tıklamayı ve
-			     fare hareketini biz yakalarız. -->
+						// Şeffaf etkileşim katmanı: iframe yüzeyin TAMAMINI kapladığı
+			// için fare olayları (pointermove/click) dış belgeye ulaşmıyor;
+			// bu yüzden kontrol çubuğu bir kez gizlendikten sonra geri
+			// gelmiyor ve kullanıcı videoyu duraklatamıyordu (ölçüldü,
+			// 8 Kasım 2026). Katman iframe'in üstünde durur, tıklamayı ve
+			// fare hareketini biz yakalarız.
 			<div class="cd-vplayer__katman" data-cd-katman aria-hidden="true"></div>
 			if v.Image != "" {
-				<!-- Poster: yüksek çözünürlük + yedek zinciri (maxres 404 ise
-				     sddefault → hqdefault). -->
+								// Poster: yüksek çözünürlük + yedek zinciri (maxres 404 ise
+				// sddefault → hqdefault).
 				<img class="cd-vplayer__kapak" data-cd-kapak src={ v.Image }
 					data-yedek={ v.ImageYedek } alt=""
 					loading="eager" fetchpriority="high" decoding="async"
@@ -206,9 +206,9 @@ templ cdVPlayerCanli(kanalID, baslik string, canli bool) {
 
 // cdVSatir "Sıradaki" satırı: solda 142×80 kapak, sağda başlık.
 templ cdVSatir(s CDVideoSatir) {
-	<!-- Dikey (short) içerik AYRI sınıf alır: satır görseli 9:16 olur.
-	     Aksi hâlde 1080x1920 kapak 16:9 kutuya kırpılıp yalnız ortasındaki
-	     dar şerit görünüyordu (ölçüldü, 11 Kasım 2026). -->
+		// Dikey (short) içerik AYRI sınıf alır: satır görseli 9:16 olur.
+	// Aksi hâlde 1080x1920 kapak 16:9 kutuya kırpılıp yalnız ortasındaki
+	// dar şerit görünüyordu (ölçüldü, 11 Kasım 2026).
 	if s.Dikey {
 		<a class="cd-vsatir cd-vsatir--dikey" href={ s.Href }>
 			@cdVSatirGovde(s)
@@ -224,9 +224,9 @@ templ cdVSatir(s CDVideoSatir) {
 templ cdVSatirGovde(s CDVideoSatir) {
 		<span class="cd-vsatir__gorsel">
 			if s.Image != "" {
-				<!-- 142 px genişlik: tarayıcı srcset'ten 480w sürümünü seçer,
-				     büyük ızgara kartı 1280w'ı. Yedek: maxres 404 verirse
-				     hqdefault (csp-delegated.js, tek seferlik). -->
+								// 142 px genişlik: tarayıcı srcset'ten 480w sürümünü seçer,
+				// büyük ızgara kartı 1280w'ı. Yedek: maxres 404 verirse
+				// hqdefault (csp-delegated.js, tek seferlik).
 				<img src={ s.Image } srcset={ s.Srcset } sizes="142px"
 					data-yedek={ s.ImageYedek }
 					alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer"/>
@@ -251,8 +251,8 @@ templ cdVKart(k CDVideoKutu) {
 	<article class={ cdVKartSinif(k.Dikey) }>
 		<a class="cd-vkart__gorsel" href={ k.Href } tabindex="-1" aria-hidden="true">
 			if k.Image != "" {
-				<!-- sizes: dikey (shorts) kart tam sütun, yatay kart ~1/3.
-				     Shorts'ta srcset boş → src (oar2 1080x1920) kullanılır. -->
+								// sizes: dikey (shorts) kart tam sütun, yatay kart ~1/3.
+				// Shorts'ta srcset boş → src (oar2 1080x1920) kullanılır.
 				if k.Dikey {
 					<img src={ k.Image } data-yedek={ k.ImageYedek }
 						alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer"/>
@@ -344,10 +344,10 @@ templ CDVideoPageView(v CDVideoPage) {
 							}
 						</div>
 						if len(v.Siradaki) > 0 {
-							<!-- SAĞ KOLON AKIŞI (11 Kasım 2026): kaydırma çubuğu YOK,
-							     üst/altta saydam geçiş (maske) ve fare tekerleğiyle
-							     yumuşak akış. Yapı: cd-vkaydir.js + .cd-vband__liste
-							     CSS'i. Liste odaklanabilir (klavye ile de kayar). -->
+														// SAĞ KOLON AKIŞI (11 Kasım 2026): kaydırma çubuğu YOK,
+							// üst/altta saydam geçiş (maske) ve fare tekerleğiyle
+							// yumuşak akış. Yapı: cd-vkaydir.js + .cd-vband__liste
+							// CSS'i. Liste odaklanabilir (klavye ile de kayar).
 							<aside class="cd-vband__sag">
 								<p class="cd-vband__etiket">Sıradaki</p>
 								<div class="cd-vband__liste" tabindex="0"
@@ -416,10 +416,10 @@ templ CDVideoWatchView(v CDVideoWatch) {
 							}
 						</div>
 						if len(v.Siradaki) > 0 {
-							<!-- SAĞ KOLON AKIŞI (11 Kasım 2026): kaydırma çubuğu YOK,
-							     üst/altta saydam geçiş (maske) ve fare tekerleğiyle
-							     yumuşak akış. Yapı: cd-vkaydir.js + .cd-vband__liste
-							     CSS'i. Liste odaklanabilir (klavye ile de kayar). -->
+														// SAĞ KOLON AKIŞI (11 Kasım 2026): kaydırma çubuğu YOK,
+							// üst/altta saydam geçiş (maske) ve fare tekerleğiyle
+							// yumuşak akış. Yapı: cd-vkaydir.js + .cd-vband__liste
+							// CSS'i. Liste odaklanabilir (klavye ile de kayar).
 							<aside class="cd-vband__sag">
 								<p class="cd-vband__etiket">Sıradaki</p>
 								<div class="cd-vband__liste" tabindex="0"
@@ -476,7 +476,7 @@ templ cdCanliModul(c CDCanli) {
 			</a>
 			<a class="cd-canli__gorsel" href={ c.Href } tabindex="-1" aria-hidden="true">
 				if c.Image != "" {
-					<!-- Kahraman görseli: yüksek çözünürlük + yedek zinciri. -->
+										// Kahraman görseli: yüksek çözünürlük + yedek zinciri.
 					<img src={ c.Image } data-yedek={ c.ImageYedek }
 						alt="" loading="eager" fetchpriority="high"
 						decoding="async" referrerpolicy="no-referrer"/>

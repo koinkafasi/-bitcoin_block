@@ -5,12 +5,6 @@ import (
 	"time"
 )
 
-// TestTarihTRAyAdlari GERÇEK ay adını yazar.
-//
-// BU TESTİN YAKALADIĞI HATA (ölçüldü, 9 Kasım 2026): biçim
-// `day.Format("2 Ocak 2006")` idi; Go'da ay belirteci "Jan"/"January"
-// olduğu için "Ocak" DÜZ METİN olarak basılıyordu ve Kasım'da yayınlanan
-// içerik "6 Ocak 2026" görünüyordu. Ay adı eşlemesi bozulursa test düşer.
 func TestTarihTRAyAdlari(t *testing.T) {
 	for ay := time.January; ay <= time.December; ay++ {
 		tarih := time.Date(2026, ay, 15, 0, 0, 0, 0, time.UTC)

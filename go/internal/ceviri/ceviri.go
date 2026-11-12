@@ -1,8 +1,3 @@
-// Package ceviri yayımlanmış içerikleri başka dillere AI ile çevirir.
-//
-// Neden ayrı paket: aieditor kullanıcıya bağlı, tek içerik odaklı bir iş
-// akışı (seçim → öneri → onay). Otomatik çeviri ise editörsüz, toplu ve
-// süreklidir; kullanıcı/izin kavramı yoktur.
 package ceviri
 
 import (
@@ -23,10 +18,6 @@ import (
 	"theblock/site/internal/repo"
 )
 
-// VarsayilanDiller otomatik çeviri yapılan dillerdir.
-//
-// Neden yalnız "en": her dil her içerik için AI maliyeti demek. İngilizce
-// kullanıcının önceliği; diğerleri panelden eklenebilir.
 var VarsayilanDiller = []string{"en"}
 
 // VarsayilanDakika dakikada çevrilecek içerik sayısıdır.
@@ -45,11 +36,6 @@ const TurLimiti = 10
 type Ayarlar struct {
 	Aktif  bool
 	Diller []string
-	// Durum çevirinin hangi durumla kaydedileceği: "yayinda" veya "taslak".
-	//
-	// "yayinda" varsayılan: kullanıcı İngilizce içeriğin temada nasıl
-	// göründüğünü görmek istedi; taslak olsaydı /en boş kalırdı. Kalite
-	// kontrolü isteyen "taslak" seçebilir (panel).
 	Durum  string
 	Dakika int
 }
@@ -146,11 +132,6 @@ type eksikIcerik struct {
 	Title string
 }
 
-// Cevrilecekler verilen dilde çevirisi olmayan yayımlanmış içerikleri
-// (en yeniden eskiye) döndürür.
-//
-// Neden yalnız yayımlanmış + kaynak dil tr: taslak bir haberin çevirisini
-// yayına almak, editörün henüz bitirmediği metni yayımlamak olurdu.
 func Cevrilecekler(ctx context.Context, pool *pgxpool.Pool, siteID int64, hedef string, limit int) ([]eksikIcerik, error) {
 	if limit <= 0 {
 		limit = TurLimiti
@@ -230,27 +211,11 @@ func ceviriJSON(ham string) (map[string]any, error) {
 	return m, nil
 }
 
-// Uret bir içeriği hedef dile çevirir.
-// Gövde çevirisi parçalara bölünür.
-//
-// Neden: canlı ölçümde 28 paragraflık bir haberin çeviri yanıtı 1200 token
-// sınırını aştı ve yanıt ORTASINDAN kesildi ("unexpected end of JSON
-// input"); iki deneme de başarısız oldu, içerik çevirisiz kaldı.
-//
-// Sınır PARAGRAF SAYISI değil KARAKTER: paragraflar çok farklı uzunlukta.
-// Yalnız sayıya bakmak yetmedi — 6 uzun paragraf (≈1000 token kaynak)
-// İngilizceye genişleyince 1200 tokenlık yanıtı yine doldurdu (ölçüm:
-// completion_tokens=1200, iki deneme). 2200 karakter ≈ 600 token kaynak,
-// çeviri ~800 token: 1600'lük sınırın altında güvenli.
 const (
 	parcaKarakter = 2200
 	parcaBoyu     = 6 // kısa paragraflarda istek sayısı artmasın
 )
 
-// parcalaraBol gövdeyi karakter ve paragraf sınırlarına göre böler.
-//
-// Her parça en az bir paragraf içerir (tek paragraf sınırı aşsa bile):
-// aksi hâlde döngü ilerlemez.
 func parcalaraBol(p []string) [][]string {
 	var out [][]string
 	var grup []string
@@ -270,10 +235,6 @@ func parcalaraBol(p []string) [][]string {
 	return out
 }
 
-// Uret bir içeriği hedef dile çevirir.
-//
-// Başlık + spot tek istekte; gövde PARÇALI çevrilir ve sıra korunarak
-// birleştirilir. Her parça kendi isteği olduğu için token sınırı aşılmaz.
 func Uret(ctx context.Context, aiclient *ai.Client, c repo.Content, hedef string) (Ceviri, error) {
 	if aiclient == nil || !aiclient.Enabled() {
 		return Ceviri{}, errors.New("AI sağlayıcısı yapılandırılmadı")
@@ -320,11 +281,7 @@ func ceviriBaslik(ctx context.Context, aiclient *ai.Client, c repo.Content, dil 
 			{Role: "system", Content: ceviriSystem(dil)},
 			{Role: "user", Content: ceviriInstruksiyonBaslik(dil) + "\n\n---\n" + string(istek)},
 		},
-		JSONMode: true,
-		// 500 token muhakeme tabanlı modellerde YETMİYOR: model bütçenin
-		// tamamını düşünmeye harcayıp JSON'u yarıda kesiyordu (canlı ölçüm
-		// 6 Kasım 2026: "çeviri yanıtı JSON değil: unexpected end of JSON
-		// input"). Başlık + spot + SEO + özet rahat sığsın diye 1200.
+		JSONMode:    true,
 		MaxTokens:   1200,
 		Temperature: 0.2,
 	})
@@ -349,15 +306,6 @@ func ceviriBaslik(ctx context.Context, aiclient *ai.Client, c repo.Content, dil 
 	return out, nil
 }
 
-// ceviriParcaGuvenli bir grubu çevirir; yanıt kesilirse grubu ikiye bölüp
-// yeniden dener.
-//
-// Neden: canlı ölçümde 2200 karakterlik bir parça bile 1600 tokenlık yanıtı
-// doldurdu (completion_tokens=1600 → "unexpected end of JSON input"). Bu
-// durumda TÜM makaleyi baştan çevirmek hem pahalı hem yavaştı (ölçüm: 3,5 dk
-// boşa gitti). Yerel bölme, hatayı o parçayla sınırlar.
-//
-// Tek paragraf da kesilirse yapılacak bir şey yok: hata yukarı çıkar.
 func ceviriParcaGuvenli(ctx context.Context, aiclient *ai.Client, grup []string, dil string) ([]string, error) {
 	out, err := ceviriParca(ctx, aiclient, grup, dil)
 	if err == nil && len(out) == len(grup) {
@@ -390,10 +338,7 @@ func ceviriParca(ctx context.Context, aiclient *ai.Client, parcalar []string, di
 			{Role: "system", Content: ceviriSystem(dil)},
 			{Role: "user", Content: ceviriInstruksiyonGovde(dil) + "\n\n---\n" + string(istek)},
 		},
-		JSONMode: true,
-		// 2200 karakterlik kaynak ≈ 800 token İngilizce üretim; 1600 sınırı
-		// kesilmeye karşı pay bırakır (ölçüm: 1200 yetmedi). Muhakeme tabanlı
-		// modeller bütçenin bir kısmını düşünmeye harcadığı için 2600.
+		JSONMode:    true,
 		MaxTokens:   2600,
 		Temperature: 0.2,
 	})
@@ -426,10 +371,6 @@ Kurallar:
 {"title":"","spot":"","seo_title":"","meta_description":""}`
 }
 
-// ceviriInstruksiyonGovde gövde kuralıdır.
-//
-// Paragraf sayısının korunması ZORUNLU: sunucu sıra eşleşmesini doğrular ve
-// uyuşmazsa kaydı reddeder (yanlış sıralı gövde yayına girmemeli).
 func ceviriInstruksiyonGovde(dil string) string {
 	return `Verilen Türkçe haber paragraflarını ` + strings.ToUpper(dil) + ` diline çevir.
 Kurallar:
@@ -563,9 +504,6 @@ func tiptapBlokMetni(v any) string {
 	return strings.TrimSpace(sb.String())
 }
 
-// Bloklar çevrilmiş paragrafları detail JSON'una çevirir.
-//
-// Girdi biçimi (blok dizisi) korunur: site şablonu bu biçimi bekliyor.
 func Bloklar(paragraflar []string) []byte {
 	bloklar := make([]map[string]any, 0, len(paragraflar))
 	for _, p := range paragraflar {
@@ -579,11 +517,6 @@ func Bloklar(paragraflar []string) []byte {
 	return b
 }
 
-// Kaydet çeviriyi yeni bir içerik olarak yazar.
-//
-// translation_of kaynak içeriğin ÇEVİRİ KÖKÜNÜ gösterir; böylece bir
-// haberin tüm dilleri tek zincirde toplanır (kanonik/hreflang bu zinciri
-// kullanır).
 func Kaydet(ctx context.Context, pool *pgxpool.Pool, kaynak repo.Content, hedef string, c Ceviri, durum string) (int64, error) {
 	if kaynak.ID <= 0 {
 		return 0, errors.New("geçersiz kaynak içerik")
@@ -593,9 +526,6 @@ func Kaydet(ctx context.Context, pool *pgxpool.Pool, kaynak repo.Content, hedef 
 	}
 	kok := kaynak.TranslationRootID()
 
-	// Paragraflar kaynakla aynı sayıda değilse (model eksik döndürdü)
-	// kaynak paragrafların sayısını korumak için eksikleri boş bırakırız:
-	// sıra bozulursa gövde anlamsız karışır.
 	kaynakP := Paragraflar(kaynak.Detail)
 	hedefP := c.Paragraflar
 	if len(kaynakP) > 0 && len(hedefP) != len(kaynakP) {
@@ -612,13 +542,6 @@ func Kaydet(ctx context.Context, pool *pgxpool.Pool, kaynak repo.Content, hedef 
 		slug += suffix
 	}
 
-	// Referanslar DOĞRULANIR: silinmiş kategori/medya/yazar çeviri kaydını
-	// FK hatasıyla patlatıyordu.
-	//
-	// Sahadan gelen gerçek vaka: `contents_category_id_fkey` ihlali, kullanıcıya
-	// ham SQL hatası olarak gösteriliyordu ("insert or update on table
-	// contents violates foreign key constraint"). Aynı hata arka plan
-	// kuyruğunda da kaydı sürekli düşürüyordu (3 denemeden sonra atlanıyordu).
 	catID := gecerliKategori(ctx, pool, kaynak.CategoryID)
 	mediaID := gecerliMedya(ctx, pool, kaynak.CoverMediaID)
 	mansetID := gecerliMedya(ctx, pool, kaynak.MansetMediaID)
@@ -642,11 +565,6 @@ func Kaydet(ctx context.Context, pool *pgxpool.Pool, kaynak repo.Content, hedef 
 		TranslationOf: &kok,
 		SiteID:        kaynak.SiteID,
 	}
-	// Faz 193c — SEO alanları çeviri yolunda da sınırlanır.
-	//
-	// ÖLÇÜM: 31 çeviride seo_title 70, 71'inde meta açıklama 165 karakteri
-	// aşıyordu (en uzun 311). `ceviriBaslik` istemde 30-60 istiyor ama yanıtı
-	// doğrulamıyordu; kırpma tek yerde (platform.SeoKirp) yapılır.
 	if s := platform.SeoKirp(temiz(c.SeoBaslik), platform.SeoBaslikSertMax); s != "" {
 		nc.SeoTitle = &s
 	}
@@ -660,11 +578,6 @@ func Kaydet(ctx context.Context, pool *pgxpool.Pool, kaynak repo.Content, hedef 
 	return repo.CreateContent(ctx, pool, nc)
 }
 
-// UretTekrar çeviriyi en çok iki kez dener.
-//
-// Neden: sağlayıcı yanıtları zaman zaman token sınırında kesiliyor
-// ("unexpected end of JSON input", izole logunda görüldü). Tek denemede
-// bırakmak içeriği kalıcı çevirisiz bırakıyordu.
 func UretTekrar(ctx context.Context, aiclient *ai.Client, c repo.Content, hedef string, logger *slog.Logger) (Ceviri, error) {
 	cev, err := Uret(ctx, aiclient, c, hedef)
 	if err == nil {
@@ -677,11 +590,6 @@ func UretTekrar(ctx context.Context, aiclient *ai.Client, c repo.Content, hedef 
 	return Uret(ctx, aiclient, c, hedef)
 }
 
-// hataSayaci kalıcı başarısız içerikleri işaretler.
-//
-// Neden gerekli: kayıt FK/veri hatasıyla sürekli düşerse kuyruğun başında
-// kalır ve HER turda yeniden denenir (her deneme AI maliyeti). Üç
-// denemeden sonra atlanır; süreç yeniden başlarsa sayaç sıfırlanır.
 type hataSayaci struct {
 	mu   sync.Mutex
 	sayi map[int64]int
@@ -705,11 +613,6 @@ func (h *hataSayaci) basarili(id int64) {
 	delete(h.sayi, id)
 }
 
-// gecerliKategori kimlik mevcutsa döndürür, değilse nil.
-//
-// Silinmiş kategoriye işaret eden bir kaynak, çeviri kaydını FK hatasıyla
-// patlatıyordu. Kategoriyi boş bırakmak çeviriyi kurtarır; editör sonradan
-// atayabilir.
 func gecerliKategori(ctx context.Context, pool *pgxpool.Pool, id *int64) *int64 {
 	if id == nil || *id <= 0 || pool == nil {
 		return nil
@@ -733,9 +636,6 @@ func gecerliMedya(ctx context.Context, pool *pgxpool.Pool, id *int64) *int64 {
 	return id
 }
 
-// gecerliYazar kimlik mevcutsa döndürür; yoksa 1 (sistem yazarı).
-//
-// AuthorID NOT NULL: nil verilemez, bu yüzden geçerli bir yedek şart.
 func gecerliYazar(ctx context.Context, pool *pgxpool.Pool, id int64) int64 {
 	if pool == nil {
 		return 1
@@ -839,12 +739,6 @@ func tur(ctx context.Context, pool *pgxpool.Pool, aiclient *ai.Client, logger *s
 	return n
 }
 
-// istekEsZamanli, editör isteklerini işleyen eşzamanlı işçi sayısıdır.
-//
-// Neden 1 değil: ölçümde tek işçi, uzun süren (ya da sağlayıcı hatasıyla
-// yeniden denenen) bir isteğin arkasında yeni isteği 6 dakika bekletti.
-// Neden 3+ değil: her işçi ayrı AI çağrısı yapar; otomatik kuyruk zaten 3
-// eşzamanlı çalışıyor, sağlayıcıyı daha fazla zorlamak hataları artırır.
 const istekEsZamanli = 2
 
 // Bekleme hedef tempoyu tutturmak için beklenecek süredir.
@@ -863,13 +757,6 @@ func Bekleme(dakika, islenen int, gecen time.Duration) time.Duration {
 func Run(ctx context.Context, pool *pgxpool.Pool, aiclient *ai.Client, logger *slog.Logger, siteID int64) {
 	hata := &hataSayaci{sayi: map[int64]int{}}
 	logger.Info("ceviri başladı", "varsayılan_dakika", VarsayilanDakika)
-	// Editör istekleri AYRI bir döngüde işlenir.
-	//
-	// Neden aynı döngüde değil: otomatik tur dakikalarca sürebiliyor (3
-	// eşzamanlı AI çağrısı, uzun haberlerde 120 sn zaman aşımı). Aynı
-	// döngüde işlendiğinde editörün isteği tur bitene kadar "bekliyor"
-	// kalıyordu (ölçüm: 2 dk sonra hâlâ bekliyor). İki iş birbirini
-	// beklememeli.
 	go istekDongusu(ctx, pool, aiclient, logger)
 
 	for {
@@ -903,16 +790,6 @@ func Run(ctx context.Context, pool *pgxpool.Pool, aiclient *ai.Client, logger *s
 	}
 }
 
-// istekDongusu editör çeviri isteklerini yoklar ve işler.
-//
-// Ayrı goroutine: otomatik tur ne kadar sürerse sürsün editör isteği
-// beklemez.
-//
-// EŞZAMANLILIK: tek tüketici yetmedi. Ölçüm: 28 paragraflık bir haberin
-// isteği 3-4 dk sürerken ya da sağlayıcı hatasıyla yeniden denerken,
-// kuyruğa yeni gelen istek 6 dakika boyunca `bekliyor` kaldı (deneyde
-// 361 sn). İki işçi, iki editörün birbirini beklemesini engeller; üst sınır
-// bilinçli olarak küçük tutulur, sağlayıcı yükü artmasın.
 func istekDongusu(ctx context.Context, pool *pgxpool.Pool, aiclient *ai.Client, logger *slog.Logger) {
 	// Süreç çeviri ortasında öldüyse "calisiyor" satırı kalır; panel
 	// sonsuza kadar yoklar. Başlangıçta geri alınır.
@@ -929,10 +806,6 @@ func istekDongusu(ctx context.Context, pool *pgxpool.Pool, aiclient *ai.Client, 
 	}
 }
 
-// istekIsci tek bir tüketicidir: sıradaki isteği alır, işler, tekrarlar.
-//
-// Boş kuyrukta 2 sn bekler. `FOR UPDATE SKIP LOCKED` sayesinde iki işçi
-// (ya da iki süreç) aynı satırı almaz.
 func istekIsci(ctx context.Context, pool *pgxpool.Pool, aiclient *ai.Client, logger *slog.Logger) {
 	for {
 		if ctx.Err() != nil {
@@ -962,13 +835,6 @@ func istekIsci(ctx context.Context, pool *pgxpool.Pool, aiclient *ai.Client, log
 	}
 }
 
-// bayatIstekTemizle, sahibi ölmüş "calisiyor" istekleri geri alır.
-//
-// Neden: başlangıçtaki sıfırlama yalnız süreç YENİDEN BAŞLARKEN çalışır.
-// İşçi goroutine'i panikle ölürse (ya da işlem `calisiyor` yazdıktan sonra
-// kesilirse) satır sonsuza kadar "çalışıyor" kalır ve panel hiç durmadan
-// yoklar. 20 dakika, en uzun çeviriden (ölçüm: 231 sn) kat kat uzundur;
-// dolayısıyla canlı bir işin altından satır çalınmaz.
 func bayatIstekTemizle(ctx context.Context, pool *pgxpool.Pool, logger *slog.Logger) {
 	if pool == nil {
 		return

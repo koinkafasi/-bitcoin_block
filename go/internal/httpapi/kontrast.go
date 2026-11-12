@@ -7,27 +7,9 @@ import (
 	"strings"
 )
 
-// Renk yardımcıları — erişilebilir kontrast (Faz 180, A-7).
-//
-// SORUN: marka rengi kullanıcı tarafından seçiliyor (Marka Merkezi) ve
-// varsayılan değeri #fa0000. Bu rengin üstüne beyaz yazı konduğunda
-// kontrast 4.15 çıkıyor; WCAG AA küçük metin eşiği 4.5.
-//
-// YANLIŞ ÇÖZÜM: marka rengini koyulaştırmak. Renk kullanıcının seçimi;
-// başlıkta, bağlantıda ve grafiklerde aynı ton görünmeli.
-//
-// DOĞRU ÇÖZÜM: marka rengi AYNEN kalır; yalnız "üstünde beyaz yazı taşıyan
-// DOLGU" için türetilmiş bir renk üretilir (`--accent-fill`). Türetme,
-// beyazla 4.5'i geçen EN AÇIK tonu bulur — yani markaya en yakın olanı.
-// #fa0000 için sonuç #ef0000 (4.5% koyu): 250 → 239 kırmızı kanalı,
-// gözle ayırt edilemez.
-
 const (
 	// wcagNormalText küçük metin için eşik.
-	wcagNormalText = 4.5
-	// enFazlaKarartma: aşırı uçuk marka renklerinde (ör. sarı) beyaz yazı
-	// hiç geçmeyebilir. Bu sınırda durup en koyu tonu döndürürüz; çağıran
-	// dilerse yazıyı koyu yapar. Pratikte marka renkleri bu aralıkta.
+	wcagNormalText  = 4.5
 	enFazlaKarartma = 0.65
 )
 
@@ -80,45 +62,19 @@ func kontrastOrani(r1, g1, b1, r2, g2, b2 float64) float64 {
 	return (l1 + 0.05) / (l2 + 0.05)
 }
 
-// accentFill: `accent` renginin üstüne BEYAZ yazı konduğunda 4.5'i geçen
-// en açık (markaya en yakın) tonu döndürür.
-//
-// Geçersiz girdide boş döner; çağıran `--accent-fill` yazmaz ve CSS'teki
-// `var(--accent-fill, var(--accent))` yedeği devreye girer.
-// accentTextFill: `accent` rengi METİN olarak açık zeminde 4.5'i geçsin
-// diye türetilmiş ton.
-//
-// Ölçüt, panelin EN KOYU yüzeyi: yan menü zemini #e7e4dd. Sayfa zemini
-// #f3f2ef ve kart #fdfdfb daha açık; en koyu olana göre ayarlanınca diğer
-// ikisi de geçiyor. (Üretimde ölçüldü: #f3f2ef'e göre ayarlanmış ton yan
-// menüde 4.0 veriyordu.)
 func accentTextFill(h string) string {
 	return karartEsige(h, "#e7e4dd")
 }
 
-// accentTextKoyu: `accent` rengi KOYU temada METIN olarak 4.5'i geçsin
-// diye türetilmiş ton. Koyu zeminde marka rengini koyulaştırmak tersine
-// çalışır; beyaza doğru açılır. Ölçüt, koyu temanın kart zemini (#18181b);
-// sayfa zemini (#131316) daha da koyu olduğu için ikisi birlikte sınanır.
 func accentTextKoyu(h string) string {
 	return koyuTemaMetin(h)
 }
 
-// koyuTemaMetin: kullanici secimi bir metin rengi (or. #000000) koyu temada
-// 4.5'i gecsin diye beyaza dogru acilir.
-//
-// NEDEN: "Gorunum & Marka" panelinde secilen metin rengi TEK bir deger;
-// iki temaya da uygulaniyordu. Kullanici siyah sectiginde koyu temada
-// metin siyah kalip okunmuyordu (olculdu: kontrast 1.2).
 func koyuTemaMetin(h string) string {
 	r, g, b, ok := hexRGB(h)
 	if !ok {
 		return ""
 	}
-	// Ölçüt, koyu temanın EN AÇIK yüzeyi: `--surface-2` ≈ #27272a.
-	// Açık metin için zemin açıldıkça kontrast DÜŞER; bu yüzden en kötü
-	// durum en açık yüzeydir. Önce kart (#1e1e22) ve sayfa (#131316)
-	// sınanmıştı; üretilen ton #27272a üzerinde 4.2 veriyordu.
 	zemin := [3]float64{39, 39, 42}
 	sayfa := [3]float64{19, 19, 22}
 	uygun := func(rr, gg, bb float64) bool {
@@ -174,9 +130,6 @@ func accentFill(h string) string {
 	if kontrastOrani(r, g, b, 255, 255, 255) >= wcagNormalText {
 		return h // zaten geçiyor: marka rengi aynen kullanılır
 	}
-	// DİKKAT: adaylar YUVARLANMIŞ kanallarla test edilir. Sürekli değerle
-	// test edip sonra hex'e yuvarlamak, eşiği kıl payı geçen tonu bir adım
-	// AÇIĞA yuvarlayabiliyor (ölçüldü: #16a34a için 4.49).
 	for i := 1; i <= 200; i++ {
 		k := 1 - (enFazlaKarartma*float64(i))/200
 		rr := math.Round(r * k)

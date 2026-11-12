@@ -11,7 +11,7 @@ templ CDHesap(v CDHesapSayfa) {
 	<html lang="tr">
 		<head>
 			@cdHead(CDHead{Title: v.Title, Desc: v.Desc, Canonical: v.Canonical,
-				OGType: "website", SiteName: v.Shell.SiteName, RSSFeed: "/rss.xml",
+				OGType: "website", SiteName: v.Shell.SiteName, FaviconURL: v.Shell.FaviconURL, RSSFeed: "/rss.xml",
 				NoIndex: true, Locale: "tr", JSONLD: v.JSONLD,
 				BaseURL: v.Shell.BaseURL})
 		</head>

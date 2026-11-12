@@ -151,10 +151,6 @@ func stringValue(p *string) string {
 	return *p
 }
 
-// publishContentLive, DB commit sonrası yayın sinyali gönderir. Taslak/arşiv
-// durumundaki içerikler için removed olayı gider; içerik metni gönderilmez.
-// publishEditorSaved, aynı içeriği açmış diğer editörlere yeni sürüm sinyali
-// gönderir. Public SSE'den ayrı bir hub kullanır.
 func (s *Server) publishEditorSaved(ctx context.Context, id, siteID int64, version int) {
 	if id <= 0 {
 		return

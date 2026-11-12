@@ -1,29 +1,5 @@
 package httpapi
 
-// İçerikler sayfasındaki DURUM sekmeleri (Yayında / Taslak / Planlanmış /
-// Arşiv / Çöp / Tümü) üst menüdeki hap geçişinin AYNISINI yapmalı
-// (kullanıcı isteği, 3 Kasım 2026).
-//
-// Ölçülen sorunlar (canlı panel, Puppeteer):
-//   1. Hap hangi sekme seçili olursa olsun HEP İLK sekmeye ("Yayında")
-//      oturuyordu: clip 4 sekme boyunca hiç değişmiyordu.
-//      Sebep: `aktifOge` içinde "tam yol eşleşmesi her zaman kazanır"
-//      kuralı ilk sıradaydı; bütün durum sekmeleri `/admin/icerikler?durum=…`
-//      adresine gittiği ve sorgu atıldığında `/admin/icerikler` =
-//      location.pathname olduğu için ilk aday dönüyordu.
-//   2. Hap kaymıyor, SOLUYORDU: panel `hx-swap` ile tümüyle değişiyor,
-//      htmx `.htmx-added` veriyor, pn-yenile (opacity .35→1) hapı da
-//      kapsıyordu. Ölçüm: opacity 1 → 0 → 1, clip sabit.
-//   3. Sekme çubuğu her takasta yeni DOM olduğu için kimlik kaydı
-//      eşleşmiyordu (`ray:adsiz`) ve tıklama işleyicisi `hx-get`
-//      bağlantılarını atlıyordu → konum devri hiç yazılmıyordu.
-//
-// Düzeltmeden sonra ölçüm (aynı araç):
-//   Taslak   hap clip çeşidi 18 · opaklık min 1.00 · içerik −28 px
-//   Arşiv    hap clip çeşidi 18 · opaklık min 1.00 · içerik +28 px
-//   Yayında  hap clip çeşidi 18 · opaklık min 1.00 · içerik −28 px
-//   Tümü     hap clip çeşidi 18 · opaklık min 1.00 · içerik +28 px
-
 import (
 	"io/fs"
 	"strings"

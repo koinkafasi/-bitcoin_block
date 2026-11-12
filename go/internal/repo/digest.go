@@ -138,9 +138,6 @@ func BuildDailyDigest(ctx context.Context, pool *pgxpool.Pool, siteID int64, day
 			summary = string([]rune(summary)[:400]) + "…"
 		}
 	}
-	// "2 Ocak 2006" Go layout'unda AY BELİRTECİ DEĞİLDİR: "Ocak" düz metin
-	// olarak basılıyordu ve her özet "… Ocak 2026 Günlük Özeti" çıkıyordu
-	// (ölçüldü 9 Kasım 2026). TarihTRUzun gerçek ay adını yazar.
 	title := TarihTRUzun(day) + " Günlük Özeti"
 	if locale != "tr" {
 		title = day.Format("2006-01-02") + " Daily Digest"
@@ -197,9 +194,6 @@ func ListDigests(ctx context.Context, pool *pgxpool.Pool, siteID int64, locale, 
 	return out, rows.Err()
 }
 
-// SetDigestAudio günlük özete ses dosyası bağlar (podcast).
-// NOT: `kind` değiştirilmez — unique kısıtı (site,tarih,dil,kind) çakışması olurdu.
-// Yalnız henüz ses bağlanmamış satırlar güncellenir (eşzamanlı üretim koruması).
 func SetDigestAudio(ctx context.Context, pool *pgxpool.Pool, d Digest) error {
 	res, err := pool.Exec(ctx, `UPDATE digests SET audio_path=$1
 		WHERE id=$2 AND (audio_path IS NULL OR audio_path='')`,

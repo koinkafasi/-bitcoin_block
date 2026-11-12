@@ -5,12 +5,6 @@ import (
 	"testing"
 )
 
-// Faz 193c — SEO yazma sınırı.
-//
-// ÖLÇÜM: yayındaki 233 içerikte seo_title > 70 (en uzun 138), 236'sında
-// meta > 165 (en uzun 180; EN'de 311). Panelden elle kaydetme ve çeviri kaydı
-// hiç sınır uygulamıyordu.
-
 func TestSeoKirpSinirAltinda(t *testing.T) {
 	s := "Kısa bir SEO başlığı"
 	if got := SeoKirp(s, 70); got != s {

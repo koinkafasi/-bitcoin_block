@@ -54,10 +54,6 @@ func refreshCore(ctx context.Context, pool *pgxpool.Pool, logger *slog.Logger) {
 	run("fikstur-h", func() (int, error) { return 0, repo.RefreshFixtures(ctx, pool) })
 	run("puan", func() (int, error) { return 0, repo.RefreshStandings(ctx, pool) })
 	run("astroloji", func() (int, error) { return 0, repo.RefreshAstroloji(ctx, pool) })
-	// Gazete manşetleri (Faz 197): günün ön sayfaları. Kaynak gün içinde
-	// değişmediği için fonksiyon kendisi atlar (bkz. repo.gazeteMansetTaze);
-	// ağa yalnız günde bir (ya da kaynak gecikirse ~50 dakikada bir) çıkar.
-	run("gazete_manset", func() (int, error) { return repo.RefreshGazeteMansetleri(ctx, pool) })
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
@@ -67,12 +63,6 @@ func refreshCore(ctx context.Context, pool *pgxpool.Pool, logger *slog.Logger) {
 	wg.Wait()
 }
 
-// RunFinance finans verilerini ayrı ve daha sık tazeler.
-//
-// Kur, kripto ve piyasa özeti 2 dakikada bir; BIST hisseleri (36 ayrı
-// Yahoo isteği) her üç turda bir (6 dakika) yenilenir. Böylece "canlı"
-// fiyat akışı 30 dakikalık genel servis turuna bağlı kalmaz, hava/namaz
-// gibi yavaş servisler de gereksiz yere çağrılmaz.
 func RunFinance(ctx context.Context, pool *pgxpool.Pool, logger *slog.Logger, every time.Duration) {
 	if every <= 0 {
 		every = 2 * time.Minute

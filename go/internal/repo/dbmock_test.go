@@ -14,11 +14,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// ---- repo.DB arayüzünün test sahtesi -------------------------------
-//
-// Gerçek Postgres'e ihtiyaç duymadan Cache/Settings/PageLayout gibi veri
-// katmanı fonksiyonlarını sınamak için kullanılır.
-
 type dbCall struct {
 	Kind string // "queryrow" | "query" | "exec"
 	SQL  string

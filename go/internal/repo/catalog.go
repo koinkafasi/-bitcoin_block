@@ -147,9 +147,6 @@ func clampTierWeight(n int) int {
 	return n
 }
 
-// CategoryMinTierWeight kategorinin varsayilan katman agirligini dondurur
-// (kategori yoksa 0). Sorgu hatasi sessizce yutulmaz: kademe kurali
-// okunamazsa cagiran taraf kaydi durdurabilir.
 func CategoryMinTierWeight(ctx context.Context, pool *pgxpool.Pool, categoryID int64) (int, error) {
 	if categoryID <= 0 {
 		return 0, nil

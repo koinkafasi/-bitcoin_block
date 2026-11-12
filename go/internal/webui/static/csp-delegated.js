@@ -1,27 +1,4 @@
-/* csp-delegated.js — CSP uyumlu olay delegasyonu.
- *
- * NEDEN: Zorunlu (enforce) CSP, satır içi olay özniteliklerini
- * (`onsubmit="return confirm(...)"`, `onchange="this.form.submit()"`)
- * ÇALIŞTIRMAZ — 'unsafe-inline' yok. Bu yüzden bu davranışlar şablonlardan
- * kaldırıldı ve burada, tek bir delege dinleyiciyle karşılandı.
- *
- * Desteklenen öznitelikler:
- *   data-confirm="metin"    → window.confirm; false dönerse işlem iptal.
- *                             htmx varsa (hx-post/hx-get) onay sorulmaz,
- *                             çünkü htmx isteği bizim submit'imizle değil
- *                             kendi içinde gönderir.
- *   data-confirm-her-zaman  → htmx olsa da onay sor.
- *   data-autosubmit         → change olayında formu gönder (htmx varsa
- *                             form.submit() çağrılmaz, htmx kendi gönderir).
- *   data-hata-gizle         → error olayında öğeyi kaldır (bozuk görsel).
- *   data-sec                → click/focus'ta içeriği seç.
- *   data-kopyala            → data-copy değerini panoya kopyala, etiketi
- *                             "Kopyalandı" yap, 1,5 sn sonra geri al.
- *   data-set-alan="a=1;b=2" → submit öncesi form alanlarını doldur.
- *
- * Tümü yakalama (capture) fazında dinlenir: htmx kendi işleyicisini
- * bağlamış olsa da sıra bizde kalır.
- */
+
 (function () {
   'use strict';
 
@@ -200,7 +177,7 @@
     var kok = document.documentElement;
     kok.classList.remove('light', 'dark');
     kok.classList.add(koyu ? 'dark' : 'light');
-    try { localStorage.setItem('tema', koyu ? 'dark' : 'light'); } catch (err) { /* yok say */ }
+    try { localStorage.setItem('tema', koyu ? 'dark' : 'light'); } catch (err) {  }
     temaDugmeleri();
   }
 

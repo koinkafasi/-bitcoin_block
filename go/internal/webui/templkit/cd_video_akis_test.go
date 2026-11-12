@@ -1,15 +1,5 @@
 package templkit
 
-// Video sayfası sağ kolon + kapak testleri (11 Kasım 2026).
-//
-// NEDEN: Kullanıcı iki şey bildirdi:
-//   "sağda scroll yok, üst/altta hafif saydam geçiş var, içerikler mouse ile
-//    akıyor"  → bu CSS + JS sözleşmesi sessizce bozulabilir
-//   "shorts küçük resimleri çok kötü kalitede" → dikey satır görseli
-//
-// Bu testler CSS kurallarını ve şablon kancalarını sabitler: biri
-// silindiğinde hata vermez, sadece görünüm bozulurdu.
-
 import (
 	"testing"
 

@@ -14,17 +14,6 @@ import (
 	"theblock/site/internal/repo"
 )
 
-// Kaynak görsel ucu (/kg/{hash}) güvenlik kapısı.
-//
-// NEDEN TEST: bu uç dışarıdan gelen bir adresi sunucuya indirtiyor.
-// Yanlış yazılmış bir hash doğrulaması yol aşımına, SVG kabulü ise
-// görselin içine gömülü script'e kapı açar.
-
-// TestGecerliKaynakGorselHash: uzunluk VE karakter birlikte doğrulanır.
-//
-// Saldırı denemeleri: "../" (yol aşımı), kodlanmış "..", büyük harf
-// (dosya sistemi büyük/küçük harf duyarsız olabilir → iki hash aynı
-// dosyaya düşer), boşluk, uzunluk ihlali.
 func TestGecerliKaynakGorselHash(t *testing.T) {
 	kabul := []string{
 		"80fe8a843afddb33661ff0f019b8ac11",
@@ -54,13 +43,6 @@ func TestKaynakGorselYol(t *testing.T) {
 	assert.Equal(t, "", repo.KaynakGorselYol(""), "boş hash yol üretmez")
 }
 
-// TestKaynakGorselDiskYoluDagilimi: ilk 2 karakter alt dizin olur.
-//
-// NEDEN: tek dizinde on binlerce dosya bazı dosya sistemlerinde yavaşlar;
-// ayrıca yedekleme/rsync dağıtımı tek dizinde kilitlenir.
-//
-// Yol artık KÖKTEN GÖRELİ üretilir (os.Root hapishanesi): mutlak yol
-// kurulmaz, böylece depolama dizini dışına çıkmak yapısal olarak imkânsız.
 func TestKaynakGorselDiskYoluDagilimi(t *testing.T) {
 	yol := kaynakGorselGoreli("80fe8a843afddb33661ff0f019b8ac11", "")
 	assert.Equal(t, filepath.Join("80", "80fe8a843afddb33661ff0f019b8ac11"), yol)
@@ -69,12 +51,6 @@ func TestKaynakGorselDiskYoluDagilimi(t *testing.T) {
 
 // ---- Ölçekli uç: /kg/{hash}/{genislik} ----
 
-// TestKaynakGorselGenislikKapaliListe: genişlik serbest OLMAMALI.
-//
-// NEDEN TEST (güvenlik, kaynak tüketimi): istemci istediği genişliği
-// isteyebilseydi /kg/<hash>/1, /kg/<hash>/2, … ile sınırsız dosya
-// üretilebilirdi — disk dolar ve her istek ölçekleme için CPU yakar.
-// Liste kapalı; bu test kapının açılmasını engeller.
 func TestKaynakGorselGenislikKapaliListe(t *testing.T) {
 	for _, g := range []int{320, 480, 768, 960, 1200, 1600} {
 		assert.True(t, kaynakGorselGenislikGecerli(g), "kabul edilmeli: %d", g)
@@ -84,11 +60,6 @@ func TestKaynakGorselGenislikKapaliListe(t *testing.T) {
 	}
 }
 
-// TestKaynakGorselGenislikMediaSrcsetIleAyni: iki görsel sistemi aynı
-// genişlik kümesini kullanmalı.
-//
-// NEDEN: ayrı listelere düşerlerse biri güncellenir diğeri kalır; şablon
-// 480 ister, uç 404 döner ve sayfada boş kare çıkar.
 func TestKaynakGorselGenislikMediaSrcsetIleAyni(t *testing.T) {
 	// mediaSrcset'in bastığı genişlikler (bkz. util.go).
 	for _, g := range []int{320, 480, 768, 960, 1200, 1600} {
@@ -97,11 +68,6 @@ func TestKaynakGorselGenislikMediaSrcsetIleAyni(t *testing.T) {
 	}
 }
 
-// TestKaynakGorselVaryantYolu: ölçekli dosya orijinalin YANINDA durur ve
-// adı onunla ÇAKIŞMAZ.
-//
-// NEDEN: çakışsaydı ölçekli dosya orijinalin üzerine yazılır, orijinal
-// bir daha elde edilemez ve her genişlik aynı dosyayı okur.
 func TestKaynakGorselVaryantYolu(t *testing.T) {
 	const h = "80fe8a843afddb33661ff0f019b8ac11"
 	asil := kaynakGorselGoreli(h, "")
@@ -114,12 +80,6 @@ func TestKaynakGorselVaryantYolu(t *testing.T) {
 	assert.Equal(t, asil+"-480", v480)
 }
 
-// TestKaynakGorselOlceklemeKucultuyor — değişikliğin ASIL İDDİASI.
-//
-// Canlı ölçüm (5 Kasım 2026): ana sayfadaki beş /kg/ görseli 1,39 MB
-// (en büyüğü 708 KB PNG), en geniş yuva 474x266. Bu test, ölçeklemenin
-// gerçekten küçülttüğünü ve en-boy oranını koruduğunu sabitler; biri
-// ResizeToWidth'i "iyileştirir" de kırarsa burada görünür.
 func TestKaynakGorselOlceklemeKucultuyor(t *testing.T) {
 	// 1600x900 PNG — kaynaklardan gelen büyük kapakları temsil eder.
 	// Düz renk değil: düz renk sıkışıp testi anlamsız kılar.
@@ -145,10 +105,6 @@ func TestKaynakGorselOlceklemeKucultuyor(t *testing.T) {
 	assert.Equal(t, 270, ol.Bounds().Dy())
 }
 
-// TestKaynakGorselOlceklemeBuyutmuyor: küçük görsel şişirilmemeli.
-//
-// NEDEN: 200px'lik bir kaynak görseli 1600'e çıkarmak dosyayı büyütür,
-// kaliteyi artırmaz. ResizeToWidth kaynak genişliğinde durur.
 func TestKaynakGorselOlceklemeBuyutmuyor(t *testing.T) {
 	img := image.NewRGBA(image.Rect(0, 0, 200, 100))
 	for y := 0; y < 100; y++ {

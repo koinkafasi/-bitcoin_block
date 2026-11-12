@@ -8,14 +8,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// Faz 189 — çok dilli ön yüz.
-//
-// Ölçülen sorun: 24 dil etkin ve `/en` 200 dönüyordu, <html lang="en"> de
-// doğruydu; ama ana sayfada manşet YOKTU (TR'de 150 hero öğesi, EN'de 0),
-// <title> Türkçe kalıyordu ve hreflang hiç basılmıyordu. Sebep: içerik
-// sorguları `locale = $1` ile sıkı filtreleniyor ve hiç İngilizce içerik
-// yoktu; düşüş/koruma katmanı da yoktu.
-
 // TestIcerikDiliDususu: içerik yoksa varsayılan dile düşülür ve bu
 // "düşüş" olarak işaretlenir (noindex + kanonik için).
 func TestIcerikDiliDususu(t *testing.T) {
@@ -42,9 +34,6 @@ func TestIcerikDiliDususu(t *testing.T) {
 		"düşüşte canonical varsayılan dile verilmeli (kopya dizinlenmesin)")
 }
 
-// TestHreflangYalnizIcerikliDiller: boş dil sayfasına hreflang verilmez.
-//
-// Aksi hâlde arama motoru boş sayfaya çağrılır; ayrıca x-default şart.
 func TestHreflangYalnizIcerikliDiller(t *testing.T) {
 	src := okuDosya(t, "dil_yardimcilari.go")
 	i := strings.Index(src, "func (s *Server) yerelHreflang(")
@@ -91,14 +80,10 @@ func TestSiteAdiYerellesir(t *testing.T) {
 	assert.Contains(t, src, "title != s.siteName",
 		"site adı karşılaştırması orijinal adla olmalı")
 
-	// MAKALE BAŞLIĞI: yeni CoinDesk kabuğunda <title> YALNIZ makale
-	// başlığıdır (site adı eklenmez — CoinDesk deseni, ölçüldü).
-	// Eski theblock gövdesindeki `seoTitle + " — " + SiteName` kuralı
-	// CD şablonunda `cdMakaleBaslik`a yerini bıraktı; ölü kod silinince
-	// (lint: unused) bu kuralı arayan iddia da güncellendi.
 	art := okuDosya(t, "cd_article.go")
-	assert.Contains(t, art, "Title:     cdMakaleBaslik(c)",
-		"CD makale <title>'ı cdMakaleBaslik'tan gelmeli")
+	bas := strings.Index(art, "cdMakaleBaslik(c)")
+	require.Greater(t, bas, 0, "CD makale <title>'ı cdMakaleBaslik'tan gelmeli")
+	assert.Contains(t, art[:bas], "Title:", "başlık alanı bu üreticiyle doldurulmalı")
 }
 
 // TestKategoriAdiCevirisi: kategori adları `category.<slug>` anahtarından.
@@ -131,10 +116,6 @@ func TestCeviriAyarAnahtarlari(t *testing.T) {
 	assert.Contains(t, main, "ceviri.Run(", "arka plan işi başlatılmalı")
 }
 
-// TestDilMigrationSozlesmesi: migration hem tr hem en anahtarlarını taşımalı.
-//
-// `all_in`/`news_word` çevrilmezse T() anahtarın kendisini döndürür ve
-// ekrana "all_in Technology news_word" yazılır (izole ölçümde görüldü).
 func TestDilMigrationSozlesmesi(t *testing.T) {
 	up := okuDosya(t, "../../migrations/0100_dil_ceviri_en.up.sql")
 

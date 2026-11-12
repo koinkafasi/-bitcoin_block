@@ -11,23 +11,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// `--muted` metin rengi olarak kullanılamaz (Faz 175).
-//
-// NEDEN: `--muted` shadcn'de bir ZEMİN rengidir; metin vurgusuz rengi
-// `--muted-fg`'dir. admin-shadcn.css eşlemeyi doğru kurmuştu
-// (`--muted: var(--sh-muted)` → açık gri zemin), ama kod tabanında `--muted`
-// YALNIZCA metin rengi olarak kullanılmıştı: 86 çağrı, hepsi `color:`.
-//
-// Sonuç panelde ölçüldü: ikincil metin krem zeminden farksız yazılıyordu
-//
-//	.as-durum  renk rgb(246,245,242) · zemin rgb(243,242,239) · kontrast ~1.0
-//
-// Public tarafta ise `--muted` hiç TANIMLI DEĞİLDİ; `color: var(--muted)`
-// geçersiz bildirim olup rengi miras alıyordu, yani ikincil metin hiç sönük
-// görünmüyordu (blok düzenleyici, medya listesi, site kurucu).
-//
-// Tek doğru ad metin vurgusuz rengi: `--muted-fg`.
-
 // TestMutedMetinRengiDegil: hiçbir dosyada `color: var(--muted)` kalmamalı.
 func TestMutedMetinRengiDegil(t *testing.T) {
 	dizinler := []string{"static", "templkit", "templates"}
@@ -86,9 +69,6 @@ func TestMutedFgHerTemada(t *testing.T) {
 	}
 }
 
-// TestMutedArkaPlanOlarak: --muted zemin vurgusu için hâlâ kullanılabilir
-// (surface-2 üzerinden). Bu test yalnızca token'ın silinmediğini doğrular;
-// birisi "kullanılmıyor" diye kaldırırsa shadcn bileşenleri sessizce bozulur.
 func TestMutedArkaPlanTokeniDuruyor(t *testing.T) {
 	b, err := os.ReadFile(filepath.Join("static", "admin-shadcn.css"))
 	require.NoError(t, err)

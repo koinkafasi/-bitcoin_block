@@ -1,18 +1,5 @@
 package repo
 
-// Hisse detay verisi (/price/stock/{sembol}).
-//
-// KAYNAK: Yahoo Finance grafik ucu — BIST için zaten kullanılan uç
-// (bkz. services_fetch.go, `yahooChart`). ABD hisseleri aynı uçtan gelir;
-// yeni bağımlılık ya da API anahtarı YOK.
-//
-// Uydurma veri ÜRETİLMEZ: uç bir alanı vermiyorsa alan boş kalır ve
-// şablon o satırı basmaz. Ölçüldü (9 Kasım 2026): `meta` içinde
-// regularMarketPrice/Volume, fiftyTwoWeekHigh/Low, previousClose,
-// regularMarketDayHigh/Low, longName ve currency var; **marketCap YOK**
-// (v7/quote ve v10/quoteSummary 401 "Invalid Crumb" döndürüyor).
-// Bu yüzden "Market Cap" satırı basılmaz — uydurulmuş sayı yazılmaz.
-
 import (
 	"context"
 	"encoding/json"
@@ -23,10 +10,6 @@ import (
 	"time"
 )
 
-// yahooChartAralik aralık parametreli grafik ucu.
-//
-// `interval` ve `range` Yahoo'nun kendi değerleri; eşleme HisseAraliklari
-// tablosunda (aşağıda) tek yerde tutulur.
 const yahooChartAralik = "https://query1.finance.yahoo.com/v8/finance/chart/%s?interval=%s&range=%s"
 
 // HisseNokta grafikteki tek nokta (unix saniye + OHLC).
@@ -92,9 +75,6 @@ func HisseAralikBul(kod string) HisseAralik {
 	return HisseAraliklari[0]
 }
 
-// hisseSembolRe Yahoo sembolü: harf/rakam + . - = ^ (BRK-B, GC=F, ^GSPC).
-//
-// ADRES PARÇASI DOĞRUDAN UCA GİRDİĞİ İÇİN katı doğrulama şart.
 var hisseSembolRe = regexp.MustCompile(`^[A-Z0-9][A-Z0-9.\-=^]{0,11}$`)
 
 // HisseSembolGecerli sembolün güvenli olduğunu söyler.
@@ -142,9 +122,6 @@ type yahooChartYanit struct {
 	} `json:"chart"`
 }
 
-// HisseCek sembolün kotasyonunu ve aralık serisini çeker.
-//
-// Hata durumunda sıfır değer döner; çağıran modülü BASMAZ (demo veri yok).
 func HisseCek(ctx context.Context, sembol, aralik string) (HisseDetay, error) {
 	sym := strings.ToUpper(strings.TrimSpace(sembol))
 	if !HisseSembolGecerli(sym) {
@@ -200,12 +177,6 @@ func HisseCek(ctx context.Context, sembol, aralik string) (HisseDetay, error) {
 	return d, nil
 }
 
-// hisseSeri zaman damgaları + OHLC dizilerini tek seriye indirir.
-//
-// NEDEN DİZİ KISALTMA: SVG yolu nokta sayısıyla doğrusal büyür; 5 günlük
-// 5 dakikalık seri 391 nokta (≈3 KB yol). 240 noktaya indirilince görsel
-// fark yok, HTML küçük kalır. SON NOKTA HER ZAMAN KORUNUR (grafik güncel
-// fiyatta bitmeli).
 func hisseSeri(ts []int64, q yahooQuote) []HisseNokta {
 	tam := make([]HisseNokta, 0, len(ts))
 	for i, t := range ts {
@@ -255,12 +226,6 @@ func firstPozitif(v ...float64) float64 {
 	return 0
 }
 
-// HisseGunOHLC son seansın açılış/yüksek/düşüğünü seriden çıkarır.
-//
-// NEDEN SON BAR DEĞİL: 1D sekmesi 5 dakikalık barlarla gelir; son barın
-// OHLC'si "günün açılışı" gibi gösterilirse yanıltıcı olur. Burada son
-// noktanın BORSA SAATİNDEKİ gününe düşen tüm barlar toplanır: açılış ilk
-// barın açılışı, yüksek/düşük barların uç değerleri.
 func HisseGunOHLC(seri []HisseNokta, dilimSaniye int) (acilis, yuksek, dusuk float64, ok bool) {
 	if len(seri) == 0 {
 		return 0, 0, 0, false

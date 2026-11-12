@@ -9,21 +9,6 @@ import (
 	"theblock/site/internal/repo"
 )
 
-// AI haber çıktısının yapı ve SEO kapısı.
-//
-// ÖLÇÜM (üretim, 2 Kasım 2026) — mevcut AI haber akışının ürettiği metinlerin
-// sahada görünen sonucu:
-//
-//	yayındaki 986 içeriğin 982'si TEK paragraf
-//	598'i 200 karakterin altında (RSS özeti kopyası)
-//	94 spot cümle ortasında kesilmiş
-//	456 SEO başlığı 60 karakterden uzun (206'sı başlığın birebir kopyası)
-//	3.628 içerikte gövdede HTML varlığı (&nbsp;, &#039;)
-//
-// Yani metin "AI yazdı" dense de yapısal olarak haber değil, özet yığınıydı.
-// Bu dosya, AI yanıtı editöre ULAŞMADAN önce yapıyı ölçer ve eksikleri
-// GÖRÜNÜR uyarı olarak döndürür (sessizce kabul etmez).
-
 const (
 	// Haber gövdesi alt sınırları. Google'ın "thin content" eşiği değil,
 	// editoryal ölçüt: 3 paragraf altındaki metin haber değil, duyurudur.
@@ -47,10 +32,6 @@ var (
 		`t[ıi]klay[ıi]n[ıi]z|okumaya devam|kayna[ğg]a git|buradan ula[şs]abilirsiniz)`)
 )
 
-// yapiUyarilari AI haber çıktısının yapı/SEO eksiklerini döndürür.
-//
-// `kaynak` modelin gördüğü kaynak metindir (seçim + haber gövdesi); yalnız
-// sızıntı denetiminde kullanılır.
 func yapiUyarilari(r *Result, act Action, kaynak string) []string {
 	if act.ID != "news" && act.ID != "research_news" && act.ID != "audio_draft" {
 		return nil
@@ -88,9 +69,6 @@ func yapiUyarilari(r *Result, act Action, kaynak string) []string {
 		out = append(out, "Metinde yönlendirme kalıntısı var (\""+m+"\"); kaldırın.")
 	}
 
-	// Kaynak sitesi sızıntısı: prompt yasaklıyor ama model sık sık
-	// "...com.tr'ye göre" yazıyor. Uyarı, uydurma ile karışmasın diye
-	// yalnız alan adı biçiminde aranır.
 	if sizinti := kaynakSizintisi(tum, r.Sources); sizinti != "" {
 		out = append(out, "Metinde kaynak site adı geçiyor (\""+sizinti+
 			"\"); kendi haberimiz gibi yazılmalı.")
@@ -105,9 +83,6 @@ func yapiUyarilari(r *Result, act Action, kaynak string) []string {
 	out = append(out, uzunlukUyarisi("Başlık", r.Title, haberBaslikMin, haberBaslikMax)...)
 	out = append(out, uzunlukUyarisi("Spot", alanDegeri(r, "spot"), haberSpotMin, haberSpotMax)...)
 
-	// SEO alanları yalnız `news`/`research_news` isteminde isteniyor.
-	// Ses taslağında istem SEO alanı içermiyor; orada "üretilmedi" uyarısı
-	// gürültü olurdu (editörün yapabileceği bir şey yok).
 	if act.ID == "news" || act.ID == "research_news" {
 		st := alanDegeri(r, "seo_title")
 		if st == "" {
@@ -171,10 +146,6 @@ func uzunlukUyarisi(ad, metin string, min, max int) []string {
 	return nil
 }
 
-// kaynakSizintisi metinde kaynak alan adı geçiyor mu?
-//
-// Yalnız `Sources` içindeki gerçek alan adları aranır: uydurma bir uyarı
-// üretmemek için genel ".com" araması yapılmaz.
 func kaynakSizintisi(metin string, kaynaklar []Source) string {
 	dusuk := strings.ToLower(metin)
 	for _, s := range kaynaklar {

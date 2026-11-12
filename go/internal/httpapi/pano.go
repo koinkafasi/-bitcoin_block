@@ -12,15 +12,6 @@ import (
 	"theblock/site/internal/webui/templkit"
 )
 
-// ---- Pano 2.0 (Faz 149) ----
-//
-// Tek sayfa: /admin/pano. Eski /admin panosuna dokunulmadı — yeni düzen
-// ayrı adreste büyüyor, beğenilince /admin'e taşınacak. Böylece iki düzen
-// yan yana karşılaştırılabiliyor ve geri dönüş için bayrak gerekmiyor.
-
-// Yayın şeridi kart ölçüleri. Genişlik yüzde olarak sabit: kart içeriği
-// başlık + saat, süre bilgisi yok — kartın gerçek süresi bilinmediği için
-// genişliği süreye bağlamak yanıltıcı bir kesinlik üretirdi.
 const (
 	planKartGenislik = 15 // yüzde (36 saatlik eksende ~5,4 saat)
 	panoPlanLaneMax  = 3  // dikey sıra sınırı (daha fazlası okunaksız)
@@ -97,9 +88,6 @@ func (s *Server) handlePano(w http.ResponseWriter, r *http.Request) {
 
 	hits := repo.SiteHits(ctx, s.pool, sid)
 
-	// --- Okunma akışı: 7 / 14 / 30 gün. Üç grafik de sunucuda çizilir,
-	// istemci yalnız görünürlüğü değiştirir (yeniden çizim = kayan nokta
-	// farkı ve yeniden istek; ikisi de gereksiz).
 	araliklar := []struct {
 		key   string
 		label string
@@ -193,13 +181,6 @@ func (s *Server) handlePano(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// --- Yayın şeridi ---
-	//
-	// İki mod var:
-	//   1. "36 saat"  : canlı pencere (-6s … +30s). Planlı/yeni yayın varsa.
-	//   2. "son yayınlar": pencere boşsa son yayınlanan içerikler, gerçek
-	//      zaman aralığına yayılır. Boş kutu göstermek yerine gerçek veri
-	//      gösterilir; eksen etiketi de moda göre değişir.
 	now := time.Now()
 	pencereBas := now.Add(-6 * time.Hour)
 	pencereSon := now.Add(30 * time.Hour) // toplam 36 saat
@@ -210,9 +191,6 @@ func (s *Server) handlePano(w http.ResponseWriter, r *http.Request) {
 		plan = repo.LastPublishedForPlan(ctx, s.pool, sid, 10)
 		if len(plan) > 0 {
 			planEtiket = "son yayınlar"
-			// Pencereyi gerçek veriye oturt: en eskiden en yeniye, iki uca
-			// yarım saat pay. Tek kayıt varsa pencere ±3 saat açılır, yoksa
-			// kart sıfır genişlikli eksende ortada kalırdı.
 			pencereBas, pencereSon = plan[0].When, plan[len(plan)-1].When
 			if pencereSon.Sub(pencereBas) < time.Hour {
 				pencereBas = pencereBas.Add(-3 * time.Hour)
@@ -259,9 +237,6 @@ func (s *Server) handlePano(w http.ResponseWriter, r *http.Request) {
 			Left: sol, Width: planKartGenislik,
 		})
 	}
-	// Şeritleri (lane) ata: aynı saatte birden çok kart varsa üst üste
-	// binmesinler. Kart genişliği sabit olduğu için çakışma kontrolü
-	// yüzde aralığıyla yapılır.
 	laneSonlari := make([]int, 0, 4)
 	for i := range planRows {
 		yer := -1
@@ -335,9 +310,6 @@ func (s *Server) handlePano(w http.ResponseWriter, r *http.Request) {
 		}},
 	}
 
-	// Yayın hedefi: son 30 günün günlük ortalaması — sabit bir sayı uydurmak
-	// yerine gerçek ritimden türetilir. 7 günlük ortalama yayın olmayan
-	// dönemde 0 çıkıp "hedef 1" gibi anlamsız bir gösterge üretiyordu.
 	hedef := 1
 	var ayTop, ayGun int
 	if pd := repo.PublishPerDay(ctx, s.pool, sid, 30); len(pd) > 0 {
@@ -393,17 +365,9 @@ func (s *Server) handlePano(w http.ResponseWriter, r *http.Request) {
 	// Kabuk stilleri admin-pano.css'te ve panelin tamamında ortak.
 	d.PageHead = template.HTML(`<link rel="stylesheet" href="` + s.assetURL("pano.css") + `">`)
 
-	// Pano artık ORTAK kabuğu kullanıyor (admin_side/admin_top). Önceden
-	// kendi aside/main/header'ını çiziyordu ve iki kabuk iki farklı görünüm
-	// demekti: yan menü zemini, arama hapının biçimi, gövde boşlukları
-	// tutmuyordu. Tek kabuk tek kaynak.
 	s.renderTemplPage(w, r, d, templkit.PanoPanel(v))
 }
 
-// handlePanoTasi yayın şeridinde sürüklenen kartın saatini kaydeder.
-//
-// Girdi: id + saat (RFC3339 ya da "2006-01-02 15:04"). Yanıt JSON: istemci
-// optimistic güncellemeyi geri alabilsin diye yeni zamanı döndürür.
 func (s *Server) handlePanoTasi(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
@@ -440,13 +404,6 @@ func (s *Server) handlePanoTasi(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// panoSaatCoz sürükle-bırak girdisindeki saati çözer.
-//
-// Neden ayrı: form gövdesinde "+03:00" ofsetinin artı işareti boşluğa
-// dönüşebilir ("2026-10-30T09:30:00 03:00"). İstemci URLSearchParams
-// kullanıyor ve doğru kodluyor, ama elle/curl çağrısında da çalışması
-// gerekiyor. Önce bilinen biçimler denenir; hepsi düşerse son boşluk artıya
-// çevrilip RFC3339 bir kez daha denenir.
 func panoSaatCoz(ham string) (time.Time, error) {
 	ham = strings.TrimSpace(ham)
 	layouts := []string{time.RFC3339, "2006-01-02T15:04", "2006-01-02 15:04", "2006-01-02T15:04:05", "2006-01-02"}
@@ -474,12 +431,6 @@ func panoJSON(w http.ResponseWriter, status int, v any) {
 	_ = json.NewEncoder(w).Encode(v)
 }
 
-// panoPlanTicks şerit ekseninin etiketlerini üretir.
-//
-// Pencere aynı gün içindeyse saat ("18"), gün aşıyorsa tarih ("26.10")
-// yazılır. Saat etiketi tek başına, günler geçen bir eksende hangi gün
-// olduğunu söylemez — panelde "03" görüp üç gün sonrası mı üç saat sonrası mı
-// olduğunu anlamamak gerçek bir karışıklıktı.
 func panoPlanTicks(bas, son time.Time, n int) []templkit.PanoPlanTick {
 	if n < 2 {
 		n = 2
@@ -522,11 +473,6 @@ func kisaAy(ay string) string {
 	return ay[5:7]
 }
 
-// panoDelta iki sayı arasındaki değişimi rozet metnine çevirir.
-//
-// Önceki değer 0 ise oran tanımsızdır: "yeni" yazılır, "%∞" yanıltıcı olurdu.
-// Oran 10 katı geçerse yüzde yerine KAT yazılır: "%4200" hem okunaksız hem
-// de anlamsız (10 yayından 430'a çıkmak bir oran değil, ölçek değişimi).
 func panoDelta(yeni, eski int) string {
 	if eski <= 0 {
 		if yeni > 0 {

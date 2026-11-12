@@ -2,10 +2,6 @@ package httpapi
 
 import "testing"
 
-// TestSameSitePathOpenRedirect, açık yönlendirme kapısını kilitler.
-// Semgrep'in işaretlediği asıl hata auth_handlers.go'daydı: yalnız
-// next[0] == '/' kontrolü "//evil.example" ve "/\evil.example" değerlerini
-// geçiriyordu. Tarayıcı bunları protokol-göreli adres sayar.
 func TestSameSitePathOpenRedirect(t *testing.T) {
 	cases := []struct{ in, want string }{
 		{"/admin", "/admin"},

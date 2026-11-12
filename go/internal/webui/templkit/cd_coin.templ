@@ -32,7 +32,7 @@ templ CDCoinPageView(v CDCoinPage) {
 	<html lang="tr">
 		<head>
 			@cdHead(CDHead{Title: v.Title, Desc: v.Desc, Canonical: v.Canonical,
-				OGType: "website", SiteName: v.Shell.SiteName, RSSFeed: "/rss.xml",
+				OGType: "website", SiteName: v.Shell.SiteName, FaviconURL: v.Shell.FaviconURL, RSSFeed: "/rss.xml",
 				JSONLD: v.JSONLD, Locale: v.Locale, PageCategory: v.PageCategory,
 				ContentCategory: v.ContentCategory, BaseURL: v.BaseURL})
 		</head>
@@ -47,8 +47,8 @@ templ CDCoinPageView(v CDCoinPage) {
 				</nav>
 				<header class="cd-coin-head">
 					<h1>{ v.Name } <span class="cd-coin-sym">{ v.Sym }</span></h1>
-					<!-- data-cg-coin*: canlı akış bu sayfanın fiyatını da
-					     tazeler (cd-canli.js); varlık sembolüyle eşleşir. -->
+										// data-cg-coin*: canlı akış bu sayfanın fiyatını da
+					// tazeler (cd-canli.js); varlık sembolüyle eşleşir.
 					<div class="cd-coin-price">
 						<strong data-cg-coin-fiyat={ v.Sym }>{ v.Price }</strong>
 						if v.Up {
@@ -60,8 +60,8 @@ templ CDCoinPageView(v CDCoinPage) {
 					</div>
 				</header>
 
-				<!-- FİYAT GRAFİĞİ: yalnız gerçek OHLCV varsa (CryptoQuant).
-				     Veri yoksa modül hiç basılmaz — uydurma çizgi yok. -->
+								// FİYAT GRAFİĞİ: yalnız gerçek OHLCV varsa (CryptoQuant).
+				// Veri yoksa modül hiç basılmaz — uydurma çizgi yok.
 				if v.Grafik != nil {
 					<section class="cd-mod">
 						@cdSectionHead("Fiyat grafiği", "")

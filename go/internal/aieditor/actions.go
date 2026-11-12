@@ -26,11 +26,6 @@ var Actions = []Action{
 	{
 		ID: "news", Label: "Bunu Haber Yap", Group: "Haber", Icon: "📝",
 		Description: "Seçili metinden düzenlenebilir haber taslağı oluşturur.",
-		// Faz 193c — yapı zorunlu: 3+ paragraf, SEO alanları, kaynak adı yok.
-		//
-		// Neden: eski istem tek bir "body" alanı istiyordu ve model tek blok
-		// metin döndürüyordu; sahada yayındaki haberlerin %99,6'sı TEK
-		// paragraftı. Paragraf dizisi istenince gövde gerçekten bölünüyor.
 		Instruction: `Seçili metni başlangıç noktası alarak Türkçe haber taslağı yaz.
 Kurallar:
 - paragraphs: 3 ile 8 arasında paragraf. Her paragraf 2-4 cümle, tek konu.
@@ -103,11 +98,6 @@ UYDURMA; yalnızca öneri ver. Şu JSON şemasını döndür:
 {"primary":"","secondary":[""],"entities":[""],"intent":"","seo_title":"","meta_description":"","slug":""}`,
 	},
 	{
-		// Faz 188: SEO alanlarını TEK adımda doldurur. "seo" eylemi
-		// anahtar kelime/niyet/slug da üretiyordu ve iki alanı ayrı ayrı
-		// doldurmak gerekiyordu; otomatik haberlerde editör yok, bu yüzden
-		// alan odaklı, sıkı uzunluk kurallı ayrı bir eylem gerekti.
-		// Seçili metin menüsünde görünmez: gövdenin tamamına bakar.
 		ID: "seo_fill", Label: "SEO Alanlarını Doldur", Group: "İçerik", Icon: "✨",
 		Hidden:      true,
 		Description: "SEO başlığı ve meta açıklamayı haberin içeriğine göre doldurur.",

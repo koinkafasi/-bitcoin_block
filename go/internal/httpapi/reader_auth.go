@@ -4,18 +4,15 @@ import (
 	"context"
 	"errors"
 	"html"
+	"math"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
 	"theblock/site/internal/auth"
 	"theblock/site/internal/repo"
 )
-
-// ---- Public üye girihi: /giris /kayit /sifremi-unuttum /sifre-sifirla ----
-//
-// Güvenlik: hız sınırı (10 dk / 8 deneme), honeypot + zaman tuzağı (bot),
-// açık yönlendirme koruması (yalnız bilinen hedef anahtarları).
 
 // readerRedirect yalnız bilinen hedef anahtarlarını kabul eder (open-redirect
 // koruması; edirnegercek deseni).
@@ -223,9 +220,6 @@ func (s *Server) handleUyeSifremiUnuttumPost(w http.ResponseWriter, r *http.Requ
 // handleUyeSifreSifirla GET /sifre-sifirla?token=…
 func (s *Server) handleUyeSifreSifirla(w http.ResponseWriter, r *http.Request) {
 	token := strings.TrimSpace(r.URL.Query().Get("token"))
-	// Süresi dolmuş/tek kullanılmış bağlantıda boş form göstermek yerine
-	// "yeni bağlantı iste" ekranına düş: kullanıcı formu doldurup
-	// gönderdikten sonra "bağlantı geçersiz" cevabı alıyordu.
 	if !repo.PasswordResetTokenGecerli(r.Context(), s.pool, token) {
 		s.renderSifreBaglantiGecersiz(w, r)
 		return
@@ -350,6 +344,58 @@ func (s *Server) sendMail(to, subject, htmlBody string) {
 }
 
 // renderUye üyelik sayfalarını (giriş/kayıt/şifre) yazar.
+// uyeKur giriş illüstrasyonundaki bir kahramanın kur rozeti.
+type uyeKur struct {
+	// Mate illüstrasyondaki karakterin anahtarı (data-mate ile aynı).
+	Mate string
+	Sym  string
+	// Fiyat biçimlenmiş metin ($74.520 gibi); şablon sayı biçimlemez.
+	Fiyat string
+	// Degisim 24 saatlik yüzde — işaretiyle birlikte metin (+1,4%).
+	Degisim string
+	// Yukari rozetin yeşil mi kırmızı mı çizileceğini söyler.
+	Yukari bool
+}
+
+func (s *Server) uyeKurlari(ctx context.Context) map[string]uyeKur {
+	istenen := map[string]string{
+		"eth": "ETH",
+		"sol": "SOL",
+		"btc": "BTC",
+		"bnb": "BNB",
+	}
+	satirlar := repo.Fiyatlar(ctx, s.pool)
+	if len(satirlar) == 0 {
+		return nil
+	}
+	indeks := make(map[string]repo.FiyatSatiri, len(satirlar))
+	for _, sat := range satirlar {
+		indeks[strings.ToUpper(sat.Sym)] = sat
+	}
+	out := make(map[string]uyeKur, len(istenen))
+	for mate, sym := range istenen {
+		sat, ok := indeks[sym]
+		if !ok || !sat.HasData || sat.Price <= 0 {
+			continue
+		}
+		isaret := "+"
+		if sat.Change < 0 {
+			isaret = "−" // U+2212: eksi işareti, kısa çizgi değil
+		}
+		out[mate] = uyeKur{
+			Mate:    mate,
+			Sym:     sym,
+			Fiyat:   repo.FiyatBicim(sat.Price), // $ işaretini biçimleyici koyar
+			Degisim: isaret + strconv.FormatFloat(math.Abs(sat.Change), 'f', 2, 64) + "%",
+			Yukari:  sat.Change >= 0,
+		}
+	}
+	if len(out) == 0 {
+		return nil
+	}
+	return out
+}
+
 func (s *Server) renderUye(w http.ResponseWriter, r *http.Request, d *tmplData) {
 	name := "uye-giris"
 	switch d.UyeMode {
@@ -372,12 +418,10 @@ func (s *Server) renderUye(w http.ResponseWriter, r *http.Request, d *tmplData) 
 	d.GoogleEnabled = s.googleEnabled(r)
 	d.UyeKayitAcik = s.uyeKayitAcik(r.Context())
 	d.UyeFormTS = time.Now().Format(time.RFC3339)
+	d.UyeKurlar = s.uyeKurlari(r.Context())
 	s.renderPublic(w, r, name, d, "no-store")
 }
 
-// renderSifreBaglantiGecersiz geçersiz/süresi dolmuş sıfırlama bağlantısında
-// formu değil "yeni bağlantı iste" ekranını hata kutusuyla basar. Eskiden
-// kullanıcı boş formu doldurup gönderiyor, ancak o zaman hata görüyordu.
 func (s *Server) renderSifreBaglantiGecersiz(w http.ResponseWriter, r *http.Request) {
 	d := s.publicView(r, "Şifre Sıfırla")
 	d.UyeMode = "sifremi-unuttum"

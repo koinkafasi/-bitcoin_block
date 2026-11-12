@@ -184,9 +184,6 @@ func (s *Server) renderMedyaPanel(w http.ResponseWriter, r *http.Request, d *tmp
 	_, _ = w.Write([]byte(sb.String()))
 }
 
-// renderMedyaParca sonsuz kaydırmanın sonraki dilimini yazar: yalnız grup
-// bölümleri + yeni gözcü. Panel kabuğu (araç çubuğu, modal) tekrar
-// gönderilmez; gelen HTML gözcünün yerine geçer.
 func (s *Server) renderMedyaParca(w http.ResponseWriter, r *http.Request, d *tmplData) {
 	var sb strings.Builder
 	if err := templkit.MedyaGruplar(s.medyaViewFrom(d), false).Render(r.Context(), &sb); err != nil {

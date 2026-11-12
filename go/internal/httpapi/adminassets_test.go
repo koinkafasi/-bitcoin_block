@@ -6,16 +6,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// Admin varlık yükleme kapsamı.
-//
-// Durum tespiti (28 Ekim 2026): `admin_head` 3 CSS + 16 JS dosyasını
-// KOŞULSUZ yüklüyordu — her admin sayfasında 1.113.576 bayt. Bunun
-// 770.939 baytı `editor.js` (TipTap + Yjs). Kontrol paneli, kategoriler ve
-// ayarlar sayfaları içerik editörünü ve manşet motorunu boşuna indiriyordu.
-//
-// Çözüm: ağır betikler yalnız ihtiyaç duyan sayfalara. Eşleme tek bir saf
-// fonksiyonda tutulur ki 40 handler'a dokunmadan, tablo ile test edilebilsin.
-
 func TestAdminScriptsIcerikFormuEditoruYukler(t *testing.T) {
 	for _, path := range []string{
 		"/admin/icerikler/yeni",
@@ -42,9 +32,6 @@ func TestAdminScriptsSesAyarlariOynaticiyiYukler(t *testing.T) {
 	assert.NotContains(t, got, "editor.js")
 }
 
-// Asıl kazanç: editörle ilgisi olmayan sayfalar 770 KB'lık paketi
-// indirmemeli. Bu testin kırılması, birinin betiği yeniden koşulsuz
-// yüklemeye aldığı anlamına gelir.
 func TestAdminScriptsDigerSayfalarAgirPaketleriYuklemez(t *testing.T) {
 	for _, path := range []string{
 		"/admin",

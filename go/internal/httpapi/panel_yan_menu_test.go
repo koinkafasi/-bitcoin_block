@@ -1,29 +1,5 @@
 package httpapi
 
-// Yan menüdeki geçiş/animasyon farkları (kullanıcı isteği, 3 Kasım 2026):
-// demo.codeandchill.store/pacely sol menüsüyle BİREBİR olmalı.
-//
-// Referans ölçümü (pacely/assets/index-BlFqaHp6.js + kit paketi `yo`):
-//
-//   • `.nav__pill`: `.side__scroll` içinde mutlak konumlu TEK span.
-//     Aktif menü öğesinin KENDİ zemini yok
-//     (`.nav__item[aria-current=page]{background:0 0}`).
-//   • Yerleştirme `inset(t r b l round 12px)` + BASKIN EKSEN:
-//       m = |Δt| > |Δl|  → dikey hareket
-//       önde giden kenar   360 ms  power3.out
-//       arkada kalan kenar 550 ms  power3.inOut
-//       çapraz iki kenar   450 ms  power3.inOut
-//   • Giriş (mount) efekti:
-//       .side             x −28 → 0, opacity 0 → 1, 700 ms expo.out
-//       .side__head/.nav__item…  x −12 → 0, 500 ms power3.out,
-//                                kademe 25 ms, gecikme 100 ms
-//       .nav__pill        scaleX .4 → 1, opacity 0 → 1, 600 ms back.out(2),
-//                         origin 0% 50%, gecikme 450 ms
-//   • Ray modunda pill GİZLENMEZ; ray değişince animasyonsuz yeniden yerleşir.
-//
-// theblock'ta karşılığı: `admin-ui.js` içindeki `sbKur` / `sbYerlestir` /
-// `sbGiris` ve `admin-pano.css` içindeki `.tb-sb-hap`.
-
 import (
 	"io/fs"
 	"testing"
@@ -86,10 +62,6 @@ func TestYanMenuHapKurulumuGecYukleniyor(t *testing.T) {
 	assert.Contains(t, js, "new MutationObserver(")
 	assert.Contains(t, js, "new ResizeObserver(")
 
-	// KRİTİK: ilk kurulum dosyanın EN SONUNDA olmalı. `tbAdminInit()` satır
-	// ~952'de çağrılıyor; `tbSbHapKur` ise kayganHap IIFE'sinde (~1920)
-	// tanımlanıyor. Erken çağrıda hap sayfa yüklenirken hiç kurulmuyordu
-	// (ölçüldü: hap ancak bir gezinmeden sonra ortaya çıkıyordu).
 	kaygan := indexOf(js, "window.tbSbHapKur = sbKur;")
 	bootstrap := indexOf(js, "if (window.tbSbHapKur) window.tbSbHapKur();\n  if (window.tbSbGiris) window.tbSbGiris();")
 	require.Greater(t, kaygan, 0)

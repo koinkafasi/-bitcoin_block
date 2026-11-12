@@ -1,6 +1,4 @@
-/* AI Editör — seçili metin menüsü + onaylı sonuç paneli.
-   Sunucu tarafı HTMX parçalarıyla çalışır; sonuç hiçbir zaman otomatik
-   olarak habere yazılmaz. */
+
 (function () {
   "use strict";
   var drawer = document.getElementById("aiEditor");
@@ -321,7 +319,7 @@
     }, 0);
   });
 
-  /* Sağ tık: eski #aiCtx menüsü kaldırıldı; aynı 11 eylem yeni menüde. */
+  
   document.addEventListener("contextmenu", function (e) {
     var host = e.target && e.target.closest ? e.target.closest("[data-ai-ctx]") : null;
     if (!host || !menu) return;
@@ -339,7 +337,7 @@
   window.addEventListener("scroll", hideMenu, { passive: true });
   window.addEventListener("resize", hideMenu);
 
-  /* Eski doğrudan-yazan AI butonlarını yeni onay paneli akışına yönlendir. */
+  
   document.addEventListener("click", function (e) {
     var legacy = e.target.closest("[data-ai]");
     if (!legacy) return;
@@ -404,8 +402,7 @@
         .catch(function () { showLoading(false); notice("Sonuç yüklenemedi."); });
     }
   });
-  /* Alıntı kaynağı: saniyeye tıklayınca ses kaydını o noktaya sar.
-     Kayıt Ses panelindeki <audio data-audio-player="..."> öğesidir. */
+  
   document.addEventListener("click", function (e) {
     var btn = e.target.closest && e.target.closest("[data-quote-seek]");
     if (!btn) return;
@@ -438,7 +435,7 @@
     }
   });
 
-  /* Ses paneli gibi dış bileşenlerin onaylı sonuç panelini açması için. */
+  
   window.__aiEditor = {
     open: function (title) {
       stopPolling();

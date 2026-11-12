@@ -8,12 +8,6 @@ import (
 	"theblock/site/internal/piyasa"
 )
 
-// Kur & Borsa: şablon (kb_style) ve yön göstergesi (kb_arrow) seçimleri.
-//
-// Kullanıcı isteği: "yükseliş ve düşüş ok tasarımları ve aynı tasarım yapısı
-// şablon seçiminde ekle, fark olmasın" — modül de diğer modüller gibi şablon
-// seçimi sunmalı ve panel önizlemesi ile canlı aynı görünmeli.
-
 func kbTestKalemler() []piyasa.Kalem {
 	return []piyasa.Kalem{
 		{Anahtar: "usd", Kisa: "DOLAR", Ad: "Dolar", Deger: 49.8335, Degisim: 0.05, Ondalik: 4, Yon: 1},
@@ -87,9 +81,6 @@ func TestKbArrowForBilinmeyenStiliDuzeltir(t *testing.T) {
 	assert.Equal(t, 1, a.Yon)
 }
 
-// Panel önizlemesi ile canlı sayfa aynı şablonu kullanır: ikisi de
-// "blk_kur_borsa" tanımını çizer. Bu test, render yolunun ayrışmadığını
-// korur — ayrı önizleme şablonu eklenirse burada kırılır.
 func TestKbOnizlemeIleCanliAyniSablon(t *testing.T) {
 	h := renderKbStil(t, kbTestKalemler(), "kart", "uzun", "zemin")
 	// Önizleme bu HTML'i olduğu gibi panoya basar; sınıf ve yapı korunmalı.

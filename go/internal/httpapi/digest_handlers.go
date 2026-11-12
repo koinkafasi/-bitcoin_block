@@ -67,14 +67,6 @@ func (s *Server) handleBultenPOST(w http.ResponseWriter, r *http.Request) {
 		}
 		s.logger.Warn("bülten onay e-postası gönderilemedi", "email", sub.Email)
 	}
-	// Onay bağlantısı YALNIZCA geliştirme kipinde yanıta konur.
-	//
-	// Üretimde token'ı yanıta yazmak çift onayı anlamsız kılar: formu dolduran
-	// kişi başkasının e-posta adresini girip dönen bağlantıyı kendisi açarak o
-	// adresi 'aktif' aboneye çevirebilir. Gönderim listesi status='aktif'
-	// filtresi kullandığı için (repo/subscribers.go) o adres bundan sonra
-	// onayı olmadan ticari ileti almaya başlar — 6563 sayılı Kanun açısından
-	// riskli, ayrıca token sızıntısı.
 	if s.cfg.Debug {
 		s.writeJSON(w, http.StatusOK, map[string]any{
 			"ok":    true,

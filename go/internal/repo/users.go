@@ -71,11 +71,6 @@ func UpdateUserPassword(ctx context.Context, pool *pgxpool.Pool, id int64, hash 
 	return err
 }
 
-// UpdateUserRole kullanıcı rolünü günceller ve eski yetkilerle açılmış
-// oturumları sonlandırır. Aksi hâlde rolü düşürülen bir kullanıcının açık
-// oturumu yeni rolüyle değil, çerez anındaki rolüyle çalışmaya devam ederdi
-// (SessionUser rolü her istekte DB'den okur; ama oturumun açıldığı yetki
-// seviyesi değişmiş olur ve kullanıcı yeniden kimlik doğrulamalıdır).
 func UpdateUserRole(ctx context.Context, pool *pgxpool.Pool, id int64, role string) error {
 	tx, err := pool.Begin(ctx)
 	if err != nil {
@@ -117,14 +112,6 @@ func ListUsers(ctx context.Context, pool *pgxpool.Pool) ([]MemberRow, error) {
 	return ListUsersAra(ctx, pool, "")
 }
 
-// ListUsersAra üye listesini ad, e-posta ve rolde metin aramasıyla süzer
-// (Faz 168, N-11).
-//
-// NEDEN: üyeler tablosunda arama yoktu; belirli bir kişiyi bulmak için tüm
-// listeyi gözle taramak gerekiyordu. Medya ve yorumlarda arama varken burada
-// olmaması tutarsızdı.
-//
-// Türkçe katlama: "saglik" → "Sağlık" (migration 0098, immutable_unaccent).
 func ListUsersAra(ctx context.Context, pool *pgxpool.Pool, ara string) ([]MemberRow, error) {
 	q := `
 		SELECT u.id, u.name, u.email, u.role, u.membership,

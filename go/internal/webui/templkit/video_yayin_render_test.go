@@ -6,11 +6,6 @@ import (
 	"testing"
 )
 
-// TestVideoYayinPanelRender: panelin boş ve dolu hâli hatasız çizilmeli.
-//
-// NEDEN: panel veritabanından gelen listeye göre tablo/sekmeler basıyor;
-// nil dilim + boş ayar kombinasyonunda templ çalışma zamanı hatası vermemeli
-// (panel açılışında 500 görmek, ayar sayfasını tamamen erişilmez yapar).
 func TestVideoYayinPanelRender(t *testing.T) {
 	// Boş hâl.
 	var b strings.Builder

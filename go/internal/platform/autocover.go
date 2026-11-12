@@ -1,6 +1,3 @@
-// Otomatik kapak görseli: içerik görseli yoksa kategori `image_service` değerine göre
-// (a) Pexels API (PEXELS_API_KEY varsa) ya da (b) deterministik marka kapak üretir.
-// spec 06 K-D (01 §L2)
 package platform
 
 import (

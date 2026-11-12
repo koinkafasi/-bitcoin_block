@@ -1,33 +1,100 @@
-/* ============================================================
-   cd-giris.css — ana sayfa GİRİŞ HERO'su (11 Kasım 2026)
-   ------------------------------------------------------------
-   KAYNAK: ghost.bitcosar.com `.ch-hero` (ölçüldü 11 Kasım 2026,
-   1440×900). Yerleşim birebir alındı:
-     · ızgara 1.05fr / 1fr / 300px, gap 30
-     · dikey dolgu 56 / 60
-     · görsel yuvası min-height 400
-     · yarım daire yay yarıçapı 84 (viewBox 200×110)
-   Renkler cd jetonlarına bağlandı: site krem (açık) / koyu temalı,
-   ghost ise tek koyu tema. Böylece hero sayfanın geri kalanıyla
-   aynı zeminde duruyor, tema anahtarına uyuyor.
 
-   NEDEN AYRI DOSYA: cd.css 195 KB ve kendi testinde 200 KB bütçeye
-   tabi (cd_tasarim_test.go). Bu blok oraya eklenirse bütçe aşılırdı.
-
-   JS YOK: sparkline ve yaylar sunucuda üretiliyor — bu dosya yalnız
-   görünüm. CSP `script-src 'self'` ile uyumlu.
-   ============================================================ */
 
 .cd-giris {
   position: relative;
   overflow: hidden;
   border-bottom: 1px solid var(--cd-border);
-  /* Yumuşak altın aydınlatma — ghost'un koyu zemindeki aurora efekti
-     yerine krem zeminde okunabilir kalan iki radyal leke. */
-  background:
-    radial-gradient(1100px 460px at 10% -12%, rgba(252, 195, 52, 0.14), transparent 62%),
-    radial-gradient(820px 380px at 92% -6%, rgba(252, 195, 52, 0.08), transparent 64%);
+  
+  --cd-giris-isin: 0.3;
+  --cd-giris-aurora: 0.5;
+  background: transparent;
 }
+html.dark .cd-giris {
+  
+  --cd-giris-isin: 0.7;
+  --cd-giris-aurora: 1;
+  background: #07080c;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not(.light) .cd-giris {
+    --cd-giris-isin: 0.7;
+    --cd-giris-aurora: 1;
+    background: #07080c;
+  }
+}
+
+.cd-giris::before {
+  content: "";
+  position: absolute;
+  inset: -30% -16%;
+  z-index: 0;
+  pointer-events: none;
+  opacity: var(--cd-giris-isin);
+  background: repeating-conic-gradient(
+    from 0deg at 68% 48%,
+    rgba(120, 200, 255, 0) 0deg,
+    rgba(120, 200, 255, 0.75) 0.4deg,
+    rgba(120, 200, 255, 0) 1.1deg,
+    rgba(255, 255, 255, 0) 2deg,
+    rgba(255, 255, 255, 0.85) 2.4deg,
+    rgba(255, 255, 255, 0) 3.1deg,
+    rgba(165, 120, 255, 0) 4deg,
+    rgba(165, 120, 255, 0.8) 4.5deg,
+    rgba(165, 120, 255, 0) 5.2deg,
+    rgba(52, 230, 200, 0) 6.2deg,
+    rgba(52, 230, 200, 0.55) 6.6deg,
+    rgba(52, 230, 200, 0) 7.3deg,
+    rgba(255, 105, 180, 0) 8.4deg,
+    rgba(255, 105, 180, 0.65) 8.9deg,
+    rgba(255, 105, 180, 0) 9.6deg,
+    rgba(90, 140, 255, 0) 10.6deg,
+    rgba(90, 140, 255, 0.5) 11deg,
+    rgba(90, 140, 255, 0) 11.7deg,
+    rgba(150, 255, 235, 0) 12.8deg,
+    rgba(150, 255, 235, 0.45) 13.2deg,
+    rgba(150, 255, 235, 0) 16deg
+  );
+  transform: scaleY(0.62) scaleX(1.18);
+  filter: blur(1px) saturate(1.45);
+  
+  -webkit-mask-image: radial-gradient(1120px 600px at 68% 48%, rgba(0, 0, 0, 0.95) 0%, #000 14%, rgba(0, 0, 0, 0.6) 50%, transparent 86%);
+  mask-image: radial-gradient(1120px 600px at 68% 48%, rgba(0, 0, 0, 0.95) 0%, #000 14%, rgba(0, 0, 0, 0.6) 50%, transparent 86%);
+  animation: cd-giris-prizma 48s linear infinite;
+}
+
+@keyframes cd-giris-prizma {
+  from { transform: scaleY(0.62) scaleX(1.18) rotate(0deg); }
+  to { transform: scaleY(0.62) scaleX(1.18) rotate(16deg); }
+}
+
+.cd-giris::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  opacity: var(--cd-giris-aurora);
+  background:
+    radial-gradient(620px 240px at 68% 48%, rgba(240, 248, 255, 0.3), rgba(150, 185, 255, 0.12) 44%, transparent 76%),
+    radial-gradient(900px 420px at 84% 2%, rgba(86, 124, 255, 0.22), transparent 68%),
+    radial-gradient(820px 460px at 94% 98%, rgba(206, 92, 255, 0.18), transparent 66%),
+    radial-gradient(520px 280px at 44% 104%, rgba(44, 230, 196, 0.12), transparent 70%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cd-giris::before { animation: none; }
+}
+
+.cd-giris__prizma {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+.cd-giris--prizma::before { display: none; }
 
 .cd-giris__in {
   position: relative;
@@ -38,14 +105,10 @@
   align-items: center;
   padding-top: 56px;
   padding-bottom: 60px;
-  /* YÜKSEKLİK SABİT — kullanıcı isteği: "bu yükseklikte bir giriş hero
-     alanı". Kaynak ölçüm 532 px (1440×900). İçerik yüksekliği yazı
-     tipine göre 400-420 arasında oynadığı için (bizde Inter/Alegreya,
-     kaynakta Satoshi) min-height ile çakılıyor: 532 = 56 + 416 + 60. */
+  
   min-height: 532px;
 }
 
-/* ---- metin sütunu ------------------------------------------------ */
 .cd-giris__eyebrow {
   display: inline-flex;
   align-items: center;
@@ -156,7 +219,6 @@ html.dark .cd-giris__eyebrow {
   color: var(--cd-muted);
 }
 
-/* ---- BTC paneli -------------------------------------------------- */
 .cd-giris__viz {
   position: relative;
   min-height: 400px;
@@ -308,7 +370,6 @@ html.dark .cd-giris__panel {
   text-overflow: ellipsis;
 }
 
-/* ---- yüzen kartlar (ETH / SOL) ---------------------------------- */
 .cd-giris__yuzen {
   position: absolute;
   z-index: 3;
@@ -340,7 +401,6 @@ html.dark .cd-giris__panel {
   padding: 8px 12px;
 }
 
-/* ---- göstergeler ------------------------------------------------- */
 .cd-giris__gostergeler {
   display: flex;
   flex-direction: column;
@@ -407,26 +467,29 @@ html.dark .cd-giris__gosterge { box-shadow: none; }
 }
 .cd-giris__gosterge-alt b { color: var(--cd-fg); }
 
-/* ---- yön renkleri (yalnız bu modül içinde) ---------------------- */
 .cd-giris .cd-yukari { color: var(--cd-up); }
 .cd-giris .cd-asagi { color: var(--cd-down); }
 .cd-giris .cd-notr { color: #b08d1f; }
 
-/* ---- duyarlı davranış (ghost kırılımlarıyla aynı) ---------------- */
 @media (max-width: 1240px) {
   .cd-giris__in {
     grid-template-columns: minmax(0, 1fr) minmax(280px, 440px);
-    /* 3. sütun kalkınca sabit yükseklik anlamsız: içerik kendi
-       yüksekliğini belirlesin. */
+    
     min-height: 0;
   }
-  /* Göstergeler gizlenir: 3. sütun kalkınca alt alta sıkışıp
-     metin sütunundan uzun kalıyorlardı (ghost'ta da gizli). */
+  
   .cd-giris__gostergeler { display: none; }
   .cd-giris__viz { min-height: 340px; }
 }
 
 @media (max-width: 900px) {
+  
+  .cd-giris::before {
+    animation: none;
+    transform: scaleY(0.72) scaleX(1.1);
+    -webkit-mask-image: radial-gradient(760px 520px at 68% 36%, rgba(0, 0, 0, 0.95) 0%, #000 14%, rgba(0, 0, 0, 0.55) 48%, transparent 84%);
+    mask-image: radial-gradient(760px 520px at 68% 36%, rgba(0, 0, 0, 0.95) 0%, #000 14%, rgba(0, 0, 0, 0.55) 48%, transparent 84%);
+  }
   .cd-giris__in {
     grid-template-columns: 1fr;
     gap: 22px;
@@ -471,4 +534,150 @@ html.dark .cd-giris__gosterge { box-shadow: none; }
   }
   .cd-giris__baslik { font-size: 29px; }
   .cd-giris__maddeler > div { flex-basis: 100%; }
+}
+
+.cd-analiz {
+  padding: 36px 0;
+  border-top: 1px solid var(--cd-border);
+}
+.cd-analiz__bas {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 10px 14px;
+  margin-bottom: 20px;
+}
+.cd-analiz__etiket {
+  font-family: var(--cd-font);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--cd-brand);
+}
+.cd-analiz__baslik {
+  margin: 0;
+  font-family: var(--cd-font);
+  font-size: clamp(20px, 2.1vw, 28px);
+  line-height: 1.2;
+  font-weight: 600;
+  letter-spacing: -.01em;
+  color: var(--cd-fg-strong);
+  flex: 1 1 320px;
+}
+.cd-analiz__rozet {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--cd-muted);
+  border: 1px solid var(--cd-border);
+  border-radius: 999px;
+  padding: 5px 11px;
+  white-space: nowrap;
+}
+.cd-analiz__izgara {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  height: 420px;
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(180deg, transparent, #000 14%, #000 86%, transparent);
+  mask-image: linear-gradient(180deg, transparent, #000 14%, #000 86%, transparent);
+}
+.cd-analiz__kolon { overflow: hidden; }
+.cd-analiz__serit {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  will-change: transform;
+}
+.cd-analiz__serit[data-akis="1"] { animation: cd-analiz-yukari 54s linear infinite; }
+.cd-analiz__serit[data-akis="2"] { animation: cd-analiz-asagi 62s linear infinite; }
+.cd-analiz__serit[data-akis="3"] { animation: cd-analiz-yukari 48s linear infinite; }
+
+.cd-analiz__izgara:hover .cd-analiz__serit,
+.cd-analiz__izgara:focus-within .cd-analiz__serit { animation-play-state: paused; }
+
+@keyframes cd-analiz-yukari {
+  from { transform: translateY(0); }
+  to { transform: translateY(-50%); }
+}
+@keyframes cd-analiz-asagi {
+  from { transform: translateY(-50%); }
+  to { transform: translateY(0); }
+}
+
+.cd-analiz__kart {
+  border: 1px solid var(--cd-border);
+  border-radius: 14px;
+  padding: 16px;
+  background: var(--cd-surface-soft);
+}
+.cd-analiz__ust {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.cd-analiz__kat {
+  font-family: var(--cd-font);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .04em;
+  color: var(--cd-brand);
+}
+.cd-analiz__tarih {
+  font-size: 11px;
+  color: var(--cd-muted);
+  margin-left: auto;
+}
+.cd-analiz__kart-baslik {
+  margin: 0 0 6px;
+  font-family: var(--cd-font);
+  font-size: 15px;
+  line-height: 1.35;
+  font-weight: 600;
+}
+.cd-analiz__kart-baslik a { color: var(--cd-fg-strong); text-decoration: none; }
+.cd-analiz__kart-baslik a:hover { text-decoration: underline; text-underline-offset: 3px; }
+.cd-analiz__spot {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--cd-muted-strong);
+  
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+@media (max-width: 900px) {
+  
+  .cd-analiz__izgara {
+    grid-template-columns: 1fr;
+    height: auto;
+    overflow: visible;
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
+  .cd-analiz__serit { animation: none; }
+  .cd-analiz__serit [aria-hidden="true"] { display: none; }
+  .cd-analiz__kolon:nth-child(n+3) { display: none; }
+  .cd-analiz__serit > :nth-child(n+4) { display: none; }
+}
+
+@media (max-width: 767px) {
+  .cd-analiz { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cd-analiz__serit { animation: none; }
+  .cd-analiz__izgara {
+    height: auto;
+    overflow: visible;
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
+  .cd-analiz__serit [aria-hidden="true"] { display: none; }
+  .cd-analiz__serit > :nth-child(n+4) { display: none; }
 }

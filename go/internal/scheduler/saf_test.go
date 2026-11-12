@@ -10,10 +10,6 @@ import (
 	"theblock/site/internal/repo"
 )
 
-// Faz 208: scheduler'ın saf (DB'siz) kararları. Gerçek zamanlanmış yayın ve
-// temizlik akışı `tick_integration_test.go` içinde gerçek Postgres'e karşı
-// sınanıyor; burada yalnız veri dönüşümleri var.
-
 // --- blocksPlainText ---
 
 func TestBlocksPlainTextBlokMetinleriniBirlestirir(t *testing.T) {

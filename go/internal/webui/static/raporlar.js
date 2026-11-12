@@ -1,4 +1,4 @@
-/* raporlar.js — Raporlar paneli: Chart.js okunma grafiği + gelir hesaplayıcı. */
+
 (function () {
   'use strict';
 

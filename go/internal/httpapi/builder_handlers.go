@@ -28,9 +28,6 @@ type blockType struct {
 
 var builderTypes = []blockType{
 	{"kategori_liste", "Kategori Haber Listesi", "Kategori sayfasının ana liste gövdesi (görünüm ayarıyla)", "list"},
-	// Kategori gövdesini bağımsız modüllere ayıran tipler. Her biri kendi
-	// haber aralığını, görünümünü ve satır yerleşimini taşır; böylece slider,
-	// seçimli manşetler, 4'lü ızgara ve akış ayrı ayrı taşınıp ayarlanabilir.
 	{"kategori_slider", "Kategori Slider", "Kategori manşet slider'ı (bağımsız modül)", "image"},
 	{"kategori_secimli", "Seçimli Manşetler", "Seçili manşet kartları (sol/sağ ray)", "layout-grid"},
 	{"kategori_4lu", "4'lü Manşet", "4 haberlik kart ızgarası", "layout-grid"},
@@ -55,11 +52,8 @@ var builderTypes = []blockType{
 	{"hisseler", "Hisseler", "BIST hisse şeridi: kod, fiyat, yön (canlı)", "chart"},
 	{"kripto_para", "Kripto Para", "Kripto fiyat ızgarası (ikon, fiyat, %24s)", "chart"},
 	{"kur_cevirici", "Kur Çevirici", "Döviz çevirici (12+ para birimi, canlı kur)", "chart"},
-	// YENİ TASARIM (bitcosar/CoinDesk) MODÜLLERİ — 9 Kasım 2026.
-	// Ana sayfanın yeni tasarımı `cd_home.templ` içinde sabit sıradaydı;
-	// artık her alan ayrı blok. Sıra ve görünürlük buradan yönetilir.
-	// `cd_*` blokları YOKSA şablon varsayılan sırayı basar, görünüm değişmez.
 	{"cd_hero", "Manşet (3 kolon)", "Sol ray + manşet + video/araştırma/klipler", "layout-grid"},
+	{"cd_analiz", "Analiz Akışı", "Üç kolonda akan son analiz yazıları; altı karttan az varsa basılmaz", "news"},
 	{"cd_nabiz", "Piyasa Nabzı", "Zincir-üstü gerçek veri (CryptoQuant); veri yoksa basılmaz", "chart"},
 	{"cd_explore", "Keşfet Şeridi", "Yatay kaydırmalı fiyat/video/klipler/bölüm panelleri", "image"},
 	{"cd_ikili", "Görüş + En Çok Okunan", "İki modül yan yana (25% / 75%)", "star"},
@@ -71,12 +65,8 @@ var builderTypes = []blockType{
 	{"kategori_panel", "Kategori Paneli", "Tek kategori vitrini (büyük manşet + kartlar)", "folder"},
 	{"puan_durumu", "Puan Durumu (Takım)", "Süper Lig puan durumu (takım logolu)", "layout-grid"},
 	{"puan_serit", "Puan Durumu Şeridi", "Takım logosu + puan, yatay şerit (Habertürk spor yazısı düzeni)", "layout-grid"},
-	{"gazete_manset", "Gazete Manşetleri", "Günün gazete ön sayfaları (sağ sütunda tek slayt)", "news"},
 }
 
-// builderTypesFor sayfaya uygun blok paletini döndürür.
-// Yazı sayfasında sayfa içine özgü bloklar (hikaye şeridi, slider vb.)
-// anlamsız oldukları için sunulmaz.
 func builderTypesFor(page string) []blockType {
 	if isSayfaPage(page) {
 		// Kurumsal sayfa paleti (Faz 143): gövde + ek metin + kenar modülleri.
@@ -97,9 +87,6 @@ func builderTypesFor(page string) []blockType {
 		if isKategoriPage(page) {
 			return builderTypes
 		}
-		// Kategori modülleri yalnız kategori sayfasında anlamlıdır; ana
-		// sayfada eklendiğinde veri kaynağı (Category) olmadığı için boş
-		// kalırlardı. Paleti sayfaya göre daralt.
 		out := make([]blockType, 0, len(builderTypes))
 		for _, t := range builderTypes {
 			if !isCategoryModuleType(t.Type) {
@@ -216,9 +203,6 @@ func builderZonesFor(page string) []builderZone {
 	}
 }
 
-// builderPage istekten sayfa anahtarını okur (varsayılan home).
-// Kategori sayfası için isteğe bağlı "kategori" parametresi verilirse o
-// kategoriye özel anahtar ("kategori:<slug>") döner.
 func builderPage(r *http.Request) string {
 	v := strings.TrimSpace(r.URL.Query().Get("sayfa"))
 	if strings.HasPrefix(v, "kategori:") {
@@ -291,11 +275,6 @@ func layoutEmpty(b []byte) bool {
 
 // handleBuilderGet sayfa tasarımcısı editörü.
 func (s *Server) handleBuilderGet(w http.ResponseWriter, r *http.Request) {
-	// Sayfa tasarımcısının betiği (ve SortableJS) gövdenin SONUNDA,
-	// .admin-main dışındadır. Panelin kabuk korumalı gezinmesi yalnız
-	// .admin-main'i değiştirdiği için boost'lu geçişte tuval hiç kurulmuyor
-	// ve sayfa boş geliyordu (F5 ile düzeliyordu). Buradan tam sayfa
-	// yüklemeye zorlanır; birincil koruma menü bağlantılarındadır.
 	if IsHTMX(r) {
 		w.Header().Set("HX-Refresh", "true")
 	}
@@ -326,9 +305,6 @@ func (s *Server) handleBuilderGet(w http.ResponseWriter, r *http.Request) {
 	if len(raw) == 0 {
 		raw = []byte("[]")
 	}
-	// Eski tek bloklu kategori panelleri: tasarımcıda panel başına ayrı
-	// modül olarak göster. Kaydedince yeni "kategori_panel" blokları kalıcı
-	// olur; public tarafta eski blok geriye dönük uyumlu render edilir.
 	if strings.Contains(string(raw), `"kategori_bloklari"`) {
 		raw = expandCategoryPanelBlocks(raw, s.panelsViewFor(ctx, sid))
 	}
@@ -385,9 +361,6 @@ func (s *Server) handleBuilderGet(w http.ResponseWriter, r *http.Request) {
 	s.render(w, r, "tasarimci", d)
 }
 
-// builderPreviewURL tasarımcıdaki "Önizle" bağlantısı için uygun public
-// adresi döndürür (home → /, article → örnek yazı sayfası, kategori → ilk
-// yayındaki kategori listesi).
 func (s *Server) builderPreviewURL(ctx context.Context, page string) string {
 	if isSayfaPage(page) {
 		if slug := sayfaSlug(page); slug != "" {
@@ -480,9 +453,6 @@ func (s *Server) handleBuilderSave(w http.ResponseWriter, r *http.Request) {
 	s.writeJSON(w, http.StatusOK, map[string]any{"ok": true, "count": len(arr), "page": page})
 }
 
-// normalizeBlocksForPage blok dizisini bu sayfanın izin verdiği zonlara sabitler
-// (Faz 8: kopyalama dahil paylaşılan yol). Geçersiz zonlar sayfanın ilk geçerli
-// zonuna düşer. Dönüş: normalize edilmiş JSON, dizi, hata.
 func (s *Server) normalizeBlocksForPage(page string, raw json.RawMessage) ([]byte, []map[string]any, error) {
 	blocks := platform.NormalizeDesign(raw)
 	var arr []map[string]any
@@ -494,9 +464,6 @@ func (s *Server) normalizeBlocksForPage(page string, raw json.RawMessage) ([]byt
 	for _, z := range zones {
 		valid[z.Key] = true
 	}
-	// Tanınmayan blok nereye düşer? Hedefin ilk bölgesi genelde doğrudur,
-	// ama yazı sayfasında ilk bölge "ust" tam genişlik şerittir; oraya
-	// rastgele blok koymak düzeni bozar. Yazıda güvenli yer sağ sütun.
 	fallback := zones[0].Key
 	if page == "article" {
 		fallback = "yan"
@@ -515,10 +482,6 @@ func (s *Server) normalizeBlocksForPage(page string, raw json.RawMessage) ([]byt
 			opts["zone"] = fallback
 		}
 	}
-	// Gövde blokları ("yazi_govde" / "sayfa_govde") yalnız kendi sayfa
-	// türünde ve yalnız bir kez anlamlıdır (Faz 142/143): sabit gövdenin
-	// yerini alır. Başka sayfada tutulursa sessizce düşürülür; aynı sayfada
-	// ikincisi yok sayılır. Bölgesi her zaman "ana"dır.
 	govdeType := ""
 	switch {
 	case page == "article":
@@ -566,9 +529,6 @@ func (s *Server) handleBuilderReset(w http.ResponseWriter, r *http.Request) {
 	s.flashRedirect(w, r, "/admin/tasarim?sayfa="+page, "info", "Düzen varsayılana sıfırlandı.")
 }
 
-// handleBuilderCopy mevcut sayfanın düzenini başka bir sayfa anahtarına
-// kopyalar (Faz 8). Hedefin zonlarına uyarlama normalizeBlocksForPage ile
-// yapılır; hedefin önceki düzeni sürüm geçmişine arşivlenir.
 func (s *Server) handleBuilderCopy(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	sid := s.curSiteID(r)
@@ -734,9 +694,6 @@ func (s *Server) categoryViewForPage(ctx context.Context, siteID int64, page str
 	return global
 }
 
-// handleBuilderCategoryViewSave tasarımcıdan kategori görünümünü kaydeder.
-// Genel düzende genel ayarı, kategoriye özel düzende yalnız o kategorinin
-// liste görünümünü günceller.
 func (s *Server) handleBuilderCategoryViewSave(w http.ResponseWriter, r *http.Request) {
 	var req struct {
 		View string `json:"view"`
@@ -877,14 +834,8 @@ type homeBlock struct {
 	CatSlug      string
 	// Kategori paneli (kategori_panel): tek kategori vitrininin düzeni ve
 	// rengi. Eski kategori_bloklari bloğu bunları panel ayarından alırdı.
-	PanelDuzen string
-	PanelTone  string
-	// Kategori gövdesini bağımsız modüllere ayıran bloklar için:
-	//   RowLayout  hero-left | hero-center | hero-right (boş = kendi satırı)
-	//   RowSlot    left | center | right (CSS sınıfı için türetilir)
-	//   ItemOffset haber aralığının başlangıcı; -1 = otomatik sıra
-	//   CatItems   bu modülün tükettiği haberler (kopya kategori görünümü)
-	//   AkisStart  akışın sayfa içindeki mutlak başlangıcı; -1 = eski hesap
+	PanelDuzen   string
+	PanelTone    string
 	RowLayout    string
 	RowSlot      string
 	RowSlotClass string
@@ -896,23 +847,13 @@ type homeBlock struct {
 	// HeroShadow kategori manşet slider'ındaki başlığa gölge ekler
 	// (portre/üçlü). Slider modülündeki başlık gölgesi karşılığıdır.
 	HeroShadow bool
-	// Kategori akış vitrini (coinhit/enerji modeli): ilk 4 haber 4'lü kart,
-	// kalanı 3 sütun × 4 kart enerji düzeniyle akar. AkisLimit toplam haber
-	// sınırı, AkisPer her yüklemede eklenecek haber sayısı, AkisAuto kaydırınca
-	// otomatik yükleme.
-	AkisLimit int
-	AkisPer   int
-	AkisAuto  bool
+	AkisLimit  int
+	AkisPer    int
+	AkisAuto   bool
 	// AkisHero akışın üstündeki manşet alanını (portre/üçlü) tutar; varsayılan
 	// açıktır, istenirse kapatılır.
-	AkisHero bool
-	// AkisFont akış kartlarının (ilk 4 kart + enerji blokları) yazı ailesidir;
-	// tüm akış tek font kullanır. Boşsa coinhit varsayılanı serif'tir.
-	// Değerler slider'daki title_font ile aynıdır (system/serif/sans/...).
-	AkisFont string
-	// Kategori sekmeli blok: blok bazında seçilen kategori slug'ları ve
-	// sekme stili/renkleri. CatTabs boşsa yönetimdeki genel sekme seçimi
-	// (yoksa menüdeki ilk 8 kategori) kullanılır.
+	AkisHero       bool
+	AkisFont       string
 	CatTabs        []string
 	TabStyle       string
 	TabBg          string
@@ -936,14 +877,11 @@ type homeBlock struct {
 	UMShadow      bool
 	// Üst manşet kart kabuğu: açık/koyu tema arka planı, gölge ve başlık
 	// yatay iç boşluğu. UMTitlePad < 0 = ayarlanmadı (stilin kendi dolgusu).
-	UMCardBg     string
-	UMCardDarkBg string
-	UMCardShadow bool
-	UMTitlePad   int
-	UMStyleCSS   template.CSS
-	// KapakTasarimID blok başına kapak şablonu eşlemesi (Faz 3). 0 = kapak
-	// tasarımı yok (içeriğin kendi görseli kullanılır); >0 = Manşet Editörü
-	// şablonu id'si → bloğun içerikleri o şablonla rayına dizilir.
+	UMCardBg       string
+	UMCardDarkBg   string
+	UMCardShadow   bool
+	UMTitlePad     int
+	UMStyleCSS     template.CSS
 	KapakTasarimID int64
 	// Slider/manşet tasarım kapaklarında HTML başlık/etiket/spot üst yazısını
 	// görsel olarak gizler; metinler ekran okuyucu ve SEO için DOM'da kalır.
@@ -984,9 +922,6 @@ type homeBlock struct {
 	// HideBadge true ise kategori etiketleri görsel olarak gizlenir; etiket
 	// metni .sr-only olarak DOM'da kalır.
 	HideBadge bool
-	// CardStyle paylaşımlı kart stili (kategori ızgarası, üst manşet, öne
-	// çıkanlar). Boş = klasik. Değerler: bloomberg, bloomberg-cizgi,
-	// bant-alt, vurgu, cerceve, kose, cam, alt-cizgi.
 	CardStyle string
 	// CardCSS kart stilinin renk/ölçü değişkenleri (CSS özel özellikleri).
 	CardCSS template.CSS
@@ -1014,18 +949,8 @@ type homeBlock struct {
 	M2NumActiveBg string
 	M2Side        string
 	M2Height      int
-	// Zone yerleşim bölgesi:
-	//   "ust"  → tam genişlik üst alan (hikayeler, üst manşet, slider, servis)
-	//   "ana"  → sol ana kolon (varsayılan)
-	//   "yan"  → sağ sütun
-	//   "genis"→ iki kolonlu düzen BİTTİKTEN SONRA tam genişlik
-	//            (haberpi'de kategori panelleri ve foto/video galeriler
-	//             sol kolonda değil, burada tam genişlikte durur)
-	Zone string
+	Zone          string
 
-	// Modül başına görünüm/ölçü ayarları (blok opts: st*).
-	// Uzunluk alanları CSS birimi kabul eder (px/rem/em/%/vw/vh/calc);
-	// padding ve margin 1-4 değerli CSS kısayolu olarak saklanabilir.
 	StPad         string
 	StMargin      string
 	StGapX        string // kartlar arası yatay (sütun) boşluk
@@ -1039,16 +964,13 @@ type homeBlock struct {
 	// 0 geçerli bir değerdir (tamamen köşeli); boş alan tema yarıçapını korur.
 	StRadiusSet bool
 	StBg        string
-	// Serbest (absolute) konumlandırma — Faz 5. StAbs true ise blok akıştan
-	// çıkar ve .blk-st sarmalayıcısına position:absolute + konum yazılır;
-	// bloğun zon container'ı (position:relative) referans alınır.
-	StAbs bool
-	StX   int
-	StY   int
-	StW   int
-	StZ   int
-	Wrap  bool // stil varsa modül bir sarmalayıcıya alınır
-	Style template.CSS
+	StAbs       bool
+	StX         int
+	StY         int
+	StW         int
+	StZ         int
+	Wrap        bool // stil varsa modül bir sarmalayıcıya alınır
+	Style       template.CSS
 
 	D      *tmplData
 	Slides []repo.Content
@@ -1142,23 +1064,12 @@ type homeBlock struct {
 	Kari []kariRow
 	// Servis bandı için blok bazında seçilmiş kur kalemleri.
 	ServisKurlar []repo.Kur
-	// Servis bandının hava durumu + il listesi. Ana sayfa dışındaki
-	// sayfalarda (yazı, kategori, kurumsal) veri havuzunda hava/şehir
-	// yoktur; bandın buralarda da basılabilmesi için blok üzerinde taşınır.
 	ServisHava   *WeatherS
 	ServisCities []repo.City
 	// Servis bandı arka plan seçimi (kart|yok|zemin|ozel) ve stil parçası.
 	ServisBg    string
 	ServisBgCSS template.CSS
 
-	// Trend Haberler modülü — kartın SAĞINDAKİ sayısal alan.
-	//
-	// Kullanıcı isteği: "Trend Haberler modülünde kartların sağındaki alanda
-	// sayısal alan köşeleri düzleştirme ayarı ekle, stil türleri de ekle."
-	//
-	// TrendNumStil sayısal alanın görünümüdür (blok|duz|serit|rozet|buyuk|kontur).
-	// TrendNumRadius köşe yarıçapıdır; -1 = tema varsayılanı (kartın köşesine
-	// uyar), 0 = tamamen düz köşe.
 	TrendNumStil   string
 	TrendNumRadius int
 	TrendNumCSS    template.CSS
@@ -1171,9 +1082,6 @@ type homeBlock struct {
 	StoriesJSON template.JS
 }
 
-// catRow kategori gövdesindeki görsel satır: Group true ise ardışık
-// hero-left/hero-center/hero-right modülleri tek .cat-hero ızgarasında
-// birleştirilir; false ise blok kendi satırında basılır.
 type catRow struct {
 	Group  bool
 	Class  string
@@ -1242,10 +1150,6 @@ func catItemSlice(items []repo.Content, start, count int) []repo.Content {
 	return items[start:end]
 }
 
-// assignCategoryModuleItems kategori gövdesindeki bağımsız modüllere haber
-// aralıklarını atar. Öncelik açık item_offset değerlerindedir; boş bırakılan
-// modüller sırayla ilk kullanılmamış haberlerden beslenir. Akış modülü kalan
-// haberleri tüketir ve AkisStart ile AJAX ucuna mutlak başlangıç verir.
 func assignCategoryModuleItems(blocks []homeBlock, items []repo.Content) {
 	if len(blocks) == 0 || len(items) == 0 {
 		return
@@ -1286,10 +1190,6 @@ func assignCategoryModuleItems(blocks []homeBlock, items []repo.Content) {
 			continue
 		}
 		if b.Type == "kategori_akis" {
-			// Akıştan sonra gelen modüller boş kalır; akış son sırada
-			// kullanılmalıdır. Akış bitişik bir kuyruk tükettiği için açık
-			// aralıklı modüllerin son kullandığı haberden sonra başlar;
-			// aksi halde aradaki haberler akışta tekrar basılırdı.
 			start := cursor
 			for i := start; i < len(items); i++ {
 				if used[i] {
@@ -1323,10 +1223,6 @@ func assignCategoryModuleItems(blocks []homeBlock, items []repo.Content) {
 	}
 }
 
-// groupCatRows kategori gövdesi bloklarını görsel satırlara böler. Ardışık
-// hero-left/hero-center/hero-right modülleri tek satırda toplanır; aynı yuva
-// ikinci kez gelirse yeni satır başlar. Satır genişliği orta slider'ın
-// hero_width değerinden, oran sınıfı da hero_ratio değerinden türetilir.
 func groupCatRows(blocks []homeBlock) []catRow {
 	var rows []catRow
 	var cur []homeBlock
@@ -1461,9 +1357,6 @@ func (s *Server) buildBlocksFrom(ctx context.Context, d *tmplData, raw []byte, h
 	if len(blocks) == 0 || h == nil {
 		return nil
 	}
-	// Kategori görünürlüğü: yazı sayfasında blok yalnız seçilen
-	// kategorilerde basılır. Filtre döngüden ÖNCE uygulanır ki elenen blok
-	// için veri de yüklenmesin.
 	if d != nil && d.Article != nil {
 		gorunen := blocks[:0]
 		for _, b := range blocks {
@@ -1479,9 +1372,6 @@ func (s *Server) buildBlocksFrom(ctx context.Context, d *tmplData, raw []byte, h
 	for i := range blocks {
 		b := &blocks[i]
 		b.D = d
-		// Blok bazında kategori seçimi: seçili kategorinin en yeni içerikleri
-		// varsayılan veri kaynağının yerine kullanılır. Kaynak yoksa (silinmiş
-		// kategori vb.) blok normal davranışına döner.
 		var src []repo.Content
 		if b.CatSlug != "" {
 			need := b.Count
@@ -1500,11 +1390,6 @@ func (s *Server) buildBlocksFrom(ctx context.Context, d *tmplData, raw []byte, h
 				slides = src
 			}
 			b.Slides = firstContent(slides, b.Count)
-			// Sağ ray slider sayısından bağımsız sabit kartlardır. İlk
-			// slaytlarla tekrar etmemesi için 3. içerikten başlanır.
-			//
-			// "sayili" (Habertürk spor düzeni) 2×2 ızgara kullanır: 4 kart.
-			// Diğer stiller 2 kartlık dikey raydır.
 			railCount := 2
 			if b.SliderStyle == "sayili" {
 				railCount = 4
@@ -1618,23 +1503,6 @@ func (s *Server) buildBlocksFrom(ctx context.Context, d *tmplData, raw []byte, h
 				d.Puan = &pd
 			}
 			b.Standings = firstStd(d.Puan.Rows, b.Count)
-		case "gazete_manset":
-			// Günün gazete kapakları — önbellekten (DB), ağa çıkılmaz.
-			//
-			// Kaynak boşsa (henüz çekilmemiş) modül hiç basılmaz; boş kutu
-			// göstermek yerine bölüm tamamen yok olur.
-			sid := int64(1)
-			if h != nil && h.SiteID > 0 {
-				sid = h.SiteID
-			}
-			kapak, gun, err := repo.LatestNewspaperPages(ctx, s.pool, sid, b.Count)
-			if err != nil || len(kapak) == 0 {
-				b.GazeteKapak = nil
-				continue
-			}
-			b.GazeteKapak = kapak
-			b.GazeteGun = gun
-			b.GazeteDar = darBolge(b.Zone)
 		case "puan_serit":
 			// Habertürk spor yazısı düzeni: takım kartları şeridi.
 			// Lig blok ayarından seçilir; önbellekten okunur (ağa çıkılmaz).
@@ -1721,9 +1589,6 @@ func (s *Server) buildBlocksFrom(ctx context.Context, d *tmplData, raw []byte, h
 			b.Hisseler = hisseRows(d.Hisseler.Rows, b.HisseSirala, b.Count)
 			b.HisseGuncel = d.Hisseler.Updated
 			b.HisseCSS = template.CSS("--hss-dur:" + itoa(b.HisseSure) + "s")
-			// Arka plan: Kur & Borsa ile aynı kurallar. "yok" saydamdır;
-			// zemin/özel renk modülün kendi bölümüne uygulanır ve ortak
-			// "Arka plan rengi" alanı susturulur (çift dolgu olmasın).
 			switch b.HisseBg {
 			case "kart":
 				// Modülün kendi çerçevesi (varsayılan görünüm).
@@ -1780,13 +1645,6 @@ func (s *Server) buildBlocksFrom(ctx context.Context, d *tmplData, raw []byte, h
 	return blocks
 }
 
-// filterServisKurlar servis bandındaki kur kalemlerini blok ayarlarına göre
-// süzer.
-//
-// Varsayılan AÇIK: panelde bir kalemin kutusu işaretli görünüyorsa (anahtar
-// hiç kaydedilmemişse de işaretli görünür), bantta da görünmelidir. Kullanıcı
-// kutuyu kaldırıp kaydederse anahtar `false` olarak yazılır ve kalem elenir.
-// Böylece panel ile bant aynı şeyi gösterir.
 func filterServisKurlar(items []repo.Kur, opts map[string]any) []repo.Kur {
 	keys := map[string]string{
 		"BIST": "kur_bist", "USD": "kur_usd", "EUR": "kur_eur",
@@ -1820,11 +1678,6 @@ func blockOptString(opts map[string]any, key, def string) string {
 	return def
 }
 
-// blokKategoriGorunumu blok ayarındaki `gorunum_kats` listesini döndürür.
-//
-// Kullanıcı isteği: "hangi yazı kategorilerinde yazılarda olması için seçenek".
-// Virgülle ayrılmış kategori slug'ları (builder'daki cats-multi alanı).
-// Boş = kısıt yok (her sayfada görünür — geriye dönük uyumlu).
 func blokKategoriGorunumu(opts map[string]any) []string {
 	raw := strings.TrimSpace(blockOptString(opts, "gorunum_kats", ""))
 	if raw == "" {
@@ -1832,9 +1685,6 @@ func blokKategoriGorunumu(opts map[string]any) []string {
 	}
 	out := make([]string, 0, 6)
 	for _, s := range strings.Split(raw, ",") {
-		// Değer JSON'a yazılırken tırnaklanmış olabilir (""spor"" gibi).
-		// Tırnaklar temizlenir; aksi hâlde "spor" != spor olur ve filtre
-		// hiçbir yazıyla eşleşmez.
 		s = strings.Trim(strings.TrimSpace(s), `"'`)
 		if s = strings.TrimSpace(s); s != "" {
 			out = append(out, s)
@@ -1846,14 +1696,6 @@ func blokKategoriGorunumu(opts map[string]any) []string {
 	return out
 }
 
-// blokYazidaGorunur mu? Yalnız yazı (makale) sayfalarında kısıt uygulanır:
-//
-//   - `gorunum_kats` boşsa → her yerde görünür.
-//   - Doluysa ve sayfa bir yazı sayfasıysa → yazının kategorisi listede
-//     olmalı; değilse blok hiç basılmaz (boşluk da bırakmaz).
-//   - Yazı sayfası değilse (ana sayfa/kategori) → kısıt uygulanmaz; oradaki
-//     düzen ayrı bir karardır, modülü orada görmek isteyip istemediğini
-//     kullanıcı o düzeni düzenleyerek belirler.
 func blokYazidaGorunur(opts map[string]any, d *tmplData) bool {
 	kats := blokKategoriGorunumu(opts)
 	if len(kats) == 0 {
@@ -1874,12 +1716,6 @@ func blokYazidaGorunur(opts map[string]any, d *tmplData) bool {
 	return false
 }
 
-// filterPiyasa Kur & Borsa modülündeki göstergeleri blok ayarlarına göre
-// süzer ve sıralar.
-//
-// Ayar anahtarı gösterge kimliğidir (`piyasa_usd` gibi), görünen ad değil:
-// ad değişse de (ör. "Dolar" → "USD/TRY") düzen bozulmaz. Ayar yoksa tümü
-// görünür — eski düzenler ve ilk ekleme için doğru varsayılan.
 func filterPiyasa(items []piyasa.Kalem, opts map[string]any) []piyasa.Kalem {
 	if len(items) == 0 {
 		return nil
@@ -1891,9 +1727,6 @@ func filterPiyasa(items []piyasa.Kalem, opts map[string]any) []piyasa.Kalem {
 		}
 		out = append(out, k)
 	}
-	// Sıra: gösterge listesi ekranda referans düzene göre sabittir
-	// (BIST, Dolar, Euro, Gram Altın, …). Özel sıra istenirse burada
-	// opts["sira"] okunabilir; şimdilik kaynak sırası korunur.
 	if limit := blockOptInt(opts, "count", 0); limit > 0 && len(out) > limit {
 		out = out[:limit]
 	}
@@ -1930,9 +1763,6 @@ func withCover(items []repo.Content) []repo.Content {
 	return out
 }
 
-// diversify her kategoriden sırayla birer içerik alır: ilk turda tüm
-// kategorilerden birer tane, sonraki turlarda her kategoriden birer tane daha.
-// Böylece hikaye şeridinde tek kategorinin (ör. teknoloji) üst üste düşmez.
 func diversify(items []repo.Content) []repo.Content {
 	groups := make([][]repo.Content, 0, 12)
 	index := map[int64]int{}
@@ -1964,21 +1794,10 @@ func diversify(items []repo.Content) []repo.Content {
 	}
 }
 
-// storiesJSON hikaye şeridi için haberpi/zuck.js uyumlu "window.hikayeData"
-// JSON dizisini üretir. Alan yapısı haberpi main.js initHikaye() ile birebirdir;
-// zuck.js Snapgram skin tıklama, açılış animasyonu ve geçişleri aynı şekilde kurar.
 func (s *Server) storiesJSON(d *tmplData, items []repo.Content) template.JS {
 	if len(items) == 0 {
 		return ""
 	}
-	// haberpi hikaye verisi şekli: id/photo/name/link/lastUpdated/baslik/itemId/time
-	//
-	// Photo ve PhotoBuyuk bilerek AYRI: daire 86x86 (retinada 172px yeter),
-	// hikâye açılınca gösterilen kare ise ~362px (retinada 724px ister).
-	// Önceden ikisi de 480x480 thumb'dı: daire için fazla, büyük görünüm için
-	// az. Daire artık 320 varyantından (kullanılabilir kare 180px) gelir —
-	// ölçüm: anasayfada 12 dairede kayda değer tasarruf. Büyük görsel yalnız
-	// kullanıcı hikâyeyi açarsa indirilir.
 	type storyJSON struct {
 		ID          string `json:"id"`
 		Photo       string `json:"photo"`
@@ -2018,9 +1837,6 @@ func (s *Server) storiesJSON(d *tmplData, items []repo.Content) template.JS {
 	return template.JS(string(raw))
 }
 
-// parseCatTabs kategori sekmeli bloktaki "sekmeler" ayarını okur.
-// Değer JSON string ("a,b") veya dizi olabilir; slug'lar doğrulanır,
-// tekrarlar atılır ve en fazla 12 sekme kabul edilir.
 func parseCatTabs(v any) []string {
 	var raw []string
 	switch t := v.(type) {
@@ -2051,10 +1867,6 @@ func parseCatTabs(v any) []string {
 	return out
 }
 
-// blockCatItems blok ayarlarında seçilen kategori için en yeni içerikleri
-// döndürür. Aynı kategoriyi kullanan bloklar için sorgu sayfa başına BİR kez
-// yapılır (homeData.catItemsCache). Slug geçersiz/silinmişse nil döner ve
-// blok varsayılan veri kaynağını kullanmaya devam eder.
 func (s *Server) blockCatItems(ctx context.Context, h *homeData, slug string, want int) []repo.Content {
 	if h == nil || h.SiteID == 0 || slug == "" {
 		return nil
@@ -2288,10 +2100,6 @@ func parseHomeBlocks(raw []byte) []homeBlock {
 		bv.Opts = b.Opts
 		bv.Count = intOf("count", 6)
 		if bv.Type == "trend_numarali" {
-			// Sayısal alan (kartın sağındaki numara kutusu) görünümü.
-			//
-			// Kullanıcı isteği: "kartların sağındaki alanda sayısal alan
-			// köşeleri düzleştirme ayarı ekle, stil türleri de ekle."
 			bv.TrendNumStil = get("tn_stil")
 			switch bv.TrendNumStil {
 			case "blok", "duz", "serit", "rozet", "buyuk", "kontur":
@@ -2329,36 +2137,6 @@ func parseHomeBlocks(raw []byte) []homeBlock {
 			}
 			if len(tnVars) > 0 {
 				bv.TrendNumCSS = template.CSS(strings.Join(tnVars, ";"))
-			}
-		}
-		if bv.Type == "gazete_manset" {
-			// 32 gazete var; varsayılan 12 kapak (sağ sütunda tek slayt
-			// döner, 12 yeterli bir tur).
-			bv.Count = intOf("count", 12)
-			if bv.Count < 1 {
-				bv.Count = 1
-			}
-			if bv.Count > 32 {
-				bv.Count = 32
-			}
-			bv.GazeteBaslik = strings.TrimSpace(get("gazete_baslik"))
-			// 0 geçerli: otomatik geçiş kapalı (kullanıcı isteyerek kapatır).
-			bv.GazeteAralik = 6
-			if v, ok := b.Opts["gazete_aralik"]; ok {
-				switch t := v.(type) {
-				case float64:
-					bv.GazeteAralik = int(t)
-				case string:
-					if n, err := strconv.Atoi(strings.TrimSpace(t)); err == nil {
-						bv.GazeteAralik = n
-					}
-				}
-			}
-			if bv.GazeteAralik < 0 {
-				bv.GazeteAralik = 0
-			}
-			if bv.GazeteAralik > 30 {
-				bv.GazeteAralik = 30
 			}
 		}
 		if bv.Type == "puan_durumu" {
@@ -2475,9 +2253,6 @@ func parseHomeBlocks(raw []byte) []homeBlock {
 			}
 		}
 		if bv.Type == "hisseler" {
-			// BIST hisse şeridi: kaç hisse, hangi yerleşim/görünüm,
-			// sıralama ve şerit turu modülün kendi ayarındadır.
-			// Görünüm sözlüğü Kur & Borsa ile aynıdır (hs_style/hs_arrow/hs_bg).
 			bv.Count = intOpt("count", hisseSayiVarsayilan)
 			if bv.Count < 3 {
 				bv.Count = 3
@@ -2575,10 +2350,6 @@ func parseHomeBlocks(raw []byte) []homeBlock {
 				bv.Count = 12
 			}
 		}
-		// Kategori gövdesi manşet düzeni:
-		//   portre = solda 5 slaytlı dikey slider, sağda 2 sabit manşet
-		//   uclu   = solda 3, ortada slider, sağda 2 manşet
-		//   klasik = 1 büyük + 2 yan (eski düzen)
 		bv.CatHeroStyle = get("hero_style")
 		switch bv.CatHeroStyle {
 		case "klasik", "portre", "uclu":
@@ -2592,9 +2363,6 @@ func parseHomeBlocks(raw []byte) []homeBlock {
 		if bv.CatHeroCount > 10 {
 			bv.CatHeroCount = 10
 		}
-		// Üçlü düzende genişlik ortadaki slider'a aittir; yan raylara da
-		// yer kalması için daha dar aralıkta tutulur. Bağımsız slider
-		// modülü manşet satırının ortasındaysa aynı dar aralık geçerlidir.
 		heroDefault, heroMin, heroMax := 58, 45, 75
 		if bv.CatHeroStyle == "uclu" || bv.RowLayout == "hero-center" {
 			heroDefault, heroMin, heroMax = 44, 30, 60
@@ -2897,9 +2665,6 @@ func parseHomeBlocks(raw []byte) []homeBlock {
 				}
 			}
 			if bv.OverlayHeight >= 0 {
-				// Yükseklik bir TABAN'dır, sabit tavan değil: uzun başlık/spot
-				// bandın üstünden taşıp kırpılmasın. İçerik bandı yukarı doğru
-				// büyütür; kısa içerikte seçilen oran korunur.
 				overlayCSS += "top:auto;bottom:0;left:0;right:0;min-height:" +
 					strconv.Itoa(bv.OverlayHeight) + "%;height:auto;display:flex;align-items:flex-end;" +
 					"box-sizing:border-box;"
@@ -2955,9 +2720,6 @@ func parseHomeBlocks(raw []byte) []homeBlock {
 		default:
 			bv.CatPosition = "inline"
 		}
-		// Üst manşet ve karma kartlarda kategori, görseli saran .um-media /
-		// .ky-media katmanının içinde konumlanır. Bu sayede başlık metninin
-		// üstüne binmez; inline absolute koordinatları kullanılmaz.
 		catInMedia := bv.Type == "ust_manset" || bv.Type == "kari_kartlar"
 		// Öne çıkanlar kartında kategori başlık altındaki metin akışındadır;
 		// pin biçimi burada mutlak konuma taşınmamalıdır.
@@ -3013,9 +2775,6 @@ func parseHomeBlocks(raw []byte) []homeBlock {
 					catCSS += "--cat-top:auto;--cat-bottom:" + bv.CatBottom + ";"
 				}
 			} else {
-				// Konum seçilmemiş olsa bile özel left/bottom girildiyse
-				// etiketi mutlak konuma al; aksi halde satır içi kalır ve
-				// koordinatlar uygulanmaz.
 				if bv.CatPosition == "inline" && (bv.CatLeft != "" || bv.CatBottom != "") {
 					bv.CatPosition = "bottom-left"
 					catCSS += "position:absolute;top:auto;bottom:12px;z-index:3;"
@@ -3042,9 +2801,6 @@ func parseHomeBlocks(raw []byte) []homeBlock {
 		}
 		bv.HideHeading = boolOf("hide_heading", false)
 		bv.HideBadge = boolOf("hide_badge", false)
-		// Paylaşımlı kart stili (Bloomberg vb.) — kategori ızgarası, üst manşet
-		// ve öne çıkanlar modüllerinde ortak. Renkler açık/koyu tema için ayrı
-		// verilir; böylece dark mode'da bant arka planı istenen renge döner.
 		bv.CardStyle = get("card_style")
 		switch bv.CardStyle {
 		case "bloomberg", "bloomberg-cizgi", "bant-alt", "vurgu",
@@ -3072,9 +2828,6 @@ func parseHomeBlocks(raw []byte) []homeBlock {
 			if n := intOpt("card_title_size", 0); n >= 10 && n <= 40 {
 				cardCSS += "--cs-size:" + px(n) + ";"
 			}
-			// Kart gövdesi (kabuk) arka planı: bant renginden bağımsız.
-			// Açık/koyu tema ayrı değişkenlere yazılır; dark mode kuralı
-			// inline değeri ezmeden doğru rengi seçebilsin.
 			if v := sanitizeHexColor(get("card_box_bg")); v != "" {
 				cardCSS += "--cs-card-light-bg:" + v + ";"
 			}
@@ -3167,9 +2920,6 @@ func parseHomeBlocks(raw []byte) []homeBlock {
 		if bv.SliderStyle != "default" && !validSliderStyle {
 			bv.SliderStyle = "default"
 		}
-		// Sayılı şerit stili (Habertürk spor düzeni) numaralı göstergenin
-		// parçasıdır: şerit olmadan stil eksik kalır. Bu yüzden gösterge
-		// ayarı ne olursa olsun numaralı şerit basılır; son hücre "+" olur.
 		if bv.SliderStyle == "sayili" {
 			bv.PagerType = "numbers"
 			bv.ShowAll = true
@@ -3214,9 +2964,6 @@ func parseHomeBlocks(raw []byte) []homeBlock {
 		default:
 			bv.Zone = "ana" // varsayılan: sol ana kolon
 		}
-		// "Otomatik" şablon bölgeye göre çözülür: sağ raya (yan) taşınan
-		// modül kendiliğinden kompakt görünüme geçer. Kullanıcı açıkça bir
-		// şablon seçtiyse ona dokunulmaz.
 		if bv.Type == "kripto_para" {
 			bv.KriptoDar = darBolge(bv.Zone)
 			bv.KriptoEtkin = kriptoEtkinStil(bv.KriptoStil, bv.KriptoDar)
@@ -3303,9 +3050,6 @@ func sanitizeCatLength(v string) string {
 	return ""
 }
 
-// sanitizeLengthValue tek bir CSS uzunluğunu doğrular. Modül iç/dış
-// boşluklarında px/rem/em/%/vw/vh/calc() ve birimsiz sayı (px) kabul edilir.
-// allowAuto margin için, allowNegative ise negatif margin için kullanılır.
 func sanitizeLengthValue(v string, allowAuto, allowNegative bool) string {
 	v = strings.TrimSpace(v)
 	if v == "" {
@@ -3361,9 +3105,6 @@ func splitCSSValues(v string) []string {
 	return out
 }
 
-// sanitizeBoxShorthand padding/margin için 1-4 değerli CSS kısayolunu
-// doğrular (örn. "1rem", "10px 20px", "0 auto"). Geçersiz değer tümden
-// reddedilir; böylece kısmen uygulanmış stil oluşmaz.
 func sanitizeBoxShorthand(v string, allowAuto, allowNegative bool) string {
 	v = strings.TrimSpace(v)
 	if v == "" {
@@ -3384,9 +3125,6 @@ func sanitizeBoxShorthand(v string, allowAuto, allowNegative bool) string {
 	return strings.Join(out, " ")
 }
 
-// buildStyle modül başına görünüm/ölçü ayarlarından (st* opts) güvenli bir
-// inline stil üretir. Yalnızca geçerli/kırpılmış değerler kullanılır; hiçbir
-// ayar yoksa Wrap=false kalır ve public çıktı değişmez.
 func (b *homeBlock) buildStyle() {
 	var p []string
 	if b.StPad != "" {
@@ -3410,9 +3148,6 @@ func (b *homeBlock) buildStyle() {
 		p = append(p, "--blk-gap-y:"+b.StGapY)
 	}
 	if b.StRadiusSet {
-		// Yerel değişkenler: finans modüllerinin iç kartları (public.css)
-		// --hp-radius / --hp-radius-sm tüketir. 0 verildiğinde modülün
-		// tamamı köşeli olur; alan boşsa tema değeri miras alınır.
 		r := clampInt(b.StRadius, 0, 60)
 		sm := r - 2
 		if sm < 0 {
@@ -3428,9 +3163,6 @@ func (b *homeBlock) buildStyle() {
 		}
 		p = append(p, "border:"+px(clampInt(b.StBorderW, 0, 12))+" solid "+col)
 	}
-	// Finans modüllerinde arka plan modülün kendi seçimiyle (kb_bg/hs_bg/
-	// kp_bg/kc_bg) yönetilir; ortak "Arka plan rengi" alanı sarmalayıcıya
-	// basılmaz. Aksi hâlde "yok" (saydam) seçilse bile kutu görünürdü.
 	suppressBg := false
 	switch b.Type {
 	case "kur_borsa", "hisseler", "kripto_para", "kur_cevirici", "servis_bandi":

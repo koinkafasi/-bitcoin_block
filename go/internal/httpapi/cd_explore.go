@@ -9,19 +9,6 @@ import (
 	"theblock/site/internal/youtube"
 )
 
-// "Explore more from CoinDesk" şeridi — panel beslemesi.
-//
-// NEDEN GERÇEK VERİ: CoinDesk'in 6 paneli (Prices · Stocks · Exchange
-// Benchmark · Videos · CoinDesk Indices · Podcast) kendi ürünlerine
-// bağlı. Bizde hisse, endeks ve benchmark verisi YOK; bülten içeriği de
-// yayında değil. Uydurma panel basmak "veri yoksa modül basılmaz"
-// kuralını çiğnerdi. Bu yüzden şerit YALNIZ gerçek veriyle dolan
-// panellerle kuruluyor — ve istenen "bölüm alanları" her bölümün kendi
-// panelinde son haberlerini göstermesiyle karşılanıyor.
-//
-// Panel sırası CoinDesk'le aynı mantıkta: önce canlı veri (fiyat),
-// sonra medya (video, klip), sonra bölümler.
-
 // cdExploreDoldur ana sayfa şeridini kurar.
 func (s *Server) cdExploreDoldur(r *http.Request, sections []templkit.CDSection) templkit.CDExplore {
 	e := templkit.CDExplore{Baslik: s.siteName + "'dan daha fazlası"}
@@ -40,13 +27,6 @@ func (s *Server) cdExploreDoldur(r *http.Request, sections []templkit.CDSection)
 		})
 	}
 
-	// 2) Videolar — YouTube akışı. `video` türünde tek kayıt var; canlı
-	// yayın arşivi (`stream`, 12 kayıt) da aynı panelde gösteriliyor,
-	// yoksa panel tek satırla boş görünüyordu.
-	//
-	// CoinDesk'in Videos panelinde AÇIKLAMA ve ALT BAĞLANTI YOK (ölçüldü:
-	// başlık 32 → 16 → 5×94 satır = 534). Aynı yükseklik hesabı bizde de
-	// tutsun diye ikisi de basılmıyor; başlığın kendisi /videos'a gidiyor.
 	if videolar := s.cdExploreVideolar(r, 5); len(videolar) > 0 {
 		e.Paneller = append(e.Paneller, templkit.CDExplorePanel{
 			Tur:      "video",
@@ -67,10 +47,6 @@ func (s *Server) cdExploreDoldur(r *http.Request, sections []templkit.CDSection)
 		})
 	}
 
-	// 4) Bölüm panelleri — her bölümün SON 5 haberi kendi listesinden
-	// çekilir (ana sayfa havuzu 60 kayıtla sınırlı olduğu için Piyasalar
-	// gibi bölümlerde 2 satırda kalıyordu). Bölüm listesi boşsa ana sayfa
-	// havuzundaki kayıtlara düşülür.
 	simdi := time.Now()
 	for _, sec := range sections {
 		var haberler []templkit.CDStory
@@ -107,11 +83,6 @@ func (s *Server) cdExploreDoldur(r *http.Request, sections []templkit.CDSection)
 	return e
 }
 
-// cdExploreVideolar Explore video panelini doldurur.
-//
-// `video` türü (uzun videolar) önce gelir, kalan yer `stream` arşiviyle
-// tamamlanır. Böylece panel CoinDesk gibi 5 satır dolu görünür; uydurma
-// kayıt üretilmiyor, hepsi gerçek YouTube kaydı.
 func (s *Server) cdExploreVideolar(r *http.Request, adet int) []templkit.CDVideo {
 	ayar := s.ytAyar(r)
 	if !ayar.VideoGoster {

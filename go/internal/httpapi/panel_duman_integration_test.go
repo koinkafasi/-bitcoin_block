@@ -1,16 +1,5 @@
 //go:build integration
 
-// Panel duman testi — her kayıtlı GET panel rotası gerçekten açılıyor mu?
-//
-// Faz 208 ölçümü: `httpapi` kapsamı %20'ydi ve panelin yüzlerce handler'ı hiç
-// çalıştırılmıyordu. Tek tek handler testi yazmak yerine, ROTA TABLOSUNUN
-// KENDİSİ taranıp hepsi bir kez çağrılıyor. Kazanç iki katlı:
-//  1. Kapsam: her handler en az bir kez gerçek koşar.
-//  2. Regresyon: yeni eklenen bir panel rotası panikliyorsa ya da 500
-//     dönüyorsa test kırmızı olur — "sayfa açılmıyor" hatası üretime gitmez.
-//
-// Rota listesi `server.go` kaynağından okunur; elle kopyalanmaz, böylece
-// yeni rota eklendiğinde test kendiliğinden kapsar.
 package httpapi_test
 
 import (
@@ -84,10 +73,6 @@ func TestPanelGETRotalariAciliyor(t *testing.T) {
 			defer resp.Body.Close()
 			govde, _ := io.ReadAll(io.LimitReader(resp.Body, 4096))
 
-			// 500 = sunucu hatası; panic kurtarma da 500 üretir.
-			// 503 ise dış bağımlılık kapalı demektir (ör. Unsplash anahtarı
-			// yok) ve açıklayıcı JSON döner — bu bir arıza değil,
-			// yapılandırma eksikliğidir; yalnız 500 kırmızı sayılır.
 			if resp.StatusCode == http.StatusServiceUnavailable {
 				if !strings.Contains(string(govde), `"ok":false`) {
 					t.Fatalf("503 açıklamasız döndü — gövde: %s", ilkBayt(govde, 240))

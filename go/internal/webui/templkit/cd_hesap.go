@@ -1,20 +1,5 @@
 package templkit
 
-// Hesap merkezi — YENİ (CoinDesk) tasarım.
-//
-// NEDEN: /hesabim ve sekmeleri hâlâ theblock şablonunu (kırmızı üst çubuk,
-// Poppins, kırmızı alt bilgi, 12 px köşe) kullanıyordu. Sitenin geri kalanı
-// CoinDesk tasarımına geçtiği için bu sayfalar "başka site" gibi duruyordu
-// (ölçüldü, 7 Kasım 2026: gövde yazı tipi Poppins, 179 elemanda).
-//
-// ÖLÇÜ KAYNAĞI: CoinDesk hesap alanı Auth0 oturumu istiyor
-// (auth.coindesk.com/u/login — girişsiz erişilemiyor). Bu yüzden geometri
-// uydurulmadı; sitenin ÖLÇÜLMÜŞ tasarım jetonları kullanıldı:
-//   - kapsayıcı 1512/1432, kart köşesi 4 px, çizgi #d9d9d9
-//   - H1 serif 36/44 w700, gövde 16/24, etiket 11/16 büyük harf #676767
-//   - birincil düğme siyah zemin/beyaz metin; marka sarısı #fcc334 vurgu
-//   - koyu temada zemin #0a0b0e, kart zemini saydam + çizgi
-
 // CDHesapNav hesap kenar menüsü satırı.
 type CDHesapNav struct {
 	Etiket string

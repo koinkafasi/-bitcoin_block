@@ -12,25 +12,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// Emoji temizliği (Faz 161).
-//
-// Panelde 137 emoji/glif vardı. Simge seti Faz 153'te yerel Tabler
-// sprite'ına geçmişti ama metinlerde emoji kalmıştı: emoji yazı tipi
-// olmayan sistemlerde kutu çiziliyor, düğme metnine karışıyor ve
-// ekran okuyucu simgeyi de okuyordu.
-//
-// Bu dosya temizlenen alanları kilitler. Kalan dosyalar (gazete.templ,
-// gazete.js, admin-ui.js …) Faz 162'de aynı yöntemle temizlenecek.
-
-// emojiMi: emoji ve "süs" glif aralıkları.
-//
-// DIŞARIDA bırakılanlar bilinçli:
-//   - tipografik noktalama (— – … “ ” « » · •)
-//   - OKLAR (2190–21FF): "A→Z", "X → Y", "panel→seçenek" gibi ifadelerde ok
-//     metnin parçası, simge değil. Düğme/simge olarak kullanılan oklar
-//     Faz 161–170'te zaten sprite'a çevrildi; burada kalanlar gerçek metin.
-//   - ⌘ (U+2318): klavye kısayolu etiketi ("⌘K"). Tuş göstergesi, metin
-//     değil; sprite simgesiyle değiştirmek yanlış olur (macOS'ta ⌘ basılır).
 func emojiMi(r rune) bool {
 	if r == 0x2318 { // ⌘
 		return false
@@ -52,11 +33,6 @@ func emojiMi(r rune) bool {
 	return false
 }
 
-// metinDugumleri: <style> ve <script> gövdelerini atar, yalnız görünen
-// metni döndürür. CSS'teki `content:'✓'` bir metin düğümü değil.
-//
-// templ dosyalarındaki `// ...` satırları Go yorumudur, HTML'e basılmaz;
-// onlar da atlanır (pano.templ'deki "⌘K" açıklaması buna takılmıştı).
 func metinDugumleri(s string) []string {
 	re := regexp.MustCompile(`(?s)<(style|script)[^>]*>.*?</(style|script)>`)
 	s = re.ReplaceAllString(s, " ")
@@ -130,10 +106,6 @@ func TestGazeteEditorEmojiKullanmaz(t *testing.T) {
 	assert.Emptyf(t, kotu, "gazete editöründe emoji kaldı: %v", kotu)
 }
 
-// TestEditorAracCubuguSimgeli: araç çubuğu etiketleri '@ad' biçiminde.
-//
-// Araç çubuğu editor-src/src/editor.js'ten derleniyor. Emoji/geometrik
-// glif yerine sprite adı kullanılmalı; `iconButton` bunları SVG'ye çevirir.
 func TestEditorAracCubuguSimgeli(t *testing.T) {
 	b, err := os.ReadFile(filepath.Join("..", "..", "..", "editor-src", "src", "editor.js"))
 	require.NoError(t, err)
@@ -155,10 +127,6 @@ func TestEditorAracCubuguSimgeli(t *testing.T) {
 	}
 }
 
-// TestIkonUreticiEditorKaynaginiTara: üretici editor-src'yi de taramalı.
-//
-// Sprite koddan türetiliyor. editor-src taranmazsa araç çubuğu simgeleri
-// sprite'a hiç girmez ve SESSİZCE boş kutu olarak basılır (ne hata ne uyarı).
 func TestIkonUreticiEditorKaynaginiTara(t *testing.T) {
 	b, err := os.ReadFile(filepath.Join("..", "..", "..", "deploy", "scripts", "ikon-uret.py"))
 	require.NoError(t, err)
@@ -177,9 +145,6 @@ func TestGazetePaletiSimgeli(t *testing.T) {
 	assert.Equal(t, 11, strings.Count(s, `class="gz-add"`),
 		"blok paletinde 11 düğme olmalı")
 
-	// Korunan değişmez: her düğme bir SVG simgesi taşır (emoji yok, çıplak
-	// metin yok). Eskiden toplam simge sayısı sabitti; her yeni düğmede
-	// sayıyı güncellemek gerekiyordu ve test asıl kuralı ifade etmiyordu.
 	dugme := regexp.MustCompile(`(?s)<button\b[^>]*>(.*?)</button>`)
 	eslesmeler := dugme.FindAllStringSubmatch(s, -1)
 	require.NotEmpty(t, eslesmeler, "düzenleyicide hiç düğme bulunamadı")
@@ -189,15 +154,6 @@ func TestGazetePaletiSimgeli(t *testing.T) {
 	}
 }
 
-// TestTumTemplDosyalariEmojisiz: panel genelinde emoji kalmadı.
-//
-// Faz 161 yalnız içerik formunu ve gazete editörünü temizlemişti
-// (emoji_test.go'daki ilk iki test). Faz 170 kalan 90 glifi 19 dosyada
-// temizledi; bu test bir daha geri sızmasın diye dosya listesini sabit
-// tutmuyor — templkit altındaki HER .templ dosyasını tarar.
-//
-// Kapsam dışı: <style>/<script> gövdeleri (CSS `content:'✓'` metin düğümü
-// değil) ve ok karakterleri (gerekçe: emojiMi).
 func TestTumTemplDosyalariEmojisiz(t *testing.T) {
 	dizin, err := filepath.Glob(filepath.Join("templkit", "*.templ"))
 	require.NoError(t, err)
@@ -209,16 +165,6 @@ func TestTumTemplDosyalariEmojisiz(t *testing.T) {
 	}
 }
 
-// TestAdminSablonlariEmojisiz: HTML tarafındaki panel şablonları.
-//
-// templkit dışında 21 şablon `admin_head` ile panel kabuğunu kullanıyor
-// (site_builder, site_seo, site_notices, *_partial …). Faz 170 bunları da
-// temizledi.
-//
-// KAPSAM DIŞI: site_public.html ve site_uye.html — okuyucuya görünen ön yüz
-// sayfaları. Onlar panel değil ve tam sprite'ı yüklemiyorlar.
-// Ayrıca partials.html içindeki PUBLIC menü satırları (LangBase) atlanır:
-// okuyucu menüsü ayrı bir tasarım kararı.
 func TestAdminSablonlariEmojisiz(t *testing.T) {
 	dizin, err := filepath.Glob(filepath.Join("templates", "*.html"))
 	require.NoError(t, err)
@@ -256,9 +202,6 @@ func TestAdminSablonlariEmojisiz(t *testing.T) {
 	assert.GreaterOrEqual(t, taranan, 15, "panel şablonu sayısı beklenenden az")
 }
 
-// TestAdminJSTutamaciSpritedir: sürükleme tutamacı JS ile üretiliyor
-// (menü ve kategori sıralaması). Braille glifi fonta bağlıydı; sprite'tan
-// gelmeli. Bu dosyalar şablon taramasına girmiyor, ayrıca korunuyor.
 func TestAdminJSTutamaciSpritedir(t *testing.T) {
 	for _, ad := range []string{"menu.js", "tabcats.js"} {
 		b, err := os.ReadFile(filepath.Join("static", ad))

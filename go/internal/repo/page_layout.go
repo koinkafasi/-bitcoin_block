@@ -71,9 +71,6 @@ func ListLayoutKeys(ctx context.Context, pool DB, siteID int64, prefix string) (
 	return out, rows.Err()
 }
 
-// CreateLayoutVersion düzenin mevcut bloklarını yeni bir sürüm kaydı olarak
-// saklar. SaveLayout HER kayıtta önce bu fonksiyonla önceki durumu arşivler
-// (böylece her kayıt bir sürüm olur; sürüm geçmişi düzenin evrimini tutar).
 func CreateLayoutVersion(ctx context.Context, pool DB, siteID int64, pageKey string, blocks []byte, note string, createdBy int64) (int64, error) {
 	var id int64
 	err := pool.QueryRow(ctx, `
@@ -83,9 +80,6 @@ func CreateLayoutVersion(ctx context.Context, pool DB, siteID int64, pageKey str
 	return id, err
 }
 
-// ListLayoutVersions düzenin sürümlerini, en yenisinden başlayarak döndürür.
-// Varsayılan/açık düzeni hariç tutmak için "yoksa" davranışı yoktur: kayıt
-// yoksa boş liste döner.
 func ListLayoutVersions(ctx context.Context, pool DB, siteID int64, pageKey string, limit int) ([]LayoutVersion, error) {
 	if limit <= 0 || limit > 100 {
 		limit = 30
@@ -121,9 +115,6 @@ func GetLayoutVersion(ctx context.Context, pool DB, id int64) (LayoutVersion, er
 	return v, err
 }
 
-// RestoreLayoutVersion istenen sürümün bloklarını aktif düzene yazar ve bu
-// geri almayı da geçmişe yeni bir sürüm olarak kaydeder (geri alma geri de
-// alınabilir).
 func RestoreLayoutVersion(ctx context.Context, pool DB, siteID int64, pageKey string, versionID int64, note string, createdBy int64) error {
 	v, err := GetLayoutVersion(ctx, pool, versionID)
 	if err != nil {
@@ -154,9 +145,6 @@ func itoa64(v int64) string {
 
 // ---- Sayfa düzeni A/B testi (Faz 7) ----
 
-// LayoutAB sayfa düzeninin A/B testi ayarıdır. B varyantı tıpkı normal blok
-// dizisi gibi JSON'dur; serving sırasında b_blocks NormalizeDesign ile normalize
-// edilir. Varyant A her zaman aktif düzendir (page_layouts.blocks).
 type LayoutAB struct {
 	SiteID    int64
 	PageKey   string

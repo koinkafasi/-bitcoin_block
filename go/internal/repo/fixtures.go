@@ -8,11 +8,6 @@ import (
 	"time"
 )
 
-// ---- Ligler (puan durumu + fikstür) ----
-//
-// Puan durumu: ESPN (ücretsiz, anahtarsız). Fikstür: TheSportsDB eventsround
-// (ücretsiz anahtar hafta başına tam maç listesi + logolar verir).
-
 // League desteklenen bir futbol ligi.
 type League struct {
 	Key    string // superlig

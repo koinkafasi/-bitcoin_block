@@ -1,17 +1,5 @@
 package httpapi
 
-// Yeni kabukta basılan HİZMET sayfaları.
-//
-// NEDEN: /hava-durumu, /namaz-vakitleri, /imsakiye, /astroloji, /fikstur,
-// /resmi-ilanlar ve /yazarlar theblock kabuğunu (site_header/site_footer)
-// kullanıyordu — menüden tıklanan kullanıcı eski tasarıma düşüyordu
-// (kullanıcı bildirimi, 9 Kasım 2026).
-//
-// YAKLAŞIM: her sayfa için yeni bir templ dosyası açmak yerine ORTAK
-// `CDBasitSayfa` iskeleti kullanılır; sayfa yalnız GÖVDESİNİ üretir.
-// Veri kaynakları DEĞİŞMEDİ (aynı repo fonksiyonları, aynı önbellekler):
-// bu bir görünüm geçişi, veri değişikliği değil.
-
 import (
 	"context"
 	"encoding/json"
@@ -54,10 +42,6 @@ func (s *Server) cdSayfaKabuk(r *http.Request, aktif, title, desc, baslik, acikl
 
 // ---- Hava durumu ----
 
-// cdHavaGovde 81 ilin sıcaklık/açıklama tablosu.
-//
-// Veri: `hava` önbelleği (repo.CacheList). Önbellek boşsa DÜRÜST boş
-// durum basılır — uydurma sıcaklık yazılmaz.
 func (s *Server) cdHavaGovde(ctx context.Context) templkit.SafeHTML {
 	cities, _ := repo.ListCities(ctx, s.pool)
 	rows, _ := repo.CacheList(ctx, s.pool, "hava")
@@ -305,9 +289,6 @@ func (s *Server) cdFiksturSayfasi(w http.ResponseWriter, r *http.Request) {
 
 // ---- Resmi ilanlar (BİK) ----
 
-// cdResmiIlanGovde resmi ilan listesi (filtre + tablo).
-//
-// Kaynak: repo.FilterNotices — aynı veri, yalnız görünüm değişti.
 func (s *Server) cdResmiIlanGovde(ctx context.Context, r *http.Request, siteID int64) templkit.SafeHTML {
 	f := noticeFilterFromQuery(r.URL.Query())
 	items, last, _ := repo.FilterNotices(ctx, s.pool, siteID, f)

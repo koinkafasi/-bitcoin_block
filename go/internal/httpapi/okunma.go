@@ -11,16 +11,6 @@ import (
 	"theblock/site/internal/repo"
 )
 
-// okunmaAraligi biriktirilen okunma sayılarının DB'ye yazılma aralığı.
-//
-// NEDEN VAR: okunma sayacı her makale görüntülemesinde İKİ UPSERT atıyordu
-// (counters_hit + hit_daily), sıralı, iki gidiş-dönüş. Ölçüm (9 Kasım 2026,
-// makale sayfası, c=8): 24 rps → yazımlar kaldırılınca 80 rps (3,3×).
-// Sayaç bir iş metrikidir, istek yolunun parçası olmamalı.
-//
-// 2 sn gecikme panelde görünmez (grafikler dakika/gün çözünürlüğünde) ama
-// yazım sayısını istek sayısından ayırır. Toplamlar KAYBOLMAZ: biriktirme
-// yalnız geciktirir, her okunma tam bir kez yazılır.
 const okunmaAraligi = 2 * time.Second
 
 // okunmaBiriktirici içerik başına okunma sayısını bellekte biriktirir.
@@ -60,11 +50,6 @@ func (b *okunmaBiriktirici) boyut() int {
 	return len(b.m)
 }
 
-// okunmaTamponu süreç geneli biriktirici.
-//
-// Paket düzeyinde: hem istek yolundan (handler, önbellek isabeti) hem arka
-// plan yazıcısından erişiliyor; Server alanı yapmak testlerde her kurulumda
-// ayrıca bağlamayı gerektirirdi.
 var okunmaTamponu = newOkunmaBiriktirici()
 
 // okunmaIsaretAnahtari istek bağlamına konan sayaç işaretinin anahtarı.
@@ -93,11 +78,6 @@ func (o *okunmaIsareti) koy(id int64) {
 	o.mu.Unlock()
 }
 
-// okunmayiIsaretle "bu isteğin okunması sayılsın" bildirimidir.
-//
-// true dönerse istek bir sayfa önbellek katmanından geçiyor: sayımı O
-// katman yapar (hem ıskada hem isabette, tek yerden). false dönerse
-// (önbellek yok: oturumlu istek, /klasik, panel…) sayımı çağıran yapar.
 func okunmayiIsaretle(ctx context.Context, id int64) bool {
 	v, ok := ctx.Value(okunmaIsaretAnahtari{}).(*okunmaIsareti)
 	if !ok || v == nil || id <= 0 {
@@ -107,10 +87,6 @@ func okunmayiIsaretle(ctx context.Context, id int64) bool {
 	return true
 }
 
-// okunmaSayilmasin arka plan/yenileme isteklerinde sayımı kapatır.
-//
-// NEDEN: arka plan yenilemesi de handler'ı çalıştırır; sayılırsa her TTL
-// sonunda sahte bir okunma yazılırdı.
 func okunmaSayilmasin(ctx context.Context) context.Context {
 	return context.WithValue(ctx, okunmaSaymaAnahtari{}, true)
 }
@@ -126,10 +102,6 @@ func (s *Server) okunmaKaydet(ctx context.Context, id int64) {
 	okunmaTamponu.ekle(id)
 }
 
-// OkunmaSayaciBaslat biriktiricinin yazıcı döngüsünü başlatır.
-//
-// Kapanışta kalan sayılar yine yazılır (ctx.Done), aksi hâlde son 2 saniye
-// kaybolurdu.
 func OkunmaSayaciBaslat(ctx context.Context, pool *pgxpool.Pool, logger *slog.Logger, aralik time.Duration) {
 	if aralik <= 0 {
 		aralik = okunmaAraligi

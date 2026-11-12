@@ -1,10 +1,7 @@
-/* theblock — istemci JS: tema (dark/light), dil menüsü, AI eylemleri, sesli yazma, rozet toggles */
+
 (function () {
   "use strict";
-  /* ---- i18n: veri-sozluk tabanli kisa metin cozucu (Faz 189) ----
-   * Sayfa <body data-i18n='{"related_more":"Show more"}'> tasir. Anahtar
-   * yoksa yedek (Turkce) kullanilir; boylece JS ile uretilen metinler de
-   * cevrilir, ama sozluk yoksa sayfa bozulmaz. */
+  
   window.tbI18n = (function () {
     var sozluk = {};
     try {
@@ -25,8 +22,7 @@
     };
   })();
 
-
-  /* ---- Tema (dark/light) ---- */
+  
   const THEME_KEY = "tb_theme";
   function applyTheme(t, persist) {
     const root = document.documentElement;
@@ -64,21 +60,7 @@
     }
     updateThemeIcon();
   });
-  /* ---- Tema geçişi: tıklanan düğmeden açılan daire (Halvo birebir) ----
-   * Kaynak (ölçüm, 2 Kasım 2026, demo.codeandchill.store/halvo):
-   *   document.startViewTransition(() => kök.dataset.theme = yeni)
-   *   .ready.then(() => kök.animate(
-   *     { clipPath: ["circle(0px at Xpx Ypx)", "circle(Rpx at Xpx Ypx)"] },
-   *     { duration: 450, easing: "cubic-bezier(.65,0,.35,1)",
-   *       pseudoElement: "::view-transition-new(root)" }))
-   * X/Y = tıklanan düğmenin merkezi (düğme yoksa sağ üst köşe),
-   * R = merkezden en uzak köşeye mesafe (ekranın tamamı kaplanır).
-   *
-   * Davranış aynı bırakıldı:
-   *   - "hareketi azalt" açıksa animasyon yok, tema anında değişir,
-   *   - View Transitions desteklenmiyorsa (eski Safari/Firefox) yine anında,
-   *   - geçiş sürerken tekrar tıklanırsa tarayıcı isteği atlar; tema yine
-   *     doğru kalır (uygula() her durumda çağrılır). */
+  
   const HAREKET_AZALT = (function () {
     try { return window.matchMedia("(prefers-reduced-motion: reduce)"); } catch (e) { return null; }
   })();
@@ -122,7 +104,7 @@
             pseudoElement: "::view-transition-new(root)"
           }
         );
-      } catch (e) { /* pseudo-element oynatılamazsa tema yine değişti */ }
+      } catch (e) {  }
     }).catch(function () {});
   }
 
@@ -134,7 +116,7 @@
     }
   });
 
-  /* ---- Yazı ölçekleme (erişilebilirlik, spec 06 K-J) ---- */
+  
   const FS_KEY = "tb_font_scale";
   function applyFontScale(v, save) {
     const root = document.documentElement;
@@ -158,7 +140,7 @@
     });
   });
 
-  /* ---- Dil menüsü (public + admin) ---- */
+  
   document.addEventListener("change", function (e) {
     const sel = e.target.closest("[data-site-select]");
     if (sel) { location.href = "/admin/site-sec?site=" + sel.value; return; }
@@ -196,7 +178,7 @@
     }
   });
 
-  /* ---- AI eylemleri (tetikle → fetch → öneriyi alana yaz) ---- */
+  
   document.addEventListener("click", function (e) {
     const t = e.target.closest("[data-ai]");
     if (!t) return;
@@ -239,7 +221,7 @@
       .catch(function () { btn.disabled = false; btn.textContent = old; alert("AI isteği başarısız"); });
   });
 
-  /* HTMX AI sonucu: HX-Trigger ile gelen metni hedef alana yaz (Faz 51). */
+  
   document.body.addEventListener("aiResult", function (e) {
     var d = (e && e.detail) || {};
     var target = d.target ? document.querySelector(d.target) : null;
@@ -250,7 +232,7 @@
     if (d.action === "title" && window.updateSeoPreview) window.updateSeoPreview();
   });
 
-  /* Trend Merkezi: öneri terimini etiket alanına ekle. */
+  
   document.addEventListener("click", function (e) {
     var b = e.target.closest("[data-trend-tag]");
     if (!b) return;
@@ -267,7 +249,7 @@
     b.textContent = "✓ " + tag;
   });
 
-  /* ---- Sesli yazma (Web Speech API) ---- */
+  
   document.addEventListener("click", function (e) {
     const b = e.target.closest("[data-voice]");
     if (!b) return;
@@ -304,7 +286,7 @@
     rec.start();
   });
 
-  /* ---- Rozet & durum hızlı işlemler (AJAX) ---- */
+  
   document.addEventListener("click", function (e) {
     const t = e.target.closest("[data-toggle]");
     if (!t) return;
@@ -317,16 +299,7 @@
       .catch(function () { window.location.reload(); });
   });
 
-  /* ---- Silme onayı (native onay → data-confirm URL'ine POST) ----
-   *
-   * DIKKAT: data-confirm projede IKI ayri anlamda kullaniliyor:
-   *   1) Burada: POST edilecek URL (form olmayan bir oge uzerinde).
-   *   2) admin-ui.js'te: onay METNI (<form data-confirm="...">).
-   *
-   * Bu dinleyici ayrim yapmadigi icin ikinci tipi de yakaliyor, gercek
-   * gonderimi preventDefault ile iptal edip onay metnini URL sanarak POST
-   * ediyordu. Sonuc: gazete panelindeki Sil ve Gonder dugmeleri hicbir sey
-   * yapmiyordu. Artik yalniz URL olani ustleniyoruz. */
+  
   document.addEventListener("click", function (e) {
     const t = e.target.closest("[data-confirm]");
     if (!t) return;
@@ -335,14 +308,7 @@
     if (!hedef.startsWith("/")) return;
     // Formun kendisindeki deger de onay metnidir.
     if (t.tagName === "FORM") return;
-    /*
-     * DIKKAT: "form icinde mi" diye bakmak YANLIS olurdu. Icerik formunda
-     * <a href="#" data-confirm="/admin/icerikler/kaynaklar/sil/N"> gibi
-     * baglantilar var; bunlar form GONDERMEZ, gezinme eylemidir ve bu
-     * dinleyicinin isidir. Dislanmasi gereken sey, formu gonderEN kontroldur
-     * (submit dugmesi/input) — onun onayi formun kendi submit olayinda
-     * sorulur.
-     */
+    
     const tip = (t.getAttribute("type") || "").toLowerCase();
     const gonderici = (t.tagName === "BUTTON" || t.tagName === "INPUT") &&
       (tip === "" || tip === "submit") && t.form;
@@ -359,7 +325,7 @@
     f.submit();
   });
 
-  /* ---- SEO önizleme + skor canlı güncelleme ---- */
+  
   window.updateSeoPreview = function () {
     const box = document.querySelector("[data-seo-preview]");
     if (!box) return;
@@ -411,7 +377,7 @@
       .replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "icerik";
   }
 
-  /* ---- Hesaplayıcı içerik türü (P5-F) ---- */
+  
   function calcEval(expr, vars) {
     expr = String(expr).replace(/\[([a-zA-Z0-9_]+)\]/g, function (m, name) { return "(" + (isFinite(vars[name]) ? vars[name] : 0) + ")"; });
     var toks = expr.match(/[0-9.]+|[+*/().%-]|[a-zA-Z_][a-zA-Z0-9_]*/g) || [];
@@ -486,7 +452,7 @@
   }
   document.addEventListener("DOMContentLoaded", buildCalc);
 })();
-/* Web push aboneliği (P1-8) */
+
 function tbUrlB64ToUint8Array(base64) {
   const padding = '='.repeat((4 - base64.length % 4) % 4);
   const b64 = (base64 + padding).replace(/-/g, '+').replace(/_/g, '/');
@@ -519,7 +485,7 @@ window.tbPush = async function () {
   } catch (e) {
     console.error(e); alert('Bildirim aboneliği başarısız.');
   }
-};/* Kaydırma derinliği (scroll_count) — önyüz/alan spec 07 */
+};
 (function () {
   var el = document.querySelector('[data-article-id]');
   if (!el) return;
@@ -539,7 +505,7 @@ window.tbPush = async function () {
   }
   window.addEventListener('scroll', check, { passive: true });
   window.addEventListener('load', check);
-})();/* ---- İnce ayarlar: okuma çubuğu + başa dön + tema rengi (spec 07) ---- */
+})();
 (function () {
   var bar = document.getElementById('readingBar');
   var top = document.getElementById('toTop');
@@ -561,19 +527,7 @@ window.tbPush = async function () {
   }
   syncThemeColor();
   try { new MutationObserver(syncThemeColor).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] }); } catch (e) {}
-})();/* ---- Panel komut paleti 2.0 (Ctrl/⌘+K) — Faz 162 ----
- *
- * ÖNCE: 38 sabit rotadan oluşan düz liste. Kullanıcı bir içerik başlığı
- * yazınca sonuç gelmiyor, "İçerikler" sayfası açılıyordu. Palet bir menü
- * kısayoluydu, arama değil.
- *
- * ŞİMDİ: rota listesi + sunucudan varlık araması (/admin/ara): içerik,
- * kategori, etiket, medya, kişi. Sonuçlar gruplu; boş sorguda son
- * kullanılanlar; eşleşen harfler vurgulanır.
- *
- * Güvenlik: arama terimi ve sunucu verisi asla innerHTML ile basılmaz —
- * düğümler textContent ile kurulur. Başlıkta `<` bulunabilir.
- */
+})();
 (function () {
   var box = document.getElementById('cmdk');
   var input = document.getElementById('cmdkInput');
@@ -906,7 +860,6 @@ window.tbPush = async function () {
   box.addEventListener('click', function (e) { if (e.target === box) kapat(); });
 })();
 
-/* --- Modüler ana sayfa blokları (spec 08): hero slider + kategori sekmeleri --- */
 (function () {
   document.querySelectorAll('.hero-slider').forEach(function (slider) {
     var allSlides = Array.prototype.slice.call(slider.querySelectorAll('.hero-slide'));
@@ -1148,7 +1101,7 @@ window.tbPush = async function () {
     }
   }
 })();
-/* ---- Önyüz üst bar (haberpi tarzı): "Diğer" menüsü, arama katmanı, mobil çekmece ---- */
+
 (function () {
   var dd = document.getElementById('navDiger');
   if (dd) {
@@ -1170,11 +1123,7 @@ window.tbPush = async function () {
 
   var drawer = document.getElementById('hpDrawer');
 
-  /* Çekmecede geçerli sayfayı işaretle.
-   *
-   * Neden: 24 bağlantılı listede "hangi sayfadayım" bilgisi yoktu; mobilde
-   * menü açıldığında kullanıcı kayboluyordu. Karşılaştırma yol (pathname)
-   * üzerinden: dil öneki ve sorgu dizesi farkı önemsiz. */
+  
   function drawerIsaretle() {
     if (!drawer) return;
     var yol = location.pathname.replace(/\/$/, '') || '/';
@@ -1202,8 +1151,7 @@ window.tbPush = async function () {
   });
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape') { closeSearch(); closeDrawer(); } });
 
-  /* Çekmece JS ile de açılabiliyor (ör. başka bir düğme, ileride kısayol);
-   * işaret her durumda konsun. */
+  
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', drawerIsaretle);
   } else {
@@ -1211,7 +1159,6 @@ window.tbPush = async function () {
   }
 })();
 
-/* ---- Kategori mega menü (üst kategoriye tıklayınca kısa alt kategori paneli) ---- */
 (function () {
   "use strict";
   var items = Array.prototype.slice.call(document.querySelectorAll('.nav-item.has-mega'));
@@ -1263,7 +1210,7 @@ window.tbPush = async function () {
     syncSeritSpace();
   }
 
-  /* Sabit şerit açıkken içerik şeridin altından başlasın. */
+  
   function syncSeritSpace() {
     var open = document.querySelector('.nav-mega-serit:not([hidden])');
     if (open) {
@@ -1280,20 +1227,14 @@ window.tbPush = async function () {
     }
   }
 
-  /* Sabit şerit TAM GENİŞLİK bir banttır (Faz 145). Önceden içerik genişliği
-     "main .container" ile kıyaslanıyordu; kurumsal/yazı sayfalarında bu
-     kapsayıcı dar (760px) olduğu için şerit aniden 100%'e atlıyor, öğeler
-     ekran kenarına yapışıyordu. Artık genişlik CSS'e bırakılır: her sayfada
-     aynı tam genişlik, aynı kenar boşluğu. */
+  
   function seritHizala(open) {
     var inner = open.querySelector('.nav-mega-inner');
     if (!inner) return;
     if (inner.style.width) inner.style.width = '';
   }
 
-  /* Şerit yüksekliği açıldıktan SONRA da değişebilir (fontlar, geç yüklenen
-     içerik, kırılma). Ölçüm bayatlar ve içerik şeride binerdi; yükseklik
-     değişimini izleyip boşluğu tazele. */
+  
   var seritObserver = null;
   function watchSerit(el) {
     if (typeof ResizeObserver === 'undefined' || !el) return;
@@ -1357,9 +1298,6 @@ window.tbPush = async function () {
   window.addEventListener('resize', syncSeritSpace);
 })();
 
-/* ---- Mobil çekmece: GZT tarzı iki panelli kategori menüsü ----
-   Ana kategori listesi kalır; chevron'a basınca aynı çekmecede alt kategori
-   paneli açılır. Geri oku ana listeye döndürür. */
 (function () {
   "use strict";
   var drawer = document.getElementById('hpDrawer');
@@ -1422,12 +1360,6 @@ window.tbPush = async function () {
   });
 })();
 
-/* ---- Sag sutun "Trend Haberler" otomatik kayma ----
-   `.trend-scroll` penceresi SABIT durur (max-height + overflow:hidden +
-   maske); transform yalnizca icerik listesine uygulanir. Bu ayrim olmezse
-   kirpma da oynar ve blok her turda ziplar.
-   En uste gelen oge yumusak sekilde yukari kayip alta devreder; fare
-   uzerine gelince durur, hareket azaltma tercihinde hic calismaz. */
 (function () {
   var lists = document.querySelectorAll('[data-autoscroll]');
   if (!lists.length) return;
@@ -1498,10 +1430,6 @@ window.tbPush = async function () {
   });
 })();
 
-/* ---- Hikaye şeridi (Zuck.js Snapgram) — haberpi ile birebir ----
-   "window.hikayeData" sayfa tarafından (Go: storiesJSON) doldurulur.
-   Aynı Zuck kurulumu, açılış animasyonu ve geçişleri kaynaktaki gibidir;
-   modal slaytlarına bulanık arka plan eklenir (haberpi main.js aynı). */
 var __tbHikayeInit = false;
 function initHikaye() {
   if (__tbHikayeInit) return;
@@ -1539,10 +1467,7 @@ function initHikaye() {
           lastUpdated: h.lastUpdated,
           items: [{
             id: h.itemId, type: 'photo', length: 5,
-            /* Açılan hikâye ~362px kare gösterir; daire ise 86px. Eskiden ikisi
-               de aynı 480x480 thumb'ı kullanıyordu: daire için fazla, büyük
-               görünüm için az. photoBuyuk sunucudan gelmezse eski davranışa
-               düşülür. */
+            
             src: h.photoBuyuk || h.photo, preview: h.photo,
             link: h.link, linkText: baslik,
             seen: false, time: h.time
@@ -1576,16 +1501,10 @@ function initHikaye() {
   }, 300);
 }
 
-/* app.js head'de defer olduğundan, başlatmayı DOMContentLoaded'a bırak:
-   o ana kadar zuck.js (body, defer) dahil tüm defer scriptler çalışmış olur.
-   load da yedek tetikleyicidir; çift başlatma __tbHikayeInit ile önlenir. */
 function __tbHikayeBaslat() { initHikaye(); }
 document.addEventListener('DOMContentLoaded', __tbHikayeBaslat);
 window.addEventListener('load', __tbHikayeBaslat);
 
-/* ---- Responsive ana menü: kategoriler ekrana sığana kadar ana menüde
-   kalır; sığmayanlar "Diğer" dropdown'a taşınır. Pencere büyüyünce
-   geri alınır. Diğer boşken gizli tutulur (ekrana hepsi sığınca). ---- */
 (function () {
   "use strict";
   var timer = null;
@@ -1651,8 +1570,6 @@ window.addEventListener('load', __tbHikayeBaslat);
   setTimeout(dengeleYumusak, 1200);
 })();
 
-/* ---- Döviz/hava servis bandı: il seçici, hava durumunu AJAX ile günceller
-   (haberpi main.js initHavaIlSelect ile aynı davranış, /api/hava/{slug}). ---- */
 (function () {
   "use strict";
 
@@ -1717,9 +1634,6 @@ window.addEventListener('load', __tbHikayeBaslat);
   }
 })();
 
-/* Video süresi alanı yalnız "video" türünde görünür (Faz 17).
-   Sunucu tarafı zaten türe göre basıyor; bu, türü değiştirip kaydetmeden
-   alanın açılıp kapanmasını sağlar. */
 (function () {
   function initVideoSure() {
     var tip = document.querySelector('select[name="tip"]');
@@ -1739,8 +1653,6 @@ window.addEventListener('load', __tbHikayeBaslat);
   }
 })();
 
-/* İçerik listesi toplu işlem çubuğu. HTMX paneli değiştirdiğinde yeniden
-   bağlanır; inline script yerine tek yerde tutulur (Faz 49). */
 (function () {
   function initToplu() {
     var bar = document.getElementById('topluBar');
@@ -1777,7 +1689,6 @@ window.addEventListener('load', __tbHikayeBaslat);
   document.addEventListener('htmx:afterSettle', initToplu);
 })();
 
-/* Medya yöneticisi: toplu seçim + yükleme öncesi yerel önizleme (Faz 50). */
 (function () {
   function initMedyaToplu() {
     var bar = document.getElementById('medyaBar');
@@ -1845,7 +1756,6 @@ window.addEventListener('load', __tbHikayeBaslat);
   document.addEventListener('htmx:afterSettle', initMedya);
 })();
 
-/* Medya seçicilerinde seçili görselin thumbnail önizlemesi. */
 (function () {
   function initMediaSelectPreviews(root) {
     (root || document).querySelectorAll('select.media-slot-select').forEach(function (select) {
@@ -1872,7 +1782,6 @@ window.addEventListener('load', __tbHikayeBaslat);
   document.addEventListener('htmx:afterSettle', function (e) { initMediaSelectPreviews(e.target || document); });
 })();
 
-/* Yorum moderasyonu: toplu seçim (Faz 52). */
 (function () {
   function initYorumToplu() {
     var bar = document.getElementById('yorumBar');
@@ -1909,8 +1818,6 @@ window.addEventListener('load', __tbHikayeBaslat);
   document.addEventListener('htmx:afterSettle', initYorumToplu);
 })();
 
-/* Ayarlar: istemci tarafı sekmeler (Faz 64). Panel HTMX ile yenilenince
-   data-aktif sekmesi yeniden uygulanır. */
 (function () {
   function initAyarTabs() {
     var tabs = document.getElementById('ayar-tabs');
@@ -1942,8 +1849,6 @@ window.addEventListener('load', __tbHikayeBaslat);
   document.addEventListener('htmx:afterSettle', initAyarTabs);
 })();
 
-/* Sosyal paylaşım: kanal test gönderimi. HTMX varsa hx-post çalışır;
-   yoksa gizli form ile normal POST fallback (Faz 74). */
 (function () {
   document.addEventListener('click', function (e) {
     var t = e.target.closest('[data-test-post]');
@@ -1964,11 +1869,10 @@ window.addEventListener('load', __tbHikayeBaslat);
   });
 })();
 
-/* ---- Panel flash otomatik sönme + HTMX hata bildirimi (Faz 95) ---- */
 (function () {
   "use strict";
 
-  /* Flash 6 sn sonra yumuşakça söner (form-aksiyon geri bildirimi). */
+  
   function tbAutoHideFlash(f) {
     if (!f || f.dataset.tbAutoHide) return;
     f.dataset.tbAutoHide = "1";
@@ -1989,7 +1893,7 @@ window.addEventListener('load', __tbHikayeBaslat);
       .forEach(tbAutoHideFlash);
   }
 
-  /* Küçük global hata toast'u (sağ alt köşe). */
+  
   function tbToast(text) {
     var el = document.createElement("div");
     el.className = "flash error";
@@ -2017,7 +1921,6 @@ window.addEventListener('load', __tbHikayeBaslat);
   });
 })();
 
-/* ---- HTMX sonrası odak yönetimi (Faz 96): tetikleyiciye odak geri verilir ---- */
 (function () {
   "use strict";
   var fs = null;
@@ -2041,11 +1944,6 @@ window.addEventListener('load', __tbHikayeBaslat);
   });
 })();
 
-
-/* ---- Kart geri bildirimi: Buna benzer daha fazla / daha az ----
-   Kartın altına iki küçük açıklamalı düğme ekler; tıklama aynı anda
-   /api/kart-tepki'ye kaydedilir. DOM'daki kart yapısı bozulmaz: kart
-   bir sarmalayıcıya alınır, düğmeler sarmalayıcının altında durur. */
 (function () {
   "use strict";
   var FAZLA = "tb_react_fazla", AZ = "tb_react_az";
@@ -2178,10 +2076,6 @@ window.addEventListener('load', __tbHikayeBaslat);
   goz.observe(document.body, { childList: true, subtree: true });
 })();
 
-/* ---- Kategori akış vitrini (coinhit/enerji): "Daha fazla" + sonsuz kaydırma ----
-   /kategori/<slug>?parca=1&bas=<mutlak sıra> ucu 12'lik enerji bloğu döndürür.
-   Yanıt başlıkları: X-Akis-Bas (sonraki sıra), X-Akis-Son (1 = bitti).
-   Otomatik yükleme açıksa gözcü, düğme görünür alana girince yükler. */
 (function () {
   "use strict";
 

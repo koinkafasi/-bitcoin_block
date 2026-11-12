@@ -58,10 +58,6 @@ func (s *Server) handleAIScore(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// aiRelevanceScore panelden tetiklenen alaka puanıdır.
-//
-// Hesap tek kaynakta tutulur (internal/scoring): bot hattı içerik oluştururken
-// aynı fonksiyonu çağırır. Burada yalnızca veritabanı sinyalleri toplanır.
 func (s *Server) aiRelevanceScore(ctx context.Context, c repo.Content) (int, string, []scoring.Signal) {
 	tagCount := 0
 	if tags, err := repo.TagsOf(ctx, s.pool, c.ID); err == nil {

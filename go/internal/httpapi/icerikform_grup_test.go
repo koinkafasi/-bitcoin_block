@@ -12,26 +12,11 @@ import (
 	"theblock/site/internal/webui/templkit"
 )
 
-// İçerik formu U2'de katlandı (spec 11 U2): ilk görünümde yalnız yazıyı
-// yazmak için gerekenler kalıyor, gerisi <details> gruplarında.
-//
-// Katlamanın tek şartı vardı: KAYDETME DAVRANIŞI DEĞİŞMEYECEK. <details>
-// bunu sağlar çünkü içeriği DOM'da kalır ve forma normal gönderilir — ama
-// bu bir varsayım olarak bırakılamaz. Alanlar JS ile gizlenseydi ya da
-// koşullu render'a alınsaydı sessizce kaybolurlardı ve editör sebebini
-// anlamadan veri kaybederdi.
-
 var (
 	reAlanAdi = regexp.MustCompile(`<(?:input|select|textarea)\b[^>]*\bname="([^"]+)"`)
 	reDetay   = regexp.MustCompile(`<details class="[^"]*form-grup`)
 )
 
-// ornekForm testlerde kullanılan dolu bir görünüm üretir.
-//
-// HasContent ve IsNew bilerek set edilir: yan sütun kartlarının çoğu
-// `if v.HasContent` arkasında, bazıları `if !v.IsNew` arkasında. Kaydedilmiş
-// bir içeriğin formunu temsil etmezsek test, alanların katlandığını değil
-// hiç render edilmediğini ölçerdi.
 func ornekForm() templkit.IcerikFormView {
 	return templkit.IcerikFormView{
 		Title:      "Test başlığı",
@@ -54,9 +39,6 @@ func TestIcerikFormKatlananAlanlarHTMLdeKaliyor(t *testing.T) {
 	require.NoError(t, templkit.IcerikFormPanel(ornekForm()).Render(context.Background(), &buf))
 	html := buf.String()
 
-	// Katlanmış olsun olmasın, formda bulunması gereken alanlar.
-	// Bunlar kaydetme sırasında sunucunun okuduğu adlardır; biri kaybolursa
-	// o alan sessizce boşalır.
 	zorunlu := []string{
 		"baslik", "spot", "kategori", "etiketler", "tip",
 		"mahrec", "author_id", "editor_id", "kume",
@@ -93,9 +75,6 @@ func TestIcerikFormGruplariVarsayilanKapali(t *testing.T) {
 	require.GreaterOrEqualf(t, len(gruplar), 4,
 		"en az 4 katlanabilir grup bekleniyordu, %d bulundu", len(gruplar))
 
-	// open niteliği taşıyan grup olmamalı: varsayılan kapalı olmazsa
-	// sadeleştirmenin anlamı kalmaz. (Kullanıcının açtığı durum
-	// localStorage'dan geri yüklenir, HTML'den değil.)
 	require.NotContains(t, html, `<details class="form-grup" open`,
 		"gruplar varsayılan olarak kapalı başlamalı")
 }

@@ -6,11 +6,6 @@ import (
 	"theblock/site/internal/quality"
 )
 
-// Kaynak hiyerarşisi (B3) testleri.
-//
-// Kural tek cümle: orijinal agregatörü yener, agregatör orijinali asla yenmez.
-// Bu karar saf fonksiyonda tutulduğu için veritabanı olmadan test edilebiliyor.
-
 func TestDedupeDecisionOrijinalAgregatoruYener(t *testing.T) {
 	if got := DedupeDecision(false, true); got != DedupeReplace {
 		t.Fatalf("orijinal agregatörü yenmeliydi, alınan: %s", got)

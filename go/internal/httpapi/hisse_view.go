@@ -10,21 +10,6 @@ import (
 	"theblock/site/internal/repo"
 )
 
-// Hisseler modülü (BIST hisse şeridi).
-//
-// Referans: Habertürk ekonomi sayfasındaki "HİSSELER" bölümü — solda kod,
-// altında fiyat, sağda yön oku; tek satırda kesintisiz kayan şerit.
-//
-// Görünüm seçenekleri Kur & Borsa modülüyle AYNI sözlüğü kullanır:
-//
-//	hs_layout : serit | izgara              (yerleşim)
-//	hs_style  : referans | sade | kart | dar (görünüm şablonu)
-//	hs_arrow  : noktali | ucgen | ok | uzun | yok (yön göstergesi)
-//	hs_bg     : kart | yok | zemin | ozel   (arka plan)
-//
-// Aynı anahtarlar bilinçli olarak seçildi: iki modül yan yana durduğunda
-// kullanıcı aynı şablon adlarını görür ve aynı görsel dili elde eder.
-
 const (
 	hisseYerlesimVarsayilan = "serit"
 	hisseStilVarsayilan     = "referans"
@@ -42,13 +27,6 @@ const (
 	hisseSayiAzami          = 40
 )
 
-// gecerliHisseGecis geçiş modelleri.
-//
-//	surekli — Habertürk modeli: kesintisiz, sabit hızda akan şerit
-//	adim    — aralıklı: her N saniyede bir yumuşak kayma + bekleme
-//
-// İkisi de aynı işaretlemeyi kullanır; modeli hisse.js uygular. JS yoksa
-// CSS yedeği (kesintisiz) devreye girer, içerik yine okunabilir kalır.
 var gecerliHisseGecis = map[string]bool{
 	"surekli": true,
 	"adim":    true,
@@ -62,12 +40,6 @@ func hisseGecisOf(s string) string {
 	return hisseGecisVarsayilan
 }
 
-// hisseHizOf şerit hızını px/sn olarak döndürür.
-//
-// Yeni ayar `hs_speed` (px/sn). Eski düzenlerde `hs_hiz` "bir turun süresi
-// (sn)" idi; iki anlamı karıştırmamak için eski değer, kalem sayısına göre
-// px/sn'ye çevrilir (count*itemPx / eskiSure). Böylece eski düzenler
-// görsel olarak aynı hızda kalır.
 func hisseHizOf(speed, eskiSure, count int) int {
 	v := speed
 	if v <= 0 && eskiSure > 0 {
@@ -89,10 +61,6 @@ func hisseHizOf(speed, eskiSure, count int) int {
 	return v
 }
 
-// hisseSureTur CSS yedeği için tur süresini saniye olarak hesaplar.
-//
-// Şerit -50% kaydığında bir grup tamamlanır; grup genişliği ≈ count*itemPx.
-// Süre = genişlik / hız → hız kalem sayısından bağımsız sabit kalır.
 func hisseSureTur(count, speed int) int {
 	if count < 1 {
 		count = hisseSayiVarsayilan
@@ -143,9 +111,6 @@ func hisseHizSecimPx(key string) (int, bool) {
 	return n, true
 }
 
-// hisseHizCoz ön ayar + serbest alan + eski (sn/tur) değeri tek yerde çözer.
-//
-// Öncelik: ön ayar → serbest px/sn → eski sn/tur → varsayılan.
 func hisseHizCoz(secim string, ozel, eskiSure, count int) int {
 	if px, ok := hisseHizSecimPx(secim); ok {
 		return hisseHizOf(px, 0, count)
@@ -153,11 +118,6 @@ func hisseHizCoz(secim string, ozel, eskiSure, count int) int {
 	return hisseHizOf(ozel, eskiSure, count)
 }
 
-// hisseYerlesimOf blok ayarından yerleşimi okur.
-//
-// Geriye dönük uyum: modül ilk sürümde yerleşimi `hs_style` içinde
-// tutuyordu (serit | izgara). Eski düzenler bozulmasın diye o değerler
-// yerleşim sayılır ve görünüm "referans"a düşer.
 func hisseYerlesimOf(layout, eskiStil string) string {
 	if gecerliHisseYerlesim[layout] {
 		return layout
@@ -168,10 +128,6 @@ func hisseYerlesimOf(layout, eskiStil string) string {
 	return hisseYerlesimVarsayilan
 }
 
-// hisseStilOf blok ayarından görünüm şablonunu okur; bilinmeyen değer
-// varsayılana döner (eski "serit"/"izgara" değerleri buraya düşer).
-//
-// "otomatik" özel bir değerdir: bölgeye göre seçim yapılır (bkz. hisseEtkinStil).
 func hisseStilOf(s string) string {
 	if s == "otomatik" {
 		return "otomatik"
@@ -182,18 +138,10 @@ func hisseStilOf(s string) string {
 	return hisseStilVarsayilan
 }
 
-// darBolge modülün dar bir bölgeye (sağ ray / yan sütun) konduğunu söyler.
-//
-// Sağ ray ~300-380 px'tir; orada 2-4 sütunlu ızgara ve geniş kartlar
-// sıkışır. "otomatik" şablon bu bilgiyi kullanarak kompakt görünüme geçer.
 func darBolge(zone string) bool {
 	return zone == "yan"
 }
 
-// hisseEtkinStil "otomatik" seçimini bölgeye göre çözer.
-//
-//	geniş bölge (ust/ana/genis/govde) → referans (tam kart)
-//	dar bölge  (yan)                  → dar (tek satır kompakt)
 func hisseEtkinStil(secili string, dar bool) string {
 	if secili == "otomatik" {
 		if dar {
@@ -221,10 +169,6 @@ func hisseBgOf(s string) string {
 	return hisseBgVarsayilan
 }
 
-// hisseOkOf yön göstergesi tasarımını okur (kb_arrow ile aynı sözlük).
-//
-// Geriye dönük uyum: ilk sürümde tek bir `hs_ok` bool'u vardı. Anahtar
-// varsa ve false ise gösterge kapalı sayılır; true ise varsayılan (noktalı).
 func hisseOkOf(stil string, eskiOk *bool) string {
 	if gecerliKbOk[stil] {
 		if stil == hisseOkVarsayilan && eskiOk != nil && !*eskiOk {
@@ -238,10 +182,6 @@ func hisseOkOf(stil string, eskiOk *bool) string {
 	return hisseOkVarsayilan
 }
 
-// hisseRows önbellekteki satırları sıralayıp istenen sayıya kırpar.
-//
-// Girdi dilimi DEĞİŞTİRİLMEZ: sıralama kopya üzerinde yapılır, aynı istekte
-// iki farklı sıralamalı hisse modülü birbirini etkilemez.
 func hisseRows(rows []repo.HisseRow, sirala string, count int) []repo.HisseRow {
 	if len(rows) == 0 {
 		return nil
@@ -284,16 +224,6 @@ func hisseYonInt(delta float64) int {
 	return 0
 }
 
-// ---- "Tüm Hisseler" sayfası -------------------------------------------
-//
-// Referans: haberturk.com/ekonomi/borsa/tum-hisseler
-//   TÜM HİSSELER başlığı + "Hisse Ara" kutusu + A-Z dizini + tablo
-//   (HİSSE ADI · FİYAT · FARK).
-//
-// Sayfa TÜM evreni (633 sembol) listeler: fiyatı olmayan sembol de görünür
-// (fiyatı "—" olarak basılır). Böylece arama yapan kullanıcı, o an işlem
-// görmeyen/verisi gelmeyen hisseyi de bulabilir. Uydurma fiyat basılmaz.
-
 // hisseSatir sayfadaki tek tablo satırı.
 type hisseSatir struct {
 	Code  string
@@ -303,13 +233,7 @@ type hisseSatir struct {
 	Value float64
 	Delta float64
 	Var   bool // fiyat verisi var mı
-	// Href satır bağlantısı.
-	//
-	// FİYATI OLAN hisse KENDİ detay sayfasına gider (`/price/stock/
-	// {KOD}.IS` — CoinDesk hisse şablonu, gerçek Yahoo verisi). Fiyatı
-	// olmayan satır arama linkinde kalır: detay ucu veri bulamayınca 404
-	// döndüğü için oraya bağlamak kırık bağlantı olurdu.
-	Href string
+	Href  string
 }
 
 // Yon sınıfı (CSS): up | down | flat.
@@ -336,11 +260,6 @@ var hisseHarfleri = []string{
 	"N", "O", "P", "R", "S", "T", "U", "V", "Y", "Z",
 }
 
-// hisseAramaNorm arama için metni sadeleştirir: Türkçe harfler ASCII'ye,
-// küçük harfe, fazla boşluklar tek boşluğa iner.
-//
-// Neden: kullanıcı "şişe", "SISE" veya "sise" yazabilir; üçü de aynı hisseyi
-// bulmalı. Ayrıca kod ortasındaki boşluk/orta nokta aramayı bozmasın.
 func hisseAramaNorm(s string) string {
 	repl := strings.NewReplacer(
 		"ı", "i", "İ", "i", "I", "i",
@@ -358,10 +277,6 @@ func hisseAramaNorm(s string) string {
 	return strings.Join(strings.Fields(s), " ")
 }
 
-// hisseSayfaOlustur evreni fiyat önbelleğiyle birleştirip filtreler.
-//
-// Filtre sırası: önce harf, sonra arama. Arama kodu ve adı birlikte tarar;
-// kod eşleşmesi öne alınır (kullanıcı çoğunlukla kod yazar).
 func hisseSayfaOlustur(hd repo.HisseData, q, harf string) *hisseSayfa {
 	byCode := make(map[string]repo.HisseRow, len(hd.Rows))
 	for _, r := range hd.Rows {
@@ -402,17 +317,6 @@ func hisseSayfaOlustur(hd repo.HisseData, q, harf string) *hisseSayfa {
 	return out
 }
 
-// paraKisa büyük tutarları okunur kısaltmayla yazar (TRY).
-//
-//	845        → "845,00"
-//	12.345     → "12,3 b"   (bin)
-//	45.600.000 → "45,6 mn"  (milyon)
-//	1.234.000.000 → "1,23 mr" (milyar)
-//
-// Türkçe kısaltmalar: b=bin, mn=milyon, mr=milyar, tn=trilyon. Tablo
-// sütununda tam sayı (25.520.814.082) okunmuyor; Habertürk tam yazıyor ama
-// TRY hacimleri 12 haneye çıkıyor. Kısaltma + başlık ipucu (title) ile
-// tam değer korunur.
 func paraKisa(v float64) string {
 	if v <= 0 {
 		return "—"

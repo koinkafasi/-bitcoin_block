@@ -21,14 +21,6 @@ type TranskriptAramaSonucu struct {
 	Rank    float64
 }
 
-// SearchAudioTranscripts transkriptlerde tam metin araması yapar.
-//
-// `audio_transcripts.search` (tsvector + GIN) migration 0087'de kurulmuştu
-// ama hiçbir sorgu kullanmıyordu; bu fonksiyon o yeteneği açığa çıkarır.
-//
-// 'simple' sözlüğü bilinçli: Türkçe ekler için agresif gövdeleme yapmaz,
-// ham sözcük eşleşmesi korunur (arama davranışı öngörülebilir olur).
-// Sorgu lexeme üretmezse (ör. yalnız noktalama) ILIKE'a düşer.
 func SearchAudioTranscripts(ctx context.Context, pool *pgxpool.Pool, siteID int64, query string, limit int) ([]TranskriptAramaSonucu, error) {
 	q := strings.TrimSpace(query)
 	if len([]rune(q)) < 2 {

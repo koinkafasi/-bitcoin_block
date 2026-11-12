@@ -1,17 +1,4 @@
-/* Pano 2.0 — istemci etkileşimleri (Faz 149)
- *
- * Sunucu HTML + SVG üretir; burada yalnız durum ve etkileşim var:
- *   1. Ray katlama (localStorage'da kalıcı)
- *   2. Zaman aralığı sekmeleri: kayan "thumb" + grafik değişimi
- *   3. Grafik balonu (nokta/çubuk üzerine gelince değer)
- *   4. Yayın şeridi: sürükle-bırak ile saat değiştirme (optimistic + toast)
- *   5. ⌘K / Ctrl+K: panel arama paleti
- *   6. Görünüm geçişleri (destekleyen tarayıcıda)
- *   7. "Magnetic" birincil düğme (imleç yaklaşınca hafif çekim)
- *
- * Hepsi bağımsız: biri hata verirse diğerleri çalışmaya devam eder. Panelin
- * geri kalanı (HTMX) bu betiğe bağlı değil.
- */
+
 (function () {
   'use strict';
 
@@ -24,7 +11,7 @@
   var app = document.querySelector('.pn-view');
   if (!app) return;
 
-  /* ---------- 2) Zaman aralığı sekmeleri ---------- */
+  
   (function sekmeler() {
     var seg = document.getElementById('pnSeg');
     var thumb = document.getElementById('pnSegThumb');
@@ -67,7 +54,7 @@
     }
   })();
 
-  /* ---------- 3) Grafik balonu ---------- */
+  
   (function balon() {
     var box = document.getElementById('pnChartBox');
     var tip = document.getElementById('pnBalon');
@@ -98,7 +85,7 @@
     }, { passive: true });
   })();
 
-  /* ---------- 4) Yayın şeridi: sürükle-bırak ---------- */
+  
   (function serit() {
     var ray = document.getElementById('pnPlanRay');
     if (!ray) return;
@@ -240,7 +227,7 @@
     function yuzdeSaatIcin(pct) { return yuzdeSaat(pct); }
   })();
 
-  /* ---------- 5) ⌘K arama paleti ---------- */
+  
   (function palet() {
     var btn = document.getElementById('pnAra');
     if (!btn) return;
@@ -258,12 +245,9 @@
     });
   })();
 
-  /* ---------- 6) Görünüm geçişleri ----------
-   * Global: admin-pano.css'te @view-transition ve admin-ui.js'te yedek
-   * yol var. Burada kopya tutmak, aynı tıklamayı iki kez yakalayıp
-   * çift yönlendirme riski doğuruyordu. */
+  
 
-  /* ---------- 7) Magnetic birincil düğme ---------- */
+  
   (function magnetik() {
     var el = document.querySelector('.pn-magnetic');
     if (!el || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;

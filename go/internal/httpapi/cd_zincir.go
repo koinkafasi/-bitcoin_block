@@ -13,24 +13,6 @@ import (
 	"theblock/site/internal/webui/templkit"
 )
 
-// Zincir-üstü veri (CryptoQuant) — grafikler.
-//
-// KULLANICI İSTEĞİ (8 Kasım 2026): "gerçek veriler için CryptoQuant API ...
-// tüm sitede tüm grafik ve ihtiyaç olan verileri için bunu kullan demo sahte
-// veri olmayacak".
-//
-// İLKELER:
-//  1. Sahte veri YOK. Anahtar yoksa / API hata verirse modül hiç basılmaz.
-//  2. Grafik sunucuda inline SVG olarak üretilir (CSP `script-src 'self'`;
-//     harici grafik kütüphanesi yüklenemez, JS'e de gerek kalmaz).
-//  3. Veri `services_cache` (kind `zincir`) içinde 10 dk önbelleklenir:
-//     her sayfa görüntülemesinde API'ye gitmek kota ve gecikme demek.
-//
-// ÖLÇÜLEN KAPSAM (8 Kasım 2026, gerçek anahtar):
-//   fiyat OHLCV : btc, eth, xrp, trx
-//   MVRV / SOPR : yalnız btc
-//   borsa akışı : btc, eth (exchange zorunlu → binance)
-
 const (
 	zincirKind = "zincir"
 	zincirTTL  = 10 * time.Minute
@@ -179,9 +161,6 @@ func cdFiyatGrafikKart(bars []cryptoquant.Bar) *templkit.CDGrafikKart {
 	}
 }
 
-// cdMetrikKart zincir-üstü metrikten mini kart üretir.
-//
-// Degisim: son değerin BİR ÖNCEKİ güne göre yüzde değişimi.
 func cdMetrikKart(baslik, alt string, deger []float64, tarih []string, bicim func(float64) string) *templkit.CDGrafikKart {
 	return cdMetrikKartTip(baslik, alt, deger, tarih, bicim, true)
 }

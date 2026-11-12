@@ -14,25 +14,10 @@ import (
 	"theblock/site/internal/trends"
 )
 
-// trendHTTPClient dış trend kaynağını çeken istemciyi üretir.
-//
-// Kaynak adresi PANELDEN girilir (bkz. handleTrendSourceEkle), yani sunucuya
-// kullanıcı denetimli bir URL açtırılır. Düz `&http.Client{}` ile bu adres
-// http://127.0.0.1:8070/admin ya da http://169.254.169.254/ (bulut metadata)
-// olabilirdi: düşük yetkili bir personel sunucunun iç ağına istek attırabilir,
-// dönen hata metnini de panelde okuyabilirdi (SSRF). Artık SSRF korumalı
-// istemci kullanılıyor — yalnız http/https, yalnız 80/443, yalnız genel IP,
-// her yönlendirmede yeniden doğrulama.
-//
-// Değişken (fonksiyon) olarak tutuluyor: testler httptest sunucusuna
-// (loopback) erişebilsin diye geçici olarak değiştirilebiliyor.
 var trendHTTPClient = func() *http.Client {
 	return platform.SafeFetchClient(20 * time.Second)
 }
 
-// RunTrendFetch dış trend kaynaklarını (Google Trends RSS vb.) periyodik çeker.
-// Her kaynağın kendi aralığı ve geri çekilme (backoff) durumu vardır; tick
-// yalnızca zamanı gelen kaynaklara istek atar.
 func RunTrendFetch(ctx context.Context, pool *pgxpool.Pool, logger *slog.Logger, every time.Duration) {
 	if every <= 0 {
 		every = 30 * time.Second

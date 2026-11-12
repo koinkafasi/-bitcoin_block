@@ -6,16 +6,6 @@ import (
 	"testing"
 )
 
-// Kaynak görsel ölçekleme — srcset/sizes sözleşmesi.
-//
-// NEDEN TEST: canlı ölçüm (5 Kasım 2026) ana sayfadaki beş /kg/ görselinin
-// 1,39 MB olduğunu gösterdi (en büyüğü 708 KB PNG), en geniş yuva ise 808px.
-// Bu testler iki hatayı önler:
-//   1. srcset'i fazla kısa kesmek — theblock'ta yapıldı; 480'de kesilince
-//      DPR 2-3 ekranlarda görüntü bozuldu (ölçüldü).
-//   2. /kg/ olmayan adreslere genişlik eklemek — ölçekleme ucu yalnız
-//      kaynak görselleri tanır, başkasına eklemek 404 üretir.
-
 // Ölçekleme YALNIZ /kg/<hash> biçimine uygulanmalı.
 func TestKgOlcekliSadeceKaynakGorseli(t *testing.T) {
 	const h = "80fe8a843afddb33661ff0f019b8ac11"
@@ -52,16 +42,6 @@ func TestKgOlceklenemeyenAdresDegismez(t *testing.T) {
 	}
 }
 
-// En geniş basamak, yuvanın ETKİN YOĞUNLUK ihtiyacını KARŞILAMALI.
-//
-// Bu testin tamamı theblock'ta yapılan hatanın tekrarını önlemek için:
-// srcset 480'de kesilmişti, DPR 2-3'te görüntü bozuldu.
-//
-// ÖNEMLİ: sizes ÇARPANLI (spec §9). Tarayıcı 2dppx dalında sizes'ı
-// 0.65 ile çarpar, sonra DPR ile çarpar → seçilen aday = yuva × 1,3.
-// Yani gereksinim yuva × 2 DEĞİL, yuva × 1,3. Bu test o sözleşmeyi
-// sabitler: biri çarpanı kaldırırsa ya da basamakları kısaltırsa burada
-// kırmızıya döner.
 func TestYuvaBasamaklariEtkinYogunlukYetiyor(t *testing.T) {
 	// Yuva genişlikleri cd.css'ten hesaplandı (bkz. cd_gorsel_yuva.go).
 	yuvaGenislik := map[CDYuva]int{
@@ -93,10 +73,6 @@ func TestYuvaBasamaklariEtkinYogunlukYetiyor(t *testing.T) {
 	}
 }
 
-// Sizes ÇARPANLI olmalı: 2dppx'te yuva × 0,65, 3dppx'te × 0,433.
-//
-// NEDEN TEST: çarpanı sessizce kaldırmak baytı ~%35 artırır ama görsel
-// hiç bozulmaz — yani kimse fark etmez. Bu test sözleşmeyi tutar.
 func TestYuvaSizesCarpanli(t *testing.T) {
 	for yuva, bilgi := range yuvaBilgi {
 		if yuva == YuvaAvatar {
@@ -111,10 +87,6 @@ func TestYuvaSizesCarpanli(t *testing.T) {
 	}
 }
 
-// Basamaklar artan sırada ve httpapi'deki KAPALI LİSTEDEN olmalı.
-//
-// NEDEN: liste dışı bir genişlik 404 döner — sayfada boş kare çıkar.
-// Uç tarafı: httpapi.kaynakGorselGenislikGecerli.
 func TestYuvaBasamaklariUcunListesinde(t *testing.T) {
 	izinli := map[int]bool{320: true, 480: true, 768: true, 960: true, 1200: true, 1600: true}
 	for yuva, bilgi := range yuvaBilgi {
@@ -154,10 +126,6 @@ func TestKgSrcsetBicimi(t *testing.T) {
 	}
 }
 
-// Varsayılan src, yuvanın basamakları ARASINDA olmalı.
-//
-// NEDEN: srcset'i olmayan tarayıcı src'yi indirir. Basamak dışı bir değer
-// ucun listesinde olmayabilir → 404 → görselsiz sayfa.
 func TestKgSrcVarsayilanBasamaklarIcinde(t *testing.T) {
 	const url = "/kg/80fe8a843afddb33661ff0f019b8ac11"
 	for yuva, bilgi := range yuvaBilgi {
@@ -191,12 +159,6 @@ func TestYuvaSizesDoldurulmus(t *testing.T) {
 	}
 }
 
-// Blok kartı yuvası, hero lead'inden DAR olmalı — ölçümün ta kendisi.
-//
-// NEDEN TEST: `lead bool` ile genişlik türetme denemesi tam burada kırılıyor.
-// Biri yuva tipini boolean'a geri çevirmeye kalkarsa burada görünür.
-// 5. tur ölçümü: CoinDesk bölüm bloğu 724'lük hücrede 334 + 334 ızgara
-// kullanıyor; eski 922 px değeri yanlış düzene aitti.
 func TestBlokKartiHeroLeadtenDar(t *testing.T) {
 	// .cd-blok__ic 724'lük hücrede (724 - 2*20 dolgu - 16 gap) / 2 = 334
 	// .cd-hero hero lead = 1464-80-290 = 1094 (hero en geniş yuva)

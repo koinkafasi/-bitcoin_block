@@ -1,41 +1,20 @@
-/* ikonlar.css — ikon animasyon yardımcıları (Faz 153)
- *
- * NEDEN CSS: bir ikonu "döndürmek" için ayrı animasyonlu SVG dosyası
- * indirmek gereksiz. Aynı tabler sembolü hem sabit hem animasyonlu
- * kullanılabilsin diye hareket sınıfla verilir.
- *
- * Kullanım:  <svg class="ti ico-spin"><use href=".../tabler-icons.svg#ti-refresh"/></svg>
- *            <svg class="ti ico-pulse">…</svg>
- *
- * Hepsi `prefers-reduced-motion` altında durur: hareket hassasiyeti olan
- * kullanıcı için dönen ikon ciddi bir rahatsızlık kaynağı.
- *
- * Gerçek "yükleniyor" SVG'leri (spinner) ayrı: vendor/spinner/*.svg —
- * onların animasyonu dosyanın içinde tanımlı, JS gerektirmez.
- */
+
 
 .ti, .pn-ico { display: inline-block; vertical-align: -0.125em; }
 
-/* Metin içinde geçen simge: punto ile birlikte büyür. Başlık, ipucu ve
- * etiketlerde kullanılıyor; sabit px verilseydi büyük başlıkta küçük,
- * küçük ipucunda iri kalırdı. */
 .ti-metin { width: 1.05em; height: 1.05em; flex: none; }
 
-/* Döndürme: en sık kullanılan (yenile/derleme/yükleniyor). */
 .ico-spin { animation: ico-don 1s linear infinite; }
 @keyframes ico-don { to { transform: rotate(360deg); } }
 
-/* Yavaş döndürme: arka plan tazeleme gibi "sürekli ama sakin" işler. */
 .ico-spin-yavas { animation: ico-don 2.4s linear infinite; }
 
-/* Nabız: canlı yayın / bağlı / senkron göstergesi. */
 .ico-pulse { animation: ico-nabiz 1.8s ease-in-out infinite; }
 @keyframes ico-nabiz {
 	0%, 100% { opacity: 1; transform: scale(1); }
 	50% { opacity: .55; transform: scale(.92); }
 }
 
-/* Halka nabzı: bildirim zili gibi "dikkat" çağrıları. */
 .ico-ring { animation: ico-cingirak 2.2s ease-in-out infinite; transform-origin: 50% 10%; }
 @keyframes ico-cingirak {
 	0%, 70%, 100% { transform: rotate(0); }
@@ -46,7 +25,6 @@
 	90% { transform: rotate(2deg); }
 }
 
-/* Zıplama: taslak→yayın gibi durum geçişlerinde kısa vurgu. */
 .ico-bounce { animation: ico-zipla 1.4s cubic-bezier(.22, 1, .36, 1) infinite; }
 @keyframes ico-zipla {
 	0%, 60%, 100% { transform: translateY(0); }
@@ -54,7 +32,6 @@
 	45% { transform: translateY(-1px); }
 }
 
-/* Çizim: çizgi ikonu "çizilerek" belirir (ilk yüklemede zarif). */
 .ico-draw path {
 	stroke-dasharray: 60;
 	stroke-dashoffset: 60;
@@ -65,7 +42,6 @@
 .ico-draw path:nth-child(4) { animation-delay: .36s; }
 @keyframes ico-ciz { to { stroke-dashoffset: 0; } }
 
-/* Sallanma: hata/uyarı geri bildirimi (tek seferlik). */
 .ico-shake { animation: ico-salla .5s ease-in-out; }
 @keyframes ico-salla {
 	0%, 100% { transform: translateX(0); }
@@ -75,12 +51,9 @@
 	80% { transform: translateX(2px); }
 }
 
-/* Gecikmeli giriş: liste/kart ikonları sırayla belirsin. */
 .ico-fade-in { animation: ico-belir .5s cubic-bezier(.22, 1, .36, 1) both; }
 @keyframes ico-belir { from { opacity: 0; transform: translateY(4px) scale(.96); } }
 
-/* Yükleniyor spinner'ı: vendor/spinner/*.svg dosyasını satır içi basar.
- * Boyut ve renk ana ikondan miras alınır. */
 .ikon-spin-svg { width: 1.25em; height: 1.25em; display: inline-block; vertical-align: -0.25em; }
 .ikon-spin-svg svg { width: 100%; height: 100%; display: block; }
 

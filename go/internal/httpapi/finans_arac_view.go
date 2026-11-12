@@ -7,15 +7,6 @@ import (
 	"theblock/site/internal/repo"
 )
 
-// Kripto Para ve Kur Çevirici modülleri.
-//
-// Referans: haberturk.com/ekonomi
-//   KRİPTO PARA : başlık + TÜMÜ + ikon/ad/fiyat/%24s ızgarası
-//   KUR ÇEVİRİCİ: iki para birimi seçici + tutar + DÖNÜŞTÜR + sonuç
-//
-// İkisi de önbellekten beslenir (istek yolunda ağa çıkılmaz) ve görünüm
-// sözlüğü diğer finans modülleriyle aynıdır.
-
 const (
 	kriptoSayiVarsayilan        = 12
 	kriptoSayiAzami             = 100
@@ -33,10 +24,6 @@ const (
 	kriptoHizVarsayilan      = 60 // px/sn
 )
 
-// gecerliKriptoYerlesim kripto modülü yerleşimleri.
-//
-//	izgara — referans: sabit ızgara (Habertürk ekonomi vitrini)
-//	serit  — kayan şerit (Hisseler ile aynı hareket motoru)
 var gecerliKriptoYerlesim = map[string]bool{
 	"izgara": true,
 	"serit":  true,
@@ -61,9 +48,6 @@ func kriptoYerlesimOf(s string) string {
 	return kriptoYerlesimVarsayilan
 }
 
-// kriptoStilOf görünüm şablonunu okur.
-//
-// "otomatik" bölgeye göre çözülür (bkz. kriptoEtkinStil).
 func kriptoStilOf(s string) string {
 	if gecerliKriptoStil[s] {
 		return s
@@ -71,13 +55,6 @@ func kriptoStilOf(s string) string {
 	return kriptoStilVarsayilan
 }
 
-// kriptoEtkinStil "otomatik" seçimini bölgeye göre çözer.
-//
-//	geniş bölge (ust/ana/genis/govde) → referans (vitrin ızgarası)
-//	dar bölge  (yan)                  → rail (yan sütun listesi)
-//
-// Yan sütun ~300-380 px: 4 sütunlu kart ızgarası orada okunmaz, bu yüzden
-// otomatik seçimde modül kendiliğinden rail görünümüne geçer.
 func kriptoEtkinStil(secili string, dar bool) string {
 	if secili == "otomatik" {
 		if dar {
@@ -186,10 +163,6 @@ type kurCeviriciView struct {
 	Var   bool
 }
 
-// kurCeviriciOlustur tablodan modül görünümünü üretir.
-//
-// Seçili para birimleri tabloda yoksa (kur güncellenmediyse) ilk geçerli
-// çift kullanılır; modül asla boş seçimle basılmaz.
 func kurCeviriciOlustur(kt repo.KurTablosu, baslik, from, to string, miktar float64) *kurCeviriciView {
 	codes := kt.Kodlar()
 	if len(codes) < 2 {
@@ -232,13 +205,6 @@ func kurCeviriciOlustur(kt repo.KurTablosu, baslik, from, to string, miktar floa
 	return v
 }
 
-// kriptoSayfaStilleri kripto sayfasının görünümleri.
-//
-// Sayfada üç görünüm seçilebilir (Habertürk tabloyu kullanır):
-//
-//	tablo   — KRIPTO · 24s · 7g · FİYAT · 24s HACİM · PİYASA DEĞERİ (referans)
-//	kart    — ikon + ad + fiyat kartları
-//	kompakt — tek satır, yalnız kod + fiyat + 24s
 var kriptoSayfaStilleri = []struct{ Key, Label string }{
 	{"tablo", "Tablo"},
 	{"kart", "Kart"},
@@ -267,11 +233,6 @@ type kriptoSayfa struct {
 	SeciliStil string // seçili görünümün etiketi
 }
 
-// kriptoSayfaOlustur önbellek satırlarını arama ile süzer.
-//
-// Arama kodu, adı ve slug'ı birlikte tarar; Türkçe duyarsızdır
-// (hisseAramaNorm aynı sadeleştirmeyi yapar). Eşleşme yoksa boş liste
-// döner; sayfa "sonuç yok" durumunu basar.
 func kriptoSayfaOlustur(kd repo.KriptoData, q, stil string) *kriptoSayfa {
 	if !gecerliKriptoSayfaStil(stil) {
 		stil = "tablo"

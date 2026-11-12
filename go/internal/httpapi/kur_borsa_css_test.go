@@ -12,15 +12,6 @@ import (
 	"theblock/site/internal/webui"
 )
 
-// Kur & Borsa CSS sözleşmesi.
-//
-// Kullanıcı geri bildirimi (28 Ekim 2026): "scroll neden var altında ve neden
-// o kadar uzatın, tam 1280 ana genişlikte responsive özellikleri düzelt,
-// çerçeve border olmayacak".
-//
-// Bu testler CSS'te geri dönüşü engeller: yatay kaydırma, çerçeve ve sabit
-// genişlikli kalemler geri gelirse burada kırılır.
-
 func kbCSS(t *testing.T) string {
 	t.Helper()
 	b, err := fs.ReadFile(webui.FS, "static/public.css")
@@ -69,9 +60,6 @@ func kural(css, selector string) string {
 }
 
 func TestKbCSSKaydirilabilirCubukGizli(t *testing.T) {
-	// Kullanıcı isteği: "üst manşet gibi sağa doğru sürükleyerek bakılabilir".
-	// Üst manşetle AYNI desen: overflow-x auto + gizli kaydırma çubuğu +
-	// scroll-snap. Çubuk görünür olursa şikâyet geri gelir.
 	css := kbCSS(t)
 	scroll := kural(css, ".pys-scroll {")
 	require.NotEmpty(t, scroll)
@@ -132,17 +120,6 @@ func TestKbCSSDuyarliKirilimlar(t *testing.T) {
 	assert.NotContains(t, css, "flex-basis: 100%")
 }
 
-// Tipografi referansla aynı olmalı.
-//
-// Kullanıcı: "fontları da düzelt, Habertürk'ten farklı". Referans Tailwind
-// sınıfları (kaynaktan ölçüldü):
-//
-//	etiket  text-xs   = 0.75rem (12px)
-//	fiyat   text-xl   = 1.25rem (20px), font-bold (700)
-//	yüzde   text-xxs  ≈ 0.625rem (10px)
-//	hepsi   leading-none + Poppins
-//
-// Önceki değerler (10.2 / 15.7 / 10.6px) referanstan küçüktü.
 func TestKbCSSTipografiReferanslaAyni(t *testing.T) {
 	css := kbCSS(t)
 
@@ -168,9 +145,6 @@ func TestKbCSSMobilTasmaEngeli(t *testing.T) {
 
 	strip := kural(css, ".pys-strip {")
 	assert.Contains(t, strip, "max-width: 100%", "şerit kapsayıcıdan taşmaz")
-	// Not: overflow:hidden artık KULLANILMIYOR — şerit kaydırılabilir
-	// olmalı (kullanıcı isteği). Sayfanın yatay kaymaması
-	// overscroll-behavior-x: contain ile sağlanıyor.
 
 	scroll := kural(css, ".pys-scroll {")
 	assert.Contains(t, scroll, "max-width: 100%")
@@ -184,15 +158,6 @@ func TestKbCSSMobilTasmaEngeli(t *testing.T) {
 	assert.NotContains(t, item, "flex-wrap")
 }
 
-// Sınıf çakışması koruması.//
-// Gerçek olay (28 Ekim 2026): modül önce `kb-` önekiyle yazıldı. Projede
-// zaten başka bir "kb-" modülü vardı (kb-lead / kb-yan / kb-item) ve onun
-// kuralı `.kb-item`a `border:1px`, `background`, `min-height:96px` veriyordu.
-// Dosyada sonra geldiği için benim kalemlerimi eziyordu: kullanıcı
-// "çerçeve border olmayacak, neden bu kadar uzun" diye gördü.
-//
-// Bu test, `pys-` sınıflarının YALNIZ bu modülde tanımlı olduğunu doğrular.
-// Yeni bir modül aynı öneki kullanırsa burada kırılır.
 func TestKbCSSSinifCakismasiYok(t *testing.T) {
 	b, err := fs.ReadFile(webui.FS, "static/public.css")
 	require.NoError(t, err)

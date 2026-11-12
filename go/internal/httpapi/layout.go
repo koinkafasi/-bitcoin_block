@@ -12,25 +12,11 @@ import (
 	"theblock/site/internal/repo"
 )
 
-// ---- Ölçü & Kenarlık (Sayfa Tasarımcısı içinde yönetilir) ----
-//
-// Public sayfalardaki alanlar arası boşluklar ve kenarlıklar CSS değişkenleri
-// (design token) ile yönetilir. Bu ayar doluysa public_head'te :root üzerine
-// yazılır; boş alanlar public.css fallback değerlerini kullanır (mevcut
-// görünüm korunur).
-
 const (
 	layoutSection = "olcu"
 	layoutKey     = "ana"
 )
 
-// LayoutConfig tasarımcıdan yönetilen ölçü/kenarlık ayarları.
-// Nil göstericiler "varsayılanı kullan" anlamına gelir.
-//
-//	GapGrid/GapColumn/GapSide/GapSmall: alanlar arası boşluklar (px)
-//	BorderW: kenarlık kalınlığı (px) — kart ve ayraç çizgileri
-//	BorderColor: kenarlık rengi (#rgb/#rrggbb; boşsa tema rengi)
-//	Radius: köşe yuvarlaklığı (px)
 type LayoutConfig struct {
 	// SiteWidth üst menü, gövde ve footer için ortak azami içerik genişliği.
 	// Boşsa public.css fallback'i 1280px kullanılır.
@@ -233,10 +219,6 @@ func (s *Server) handleLayoutSave(w http.ResponseWriter, r *http.Request) {
 	s.flashRedirect(w, r, back, "info", msg)
 }
 
-// handleLayoutPartial POST /admin/olcu/parca — tek bir ölçü alanını (AJAX)
-// günceller. `key` allowlist ile sınırlıdır; diğer alanlar korunur (kısmi
-// güncelleme, formu yeniden yüklemeye gerek kalmaz — ör. tasarımcının şablon
-// görünümündeki hızlı "Sütun boşluğu" alanı).
 func (s *Server) handleLayoutPartial(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	_ = r.ParseForm()

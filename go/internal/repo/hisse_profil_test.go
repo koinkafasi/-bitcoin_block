@@ -88,10 +88,6 @@ func TestHisseProfilCozBos(t *testing.T) {
 	}
 }
 
-// TestHisseProfilCekCanli gerçek uca bağlanır (BC_CANLI_AG=1).
-//
-// Ölçülen (9 Kasım 2026): crumb akışı çerez + getcrumb ile çalışıyor;
-// hem ABD hem BIST sembolünde longBusinessSummary ve marketCap geliyor.
 func TestHisseProfilCekCanli(t *testing.T) {
 	if os.Getenv("BC_CANLI_AG") != "1" {
 		t.Skip("BC_CANLI_AG=1 değil: ağ testi atlandı")

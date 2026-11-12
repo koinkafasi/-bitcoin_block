@@ -1,21 +1,3 @@
-// Package piyasa Türkiye piyasa göstergelerini (döviz, altın, borsa, emtia)
-// tek bir listede toplar.
-//
-// Neden yeni paket: mevcut `kur` önbelleği yalnız dolar/euro tutuyordu ve
-// altın sabit demoydu (28 Ekim 2026 ölçümü: önbellekte dolar 34,80 — gerçek
-// değer 49,83). Referans olarak alınan Habertürk göstergesi 11 kalem
-// gösteriyor: BIST 100, Dolar, Euro, Gram Altın, Bitcoin, 2 yıllık tahvil,
-// Gümüş (gram), Sterlin, Euro/Dolar, Brent, Çeyrek Altın.
-//
-// Kaynak seçimi ölçümle yapıldı (28 Ekim 2026):
-//
-//	finans.truncgil.com/v4/today.json  → döviz + altın + çeyrek (Türkçe kaynak)
-//	Yahoo Finance chart v8             → BIST 100, Brent, kripto, parite
-//	api.gold-api.com                   → ons altın/gümüş (yedek)
-//
-// truncgil değerleri referansla birebir örtüştü (USD 49,8335 / EUR 55,42 /
-// gram altın 6.476,69 / çeyrek 10.322,50 satış). Yahoo quote v7 ucu 401
-// döndüğü için chart v8 kullanılır.
 package piyasa
 
 import (
@@ -59,10 +41,6 @@ type Sonuc struct {
 	Kaynak string `json:"kaynak"`
 }
 
-// Tanim bir göstergenin nasıl gösterileceğini ve nereden okunacağını söyler.
-//
-// Sabit sıra referans düzene uyar: BIST, Dolar, Euro, Gram Altın, Bitcoin,
-// Faiz, Gümüş, Sterlin, Euro/Dolar, Brent, Çeyrek.
 type Tanim struct {
 	Anahtar string
 	Ad      string
@@ -101,12 +79,6 @@ func Anahtarlar() []string {
 	return out
 }
 
-// KaynakliTanimSayisi veri kaynağı tanımlı gösterge sayısıdır.
-//
-// `tahvil2y` bilinçli olarak kaynaksızdır: 2 yıllık tahvil getirisi için
-// ücretsiz ve güvenilir bir uç bulunamadı (Yahoo TR2YT=RR boş döndü,
-// truncgil tahvil yayımlamıyor). Uydurma sayı göstermek yerine kalem
-// yayımlanmaz; kaynak bulunduğunda Tanim'a eklenir ve otomatik görünür.
 func KaynakliTanimSayisi() int {
 	n := 0
 	for _, t := range Tanimlar {
@@ -143,11 +115,6 @@ type tgKalem struct {
 	Name    string  `json:"Name"`
 }
 
-// deger alış/satıştan gösterilecek değeri seçer.
-//
-// Kural: satış > 0 ise satış (halkın gördüğü fiyat), yoksa alış. Bazı
-// kalemlerde (ONS, BRENT) ikisi de 0 geliyor — o kalem "yok" sayılır ve
-// diğer kaynağa düşülür; 0 göstermek yanlış bilgi olurdu.
 func (k tgKalem) deger() (float64, bool) {
 	if k.Selling > 0 {
 		return k.Selling, true
@@ -160,10 +127,6 @@ func (k tgKalem) deger() (float64, bool) {
 
 func fetchTruncgil(ctx context.Context) (map[string]tgKalem, error) {
 	var sonHata error
-	// Birincil kaynak: 11 kalemin 7'si buradan geliyor. Tek deneme, geçici
-	// bir 5xx/boş yanıtta modülün yarısının kaybolmasına yol açıyordu
-	// (28 Ekim 2026: bir turda yalnız 4 Yahoo kalemi geldi). İki deneme ve
-	// kısa bekleme bunu pratikte ortadan kaldırıyor.
 	for deneme := 0; deneme < 2; deneme++ {
 		if deneme > 0 {
 			select {
@@ -349,9 +312,6 @@ func Get(ctx context.Context) (Sonuc, error) {
 			}
 		}
 		if !ok {
-			// Hiçbir kaynakta yok: kalemi demo olarak taşımıyoruz —
-			// gösterge listesinden tamamen çıkar, yanlış sayı göstermekten
-			// iyidir.
 			continue
 		}
 		k.Yon = yon(k.Degisim)

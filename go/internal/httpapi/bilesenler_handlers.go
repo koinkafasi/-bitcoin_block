@@ -8,9 +8,6 @@ import (
 	"theblock/site/internal/webui/templkit"
 )
 
-// handleBilesenler GET /admin/bilesenler — templ × shadcn bileşen galerisi (Adım 2 pilot).
-// Yeni nesil modüllerin tip-güvenli templ bileşenleriyle yazılabileceğini kanıtlar;
-// görsel dil admin-shadcn.css ile ortaktır.
 func (s *Server) handleBilesenler(w http.ResponseWriter, r *http.Request) {
 	d := s.baseView("tr", "/admin", "Bileşenler")
 	d.User = ptr(userFromContext(r.Context()))

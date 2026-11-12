@@ -12,12 +12,6 @@ import (
 	"theblock/site/internal/webui/templkit"
 )
 
-// ASR ayarları sayfası (Faz 125).
-//
-// Amaç: API anahtarını/sağlayıcıyı .env'i düzenleyip servisi yeniden
-// başlatmadan değiştirebilmek. Değerler settings/asr altında saklanır ve
-// .env yalnız varsayılan/başlangıç değeri sağlar.
-
 // asrStore sunucunun ASR ayar deposudur (dinamik sağlayıcıyla aynı kaynak).
 func (s *Server) asrStore() *transcribe.SettingsStore {
 	if s.asrSettings == nil {
@@ -78,9 +72,6 @@ func (s *Server) handleASRSettingsPost(w http.ResponseWriter, r *http.Request) {
 	s.renderASRSettings(w, r, "Ayarlar kaydedildi. Yeni anahtar/sağlayıcı bir sonraki işte kullanılacak.")
 }
 
-// testASRConnection etkin yapılandırmayla sağlayıcıya küçük bir istek atar.
-// Tam transkripsiyon yapmaz (maliyet/timeout); yalnız kimlik doğrulamayı
-// sınar.
 func (s *Server) testASRConnection(ctx context.Context) string {
 	cfg := s.asrStore().Load(ctx)
 	if cfg.Empty() {

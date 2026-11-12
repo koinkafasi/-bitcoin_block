@@ -9,16 +9,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// HİSSE DİZİNİ SAYFASI (9 Kasım 2026).
-//
-// NEDEN TEST: sayfa theblock'tan kalan `site_public.html` bloğundan
-// (`hsp-*` + site-header/site-footer) geliyordu. Yeni temaya geçmiş her
-// sayfa `cd-*` kabuğunu kullanırken bu sayfa geride kalmıştı; kabuk
-// sessizce eski şablona dönerse kullanıcı iki farklı site görür.
-//
-// Test iki şeyi kilitler:
-//  1. sayfa cd-* kabuğunu kullanır (cd-topbar / cd-footer / cd-table),
-//  2. eski kabuk sınıfları (site-header, hsp-table) BASILMAZ.
 func TestCDHisselerSayfasiKabuk(t *testing.T) {
 	v := CDHisselerPage{
 		Shell: CDShell{
@@ -69,10 +59,6 @@ func TestCDHisselerSayfasiKabuk(t *testing.T) {
 	assert.Contains(t, h, `aria-current="page"`)
 }
 
-// TestCDHisseHarfHref: A-Z bağlantısı arama metnini KORUR.
-//
-// NEDEN: kullanıcı "THY" yazıp sonra "T" harfine basarsa süzgeç
-// kaybolmamalı; iki parametre birlikte taşınır.
 func TestCDHisseHarfHref(t *testing.T) {
 	assert.Equal(t, "/borsa/hisseler", cdHisseHarfHref("", ""))
 	assert.Equal(t, "/borsa/hisseler?harf=A", cdHisseHarfHref("A", ""))

@@ -94,9 +94,6 @@ func looksLikeMP3(b []byte) bool {
 	return len(b) >= 2 && b[0] == 0xFF && (b[1]&0xE0) == 0xE0
 }
 
-// SplitText metni cümle sınırlarına saygı duyarak en fazla maxRunes
-// uzunluğunda parçalara böler. OpenAI /audio/speech 4096 karakter sınırı
-// olduğu için varsayılan 3500 güvenli aralıktır.
 func SplitText(text string, maxRunes int) []string {
 	text = strings.Join(strings.Fields(text), " ")
 	if maxRunes <= 0 {

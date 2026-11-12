@@ -6,15 +6,6 @@ import (
 	"theblock/site/internal/repo"
 )
 
-// Video süresi kartlarda (Faz 21)
-//
-// `contents.video_seconds` yalnız video içeriklerinde anlamlıdır ve çoğu liste
-// sorgusu onu okumaz. Burada, EKRANA BASILACAK kartlar için süreler TEK sorguda
-// getirilip içerik kopyalarına yerinde yazılır. Böylece:
-//   - kart şablonları doğrudan `.VideoSeconds` okur (şablon işlevi gerekmez,
-//     hatta FormatDurationTR bile şablonda çağrılabilir),
-//   - kart sayısı ne olursa olsun sorgu sayısı 1 kalır (N+1 yok).
-
 // videoSureHedefleri verilen içerik dilimindeki videoları, sonradan doldurulmak
 // üzere kimlik -> içerik işaretçisi haritasına toplar.
 func videoSureHedefleri(items []repo.Content, out map[int64][]*repo.Content) {

@@ -16,35 +16,17 @@ import (
 
 // SeoAyarlar otomatik SEO doldurmanın açık/kapalı ve hız bilgisidir.
 type SeoAyarlar struct {
-	Aktif bool
-	// Dakika: DAKİKADA işlenecek içerik sayısı (AI maliyeti/latency sınırı).
-	//
-	// Ölçüm (canlı): bot günde ~3.593 taslak ekliyor (~150/saat). Eski ayar
-	// "2 dakikada 5" = 150/saat idi — akış hızına TAM EŞİT, yani 10.400
-	// kişilik birikmiş kuyruk hiç erimiyordu. Hız artık dakika cinsinden
-	// veriliyor ki panelden anlaşılır olsun.
+	Aktif  bool
 	Dakika int
 }
 
-// SeoVarsayilanDakika varsayılan hızdır (dakikada içerik).
-//
-// Ölçüm: aynı sağlayıcıda tek çağrı 20–83 sn (auto/best-chat farklı
-// modellere yönlendiriyor). Sıralı işlemede pratik hız 1–2/dk'ya düşüyor,
-// 10 binlik kuyruk hiç erimiyor.
 const SeoVarsayilanDakika = 20
 
-// SeoEszamanli aynı anda uçuşta olacak AI isteği sayısı.
-//
-// 3 paralel istek sağlayıcıda ölçüldü (3 istek 31 sn'de döndü, hatasız).
 const SeoEszamanli = 3
 
 // SeoMaksDakika panelden girilebilecek üst sınır.
 const SeoMaksDakika = 120
 
-// SeoAyarlariOku bot ayarlarından okur.
-//
-// Varsayılan AÇIK: otomatik haberlerin SEO alanları doldurulsun istendi.
-// Ayar hiç yazılmamışsa açık kabul edilir; panelden kapatılabilir.
 func SeoAyarlariOku(ctx context.Context, pool *pgxpool.Pool) SeoAyarlar {
 	a := SeoAyarlar{Aktif: true, Dakika: SeoVarsayilanDakika}
 	if b, err := repo.GetSetting(ctx, pool, "bot", "seo_otomatik"); err == nil {
@@ -88,11 +70,6 @@ func sinirDakika(n int) int {
 	return n
 }
 
-// seoDeneme bir içeriğin kaç kez başarısız olduğunu tutar.
-//
-// Başarısız içerik her turda yeniden denenirse her 2 dakikada bir AI
-// çağrısı (ve ücret) harcanır. Üç denemeden sonra vazgeçilir; süreç
-// yeniden başlarsa sayaç sıfırlanır (içerik düzelmiş olabilir).
 type seoDeneme struct {
 	mu   sync.Mutex
 	sayi map[int64]int
@@ -116,11 +93,6 @@ func (d *seoDeneme) basarili(id int64) {
 	delete(d.sayi, id)
 }
 
-// SeoDoldurmaTuru tek bir turda (en çok 10 içerik) boş SEO'lu taslakları
-// doldurur ve doldurulan sayısını verir.
-//
-// Bir içerik hata verirse tur devam eder: tek bir bozuk kayıt tüm kuyruğu
-// durdurmamalı.
 func SeoDoldurmaTuru(ctx context.Context, pool *pgxpool.Pool, aiclient *ai.Client, logger *slog.Logger) int {
 	return seoDoldurmaTuru(ctx, pool, aiclient, logger, &seoDeneme{sayi: map[int64]int{}}, 10)
 }
@@ -208,16 +180,6 @@ func seoDoldurmaTuru(ctx context.Context, pool *pgxpool.Pool, aiclient *ai.Clien
 	return doldurulan
 }
 
-// seoUretTekrar SEO üretimini en çok iki kez dener.
-//
-// Neden: sağlayıcı (auto/best-chat) isteklerin bir kısmında görünmeyen akıl
-// yürütmeye token harcayıp içeriği hiç yazmıyor (ölçüm: 1000 token'da
-// finish=length ve 14 karakter). Bu yanıt ne JSON ne kurtarılabilir; tek
-// denemede bırakmak içeriği kalıcı boş bırakıyordu. İkinci deneme
-// gözlemlenen başarı oranını belirgin biçimde yükseltiyor.
-//
-// Yalnız İKİ deneme: her deneme AI maliyeti; sürekli başarısız kayıt
-// kuyruğu tıkamamalı (3 başarısızlıktan sonra tur dışı bırakılır).
 func seoUretTekrar(ctx context.Context, aiclient *ai.Client, c repo.Content, logger *slog.Logger) (SeoOneri, error) {
 	oneri, err := SeoUret(ctx, aiclient, c)
 	if err == nil {
@@ -234,16 +196,6 @@ func seoUretTekrar(ctx context.Context, aiclient *ai.Client, c repo.Content, log
 	return oneri2, nil
 }
 
-// RunSeoDoldurma otomatik haberlerin SEO alanlarını SÜREKLİ, ayarlanan
-// dakikalık hızda doldurur.
-//
-// Eski yapı "her 2 dakikada bir tur" idi ve tur başına 5 içerik işliyordu:
-// saatte 150. Bot ise saatte ~150 taslak üretiyor (ölçüm: 24 saatte 3.593).
-// Yani akış hızına tam eşit → 10.400 kişilik birikmiş kuyruk hiç erimiyordu.
-//
-// Yeni yapı: tur biter bitmez bir sonraki tura geçilir, iki tur arasında
-// yalnız hedef aralığı (60 sn / dakika) tamamlayacak kadar beklenir. Böylece
-// hız panelden anlaşılır bir birimle (dakikada N) verilir ve kuyruk erir.
 func RunSeoDoldurma(ctx context.Context, pool *pgxpool.Pool, aiclient *ai.Client, logger *slog.Logger, _ time.Duration) {
 	deneme := &seoDeneme{sayi: map[int64]int{}}
 	logger.Info("seo doldurma başladı", "varsayılan_dakika", SeoVarsayilanDakika)
@@ -264,10 +216,6 @@ func RunSeoDoldurma(ctx context.Context, pool *pgxpool.Pool, aiclient *ai.Client
 		if n > 0 {
 			logger.Info("seo doldurma turu", "doldurulan", n, "dakika_hedefi", ayar.Dakika)
 		}
-		// Tempo: dakikada `Dakika` içerik ⇒ öğe başına 60 sn / Dakika.
-		//
-		// İşlenen öğe sayısına göre hedef süre hesaplanır; tur zaten bu
-		// süreden uzun sürdüyse beklenmez (AI çağrısı hızı zaten sınırlar).
 		if kalan := seoBekleme(ayar.Dakika, n, time.Since(bas)); kalan > 0 {
 			if !bekle(ctx, kalan) {
 				return
@@ -282,14 +230,6 @@ func RunSeoDoldurma(ctx context.Context, pool *pgxpool.Pool, aiclient *ai.Client
 	}
 }
 
-// seoBekleme, hedef tempoyu tutturmak için beklenecek süreyi verir.
-//
-//	dakika: dakikada hedeflenen içerik sayısı
-//	islenen: bu turda işlenen içerik sayısı
-//	gecen: turun gerçek süresi
-//
-// Örnek: dakika=20, islenen=10 ⇒ hedef 30 sn. Tur 12 sn sürdüyse 18 sn beklenir.
-// Tur 40 sn sürdüyse bekleme yok (0): yavaş sağlayıcı zaten tempoyu tutuyor.
 func seoBekleme(dakika, islenen int, gecen time.Duration) time.Duration {
 	if islenen <= 0 {
 		return 0

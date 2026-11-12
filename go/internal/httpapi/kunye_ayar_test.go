@@ -12,11 +12,6 @@ import (
 	"theblock/site/internal/webui/templkit"
 )
 
-// Künye alanları panelden kaydedilmeliydi: kod onları settings "kunye"
-// bölümünden okuyordu ama yazacak hiçbir arayüz yoktu. Bu testler
-// kaydetmenin alan adlarını ve "boş bırakma = iletişim yedeğine dön"
-// davranışını kilitler.
-
 // toplananKunye sahte bir settings yazıcısı: hangi anahtara ne yazıldığını
 // tutar, böylece DB olmadan kaydetme sözleşmesi doğrulanabilir.
 func toplananKunye() (func(section, key string, v any), map[string]any) {
@@ -52,9 +47,6 @@ func TestKunyeAyarKaydetme(t *testing.T) {
 	assert.False(t, var_mi, "formda olmayan künye alanı yazılmamalı")
 }
 
-// Telefon/e-posta/adres bilerek BOŞ gönderilir: kaydetme bunları boş dize
-// olarak yazmalı (anahtarı silmemeli), böylece canlıda iletişim ayarından
-// gelen yedek yeniden devreye girer.
 func TestKunyeAyarBosDegerYedekBirakir(t *testing.T) {
 	form := url.Values{"kunye_telefon": {"   "}}
 	r := httptest.NewRequest("POST", "/admin/ayarlar", strings.NewReader(form.Encode()))
@@ -69,9 +61,6 @@ func TestKunyeAyarBosDegerYedekBirakir(t *testing.T) {
 	assert.Equal(t, "", deger, "boşluk kırpılıp boş dize yazılmalı")
 }
 
-// Panel formu, kayıtlı değeri ve varsa iletişim yedeğini göstermeli.
-// Ayrıca on alanın hepsi tek bir yerde listelenmeli ki yeni bir zorunlu
-// alan eklendiğinde panel sessizce eksik kalmasın.
 func TestKunyePaneliOnAlaniGosterir(t *testing.T) {
 	sc := &settingsData{
 		Kunye:      bikKunyeAlanlari(),

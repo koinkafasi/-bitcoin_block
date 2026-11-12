@@ -9,18 +9,6 @@ import (
 	"testing"
 )
 
-// NOT: Bu testler `s.disKatman` üzerinden ÜRETİMDEKİ ara katman sırasını
-// sınar. Kendi zincirini kursaydı (s.withGzip(s.withRecover(...)) gibi),
-// üretimdeki sıra bozulsa bile test geçerdi — bu tuzak bir kez yaşandı ve
-// testin değersiz olduğu ölçümle anlaşıldı.
-
-// TestPanicGzipCercevesiBozulmaz
-//
-// KRİTİK: withRecover, withGzip'in İÇİNDE olmalı. Dışında olsaydı panic
-// sonrası yazılan düz metin, `Content-Encoding: gzip` başlığıyla birlikte
-// HAM olarak giderdi ve istemci bozuk yanıt alırdı.
-//
-// En zor senaryo: başlık ve bir parça gövde yazıldıktan SONRA panic.
 func TestPanicGzipCercevesiBozulmaz(t *testing.T) {
 	s := &Server{logger: testLogger(t)}
 	h := s.disKatman(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

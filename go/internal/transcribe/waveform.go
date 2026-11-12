@@ -11,19 +11,8 @@ import (
 	"strings"
 )
 
-// WaveformBucketCount oynatıcıda çizilen dalga formu kova sayısıdır.
-// 400 kova, 8 dakikalık bir kayıtta ~1,2 saniyelik çözünürlük demektir;
-// SoundCloud benzeri görünüm için yeterli, JSON'u da küçük tutar (~2 KB).
 const WaveformBucketCount = 400
 
-// Waveform normalize edilmiş sesten 0..1 aralığında tepe noktaları üretir.
-//
-// Yöntem: ffmpeg sesi 8 kHz mono 16-bit PCM'e çözer, her kovadaki en büyük
-// mutlak genliği alır ve en yüksek tepeye göre normalize eder. Deterministik,
-// kütüphane gerektirmez ve zaten ffmpeg bağımlılığımız var.
-//
-// Hata durumunda (ffmpeg yok, bozuk ses) nil döner: oynatıcı dalga formu
-// olmadan düz ilerleme çubuğu gösterir. Bu bir iş hatası değildir.
 func (f *FFmpeg) Waveform(ctx context.Context, audioPath string, buckets int) []float64 {
 	if buckets <= 0 {
 		buckets = WaveformBucketCount
@@ -69,9 +58,6 @@ func peaksFromPCM(pcm []byte, buckets int) []float64 {
 		}
 		peak := 0.0
 		for j := start; j < end; j++ {
-			// #nosec G115 -- PCM örnekleri 16 bit İKİLİ TÜMLEYEN biçiminde;
-			// uint16 → int16 dönüşümü kasıtlı: negatif örnekler negatif
-			// kalır, taşma yok. Ses verisi bu biçimde saklanıyor.
 			v := int16(binary.LittleEndian.Uint16(pcm[j*bytesPerSample : j*bytesPerSample+bytesPerSample]))
 			a := math.Abs(float64(v)) / 32768.0
 			if a > peak {

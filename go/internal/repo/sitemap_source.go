@@ -14,10 +14,6 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-// News sitemap adaptörü: RSS yayınlamayan ama Google News sitemap'i sunan
-// sitelerden başlık, URL ve yayın tarihi alır. İlk birkaç yeni öğe için
-// makale özeti ayrıca zenginleştirilir.
-
 const (
 	sitemapMaxBodyBytes   = 8 << 20
 	sitemapDetailBudget   = 6

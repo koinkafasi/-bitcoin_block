@@ -1,13 +1,5 @@
 //go:build integration
 
-// Integration testleri: gerçek Postgres şeması + tam HTTP yığını.
-//
-// Çalıştırmak için ayrı bir test veritabanı gerekir:
-//
-//	TEST_DATABASE_URL=postgres://... TEST_DB_RESET=1 go test -tags=integration ./internal/httpapi/
-//
-// TEST_DATABASE_URL tanımlı değilse testler atlanır (skip), yani normal
-// `go test ./...` akışında çalışmaz ve üretim veritabanına dokunmaz.
 package httpapi_test
 
 import (
@@ -140,26 +132,12 @@ func TestSecurityHeaders(t *testing.T) {
 	// mikrofon kapatılırsa o özellik ölür.
 	assert.Contains(t, pp, "microphone=(self)", "dikte için mikrofon açık kalmalı")
 
-	// YouTube çerçevesi (7 Kasım 2026 — gerçek hata): `autoplay=(self)` çapraz
-	// kaynak çerçeveye otomatik oynatma izni vermiyordu; kullanıcı oynat
-	// düğmesine basıyor, YouTube poster'ında kalıyor ve ikinci tıklama
-	// gerekiyordu. Bu regresyon sessizce geri gelmesin.
 	for _, yetenek := range []string{"autoplay", "fullscreen", "picture-in-picture", "encrypted-media"} {
 		if !strings.Contains(pp, yetenek+"=(self \"https://www.youtube.com\"") {
 			t.Errorf("Permissions-Policy %s için YouTube izni yok: %s", yetenek, pp)
 		}
 	}
 
-	// CSP artık ZORUNLU kipte ve HASH tabanlı. script-src 'unsafe-inline'
-	// İÇERMEZ: satır içi <script> etiketleri sayfanın kendi baytlarından
-	// hesaplanan sha256 hash'leriyle izinlenir (nonce değil — herkese açık
-	// sayfalar önbelleklendiği için nonce tekilliği bozulurdu; bkz.
-	// csp.go başlığı ve commit 2385454).
-	//
-	// NOT: /healthz bir JSON ucudur, satır içi script içermez → hash listesi
-	// boştur. Hash'in gerçekten üretildiği HTML sayfasında
-	// TestCSPHashSayfadanTuretilir sınıyor. Burada yalnız "yasak olan yok"
-	// ve "izin verilenler doğru" kilitleniyor.
 	csp := resp.Header.Get("Content-Security-Policy")
 	assert.NotEmpty(t, csp, "CSP zorunlu kipte yayımlanmalı")
 	assert.Contains(t, csp, "object-src 'none'")
@@ -171,9 +149,6 @@ func TestSecurityHeaders(t *testing.T) {
 	assert.NotContains(t, csp, "'unsafe-eval'")
 	assert.NotContains(t, csp, "'nonce-",
 		"nonce kullanılmıyor: önbelleklenen yanıt tüm kullanıcılara aynı nonce'u verirdi")
-	// Faz 211: `<style>` blokları hash'leniyor, style ÖZNİTELİKLERİ ayrı
-	// direktifte bilinçli olarak açık. /healthz gövdesinde <style> yok →
-	// hash listesi boş, ama 'unsafe-inline' style-src'te OLMAMALI.
 	styleSrc := cspDirektifi(csp, "style-src ")
 	assert.NotContains(t, styleSrc, "'unsafe-inline'",
 		"style-src 'unsafe-inline' içermemeli (enjekte <style> çalışmasın)")
@@ -363,12 +338,6 @@ func TestFiksturQueryParams(t *testing.T) {
 	}
 }
 
-// ---- responsive regresyon koruması --------------------------------
-//
-// Yeni Doğrulama (public.css yalnızca gömülü FS'ten servis edilir):
-// hiçbir grid kuralı çıplak "1fr"/"1fr 1fr" kullanmamalı; 1fr tek başına
-// min-content tabanlı grid taşmasına yol açar (mobilde 930px'e şişme).
-
 func TestPublicCSSHasNoBareFrTracks(t *testing.T) {
 	skipIfNoDB(t)
 	resp, err := http.Get(itHTTP.URL + "/static/public.css")
@@ -420,9 +389,6 @@ func TestSettingsRoundTrip(t *testing.T) {
 	ctx := context.Background()
 	const section, key = "integration_test", "roundtrip"
 
-	// Metin değerleri JSON string olarak saklanır ama GetSetting bunları
-	// ÇÖZÜLMÜŞ (düz metin) döndürür — bu, jsonb yazımının sessizce
-	// başarısız olmasını önleyen davranışın sözleşmesidir.
 	require.NoError(t, repo.SetSetting(ctx, itPool, section, key, []byte("değer")))
 	got, err := repo.GetSetting(ctx, itPool, section, key)
 	require.NoError(t, err)

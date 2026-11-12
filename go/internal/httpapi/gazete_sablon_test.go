@@ -8,9 +8,6 @@ import (
 
 // Faz 3 koruyucu testleri — specs/13-gazete-sayfa-duzenleyici.md
 
-// TestGazeteSablonSemasi projeyle gelen her hazır şablonun şemayı geçtiğini
-// doğrular. Bozuk şablon, bozuk gazete demek: sayfa dışına taşan blok baskıda
-// kırpılır, tipi bilinmeyen blok hiç basılmaz.
 func TestGazeteSablonSemasi(t *testing.T) {
 	tohumlar := gazeteTohumSablonlari()
 	if len(tohumlar) < 5 {

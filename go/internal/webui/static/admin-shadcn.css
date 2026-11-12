@@ -1,17 +1,7 @@
-/* admin-shadcn.css — shadcn/ui tasarım katmanı (Adım 1)
- *
- * shadcn/ui (New York, zinc tabanlı) token'ları ve bileşen kalıpları;
- * yalnızca admin sayfalarında yüklenir (admin_head), public'e dokunmaz.
- *
- * NOT: shadcn'de `--accent` = "hover arka planı" demektir; bizim sistemimizde
- * `--accent` = MARKA rengidir ve korunur. shadcn'in `--primary`'ı bizim
- * `--accent`'imizle eşlenir; hover için `--hover` token'ı kullanılır.
- * Görünüm (marka kiti) inline CSS'i bu dosyadan SONRA yüklendiği için
- * marka renkleri her zaman üstte kalır.
- */
+
 
 :root, [data-theme="light"] {
-  /* shadcn zinc paleti (light) */
+  
   --sh-bg: hsl(0 0% 100%);
   --sh-fg: hsl(240 10% 3.9%);
   --sh-card: hsl(0 0% 100%);
@@ -25,7 +15,7 @@
   --sh-sidebar: hsl(240 4.8% 98%);
   --sh-sidebar-hover: hsl(240 4.8% 95.9%);
 
-  /* Mevcut sistemle köprü */
+  
   --radius: 10px;
   --radius-sm: 8px;
   --card: var(--sh-card);
@@ -36,11 +26,10 @@
   --muted: var(--sh-muted);
   --muted-fg: var(--sh-muted-fg);
   --primary-fg: #ffffff;
-  /* Basari rozetinin DOLGUSU: beyaz yaziyla 4.59 (olculdu).
-     --ok (#16a34a) 3.30 veriyordu; kendisi degismedi. */
+  
   --ok-fill: #12873d;
   --warn-fill: #b36205;
-  /* Marka rengi metin/dolgu tonlari (Go tarafi ezer). */
+  
   --accent-text: var(--accent-text-acik, #c71a40);
   --accent-fill: #e11d48;
 
@@ -49,11 +38,9 @@
   --surface: var(--sh-card);
   --surface-2: var(--sh-muted);
   --border: var(--sh-border);
-  /* --line birçok panelde kenarlık/ayırıcı olarak kullanılıyor; tanımlı
-     olmadığı için bu kurallar sessizce düşüyordu. Border ile eşitliyoruz. */
+  
   --line: var(--sh-border);
-  /* Kullanici "Gorunum & Marka"da metin rengi sectiyse o kullanilir;
-     secmediyse temanin kendi metin rengi. */
+  
   --text: var(--text-kullanici, var(--sh-fg));
   --text-2: hsl(240 5.9% 25%);
   --text-3: var(--sh-muted-fg);
@@ -62,7 +49,7 @@
 }
 
 [data-theme="dark"] {
-  /* shadcn zinc paleti (dark) */
+  
   --sh-bg: hsl(240 10% 3.9%);
   --sh-fg: hsl(0 0% 98%);
   --sh-card: hsl(240 10% 5.9%);
@@ -86,17 +73,12 @@
   --muted: var(--sh-muted);
   --muted-fg: var(--sh-muted-fg);
   --primary-fg: #ffffff;
-  /* Basari rozetinin DOLGUSU: beyaz yaziyla 4.59 (olculdu).
-     --ok (#16a34a) 3.30 veriyordu; kendisi degismedi. */
+  
   --ok-fill: #218661;
   --warn-fill: #b36205;
-  /* Koyu temada `--danger` acik kirmizi (#f87171); beyaz yazi 2.8
-   * veriyordu. Dolgu tonu koyulastirildi. */
+  
   --danger-fill: #be5656;
-  /* Marka rengi metin/dolgu tonlari (Go tarafi ezer).
-   * KOYU temada metin tonu beyaza dogru ACILIR (Go tarafi hesaplar).
-   * Acik temanin koyu tonunu burada sabitlemek yaziyi okunmaz yapiyordu
-   * (olculdu: 3.2). Yedek: #e64266 (#e11d48'in acilmis hali). */
+  
   --accent-text: var(--accent-text-dark, #e74e6f);
 
   --bg: var(--sh-bg);
@@ -105,8 +87,7 @@
   --surface-2: var(--sh-muted);
   --border: var(--sh-border);
   --line: var(--sh-border);
-  /* Koyu temada kullanicinin sectigi metin rengi BEYAZA ACILMIS hali
-     kullanilir; #000000 gibi bir secim aksi halde okunmuyordu. */
+  
   --text: var(--text-dark, var(--sh-fg));
   --text-2: hsl(240 5% 80%);
   --text-3: var(--sh-muted-fg);
@@ -114,9 +95,6 @@
   --shadow-lg: 0 10px 30px hsl(0 0% 0% / .45);
 }
 
-/* ================= Bileşen kalıpları ================= */
-
-/* Kart: rounded-xl border shadow-sm */
 .card {
   background: var(--card);
   color: var(--text);
@@ -127,7 +105,6 @@
 [data-theme="dark"] .card { box-shadow: none; }
 .card-pad { padding: 16px; }
 
-/* Buton: shadcn default/secondary/ghost */
 .btn {
   display: inline-flex; align-items: center; gap: 6px;
   height: 36px; padding: 0 14px;
@@ -148,14 +125,12 @@
 .btn.ghost:hover, .btn.secondary:hover { background: color-mix(in srgb, var(--sh-muted) 75%, var(--text) 6%); opacity: 1; }
 .btn[disabled] { opacity: .5; pointer-events: none; }
 
-/* Odak halkası (shadcn ring) */
 .btn:focus-visible, .icon-btn:focus-visible, .input:focus-visible, .select:focus-visible,
 .qtile:focus-visible, .kpi:focus-visible, .menu a:focus-visible {
   outline: none;
   box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--ring);
 }
 
-/* Input / select: h-9 rounded-md */
 .input, .select {
   height: 36px; padding: 0 12px;
   background: transparent; color: var(--text);
@@ -167,7 +142,6 @@
 .input:hover, .select:hover { border-color: color-mix(in srgb, var(--input) 60%, var(--text) 25%); }
 textarea.input { height: auto; padding: 8px 12px; }
 
-/* Tablo: border-b satırlar, muted başlık, hover */
 .table { width: 100%; border-collapse: collapse; font-size: .875rem; }
 .table th {
   height: 40px; padding: 0 12px; text-align: left;
@@ -178,7 +152,6 @@ textarea.input { height: auto; padding: 8px 12px; }
 .table tbody tr:last-child td { border-bottom: none; }
 .table tbody tr:hover { background: color-mix(in srgb, var(--sh-hover) 70%, transparent); }
 
-/* Badge / durum rozeti */
 .badge {
   display: inline-flex; align-items: center; gap: 4px;
   padding: 2px 8px; border-radius: 999px;
@@ -194,7 +167,6 @@ textarea.input { height: auto; padding: 8px 12px; }
 .badge.news-uyari { background: var(--warn); color: #fff; }
 .status-pill { border-radius: 999px; padding: 2px 8px; font-size: .75rem; font-weight: 500; }
 
-/* Icon buton */
 .icon-btn {
   width: 36px; height: 36px;
   background: transparent; color: var(--text);
@@ -203,7 +175,6 @@ textarea.input { height: auto; padding: 8px 12px; }
 }
 .icon-btn:hover { background: var(--sh-hover); color: var(--text); border-color: transparent; }
 
-/* Sidebar (shadcn sidebar token'ları) */
 .admin-side { background: var(--sh-sidebar); border-right: 1px solid var(--border); }
 .admin-side .brand { color: var(--text); }
 .admin-side .menu-h { color: var(--muted-fg); font-size: .75rem; font-weight: 500;
@@ -219,15 +190,12 @@ textarea.input { height: auto; padding: 8px 12px; }
 }
 .admin-side .menu a.active .ti { color: var(--accent-text, var(--accent)); }
 
-/* Üst bar */
 .admin-top { background: var(--card); border-bottom: 1px solid var(--border); }
 .admin-top h1 { font-size: 1.05rem; font-weight: 600; letter-spacing: -.01em; }
 .admin-crumb { color: var(--muted-fg); }
 
-/* Breadcrumb başlık hiyerarşisi (shadcn: tight headings) */
 .admin-body h2, .dash-head h2 { font-weight: 600; letter-spacing: -.01em; }
 
-/* Flash (shadcn alert) */
 .flash {
   border: 1px solid var(--border); border-radius: 12px;
   padding: 10px 14px; font-size: .875rem;
@@ -238,7 +206,6 @@ textarea.input { height: auto; padding: 8px 12px; }
 .flash.error { border-color: color-mix(in srgb, var(--danger) 45%, var(--border)); }
 .flash.ok { border-color: color-mix(in srgb, var(--ok) 45%, var(--border)); }
 
-/* KPI kartı + hızlı eylemler */
 .kpi {
   background: var(--card); border: 1px solid var(--border);
   border-radius: 12px; box-shadow: 0 1px 2px hsl(240 5.9% 10% / .04);
@@ -249,7 +216,6 @@ textarea.input { height: auto; padding: 8px 12px; }
 .kpi .kpi-val { font-size: 1.4rem; font-weight: 600; letter-spacing: -.02em; }
 .qtile { border-radius: 12px; }
 
-/* Komut paleti (shadcn command) */
 .cmdk-box {
   background: var(--card); border: 1px solid var(--border);
   border-radius: 12px; box-shadow: var(--shadow-lg);
@@ -257,19 +223,16 @@ textarea.input { height: auto; padding: 8px 12px; }
 .cmdk-list li { border-radius: var(--radius-sm); }
 .cmdk-list li:hover, .cmdk-list li.on { background: var(--sh-hover); color: var(--text); }
 
-/* Modal (shadcn dialog) */
 .ui-modal .ui-box {
   background: var(--card); color: var(--text);
   border: 1px solid var(--border); border-radius: 12px;
   box-shadow: var(--shadow-lg);
 }
 
-/* Otomasyon / aktivite / onboarding satırları */
 .auto-row .au-ico { background: var(--sh-muted); border-radius: var(--radius-sm); }
 .ob-item { border-radius: 12px; }
 .ob-item.done { border-color: color-mix(in srgb, var(--ok) 40%, var(--border)); }
 
-/* Tablo araçları + sayfalama */
 .tbl-tools .input { max-width: 240px; }
 .tbl-pager button {
   height: 32px; padding: 0 12px; border-radius: var(--radius-sm);
@@ -277,12 +240,10 @@ textarea.input { height: auto; padding: 8px 12px; }
 }
 .tbl-pager button:hover { background: var(--sh-hover); }
 
-/* Form çubuğu */
 .form-bar { background: var(--card); border-top: 1px solid var(--border); }
 
-/* Hint / yardımcı metin */
 .hint, .muted, .small.muted { color: var(--muted-fg); }
-/* ---- Admin: aylık gelir trendi (saf CSS çubuk grafik) ---- */
+
 .abon-trend { margin: 6px 0 16px; }
 .abon-trend-head { display: flex; justify-content: space-between; gap: 10px; margin-bottom: 6px; flex-wrap: wrap; }
 .abon-trend-bars { display: flex; align-items: flex-end; gap: 6px; height: 96px; padding: 6px 4px 0; border-bottom: 1px solid var(--border); }

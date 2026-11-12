@@ -9,10 +9,6 @@ import (
 	"theblock/site/internal/piyasa"
 )
 
-// Kısmi sonuç önbelleği küçültmemeli: 28 Ekim 2026'da truncgil bir turda
-// yanıt vermedi, sonuç 11 kalemden 4'üne düştü ve döviz/altın kalemleri
-// sayfadan kayboldu.
-
 func kalem(anahtar string, deger float64) piyasa.Kalem {
 	return piyasa.Kalem{Anahtar: anahtar, Ad: anahtar, Deger: deger, Ondalik: 2}
 }

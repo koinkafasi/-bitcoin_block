@@ -1,25 +1,5 @@
-/* Pano 2.0 — ana ekranın İÇ stilleri (Faz 149, sadeleştirildi Faz 154)
- *
- * Kabuk (yan menü, üst çubuk, gövde) artık ORTAK: admin-pano.css. Bu dosya
- * yalnız panoya özgü parçaları taşır — KPI döşemeleri, grafikler, kategori
- * halkası, yayın şeridi, aktivite, toast.
- *
- * Renk değişkenleri `.pn-view` kapsamında: pano içeriği ortak kabuğun
- * içinde yaşıyor; değişkenler eski `.pn-app` üzerinde kalsaydı grafikler
- * renksiz kalırdı.
- */
-/* Pano 2.0 — yönetici ana ekranı (Faz 149)
- *
- * Pacely düzeninden uyarlanan panel: katlanabilir ray, renkli KPI döşemeleri,
- * sunucuda üretilen SVG grafikler, sürüklenebilir yayın şeridi.
- *
- * Renk kararları: KPI döşemeleri Pacely'deki gibi YUMUŞAK zemin + koyu metin.
- * Doygun zemin kullanılmadı: dört kart yan yana gelince doygun renkler
- * değerleri okunaksızlaştırıyor ve koyu temada göz yoruyor.
- *
- * Tüm ölçüler rem değil px: panel yoğun bir arayüz, tarayıcı yazı boyutu
- * büyütmesinde düzenin kaymasını istemiyoruz (aynı gerekçe admin-only.css'te).
- */
+
+
 .pn-view {
 	--pn-bg: #f3f2ef;
 	--pn-card: #fdfdfb;
@@ -30,12 +10,10 @@
 	--pn-line: rgba(27, 26, 24, .10);
 	--pn-line-2: rgba(27, 26, 24, .16);
 	--pn-sig: #d9532a;
-	/* `--pn-sig` grafik rengi (çizgi, sparkline, işaret): eşik 3.0, geçiyor.
-	 * Aynı tonda 12.5px METİN ise 4.5 eşiğini geçmiyordu (kartta 3.95).
-	 * Metin için koyulaştırılmış ton (Faz 180, A-7). */
+	
 	--pn-sig-fg: #c84c27;
 	--pn-good: #2a7a46;
-	/* Rozet metni: 14% yesil zeminde 4.5 (Faz 180). */
+	
 	--pn-good-fg: #22653a;
 	--pn-warn: #8a5a00;
 	--pn-bad: #b3261e;
@@ -54,9 +32,7 @@
 	--pn-t3: #f1e6cd;
 	--pn-t4: #efdfe3;
 	color: var(--pn-ink);
-	/* Yazı ailesi admin-pano.css'teki --admin-font'tan gelir; burada
-	 * ayrıca tanımlamak panonun gövdeden farklı fontla render
-	 * edilmesine yol açıyordu. */
+	
 	font-family: var(--admin-font, system-ui, -apple-system, "Segoe UI", sans-serif);
 }
 
@@ -70,8 +46,7 @@ html[data-theme="dark"] .pn-view {
 	--pn-line: rgba(255, 255, 255, .10);
 	--pn-line-2: rgba(255, 255, 255, .18);
 	--pn-sig: #ff7a52;
-	/* Grafik rengi acik tonda kalabilir (esik 3.0) ama ayni renk METIN
-	 * olarak koyu zeminde 3.6 veriyordu; metin tonlari aciliyor. */
+	
 	--pn-sig-fg: #d36f51;
 	--pn-good-fg: #749e83;
 	--pn-bad: #d17d78;
@@ -89,7 +64,6 @@ html[data-theme="dark"] .pn-view {
 	100% { box-shadow: 0 0 0 0 rgba(42, 122, 70, 0); }
 }
 
-/* ---------- Gövde ---------- */
 .pn-view { padding: 6px 26px 44px; display: flex; flex-direction: column; gap: var(--pn-gap); }
 
 .pn-head { display: flex; align-items: flex-end; gap: 16px; padding: 6px 2px 2px; }
@@ -108,7 +82,6 @@ html[data-theme="dark"] .pn-view {
 
 .pn-chip--sade { background: var(--pn-card-2); color: var(--pn-muted); }
 
-/* KPI döşemeleri */
 .pn-kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--pn-gap); }
 
 .pn-kpi {
@@ -150,7 +123,6 @@ html[data-theme="dark"] .pn-view {
 
 .pn-spark { width: 92px; height: 30px; margin-left: auto; flex: none; color: var(--pn-sig); }
 
-/* Kartlar */
 .pn-card {
 	position: relative; min-width: 0;
 	display: flex; flex-direction: column;
@@ -177,7 +149,6 @@ html[data-theme="dark"] .pn-view {
 
 .pn-grid--3 { grid-template-columns: 1fr 1fr 1fr; }
 
-/* Sekmeli kontrol (7/14/30) */
 .pn-seg {
 	position: relative; display: inline-flex; padding: 3px; flex: none;
 	border-radius: 12px; background: var(--pn-card-2);
@@ -199,7 +170,6 @@ html[data-theme="dark"] .pn-view {
 	transition: transform .28s cubic-bezier(.22, 1, .36, 1), width .28s cubic-bezier(.22, 1, .36, 1);
 }
 
-/* Grafikler */
 .pn-chartbox { position: relative; flex: 1; min-height: 220px; color: var(--pn-sig-fg); }
 
 .pn-chartbox--kisa { min-height: 190px; }
@@ -210,14 +180,11 @@ html[data-theme="dark"] .pn-view {
 
 .pn-chart { width: 100%; height: 100%; overflow: visible; }
 
-/* nokta yarıçapı SVG 2 geometri özelliğiyle (r) veriliyor: animasyonlu
-   büyüme yalnız bu özellikle mümkün. Sonar S9424 bunu bilmediği için
-   "bilinmeyen değer" diyor — NOSONAR ile susturuldu. */
-.pn-nokta { fill: var(--pn-card); stroke: currentColor; stroke-width: 1.8; r: 3.2; opacity: 0; transition: opacity .12s ease, r .12s ease; } /* NOSONAR */
+.pn-nokta { fill: var(--pn-card); stroke: currentColor; stroke-width: 1.8; r: 3.2; opacity: 0; transition: opacity .12s ease, r .12s ease; } 
 
 .pn-chartbox:hover .pn-nokta { opacity: .85; }
 
-.pn-nokta:hover { r: 5.5; opacity: 1; } /* NOSONAR: SVG 2 geometri ozelligi */
+.pn-nokta:hover { r: 5.5; opacity: 1; } 
 
 .pn-cubuk { fill: var(--pn-c1); opacity: .82; transition: opacity .15s ease; }
 
@@ -236,7 +203,6 @@ html[data-theme="dark"] .pn-view {
 
 .pn-bos { margin: auto; font-size: 12.5px; color: var(--pn-muted); text-align: center; padding: 24px 0; }
 
-/* Halka */
 .pn-halka__kutu { display: flex; align-items: center; gap: 18px; flex: 1; }
 
 .pn-halka { width: 170px; height: 170px; flex: none; }
@@ -265,7 +231,6 @@ html[data-theme="dark"] .pn-view {
 
 .pn-lejant__pct { color: var(--pn-muted); font-size: 11px; width: 32px; text-align: right; font-variant-numeric: tabular-nums; }
 
-/* Yatay çubuklar */
 .pn-yatay { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 11px; }
 
 .pn-yatay__satir { display: flex; align-items: center; gap: 9px; font-size: 12.5px; }
@@ -285,7 +250,6 @@ html[data-theme="dark"] .pn-view {
 
 .pn-yatay__deger { width: 42px; text-align: right; font-size: 11.5px; font-weight: 600; font-variant-numeric: tabular-nums; }
 
-/* Aktivite */
 .pn-akt { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
 
 .pn-akt li { display: flex; align-items: flex-start; gap: 10px; }
@@ -305,7 +269,6 @@ html[data-theme="dark"] .pn-view {
 
 .pn-akt__zaman { font-size: 11px; color: var(--pn-muted); font-variant-numeric: tabular-nums; }
 
-/* ---------- Yayın şeridi (sürükle-bırak) ---------- */
 .pn-plan { padding-top: 4px; }
 
 .pn-plan__eksen { position: relative; height: 26px; margin: 0 0 6px; }
@@ -319,8 +282,7 @@ html[data-theme="dark"] .pn-view {
 .pn-plan__imdi b {
 	position: absolute; top: -18px; left: 50%; transform: translateX(-50%);
 	font-size: 10.5px; font-weight: 700; color: var(--pn-sig-fg); white-space: nowrap;
-	/* Çizgi yazının arkasından geçiyordu (kontrast 1.2). Zemin verilince
-	 * yazı çizgiden ayrışıyor. */
+	
 	background: var(--pn-card); padding: 1px 4px; border-radius: 4px;
 }
 
@@ -362,7 +324,6 @@ html[data-theme="dark"] .pn-view {
 	from { transform: scale(.94); box-shadow: 0 0 0 3px rgba(217, 83, 42, .35); }
 }
 
-/* ---------- Balonlar (toast) ---------- */
 .pn-toasts {
 	position: fixed; z-index: 80; left: 50%; bottom: 22px; transform: translateX(-50%);
 	display: flex; flex-direction: column; gap: 8px; pointer-events: none;
@@ -384,9 +345,6 @@ html[data-theme="dark"] .pn-view {
 	from { opacity: 0; transform: translateY(10px) scale(.98); }
 }
 
-/* ---------- Duyarlı ---------- */
-/* Kabuk duyarlılığı admin-pano.css'te (ortak). Burada yalnız panonun
- * kendi ızgaraları. */
 @media (max-width: 1280px) {
 	.pn-grid--3 { grid-template-columns: 1fr 1fr; }
 	.pn-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }

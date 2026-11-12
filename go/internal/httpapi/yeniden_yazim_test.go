@@ -10,11 +10,6 @@ import (
 	"theblock/site/internal/repo"
 )
 
-// Faz 204 — yeniden yazım paneli şablonu.
-//
-// Panelin işi eski/yeni metni YAN YANA göstermek ve onay/red düğmelerini
-// yalnız uygun durumda basmak. Şablon hatası bu ekranı tamamen düşürürdü;
-// veritabanı gerektirmeyen bu test yapıyı kilitler.
 func TestYenidenYazimPanelSablonu(t *testing.T) {
 	tmpl := parseTestTemplates(t)
 

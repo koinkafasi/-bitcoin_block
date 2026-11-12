@@ -42,9 +42,6 @@ func TagIcerikleri(ctx context.Context, pool *pgxpool.Pool, siteID int64, locale
 	if err := rows.Err(); err != nil {
 		return nil, 0, err
 	}
-	// Toplam: ayrı ve ucuz COUNT (sayfa başına bir kez; LIMIT'li tarama
-	// zaten yapıldı, pencere fonksiyonu ile her satıra sayı eklemek
-	// gereksizdi).
 	var toplam int
 	err = pool.QueryRow(ctx, `
 		SELECT count(*) FROM contents c

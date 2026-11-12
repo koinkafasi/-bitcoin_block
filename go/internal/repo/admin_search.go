@@ -11,16 +11,6 @@ import (
 // karakter, boşluk ve & bulunabildiği için ham birleştirme yapılamaz.
 func slugQuery(v string) string { return url.QueryEscape(v) }
 
-// AdminSearchSonuc panel komut paletinin varlık araması (Faz 162).
-//
-// NEDEN AYRI DOSYA: palet önceden yalnız sabit rota listesiydi (38 kayıt,
-// static/app.js). Kullanıcı bir içerik başlığı yazdığında sonuç gelmiyor,
-// "İçerikler" sayfası açılıyordu. Burada amaç hızlı, sınırlı, site kapsamlı
-// bir arama: her gruptan en çok `limit` kayıt, tek turda.
-//
-// Indeks notu: `contents.title` üzerinde pg_trgm indeksi varsa ILIKE
-// indeksten yararlanır; yoksa bile LIMIT sayesinde tarama sınırlı kalır
-// (panelde içerik sayısı on binler mertebesinde).
 type AdminAramaOge struct {
 	ID     int64  `json:"id"`
 	Baslik string `json:"baslik"`
@@ -41,10 +31,6 @@ func AdminArama(ctx context.Context, pool *pgxpool.Pool, siteID int64, q string,
 	if limit <= 0 || limit > 20 {
 		limit = 5
 	}
-	// Türkçe katlama: "saglik" yazan kullanıcı "Sağlık" başlığını bulmalı.
-	// unaccent ğ→g ve ı→i eşlemesini yapar (migration 0098). Sorgu da
-	// katlanır, aksi hâlde desen "saglik" kalıp sütun "saglik" ile eşleşirdi
-	// ama tersi (kullanıcı "Sağlık" yazarsa) çalışmazdı.
 	desen := "%" + q + "%"
 	var gruplar []AdminAramaGrup
 

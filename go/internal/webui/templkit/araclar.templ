@@ -160,62 +160,6 @@ type GazetelerView struct {
 	Items     []GazeteManset
 }
 
-// GazetelerPanel gazete manşetleri (HTMX hedefi: #gazeteler-panel).
-templ GazetelerPanel(v GazetelerView) {
-	<div id="gazeteler-panel">
-		if v.FlashText != "" {
-			<div class={ "flash", v.FlashKind }>{ v.FlashText }</div>
-		}
-		@Yukleniyor("gazeteler-yukleniyor", "")
-		<div class="card card-pad" style="display:flex;gap:14px;flex-wrap:wrap;align-items:center">
-			<div><div class="small muted">Toplam manşet</div><div class="big">{ v.Total }</div></div>
-			<div><div class="small muted">Bu tarih</div><div class="big">{ v.Date }</div></div>
-			if v.HasDates {
-				<form method="get" action="/admin/gazeteler" style="margin-left:auto" hx-get="/admin/gazeteler" hx-target="#gazeteler-panel" hx-swap="outerHTML" hx-push-url="true" hx-indicator="#gazeteler-yukleniyor">
-					<select class="select" name="tarih" data-autosubmit>
-						for _, d := range v.Dates {
-							<option value={ d.Value } selected?={ d.Selected }>{ d.Label }</option>
-						}
-					</select>
-				</form>
-			}
-			<a class="btn small" href="/gazete-mansetleri" target="_blank">Genel sayfa</a>
-			<form method="post" action="/admin/gazeteler/cek" hx-post="/admin/gazeteler/cek" hx-target="#gazeteler-panel" hx-swap="outerHTML" hx-indicator="#gazeteler-yukleniyor">
-				<button class="btn small" type="submit">Kaynaktan çek</button>
-			</form>
-			<p class="hint" style="flex-basis:100%;margin:0">Kaynak: gazeteoku.com (günün ön sayfaları). Zamanlayıcı bunu günde bir kendiliğinden yapar; düğme elle çekim içindir.</p>
-		</div>
-		<h2 style="font-size:1.05rem;margin-top:20px">Manşetler ({ v.Date })</h2>
-		<div class="grid-2" style="grid-template-columns:repeat(auto-fill,minmax(220px,1fr))">
-			if len(v.Items) == 0 {
-				<p class="muted">Bu tarih için manşet yok. Aşağıdan ekleyin.</p>
-			}
-			for _, it := range v.Items {
-				<div class="card card-pad" style="text-align:center">
-					<img src={ templ.SafeURL(orStrT(it.ThumbURL, it.ImageURL)) } alt={ it.Name } loading="lazy" style="width:100%;height:auto;border:1px solid var(--border);border-radius:6px"/>
-					<div style="margin-top:6px"><strong>{ it.Name }</strong></div>
-					<div class="small muted">{ it.PageDate } · sıra { it.Sort }</div>
-					<form method="post" action={ templ.SafeURL("/admin/gazeteler/" + it.ID + "/sil") } style="margin-top:6px" hx-post={ "/admin/gazeteler/" + it.ID + "/sil" } hx-target="#gazeteler-panel" hx-swap="outerHTML" hx-confirm="Manşet silinsin mi?" hx-indicator="#gazeteler-yukleniyor" data-confirm="Manşet silinsin mi?">
-						<button class="btn small danger" type="submit">Sil</button>
-					</form>
-				</div>
-			}
-		</div>
-		<h2 style="font-size:1.05rem;margin-top:22px">Yeni Manşet Ekle / Güncelle</h2>
-		<form method="post" action="/admin/gazeteler/yeni" class="card card-pad" hx-post="/admin/gazeteler/yeni" hx-target="#gazeteler-panel" hx-swap="outerHTML" hx-indicator="#gazeteler-yukleniyor">
-			<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:6px">
-				<input class="input" name="gazete" required placeholder="Gazete adı (örn. Hürriyet)" aria-label="Gazete adı"/>
-				<input class="input" name="tarih" type="date" aria-label="Manşet tarihi (boş = bugün)"/>
-				<input class="input" name="gorsel" required placeholder="Ön sayfa görsel URL" aria-label="Ön sayfa görsel URL"/>
-				<input class="input" name="kucuk" placeholder="Küçük görsel URL (ops)" aria-label="Küçük görsel URL"/>
-				<input class="input" name="sira" placeholder="Sıra (0)" style="max-width:120px" aria-label="Sıra"/>
-			</div>
-			<p class="hint" style="margin:.5em 0">Tarih boş bırakılırsa bugün kullanılır. Aynı gazete + tarih tekrar girilirse güncellenir. Görselleri <a href="/admin/dosyalar">Medya</a>'ya yükleyip URL'sini buraya yapıştırabilirsiniz.</p>
-			<button class="btn" type="submit">Kaydet</button>
-		</form>
-	</div>
-}
-
 // orStrT ilk boş olmayan değeri döndürür.
 func orStrT(a, b string) string {
 	if a != "" {

@@ -6,17 +6,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// Faz 195 — boş çeviri değeri etiketi siliyordu.
-//
-// ÖLÇÜM (üretim): `translations` tablosunda `footer.akis` gibi 9 anahtarın
-// satırı VAR ama `tr` değeri BOŞ. `T()` yalnız anahtar YOKSA geri düşüyordu;
-// boş değeri döndürüp etiketi tamamen siliyordu. Çekmecede yalnız emoji
-// kalan bağlantılar görüldü:
-//
-//	[2] "📰"   [1] "✉"   [2] "💳"   [2] "☀"  …
-//
-// Boş değer artık "çeviri yok" sayılır.
-
 func yeniBundle(msgs map[string]string) *Bundle {
 	b := &Bundle{msgs: msgs}
 	return b

@@ -1,19 +1,11 @@
-/* ===========================================================================
-   Public yüzey hareket katmanı + üst manşet şeridi denetleyicisi.
-   - GSAP yereldir (static/vendor/gsap.min.js), CDN yok, eval yok: CSP temiz.
-   - JS çalışmazsa veya GSAP yüklenmezse içerik olduğu gibi görünür kalır;
-     gizleme yalnız <html class="hareket-hazir"> işaretlendikten sonra geçerli.
-   - prefers-reduced-motion'a uyar: hareket tamamen kapanır, işlev kalır.
-   =========================================================================== */
+
 (function () {
   'use strict';
 
   var azHareket = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   var gsap = window.gsap || null;
 
-  /* ---- 1) Üst manşet şeridi ---------------------------------------------
-     Şerit overflow-x:auto ama scrollbar gizli ve göstergesi yoktu. Oklar,
-     ilerleme çubuğu ve durum sınıfları gizli kartları keşfedilebilir yapar. */
+  
   function seritKur(sarmal) {
     if (sarmal.dataset.seritKuruldu === '1') return;
     var serit = sarmal.querySelector('.ust-manset');
@@ -76,9 +68,7 @@
     durumuTazele();
   }
 
-  /* ---- 2) Giriş animasyonları --------------------------------------------
-     Haber sitesi: abartısız. 14px yükselme + opaklık, kademeli.
-     ScrollTrigger yerine IntersectionObserver — ek eklenti yüklemeye gerek yok. */
+  
   var GIRIS_SECICI = [
     '.ust-manset > .um-card',
     '.kari-izgara > *',
@@ -119,8 +109,7 @@
     hedefler.forEach(function (el) { gozcu.observe(el); });
   }
 
-  /* ---- 3) Hero başlığı ----------------------------------------------------
-     Sayfanın odak noktası; yüklenince tek seferlik, kısa bir yükselme. */
+  
   function heroKur() {
     if (azHareket || !gsap) return;
     var baslik = document.querySelector('.m6-title-ana');
@@ -146,8 +135,7 @@
     basla();
   }
 
-  /* htmx sayfanın bir parçasını değiştirdiğinde yeni gelen düğümler için
-     denetleyici ve animasyonlar yeniden bağlanmalı. */
+  
   document.body.addEventListener('htmx:afterSwap', function (e) {
     kur(e.target || document);
   });

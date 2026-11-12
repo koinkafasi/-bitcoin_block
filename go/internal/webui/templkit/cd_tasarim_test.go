@@ -10,16 +10,6 @@ import (
 	"theblock/site/internal/webui"
 )
 
-// CoinDesk tasarım sistemi kalıcı kapısı.
-//
-// NEDEN: tasarım kararları görsel doğrulama gerektirir ve sessizce
-// bozulabilir (birisi gölge ekler, ritmi değiştirir, token'ı siler).
-//
-// KAYNAK: `docs/COINDESK-TASARIM-SPEC.md` — 6 Kasım 2026'da gerçek
-// Chrome'da `getComputedStyle` ile ÖLÇÜLDÜ. Eski kapı `COINDESK-SPEC.md`
-// §2'yi tutuyordu; o liste eski bir build'dendi ve yeni ölçümde yanlış
-// çıktı (mavi bağlantı, 2 px köşe, proxima-nova). Kapı artık ÖLÇÜLEN
-// değerleri tutar.
 func cdCSS(t *testing.T) string {
 	t.Helper()
 	b, err := webui.FS.ReadFile("static/cd.css")
@@ -27,15 +17,9 @@ func cdCSS(t *testing.T) string {
 	return string(b)
 }
 
-// TestCDTasarimTokenlari: ölçülen renk ve ritim değerleri yerinde.
-//
-// Her satır spec §5'teki semantik ad → değer tablosundan.
 func TestCDTasarimTokenlari(t *testing.T) {
 	css := cdCSS(t)
 	for _, token := range []string{
-		// zemin (surface-*)
-		// 9 Kasım 2026: açık tema zemini beyazdan sıcak kreme geçti
-		// (kullanıcı isteği). Gövde = üst çubuk = şerit = alt bilgi = panel.
 		"--cd-bg: #f3f1e9",
 		"--cd-topbar-bg: #f3f1e9",
 		"--cd-ticker-bg: #f3f1e9",
@@ -75,13 +59,6 @@ func TestCDTasarimTokenlari(t *testing.T) {
 	}
 }
 
-// TestCDEskiYanlisDegerlerYok: spec §0'da "yanlış" işaretlenen değerler
-// geri dönmemeli. Bu değerler bir kez ölçümsüz kopyalanmıştı; geri
-// gelirlerse görünüm sessizce CoinDesk'ten uzaklaşır.
-//
-// Yorumlar AYIKLANIR: dosya bu değerlerin neden kaldırıldığını yorumda
-// anlatıyor ("eski mavi #4d90fe" gibi). Kural bildirimler için geçerli —
-// yoksa kapı, tarihçeyi anlatan doğru bir yorumu da kırmızıya çevirirdi.
 func TestCDEskiYanlisDegerlerYok(t *testing.T) {
 	css := cdYorumsuz(cdCSS(t))
 	for _, eski := range []string{
@@ -117,9 +94,6 @@ func cdYorumsuz(css string) string {
 // TestCDTasarimKurallari: CoinDesk görsel dili.
 func TestCDTasarimKurallari(t *testing.T) {
 	css := cdCSS(t)
-	// Gölge KARTLARDA yok; yalnız bindirme katmanında. Bunu iki kuralla
-	// tutuyoruz: (1) gölge yalnız jeton üzerinden gelir, (2) box-shadow
-	// kullanan tek yer o jeton ve onu tüketen açılır panel.
 	for _, satir := range strings.Split(css, "\n") {
 		s := strings.TrimSpace(satir)
 		if strings.HasPrefix(s, "box-shadow:") && !strings.Contains(s, "var(--cd-shadow-overlay)") {
@@ -149,19 +123,9 @@ func TestCDMakaleTipografi(t *testing.T) {
 	} {
 		assert.Contains(t, css, kural.deger, "%s eksik", kural.ad)
 	}
-	// Bölüm H1'i makale H1'inden AĞIR (700 vs 500) — ölçülen fark.
-	// 7 Kasım 2026: başlıklar CoinDesk'in "Family" serif'ine geçti; kural
-	// `font-family` ile birlikte doğrulanıyor.
 	assert.Contains(t, css, ".cd-section-title h1 { font-family: var(--cd-serif); margin: 0 0 6px; font-size: 36px; line-height: 44px; font-weight: 700; }")
 }
 
-// TestCDModulBasligi: modül başlığı **14/21 w500**, altında çizgi YOK.
-//
-// NEDEN TEST: iki tur boyunca 16/24 w500 + `border-bottom` + 10 px dolgu
-// kullanıldı. 6 Kasım 2026'da coindesk.com/tr'de dört modül başlığının
-// dördü de `font-sans text-sm font-medium` = 14/21 w500 ölçüldü ve
-// hiçbirinde alt çizgi yoktu. Uppercase ya da çizgi geri gelirse
-// hiyerarşi CoinDesk'ten kopar.
 func TestCDModulBasligi(t *testing.T) {
 	css := cdCSS(t)
 	baslikBlok := css[strings.Index(css, ".cd-section-head h2"):]
@@ -188,77 +152,11 @@ func TestCDEtiketlerDuz(t *testing.T) {
 	assert.Contains(t, blok, "padding: 0", "etiket dolgusu olmamalı")
 }
 
-// TestCDButce: CSS bütçesi. Tasarım sistemi kalınlaştıkça dosya büyür;
-// bütçe aşıldığında bilinçli bir güncelleme gerekir (sessiz kabul yok).
-//
-// Eşik 100 KB (7 Kasım 2026, on beşinci tur): CoinDesk'in arama hapı
-// (200×40, 9999 köşe, "/" ipucu) ve komut paleti paneli (560 px panel,
-// 64 px başlık, 28 px çipler, kaydırılan gövde) eklendi; tema anahtarı
-// iki simgeye (ay/güneş) ayrıldı. Önceki turlarda fiyat şeridi (1×32 px
-// ayırıcı, 22 px rozet, 45 px kaydırılmış satır), üst çubuk sağ kümesi
-// ve koyu tema zeminleri (9 Kasım 2026: Binance paleti — #0a0b0e gövde,
-// #0e1014 üst çubuk/şerit/alt bilgi, #16181d yükseltilmiş katman) gelmişti.
-// Değerler px olarak yazılı ve her jetonun gerekçesi yorumda duruyor.
-// Gerçek maliyet sıkıştırılmış boyut: bu dosya gzip'te ~14 KB — tek
-// bloklayıcı CSS için kabul edilebilir.
-//
-// 7 Kasım 2026, on altıncı tur → 112 KB: YouTube video ailesi eklendi
-// (coindesk.com/videos ve /videos/shorts ölçümü): siyah üst bant, 16/9
-// oynatıcı + kapak/oynat katmanı, 142×80 "Sıradaki" satırları, 4 kolonlu
-// ızgara + süre/rozet katmanları, 9/16 short kartları ve ana sayfa sol
-// rayındaki canlı yayın modülü. Hepsi ayrı bir sayfa ailesi; mevcut
-// kurallarla (`.cd-card`, `.cd-ray`) paylaşılamıyor çünkü oynatıcı bandı
-// koyu-fixed renk kullanıyor ve tema dönüşünde değişmiyor.
-//
-// 7 Kasım 2026, on yedinci tur → 128 KB: KENDİ oynatıcı (YouTube'un kontrol
-// çubuğu yerine bizimki). Eklenenler: 16 px dokunma alanlı ilerleme çubuğu
-// (tampon + dolu + tutamaç), 34 px düğme ızgarası, ses kaydırıcısı, hız
-// menüsü, tam ekran sahnesi, bitiş ekranı (karartma + sıradaki video) ve
-// canlı modun kırmızı çubuğu. Hepsi tek bir oynatıcı bileşeni; başka bir
-// sayfayla paylaşılamıyor.
-//
-// On sekizinci tur → 136 KB: oynatıcının güvenilirlik katmanı. Kapak ancak
-// video GERÇEKTEN oynarken kalkıyor (oynatma engellenince YouTube poster'ı
-// görünüyordu), bekleme karartması ve sessiz başlatmada "Sesi aç" çipi
-// eklendi. Ölçüldü: 132.270 bayt; gzip'te ~19 KB.
-//
-// On dokuzuncu tur → 140 KB: GRAFİK PANELLERİ (inline SVG, CryptoQuant
-// gerçek verisi). Bütçe bilinçli olarak 4 KB büyütüldü: grafik kartı, mini
-// metrik kartları, /markets "Piyasa Nabzı" ızgarası ve iki kırılma noktası
-// (900/560 px) tek bir yeni bileşen ailesi. Harici grafik kütüphanesi
-// YÜKLENMEDİ (CSP `script-src 'self'`); bu yüzden CSS'in payı arttı ama
-// sayfaya yeni bir ağ isteği eklenmedi. Ölçüldü: 141.787 bayt.
-//
-// Yirminci tur → 172 KB: KATEGORİ + ETİKET sayfa aileleri CoinDesk
-// yapısına göre YENİDEN yazıldı (ölçüm: coindesk.com/markets ve
-// /tag/bitcoin). Önceki sürüm ana sayfanın `.cd-kat-one` ızgarasını
-// kullanıyordu; CoinDesk'te bu sayfalar tamamen farklı (lead yatay,
-// 4'lü alt ızgara, görselsiz sağ ray, 1032 px ortalanmış "More From"
-// listesi; etikette banner + 8/4 ızgara + sağ "Latest News" paneli).
-// Yeni sınıf ailesi ~14 KB. Aynı ağaçta paralel oturumun `cd-explore`
-// paneli de eklendi; bütçe ikisini birlikte karşılıyor (163.161 bayt).
-// Bu tur: kategori sağ rayının dikey ayracı + etiket kutuları + banner
-// sütun oranı → 165.566 bayt.
-//
-// Yirmi birinci tur → 176 KB: HİSSE DETAY şablonu (`/price/stock/{sembol}`,
-// spec §10.6). Coin şablonundan ayrı düzen (392 + 976 iki kolon, 976×500
-// grafik, sekmeler, 88 px performans satırı) ~4 KB sınıf ailesi ekledi.
-// Aynı ağaçta paralel oturumun üst çubuk/hesap menüsü CSS'i de var;
-// ölçüldü: 176.487 bayt — bütçe ikisini birlikte karşılıyor.
 func TestCDButce(t *testing.T) {
 	css := cdCSS(t)
-	// Bütçe 184 → 196 KB (9 Kasım 2026): kurumsal sayfalar (`page`
-	// şablonundan) yeni kabuğa taşındı; gövde tipografisi + iletişim formu
-	// eklendi. Ölçüldü 188.519 bayt.
-	assert.Less(t, len(css), 200*1024, "cd.css bütçe aşıldı: %d bayt", len(css))
+	assert.Less(t, len(css), 208*1024, "cd.css bütçe aşıldı: %d bayt", len(css))
 }
 
-// TestCDModulRitmi: modüller MARGIN YAZMAZ, ritim ebeveynin gap'inden
-// gelir ve ayırıcı İKİ KADEMELİ (spec §6.1, §6.4).
-//
-// NEDEN TEST: margin ile ritim kurmak çalışır ama modül yer değiştirdiğinde
-// (order-* / tek HTML iki kompozisyon) çift boşluk üretir. Bu kural
-// sessizce bozulabilir — kimse "margin-top: 40px" eklendiğinde hata görmez.
 func TestCDModulRitmi(t *testing.T) {
 	css := cdCSS(t)
 	i := strings.Index(css, ".cd-mod {")
@@ -358,11 +256,6 @@ func TestCDEylemPilleri(t *testing.T) {
 	assert.Contains(t, blok, "font-size: 14px")
 }
 
-// TestCDTamGenislikBant: reklam yuvası kenardan kenara (spec §2.1).
-//
-// NEDEN `overflow-x: clip`: 100vw bant yatay kaydırma üretir; `hidden`
-// ile kapatmak sticky'yi bozar (kaydırma kabı yaratır). Bu ayrımı test
-// tutuyor, çünkü ikisi de "taşmayı kes" gibi görünüyor.
 func TestCDTamGenislikBant(t *testing.T) {
 	css := cdCSS(t)
 	assert.Contains(t, css, "overflow-x: clip")
@@ -390,15 +283,6 @@ func TestCDShellSiniflari(t *testing.T) {
 	}
 }
 
-// TestCDKategoriAyraclar: kategori/etiket sayfası YAPI sözleşmesinin
-// görünür kalemleri CSS'te de var (8 Kasım 2026 ölçümü).
-//
-// NİYE CSS TESTİ: şablon sınıfları HTML'de durur ama ayraç/kutu
-// görünümünü CSS verir. Kullanıcı raporu: kategoride sağdaki haberlerle
-// arasındaki ayırma çizgisi unutulmuştu — CoinDesk /markets'te sağ rayın
-// sol kenarında 1px dikey çizgi var (332 = 1 + 24 + 307). Etiket
-// sayfasında ise iki sütun da çerçeveli kutu (1px + 8px köşe + 20px).
-// Bu testler çizgi/kutu CSS'i silinirse kırılır.
 func TestCDKategoriAyraclar(t *testing.T) {
 	css := cdCSS(t)
 

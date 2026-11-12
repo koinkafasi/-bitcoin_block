@@ -5,13 +5,6 @@ import (
 	"testing"
 )
 
-// Faz 211 — `<style>` bloklarının hash'lenmesi.
-//
-// Amaç: `style-src`ten 'unsafe-inline' kaldırıldı; sunucunun ürettiği stil
-// blokları hash ile izinli, enjekte edilen <style> çalışmaz. `style="..."`
-// ÖZNİTELİKLERİ ayrı direktifte (`style-src-attr`) bilinçli olarak açık
-// kalıyor — orada hash mümkün değil.
-
 func TestCSPStyleHashesBos(t *testing.T) {
 	for _, html := range []string{"", "<p>yok</p>", "<script>x</script>"} {
 		if got := cspStyleHashes(html); len(got) != 0 {

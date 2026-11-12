@@ -39,7 +39,7 @@ templ CDBasitSayfaView(v CDBasitSayfa) {
 	<html lang="tr">
 		<head>
 			@cdHead(CDHead{Title: v.Title, Desc: v.Desc, Canonical: v.Canonical,
-				OGType: "website", SiteName: v.Shell.SiteName, RSSFeed: "/rss.xml",
+				OGType: "website", SiteName: v.Shell.SiteName, FaviconURL: v.Shell.FaviconURL, RSSFeed: "/rss.xml",
 				JSONLD: v.JSONLD, Locale: v.Locale, PageCategory: v.PageCategory,
 				ContentCategory: v.ContentCategory, BaseURL: v.BaseURL})
 		</head>

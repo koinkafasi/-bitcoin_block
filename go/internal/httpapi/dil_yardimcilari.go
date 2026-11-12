@@ -5,18 +5,6 @@ import (
 	"strings"
 )
 
-// Yerelleştirme yardımcıları (Faz 189).
-//
-// Ölçülen sorun: 24 dil etkin, ama yalnız Türkçe içerik var. `/en` 200
-// dönüyordu ve <html lang="en"> doğruydu; buna karşılık ana sayfada manşet
-// YOKTU (TR'de 150 hero öğesi, EN'de 0) çünkü içerik sorguları
-// `locale = $1` ile sıkı filtreleniyor. Sonuç: boş manşet alanı → tasarım
-// kırık görünüyor, sayfa "İngilizce" olduğunu iddia ederken Türkçe
-// başlıklar taşıyordu.
-
-// yerelIcerikVar verilen dilde yayımlanmış içerik var mı?
-//
-// Yalnız varlık kontrolü: sayım gerekmiyor, LIMIT 1 yeterli.
 func (s *Server) yerelIcerikVar(ctx context.Context, siteID int64, locale string) bool {
 	if locale == "" {
 		return false
@@ -28,12 +16,6 @@ func (s *Server) yerelIcerikVar(ctx context.Context, siteID int64, locale string
 	return err == nil
 }
 
-// icerikDili içerik sorgularında kullanılacak dili verir.
-//
-// İstenen dilde içerik varsa o; yoksa varsayılan dil (tr). İkinci değer
-// true ise "gösterilen içerik istenen dilden FARKLI" demektir: bu durumda
-// sayfa noindex'lenir ve canonical varsayılan dilin adresine verilir, yoksa
-// aynı Türkçe içerik 24 adreste kopya olarak dizinlenir.
 func (s *Server) icerikDili(ctx context.Context, siteID int64, istenen string) (string, bool) {
 	varsayilan := s.i18n.Default()
 	if istenen == "" || istenen == varsayilan {
@@ -45,11 +27,6 @@ func (s *Server) icerikDili(ctx context.Context, siteID int64, istenen string) (
 	return varsayilan, true
 }
 
-// yerelHreflang ana sayfa/bölüm sayfaları için alternatif dil etiketleri.
-//
-// Yalnız GERÇEKTEN içeriği olan diller listelenir: boş bir dil sayfasına
-// hreflang vermek, arama motorunu boş sayfaya çağırmak olurdu. Kendi dil
-// her zaman eklenir; x-default varsayılan dile verilir.
 func (s *Server) yerelHreflang(ctx context.Context, absBase string, siteID int64, istenen string, yolBicimi func(locale string) string) []langLink {
 	taban := strings.TrimRight(absBase, "/")
 	kendi := istenen
@@ -90,12 +67,6 @@ func siteIDOr1(id int64) int64 {
 	return id
 }
 
-// categoryLangName kategori adının yerelleştirilmiş hâlini verir.
-//
-// Kategoriler tablosunda dil kolonu yok (ad tek: "Gündem"). Çeviri
-// `translations` tablosunda `category.<slug>` anahtarıyla tutulur; yoksa
-// veritabanı adı kullanılır. Böylece şema değişmeden bölüm başlıkları
-// çevrilebiliyor.
 func (s *Server) categoryLangName(ctx context.Context, locale, slug, yedek string) string {
 	if s.i18n == nil || locale == "" || locale == "tr" || slug == "" {
 		return yedek
@@ -108,10 +79,6 @@ func (s *Server) categoryLangName(ctx context.Context, locale, slug, yedek strin
 	return v
 }
 
-// localeText verilen anahtarın çevirisini, yoksa yedeği döndürür.
-//
-// `T` anahtar bulunamazsa anahtarın kendisini döndürüyor; bu, ekrana
-// "site.suffix" yazılmasına yol açar. Bu yardımcı o durumu yedeğe çevirir.
 func (s *Server) localeText(locale, anahtar, yedek string) string {
 	if s.i18n == nil || locale == "" || locale == "tr" {
 		return yedek
@@ -123,13 +90,6 @@ func (s *Server) localeText(locale, anahtar, yedek string) string {
 	return v
 }
 
-// kategoriIcerikDili kategori sayfası için kullanılacak dili verir.
-//
-// Global `icerikDili` yeterli değil: sitede İngilizce içerik olabilir ama o
-// KATEGORİDE hiç olmayabilir (ölçüldü: /en varken /en/kategori/otomobil
-// boştu). Bu yüzden kategori (ve alt kategorileri) bazında bakılır.
-//
-// İkinci değer düşüş bayrağıdır (canonical/noindex için).
 func (s *Server) kategoriIcerikDili(ctx context.Context, siteID int64, slug, istenen string) (string, bool) {
 	varsayilan := s.i18n.Default()
 	if istenen == "" || istenen == varsayilan {

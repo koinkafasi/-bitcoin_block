@@ -10,16 +10,6 @@ import (
 	"theblock/site/internal/platform"
 )
 
-// Faz 208 — trend kaynağı SSRF koruması.
-//
-// Trend kaynağı adresi panelden girilir ve sunucu onu çeker. Koruma
-// iki katmanlı:
-//   1. Kayıt anında `platform.ValidateOutboundURL` (erken geri bildirim).
-//   2. Çekim anında `trendHTTPClient` = SSRF korumalı istemci (asıl kapı).
-//
-// Burada ikinci katmanın GERÇEKTEN devrede olduğu sınanıyor: birisi kaydı
-// doğrudan veritabanına yazsa bile loopback/özel adres çekilememeli.
-
 // Varsayılan istemci SSRF korumalı olmalı ve loopback'i reddetmeli.
 func TestTrendHTTPClientVarsayilanKorumali(t *testing.T) {
 	c := trendHTTPClient()

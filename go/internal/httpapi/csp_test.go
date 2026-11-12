@@ -80,15 +80,6 @@ func TestCSPScriptHashes_BuyukHarf(t *testing.T) {
 	}
 }
 
-// TestBuildCSP zorunlu politikanın güvenlik özellikleri.
-// TestCSPPolitikadaYasakliTasima, üretilen politikanın TAMAMINDA
-// `'unsafe-eval'` ve script tarafında `'unsafe-inline'` bulunmadığını
-// doğrular — politika varyantlarının hepsinde.
-//
-// NEDEN AYRI TEST: CI'daki kapı bunu `grep csp.go` ile arıyordu ve
-// csp.go'daki bir YORUM satırını ("// 'unsafe-inline' ve 'unsafe-eval'
-// YOK.") yakalayıp işi kırdı (5 Kasım 2026). Kaynak metni değil, ÜRETİLEN
-// politikayı sınamak doğrusu: yorum değişse de test anlamlı kalır.
 func TestCSPPolitikadaYasakliTasima(t *testing.T) {
 	h := hashOf("var a = 1;")
 	varyantlar := map[string]string{
@@ -148,9 +139,6 @@ func TestBuildCSP(t *testing.T) {
 	}
 }
 
-// TestCSPOnbellekGuvenli CSP başlığı gövdeden ÜRETİLMELİ ve HTML'de nonce
-// bulunmamalı: public sayfalar CDN'de önbelleklendiği için nonce tekilliği
-// bozulurdu (bkz. csp.go başlığındaki gerekçe).
 func TestCSPOnbellekGuvenli(t *testing.T) {
 	html := `<script>var a=1;</script>`
 	csp := buildCSP(cspScriptHashes(html), cspStyleHashes(html), "", "")
@@ -166,10 +154,6 @@ func TestCSPOnbellekGuvenli(t *testing.T) {
 	}
 }
 
-// TestCSPScriptHashes_TurkceMetin Türkçe karakterler (İ, ğ, ş) hash
-// çıkarımını kaydırmamalı. Regresyon: strings.ToLower ile arama yapıldığında
-// 'İ' bayt uzunluğunu değiştiriyor, indeksler kayıyor ve hash'ler gövdeyle
-// uyuşmuyordu (tarayıcıda CSP ihlali).
 func TestCSPScriptHashes_TurkceMetin(t *testing.T) {
 	html := `<h1>İSTANBUL'DA GÜNDEM: ŞİDDET VE İKLİM</h1>` +
 		`<p>ĞÜŞİÖÇ ğüşiöç</p>` +
@@ -195,9 +179,6 @@ func TestIndexFold_BoyutKoruyucu(t *testing.T) {
 	}
 }
 
-// TestSablonlardaSatirIciOlayYok: zorunlu CSP satır içi olay özniteliklerini
-// çalıştırmaz. Şablonlara yeniden on*= eklenirse site sessizce bozulur —
-// bu test onu derleme/test aşamasında yakalar.
 func TestSablonlardaSatirIciOlayYok(t *testing.T) {
 	kok := filepath.Join("..", "webui")
 	desen := regexp.MustCompile(`\son[a-z]+\s*=\s*["']`)

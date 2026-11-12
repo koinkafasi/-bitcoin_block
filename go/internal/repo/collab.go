@@ -12,12 +12,6 @@ import (
 // denetiminin tutmadığını bildirir (arada panel formu yazmış).
 var ErrSurumCakismasi = errors.New("sürüm çakışması")
 
-// SaveCollabDetail, ortak düzenleme servisinden gelen gövdeyi kaydeder.
-// Yalnızca detail alanı değişir; başlık/spot/künye form kaydında kalır.
-//
-// expected > 0 ise UPDATE yalnız o sürümde geçerlidir (compare-and-swap).
-// Tutmazsa ErrSurumCakismasi döner; çağıran 409 ile yanıtlayıp istemcinin
-// güncel sürümü almasını sağlar. expected = 0 eski davranıştır.
 func SaveCollabDetail(ctx context.Context, pool *pgxpool.Pool, id int64, detail []byte, expected int) (int, int64, string, string, error) {
 	var version int
 	var siteID int64

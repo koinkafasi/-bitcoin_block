@@ -18,11 +18,6 @@ import (
 	"theblock/site/internal/repo"
 )
 
-// Abonelik yaşam döngüsü: gerçek Postgres'e karşı (tag=integration).
-//
-// Test kendi kullanıcısını oluşturur ve sonunda SİLER; kullanıcı verisine
-// (mevcut abonelikler, promo kodları) dokunmaz. Kalıntı 0 doğrulanır.
-
 func intPool(t *testing.T) *pgxpool.Pool {
 	t.Helper()
 	url := os.Getenv("TEST_DATABASE_URL")

@@ -5,9 +5,6 @@ import (
 	"testing"
 )
 
-// Explain'in kalemleri ile Relevance'ın puanı ayrışmamalı. Kayıtlı 34 bin
-// ai_score bu aritmetikle üretildi; döküm ile puan birbirini tutmazsa
-// editöre gösterilen gerekçe yalan olur.
 func TestExplainKalemToplamiPuaniVerir(t *testing.T) {
 	cases := []Input{
 		{},

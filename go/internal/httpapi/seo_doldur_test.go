@@ -9,11 +9,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// Faz 188 — AI ile SEO alanlarını doldurma (HTTP katmanı).
-//
-// Uç nokta iki adımlı akışın ilk yarısıdır: üret → göster. Doğrudan forma
-// yazmaz; öneri paneli döner ve uygulama istemcide olur.
-
 // TestSeoDoldurRotaKayitli: rota panelin içe aktarma listesinde olmalı,
 // yoksa düğme 404 alır.
 func TestSeoDoldurRotaKayitli(t *testing.T) {
@@ -38,11 +33,6 @@ func TestSeoDoldurHataMetni(t *testing.T) {
 	assert.Contains(t, msg, "başlığı veya gövdesi")
 }
 
-// TestSeoDoldurOnizlemeYazmaz: önizleme uç noktası DB'ye YAZMAMALI.
-//
-// İlk sürümde "Yeniden üret" dolu alanların üzerine yazıyordu. Oysa panel
-// bir önizleme: kullanıcı metni görüp uygular, kaydetmeyi form düğmesi
-// yapar. Önizleme sırasında yazmak, görülmemiş metni kaydetmek demekti.
 func TestSeoDoldurOnizlemeYazmaz(t *testing.T) {
 	h := mustRead(t, "seo_doldur_handlers.go")
 
@@ -120,14 +110,6 @@ func mustRead(t *testing.T, yol string) string {
 	return string(b)
 }
 
-// TestSeoOnizlemeKapsayicisi: SERP/sosyal önizlemenin canlı güncellenmesi
-// `[data-seo-preview]` kapsayıcısına bağlı.
-//
-// Bu kapsayıcı yoktu: app.js `document.querySelector("[data-seo-preview]")`
-// null dönünce updateSeoPreview hemen çıkıyordu, yani başlık/spot
-// değişince önizleme HİÇ güncellenmiyordu (ölçüldü: eski başlık ekranda
-// kalıyordu). SEO alanları da önizlemeyi beslemeli: Google <title> değil
-// seo_title'ı gösteriyor.
 func TestSeoOnizlemeKapsayicisi(t *testing.T) {
 	form := mustRead(t, "../webui/templkit/icerikform.templ")
 	assert.Contains(t, form, "data-seo-preview",

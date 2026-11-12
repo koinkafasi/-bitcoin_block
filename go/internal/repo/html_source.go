@@ -21,10 +21,6 @@ import (
 	"theblock/site/internal/platform"
 )
 
-// HTML kaynak adaptörü: RSS yayınlamayan sitelerin ana sayfa/section
-// listelerinden haber bağlantılarını çıkarır. Yeni bağlantıların ilk birkaç
-// tanesi için makale sayfasındaki JSON-LD/meta özetiyle zenginleştirme yapılır.
-
 const (
 	htmlMaxBodyBytes   = 4 << 20
 	htmlDetailBudget   = 6
@@ -54,9 +50,6 @@ type htmlArticleMeta struct {
 	Published   time.Time
 }
 
-// ScanHTMLFeed HTML kaynağını tarar; yalnızca daha önce alınmamış yeni
-// bağlantıları döndürür. İlk birkaç yeni bağlantı için makale özeti ve tarih
-// bilgisi çekilir; bu sayede AI taslakları yalnızca başlığa mahkûm kalmaz.
 func ScanHTMLFeed(ctx context.Context, pool *pgxpool.Pool, siteID int64, f Feed) ([]RSSItem, error) {
 	listing, err := FetchHTMLListing(ctx, f.URL)
 	if err != nil {
@@ -408,9 +401,6 @@ func jsonLDString(v any) string {
 }
 
 func fetchHTMLDocument(ctx context.Context, rawURL, accept string) ([]byte, error) {
-	// Adres panelden (AI Kaynak / HTML akış) girer: SSRF korumalı istemci
-	// kullanılır. Loopback/özel/metadata adresleri ve 80/443 dışı portlar
-	// reddedilir.
 	u, perr := url.Parse(rawURL)
 	if perr != nil {
 		return nil, perr

@@ -271,9 +271,6 @@ func TestStatsBozukGovde(t *testing.T) {
 
 // --- urlQueryEscape (gerçek hata regresyonu) ---
 
-// Türkçe karakterler UTF-8 baytlarına kodlanmalı. Eski sürüm rune kod
-// noktasını yazıyordu ("ş" → %15F), bu yüzden sorgu search-svc'de hiç
-// eşleşmiyordu.
 func TestURLQueryEscapeCokBaytli(t *testing.T) {
 	kasalar := map[string]string{
 		"şeker":         "%C5%9Feker",

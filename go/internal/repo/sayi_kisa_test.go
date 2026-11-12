@@ -2,11 +2,6 @@ package repo
 
 import "testing"
 
-// TestSayiBicimKisa piyasa değeri kısaltmasını kilitler.
-//
-// ÖLÇÜM (9 Kasım 2026): tam sayı ("1,635,401,465,856") hisse sayfasının
-// 326 px'lik sol rayını taşırıyordu; kısaltma CoinDesk'in de kullandığı
-// biçim ("$1.64T").
 func TestSayiBicimKisa(t *testing.T) {
 	for _, k := range []struct {
 		deger    float64

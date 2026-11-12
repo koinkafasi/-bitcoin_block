@@ -176,11 +176,6 @@ func FetchRSS(url string) ([]RSSItem, error) {
 		return nil, err
 	}
 
-	// Ölçüm (28 Ekim 2026): bot çekimlerinin %52'si hata veriyordu. Üç ayrı
-	// kök neden: (1) feed yerine HTML sayfası dönen adresler, (2) RSS
-	// gövdesindeki tanımsız HTML varlıkları (&nbsp;, &l…), (3) UTF-8
-	// olmayan gövdeler (windows-1254). Üçü de burada, ayrıştırmadan önce
-	// ele alınıyor; ham XML hatası yerine anlaşılır mesaj dönüyor.
 	body, err = decodeCharset(body, contentType)
 	if err != nil {
 		return nil, err
@@ -191,9 +186,6 @@ func FetchRSS(url string) ([]RSSItem, error) {
 	return parseRSS(string(body))
 }
 
-// looksLikeHTML sunucunun RSS yerine web sayfası döndürüp döndürmediğini
-// söyler. Bu, yanlış yazılmış bir feed adresinin en sık belirtisidir ve
-// "XML syntax error: attribute name without =" mesajından çok daha anlaşılır.
 func looksLikeHTML(contentType string, body []byte) bool {
 	if strings.Contains(strings.ToLower(contentType), "text/html") {
 		return true
@@ -203,11 +195,6 @@ func looksLikeHTML(contentType string, body []byte) bool {
 	return strings.HasPrefix(head, "<!doctype html") || strings.HasPrefix(head, "<html")
 }
 
-// decodeCharset gövdeyi UTF-8'e çevirir.
-//
-// Sıra: Content-Type charset → <?xml encoding=...?> → geçerlilik denetimi.
-// Bildirilen kodlama UTF-8 olsa bile gövde geçersiz bayt içerebilir (Türkçe
-// sitelerde sık); o durumda windows-1254'e düşülür.
 func decodeCharset(body []byte, contentType string) ([]byte, error) {
 	label := charsetParam(contentType)
 	if label == "" {
@@ -263,20 +250,6 @@ func xmlEncodingDecl(body []byte) string {
 	return rest[:end]
 }
 
-// atomEntry Atom (RFC 4287) öğesi.
-//
-// ÖLÇÜM (6 Kasım 2026): Atom beslemeleri SIFIR kullanılabilir öğe
-// veriyordu. İki sebep vardı ve ikisi de sessizdi:
-//
-//  1. Atom'da bağlantı eleman METNİ değil, `<link href="...">`
-//     ÖZNİTELİĞİDİR. `xml:"link"` boş dönüyordu; bot `it.Link == ""`
-//     olan öğeyi atladığı için besleme tamamen boşa düşüyordu.
-//  2. Kapak görseli gövde HTML'inde aranıyordu; Atom yayıncıları görseli
-//     `media:group/media:content@url` ya da `media:thumbnail@url` ile
-//     verir (YouTube, Vimeo, Substack böyle).
-//
-// Doğrulama: CoinDesk YouTube beslemesi (15 öğe) düzeltmeden önce 0,
-// sonra 15 öğe veriyor.
 type atomEntry struct {
 	Title string `xml:"title"`
 	// Links: Atom birden fazla link taşır (alternate, self, enclosure…).
@@ -301,20 +274,8 @@ type atomEntry struct {
 		Thumbnails []rssMedia `xml:"thumbnail"`
 		Desc       string     `xml:"description"`
 	} `xml:"group"`
-	// Öğe düzeyinde media:* ALANI YOK — bilinçli.
-	//
-	// `encoding/xml` ad alanını yok sayar, bu yüzden atom:content ile
-	// media:content aynı etikete ("content") düşer ve `go vet` haklı
-	// olarak çakışma bildirir; ayrıştırmada da sıralamaya göre biri
-	// diğerini ezer. Aynı tuzak rss_sanitize.go'da da belgelenmiş.
-	// Gövde için atom:content gerekli olduğundan görsel YALNIZ
-	// media:group'tan okunur — YouTube, Vimeo ve Substack group veriyor.
 }
 
-// atomBaglanti insan tarafından okunacak adresi seçer.
-//
-// Sıra: rel="alternate" → rel boş (varsayılan alternate'tir) → ilk http(s).
-// rel="self" ATLANIR: beslemenin kendi adresidir, öğenin değil.
 func atomBaglanti(e atomEntry) string {
 	var ilk string
 	for _, l := range e.Links {
@@ -339,19 +300,6 @@ func atomBaglanti(e atomEntry) string {
 	return ilk
 }
 
-// atomGorsel Atom öğesinin kapak görselini bulur.
-//
-// SIRA ÖLÇÜMLE BELİRLENDİ: media:thumbnail ÖNCE gelir.
-// YouTube'un media:content'i görsel değil, oynatıcı adresidir:
-//
-//	<media:content url="https://www.youtube.com/v/XXX?version=3"
-//	               type="application/x-shockwave-flash"/>
-//	<media:thumbnail url="https://i4.ytimg.com/vi/XXX/hqdefault.jpg"/>
-//
-// İlk sürümde content önce denendiği için 15 videonun 15'ine flash
-// oynatıcı adresi kapak olarak yazılıyordu — `<img src>` onu gösteremez,
-// yani kartlar görselsiz kalırdı. Artık thumbnail önce; content ancak
-// GÖRSEL olduğunu beyan ederse kabul edilir.
 func atomGorsel(e atomEntry, govde string) string {
 	// 1) thumbnail: spec gereği her zaman görseldir.
 	for _, m := range e.MediaGroup.Thumbnails {
@@ -371,11 +319,6 @@ func atomGorsel(e atomEntry, govde string) string {
 	return rssHTMLGorsel(govde)
 }
 
-// medyaGorselMi media:content gerçekten görsel mi beyan ediyor.
-//
-// `type="image/..."` ya da `medium="image"` arar. İkisi de yoksa
-// REDDEDİLİR: beyansız content video/ses/oynatıcı olabiliyor ve
-// `<img>` içinde kırık görünür.
 func medyaGorselMi(m rssMedia) bool {
 	if strings.HasPrefix(strings.ToLower(strings.TrimSpace(m.Type)), "image/") {
 		return true
@@ -451,12 +394,6 @@ func parseRSS(doc string) ([]RSSItem, error) {
 	return out, nil
 }
 
-// rssGorsel bir RSS 2.0/RDF öğesinin kapak görselini bulur.
-//
-// Sıra bilinçli: media:thumbnail en küçük/kırpılmış olan, media:content ise
-// yayın için hazırlanmış geniş görsel. Bu yüzden content → thumbnail →
-// enclosure → gövde HTML'i sırası izlenir. Tüm adaylar http(s) olmalı;
-// veri: URI'leri ve göreli yollar atılır (şablon bunları gösteremez).
 func rssGorsel(it rssXMLItem, govde string) string {
 	for _, m := range it.Medias {
 		if u := gecerliGorselURL(m.URL); u != "" && (m.Medium == "" || m.Medium == "image") {
@@ -510,12 +447,6 @@ func rssHTMLGorsel(govde string) string {
 	}
 }
 
-// gecerliGorselURL yalnız mutlak http(s) adreslerini kabul eder.
-//
-// NEDEN: feed'lerde `data:` URI'leri (base64) ve `//cdn...` gibi şemasız
-// yollar var. data: URI'yi <img src> olarak basmak HTML'i megabaytlarca
-// şişirir; şemasız yolu basmak sayfayı https'te karışık içerik hatasına
-// düşürür. İkisi de sessiz bozulma; burada elenir.
 func gecerliGorselURL(raw string) string {
 	u := strings.TrimSpace(html.UnescapeString(raw))
 	if u == "" {
@@ -542,11 +473,6 @@ func stripHTML(s string) string {
 		}
 	}
 	ham := b.String()
-	// Agregatör özetleri başlıkları KIRILMASIZ BOŞLUKLA yapıştırıyor:
-	// "…zaferi olarak gördü&nbsp;&nbsp;Son DakikaBM'de … Euronews.com…"
-	// (ölçüm: 1088 içerik). Sınırı çözmeden ÖNCE kesiyoruz; sonra
-	// `boslukToparla` bu izi siler ve gövde anlamsız başlık yığını olarak
-	// kaydedilirdi.
 	if ilk, kes := yapistirilmisBasliklar(ham); kes {
 		ham = ilk
 	}
@@ -580,18 +506,9 @@ func CrawlFeed(ctx context.Context, pool *pgxpool.Pool, f *Feed, rules []WordRul
 	// atmak gereksiz yük olurdu.
 	slugIDs, _ := categorySlugIDs(ctx, pool)
 	count := 0
-	// alakasiz: resmî kaynakta kripto terimi bulunmayan öğe sayısı.
-	// Log'da görünür ki "kaynak çalışıyor ama hep eleniyor" durumu
-	// sessizce kaybolmasın (ölçüm için gerekli).
 	alakasiz := 0
-	// reklam: tanitim/sponsorlu olarak isaretlenip atlanan oge sayisi.
-	// reklamIlkNeden: ilk tetiklenen gerekce; ozet notunda gosterilir ki
-	// kapinin NIYE tetiklendigi panelden gorulebilsin (sessiz dusme olmasin).
 	reklam := 0
 	reklamIlkNeden := ""
-	// govdeDenemesi: keşif kaynağında bu turda kaç makale gövdesi çekildiği.
-	// Sınır var, çünkü okuyucu proxy'si ücretsiz katmanda dakika başına
-	// istek sınırı koyuyor; 25 öğenin tamamı için denemek 429 üretirdi.
 	govdeDenemesi := 0
 	for _, it := range items {
 		if it.Link == "" || it.Title == "" {
@@ -614,18 +531,10 @@ func CrawlFeed(ctx context.Context, pool *pgxpool.Pool, f *Feed, rules []WordRul
 		// Körlemesine 240 rune kesmek cümleyi ortadan bölüyordu (ölçüm:
 		// yayındaki 94 spot noktalamasız bitiyordu). Cümle sınırına saygılı.
 		spot = cumleGuvenliKirp(spot, 240)
-		// Spot başlığın tekrarıysa ATILIR.
-		//
-		// ÖLÇÜM (5 Kasım 2026): Fed/ECB feed'lerinde `<description>` başlığın
-		// aynısı. Sayfada başlık iki kez alt alta basılıyordu (kart + spot).
-		// Okuyucuya bilgi katmıyor, tasarımı şişiriyor.
 		if spotEsitBaslik(spot, title) {
 			spot = ""
 		}
 
-		// Alaka kapısı: resmî kurum kaynaklarında (SEC/Fed/ECB) kripto
-		// terimi yoksa içerik ATLANIR. Kripto medyası feed'lerinde kapı yok.
-		// Gerekçe ve ölçüm: internal/repo/alaka.go
 		if kaynakAlakaGerekli(f.Aggregator) && !kriptoAlakali(title+" "+spot) {
 			// "Çekildi" işaretlenir: her turda yeniden denenmesin.
 			if _, err := pool.Exec(ctx, `INSERT INTO crawled_items (feed_id, url, url_hash) VALUES ($1,$2,$3)`,
@@ -636,10 +545,6 @@ func CrawlFeed(ctx context.Context, pool *pgxpool.Pool, f *Feed, rules []WordRul
 			continue
 		}
 
-		// Reklam/tanitim kapisi: adres yolu, yonlendirme parametresi, acik
-		// sponsor ifsasi ya da baslikta tesvik kalibi varsa icerik ATLANIR.
-		// Bu bir ALAKA filtresi DEGILDIR; gerekce ve olcum:
-		// internal/repo/reklam.go
 		if reklamMi, neden := ReklamIcerikMi(it.Link, title, spot); reklamMi {
 			// "Cekildi" isaretlenir: her turda yeniden denenmesin.
 			if _, err := pool.Exec(ctx, `INSERT INTO crawled_items (feed_id, url, url_hash) VALUES ($1,$2,$3)`,
@@ -653,14 +558,6 @@ func CrawlFeed(ctx context.Context, pool *pgxpool.Pool, f *Feed, rules []WordRul
 			continue
 		}
 
-		// Yakın-kopya kapısı: url_hash farklı olsa da aynı haber başka
-		// kaynaktan gelmiş olabilir (bkz. bot_dedupe.go). Mükerrer ise
-		// kaydetmeyiz ama url'yi "çekildi" diye işaretleriz; aksi hâlde her
-		// turda yeniden denenir.
-		//
-		// Kaynak hiyerarşisi: kayıtlı kopya bir agregatörden geliyorsa ve
-		// gelen öğe orijinal kaynaktansa orijinal kazanır — agregatör kopyası
-		// arşivlenir, yeni içerik normal akışta kaydedilir.
 		dup, action, dupID := duplicateDraft(ctx, pool, siteIDOr1(f.SiteID), title, spot, f.Aggregator)
 		if dup && action != DedupeReplace {
 			if _, err := pool.Exec(ctx, `INSERT INTO crawled_items (feed_id, url, url_hash) VALUES ($1,$2,$3)`,
@@ -675,13 +572,7 @@ func CrawlFeed(ctx context.Context, pool *pgxpool.Pool, f *Feed, rules []WordRul
 			}
 		}
 
-		// Gövde: RSS özeti tek blok hâlinde kaydediliyordu (ölçüm: yayındaki
-		// 982/986 içerik TEK paragraf). Paragraflara bölününce okunur oluyor;
-		// metin uydurulmuyor, yalnız cümle sınırlarından ayrılıyor.
 		detail := paragrafBloklari(ApplyReplacer(it.Description, rules))
-		// Keşif kaynaklarında (kind=bing) RSS yalnız tek cümlelik özet
-		// taşıyor. Makale gövdesi okuyucu proxy'sinden çekilir; çekilemezse
-		// özetle devam edilir — zenginleştirme içerik üretimini engellemez.
 		if govdeGerekli(f.Kind) && govdeDenemesi < kaynakGovdeTurLimiti {
 			govdeDenemesi++
 			if g, gerr := KaynakGovdeCek(ctx, it.Link); gerr == nil {
@@ -693,32 +584,18 @@ func CrawlFeed(ctx context.Context, pool *pgxpool.Pool, f *Feed, rules []WordRul
 				}
 			}
 		}
-		// Alaka puanı içerik oluşturulurken hesaplanır: kategori yayın kapısı
-		// (categories.min_score) bu alana bakar. Eskiden yalnızca panelden
-		// hesaplandığı için taslakların tamamı 0 puanla duruyordu (B4).
 		score, _ := scoring.Relevance(scoring.Input{
 			Title:     title,
 			Spot:      spot,
 			TagCount:  len(it.Categories),
 			HasSource: true,
 		})
-		// Kategori: kaynak bölümü → editörün feed ataması → anahtar sözcük.
-		// Ayrıntı ve gerekçe: internal/classify (B5).
-		//
-		// KRİPTO PORTALI (bitcosar): bölümler CoinDesk taksonomisidir
-		// (markets/business/tech/policy). Eski Türkçe eşleme (gundem/ekonomi)
-		// kullanılırsa 179 içeriğin tamamı tek bölüme düşüyordu — ölçüldü.
 		catID := f.CategoryID
 		slug := classify.CoinDeskSection(it.Categories, title, spot)
 		if id, ok := slugIDs[slug]; ok && (f.CategoryID == nil || *f.CategoryID != id) {
 			v := id
 			catID = &v
 		}
-		// Keşif kaynaklarında (kind=bing) bölüm, ADRES YOLUNDAN okunur ve
-		// otoriterdir. Neden: "18 years in, what has Bitcoin truly done?"
-		// gibi bir görüş yazısı başlığındaki "bitcoin" sözcüğü yüzünden
-		// metin sınıflandırıcısı onu markets'a atıyordu — görüş sayfası boş
-		// kalıyordu. Kaynağın kendi bölüm adı (…/opinion/…) daha güvenilir.
 		if govdeGerekli(f.Kind) && it.Section != "" {
 			if id, ok := slugIDs[strings.ToLower(it.Section)]; ok {
 				v := id
@@ -833,11 +710,6 @@ func categorySlugIDs(ctx context.Context, pool *pgxpool.Pool) (map[string]int64,
 
 func strPtr(s string) *string { return &s }
 
-// textToBlocksStmt repo içi blok üretimi (httpapi util'daki ile aynı kural).
-// paragrafBloklari metni okunur paragraflara bölüp blok dizisi üretir.
-//
-// `textToBlocksStmt` yalnız "\n" üzerinde bölüyordu; RSS özetlerinde satır
-// sonu olmadığı için tek paragraf çıkıyordu.
 func paragrafBloklari(s string) []byte {
 	parcalar := paragraflaraBol(s)
 	blocks := make([]map[string]any, 0, len(parcalar))

@@ -6,13 +6,6 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-// LastPublishedForPlan yayın şeridi boş kaldığında kullanılan yedek listeyi
-// döndürür: son yayınlanan içerikler, tarih farkı gözetmeden.
-//
-// Neden gerekli: şerit varsayılan olarak "-6 saat … +30 saat" penceresine
-// bakıyor. Site birkaç gün yayın yapmadıysa ya da planlı içerik yoksa şerit
-// tamamen boş kalıyor ve panonun en görünür bileşeni kayboluyordu. Boş kalan
-// yerde "son yayınlar" göstermek, boş kutu göstermekten iyidir.
 func LastPublishedForPlan(ctx context.Context, pool *pgxpool.Pool, siteID int64, limit int) []PlanRow {
 	if limit <= 0 || limit > 40 {
 		limit = 10

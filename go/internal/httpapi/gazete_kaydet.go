@@ -11,16 +11,6 @@ import (
 	"theblock/site/internal/repo"
 )
 
-// Sayı kaydı — specs/13-gazete-sayfa-duzenleyici.md K6
-//
-// Eskiden editör sayfa başına ayrı POST atıyordu (`Promise.all`): 10 sayfalık
-// bir sayıda 10 bağımsız istek, işlem yok, sürüm denetimi yok. Üçüncüsü
-// düşerse sayı tutarsız kalıyor ve kullanıcı bunu bilmiyordu. Ayrıca iki
-// sekmede aynı sayı düzenlenirse ikincisi birincinin işini sessizce eziyordu.
-//
-// Burada tüm sayfalar tek gövdede, tek transaction'da yazılır ve iyimser
-// kilit uygulanır.
-
 // gazeteKayitSayfa istemciden gelen tek sayfa.
 type gazeteKayitSayfa struct {
 	No      int             `json:"no"`
@@ -135,11 +125,6 @@ func (s *Server) gazeteSayfalariYaz(ctx context.Context, issueID int64,
 	return "", nil
 }
 
-// gazeteKayitDogrula gelen sayfa yukunu denetler.
-//
-// Sayfa numarasi gecersiz ya da tekrar ediyorsa kayit belirsizlesir: hangi
-// sayfanin bloklari yazilacagi belli olmaz ve "gonderilmeyen sayfayi sil"
-// kurali yanlis sayfayi silebilir.
 func gazeteKayitDogrula(sayfalar []gazeteKayitSayfa) error {
 	if len(sayfalar) == 0 {
 		return fmt.Errorf("hiç sayfa gönderilmedi")

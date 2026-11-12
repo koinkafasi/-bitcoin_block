@@ -29,16 +29,13 @@ func MenuCategoryIDs(ctx context.Context, pool *pgxpool.Pool) ([]int64, error) {
 
 // FeedQuery akış sorgu parametreleri.
 type FeedQuery struct {
-	SiteID     int64
-	CategoryID int64
-	Other      bool   // menü dışı kategoriler
-	Day        string // YYYY-MM-DD → tam o gün
-	Since      string // YYYY-MM-DD → o günden itibaren (>=)
-	Page       int
-	PerPage    int
-	// IncludeGallery foto_galeri / video türlerini akışa dahil eder.
-	// Varsayılan false: galeri içerikleri kendi sayfalarında gösterilir,
-	// haber akışını kirletmez (aksi halde aynı haber iki kez listelenir).
+	SiteID         int64
+	CategoryID     int64
+	Other          bool   // menü dışı kategoriler
+	Day            string // YYYY-MM-DD → tam o gün
+	Since          string // YYYY-MM-DD → o günden itibaren (>=)
+	Page           int
+	PerPage        int
 	IncludeGallery bool
 	// Types verilirse akış yalnızca bu içerik türlerini döndürür.
 	Types []string
@@ -112,10 +109,6 @@ func FeedPage(ctx context.Context, pool *pgxpool.Pool, q FeedQuery) ([]Content, 
 	return out, total, rows.Err()
 }
 
-// FeedByCategories birden çok kategorinin en yeni içeriklerini TEK sorguda
-// döndürür: her kategori için en fazla perCat kayıt (ROW_NUMBER penceresi).
-// Kategori sekmeli blokların N+1 sorgu yapmasını önler.
-// Dönüş: kategori kimliğine göre içerik listeleri.
 func FeedByCategories(ctx context.Context, pool *pgxpool.Pool, siteID int64, catIDs []int64, perCat int) (map[int64][]Content, error) {
 	out := map[int64][]Content{}
 	if len(catIDs) == 0 {

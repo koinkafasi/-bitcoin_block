@@ -10,10 +10,6 @@ import (
 	"theblock/site/internal/webui/templkit"
 )
 
-// handleGelenKutusu GET /admin/gelen-kutusu — birleşik gelen kutusu (Faz 167).
-//
-// Üç kaynağı (iletişim, geri bildirim, yorum) tek listede gösterir.
-// SALT OKUMA: satırlar kendi ekranına yönlendirir; işlem orada yapılır.
 func (s *Server) handleGelenKutusu(w http.ResponseWriter, r *http.Request) {
 	d := s.baseView("tr", "/admin", "Gelen Kutusu")
 	d.User = ptr(userFromContext(r.Context()))
@@ -78,10 +74,6 @@ func (s *Server) handleGelenKutusu(w http.ResponseWriter, r *http.Request) {
 	s.render(w, r, "admin_gelen_kutusu", d)
 }
 
-// gelenZaman göreli zaman: bugünse saat, dünse "Dün", else tarih.
-//
-// NEDEN göreli: gelen kutusunda amaç "ne zaman geldi" değil "ne kadar taze".
-// Mutlak tarih 40 satırda taramayı zorlaştırıyor.
 func gelenZaman(t time.Time) string {
 	if t.IsZero() {
 		return ""

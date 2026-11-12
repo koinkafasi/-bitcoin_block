@@ -1,20 +1,7 @@
-/* =====================================================================
-   Üye girişi / kayıt — "huddle" düzeni (Faz 198)
-   =====================================================================
-   İstek: demo.codeandchill.store/huddle/ ekranındaki gibi iki sütunlu
-   giriş: solda fareyi izleyen, form durumuna tepki veren karakterler;
-   sağda giriş formu.
 
-   Bu dosya YALNIZ üyelik sayfalarında yüklenir (public_head'e eklenmez).
-   Tüm seçiciler `.auth-page` ya da `.auth*` önekiyle kapsanır; site
-   başlığının/panel stillerinin sayfaya sızmasını engeller.
-
-   Renkler marka değişkenlerinden türetilir: `--hp-tema` (kırmızı) ve
-   `--hp-text`. Peri/amber/mercan yalnız illüstrasyon renkleridir.
-   ===================================================================== */
 
 body.auth-page {
-  /* Sayfa zemini: koyu, marka kırmızısına çalan ışık. */
+  
   --a-bg: #0d0b0e;
   --a-bg-2: #171014;
   --a-card: #ffffff;
@@ -34,6 +21,15 @@ body.auth-page {
   --a-amber: #eab308;
   --a-coral: #f97a5f;
   --a-cream: #fff7e6;
+  
+  --a-btc: #f7931a;
+  --a-btc-soft: rgba(247, 147, 26, .12);
+  --a-eth: #6b7fe3;
+  --a-eth-soft: rgba(107, 127, 227, .12);
+  --a-sol: #12b886;
+  --a-sol-soft: rgba(18, 184, 134, .12);
+  --a-bnb: #e0a722;
+  --a-bnb-soft: rgba(224, 167, 34, .12);
   --a-card-r: 28px;
   --a-spring: cubic-bezier(.34, 1.32, .5, 1);
   --a-ease: cubic-bezier(.22, 1, .36, 1);
@@ -52,8 +48,7 @@ body.auth-page {
 }
 
 html[data-theme="dark"] body.auth-page {
-  /* Koyu palet (9 Kasım 2026): gövde #0a0b0e, kart #0a0b0e,
-     yükseltilmiş #16181d, çizgi #1f2329. */
+  
   --a-card: #0a0b0e;
   --a-art-1: #16181d;
   --a-art-2: #0e1014;
@@ -69,7 +64,6 @@ html[data-theme="dark"] body.auth-page {
   --a-cream: #f3e9d2;
 }
 
-/* ---------- zemin ışığı ---------- */
 .auth-room {
   position: fixed;
   inset: 0;
@@ -87,7 +81,6 @@ html[data-theme="dark"] body.auth-page {
     radial-gradient(55% 45% at 82% 62%, rgba(234, 179, 8, .10), transparent 72%);
 }
 
-/* ---------- sahne ---------- */
 .auth-stage {
   position: relative;
   z-index: 1;
@@ -113,7 +106,6 @@ html[data-theme="dark"] body.auth-page {
 }
 .auth-skip:focus { left: 0; }
 
-/* ---------- üst şerit ---------- */
 .auth-top {
   width: min(1060px, 100%);
   display: flex;
@@ -153,7 +145,6 @@ html[data-theme="dark"] body.auth-page {
 .auth-top-links a:hover { border-color: #ff5a68; color: #fff; }
 .auth-top-links a:focus-visible { outline: 2px solid #ff5a68; outline-offset: 4px; border-radius: 4px; }
 
-/* ---------- kart ---------- */
 .auth {
   width: min(1060px, 100%);
   display: grid;
@@ -164,7 +155,6 @@ html[data-theme="dark"] body.auth-page {
   box-shadow: var(--a-shadow);
 }
 
-/* ---------- sol: illüstrasyon ---------- */
 .auth__art {
   position: relative;
   display: flex;
@@ -175,7 +165,7 @@ html[data-theme="dark"] body.auth-page {
   overflow: hidden;
   background: linear-gradient(180deg, var(--a-art-1) 0%, var(--a-art-2) 62%, var(--a-art-1) 100%);
 }
-/* Haber kâğıdı dokusu: çok soluk sütun çizgileri. */
+
 .auth__art::before {
   content: "";
   position: absolute;
@@ -195,24 +185,24 @@ html[data-theme="dark"] .auth__art::before {
   aspect-ratio: 520 / 400;
   --px: 0;
   --py: 0;
+  
+  perspective: 1200px;
 }
 
-/* Karakter iskeleti --------------------------------------------------
-   Konumlar demo.codeandchill.store/huddle/ ölçümüne göre hizalandı
-   (kart 1060 px'te huddle 494×380; tall %27/%26, ink %47/%18,
-   sun %61/%22, blush %8/%51, taban boşluğu ~29 px). */
 .mate {
   position: absolute;
   bottom: 7.5%;
+  --near: 0;
   transform-origin: 50% 100%;
   transform:
     translate(calc(var(--dx, 0) * 1%), calc(var(--dy, 0) * 1%))
     rotate(calc(var(--rot, 0) * 1deg));
-  transition: transform .62s var(--a-spring);
+  transition: transform .62s var(--a-spring), filter .3s var(--a-ease);
   will-change: transform;
 }
 .mate__breath {
   transform-origin: 50% 100%;
+  transform-style: preserve-3d;
   animation: auth-breathe var(--bt, 4.4s) ease-in-out var(--bd, 0s) infinite;
 }
 .mate svg {
@@ -220,54 +210,96 @@ html[data-theme="dark"] .auth__art::before {
   width: 100%;
   height: auto;
   overflow: visible;
-  transform: rotate(calc(var(--px, 0) * var(--follow, 1.2deg)));
+  
+  transform:
+    translateX(calc(var(--px, 0) * var(--sway, 7px)))
+    rotate(calc(var(--px, 0) * var(--follow, 3.4deg)))
+    scale(calc(1 + var(--near, 0) * .05));
   transform-origin: 50% 100%;
+  transition: transform .28s var(--a-ease);
 }
 
-.mate--red   { left: 27%; width: 26.5%; z-index: 1; --bt: 4.6s; --bd: -.4s; }
-.mate--ink   { left: 47%; width: 17.5%; z-index: 2; --bt: 3.9s; --bd: -1.9s; }
-.mate--amber { left: 61%; width: 22%; z-index: 3; --bt: 5.1s; --bd: -1.1s; }
-.mate--coral { left: 8%; width: 51%; z-index: 4; --bt: 4.2s; --bd: -2.7s; }
+.mate--eth { left: 0;   width: 29%; z-index: 1; --bt: 3.9s; --bd: -1.9s; }
+.mate--sol { left: 20%; width: 25%; z-index: 2; --bt: 5.1s; --bd: -1.1s; }
+.mate--bnb { left: 70%; width: 29%; z-index: 3; --bt: 4.6s; --bd: -.4s; }
+.mate--btc { left: 37%; width: 42%; z-index: 4; --bt: 4.2s; --bd: -2.7s; }
 
 @keyframes auth-breathe {
   0%, to { transform: scale(1, 1); }
   50% { transform: scale(.995, 1.018); }
 }
 
-/* Renkler ------------------------------------------------------------ */
-.ink-red   { fill: var(--a-red); }
-.ink-ink   { fill: var(--a-ink); }
-.ink-amber { fill: var(--a-amber); }
-.ink-coral { fill: var(--a-coral); }
-.ink-cream { fill: var(--a-cream); }
-.ink-white { fill: #fff; }
-.face-ink  { fill: #17151a; }
-.face-line { fill: none; stroke: #17151a; stroke-width: 6; stroke-linecap: round; stroke-linejoin: round; }
-.face-line--light { stroke: #fff; stroke-width: 5; }
-.face-line--lip { stroke-width: 5; }
-
-/* Kırmızı karakter: baş gövdeden ayrı döner (bel kırılması). */
-.red-head {
-  transform: rotate(calc(var(--bend, 0) * 1deg));
-  transform-box: view-box;
-  transform-origin: 75px 158px;
-  transition: transform .62s var(--a-spring);
+.mate.is-spinning .mate__breath {
+  animation: auth-coin-spin .92s cubic-bezier(.45, .05, .2, 1);
 }
-.amber-face {
-  transform: scaleX(var(--flip, 1));
-  transform-box: view-box;
-  transform-origin: 60px 86px;
-  transition: transform .45s var(--a-ease);
+@keyframes auth-coin-spin {
+  0%   { transform: rotateY(0deg); }
+  50%  { transform: rotateY(180deg) scale(1.03); }
+  to   { transform: rotateY(360deg); }
 }
-.mate--ink .ink-back { opacity: 0; transition: opacity .2s linear .1s; }
 
-/* Gözler / ağızlar --------------------------------------------------- */
+.mate--btc { --coin: var(--a-btc); --coin-soft: var(--a-btc-soft); }
+.mate--eth { --coin: var(--a-eth); --coin-soft: var(--a-eth-soft); }
+.mate--sol { --coin: var(--a-sol); --coin-soft: var(--a-sol-soft); }
+.mate--bnb { --coin: var(--a-bnb); --coin-soft: var(--a-bnb-soft); }
+
+.coin-edge {
+  fill: none;
+  stroke: var(--coin);
+  stroke-width: 7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.coin-edge.is-soft { stroke-width: 4; opacity: .45; }
+.coin-edge.is-hair { stroke-width: 3; opacity: .34; }
+.coin-edge.is-bar  { stroke-width: 8; }
+.coin-fill { fill: var(--coin-soft); }
+
+.cape__wing {
+  fill: var(--coin-soft);
+  stroke: var(--coin);
+  stroke-width: 4;
+  stroke-linejoin: round;
+  opacity: .8;
+  transform-box: view-box;
+  transform-origin: 50% 20%;
+  animation: auth-cape 6.4s ease-in-out var(--bd, 0s) infinite;
+}
+@keyframes auth-cape {
+  0%, to { transform: rotate(-1.6deg); }
+  50%    { transform: rotate(1.8deg); }
+}
+.hero-mask {
+  fill: var(--coin-soft);
+  stroke: var(--coin);
+  stroke-width: 4;
+  stroke-linejoin: round;
+  opacity: .9;
+}
+
+.mate--sol .speed {
+  opacity: calc(.3 + var(--near, 0) * .7);
+  transform: translateX(calc(var(--near, 0) * -7px));
+  transition: opacity .25s linear, transform .25s var(--a-ease);
+}
+
+.face-ink  { fill: var(--a-text); }
+.face-line {
+  fill: none;
+  stroke: var(--a-text);
+  stroke-width: 6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
 .face__pupils {
   transform: translate(
-    calc(var(--px, 0) * var(--gaze, 5px)),
-    calc(var(--py, 0) * var(--gaze, 5px) * .7)
+    calc(var(--px, 0) * var(--gaze, 8px) + var(--look-x, 0px)),
+    calc(var(--py, 0) * var(--gaze, 8px) * .7 + var(--look-y, 0px))
   );
+  transition: transform .34s var(--a-spring);
 }
+.face { transition: opacity .2s linear; }
 .face__eyes, .face__mouth { transition: opacity .16s linear; }
 .face__eyes.is-open { opacity: var(--f-open, 1); }
 .face__eyes.is-shut { opacity: var(--f-shut, 0); }
@@ -280,7 +312,6 @@ html[data-theme="dark"] .auth__art::before {
 .face__mouth.is-frown { opacity: var(--m-frown, 0); }
 .face__mouth.is-grin  { opacity: var(--m-grin, 0); }
 
-/* Göz kırpma: yalnız sakin (idle/nosy) durumda. */
 .mate .face__eyes.is-open { animation: auth-blink-open 6.5s var(--bd, 0s) infinite; }
 .mate .face__eyes.is-shut { animation: auth-blink-shut 6.5s var(--bd, 0s) infinite; }
 @keyframes auth-blink-open {
@@ -293,52 +324,159 @@ html[data-theme="dark"] .auth__art::before {
 }
 .auth:not([data-mood="idle"]):not([data-mood="nosy"]) .face__eyes { animation: none; }
 
-/* ---------- ruh hâlleri ----------
-   Tek kaynak `.auth[data-mood]`; JS yalnız bu özniteliği değiştirir.
-   Değerler iki koordinat sistemiyle yazılır: gövde (dx/dy/rot/bend) ve
-   yüz (f-*/m-*). Böylece aynı durum dört karakterde birden okunur. */
+m-*). Böylece aynı durum dört kahramanda birden okunur. */
 
-[data-mood="nosy"] .mate--red   { --rot: 6; --dx: 3; --dy: -2.6; --bend: 10; --m-calm: 0; --m-o: 1; }
-[data-mood="nosy"] .mate--ink   { --rot: 5; --dx: 4; --dy: -2; }
-[data-mood="nosy"] .mate--amber { --rot: 4; --dx: 3; --dy: -2.6; }
-[data-mood="nosy"] .mate--coral { --dx: 2; --m-calm: 0; --m-dots: 1; }
+[data-mood="nosy"] .mate--btc { --rot: 11; --dx: 6; --dy: -4.2; --m-calm: 0; --m-o: 1; }
+[data-mood="nosy"] .mate--eth { --rot: 15; --dx: 9; --dy: -3.4; }
+[data-mood="nosy"] .mate--sol { --rot: 13; --dx: 7; --dy: -4;   --m-calm: 0; --m-dots: 1; }
+[data-mood="nosy"] .mate--bnb { --rot: 8;  --dx: 4; --dy: -3.4; }
 
-[data-mood="shy"] .mate { --f-open: 0; --f-shut: 1; --follow: 0deg; }
-[data-mood="shy"] .mate--red   { --rot: -5; --dx: -3; --dy: -2.2; --bend: -8; --m-calm: 0; }
-[data-mood="shy"] .mate--ink   { --rot: -4; --dx: -2; --dy: -1.6; }
-[data-mood="shy"] .mate--amber { --rot: -3; --dx: -2; --dy: -1.9; --flip: -1; --m-calm: 0; }
-[data-mood="shy"] .mate--coral { --dx: -2; --m-calm: 0; }
+[data-mood="nosy"] .mate { --look-x: 3px; }
 
-/* Utangaçken bir tanesi dayanamayıp bakar; yakalanınca geri kapatır. */
-.mate--ink.is-peeking { --f-shut: 0; --f-peek: 1; --rot: 3; --dx: 4; --dy: -1.2; }
+[data-mood="shy"] .mate { --follow: .8deg; --sway: 2px; --gaze: 0px; --look-y: -5px; }
+[data-mood="shy"] .mate--btc { --rot: -9;  --dx: -5; --dy: -2.8; --m-calm: 0; --m-wave: 1; }
+[data-mood="shy"] .mate--eth { --rot: -12; --dx: -7; --dy: -2.2; --look-x: -4px; }
+[data-mood="shy"] .mate--sol { --rot: -10; --dx: -6; --dy: -2.6; --m-calm: 0; --m-dots: 1; }
+[data-mood="shy"] .mate--bnb { --rot: -7;  --dx: -4; --dy: -2.2; --m-calm: 0; --look-x: 4px; }
 
-[data-mood="exposed"] .mate { --f-open: 0; --f-shut: 1; --follow: 0deg; }
-[data-mood="exposed"] .mate--red   { --rot: -9; --dx: -6; --dy: -3.9; --bend: -22; --m-calm: 0; --m-frown: 1; }
-[data-mood="exposed"] .mate--ink   { --rot: -6; --dx: -4; --dy: -2.5; --f-shut: 0; }
-[data-mood="exposed"] .mate--amber { --rot: -5; --dx: -3; --dy: -3.2; --flip: -1; --m-calm: 0; --m-wave: 1; }
-[data-mood="exposed"] .mate--coral { --dx: -3; --m-calm: 0; --m-frown: 1; }
-/* Sırtını dönen mürekkep: yüz yok, yalnız sırt dikişi. */
-[data-mood="exposed"] .mate--ink .face { opacity: 0; }
-[data-mood="exposed"] .mate--ink .ink-back { opacity: 1; }
+.mate--eth.is-peeking { --look-y: 4px; --look-x: 7px; --rot: 5; --dx: 5; --dy: -1.6; }
 
-[data-mood="busy"] .mate--red   { --rot: 4; --dx: 2; --dy: -1.7; --bend: 6; --m-calm: 0; --m-o: 1; }
-[data-mood="busy"] .mate--ink   { --rot: 3; --dx: 2; --dy: -1.2; }
-[data-mood="busy"] .mate--amber { --rot: 3; --dx: 2; --dy: -1.9; }
-[data-mood="busy"] .mate--coral { --dx: 1; --m-calm: 0; --m-dots: 1; }
+[data-mood="exposed"] .mate { --f-open: 0; --f-shut: 1; --follow: 0deg; --sway: 0px; }
+[data-mood="exposed"] .mate--btc { --rot: -14; --dx: -8; --dy: -4.4; --m-calm: 0; --m-frown: 1; }
+[data-mood="exposed"] .mate--eth { --rot: -17; --dx: -10; --dy: -3.2; --f-shut: 0; }
+[data-mood="exposed"] .mate--sol { --rot: -15; --dx: -8; --dy: -3.8; --m-calm: 0; --m-wave: 1; }
+[data-mood="exposed"] .mate--bnb { --rot: -11; --dx: -6; --dy: -3; }
 
-[data-mood="wrong"] .mate { --f-open: 0; --f-shut: 1; --follow: 0deg; }
-[data-mood="wrong"] .mate--red   { --rot: -8; --dx: -5; --dy: -3.5; --bend: -10; --m-calm: 0; --m-frown: 1; }
-[data-mood="wrong"] .mate--ink   { --rot: -6; --dx: -4; --dy: -2.5; }
-[data-mood="wrong"] .mate--amber { --rot: -5; --dx: -3; --dy: -3.2; --m-calm: 0; --m-wave: 1; }
-[data-mood="wrong"] .mate--coral { --dx: -2; --m-calm: 0; --m-frown: 1; }
+[data-mood="exposed"] .mate--bnb .face { opacity: 0; }
 
-/* Giriş animasyonu (JS varsa). */
+[data-mood="busy"] .mate--btc { --rot: 4; --dx: 2; --dy: -1.7; --m-calm: 0; --m-o: 1; }
+[data-mood="busy"] .mate--eth { --rot: 3; --dx: 2; --dy: -1.2; }
+[data-mood="busy"] .mate--sol { --rot: 3; --dx: 2; --dy: -1.9; --m-calm: 0; --m-dots: 1; }
+[data-mood="busy"] .mate--bnb { --rot: 2; --dx: 1; --dy: -1.4; --m-calm: 0; --m-dots: 1; }
+
+[data-mood="wrong"] .mate { --follow: 0deg; --sway: 0px; --gaze: 4px; --look-y: 3px; }
+[data-mood="wrong"] .mate--btc { --rot: -9; --dx: -5; --dy: 4.2; --m-calm: 0; --m-frown: 1; }
+[data-mood="wrong"] .mate--eth { --rot: -8; --dx: -4; --dy: 3.4; --m-calm: 0; --m-frown: 1; }
+[data-mood="wrong"] .mate--sol { --rot: -7; --dx: -3; --dy: 3.8; --m-calm: 0; --m-wave: 1; }
+[data-mood="wrong"] .mate--bnb { --rot: -6; --dx: -3; --dy: 3.2; --m-calm: 0; --m-frown: 1; }
+
+.kur {
+  position: absolute;
+  left: 50%;
+  bottom: 100%;
+  z-index: 5;
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+  margin-bottom: 8px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--a-hair);
+  background: var(--a-card);
+  font-size: 10px;
+  line-height: 1;
+  white-space: nowrap;
+  color: var(--a-text);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, .18);
+  
+  opacity: 0;
+  transform: translate(-50%, 8px) rotate(calc(var(--rot, 0) * -1deg)) scale(.9);
+  transition: opacity .28s var(--a-ease), transform .42s var(--a-spring);
+  pointer-events: none;
+}
+
+.mate--btc .kur { left: 50%; margin-bottom: 10px; }
+.mate--bnb .kur { left: 58%; margin-bottom: 10px; }
+.mate--sol .kur { left: 58%; margin-bottom: 90px; }
+.mate--eth .kur { left: 76%; margin-bottom: 130px; }
+
+.kur b { font-size: 10px; letter-spacing: .04em; opacity: .62; }
+.kur__fiyat { font-weight: 700; font-variant-numeric: tabular-nums; }
+.kur__degisim { font-style: normal; font-weight: 600; font-variant-numeric: tabular-nums; }
+.kur--up .kur__degisim { color: var(--a-ok); }
+.kur--down .kur__degisim { color: var(--a-danger); }
+.kur__poz {
+  font-style: normal;
+  font-weight: 700;
+  font-size: 9px;
+  letter-spacing: .08em;
+  padding: 2px 6px;
+  border-radius: 999px;
+  color: #fff;
+  background: var(--a-muted);
+}
+.kur__poz:empty { display: none; }
+
+[data-pos] .kur {
+  opacity: 1;
+  transform: translate(-50%, 0) rotate(calc(var(--rot, 0) * -1deg)) scale(1);
+}
+[data-pos="long"] .kur__poz { background: var(--a-danger); }
+[data-pos="short"] .kur__poz { background: var(--a-ok); }
+
+[data-pos="long"] .mate {
+  filter:
+    grayscale(.84) brightness(1.12)
+    drop-shadow(0 0 10px rgba(130, 200, 255, .6));
+  animation: auth-titre .5s linear 3;
+}
+[data-pos="long"] .mate__breath { animation-duration: 2.2s; }
+
+[data-pos="long"] .mate {
+  --m-calm: 0; --m-frown: 0; --m-wave: 0; --m-dots: 0; --m-o: 1;
+  --f-open: 1; --f-shut: 0; --gaze: 2px; --look-y: -2px;
+}
+@keyframes auth-titre {
+  0%, to { margin-left: 0; }
+  25% { margin-left: -3px; }
+  75% { margin-left: 3px; }
+}
+
+[data-pos="long"] .auth__art::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(120% 90% at 50% 100%, rgba(120, 190, 255, .22), transparent 62%),
+    linear-gradient(180deg, rgba(150, 210, 255, .14), transparent 45%);
+  pointer-events: none;
+  animation: auth-fade .5s ease-out;
+}
+
+[data-pos="short"] .mate {
+  filter: saturate(1.22) brightness(1.05) drop-shadow(0 0 12px rgba(255, 170, 60, .5));
+  animation: auth-zipla .72s cubic-bezier(.25, .9, .3, 1.2);
+}
+[data-pos="short"] .mate {
+  --m-calm: 0; --m-o: 0; --m-frown: 0; --m-grin: 1;
+  --f-open: 0; --f-shut: 0; --f-glad: 1; --look-y: 0px;
+}
+@keyframes auth-zipla {
+  0%   { margin-bottom: 0; }
+  35%  { margin-bottom: 16px; }
+  60%  { margin-bottom: -2px; }
+  to   { margin-bottom: 0; }
+}
+[data-pos="short"] .auth__art::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(120% 90% at 50% 100%, rgba(255, 176, 64, .2), transparent 60%);
+  pointer-events: none;
+  animation: auth-fade .5s ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-pos="long"] .mate,
+  [data-pos="short"] .mate { animation: none; }
+}
+
 .js .mate { animation: auth-arrive .82s cubic-bezier(.2, .92, .28, 1.06) var(--ad, 0s) backwards; }
 .js .face { animation: auth-fade .45s ease-out calc(var(--ad, 0s) + .5s) backwards; }
-.mate--red   { --ad: .10s; --ax: -18; --ay: 34; --ar: -22; }
-.mate--ink   { --ad: 0s;   --ax: 22;  --ay: -58; --ar: 26; }
-.mate--amber { --ad: .20s; --ax: 34;  --ay: 40; --ar: 20; }
-.mate--coral { --ad: .28s; --ax: -12; --ay: 46; --ar: -12; }
+.mate--eth { --ad: 0s;   --ax: -22; --ay: -46; --ar: -24; }
+.mate--sol { --ad: .10s; --ax: -14; --ay: 38;  --ar: -18; }
+.mate--bnb { --ad: .20s; --ax: 30;  --ay: 36;  --ar: 22; }
+.mate--btc { --ad: .28s; --ax: 6;   --ay: 48;  --ar: 10; }
 @keyframes auth-arrive {
   0% { opacity: 0; transform: translate(calc(var(--ax, 0) * 1%), calc(var(--ay, 0) * 1%)) rotate(calc(var(--ar, 0) * 1deg)); }
   22% { opacity: 1; }
@@ -346,7 +484,6 @@ html[data-theme="dark"] .auth__art::before {
 }
 @keyframes auth-fade { 0% { opacity: 0; } to { opacity: 1; } }
 
-/* ---------- sağ: form ---------- */
 .auth__panel {
   background: var(--a-card);
   display: flex;
@@ -379,7 +516,6 @@ html[data-theme="dark"] .auth__art::before {
   color: var(--a-muted);
 }
 
-/* Sunucu hatası / bilgi kutusu */
 .auth-alert {
   display: flex;
   gap: 8px;
@@ -400,7 +536,6 @@ html[data-theme="dark"] .auth__art::before {
 }
 .auth-alert svg { flex: none; margin-top: 1px; }
 
-/* Başarı işareti (şifre güncellendi / e-posta doğrulandı) --------------- */
 .panel__ok {
   width: 54px;
   height: 54px;
@@ -422,7 +557,6 @@ html[data-theme="dark"] .auth__art::before {
 }
 .panel__ok--hata { background: var(--a-danger); }
 
-/* Alanlar ------------------------------------------------------------ */
 .afield { position: relative; padding-bottom: 30px; }
 .afield__label {
   display: block;
@@ -502,7 +636,6 @@ html[data-theme="dark"] .auth__art::before {
 .acaps[hidden] { display: none; }
 .afield[data-invalid] .acaps { display: none; }
 
-/* Şifre göster/gizle ------------------------------------------------- */
 .apeek {
   position: absolute;
   right: -6px;
@@ -534,7 +667,6 @@ html[data-theme="dark"] .auth__art::before {
 .apeek[aria-pressed="true"] .apeek__on { display: none; }
 .apeek[aria-pressed="true"] .apeek__off { display: block; }
 
-/* Satır: beni hatırla + şifremi unuttum ------------------------------- */
 .arow {
   display: flex;
   align-items: center;
@@ -584,7 +716,6 @@ html[data-theme="dark"] .auth__art::before {
 .alink--strong { color: var(--a-red); font-weight: 600; }
 .alink--strong:hover { color: var(--a-red); border-color: currentColor; }
 
-/* Birincil düğme ------------------------------------------------------ */
 .acta {
   position: relative;
   width: 100%;
@@ -621,7 +752,6 @@ html[data-theme="dark"] .auth__art::before {
 .acta[data-busy] .acta__spin { opacity: 1; transform: scale(1); animation: auth-spin .7s linear infinite; }
 @keyframes auth-spin { to { transform: rotate(360deg) scale(1); } }
 
-/* Ayırıcı + Google ---------------------------------------------------- */
 .asep {
   display: flex;
   align-items: center;
@@ -661,7 +791,6 @@ html[data-theme="dark"] .auth__art::before {
   color: var(--a-muted);
 }
 
-/* Alt ipucu ----------------------------------------------------------- */
 .auth-hint {
   margin: 0;
   text-align: center;
@@ -678,7 +807,6 @@ html[data-theme="dark"] .auth__art::before {
 }
 .auth-hint__note { font-size: .76rem; color: #8f8995; }
 
-/* Yanlış giriş: kart sarsılır (yalnız bir kez). */
 [data-mood="wrong"] [data-shake] { animation: auth-jolt .42s cubic-bezier(.36, .07, .19, .97); }
 @keyframes auth-jolt {
   0%, to { transform: translate(0); }
@@ -689,7 +817,6 @@ html[data-theme="dark"] .auth__art::before {
   85% { transform: translate(-1px); }
 }
 
-/* Odak halkaları ------------------------------------------------------ */
 .auth-page :where(a, button, input, [tabindex]):focus-visible {
   outline: 2px solid var(--a-red);
   outline-offset: 3px;
@@ -701,7 +828,6 @@ html[data-theme="dark"] .auth__art::before {
 .auth-page .apeek:focus-visible { border-radius: 50%; }
 .auth-page .acheck input:focus-visible + .acheck__box { outline: 2px solid var(--a-red); outline-offset: 3px; }
 
-/* Hareket azaltma ----------------------------------------------------- */
 @media (prefers-reduced-motion: reduce) {
   .js .mate, .js .face, .mate__breath,
   .mate .face__eyes.is-open, .mate .face__eyes.is-shut { animation: none; }
@@ -712,7 +838,6 @@ html[data-theme="dark"] .auth__art::before {
   .acta[data-busy] .acta__spin { animation: none; opacity: 1; }
 }
 
-/* Duyarlı ------------------------------------------------------------- */
 @media (max-width: 900px) {
   .auth { grid-template-columns: 1fr; }
   .auth__art {
@@ -736,25 +861,6 @@ html[data-theme="dark"] .auth__art::before {
   .auth__panel { padding-top: 30px; padding-bottom: 30px; }
 }
 
-/* =====================================================================
-   13) ÜYELİK SAYFALARI — CoinDesk diline geçiş (7 Kasım 2026)
-   =====================================================================
-   NEDEN: giriş/kayıt/şifre sıfırlama sayfaları ayrı bir kabuk kullanıyor
-   (uye-giris.css). Bu dosya public_head'ten SONRA yüklendiği için
-   cd-public.css'teki jetonları eziyordu: sayfa koyu bordo zemin
-   (#0d0b0e), kırmızı marka (#d10015), 28 px kart köşesi ve ağır gölge
-   ile açılıyordu. Sitenin geri kalanı CoinDesk tasarımındayken giriş
-   sayfası "başka site" gibi duruyordu.
-
-   YAKLAŞIM: düzeni (iki sütunlu huddle illüstrasyonu + form) KORU —
-   kullanıcı akışı ve karakter animasyonları değişmiyor. Yalnız görsel
-   dil CoinDesk'e çevriliyor: beyaz zemin, 4 px köşe, 1 px çizgi,
-   gölge yok, siyah birincil düğme, Neue Haas/Inter tipografi.
-
-   Bu blok dosyanın SONUNDA olmalı: aynı özgüllükte sonra gelen kazanır.
-   ===================================================================== */
-
-/* ---- Zemin: koyu bordo ışık → düz beyaz (CoinDesk) ---- */
 body.auth-page {
   --a-bg: #ffffff;
   --a-bg-2: #ffffff;
@@ -781,7 +887,7 @@ body.auth-page {
 }
 
 html[data-theme="dark"] body.auth-page {
-  /* Koyu palet (kullanıcı isteği, 9 Kasım 2026). */
+  
   --a-bg: #0a0b0e;
   --a-bg-2: #0a0b0e;
   --a-card: #0a0b0e;
@@ -799,24 +905,16 @@ html[data-theme="dark"] body.auth-page {
   --a-ink: #ffffff;
 
   background-color: #0a0b0e;
-  /* Gövde metin rengi de jetonla dönmeli: taban kural `color:#262626`
-     yazdığı için koyu temada metin koyu kalıyordu (9 Kasım 2026 ölçümü). */
+  
   color: var(--a-text);
 }
 
-/* Koyu bordo ışık katmanı kalkar: CoinDesk düz zemin kullanıyor. */
 .auth-room { display: none; }
 
-/* ---- Üst şerit ---- */
 .auth-stage { padding-top: 24px; }
 .auth-top { padding: 0 0 24px; }
 .auth-brand__logo { display: block; height: 32px; width: auto; }
 
-/* ÖZGÜLLÜK TUZAĞI (7 Kasım 2026): uye-giris.css'te daha yukarıda
-   `.auth-brand img { height: 30px; width: auto; display: block; }`
-   kuralı var (0,1,1). Tek sınıflı `.auth-brand__logo--acik` (0,1,0) onu
-   EZEMİYOR ve iki logo YAN YANA basılıyordu (ölçümde ekran görüntüsünde
-   görüldü). Gizleme kuralları aynı özgüllükte yazılmalı. */
 .auth-brand .auth-brand__logo--acik { display: none; }
 html[data-theme="dark"] .auth-brand .auth-brand__logo--koyu { display: none; }
 html[data-theme="dark"] .auth-brand .auth-brand__logo--acik { display: block; }
@@ -841,7 +939,6 @@ html[data-theme="dark"] .auth-brand .auth-brand__logo--acik { display: block; }
 }
 .auth-top-links a:hover { background: var(--a-ghost); color: var(--a-text); border-color: var(--a-hair); }
 
-/* ---- Kart: 28 px köşe + ağır gölge → 4 px + 1 px çizgi ---- */
 .auth {
   border-radius: var(--hp-radius);
   border: 1px solid var(--a-hair);
@@ -849,22 +946,18 @@ html[data-theme="dark"] .auth-brand .auth-brand__logo--acik { display: block; }
   overflow: hidden;
 }
 
-/* İllüstrasyon paneli: gazete dokusu korunur, kırmızı marka kalkar. */
 .auth__art {
   background: var(--a-art-1);
   min-height: 600px;
 }
 
-/* CoinDesk'te form paneli zeminden ayrılmıyor; ince ayırıcı yeterli. */
 .auth__panel {
   border-left: 1px solid var(--a-hair);
   background: var(--a-card);
 }
 
-/* Kırmızı kalkan ikonu: CoinDesk dilinde nötr. */
 .panel__mark { display: none; }
 
-/* ---- Tipografi ---- */
 .panel__title {
   font-family: var(--hp-serif);
   font-size: 32px;
@@ -880,7 +973,6 @@ html[data-theme="dark"] .auth-brand .auth-brand__logo--acik { display: block; }
   color: var(--a-muted);
 }
 
-/* ---- Form alanları ---- */
 .auth-form input[type="text"],
 .auth-form input[type="email"],
 .auth-form input[type="password"],
@@ -901,7 +993,6 @@ html[data-theme="dark"] .auth-brand .auth-brand__logo--acik { display: block; }
 }
 html[data-theme="dark"] .auth-form input:focus { border-color: #ffffff; }
 
-/* ---- Birincil düğme: kırmızı → siyah (CoinDesk), 4 px köşe ---- */
 .auth-form button[type="submit"],
 .auth-form .panel__submit,
 .auth-form .btn {
@@ -933,16 +1024,13 @@ html[data-theme="dark"] .auth-form .btn:hover {
   border-color: #d9d9d9;
 }
 
-/* Bağlantılar (şifremi unuttum, kayıt ol) */
 .auth-form a { color: var(--a-text); text-decoration: underline; text-underline-offset: 3px; }
 .auth-form a:hover { color: #000000; }
 html[data-theme="dark"] .auth-form a:hover { color: #ffffff; }
 
-/* Uyarı kutusu: kırmızı tonları korunur ama 4 px köşe. */
 .auth-alert { border-radius: var(--hp-radius); }
 .panel__ok { border-radius: var(--hp-radius); }
 
-/* ---- Duyarlı ---- */
 @media (max-width: 900px) {
   .auth__art { display: none; }
   .auth { grid-template-columns: minmax(0, 1fr); }
@@ -950,12 +1038,6 @@ html[data-theme="dark"] .auth-form a:hover { color: #ffffff; }
   .panel__title { font-size: 28px; line-height: 36px; }
 }
 
-/* ---- 14) Alt ipucu metni: koyu tema rengi sabitlenmişti ----
- *
- * HATA (ölçüldü, 7 Kasım 2026): `.auth-hint` rengi #cfc8d2, `.auth-hint__note`
- * #8f8995 olarak SABİT yazılmıştı — bunlar koyu zemin için seçilmiş açık
- * griler. Zemini beyaza çevirince metin neredeyse görünmez kaldı
- * (kontrast ~1.4:1). Renk artık tema jetonuna bağlı. */
 .auth-hint { color: var(--a-muted); }
 .auth-hint__say { color: var(--a-text); }
 .auth-hint__note { color: var(--a-muted); }

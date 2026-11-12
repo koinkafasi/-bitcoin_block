@@ -12,12 +12,6 @@ import (
 	"theblock/site/internal/youtube"
 )
 
-// YouTube video & canlı yayın paneli (/admin/video-yayin).
-//
-// NEDEN AYRI PANEL: kanal kimliği, çekme sıklığı ve hangi içeriğin öne
-// çıkacağı kod değiştirmeden yönetilebilmeli. Ayrıca canlı algılama
-// gecikirse editör bir yayını elle işaretleyebilmeli.
-
 type videoYayinData struct {
 	ayar    youtube.Ayar
 	items   []repo.YoutubeKayit
@@ -121,10 +115,6 @@ func (s *Server) handleVideoYayinCek(w http.ResponseWriter, r *http.Request) {
 		strconv.Itoa(len(sn.Yayinlar))+" yayın.")
 }
 
-// handleVideoYayinIslem tek içerik üzerinde bayrak/silme işlemi.
-//
-// islem: one_cikan · canli · gizli · sil. Bayraklar TERSİNE çevrilir
-// (düğme "Öne çıkar"/"Öne çıkarmayı kaldır" olarak iki durumda basılır).
 func (s *Server) handleVideoYayinIslem(w http.ResponseWriter, r *http.Request) {
 	id := strings.TrimSpace(r.PathValue("id"))
 	islem := strings.TrimSpace(r.PathValue("islem"))

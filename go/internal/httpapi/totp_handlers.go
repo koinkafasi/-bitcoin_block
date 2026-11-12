@@ -16,12 +16,6 @@ import (
 
 const pending2FACookie = "tb_2fa"
 
-// pending2FAValue, şifre adımını geçen kullanıcı için HMAC imzalı ara çerez
-// değeri üretir: "uid:exp:imza".
-//
-// Eski biçim yalnız "uid:exp" idi; imza olmadığı için saldırgan çerezi elle
-// yazıp şifre adımını atlayabiliyordu (2FA'yı devre dışı bırakmadan kodu
-// denemek serbest kalıyordu).
 func (s *Server) pending2FAValue(uid, exp int64) string {
 	payload := strconv.FormatInt(uid, 10) + ":" + strconv.FormatInt(exp, 10)
 	mac := hmac.New(sha256.New, s.memberSecret())

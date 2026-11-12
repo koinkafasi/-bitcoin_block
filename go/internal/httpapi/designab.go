@@ -9,12 +9,6 @@ import (
 	"theblock/site/internal/repo"
 )
 
-// ---- Sayfa düzeni A/B testi (Faz 7) ----
-//
-// A varyantı = aktif düzen (page_layouts.blocks), B varyantı = layout_ab.b_blocks
-// (yönetici tasarımcıdan "B olarak ata" der). Ziyaretçi çerez (tb_ab) ile ayrıştırılır;
-// çerez yoksa weight_b olasılığıyla B atanır ve çerez yazılır. Günlük hit sayılır.
-
 const abCookie = "tb_ab"
 
 // applyAB (varsa) A/B testini uygular: varyant seçer, çerez yazar, günlük hit

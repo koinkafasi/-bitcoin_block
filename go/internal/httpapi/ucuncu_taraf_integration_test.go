@@ -1,16 +1,5 @@
 //go:build integration
 
-// Public sayfaların üçüncü taraf bağlantı yüzeyini kilitler.
-//
-// Neden test gerekiyor: fontlar bir süre fonts.googleapis.com ve
-// fonts.gstatic.com üzerinden yükleniyordu. Bu, sayfayı açan her ziyaretçinin
-// IP adresinin ve User-Agent bilgisinin, kullanıcı hiçbir şey yapmadan ve
-// rızası alınmadan Google'a (ABD) gitmesi demekti — 6698 sayılı Kanun'un
-// 9. maddesi anlamında yurt dışına aktarım. Fontlar yerele alındı; bu test
-// geri gelmesini engeller.
-//
-// Bir <link href="https://fonts.googleapis.com/..."> satırını şablona geri
-// koymak bu testi kırar.
 package httpapi_test
 
 import (
@@ -72,9 +61,6 @@ func TestYerelFontlarSunuluyor(t *testing.T) {
 	assert.Equal(t, 200, resp.StatusCode, "fonts.css sunulmalı")
 	assert.Contains(t, css, "@font-face", "fonts.css @font-face içermeli")
 	assert.Contains(t, css, "Poppins")
-	// Dosyanın yorum bloğu, kaldırılan adresleri açıklamak için adıyla anıyor;
-	// bu yüzden metnin tamamında arama yapılmaz. Asıl değişmez şudur: hiçbir
-	// src bildirimi uzak bir adrese işaret etmemeli.
 	for _, uzak := range []string{"url(https://", "url('https://", "url(\"https://"} {
 		assert.NotContains(t, css, uzak, "fonts.css uzak kaynağa işaret etmemeli")
 	}
@@ -95,14 +81,6 @@ func TestYerelFontlarSunuluyor(t *testing.T) {
 	}
 }
 
-// GA4 yapılandırılmış OLSA BİLE sayfa, gtag.js'i kendisi yüklememeli:
-// ölçüm kimliği yalnız cerez.js'e data-ga4 ile geçer ve betik, ziyaretçi
-// açıkça kabul ederse scripti istemci tarafında ekler.
-//
-// Kurul'un 08.08.2024 tarihli 2024/1361 sayılı kararı, kesinlikle gerekli
-// olmayan analitik çerez için sitenin ilk girişinde açık rıza alacak bir
-// mekanizma bulunmamasını ihlal saydı. Şablona <script src="...gtag/js...">
-// geri konursa bu test kırılır.
 func TestAnalitikRizaOncesiYuklenmez(t *testing.T) {
 	skipIfNoDB(t)
 
@@ -118,10 +96,6 @@ func TestAnalitikRizaOncesiYuklenmez(t *testing.T) {
 			`DELETE FROM settings WHERE section='trend' AND key='ga4_olcum'`)
 	})
 
-	// Kendi sunucusunu kurar: ga4Measurement, cachedSetting üzerinden TTL
-	// önbellekli okunur (ga4.go). Paketin ortak sunucusu önceki testlerde
-	// ayarı BOŞ olarak önbelleğe aldığı için buradaki INSERT ona yansımaz;
-	// yeni sunucunun önbelleği boştur ve değeri taze okur.
 	bundle, err := i18n.Load(ctx, itPool)
 	require.NoError(t, err)
 	cfg := config.Config{

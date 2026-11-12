@@ -9,18 +9,6 @@ import (
 	"theblock/site/internal/webui/templkit"
 )
 
-// JSON-LD üretimi — Go tarafında.
-//
-// NEDEN templ içinde değil: templ `<script>` içeriğini HAM metin sayar;
-// `{{ }}` ifadeleri çalıştırılmaz. Ölçüm (5 Kasım 2026): çıktıda literal
-// `{{ templ.JSONString(...) }}` göründü, JSON geçersiz oldu, Google yapısal
-// veriyi okuyamadı. theblock da aynı nedenle jsonld.go'da strings.Builder
-// kullanıyor.
-
-// jsonldScript tek bir yapısal veri bloğunu <script> etiketiyle sarar.
-//
-// `</script>` enjeksiyonuna karşı: json.Marshal `</` dizisini `<\/` yapar
-// (Go 1.7+ SetEscapeHTML varsayılanı), bu yüzden ek kaçış gerekmez.
 func jsonldScript(v any) template.HTML {
 	b, err := json.Marshal(v)
 	if err != nil {
@@ -65,17 +53,6 @@ type makaleLDGirdi struct {
 	Gorsel string
 }
 
-// makaleJSONLD NewsArticle — CoinDesk makale sayfasıyla aynı alan seti.
-//
-// CoinDesk tek nesne basıyor (@graph YOK) ve şu alanları taşıyor:
-// inLanguage, url, identifier, publisher, headline, abstract,
-// mainEntityOfPage, thumbnailUrl, image, datePublished, dateModified,
-// articleSection, author, keywords.
-//
-// FARK (bilinçli): `author` CoinDesk'te Person + jobTitle + worksFor +
-// description + sameAs + image taşıyor. Bizde yazarın biyografisi/sosyal
-// hesabı veritabanında doğrulanmış alan olarak yoksa yalnız name + url
-// basılır — uydurma jobTitle yazmak E-E-A-T'yi zayıflatır.
 func makaleJSONLD(g makaleLDGirdi) template.HTML {
 	v := g.View
 	yazar := map[string]any{"@type": "Person", "name": v.Author}
@@ -126,11 +103,6 @@ func makaleJSONLD(g makaleLDGirdi) template.HTML {
 	return jsonldScript(makale)
 }
 
-// makaleBreadcrumbJSONLD BreadcrumbList — ayrı blok.
-//
-// CoinDesk makalede kırıntı basmıyor; ama Google SERP yolunu bu blok
-// besliyor ve sayfada GÖRÜNÜR kırıntı yok (kullanıcı isteği) — yapısal
-// veri arka planda kalıyor.
 func makaleBreadcrumbJSONLD(v templkit.CDArticleView) template.HTML {
 	return breadcrumbScript([]crumb{
 		{Name: "Ana sayfa", URL: strings.TrimRight(v.BaseURL, "/") + "/"},
@@ -139,12 +111,6 @@ func makaleBreadcrumbJSONLD(v templkit.CDArticleView) template.HTML {
 	})
 }
 
-// breadcrumbScript kırıntı yolunu <script> etiketiyle sarar.
-//
-// NEDEN SARMALAYICI BURADA: templ bir `<script>` etiketinin İÇİNDEKİ
-// ifadeleri çalıştırmıyor, ham metin sayıyor (7 Kasım 2026'da bu tuşla
-// sayfaya literal `@templ.Raw(...)` yazıldı). Bu yüzden script etiketi
-// Go'da kurulur ve templ'e tek parça `templ.Raw` olarak verilir.
 func breadcrumbScript(items []crumb) template.HTML {
 	js := breadcrumbJSONLD(items)
 	if js == "" {

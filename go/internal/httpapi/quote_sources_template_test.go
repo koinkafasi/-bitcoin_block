@@ -10,9 +10,6 @@ import (
 	"theblock/site/internal/aieditor"
 )
 
-// renderQuoteResult aieditor sonucunu ai_editor_result şablonuyla işler.
-// parseTestTemplates (ai_editor_template_test.go) tüm şablonları ayrıştırır;
-// burada yalnız ilgili parça çalıştırılır.
 func renderQuoteResult(t *testing.T, res aieditor.Result) string {
 	t.Helper()
 	tmpl := parseTestTemplates(t)

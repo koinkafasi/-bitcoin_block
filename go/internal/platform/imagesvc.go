@@ -1,16 +1,3 @@
-// image-svc istemcisi — görsel kırpma/ölçekleme işini Rust mikroservisine
-// devreder, servis yoksa/başarısızsa yerel Go yoluna düşer.
-//
-// NEDEN: aynı iş (1600×900 JPEG → 1200 px, 16:9 kırpma, JPEG) ölçüldü
-// (7 Kasım 2026, aynı makine):
-//
-//	Rust image-svc (libjpeg-turbo): p50 45 ms
-//	Go (x/image CatmullRom + image/jpeg): p50 109 ms
-//
-// Fark dil değil kodlayıcı: Go'nun image/jpeg'i saf Go, SIMD/libjpeg-turbo
-// kullanmıyor. Servis yalnız JPEG girdide devreye alınır (PNG saydamlığı
-// Rust tarafında beyaz zemine çevrilmiyor) ve HER hata durumunda yerel yol
-// kullanılır — servis çökmesi görsel üretimini durdurmaz.
 package platform
 
 import (
@@ -27,9 +14,6 @@ import (
 	"time"
 )
 
-// imageSvcYenidenDene: servis bir kez hata verince bu süre boyunca hiç
-// çağrılmaz. Aksi hâlde ölü servis her görselde 5 sn zaman aşımı eklerdi —
-// yani kazanç sağlamak yerine sayfayı yavaşlatırdı.
 const imageSvcYenidenDene = 30 * time.Second
 
 type imageSvcDurum struct {

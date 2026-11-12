@@ -65,9 +65,6 @@ func (s *Server) handlePerson(w http.ResponseWriter, r *http.Request) {
 	d.PersonDetail = true
 	d.Canonical = strings.TrimRight(s.absBase(r), "/") + r.URL.Path
 
-	// ---- SEO: CoinDesk yazar sayfası deseni ----
-	// Başlık "{Ad} | {Site} Yazar", açıklama biyografi (yoksa unvan),
-	// OG tipi profile, JSON-LD WebPage + mainEntity.Person.
 	d.MetaTitle = p.Name + " | " + s.siteName + " Yazar"
 	aciklama := strings.TrimSpace(p.Bio)
 	if aciklama == "" {

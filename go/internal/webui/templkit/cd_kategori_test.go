@@ -6,24 +6,6 @@ import (
 	"testing"
 )
 
-// Kategori/bölüm sayfasının YAPI sözleşmesi.
-//
-// ÖLÇÜM (coindesk.com/markets, 8 Kasım 2026, 1440×1000, gerçek Chrome):
-//
-//	H1 kutusu : h1 36/44 w700, `border-b strong`, mb 24 (toplam 61 px)
-//	12 kolon  : gap 16
-//	  sol 9   : lead YATAY (metin 319 / görsel 686×386) + altında border-t
-//	            alt ızgara 4 kolon × 239 px (görsel 239×135 üstte, h3 20/26)
-//	  sağ 3   : GÖRSELSİZ ray, 6 kalem, h2 16/24 w500 + saat 14/22
-//	"More From X" : 1032 px ORTALANMIŞ, border-t strong, 14/21 w500
-//	haber satırı  : metin 681 + görsel 327×185, h2 24/30 w500, aralarda hr
-//
-// NİYE TEST: önceki sürüm ana sayfanın `.cd-kat-one` ızgarasını (6+3+3)
-// kullanıyordu. Ölçülen sonuç: lead 681 px (olması gereken 1029), "Son
-// Haberler" listesi 1029×749 px DİKEY kartlar (olması gereken 1032×185
-// YATAY satırlar), sağ ray ve "More From" etiketi hiç yoktu. Bu testler
-// o yanlış düzenin geri gelmesini engeller.
-
 func kategoriCiz(t *testing.T, v CDSectionPage) string {
 	t.Helper()
 	var sb strings.Builder
@@ -138,9 +120,6 @@ func TestKategoriYuvalariKullaniliyor(t *testing.T) {
 	}
 }
 
-// H1 bandı var, altında AÇIKLAMA PARAGRAFI yok.
-//
-// Ölçüldü: ne /markets ne /tr/business'te H1 altı açıklama var.
 func TestKategoriH1AltiAciklamaYok(t *testing.T) {
 	v := ornekKategori()
 	v.Desc = "Bu metin <meta description>'da kalmalı, sayfada görünmemeli."

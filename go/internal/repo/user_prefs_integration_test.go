@@ -12,13 +12,6 @@ import (
 	"theblock/site/internal/repo"
 )
 
-// Kullanıcı arayüz tercihleri (Faz 173, A-3): gerçek Postgres'e karşı.
-//
-// Test kendi kullanıcısını oluşturur ve sonunda siler; mevcut kullanıcı
-// tercihlerine dokunmaz. Amaç üç davranışı kanıtlamak:
-//   - kayıt yokken boş harita (hata değil),
-//   - jsonb birleştirme (yeni anahtar eskisini silmiyor),
-//   - kullanıcı silinince tercihin de gitmesi (CASCADE).
 func TestKullaniciTercihleriIntegration(t *testing.T) {
 	pool := intPool(t)
 	ctx := context.Background()

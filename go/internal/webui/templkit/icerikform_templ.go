@@ -370,7 +370,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 			var templ_7745c5c3_Var3 string
 			templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.ResolveAttributeValue(templ.CSSClasses(templ_7745c5c3_Var2).String())
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1, Col: 0}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1, Col: 0}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var3)
 			if templ_7745c5c3_Err != nil {
@@ -383,7 +383,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 			var templ_7745c5c3_Var4 string
 			templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(v.FlashText)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 536, Col: 52}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 536, Col: 52}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 			if templ_7745c5c3_Err != nil {
@@ -405,7 +405,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 		var templ_7745c5c3_Var5 templ.SafeURL
 		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL(v.ActionURL))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 539, Col: 57}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 539, Col: 57}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 		if templ_7745c5c3_Err != nil {
@@ -418,7 +418,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 		var templ_7745c5c3_Var6 string
 		templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.ResolveAttributeValue(v.ActionURL)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 539, Col: 111}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 539, Col: 111}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var6)
 		if templ_7745c5c3_Err != nil {
@@ -431,7 +431,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 		var templ_7745c5c3_Var7 string
 		templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.ResolveAttributeValue(v.Version)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 540, Col: 71}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 540, Col: 71}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var7)
 		if templ_7745c5c3_Err != nil {
@@ -455,7 +455,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 					var templ_7745c5c3_Var8 string
 					templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.ResolveAttributeValue(l.Native + " · bu sayfa")
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 546, Col: 72}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 546, Col: 72}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var8)
 					if templ_7745c5c3_Err != nil {
@@ -468,7 +468,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 					var templ_7745c5c3_Var9 string
 					templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(dilKisa(l.Code))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 546, Col: 92}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 546, Col: 92}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 					if templ_7745c5c3_Err != nil {
@@ -486,7 +486,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 					var templ_7745c5c3_Var10 templ.SafeURL
 					templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL("/admin/icerikler/" + itoaT64(l.ContentID)))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 548, Col: 98}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 548, Col: 98}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 					if templ_7745c5c3_Err != nil {
@@ -499,7 +499,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 					var templ_7745c5c3_Var11 string
 					templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.ResolveAttributeValue(l.Native + " · düzenle")
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 548, Col: 134}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 548, Col: 134}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var11)
 					if templ_7745c5c3_Err != nil {
@@ -512,7 +512,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 					var templ_7745c5c3_Var12 string
 					templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(dilKisa(l.Code))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 548, Col: 154}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 548, Col: 154}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 					if templ_7745c5c3_Err != nil {
@@ -530,7 +530,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 					var templ_7745c5c3_Var13 string
 					templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.ResolveAttributeValue("/admin/icerikler/" + v.KaynakID + "/cevir/" + l.Code)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 553, Col: 71}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 553, Col: 71}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var13)
 					if templ_7745c5c3_Err != nil {
@@ -543,7 +543,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 					var templ_7745c5c3_Var14 string
 					templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.ResolveAttributeValue(`{"ai":"1"}`)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 554, Col: 30}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 554, Col: 30}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var14)
 					if templ_7745c5c3_Err != nil {
@@ -556,7 +556,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 					var templ_7745c5c3_Var15 string
 					templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.ResolveAttributeValue(l.Native + " · çeviri yok — AI ile çevir")
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 555, Col: 62}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 555, Col: 62}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var15)
 					if templ_7745c5c3_Err != nil {
@@ -569,7 +569,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 					var templ_7745c5c3_Var16 string
 					templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(dilKisa(l.Code))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 556, Col: 25}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 556, Col: 25}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
 					if templ_7745c5c3_Err != nil {
@@ -598,7 +598,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 			var templ_7745c5c3_Var17 string
 			templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.ResolveAttributeValue(t.Value)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 567, Col: 31}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 567, Col: 31}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var17)
 			if templ_7745c5c3_Err != nil {
@@ -621,7 +621,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 			var templ_7745c5c3_Var18 string
 			templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.JoinStringErrs(t.Label)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 567, Col: 68}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 567, Col: 68}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var18))
 			if templ_7745c5c3_Err != nil {
@@ -639,7 +639,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 		var templ_7745c5c3_Var19 string
 		templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.ResolveAttributeValue(v.Title)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 574, Col: 70}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 574, Col: 70}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var19)
 		if templ_7745c5c3_Err != nil {
@@ -652,7 +652,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 		var templ_7745c5c3_Var20 string
 		templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.ResolveAttributeValue(v.ContentID)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 575, Col: 134}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 575, Col: 134}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var20)
 		if templ_7745c5c3_Err != nil {
@@ -665,7 +665,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 		var templ_7745c5c3_Var21 string
 		templ_7745c5c3_Var21, templ_7745c5c3_Err = templ.ResolveAttributeValue(v.TitleActionVals)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 575, Col: 164}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 575, Col: 164}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var21)
 		if templ_7745c5c3_Err != nil {
@@ -678,7 +678,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 		var templ_7745c5c3_Var22 string
 		templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.ResolveAttributeValue(v.Lang)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 576, Col: 105}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 576, Col: 105}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var22)
 		if templ_7745c5c3_Err != nil {
@@ -691,7 +691,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 		var templ_7745c5c3_Var23 string
 		templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.JoinStringErrs(itoaT(v.TitleLen))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 578, Col: 80}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 578, Col: 80}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var23))
 		if templ_7745c5c3_Err != nil {
@@ -704,7 +704,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 		var templ_7745c5c3_Var24 string
 		templ_7745c5c3_Var24, templ_7745c5c3_Err = templ.ResolveAttributeValue(v.ContentID)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 580, Col: 69}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 580, Col: 69}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var24)
 		if templ_7745c5c3_Err != nil {
@@ -717,7 +717,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 		var templ_7745c5c3_Var25 string
 		templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.ResolveAttributeValue(v.AutosaveURL)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 580, Col: 105}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 580, Col: 105}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var25)
 		if templ_7745c5c3_Err != nil {
@@ -755,7 +755,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 		var templ_7745c5c3_Var26 string
 		templ_7745c5c3_Var26, templ_7745c5c3_Err = templ.JoinStringErrs(v.Spot)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 719, Col: 134}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 719, Col: 134}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var26))
 		if templ_7745c5c3_Err != nil {
@@ -768,7 +768,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 		var templ_7745c5c3_Var27 string
 		templ_7745c5c3_Var27, templ_7745c5c3_Err = templ.ResolveAttributeValue(v.ContentID)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 720, Col: 131}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 720, Col: 131}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var27)
 		if templ_7745c5c3_Err != nil {
@@ -781,7 +781,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 		var templ_7745c5c3_Var28 string
 		templ_7745c5c3_Var28, templ_7745c5c3_Err = templ.ResolveAttributeValue(v.SpotActionVals)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 720, Col: 160}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 720, Col: 160}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var28)
 		if templ_7745c5c3_Err != nil {
@@ -794,7 +794,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 		var templ_7745c5c3_Var29 string
 		templ_7745c5c3_Var29, templ_7745c5c3_Err = templ.JoinStringErrs(v.DetailJSON)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 726, Col: 64}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 726, Col: 64}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var29))
 		if templ_7745c5c3_Err != nil {
@@ -807,7 +807,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 		var templ_7745c5c3_Var30 string
 		templ_7745c5c3_Var30, templ_7745c5c3_Err = templ.ResolveAttributeValue(v.ContentID)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 727, Col: 90}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 727, Col: 90}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var30)
 		if templ_7745c5c3_Err != nil {
@@ -820,7 +820,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 		var templ_7745c5c3_Var31 string
 		templ_7745c5c3_Var31, templ_7745c5c3_Err = templ.ResolveAttributeValue(v.UserID)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 727, Col: 116}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 727, Col: 116}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var31)
 		if templ_7745c5c3_Err != nil {
@@ -833,7 +833,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 		var templ_7745c5c3_Var32 string
 		templ_7745c5c3_Var32, templ_7745c5c3_Err = templ.ResolveAttributeValue(v.UserName)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 727, Col: 146}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 727, Col: 146}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var32)
 		if templ_7745c5c3_Err != nil {
@@ -851,7 +851,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 			var templ_7745c5c3_Var33 string
 			templ_7745c5c3_Var33, templ_7745c5c3_Err = templ.ResolveAttributeValue(m.ID)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 750, Col: 28}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 750, Col: 28}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var33)
 			if templ_7745c5c3_Err != nil {
@@ -864,7 +864,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 			var templ_7745c5c3_Var34 string
 			templ_7745c5c3_Var34, templ_7745c5c3_Err = templ.ResolveAttributeValue(m.URL)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 750, Col: 47}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 750, Col: 47}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var34)
 			if templ_7745c5c3_Err != nil {
@@ -877,7 +877,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 			var templ_7745c5c3_Var35 string
 			templ_7745c5c3_Var35, templ_7745c5c3_Err = templ.ResolveAttributeValue(m.Thumb)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 750, Col: 70}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 750, Col: 70}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var35)
 			if templ_7745c5c3_Err != nil {
@@ -890,7 +890,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 			var templ_7745c5c3_Var36 string
 			templ_7745c5c3_Var36, templ_7745c5c3_Err = templ.ResolveAttributeValue(m.Alt)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 750, Col: 89}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 750, Col: 89}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var36)
 			if templ_7745c5c3_Err != nil {
@@ -903,7 +903,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 			var templ_7745c5c3_Var37 string
 			templ_7745c5c3_Var37, templ_7745c5c3_Err = templ.ResolveAttributeValue(m.Caption)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 750, Col: 116}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 750, Col: 116}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var37)
 			if templ_7745c5c3_Err != nil {
@@ -916,7 +916,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 			var templ_7745c5c3_Var38 string
 			templ_7745c5c3_Var38, templ_7745c5c3_Err = templ.ResolveAttributeValue(m.Title)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 750, Col: 139}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 750, Col: 139}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var38)
 			if templ_7745c5c3_Err != nil {
@@ -929,7 +929,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 			var templ_7745c5c3_Var39 string
 			templ_7745c5c3_Var39, templ_7745c5c3_Err = templ.ResolveAttributeValue(m.Description)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 750, Col: 174}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 750, Col: 174}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var39)
 			if templ_7745c5c3_Err != nil {
@@ -942,7 +942,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 			var templ_7745c5c3_Var40 string
 			templ_7745c5c3_Var40, templ_7745c5c3_Err = templ.ResolveAttributeValue(m.SeoTitle)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 750, Col: 204}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 750, Col: 204}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var40)
 			if templ_7745c5c3_Err != nil {
@@ -955,7 +955,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 			var templ_7745c5c3_Var41 string
 			templ_7745c5c3_Var41, templ_7745c5c3_Err = templ.ResolveAttributeValue(m.SeoDescription)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 750, Col: 246}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 750, Col: 246}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var41)
 			if templ_7745c5c3_Err != nil {
@@ -968,7 +968,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 			var templ_7745c5c3_Var42 string
 			templ_7745c5c3_Var42, templ_7745c5c3_Err = templ.ResolveAttributeValue(m.Category)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 750, Col: 275}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 750, Col: 275}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var42)
 			if templ_7745c5c3_Err != nil {
@@ -981,7 +981,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 			var templ_7745c5c3_Var43 string
 			templ_7745c5c3_Var43, templ_7745c5c3_Err = templ.JoinStringErrs(m.Title)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 750, Col: 287}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 750, Col: 287}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var43))
 			if templ_7745c5c3_Err != nil {
@@ -1020,7 +1020,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 			var templ_7745c5c3_Var44 string
 			templ_7745c5c3_Var44, templ_7745c5c3_Err = templ.ResolveAttributeValue(c.Value)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 936, Col: 31}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 936, Col: 31}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var44)
 			if templ_7745c5c3_Err != nil {
@@ -1043,7 +1043,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 			var templ_7745c5c3_Var45 string
 			templ_7745c5c3_Var45, templ_7745c5c3_Err = templ.JoinStringErrs(c.Label)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 936, Col: 68}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 936, Col: 68}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var45))
 			if templ_7745c5c3_Err != nil {
@@ -1066,7 +1066,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 			var templ_7745c5c3_Var46 string
 			templ_7745c5c3_Var46, templ_7745c5c3_Err = templ.ResolveAttributeValue(m.Value)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 947, Col: 32}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 947, Col: 32}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var46)
 			if templ_7745c5c3_Err != nil {
@@ -1089,7 +1089,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 			var templ_7745c5c3_Var47 string
 			templ_7745c5c3_Var47, templ_7745c5c3_Err = templ.JoinStringErrs(m.Label)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 947, Col: 69}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 947, Col: 69}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var47))
 			if templ_7745c5c3_Err != nil {
@@ -1112,7 +1112,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 			var templ_7745c5c3_Var48 string
 			templ_7745c5c3_Var48, templ_7745c5c3_Err = templ.ResolveAttributeValue(p.Value)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 956, Col: 32}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 956, Col: 32}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var48)
 			if templ_7745c5c3_Err != nil {
@@ -1135,7 +1135,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 			var templ_7745c5c3_Var49 string
 			templ_7745c5c3_Var49, templ_7745c5c3_Err = templ.JoinStringErrs(p.Label)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 956, Col: 69}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 956, Col: 69}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var49))
 			if templ_7745c5c3_Err != nil {
@@ -1158,7 +1158,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 			var templ_7745c5c3_Var50 string
 			templ_7745c5c3_Var50, templ_7745c5c3_Err = templ.ResolveAttributeValue(p.Value)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 965, Col: 32}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 965, Col: 32}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var50)
 			if templ_7745c5c3_Err != nil {
@@ -1181,7 +1181,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 			var templ_7745c5c3_Var51 string
 			templ_7745c5c3_Var51, templ_7745c5c3_Err = templ.JoinStringErrs(p.Label)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 965, Col: 69}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 965, Col: 69}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var51))
 			if templ_7745c5c3_Err != nil {
@@ -1204,7 +1204,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 			var templ_7745c5c3_Var52 string
 			templ_7745c5c3_Var52, templ_7745c5c3_Err = templ.ResolveAttributeValue(c.Value)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 975, Col: 31}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 975, Col: 31}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var52)
 			if templ_7745c5c3_Err != nil {
@@ -1227,7 +1227,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 			var templ_7745c5c3_Var53 string
 			templ_7745c5c3_Var53, templ_7745c5c3_Err = templ.JoinStringErrs(c.Label)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 975, Col: 68}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 975, Col: 68}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var53))
 			if templ_7745c5c3_Err != nil {
@@ -1245,7 +1245,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 		var templ_7745c5c3_Var54 string
 		templ_7745c5c3_Var54, templ_7745c5c3_Err = templ.ResolveAttributeValue(v.TagsText)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 981, Col: 151}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 981, Col: 151}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var54)
 		if templ_7745c5c3_Err != nil {
@@ -1268,7 +1268,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 				var templ_7745c5c3_Var55 string
 				templ_7745c5c3_Var55, templ_7745c5c3_Err = templ.ResolveAttributeValue(c.Value)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 997, Col: 34}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 997, Col: 34}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var55)
 				if templ_7745c5c3_Err != nil {
@@ -1281,7 +1281,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 				var templ_7745c5c3_Var56 string
 				templ_7745c5c3_Var56, templ_7745c5c3_Err = templ.JoinStringErrs(c.Label)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 997, Col: 46}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 997, Col: 46}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var56))
 				if templ_7745c5c3_Err != nil {
@@ -1309,7 +1309,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 			var templ_7745c5c3_Var57 string
 			templ_7745c5c3_Var57, templ_7745c5c3_Err = templ.ResolveAttributeValue(vid.ID)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1005, Col: 31}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1005, Col: 31}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var57)
 			if templ_7745c5c3_Err != nil {
@@ -1322,7 +1322,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 			var templ_7745c5c3_Var58 string
 			templ_7745c5c3_Var58, templ_7745c5c3_Err = templ.ResolveAttributeValue(vid.Cover)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1005, Col: 56}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1005, Col: 56}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var58)
 			if templ_7745c5c3_Err != nil {
@@ -1335,7 +1335,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 			var templ_7745c5c3_Var59 string
 			templ_7745c5c3_Var59, templ_7745c5c3_Err = templ.ResolveAttributeValue(vid.Slug)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1005, Col: 79}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1005, Col: 79}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var59)
 			if templ_7745c5c3_Err != nil {
@@ -1348,7 +1348,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 			var templ_7745c5c3_Var60 string
 			templ_7745c5c3_Var60, templ_7745c5c3_Err = templ.ResolveAttributeValue(vid.Spot)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1005, Col: 102}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1005, Col: 102}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var60)
 			if templ_7745c5c3_Err != nil {
@@ -1361,7 +1361,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 			var templ_7745c5c3_Var61 string
 			templ_7745c5c3_Var61, templ_7745c5c3_Err = templ.ResolveAttributeValue(vid.Sure)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1005, Col: 125}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1005, Col: 125}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var61)
 			if templ_7745c5c3_Err != nil {
@@ -1374,7 +1374,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 			var templ_7745c5c3_Var62 string
 			templ_7745c5c3_Var62, templ_7745c5c3_Err = templ.ResolveAttributeValue(vid.Cat)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1005, Col: 146}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1005, Col: 146}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var62)
 			if templ_7745c5c3_Err != nil {
@@ -1397,7 +1397,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 			var templ_7745c5c3_Var63 string
 			templ_7745c5c3_Var63, templ_7745c5c3_Err = templ.JoinStringErrs(vid.Title)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1005, Col: 187}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1005, Col: 187}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var63))
 			if templ_7745c5c3_Err != nil {
@@ -1420,7 +1420,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 			var templ_7745c5c3_Var64 string
 			templ_7745c5c3_Var64, templ_7745c5c3_Err = templ.ResolveAttributeValue(v.AudioActionURL)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1102, Col: 80}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1102, Col: 80}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var64)
 			if templ_7745c5c3_Err != nil {
@@ -1438,7 +1438,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 				var templ_7745c5c3_Var65 templ.SafeURL
 				templ_7745c5c3_Var65, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL(v.AudioURL))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1104, Col: 58}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1104, Col: 58}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var65))
 				if templ_7745c5c3_Err != nil {
@@ -1451,7 +1451,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 				var templ_7745c5c3_Var66 string
 				templ_7745c5c3_Var66, templ_7745c5c3_Err = templ.JoinStringErrs(v.AudioSeconds)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1105, Col: 51}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1105, Col: 51}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var66))
 				if templ_7745c5c3_Err != nil {
@@ -1464,7 +1464,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 				var templ_7745c5c3_Var67 string
 				templ_7745c5c3_Var67, templ_7745c5c3_Err = templ.JoinStringErrs(v.AudioStatus)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1105, Col: 75}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1105, Col: 75}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var67))
 				if templ_7745c5c3_Err != nil {
@@ -1497,7 +1497,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 				var templ_7745c5c3_Var68 string
 				templ_7745c5c3_Var68, templ_7745c5c3_Err = templ.ResolveAttributeValue(t.Term)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1117, Col: 78}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1117, Col: 78}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var68)
 				if templ_7745c5c3_Err != nil {
@@ -1510,7 +1510,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 				var templ_7745c5c3_Var69 string
 				templ_7745c5c3_Var69, templ_7745c5c3_Err = templ.ResolveAttributeValue(trendTitle(t))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1117, Col: 102}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1117, Col: 102}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var69)
 				if templ_7745c5c3_Err != nil {
@@ -1523,7 +1523,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 				var templ_7745c5c3_Var70 string
 				templ_7745c5c3_Var70, templ_7745c5c3_Err = templ.JoinStringErrs(t.Term)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1117, Col: 113}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1117, Col: 113}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var70))
 				if templ_7745c5c3_Err != nil {
@@ -1547,7 +1547,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 			var templ_7745c5c3_Var71 string
 			templ_7745c5c3_Var71, templ_7745c5c3_Err = templ.JoinStringErrs(v.GelismisIpucu)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1124, Col: 94}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1124, Col: 94}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var71))
 			if templ_7745c5c3_Err != nil {
@@ -1570,7 +1570,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 			var templ_7745c5c3_Var72 string
 			templ_7745c5c3_Var72, templ_7745c5c3_Err = templ.ResolveAttributeValue(v.VideoSure)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1127, Col: 64}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1127, Col: 64}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var72)
 			if templ_7745c5c3_Err != nil {
@@ -1588,7 +1588,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 				var templ_7745c5c3_Var73 string
 				templ_7745c5c3_Var73, templ_7745c5c3_Err = templ.JoinStringErrs(v.HesaplayiciSema)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1133, Col: 153}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1133, Col: 153}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var73))
 				if templ_7745c5c3_Err != nil {
@@ -1616,7 +1616,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 			var templ_7745c5c3_Var74 string
 			templ_7745c5c3_Var74, templ_7745c5c3_Err = templ.ResolveAttributeValue(slot.Name)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1144, Col: 65}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1144, Col: 65}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var74)
 			if templ_7745c5c3_Err != nil {
@@ -1629,7 +1629,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 			var templ_7745c5c3_Var75 string
 			templ_7745c5c3_Var75, templ_7745c5c3_Err = templ.ResolveAttributeValue(slot.Help)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1144, Col: 90}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1144, Col: 90}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var75)
 			if templ_7745c5c3_Err != nil {
@@ -1647,7 +1647,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 				var templ_7745c5c3_Var76 string
 				templ_7745c5c3_Var76, templ_7745c5c3_Err = templ.ResolveAttributeValue(o.ID)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1147, Col: 31}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1147, Col: 31}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var76)
 				if templ_7745c5c3_Err != nil {
@@ -1660,7 +1660,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 				var templ_7745c5c3_Var77 string
 				templ_7745c5c3_Var77, templ_7745c5c3_Err = templ.ResolveAttributeValue(o.Thumb)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1147, Col: 54}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1147, Col: 54}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var77)
 				if templ_7745c5c3_Err != nil {
@@ -1683,7 +1683,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 				var templ_7745c5c3_Var78 string
 				templ_7745c5c3_Var78, templ_7745c5c3_Err = templ.JoinStringErrs(o.Filename)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1147, Col: 94}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1147, Col: 94}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var78))
 				if templ_7745c5c3_Err != nil {
@@ -1701,7 +1701,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 			var templ_7745c5c3_Var79 string
 			templ_7745c5c3_Var79, templ_7745c5c3_Err = templ.JoinStringErrs(slot.Help)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1151, Col: 38}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1151, Col: 38}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var79))
 			if templ_7745c5c3_Err != nil {
@@ -1719,7 +1719,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 		var templ_7745c5c3_Var80 string
 		templ_7745c5c3_Var80, templ_7745c5c3_Err = templ.ResolveAttributeValue(v.PublishAtValue)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1160, Col: 192}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1160, Col: 192}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var80)
 		if templ_7745c5c3_Err != nil {
@@ -1757,7 +1757,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 			var templ_7745c5c3_Var81 string
 			templ_7745c5c3_Var81, templ_7745c5c3_Err = templ.ResolveAttributeValue(r.Code)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1173, Col: 100}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1173, Col: 100}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var81)
 			if templ_7745c5c3_Err != nil {
@@ -1780,7 +1780,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 			var templ_7745c5c3_Var82 string
 			templ_7745c5c3_Var82, templ_7745c5c3_Err = templ.JoinStringErrs(r.Code)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1173, Col: 131}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1173, Col: 131}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var82))
 			if templ_7745c5c3_Err != nil {
@@ -1858,7 +1858,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 		var templ_7745c5c3_Var83 string
 		templ_7745c5c3_Var83, templ_7745c5c3_Err = templ.ResolveAttributeValue(v.SourceURL)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1196, Col: 89}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1196, Col: 89}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var83)
 		if templ_7745c5c3_Err != nil {
@@ -1871,7 +1871,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 		var templ_7745c5c3_Var84 string
 		templ_7745c5c3_Var84, templ_7745c5c3_Err = templ.ResolveAttributeValue(v.SourceName)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1197, Col: 90}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1197, Col: 90}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var84)
 		if templ_7745c5c3_Err != nil {
@@ -1889,7 +1889,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 			var templ_7745c5c3_Var85 templ.SafeURL
 			templ_7745c5c3_Var85, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL(v.PreviewURL))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1207, Col: 63}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1207, Col: 63}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var85))
 			if templ_7745c5c3_Err != nil {
@@ -1907,7 +1907,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 		var templ_7745c5c3_Var86 string
 		templ_7745c5c3_Var86, templ_7745c5c3_Err = templ.JoinStringErrs(itoaT(v.CeviriSayisi))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1214, Col: 111}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1214, Col: 111}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var86))
 		if templ_7745c5c3_Err != nil {
@@ -1925,7 +1925,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 			var templ_7745c5c3_Var87 string
 			templ_7745c5c3_Var87, templ_7745c5c3_Err = templ.JoinStringErrs(v.IcerikLocaleAd)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1220, Col: 30}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1220, Col: 30}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var87))
 			if templ_7745c5c3_Err != nil {
@@ -1943,7 +1943,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 				var templ_7745c5c3_Var88 templ.SafeURL
 				templ_7745c5c3_Var88, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL("/admin/icerikler/" + v.KaynakID))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1222, Col: 104}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1222, Col: 104}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var88))
 				if templ_7745c5c3_Err != nil {
@@ -1956,7 +1956,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 				var templ_7745c5c3_Var89 string
 				templ_7745c5c3_Var89, templ_7745c5c3_Err = templ.JoinStringErrs(v.KaynakBaslik)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1222, Col: 123}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1222, Col: 123}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var89))
 				if templ_7745c5c3_Err != nil {
@@ -1979,7 +1979,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 				var templ_7745c5c3_Var90 string
 				templ_7745c5c3_Var90, templ_7745c5c3_Err = templ.JoinStringErrs(v.KaynakBaslik)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1230, Col: 32}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1230, Col: 32}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var90))
 				if templ_7745c5c3_Err != nil {
@@ -1997,7 +1997,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 					var templ_7745c5c3_Var91 string
 					templ_7745c5c3_Var91, templ_7745c5c3_Err = templ.JoinStringErrs(v.KaynakSpot)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1232, Col: 48}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1232, Col: 48}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var91))
 					if templ_7745c5c3_Err != nil {
@@ -2039,7 +2039,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 			var templ_7745c5c3_Var93 string
 			templ_7745c5c3_Var93, templ_7745c5c3_Err = templ.ResolveAttributeValue(templ.CSSClasses(templ_7745c5c3_Var92).String())
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1, Col: 0}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1, Col: 0}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var93)
 			if templ_7745c5c3_Err != nil {
@@ -2052,7 +2052,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 			var templ_7745c5c3_Var94 string
 			templ_7745c5c3_Var94, templ_7745c5c3_Err = templ.JoinStringErrs(l.Native)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1246, Col: 23}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1246, Col: 23}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var94))
 			if templ_7745c5c3_Err != nil {
@@ -2065,7 +2065,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 			var templ_7745c5c3_Var95 string
 			templ_7745c5c3_Var95, templ_7745c5c3_Err = templ.JoinStringErrs(l.Code)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1247, Col: 43}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1247, Col: 43}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var95))
 			if templ_7745c5c3_Err != nil {
@@ -2098,7 +2098,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 				var templ_7745c5c3_Var97 string
 				templ_7745c5c3_Var97, templ_7745c5c3_Err = templ.ResolveAttributeValue(templ.CSSClasses(templ_7745c5c3_Var96).String())
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1, Col: 0}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1, Col: 0}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var97)
 				if templ_7745c5c3_Err != nil {
@@ -2111,7 +2111,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 				var templ_7745c5c3_Var98 string
 				templ_7745c5c3_Var98, templ_7745c5c3_Err = templ.JoinStringErrs(l.StateTR)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1255, Col: 143}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1255, Col: 143}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var98))
 				if templ_7745c5c3_Err != nil {
@@ -2139,7 +2139,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 				var templ_7745c5c3_Var99 templ.SafeURL
 				templ_7745c5c3_Var99, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL("/admin/icerikler/" + itoaT64(l.ContentID)))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1262, Col: 102}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1262, Col: 102}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var99))
 				if templ_7745c5c3_Err != nil {
@@ -2157,7 +2157,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 					var templ_7745c5c3_Var100 templ.SafeURL
 					templ_7745c5c3_Var100, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL(l.URL))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1267, Col: 66}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1267, Col: 66}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var100))
 					if templ_7745c5c3_Err != nil {
@@ -2176,7 +2176,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 				var templ_7745c5c3_Var101 string
 				templ_7745c5c3_Var101, templ_7745c5c3_Err = templ.ResolveAttributeValue("/admin/icerikler/" + v.KaynakID + "/cevir/" + l.Code)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1275, Col: 75}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1275, Col: 75}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var101)
 				if templ_7745c5c3_Err != nil {
@@ -2189,7 +2189,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 				var templ_7745c5c3_Var102 string
 				templ_7745c5c3_Var102, templ_7745c5c3_Err = templ.ResolveAttributeValue(`{"ai":"1"}`)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1276, Col: 34}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1276, Col: 34}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var102)
 				if templ_7745c5c3_Err != nil {
@@ -2202,7 +2202,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 				var templ_7745c5c3_Var103 string
 				templ_7745c5c3_Var103, templ_7745c5c3_Err = templ.ResolveAttributeValue("#ceviri-" + l.Code)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1280, Col: 46}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1280, Col: 46}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var103)
 				if templ_7745c5c3_Err != nil {
@@ -2215,7 +2215,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 				var templ_7745c5c3_Var104 string
 				templ_7745c5c3_Var104, templ_7745c5c3_Err = templ.ResolveAttributeValue("Kaynak metni " + l.Native + " diline AI ile çevirir")
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1281, Col: 74}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1281, Col: 74}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var104)
 				if templ_7745c5c3_Err != nil {
@@ -2228,7 +2228,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 				var templ_7745c5c3_Var105 string
 				templ_7745c5c3_Var105, templ_7745c5c3_Err = templ.ResolveAttributeValue("/admin/icerikler/" + v.KaynakID + "/cevir/" + l.Code)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1289, Col: 75}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1289, Col: 75}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var105)
 				if templ_7745c5c3_Err != nil {
@@ -2241,7 +2241,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 				var templ_7745c5c3_Var106 string
 				templ_7745c5c3_Var106, templ_7745c5c3_Err = templ.ResolveAttributeValue(`{"kopya":"1"}`)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1290, Col: 37}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1290, Col: 37}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var106)
 				if templ_7745c5c3_Err != nil {
@@ -2254,7 +2254,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 				var templ_7745c5c3_Var107 string
 				templ_7745c5c3_Var107, templ_7745c5c3_Err = templ.ResolveAttributeValue("ceviri-" + l.Code)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1294, Col: 73}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1294, Col: 73}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var107)
 				if templ_7745c5c3_Err != nil {
@@ -2287,7 +2287,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 			var templ_7745c5c3_Var108 string
 			templ_7745c5c3_Var108, templ_7745c5c3_Err = templ.ResolveAttributeValue(itoaT(v.SeoScore))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1309, Col: 57}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1309, Col: 57}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var108)
 			if templ_7745c5c3_Err != nil {
@@ -2300,7 +2300,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 			var templ_7745c5c3_Var109 string
 			templ_7745c5c3_Var109, templ_7745c5c3_Err = templruntime.SanitizeStyleAttributeValues(gaugeStyle(v.SeoScore))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1309, Col: 90}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1309, Col: 90}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var109))
 			if templ_7745c5c3_Err != nil {
@@ -2313,7 +2313,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 			var templ_7745c5c3_Var110 string
 			templ_7745c5c3_Var110, templ_7745c5c3_Err = templ.JoinStringErrs(itoaT(v.SeoScore))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1309, Col: 112}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1309, Col: 112}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var110))
 			if templ_7745c5c3_Err != nil {
@@ -2326,7 +2326,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 			var templ_7745c5c3_Var111 string
 			templ_7745c5c3_Var111, templ_7745c5c3_Err = templ.JoinStringErrs(v.SeoText)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1310, Col: 44}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1310, Col: 44}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var111))
 			if templ_7745c5c3_Err != nil {
@@ -2339,7 +2339,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 			var templ_7745c5c3_Var112 string
 			templ_7745c5c3_Var112, templ_7745c5c3_Err = templ.ResolveAttributeValue("/admin/icerikler/" + v.ContentID + "/ai/seo-doldur")
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1317, Col: 71}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1317, Col: 71}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var112)
 			if templ_7745c5c3_Err != nil {
@@ -2360,7 +2360,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 			var templ_7745c5c3_Var113 string
 			templ_7745c5c3_Var113, templ_7745c5c3_Err = templ.ResolveAttributeValue(v.SeoTitle)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1332, Col: 84}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1332, Col: 84}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var113)
 			if templ_7745c5c3_Err != nil {
@@ -2373,7 +2373,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 			var templ_7745c5c3_Var114 string
 			templ_7745c5c3_Var114, templ_7745c5c3_Err = templ.ResolveAttributeValue(v.ContentID)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1333, Col: 149}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1333, Col: 149}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var114)
 			if templ_7745c5c3_Err != nil {
@@ -2386,7 +2386,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 			var templ_7745c5c3_Var115 string
 			templ_7745c5c3_Var115, templ_7745c5c3_Err = templ.ResolveAttributeValue(v.SeoTitleVals)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1333, Col: 176}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1333, Col: 176}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var115)
 			if templ_7745c5c3_Err != nil {
@@ -2399,7 +2399,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 			var templ_7745c5c3_Var116 string
 			templ_7745c5c3_Var116, templ_7745c5c3_Err = templ.JoinStringErrs(v.SeoDesc)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1339, Col: 131}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1339, Col: 131}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var116))
 			if templ_7745c5c3_Err != nil {
@@ -2412,7 +2412,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 			var templ_7745c5c3_Var117 string
 			templ_7745c5c3_Var117, templ_7745c5c3_Err = templ.ResolveAttributeValue(v.ContentID)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1340, Col: 156}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1340, Col: 156}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var117)
 			if templ_7745c5c3_Err != nil {
@@ -2425,7 +2425,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 			var templ_7745c5c3_Var118 string
 			templ_7745c5c3_Var118, templ_7745c5c3_Err = templ.ResolveAttributeValue(v.SeoDescVals)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1340, Col: 182}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1340, Col: 182}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var118)
 			if templ_7745c5c3_Err != nil {
@@ -2438,7 +2438,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 			var templ_7745c5c3_Var119 string
 			templ_7745c5c3_Var119, templ_7745c5c3_Err = templ.JoinStringErrs(v.SiteLabel())
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1344, Col: 54}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1344, Col: 54}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var119))
 			if templ_7745c5c3_Err != nil {
@@ -2451,7 +2451,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 			var templ_7745c5c3_Var120 string
 			templ_7745c5c3_Var120, templ_7745c5c3_Err = templ.JoinStringErrs(v.SerpTitle())
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1345, Col: 54}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1345, Col: 54}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var120))
 			if templ_7745c5c3_Err != nil {
@@ -2464,7 +2464,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 			var templ_7745c5c3_Var121 string
 			templ_7745c5c3_Var121, templ_7745c5c3_Err = templ.JoinStringErrs(v.SerpDesc())
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1346, Col: 54}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1346, Col: 54}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var121))
 			if templ_7745c5c3_Err != nil {
@@ -2477,7 +2477,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 			var templ_7745c5c3_Var122 string
 			templ_7745c5c3_Var122, templ_7745c5c3_Err = templ.JoinStringErrs(v.SiteLabel())
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1350, Col: 44}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1350, Col: 44}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var122))
 			if templ_7745c5c3_Err != nil {
@@ -2490,7 +2490,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 			var templ_7745c5c3_Var123 string
 			templ_7745c5c3_Var123, templ_7745c5c3_Err = templ.JoinStringErrs(v.SerpTitle())
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1351, Col: 70}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1351, Col: 70}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var123))
 			if templ_7745c5c3_Err != nil {
@@ -2503,7 +2503,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 			var templ_7745c5c3_Var124 string
 			templ_7745c5c3_Var124, templ_7745c5c3_Err = templ.JoinStringErrs(v.SerpDesc())
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1352, Col: 67}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1352, Col: 67}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var124))
 			if templ_7745c5c3_Err != nil {
@@ -2516,7 +2516,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 			var templ_7745c5c3_Var125 string
 			templ_7745c5c3_Var125, templ_7745c5c3_Err = templ.ResolveAttributeValue(v.ImageCredit)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1359, Col: 174}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1359, Col: 174}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var125)
 			if templ_7745c5c3_Err != nil {
@@ -2529,7 +2529,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 			var templ_7745c5c3_Var126 string
 			templ_7745c5c3_Var126, templ_7745c5c3_Err = templ.JoinStringErrs(v.SocialSummary)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1360, Col: 254}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1360, Col: 254}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var126))
 			if templ_7745c5c3_Err != nil {
@@ -2542,7 +2542,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 			var templ_7745c5c3_Var127 string
 			templ_7745c5c3_Var127, templ_7745c5c3_Err = templ.JoinStringErrs(v.AISummary)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1361, Col: 232}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1361, Col: 232}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var127))
 			if templ_7745c5c3_Err != nil {
@@ -2560,7 +2560,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 				var templ_7745c5c3_Var128 string
 				templ_7745c5c3_Var128, templ_7745c5c3_Err = templ.JoinStringErrs(v.FieldAudioURL)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1363, Col: 174}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1363, Col: 174}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var128))
 				if templ_7745c5c3_Err != nil {
@@ -2573,7 +2573,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 				var templ_7745c5c3_Var129 string
 				templ_7745c5c3_Var129, templ_7745c5c3_Err = templ.JoinStringErrs(v.FieldAudioSeconds)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1363, Col: 199}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1363, Col: 199}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var129))
 				if templ_7745c5c3_Err != nil {
@@ -2586,7 +2586,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 				var templ_7745c5c3_Var130 string
 				templ_7745c5c3_Var130, templ_7745c5c3_Err = templ.JoinStringErrs(v.FieldAudioStatus)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1363, Col: 228}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1363, Col: 228}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var130))
 				if templ_7745c5c3_Err != nil {
@@ -2605,7 +2605,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 				var templ_7745c5c3_Var131 string
 				templ_7745c5c3_Var131, templ_7745c5c3_Err = templ.JoinStringErrs(v.FieldScrollCount)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1366, Col: 189}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1366, Col: 189}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var131))
 				if templ_7745c5c3_Err != nil {
@@ -2628,7 +2628,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 				var templ_7745c5c3_Var132 string
 				templ_7745c5c3_Var132, templ_7745c5c3_Err = templ.JoinStringErrs(p.Name)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1375, Col: 23}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1375, Col: 23}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var132))
 				if templ_7745c5c3_Err != nil {
@@ -2641,7 +2641,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 				var templ_7745c5c3_Var133 string
 				templ_7745c5c3_Var133, templ_7745c5c3_Err = templ.JoinStringErrs(itoaT(p.Weight))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1376, Col: 46}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1376, Col: 46}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var133))
 				if templ_7745c5c3_Err != nil {
@@ -2654,7 +2654,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 				var templ_7745c5c3_Var134 string
 				templ_7745c5c3_Var134, templ_7745c5c3_Err = templ.JoinStringErrs(itoaT(p.Weight))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1376, Col: 66}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1376, Col: 66}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var134))
 				if templ_7745c5c3_Err != nil {
@@ -2667,7 +2667,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 				var templ_7745c5c3_Var135 string
 				templ_7745c5c3_Var135, templ_7745c5c3_Err = templruntime.SanitizeStyleAttributeValues(barStyle(p.Weight))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1377, Col: 55}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1377, Col: 55}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var135))
 				if templ_7745c5c3_Err != nil {
@@ -2725,7 +2725,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 			var templ_7745c5c3_Var136 string
 			templ_7745c5c3_Var136, templ_7745c5c3_Err = templ.ResolveAttributeValue(v.YMYLUzman)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1394, Col: 158}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1394, Col: 158}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var136)
 			if templ_7745c5c3_Err != nil {
@@ -2738,7 +2738,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 			var templ_7745c5c3_Var137 string
 			templ_7745c5c3_Var137, templ_7745c5c3_Err = templ.ResolveAttributeValue(v.AiScore)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1400, Col: 164}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1400, Col: 164}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var137)
 			if templ_7745c5c3_Err != nil {
@@ -2751,7 +2751,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 			var templ_7745c5c3_Var138 string
 			templ_7745c5c3_Var138, templ_7745c5c3_Err = templ.ResolveAttributeValue(v.AISkorURL)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1401, Col: 100}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1401, Col: 100}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var138)
 			if templ_7745c5c3_Err != nil {
@@ -2773,7 +2773,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 			}
 			templ_7745c5c3_Var139, templ_7745c5c3_Err := templruntime.ScriptContentOutsideStringLiteral(v.NumID)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1410, Col: 35}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1410, Col: 35}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var139)
 			if templ_7745c5c3_Err != nil {
@@ -2791,7 +2791,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 				var templ_7745c5c3_Var140 string
 				templ_7745c5c3_Var140, templ_7745c5c3_Err = templ.ResolveAttributeValue(v.DeleteURL)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1429, Col: 65}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1429, Col: 65}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var140)
 				if templ_7745c5c3_Err != nil {
@@ -2841,7 +2841,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 				var templ_7745c5c3_Var141 string
 				templ_7745c5c3_Var141, templ_7745c5c3_Err = templ.ResolveAttributeValue(a.ID)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1451, Col: 69}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1451, Col: 69}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var141)
 				if templ_7745c5c3_Err != nil {
@@ -2854,7 +2854,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 				var templ_7745c5c3_Var142 string
 				templ_7745c5c3_Var142, templ_7745c5c3_Err = templ.ResolveAttributeValue(researchFlag(a.Research))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1451, Col: 115}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1451, Col: 115}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var142)
 				if templ_7745c5c3_Err != nil {
@@ -2867,7 +2867,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 				var templ_7745c5c3_Var143 string
 				templ_7745c5c3_Var143, templ_7745c5c3_Err = templ.JoinStringErrs(a.Icon)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1452, Col: 62}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1452, Col: 62}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var143))
 				if templ_7745c5c3_Err != nil {
@@ -2880,7 +2880,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 				var templ_7745c5c3_Var144 string
 				templ_7745c5c3_Var144, templ_7745c5c3_Err = templ.JoinStringErrs(a.Label)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1453, Col: 24}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1453, Col: 24}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var144))
 				if templ_7745c5c3_Err != nil {
@@ -2893,7 +2893,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 				var templ_7745c5c3_Var145 string
 				templ_7745c5c3_Var145, templ_7745c5c3_Err = templ.JoinStringErrs(a.Description)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1453, Col: 52}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1453, Col: 52}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var145))
 				if templ_7745c5c3_Err != nil {
@@ -2921,7 +2921,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 			var templ_7745c5c3_Var146 string
 			templ_7745c5c3_Var146, templ_7745c5c3_Err = templ.ResolveAttributeValue(v.ContentID)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1461, Col: 95}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1461, Col: 95}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var146)
 			if templ_7745c5c3_Err != nil {
@@ -2934,7 +2934,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 			var templ_7745c5c3_Var147 string
 			templ_7745c5c3_Var147, templ_7745c5c3_Err = templ.ResolveAttributeValue(v.ContentID)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1470, Col: 98}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1470, Col: 98}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var147)
 			if templ_7745c5c3_Err != nil {
@@ -2953,7 +2953,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 			var templ_7745c5c3_Var148 string
 			templ_7745c5c3_Var148, templ_7745c5c3_Err = templ.JoinStringErrs(itoaT(v.OrigIndex))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1490, Col: 103}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1490, Col: 103}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var148))
 			if templ_7745c5c3_Err != nil {
@@ -2966,7 +2966,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 			var templ_7745c5c3_Var149 string
 			templ_7745c5c3_Var149, templ_7745c5c3_Err = templ.ResolveAttributeValue(v.KaynakKontrol)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1492, Col: 70}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1492, Col: 70}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var149)
 			if templ_7745c5c3_Err != nil {
@@ -2979,7 +2979,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 			var templ_7745c5c3_Var150 templ.SafeURL
 			templ_7745c5c3_Var150, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL(v.KaynakEkle))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1494, Col: 60}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1494, Col: 60}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var150))
 			if templ_7745c5c3_Err != nil {
@@ -3003,7 +3003,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 				var templ_7745c5c3_Var151 string
 				templ_7745c5c3_Var151, templ_7745c5c3_Err = templruntime.SanitizeStyleAttributeValues(sourceBadgeStyle(s.Accessible))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1503, Col: 64}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1503, Col: 64}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var151))
 				if templ_7745c5c3_Err != nil {
@@ -3031,7 +3031,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 				var templ_7745c5c3_Var152 templ.SafeURL
 				templ_7745c5c3_Var152, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL(s.URL))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1510, Col: 36}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1510, Col: 36}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var152))
 				if templ_7745c5c3_Err != nil {
@@ -3044,7 +3044,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 				var templ_7745c5c3_Var153 string
 				templ_7745c5c3_Var153, templ_7745c5c3_Err = templ.JoinStringErrs(s.URL)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1510, Col: 150}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1510, Col: 150}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var153))
 				if templ_7745c5c3_Err != nil {
@@ -3057,7 +3057,7 @@ func IcerikFormPanel(v IcerikFormView) templ.Component {
 				var templ_7745c5c3_Var154 string
 				templ_7745c5c3_Var154, templ_7745c5c3_Err = templ.ResolveAttributeValue("/admin/icerikler/kaynaklar/sil/" + s.ID)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1511, Col: 98}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1511, Col: 98}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var154)
 				if templ_7745c5c3_Err != nil {
@@ -3121,7 +3121,7 @@ func KalitePanel(v IcerikKalite) templ.Component {
 			var templ_7745c5c3_Var157 string
 			templ_7745c5c3_Var157, templ_7745c5c3_Err = templ.ResolveAttributeValue(templ.CSSClasses(templ_7745c5c3_Var156).String())
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1, Col: 0}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1, Col: 0}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var157)
 			if templ_7745c5c3_Err != nil {
@@ -3134,7 +3134,7 @@ func KalitePanel(v IcerikKalite) templ.Component {
 			var templ_7745c5c3_Var158 string
 			templ_7745c5c3_Var158, templ_7745c5c3_Err = templ.JoinStringErrs(v.Grade)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1548, Col: 72}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1548, Col: 72}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var158))
 			if templ_7745c5c3_Err != nil {
@@ -3147,7 +3147,7 @@ func KalitePanel(v IcerikKalite) templ.Component {
 			var templ_7745c5c3_Var159 string
 			templ_7745c5c3_Var159, templ_7745c5c3_Err = templ.JoinStringErrs(itoaT(v.Score))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1549, Col: 48}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1549, Col: 48}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var159))
 			if templ_7745c5c3_Err != nil {
@@ -3175,7 +3175,7 @@ func KalitePanel(v IcerikKalite) templ.Component {
 			var templ_7745c5c3_Var160 string
 			templ_7745c5c3_Var160, templ_7745c5c3_Err = templ.JoinStringErrs(v.Words)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1557, Col: 22}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1557, Col: 22}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var160))
 			if templ_7745c5c3_Err != nil {
@@ -3188,7 +3188,7 @@ func KalitePanel(v IcerikKalite) templ.Component {
 			var templ_7745c5c3_Var161 string
 			templ_7745c5c3_Var161, templ_7745c5c3_Err = templ.JoinStringErrs(v.Sentences)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1558, Col: 26}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1558, Col: 26}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var161))
 			if templ_7745c5c3_Err != nil {
@@ -3201,7 +3201,7 @@ func KalitePanel(v IcerikKalite) templ.Component {
 			var templ_7745c5c3_Var162 string
 			templ_7745c5c3_Var162, templ_7745c5c3_Err = templ.JoinStringErrs(v.AvgSentence)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1559, Col: 33}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1559, Col: 33}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var162))
 			if templ_7745c5c3_Err != nil {
@@ -3214,7 +3214,7 @@ func KalitePanel(v IcerikKalite) templ.Component {
 			var templ_7745c5c3_Var163 string
 			templ_7745c5c3_Var163, templ_7745c5c3_Err = templ.JoinStringErrs(v.StdDev)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1560, Col: 29}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1560, Col: 29}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var163))
 			if templ_7745c5c3_Err != nil {
@@ -3227,7 +3227,7 @@ func KalitePanel(v IcerikKalite) templ.Component {
 			var templ_7745c5c3_Var164 string
 			templ_7745c5c3_Var164, templ_7745c5c3_Err = templ.JoinStringErrs(v.MATTR)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1561, Col: 35}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1561, Col: 35}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var164))
 			if templ_7745c5c3_Err != nil {
@@ -3245,7 +3245,7 @@ func KalitePanel(v IcerikKalite) templ.Component {
 				var templ_7745c5c3_Var165 string
 				templ_7745c5c3_Var165, templ_7745c5c3_Err = templ.JoinStringErrs(v.Cliches)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1563, Col: 32}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1563, Col: 32}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var165))
 				if templ_7745c5c3_Err != nil {
@@ -3264,7 +3264,7 @@ func KalitePanel(v IcerikKalite) templ.Component {
 				var templ_7745c5c3_Var166 string
 				templ_7745c5c3_Var166, templ_7745c5c3_Err = templ.JoinStringErrs(v.Repeats)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1566, Col: 32}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1566, Col: 32}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var166))
 				if templ_7745c5c3_Err != nil {
@@ -3287,7 +3287,7 @@ func KalitePanel(v IcerikKalite) templ.Component {
 				var templ_7745c5c3_Var167 string
 				templ_7745c5c3_Var167, templ_7745c5c3_Err = templ.JoinStringErrs(b.Title)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1571, Col: 141}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1571, Col: 141}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var167))
 				if templ_7745c5c3_Err != nil {
@@ -3300,7 +3300,7 @@ func KalitePanel(v IcerikKalite) templ.Component {
 				var templ_7745c5c3_Var168 string
 				templ_7745c5c3_Var168, templ_7745c5c3_Err = templ.JoinStringErrs(b.Detail)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1572, Col: 21}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1572, Col: 21}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var168))
 				if templ_7745c5c3_Err != nil {
@@ -3319,7 +3319,7 @@ func KalitePanel(v IcerikKalite) templ.Component {
 				var templ_7745c5c3_Var169 string
 				templ_7745c5c3_Var169, templ_7745c5c3_Err = templ.JoinStringErrs(w.Title)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1577, Col: 152}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1577, Col: 152}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var169))
 				if templ_7745c5c3_Err != nil {
@@ -3332,7 +3332,7 @@ func KalitePanel(v IcerikKalite) templ.Component {
 				var templ_7745c5c3_Var170 string
 				templ_7745c5c3_Var170, templ_7745c5c3_Err = templ.JoinStringErrs(w.Detail)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1578, Col: 21}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1578, Col: 21}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var170))
 				if templ_7745c5c3_Err != nil {
@@ -3360,7 +3360,7 @@ func KalitePanel(v IcerikKalite) templ.Component {
 					var templ_7745c5c3_Var171 string
 					templ_7745c5c3_Var171, templ_7745c5c3_Err = templ.JoinStringErrs(f.Detail)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1585, Col: 25}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1585, Col: 25}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var171))
 					if templ_7745c5c3_Err != nil {
@@ -3388,7 +3388,7 @@ func KalitePanel(v IcerikKalite) templ.Component {
 				var templ_7745c5c3_Var172 string
 				templ_7745c5c3_Var172, templ_7745c5c3_Err = templ.JoinStringErrs(v.BenzerlikOran)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1592, Col: 77}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1592, Col: 77}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var172))
 				if templ_7745c5c3_Err != nil {
@@ -3406,7 +3406,7 @@ func KalitePanel(v IcerikKalite) templ.Component {
 					var templ_7745c5c3_Var173 string
 					templ_7745c5c3_Var173, templ_7745c5c3_Err = templ.JoinStringErrs(b.Detail)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1594, Col: 25}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1594, Col: 25}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var173))
 					if templ_7745c5c3_Err != nil {
@@ -3441,7 +3441,7 @@ func KalitePanel(v IcerikKalite) templ.Component {
 			var templ_7745c5c3_Var174 string
 			templ_7745c5c3_Var174, templ_7745c5c3_Err = templ.ResolveAttributeValue(v.RefreshURL)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1603, Col: 71}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1603, Col: 71}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var174)
 			if templ_7745c5c3_Err != nil {
@@ -3505,7 +3505,7 @@ func SesPanel(v IcerikFormView) templ.Component {
 		var templ_7745c5c3_Var176 string
 		templ_7745c5c3_Var176, templ_7745c5c3_Err = templ.ResolveAttributeValue(v.ContentID)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1626, Col: 119}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1626, Col: 119}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var176)
 		if templ_7745c5c3_Err != nil {
@@ -3562,7 +3562,7 @@ func SesAramaSonuclari(sonuclar []IcerikSesArama, sorgu string) templ.Component 
 			var templ_7745c5c3_Var178 string
 			templ_7745c5c3_Var178, templ_7745c5c3_Err = templ.JoinStringErrs(sorgu)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1653, Col: 51}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1653, Col: 51}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var178))
 			if templ_7745c5c3_Err != nil {
@@ -3580,7 +3580,7 @@ func SesAramaSonuclari(sonuclar []IcerikSesArama, sorgu string) templ.Component 
 			var templ_7745c5c3_Var179 string
 			templ_7745c5c3_Var179, templ_7745c5c3_Err = templ.JoinStringErrs(itoaT(len(sonuclar)))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1656, Col: 67}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1656, Col: 67}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var179))
 			if templ_7745c5c3_Err != nil {
@@ -3593,7 +3593,7 @@ func SesAramaSonuclari(sonuclar []IcerikSesArama, sorgu string) templ.Component 
 			var templ_7745c5c3_Var180 string
 			templ_7745c5c3_Var180, templ_7745c5c3_Err = templ.JoinStringErrs(sorgu)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1656, Col: 90}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1656, Col: 90}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var180))
 			if templ_7745c5c3_Err != nil {
@@ -3611,7 +3611,7 @@ func SesAramaSonuclari(sonuclar []IcerikSesArama, sorgu string) templ.Component 
 				var templ_7745c5c3_Var181 templ.SafeURL
 				templ_7745c5c3_Var181, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL(s.URL))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1658, Col: 57}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1658, Col: 57}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var181))
 				if templ_7745c5c3_Err != nil {
@@ -3624,7 +3624,7 @@ func SesAramaSonuclari(sonuclar []IcerikSesArama, sorgu string) templ.Component 
 				var templ_7745c5c3_Var182 string
 				templ_7745c5c3_Var182, templ_7745c5c3_Err = templ.JoinStringErrs(s.ContentTitle)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1659, Col: 52}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1659, Col: 52}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var182))
 				if templ_7745c5c3_Err != nil {
@@ -3637,7 +3637,7 @@ func SesAramaSonuclari(sonuclar []IcerikSesArama, sorgu string) templ.Component 
 				var templ_7745c5c3_Var183 string
 				templ_7745c5c3_Var183, templ_7745c5c3_Err = templ.JoinStringErrs(s.Snippet)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1660, Col: 46}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1660, Col: 46}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var183))
 				if templ_7745c5c3_Err != nil {
@@ -3650,7 +3650,7 @@ func SesAramaSonuclari(sonuclar []IcerikSesArama, sorgu string) templ.Component 
 				var templ_7745c5c3_Var184 string
 				templ_7745c5c3_Var184, templ_7745c5c3_Err = templ.JoinStringErrs(s.Duration)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1661, Col: 58}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1661, Col: 58}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var184))
 				if templ_7745c5c3_Err != nil {
@@ -3705,7 +3705,7 @@ func SesPanelBody(v IcerikFormView) templ.Component {
 			var templ_7745c5c3_Var187 string
 			templ_7745c5c3_Var187, templ_7745c5c3_Err = templ.ResolveAttributeValue(templ.CSSClasses(templ_7745c5c3_Var186).String())
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1, Col: 0}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1, Col: 0}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var187)
 			if templ_7745c5c3_Err != nil {
@@ -3718,7 +3718,7 @@ func SesPanelBody(v IcerikFormView) templ.Component {
 			var templ_7745c5c3_Var188 string
 			templ_7745c5c3_Var188, templ_7745c5c3_Err = templ.JoinStringErrs(v.SesFlashText)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1671, Col: 71}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1671, Col: 71}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var188))
 			if templ_7745c5c3_Err != nil {
@@ -3736,7 +3736,7 @@ func SesPanelBody(v IcerikFormView) templ.Component {
 		var templ_7745c5c3_Var189 templ.SafeURL
 		templ_7745c5c3_Var189, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL(v.SesUploadURL))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1673, Col: 78}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1673, Col: 78}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var189))
 		if templ_7745c5c3_Err != nil {
@@ -3749,7 +3749,7 @@ func SesPanelBody(v IcerikFormView) templ.Component {
 		var templ_7745c5c3_Var190 string
 		templ_7745c5c3_Var190, templ_7745c5c3_Err = templ.ResolveAttributeValue(v.SesUploadURL)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1673, Col: 135}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1673, Col: 135}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var190)
 		if templ_7745c5c3_Err != nil {
@@ -3781,7 +3781,7 @@ func SesPanelBody(v IcerikFormView) templ.Component {
 			var templ_7745c5c3_Var191 string
 			templ_7745c5c3_Var191, templ_7745c5c3_Err = templ.ResolveAttributeValue(a.MediaID)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1705, Col: 53}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1705, Col: 53}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var191)
 			if templ_7745c5c3_Err != nil {
@@ -3794,7 +3794,7 @@ func SesPanelBody(v IcerikFormView) templ.Component {
 			var templ_7745c5c3_Var192 string
 			templ_7745c5c3_Var192, templ_7745c5c3_Err = templ.JoinStringErrs(a.Filename)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1708, Col: 25}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1708, Col: 25}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var192))
 			if templ_7745c5c3_Err != nil {
@@ -3816,7 +3816,7 @@ func SesPanelBody(v IcerikFormView) templ.Component {
 			var templ_7745c5c3_Var194 string
 			templ_7745c5c3_Var194, templ_7745c5c3_Err = templ.ResolveAttributeValue(templ.CSSClasses(templ_7745c5c3_Var193).String())
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1, Col: 0}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1, Col: 0}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var194)
 			if templ_7745c5c3_Err != nil {
@@ -3829,7 +3829,7 @@ func SesPanelBody(v IcerikFormView) templ.Component {
 			var templ_7745c5c3_Var195 string
 			templ_7745c5c3_Var195, templ_7745c5c3_Err = templ.JoinStringErrs(a.StatusLabel)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1709, Col: 70}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1709, Col: 70}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var195))
 			if templ_7745c5c3_Err != nil {
@@ -3847,7 +3847,7 @@ func SesPanelBody(v IcerikFormView) templ.Component {
 				var templ_7745c5c3_Var196 string
 				templ_7745c5c3_Var196, templ_7745c5c3_Err = templ.JoinStringErrs(itoaT(a.Progress))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1711, Col: 51}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1711, Col: 51}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var196))
 				if templ_7745c5c3_Err != nil {
@@ -3870,7 +3870,7 @@ func SesPanelBody(v IcerikFormView) templ.Component {
 				var templ_7745c5c3_Var197 string
 				templ_7745c5c3_Var197, templ_7745c5c3_Err = templ.JoinStringErrs(a.Duration)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1716, Col: 24}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1716, Col: 24}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var197))
 				if templ_7745c5c3_Err != nil {
@@ -3889,7 +3889,7 @@ func SesPanelBody(v IcerikFormView) templ.Component {
 				var templ_7745c5c3_Var198 string
 				templ_7745c5c3_Var198, templ_7745c5c3_Err = templ.JoinStringErrs(a.Size)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1719, Col: 23}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1719, Col: 23}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var198))
 				if templ_7745c5c3_Err != nil {
@@ -3908,7 +3908,7 @@ func SesPanelBody(v IcerikFormView) templ.Component {
 				var templ_7745c5c3_Var199 string
 				templ_7745c5c3_Var199, templ_7745c5c3_Err = templ.JoinStringErrs(a.CreatedAt)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1722, Col: 28}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1722, Col: 28}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var199))
 				if templ_7745c5c3_Err != nil {
@@ -3931,7 +3931,7 @@ func SesPanelBody(v IcerikFormView) templ.Component {
 				var templ_7745c5c3_Var200 string
 				templ_7745c5c3_Var200, templ_7745c5c3_Err = templ.ResolveAttributeValue(itoaT(a.Progress))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1727, Col: 82}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1727, Col: 82}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var200)
 				if templ_7745c5c3_Err != nil {
@@ -3944,7 +3944,7 @@ func SesPanelBody(v IcerikFormView) templ.Component {
 				var templ_7745c5c3_Var201 string
 				templ_7745c5c3_Var201, templ_7745c5c3_Err = templruntime.SanitizeStyleAttributeValues("width:" + itoaT(a.Progress) + "%")
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1728, Col: 53}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1728, Col: 53}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var201))
 				if templ_7745c5c3_Err != nil {
@@ -3963,7 +3963,7 @@ func SesPanelBody(v IcerikFormView) templ.Component {
 				var templ_7745c5c3_Var202 string
 				templ_7745c5c3_Var202, templ_7745c5c3_Err = templ.JoinStringErrs(a.Error)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1732, Col: 90}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1732, Col: 90}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var202))
 				if templ_7745c5c3_Err != nil {
@@ -3981,7 +3981,7 @@ func SesPanelBody(v IcerikFormView) templ.Component {
 			var templ_7745c5c3_Var203 string
 			templ_7745c5c3_Var203, templ_7745c5c3_Err = templ.ResolveAttributeValue(a.MediaID)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1734, Col: 68}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1734, Col: 68}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var203)
 			if templ_7745c5c3_Err != nil {
@@ -3994,7 +3994,7 @@ func SesPanelBody(v IcerikFormView) templ.Component {
 			var templ_7745c5c3_Var204 string
 			templ_7745c5c3_Var204, templ_7745c5c3_Err = templ.ResolveAttributeValue(a.Filename)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1734, Col: 94}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1734, Col: 94}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var204)
 			if templ_7745c5c3_Err != nil {
@@ -4007,7 +4007,7 @@ func SesPanelBody(v IcerikFormView) templ.Component {
 			var templ_7745c5c3_Var205 string
 			templ_7745c5c3_Var205, templ_7745c5c3_Err = templ.ResolveAttributeValue(a.WaveformJSON)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1734, Col: 127}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1734, Col: 127}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var205)
 			if templ_7745c5c3_Err != nil {
@@ -4020,7 +4020,7 @@ func SesPanelBody(v IcerikFormView) templ.Component {
 			var templ_7745c5c3_Var206 string
 			templ_7745c5c3_Var206, templ_7745c5c3_Err = templ.ResolveAttributeValue(a.Duration)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1734, Col: 156}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1734, Col: 156}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var206)
 			if templ_7745c5c3_Err != nil {
@@ -4033,7 +4033,7 @@ func SesPanelBody(v IcerikFormView) templ.Component {
 			var templ_7745c5c3_Var207 string
 			templ_7745c5c3_Var207, templ_7745c5c3_Err = templ.ResolveAttributeValue(templ.SafeURL(a.StreamURL))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1735, Col: 87}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1735, Col: 87}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var207)
 			if templ_7745c5c3_Err != nil {
@@ -4046,7 +4046,7 @@ func SesPanelBody(v IcerikFormView) templ.Component {
 			var templ_7745c5c3_Var208 string
 			templ_7745c5c3_Var208, templ_7745c5c3_Err = templ.ResolveAttributeValue(a.MediaID)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1735, Col: 119}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1735, Col: 119}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var208)
 			if templ_7745c5c3_Err != nil {
@@ -4059,7 +4059,7 @@ func SesPanelBody(v IcerikFormView) templ.Component {
 			var templ_7745c5c3_Var209 string
 			templ_7745c5c3_Var209, templ_7745c5c3_Err = templ.JoinStringErrs(a.Duration)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1751, Col: 39}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1751, Col: 39}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var209))
 			if templ_7745c5c3_Err != nil {
@@ -4072,7 +4072,7 @@ func SesPanelBody(v IcerikFormView) templ.Component {
 			var templ_7745c5c3_Var210 string
 			templ_7745c5c3_Var210, templ_7745c5c3_Err = templ.ResolveAttributeValue("sesRate-" + a.MediaID)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1755, Col: 60}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1755, Col: 60}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var210)
 			if templ_7745c5c3_Err != nil {
@@ -4085,7 +4085,7 @@ func SesPanelBody(v IcerikFormView) templ.Component {
 			var templ_7745c5c3_Var211 string
 			templ_7745c5c3_Var211, templ_7745c5c3_Err = templ.ResolveAttributeValue("sesRate-" + a.MediaID)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1756, Col: 70}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1756, Col: 70}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var211)
 			if templ_7745c5c3_Err != nil {
@@ -4103,7 +4103,7 @@ func SesPanelBody(v IcerikFormView) templ.Component {
 				var templ_7745c5c3_Var212 string
 				templ_7745c5c3_Var212, templ_7745c5c3_Err = templ.ResolveAttributeValue(a.DraftURL)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1767, Col: 74}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1767, Col: 74}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var212)
 				if templ_7745c5c3_Err != nil {
@@ -4122,7 +4122,7 @@ func SesPanelBody(v IcerikFormView) templ.Component {
 				var templ_7745c5c3_Var213 templ.SafeURL
 				templ_7745c5c3_Var213, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL(a.SrtURL))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1770, Col: 62}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1770, Col: 62}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var213))
 				if templ_7745c5c3_Err != nil {
@@ -4135,7 +4135,7 @@ func SesPanelBody(v IcerikFormView) templ.Component {
 				var templ_7745c5c3_Var214 templ.SafeURL
 				templ_7745c5c3_Var214, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL(a.VttURL))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1771, Col: 62}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1771, Col: 62}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var214))
 				if templ_7745c5c3_Err != nil {
@@ -4154,7 +4154,7 @@ func SesPanelBody(v IcerikFormView) templ.Component {
 				var templ_7745c5c3_Var215 string
 				templ_7745c5c3_Var215, templ_7745c5c3_Err = templ.ResolveAttributeValue(a.RetryURL)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1774, Col: 71}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1774, Col: 71}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var215)
 				if templ_7745c5c3_Err != nil {
@@ -4172,7 +4172,7 @@ func SesPanelBody(v IcerikFormView) templ.Component {
 			var templ_7745c5c3_Var216 string
 			templ_7745c5c3_Var216, templ_7745c5c3_Err = templ.ResolveAttributeValue(a.DeleteURL)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1776, Col: 72}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1776, Col: 72}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var216)
 			if templ_7745c5c3_Err != nil {
@@ -4190,7 +4190,7 @@ func SesPanelBody(v IcerikFormView) templ.Component {
 				var templ_7745c5c3_Var217 string
 				templ_7745c5c3_Var217, templ_7745c5c3_Err = templ.JoinStringErrs(a.Speakers)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1779, Col: 70}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1779, Col: 70}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var217))
 				if templ_7745c5c3_Err != nil {
@@ -4214,7 +4214,7 @@ func SesPanelBody(v IcerikFormView) templ.Component {
 					var templ_7745c5c3_Var218 string
 					templ_7745c5c3_Var218, templ_7745c5c3_Err = templ.ResolveAttributeValue(a.MediaID)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1785, Col: 71}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1785, Col: 71}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var218)
 					if templ_7745c5c3_Err != nil {
@@ -4227,7 +4227,7 @@ func SesPanelBody(v IcerikFormView) templ.Component {
 					var templ_7745c5c3_Var219 string
 					templ_7745c5c3_Var219, templ_7745c5c3_Err = templ.ResolveAttributeValue(itoaT64(seg.StartMS))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1785, Col: 110}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1785, Col: 110}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var219)
 					if templ_7745c5c3_Err != nil {
@@ -4240,7 +4240,7 @@ func SesPanelBody(v IcerikFormView) templ.Component {
 					var templ_7745c5c3_Var220 string
 					templ_7745c5c3_Var220, templ_7745c5c3_Err = templ.JoinStringErrs(seg.StartLabel)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1786, Col: 50}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1786, Col: 50}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var220))
 					if templ_7745c5c3_Err != nil {
@@ -4258,7 +4258,7 @@ func SesPanelBody(v IcerikFormView) templ.Component {
 						var templ_7745c5c3_Var221 string
 						templ_7745c5c3_Var221, templ_7745c5c3_Err = templ.JoinStringErrs(seg.Speaker)
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1788, Col: 51}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1788, Col: 51}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var221))
 						if templ_7745c5c3_Err != nil {
@@ -4282,7 +4282,7 @@ func SesPanelBody(v IcerikFormView) templ.Component {
 							var templ_7745c5c3_Var222 string
 							templ_7745c5c3_Var222, templ_7745c5c3_Err = templ.ResolveAttributeValue(itoaT64(w.StartMS))
 							if templ_7745c5c3_Err != nil {
-								return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1793, Col: 72}
+								return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1793, Col: 72}
 							}
 							_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var222)
 							if templ_7745c5c3_Err != nil {
@@ -4295,7 +4295,7 @@ func SesPanelBody(v IcerikFormView) templ.Component {
 							var templ_7745c5c3_Var223 string
 							templ_7745c5c3_Var223, templ_7745c5c3_Err = templ.ResolveAttributeValue(itoaT64(w.EndMS))
 							if templ_7745c5c3_Err != nil {
-								return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1793, Col: 105}
+								return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1793, Col: 105}
 							}
 							_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var223)
 							if templ_7745c5c3_Err != nil {
@@ -4308,7 +4308,7 @@ func SesPanelBody(v IcerikFormView) templ.Component {
 							var templ_7745c5c3_Var224 string
 							templ_7745c5c3_Var224, templ_7745c5c3_Err = templ.JoinStringErrs(w.Text)
 							if templ_7745c5c3_Err != nil {
-								return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1793, Col: 116}
+								return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1793, Col: 116}
 							}
 							_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var224))
 							if templ_7745c5c3_Err != nil {
@@ -4321,7 +4321,7 @@ func SesPanelBody(v IcerikFormView) templ.Component {
 							var templ_7745c5c3_Var225 string
 							templ_7745c5c3_Var225, templ_7745c5c3_Err = templ.JoinStringErrs(" ")
 							if templ_7745c5c3_Err != nil {
-								return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1793, Col: 130}
+								return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1793, Col: 130}
 							}
 							_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var225))
 							if templ_7745c5c3_Err != nil {
@@ -4340,7 +4340,7 @@ func SesPanelBody(v IcerikFormView) templ.Component {
 						var templ_7745c5c3_Var226 string
 						templ_7745c5c3_Var226, templ_7745c5c3_Err = templ.JoinStringErrs(seg.Text)
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1797, Col: 45}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1797, Col: 45}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var226))
 						if templ_7745c5c3_Err != nil {
@@ -4368,7 +4368,7 @@ func SesPanelBody(v IcerikFormView) templ.Component {
 				var templ_7745c5c3_Var227 string
 				templ_7745c5c3_Var227, templ_7745c5c3_Err = templ.JoinStringErrs(a.TranscriptText)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1805, Col: 56}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1805, Col: 56}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var227))
 				if templ_7745c5c3_Err != nil {
@@ -4392,7 +4392,7 @@ func SesPanelBody(v IcerikFormView) templ.Component {
 			var templ_7745c5c3_Var228 string
 			templ_7745c5c3_Var228, templ_7745c5c3_Err = templ.ResolveAttributeValue(v.SesPollURL)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/icerikform.templ`, Line: 1811, Col: 41}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/icerikform.templ`, Line: 1811, Col: 41}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var228)
 			if templ_7745c5c3_Err != nil {

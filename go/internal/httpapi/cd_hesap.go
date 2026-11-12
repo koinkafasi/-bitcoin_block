@@ -9,19 +9,6 @@ import (
 	"theblock/site/internal/webui/templkit"
 )
 
-// Hesap merkezi — CoinDesk tasarımına geçiş (7 Kasım 2026).
-//
-// NEDEN: /hesabim ve 8 sekmesi theblock kabuğundaydı (kırmızı üst çubuk,
-// Poppins, kırmızı alt bilgi). Sitenin geri kalanı CoinDesk tasarımında
-// olduğu için sayfa "başka site" gibi duruyordu (ölçüm: gövde yazı tipi
-// Poppins, 179 elemanda).
-//
-// TASARIM ÖLÇÜSÜ: CoinDesk hesap alanı Auth0 oturumu istiyor
-// (auth.coindesk.com/u/login) — girişsiz ölçülemiyor. Geometri
-// uydurulmadı: sitenin ÖLÇÜLMÜŞ jetonları kullanıldı (spec §5, §11.13).
-// Yapı CoinDesk'in hesap deseniyle aynı: sol kenar menü + sağ içerik,
-// tek sütun 240 px menü, kart köşesi 4, 1 px #d9d9d9 çizgi.
-
 // cdHesapNavListesi hesap kenar menüsü (sabit sıra).
 func cdHesapNavListesi(h *hesapData) []templkit.CDHesapNav {
 	sayi := func(n int) int { return n }
@@ -40,9 +27,6 @@ func cdHesapNavListesi(h *hesapData) []templkit.CDHesapNav {
 // cdHesapSayfaOlustur hesapData → templkit.CDHesapSayfa.
 func (s *Server) cdHesapSayfaOlustur(r *http.Request, d *tmplData, h *hesapData, sekme, baslik, aciklama string) templkit.CDHesapSayfa {
 	shell := s.cdShellCtx(r.Context(), r, "")
-	// Fiyat şeridi her sayfada dolu olmalı: cdShellCtx bunu doldurmuyor
-	// (ana sayfa kendi dolduruyor). Boş şerit yalnız "Canlı Piyasalar"
-	// başlığıyla görünüyordu — ölçüldü, 7 Kasım 2026.
 	shell.Ticker = s.cdTickerDoldur(r)
 	shell.BaseURL = strings.TrimRight(s.cfg.BaseURL, "/")
 	kanonik := strings.TrimRight(s.cfg.BaseURL, "/") + r.URL.Path

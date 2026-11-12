@@ -13,22 +13,6 @@ import (
 	"theblock/site/internal/platform"
 )
 
-// Kaynak gövdesi çekici (okuyucu proxy).
-//
-// SORUN: CoinDesk'in HTML sayfaları sunucudan 429 (bot koruması) dönüyor;
-// yalnız `/arc/outboundfeeds/rss/` açık. RSS ise tek cümlelik `<description>`
-// taşıyor. O cümleden "haber" yazmak, uydurmadan 3 paragraf üretmek
-// demekti — kalite kapısının reddettiği tam olarak bu.
-//
-// ÇÖZÜM: herkese açık okuyucu proxy'si (r.jina.ai) makaleyi sunucu
-// tarafında çekip markdown döndürüyor. Biz yalnız GÖVDE paragraflarını
-// alıyoruz: gezinme, çerez metni, "ilgili haberler" listesi atılıyor.
-// Çekilen metin TASLAĞA kaynak metin olarak yazılır; yayına giden metin
-// AI ile Türkçe yeniden yazılır (bkz. internal/aieditor).
-//
-// GİZLİLİK: yalnız herkese açık makale adresi gönderilir; kullanıcı verisi,
-// çerez veya iç oturum bilgisi paylaşılmaz.
-
 const (
 	kaynakGovdeMaxBayt  = 2 << 20
 	kaynakGovdeZamanAsi = 40 * time.Second
@@ -71,10 +55,6 @@ var govdeBitisIsaretleri = []string{
 	"disclaimer",
 }
 
-// KaynakGovdeCek makale gövdesini okuyucu proxy üzerinden çeker.
-//
-// Hata dönerse çağıran RSS özetiyle devam eder: gövde zenginleştirmesi
-// içerik üretimini ENGELLEMEZ, yalnız iyileştirir.
 func KaynakGovdeCek(ctx context.Context, makaleURL string) (KaynakGovde, error) {
 	makaleURL = strings.TrimSpace(makaleURL)
 	if makaleURL == "" {
@@ -118,11 +98,6 @@ func KaynakGovdeCek(ctx context.Context, makaleURL string) (KaynakGovde, error) 
 	return g, nil
 }
 
-// govdeAyikla okuyucu çıktısından yalnız makale paragraflarını seçer.//
-// Biçim gözlemlenerek yazıldı (6 Kasım 2026, CoinDesk opinion sayfası):
-// başlık, gezinme bağlantıları, künye satırı ve görsellerden sonra düz
-// paragraflar geliyor; "Note: The views expressed..." satırı gövdeyi
-// bitiriyor, ardından ilgili haber listesi başlıyor.
 func govdeAyikla(ham string) KaynakGovde {
 	var g KaynakGovde
 	icerik := ham
@@ -194,27 +169,12 @@ func markdownTemizle(s string) string {
 	return strings.Join(strings.Fields(s), " ")
 }
 
-// kaynakGovdeTurLimiti: tek çekim turunda en fazla kaç makale gövdesi
-// çekilir. Okuyucu proxy'si ücretsiz katmanda dakikada ~20 istek kabul
-// ediyor; bütçeyi tarama turuna yaymak 429 üretmemek için gerekli.
 const kaynakGovdeTurLimiti = 8
 
-// govdeGerekli: bu feed türünde makale gövdesi çekilmeli mi?
-//
-// Yalnız keşif kaynaklarında (kind=bing) RSS tek cümlelik özet taşıyor.
-// Normal RSS feed'lerinin kendi gövdesi zaten var; her öğe için ayrıca
-// proxy çağırmak maliyeti ve gecikmeyi boşuna artırırdı.
 func govdeGerekli(kind string) bool {
 	return strings.EqualFold(strings.TrimSpace(kind), "bing")
 }
 
-// feedOku feed türüne göre öğeleri çeker.
-//
-//	rss (varsayılan/boş): RSS veya Atom
-//	bing:                 Bing News `site:` sorgusu → gerçek makale adresleri
-//
-// NEDEN kind: CoinDesk'in bölüm sayfaları sunucudan 429 dönüyor ve RSS
-// bölüm feed'i yayınlamıyor; keşif Bing News üzerinden yapılıyor.
 func feedOku(ctx context.Context, f *Feed) ([]RSSItem, error) {
 	if strings.EqualFold(strings.TrimSpace(f.Kind), "bing") {
 		return FetchBingLinkFeed(ctx, f.URL, siteHostSorgudan(f.URL))

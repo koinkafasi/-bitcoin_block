@@ -10,18 +10,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// Medya paneli — Faz 187: sonsuz kaydırma, gruplu kategori çipleri, sade üst
-// alan.
-//
-// Üç ayrı kullanıcı isteği:
-//  1. "medya yüklemeyi sayfalama değil lazy load süreli otomatik yüklenir" →
-//     sayfalama kaldırıldı, `revealed` gözcüsü geldi.
-//  2. "Arama Kategoriler gruplayarak seçenek aksiyon ve efektif efektleri" →
-//     kategori select'i yerine sayaçlı, geçişli çipler.
-//  3. "Dosyaları seç Butonu fazla kaldır ... üste başlık alt metin gibi
-//     seçenekler resim detayında zaten var olan alanları birdaha tekrar
-//     olmasın panelde" → üstteki yükleme kartı tamamen kaldırıldı.
-
 func medyaJS(t *testing.T) string {
 	t.Helper()
 	b, err := os.ReadFile(filepath.Join("static", "media.js"))
@@ -38,12 +26,6 @@ func medyaUstDilim(t *testing.T, s string) string {
 	return s[:i]
 }
 
-// TestMedyaTekrarAlanYok: dosya seç düğmesi ve başlık/alt metin/fotoğraf
-// altı/açıklama alanları panelin üstünde TEKRAR EDİLMEMELİ.
-//
-// Bu alanlar resim detayında (modal) zaten var: aynı bilgiyi iki yerde
-// sormak, yüklerken doldurulan alanın sonradan düzenlenmesi gerektiğinde
-// hangisinin geçerli olduğu belirsizliğini doğuruyordu.
 func TestMedyaTekrarAlanYok(t *testing.T) {
 	ust := medyaUstDilim(t, medyaTempl(t))
 
@@ -166,9 +148,6 @@ func TestMedyaSonsuzKaydirmaBakimi(t *testing.T) {
 	assert.Contains(t, js, "parca=1")
 	assert.Contains(t, js, "xhr.responseURL")
 
-	// JS öncesi varsayılan yükseklik: span yokken ızgara 4px satırla
-	// çöküyor, gözcü hemen görünüyor ve sayfa açılır açılmaz ikinci dilim
-	// isteniyordu (ölçüldü: 48 değil 96 kart).
 	css := medyaCSS(t)
 	i := strings.Index(css, ".media-panel:not(.media-list-view) .media-item {")
 	require.Greater(t, i, 0)

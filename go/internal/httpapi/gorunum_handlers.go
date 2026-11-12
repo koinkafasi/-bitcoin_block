@@ -13,12 +13,6 @@ import (
 	"theblock/site/internal/repo"
 )
 
-// ---- Admin görünüm / marka kiti (Faz A) ----
-//
-// WiseCP "Appearance" tarzı: logo'dan renk çıkarma (istemci canvas),
-// ana/ikincil/metin/navbar renkleri, font seçimi, dikey/yatay navbar.
-// Saklama: settings('admin_gorunum','secim') JSON.
-
 // gorunumView panel görünüm ayarları.
 type gorunumView struct {
 	Primary   string `json:"primary"`
@@ -75,18 +69,12 @@ func (g gorunumView) CSS() template.CSS {
 	b.WriteString(":root{")
 	if g.Primary != "" {
 		b.WriteString("--accent:" + g.Primary + ";--accent-2:" + g.Primary + ";")
-		// Aynı değer ikinci bir adla: public.css yükleyen sayfalar (Sayfa
-		// Tasarımcısı) `--accent`'i kendi temasına çeviriyor; orada bu
-		// değerden geri yüklenir (Faz 182).
 		b.WriteString("--tb-accent:" + g.Primary + ";--tb-accent-2:" + g.Primary + ";")
 		// Dolgu tonu: üstünde beyaz yazı 4.5'i geçsin diye türetilir.
 		// Marka rengi (--accent) DEĞİŞMEZ (Faz 180, A-7).
 		if f := accentFill(g.Primary); f != "" {
 			b.WriteString("--accent-fill:" + f + ";")
 		}
-		// Metin tonu: açık zeminde 4.5 (Faz 180).
-		// Açık tema metin tonu. Adı `-acik`: düz `--accent-text` yazmak
-		// koyu temada da geçerli oluyordu (ölçüldü: 2.9 kontrast).
 		if t := accentTextFill(g.Primary); t != "" {
 			b.WriteString("--accent-text-acik:" + t + ";")
 		}
@@ -99,10 +87,6 @@ func (g gorunumView) CSS() template.CSS {
 		b.WriteString("--brand:" + g.Secondary + ";")
 	}
 	if g.TextColor != "" {
-		// METIN RENGI TEK BIR DEGER: iki temaya da uygulanirsa koyu temada
-		// siyah metin okunmaz (olculdu: kontrast 1.2). Acik tema secimi
-		// oldugu gibi, koyu tema icin acilmis tonu yazilir; hangisinin
-		// kullanilacagina admin-shadcn karar verir (Faz 182).
 		b.WriteString("--text-kullanici:" + g.TextColor + ";")
 		if t := koyuTemaMetin(g.TextColor); t != "" {
 			b.WriteString("--text-dark:" + t + ";")

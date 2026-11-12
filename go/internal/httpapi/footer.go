@@ -23,12 +23,6 @@ type FootCol struct {
 	Links []FootLink `json:"links"`
 }
 
-// FooterConfig tüm footer görünümü.
-//
-//	LogoPos: "left" | "center" | "right"  → marka bloğunun konumu
-//	Layout : "klasik" (üst şeritli) | "compact" (şeritsiz, kompakt)
-//	Strip  : üst şeritteki linkler (klasik modelde)
-//	Cols   : link kolonları
 type FooterConfig struct {
 	LogoPos     string     `json:"logo"`
 	Layout      string     `json:"model"` // klasik | compact | sade
@@ -83,11 +77,6 @@ func trimSpace(s string) string {
 	return s[i:j]
 }
 
-// footerConfig ayardan okur; yoksa varsayılan kurulumu döndürür.
-// normalizePageURL kurumsal sayfaların eski /sayfa/<slug> adresini kök
-// adrese çevirir (Faz 143). Kayıtlı menü/footer ayarları eski adresi
-// taşıyabilir; yönlendirmeye ek olarak bağlantılar da doğrudan kök adrese
-// gitsin diye okuma sırasında uygulanır.
 func normalizePageURL(u string) string {
 	if u == "" {
 		return u
@@ -145,7 +134,6 @@ func (s *Server) footerConfig(ctx context.Context) *FooterConfig {
 				{Label: "Piyasa ve Borsa", URL: "/borsa"},
 				{Label: "Fikstür", URL: "/fikstur"},
 				{Label: "Astroloji", URL: "/astroloji"},
-				{Label: "Gazete Manşetleri", URL: "/gazete-mansetleri"},
 			}},
 			{Title: "Kurumsal", Links: []FootLink{
 				{Label: "Çerez Politikası", URL: "/cerez-politikasi"},

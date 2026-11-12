@@ -1,6 +1,5 @@
-/* gazete.css — Gazete modülü stilleri (editör + okuyucu + baskı sayfaları) */
 
-/* ===================== EDİTÖR ===================== */
+
 .gz-toolbar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 12px; }
 .gz-toolbar strong { font-size: .95rem; }
 .gz-layout { display: grid; grid-template-columns: 200px minmax(320px, 1fr) 280px; gap: 12px; align-items: start; }
@@ -22,18 +21,9 @@
   background: #ece9f3; overflow: auto; }
 body[data-theme="dark"] .gz-canvas-wrap { background: #1d1f26; }
 
-/* Tuval GERCEK sayfa olcusunde kurulur (.gazete-sayfa, mm cinsinden) ve
- * transform ile kucultulur; sarmalayici olceklenmis boyutu yer olarak ayirir.
- * Boylece editorde gorunen ile basilan ayni HTML+CSS'ten gelir
- * (specs/13-gazete-sayfa-duzenleyici.md K1 - tek render yolu).
- * Blok govdelerini editor cizmez, sunucudan gelir. */
 .gz-canvas-olcek { position: relative; flex: none; }
 #gz-canvas { box-shadow: 0 2px 18px rgba(0,0,0,.18); transform-origin: top left; }
 
-/* Blok kapsayicisi baski siniflarinin (.gb) kendisi; editor yalnizca secim
- * ve tutamak ekler, gorunumu taklit etmez.
- * --gz-ters: 1/olcek. Tuval kucultuldugu icin tutamak ve cerceve de
- * kuculurdu; ters carpanla ekranda sabit kalinlikta tutuluyor. */
 #gz-canvas .gb { cursor: grab; outline: 1px dashed transparent; }
 #gz-canvas .gb:hover { outline-color: rgba(118,48,215,.55); }
 #gz-canvas .gb.gz-secili {
@@ -41,8 +31,7 @@ body[data-theme="dark"] .gz-canvas-wrap { background: #1d1f26; }
   outline-width: calc(2px * var(--gz-ters, 1));
   z-index: 5;
 }
-/* Tutamak blogun ICINDE: .gb overflow:hidden oldugu icin disa tasan
- * tutamak kirpilirdi. */
+
 .gz-handle { position: absolute; right: 0; bottom: 0;
   width: calc(14px * var(--gz-ters, 1)); height: calc(14px * var(--gz-ters, 1));
   background: #7630d7; border: calc(2px * var(--gz-ters, 1)) solid #fff;
@@ -63,17 +52,13 @@ body[data-theme="dark"] .gz-canvas-wrap { background: #1d1f26; }
 .gz-preview .gz-palette, .gz-preview .gz-props { display: none; }
 .gz-preview .gz-layout { grid-template-columns: 1fr; }
 
-/* ---- Tasma isareti (SPEC K3, Scribus deseni) ----
- * Tasan metin sessizce kirpilmamali; blok isaretlenir. Isaret sol-altta
- * cunku sag-alt koseyi boyutlandirma tutamagi kullaniyor.
- * Olcek carpani burada da gerekli: tuval kucultulunce isaret kaybolurdu. */
 #gz-canvas .gb.gz-tasma { outline: solid #d93025; outline-width: calc(2px * var(--gz-ters, 1)); }
 #gz-canvas .gb.gz-tasma::after {
   content: "";
   position: absolute; left: 0; bottom: 0;
   width: calc(14px * var(--gz-ters, 1)); height: calc(14px * var(--gz-ters, 1));
   background: #d93025;
-  /* Icine carpi cizgisi: renk korlugunde de ayirt edilebilsin. */
+  
   background-image:
     linear-gradient(45deg, transparent 44%, #fff 44%, #fff 56%, transparent 56%),
     linear-gradient(-45deg, transparent 44%, #fff 44%, #fff 56%, transparent 56%);
@@ -87,21 +72,15 @@ body[data-theme="dark"] .gz-canvas-wrap { background: #1d1f26; }
 }
 .gz-tasma-sayac[hidden] { display: none; }
 
-/* ---- Sutun izgarasi (SPEC K4) ----
- * Gazete sayfasi sutun urunudur; keyfi adimla hizali sayfa uretilemez.
- * Izgara sablondan gelir, yakalama sutun kenarlarina yapilir. */
 .gz-izgara { position: absolute; inset: 0; pointer-events: none; z-index: 0; }
 .gz-izgara-sutun { position: absolute; top: 0; bottom: 0; background: rgba(118,48,215,.06);
   border-left: 1px dashed rgba(118,48,215,.25); border-right: 1px dashed rgba(118,48,215,.25); }
 #gz-canvas.gz-izgara-gizli .gz-izgara { display: none; }
 
-/* Hizalama kilavuzlari: yakalama olunca nereye hizalandigini gosterir. */
 .gz-kilavuz { position: absolute; pointer-events: none; z-index: 999; background: #e0632a; }
 .gz-kilavuz-d { top: 0; bottom: 0; width: calc(1px * var(--gz-ters, 1)); }
 .gz-kilavuz-y { left: 0; right: 0; height: calc(1px * var(--gz-ters, 1)); }
 
-/* Sekiz tutamak. Tutamaklar blogun ICINDE: .gb overflow:hidden disa
- * tasani kirpiyor. Olcek ters carpani ekranda sabit boy saglar. */
 .gz-handle { position: absolute; display: none; background: #7630d7;
   border: calc(1.5px * var(--gz-ters, 1)) solid #fff; border-radius: 2px;
   width: calc(11px * var(--gz-ters, 1)); height: calc(11px * var(--gz-ters, 1)); z-index: 10; }
@@ -115,23 +94,19 @@ body[data-theme="dark"] .gz-canvas-wrap { background: #1d1f26; }
 .gz-h-sw { left: 0; bottom: 0; cursor: nesw-resize; }
 .gz-h-w  { left: 0; top: 50%; transform: translateY(-50%); cursor: ew-resize; }
 
-/* Birincil secim (ozellikler bu bloga uygulanir) digerlerinden ayrilsin. */
 #gz-canvas .gb.gz-birincil { outline-color: #7630d7; }
 #gz-canvas .gb.gz-secili:not(.gz-birincil) { outline-color: rgba(118,48,215,.6); }
 
-/* Katman satiri dugmeleri */
 .gz-layer-btn { border: none; background: none; cursor: pointer; color: var(--muted, #6b7280);
   padding: 0 2px; line-height: 1; }
 .gz-layer-btn:hover { color: #7630d7; }
 .gz-layer-btn.gz-layer-del:hover { color: #b91c1c; }
 .gz-layer[draggable="true"] { cursor: grab; }
 
-/* Ozellik paneli ayraci */
 .gz-props-ayrac { grid-column: 1 / -1; margin: 8px 0 2px; font-size: .72rem;
   text-transform: uppercase; letter-spacing: .06em; color: var(--muted, #6b7280);
   border-top: 1px solid var(--border, #e5e7eb); padding-top: 8px; }
 
-/* Panel ici bildirim: alert() yerine. */
 .gz-bildirim { margin: 0 0 10px; padding: 9px 12px; border-radius: 8px; font-size: .85rem;
   border: 1px solid transparent; }
 .gz-bildirim[hidden] { display: none; }
@@ -139,12 +114,10 @@ body[data-theme="dark"] .gz-canvas-wrap { background: #1d1f26; }
 .gz-bildirim.ok { background: #ecfdf5; border-color: #a7f3d0; color: #065f46; }
 .gz-bildirim.error { background: #fdecea; border-color: #f3b7b3; color: #a31512; }
 
-/* Yakinlastirma gostergesi */
 .gz-zoom { display: inline-flex; align-items: center; gap: 2px; }
 .gz-zoom-etiket { min-width: 42px; text-align: center; font-size: .78rem;
   color: var(--muted, #6b7280); font-variant-numeric: tabular-nums; }
 
-/* Sayfa seridi satiri: sec, adlandir (cift tik), sil, surukleyerek sirala. */
 .gz-page-row { display: flex; align-items: center; gap: 2px; border: 1px solid var(--border, #e5e7eb);
   border-radius: 6px; background: var(--card, #fff); cursor: grab; }
 .gz-page-row.secili { border-color: #7630d7; background: #f3ebff; }
@@ -152,10 +125,6 @@ body[data-theme="dark"] .gz-canvas-wrap { background: #1d1f26; }
   padding: 6px 8px; font-size: .8rem; cursor: pointer; }
 .gz-page-row.secili .gz-page-btn { font-weight: 600; }
 
-/* ---- Baski kilavuzlari (Faz 6) ----
- * Kesim cizgisi sayfanin kenarindan kesim payi kadar iceride; guvenli alan
- * ondan biraz daha icerde. Yalniz editorde gorunur: dijital nusha tam kesim
- * olcusunde basilir, isaretler matbaa dosyasina aittir (SPEC K8). */
 .gz-baski-kilavuz { position: absolute; inset: 0; pointer-events: none; z-index: 1; }
 .gz-kl { position: absolute; }
 .gz-kl-kesim {
@@ -169,12 +138,10 @@ body[data-theme="dark"] .gz-canvas-wrap { background: #1d1f26; }
 #gz-canvas.gz-kilavuz-gizli .gz-baski-kilavuz,
 #gz-canvas.gz-kilavuz-gizli .gz-izgara { display: none; }
 
-/* Tam onizleme: paneller gizlenir, sayfa ortalanir. */
 .gz-preview .gz-palette, .gz-preview .gz-props { display: none; }
 .gz-preview .gz-layout { grid-template-columns: 1fr; }
 .gz-preview .gz-canvas-wrap { background: #3b3b42; }
 
-/* ===================== OKUYUCU (flip) ===================== */
 .gz-read-toolbar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 14px; }
 .gz-flip { margin: 0 auto; max-width: 980px; }
 .gz-flip-fallback { display: flex; gap: 12px; overflow-x: auto; }
@@ -183,20 +150,13 @@ body[data-theme="dark"] .gz-canvas-wrap { background: #1d1f26; }
 .gz-grid-view { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px; margin-top: 14px; }
 .gz-grid-item { border: 1px solid var(--border, #e5e7eb); background: #fff; aspect-ratio: 297/420; overflow: hidden; }
 
-/* ===================== ŞABLON GALERİSİ (templ modülü) ===================== */
 .gz-thumbs { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
 .gz-thumb { width: 46px; height: 64px; color: var(--border, #e5e7eb);
   border: 1px solid var(--border, #e5e7eb); border-radius: 4px; background: #fff; }
 
-/* ===================== SAYFA & BLOK (ekran) ===================== */
-/* Okuyucu, baski HTML'ini ekranda gosterir ve kendi duyarli olcegini
- * kullanir (em tabanli, yuzde ic bosluk). Bu kurallar MUTLAKA okuyucu
- * kabina kapsamli kalmali: editor hem gazete-baski.css hem bu dosyayi
- * yukluyor; kapsamsiz bir .gazete-sayfa kurali baskinin gercek sayfa
- * olcusunu eziyor ve tuval 0x0 kaliyordu. */
 .gz-flip-page .gazete-sayfa, .gz-grid-item .gazete-sayfa { position: relative; width: 100%; height: 100%; padding: 2.5%;
   background: #fff; color: #111; font-family: Georgia, "Times New Roman", serif;
-  font-size: 3.2px; /* 420px yükseklikte ≈ 9pt taban */ overflow: hidden; }
+  font-size: 3.2px;  overflow: hidden; }
 .gz-flip-page .gazete-sayfa { height: 100%; }
 .gz-grid-item .gazete-sayfa { height: 100%; }
 .gz-flip-page .gazete-sayfa .gb, .gz-grid-item .gazete-sayfa .gb { position: absolute; overflow: hidden; }

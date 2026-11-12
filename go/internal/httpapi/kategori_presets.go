@@ -1,9 +1,5 @@
 package httpapi
 
-// Kategori tasarım şablonları: yönetimden tek tıkla uygulanan hazır
-// blok düzenleri + liste görünümü. Şablon "kategori:<slug>" page_layout
-// anahtarına yazılır; böylece Sayfa Tasarımcısı'nda sonradan düzenlenebilir.
-
 type categoryPreset struct {
 	Key    string
 	Name   string

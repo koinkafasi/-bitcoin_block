@@ -5,9 +5,6 @@ import (
 	"testing"
 )
 
-// bistEvreni şeritte/listede gösterilen BIST sembollerini tanımlar. Liste elle
-// tutulduğu için yazım hataları sessizce boş kutuya dönüşür; bu test biçimi,
-// tekilliği ve sıralamayı korur.
 func TestHisseListeBicimi(t *testing.T) {
 	// BIST kodları 4-6 karakterdir ve rakam içerebilir (A1CAP, 1000?).
 	kod := regexp.MustCompile(`^[A-Z0-9]{4,6}$`)

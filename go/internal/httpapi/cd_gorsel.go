@@ -14,40 +14,11 @@ import (
 	"theblock/site/internal/repo"
 )
 
-// handleKaynakGorsel — kaynak görselini KENDİ origin'imizden servis eder.
-//
-// GET /kg/{hash}
-//
-// NEDEN (ölçüm, 5 Kasım 2026): /markets sayfasında Lighthouse
-// best-practices 73 idi. Neden bizim işaretlememiz değil, kaynak CDN'inin
-// yazdığı ÜÇÜNCÜ TARAF ÇEREZ:
-//
-//	third-party-cookies → cdn.decrypt.co/...png
-//	inspector-issues    → Cookie
-//
-// Ayrıca her görüntülemede dış DNS/TLS yeniden kuruluyordu (LCP 2,0 s).
-//
-// Akış:
-//  1. hash → DB'den kaynak adres (crawler yazdı)
-//  2. diskte varsa doğrudan sun (edge/CDN önbelleği: immutable)
-//  3. yoksa indir (SSRF korumalı istemci), doğrula, atomik yaz, sun
-//
-// GÜVENLİK: yalnız http(s); SafeFetchClient (özel IP reddi + yönlendirme
-// doğrulaması); 8 MB üst sınır; içerik tipi image/* olmalı; SVG kabul
-// EDİLMEZ (script taşıyabilir).
-//
-// TELİF: bu bir teknik önbellektir; makalede kaynak atfı ve kaynağa bağlantı
-// korunur. Kaynak kaldırma talebinde satır silinir (repo.DeleteSourceImage).
 const (
 	kaynakGorselMaxBayt = 8 << 20
 	kaynakGorselTimeout = 12 * time.Second
 )
 
-// gecerliKaynakGorselHash hash biçimini doğrular: 32 karakter, yalnız hex.
-//
-// Uzunluk ve karakter kontrolü TEK yerde: ikisi ayrıldığında biri
-// güncellenmeden diğeri kalıyor ve yol aşımına kapı açılıyor
-// (test bunu yakaladı — `yalnizHex("")` true dönüyordu).
 func gecerliKaynakGorselHash(h string) bool {
 	return len(h) == 32 && yalnizHex(h)
 }
@@ -66,12 +37,6 @@ func (s *Server) handleKaynakGorsel(w http.ResponseWriter, r *http.Request) {
 	s.kaynakGorselSun(w, r, b, ct)
 }
 
-// kaynakGorselAsil orijinal baytları verir: diskte varsa oradan, yoksa
-// indirip atomik yazdıktan sonra.
-//
-// İki uç da (orijinal ve ölçekli) buradan geçer — indirme, SSRF koruması ve
-// DB işaretlemesi TEK yerde kalsın. Ayrıldığında biri güncellenmeden diğeri
-// kalıyor; /kg/ ucunun güvenlik kapısı tam bu akışta.
 func (s *Server) kaynakGorselAsil(r *http.Request, hash string) ([]byte, string, bool) {
 	if b, ct, ok := kaynakGorselOku(hash, ""); ok {
 		return b, ct, true
@@ -94,23 +59,6 @@ func (s *Server) kaynakGorselAsil(r *http.Request, hash string) ([]byte, string,
 	return b, ct, true
 }
 
-// handleKaynakGorselOlcekli — kaynak görselin ölçeklenmiş hâli.
-//
-// GET /kg/{hash}/{genislik}
-//
-// NEDEN (ölçüm, 5 Kasım 2026): /kg/ önbellekliyordu ama BOYUTLANDIRMIYORDU.
-// Ana sayfadaki beş görsel canlı ölçüldü: 708+262+245+106+65 KB = 1,39 MB;
-// dokuz görselle ~2,5 MB. Oysa en geniş yuva 474x266 (lead 734x413) — yani
-// 708 KB'lık bir PNG 292x164'lük karta giriyordu. Ölçülen variant/480
-// ortalaması 27 KB; aynı sayfa ~250 KB'ye iniyor.
-//
-// Akış orijinalle aynı iskelet: diskte varsa sun, yoksa üret-yaz-sun.
-// Ölçekli dosya orijinalin yanında durur, adı genişlikle ayrışır.
-//
-// Çıktı DAİMA JPEG (platform.ResizeToWidth öyle kodluyor). Bu bilinçli:
-// kaynaklarda WebP/PNG karışık geliyor, tek biçim önbelleği ve Content-Type'ı
-// basitleştiriyor. Animasyonlu GIF animasyonunu yitirir — haber kapaklarında
-// animasyon yok, ölçüldü.
 func (s *Server) handleKaynakGorselOlcekli(w http.ResponseWriter, r *http.Request) {
 	hash := strings.TrimSpace(r.PathValue("hash"))
 	if !gecerliKaynakGorselHash(hash) {
@@ -149,13 +97,6 @@ func (s *Server) handleKaynakGorselOlcekli(w http.ResponseWriter, r *http.Reques
 	s.kaynakGorselSun(w, r, kucuk, "image/jpeg")
 }
 
-// kaynakGorselGenislikGecerli izin verilen genişlikler.
-//
-// Liste KAPALI ve bu bir güvenlik kararı: istemci serbest genişlik
-// isteyebilseydi her istek yeni bir dosya üretirdi — /kg/<hash>/1,
-// /kg/<hash>/2 … ile disk doldurulur ve her biri CPU yakar (ölçekleme
-// pahalı). Değerler mediaSrcset ile aynı tutuluyor ki iki görsel sistemi
-// ayrı listelere düşmesin.
 func kaynakGorselGenislikGecerli(genislik int) bool {
 	switch genislik {
 	case 320, 480, 768, 960, 1200, 1600:
@@ -164,10 +105,6 @@ func kaynakGorselGenislikGecerli(genislik int) bool {
 	return false
 }
 
-// kaynakGorselSun gövdeyi uzun önbellekle sunar.
-//
-// `immutable` bilinçli: URL içerik adresinin parmak izidir, içerik
-// değişmez. 1 yıl tarayıcı + CDN önbelleği.
 func (s *Server) kaynakGorselSun(w http.ResponseWriter, r *http.Request, b []byte, ct string) {
 	if ct == "" {
 		ct = "image/jpeg"
@@ -213,17 +150,6 @@ func kaynakGorselIndir(r *http.Request, rawURL string) ([]byte, string, error) {
 	return b, ct, nil
 }
 
-// kaynakGorselKok depolama kökünü "hapishane" olarak açar (storage/kaynak).
-//
-// NEDEN os.Root (Go 1.24+): hash doğrulaması doğru ama SAVUNMA TEK KATMAN
-// olmamalı. Doğrulama bir gün gevşetilirse (ya da çağrı yolu değişirse)
-// `..` içeren bir ad storage dışına çıkabilirdi. os.Root çekirdek tarafından
-// uygulanır: kökün dışına çıkan her işlem hata döner — kod ne yazarsa yazsın.
-//
-// (Ölçüm, 6 Kasım 2026: gosec G703 bu dosyada 5 bulgu verdi — taint analizi
-// `gecerliKaynakGorselHash` doğrulamasını göremiyor. Bulgu "yanlış pozitif"
-// olsa da işaret ettiği şey gerçek: yol güvenliği tek bir doğrulama
-// fonksiyonuna bağlıydı. os.Root bunu yapısal garantiye çevirir.)
 func kaynakGorselKok() (*os.Root, error) {
 	kok := filepath.Join(platform.StorageDir(), "kaynak")
 	if err := os.MkdirAll(kok, 0o755); err != nil {

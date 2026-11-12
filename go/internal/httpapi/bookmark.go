@@ -40,9 +40,6 @@ func (s *Server) handleBookmarkPreview(w http.ResponseWriter, r *http.Request) {
 	}
 	ctx, cancel := context.WithTimeout(r.Context(), 7*time.Second)
 	defer cancel()
-	// #nosec G704 -- Hedef validateBookmarkURL'den geçti (yalnız http/https,
-	// özel/loopback IP reddi) + safeRemoteHTTPClient yönlendirmede yeniden
-	// doğrular. gosec sanitizer'ı tanımıyor.
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, target.String(), nil)
 	if err != nil {
 		s.writeJSON(w, http.StatusBadRequest, map[string]any{"ok": false, "error": "bağlantı geçersiz"})

@@ -147,7 +147,9 @@ templ cdAkis(items []CDStory) {
 			for _, s := range items {
 				<article class="cd-akis__satir">
 					<a class="cd-akis__gorsel" href={ s.Href } tabindex="-1" aria-hidden="true">
-						if cdKgOlcekli(s.Image) {
+						if s.Image == "" {
+							@cdKapakYok(s)
+						} else if cdKgOlcekli(s.Image) {
 							<img src={ cdKgSrc(s.Image, YuvaAkis) } srcset={ cdKgSrcset(s.Image, YuvaAkis) }
 								sizes={ cdKgSizes(YuvaAkis) } alt="" loading="lazy" fetchpriority="low"
 								decoding="async" referrerpolicy="no-referrer"/>
@@ -243,11 +245,11 @@ templ cdVideoModul(items []CDVideo) {
 	if len(items) > 0 {
 		<section class="cd-ray cd-video">
 			<h2 class="cd-ray__duz">@cdBasSimge() Bugünün Videoları</h2>
-			<!-- Radyo düğmeleri TEK VİDEODA DA basılır: slayt görünürlüğü
-			     yalnız `#cd-video-N:checked` kuralından geliyor. Kural
-			     `len(items) > 1` iken basıldığında, tek video girdisinde
-			     hiçbir slayt görünmüyor ve modül 360 px yerine 94 px'e
-			     çöküyordu (gerçek veriyle ölçüldü, 7 Kasım 2026). -->
+						// Radyo düğmeleri TEK VİDEODA DA basılır: slayt görünürlüğü
+			// yalnız `#cd-video-N:checked` kuralından geliyor. Kural
+			// `len(items) > 1` iken basıldığında, tek video girdisinde
+			// hiçbir slayt görünmüyor ve modül 360 px yerine 94 px'e
+			// çöküyordu (gerçek veriyle ölçüldü, 7 Kasım 2026).
 			for i := range items {
 				if i == 0 {
 					<input class="cd-basin__durum" type="radio" name="cd-video"
@@ -264,11 +266,11 @@ templ cdVideoModul(items []CDVideo) {
 					for _, v := range items {
 						<article class="cd-video__slayt">
 							<a class="cd-video__gorsel" href={ v.Href } tabindex="-1" aria-hidden="true">
-								<!-- KAPAK KALİTESİ (12 Kasım 2026): src kimlikten üretilen
-								     yüksek çözünürlüklü adres (DB'deki hqdefault 480×360
-								     kartta bulanıktı). srcset varsa tarayıcı kart ölçüsüne
-								     göre seçer; `data-yedek` virgüllü ZİNCİRDİR
-								     (maxres → sd → hq), her 404'te bir sonrakine geçer. -->
+																// KAPAK KALİTESİ (12 Kasım 2026): src kimlikten üretilen
+								// yüksek çözünürlüklü adres (DB'deki hqdefault 480×360
+								// kartta bulanıktı). srcset varsa tarayıcı kart ölçüsüne
+								// göre seçer; `data-yedek` virgüllü ZİNCİRDİR
+								// (maxres → sd → hq), her 404'te bir sonrakine geçer.
 								if v.Srcset != "" {
 									<img src={ v.Image } srcset={ v.Srcset }
 										sizes="(max-width:1023px) 92vw, 290px"
@@ -277,7 +279,7 @@ templ cdVideoModul(items []CDVideo) {
 										referrerpolicy="no-referrer"/>
 								} else {
 									<img src={ v.Image } data-yedek={ v.ImageYedek }
-										alt="" loading="lazy" decoding="async"
+										alt={ v.Baslik } loading="lazy" decoding="async"
 										referrerpolicy="no-referrer"/>
 								}
 								if v.Sure != "" {
@@ -339,7 +341,7 @@ templ cdArastirmaModul(items []CDArastirma) {
 	if len(items) > 0 {
 		<section class="cd-ray cd-ray--cizgili cd-arastirma">
 			<h2 class="cd-ray__duz">@cdBasSimge() Öne Çıkan Araştırma</h2>
-			<!-- Tek kartta da radyo basılır — gerekçe cdVideoModul'de. -->
+						// Tek kartta da radyo basılır — gerekçe cdVideoModul'de.
 			for i := range items {
 				if i == 0 {
 					<input class="cd-basin__durum" type="radio" name="cd-arastirma"
@@ -437,8 +439,8 @@ templ cdKlipler(items []CDKlip) {
 				Bugünün Klipleri
 				@cdRayOk()
 			</a>
-			<!-- Radyolar her durumda basılır: slayt görünürlüğü yalnız
-			     `#cd-klip-N:checked` kuralından gelir. -->
+						// Radyolar her durumda basılır: slayt görünürlüğü yalnız
+			// `#cd-klip-N:checked` kuralından gelir.
 			for i := range items {
 				if i == 0 {
 					<input class="cd-basin__durum" type="radio" name="cd-klip"
@@ -455,11 +457,11 @@ templ cdKlipler(items []CDKlip) {
 					for _, k := range items {
 						<a class="cd-klip" href={ k.Href }>
 							if k.Image != "" {
-								<!-- DİKEY KART (9:16): kapak oar2 (1080×1920).
-								     `data-yedek` zinciri oar2 → maxres → hq; oar2 her
-								     short'ta yok (ölçüldü: 404). -->
+																// DİKEY KART (9:16): kapak oar2 (1080×1920).
+								// `data-yedek` zinciri oar2 → maxres → hq; oar2 her
+								// short'ta yok (ölçüldü: 404).
 								<img src={ k.Image } data-yedek={ k.ImageYedek }
-									alt="" loading="lazy" decoding="async"
+									alt={ k.Baslik } loading="lazy" decoding="async"
 									referrerpolicy="no-referrer"/>
 							}
 							if k.Baslik != "" {
@@ -474,8 +476,8 @@ templ cdKlipler(items []CDKlip) {
 					}
 				</div>
 				if len(items) > 1 {
-					<!-- Dikey oklar kartın sağ kenarında: yukarı = önceki,
-					     aşağı = sonraki (CoinDesk dikey slider yönü). -->
+										// Dikey oklar kartın sağ kenarında: yukarı = önceki,
+					// aşağı = sonraki (CoinDesk dikey slider yönü).
 					<div class="cd-klip__oklar">
 						for i := range items {
 							<label class={ "cd-klip__ok cd-klip__durum-" + cdSiraya(i) }
@@ -536,10 +538,10 @@ templ cdCardGorsel(s CDStory, yuva CDYuva) {
 templ cdCardBody(s CDStory, yuva CDYuva) {
 	if s.Image != "" {
 		<a class="cd-card__media" href={ s.Href } tabindex="-1" aria-hidden="true">
-			<!-- İki dal: templ'in koşullu öznitelik sözdizimi sürümden
-			     sürüme değişiyor (bkz. cd_shell.templ notu). Kaynak görseli
-			     ölçeklenebiliyorsa srcset/sizes basılır, değilse adres
-			     olduğu gibi kalır (dış adres, /media/... vb.). -->
+						// İki dal: templ'in koşullu öznitelik sözdizimi sürümden
+			// sürüme değişiyor (bkz. cd_shell.templ notu). Kaynak görseli
+			// ölçeklenebiliyorsa srcset/sizes basılır, değilse adres
+			// olduğu gibi kalır (dış adres, /media/... vb.).
 			if cdKgOlcekli(s.Image) {
 				<img src={ cdKgSrc(s.Image, yuva) } srcset={ cdKgSrcset(s.Image, yuva) }
 					sizes={ cdKgSizes(yuva) } alt="" loading="lazy" decoding="async"
@@ -548,6 +550,10 @@ templ cdCardBody(s CDStory, yuva CDYuva) {
 				<img src={ s.Image } alt="" loading="lazy" decoding="async"
 					referrerpolicy="no-referrer"/>
 			}
+		</a>
+	} else {
+		<a class="cd-card__media cd-card__media--kapak" href={ s.Href } tabindex="-1" aria-hidden="true">
+			@cdKapakYok(s)
 		</a>
 	}
 	if s.Kicker != "" {
@@ -623,6 +629,10 @@ templ cdBlokHucre(sec CDSection) {
 							<img src={ sec.Lead.Image } alt="" loading="lazy" decoding="async"
 								referrerpolicy="no-referrer"/>
 						}
+					</a>
+				} else {
+					<a class="cd-blok__gorsel cd-blok__gorsel--kapak" href={ sec.Lead.Href } tabindex="-1" aria-hidden="true">
+						@cdKapakYok(sec.Lead)
 					</a>
 				}
 				<a class="cd-blok__manset" href={ sec.Lead.Href }>{ sec.Lead.Title }</a>
@@ -757,7 +767,7 @@ templ cdUzmanMetin(u CDUzman) {
 
 templ cdUzmanAvatar(u CDUzman) {
 	if u.Avatar != "" {
-		<img class="cd-opinion__avatar" src={ u.Avatar } alt="" width="48" height="48"
+		<img class="cd-opinion__avatar" src={ u.Avatar } alt={ u.Ad } width="48" height="48"
 			loading="lazy" decoding="async" referrerpolicy="no-referrer"/>
 	}
 }
@@ -780,40 +790,44 @@ templ CDHome(v CDHomeView) {
 		<body class="cd">
 			@cdTopbar(v.Shell)
 			@cdTicker(v.Shell)
-			<!-- GİRİŞ HERO (11 Kasım 2026): şerit ile üç kolon manşet
-			     arasında. Yerleşim ghost.bitcosar.com `.ch-hero`'dan
-			     ölçülerek alındı; veri gerçek (CoinGecko + alternative.me).
-			     Veri yoksa modül hiç basılmaz. -->
+						// GİRİŞ HERO (11 Kasım 2026): şerit ile üç kolon manşet
+			// arasında. Yerleşim ghost.bitcosar.com `.ch-hero`'dan
+			// ölçülerek alındı; veri gerçek (CoinGecko + alternative.me).
+			// Veri yoksa modül hiç basılmaz.
 			@cdGirisHero(v.Giris)
 			<main class="cd-wrap cd-main">
-				<!-- MODÜLER YERLEŞİM (9 Kasım 2026): sayfa tasarımcısı yeni
-				     tasarımın alanlarını ayrı bloklar olarak yönetir. Düzen
-				     yazılmamışsa (v.Moduller boş) aşağıdaki VARSAYILAN SIRA
-				     birebir eskisi gibi işler — mevcut görünüm değişmez.
-
-				     Varsayılan sıra (CoinDesk'ten ölçüldü, 8 Kasım 2026):
-				       hero → nabız → explore → görüş+en çok okunan → bölümler -->
+								// MODÜLER YERLEŞİM (9 Kasım 2026): sayfa tasarımcısı yeni
+				// tasarımın alanlarını ayrı bloklar olarak yönetir. Düzen
+				// yazılmamışsa (v.Moduller boş) aşağıdaki VARSAYILAN SIRA
+				// birebir eskisi gibi işler — mevcut görünüm değişmez.
+				// Varsayılan sıra (CoinDesk'ten ölçüldü, 8 Kasım 2026):
+				// hero → nabız → explore → görüş+en çok okunan → bölümler
 				if len(v.Moduller) > 0 {
 					for _, m := range v.Moduller {
 						@CDModulCiz(v, m)
 					}
 				} else {
-					<!-- §8 manşet bloğu — üç kolon (spec §7A) -->
+										// §8 manşet bloğu — üç kolon (spec §7A)
 					@cdHeroModul(v)
 
-					<!-- PİYASA NABZI: gerçek CryptoQuant verisi. Boşsa basılmaz. -->
+
+										// ANALİZ AKIŞI: üç kolon akan kartlar. Kaynak analiz
+					// kategorileri; altı karttan az varsa basılmaz.
+					@cdAnalizModul(v.Analiz, v.AnalizSayi)
+
+										// PİYASA NABZI: gerçek CryptoQuant verisi. Boşsa basılmaz.
 					@cdNabizModul(v.NabizFiyat, v.Nabiz,
 						"Kaynak: CryptoQuant · BTC · Binance akışları · günlük veri · 10 dakika önbellek")
 
-					<!-- "Explore more" — yatay kaydırma şeridi. Paneller gerçek
-					     veriyle doluyor: Fiyatlar · Videolar · Klipler ve her
-					     bölümün kendi son haber paneli. -->
+										// "Explore more" — yatay kaydırma şeridi. Paneller gerçek
+					// veriyle doluyor: Fiyatlar · Videolar · Klipler ve her
+					// bölümün kendi son haber paneli.
 					@cdExplore(v.Explore)
 
-					<!-- §20+§21 Görüş (25%) + En Çok Okunan (75%) yan yana -->
+										// §20+§21 Görüş (25%) + En Çok Okunan (75%) yan yana
 					@cdIkili(v.Opinion, v.MostRead)
 
-					<!-- §22 bölüm blokları — tek 2×2 ızgara -->
+										// §22 bölüm blokları — tek 2×2 ızgara
 					@cdBloklar(v.Sections)
 				}
 			</main>
@@ -852,9 +866,9 @@ templ cdNewsletter() {
 templ cdPriceTable(baslik string, rows []CDPriceRow) {
 	if len(rows) > 0 {
 	<section class="cd-mod">
-		<!-- Başlık boşsa `cdSectionHead` HİÇ çağrılmaz: coin sayfası kendi
-		     başlığını basıyor; boş başlıkla ikinci bir "Tümü →" satırı
-		     çıkıyordu (ölçüldü, 8 Kasım 2026). -->
+				// Başlık boşsa `cdSectionHead` HİÇ çağrılmaz: coin sayfası kendi
+		// başlığını basıyor; boş başlıkla ikinci bir "Tümü →" satırı
+		// çıkıyordu (ölçüldü, 8 Kasım 2026).
 		if baslik != "" {
 			@cdSectionHead(baslik, "/price")
 		}
@@ -868,8 +882,8 @@ templ cdPriceTable(baslik string, rows []CDPriceRow) {
 				</tr>
 			</thead>
 			<tbody>
-				<!-- data-cg-coin: canlı akış fiyatı DEĞİŞTİĞİ ANDA tazeler
-				     (cd-canli.js). Sembolle eşleşir. -->
+								// data-cg-coin: canlı akış fiyatı DEĞİŞTİĞİ ANDA tazeler
+				// (cd-canli.js). Sembolle eşleşir.
 				for _, r := range rows {
 					<tr data-cg-coin={ r.Sym }>
 						<td>{ r.Rank }</td>

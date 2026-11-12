@@ -10,12 +10,6 @@ import (
 	"theblock/site/internal/webui/templkit"
 )
 
-// Etiket sayfası (§4 /tag/{tag}) ve tek varlık fiyat sayfası (/price/{coin}).
-//
-// NEDEN: makale altındaki etiket rozetleri ve fiyat tablosundaki satırlar
-// bu adreslere bağlanıyor. Rota yokken ikisi de 404 dönüyordu (ölçüm:
-// 5 Kasım 2026) — kullanıcı için "site yarım" demek.
-
 // handleCDTag /tag/{slug}.
 func (s *Server) handleCDTag(w http.ResponseWriter, r *http.Request) {
 	slug := strings.TrimSpace(r.PathValue("slug"))
@@ -107,9 +101,6 @@ func (s *Server) handleCDTag(w http.ResponseWriter, r *http.Request) {
 		v.PrevHref = "/tag/" + slug + sayfaURL(sayfa-1)
 	}
 
-	// PARÇA (`?sayfa=N&parca=1`) — bkz. cd_section.go: cd-daha.js sayfa
-	// geçişi olmadan ekler. Etikette lead/alt/ray bölmesi YOK; parçada
-	// banner da basılmaz (banner yalnız 1. sayfanın tepesinde).
 	if r.URL.Query().Get("parca") == "1" {
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
 		w.Header().Set("Cache-Control", cacheControlPublic)
@@ -126,15 +117,6 @@ func (s *Server) handleCDTag(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// handleCDCoin /price/{coin} — tek varlık fiyat sayfası.
-//
-// KANONİK ADRES TAM ADDIR (`/price/bitcoin`) — CoinDesk deseni (spec
-// §10.5). SEO'da "bitcoin price" aramasıyla birebir eşleşiyor. Eski
-// sembol adresleri (`/price/btc`) 301 ile buraya taşınır: bağlantı kırılmaz,
-// iki adres ayrı sayfa olarak indekslenmez (kanonik tekilleşir).
-//
-// Veri CoinGecko listesinden gelir (ayrı istek yok): ad VEYA sembol
-// eşleşmesi yeterli. Bilinmeyen değerde 404.
 func (s *Server) handleCDCoin(w http.ResponseWriter, r *http.Request) {
 	parca := strings.TrimSpace(r.PathValue("coin"))
 	if parca == "" {
@@ -178,14 +160,8 @@ func (s *Server) handleCDCoin(w http.ResponseWriter, r *http.Request) {
 	base := strings.TrimRight(s.cfg.BaseURL, "/")
 	fiyatMetin := repo.FiyatBicim(bulunan.Price)
 	degisimMetin := repo.DegisimBicim(bulunan.Change)
-	// "Diğer varlıklar" kendi satırını İÇERMEZ (Bitcoin sayfasında Bitcoin
-	// listeleniyordu — ölçüldü, 8 Kasım 2026). Bir satır eksik alınır ki
-	// liste yine 12 satır olsun.
 	digerleri := s.cdDigerVarliklar(r, 12, sym)
 
-	// CoinDesk /price/{coin} yapısı: WebPage+FinancialProduct, BreadcrumbList,
-	// ItemList. FAQPage BİLİNÇLİ OLARAK YOK: soru-cevap metnimiz yok,
-	// uydurulmuş FAQ Google'ın spam politikasına girer.
 	var ldItems []cdLDItem
 	for _, row := range digerleri {
 		ldItems = append(ldItems, cdLDItem{Headline: row.Name, URL: base + row.Href})

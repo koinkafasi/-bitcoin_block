@@ -21,15 +21,6 @@ func dilDurumTR(state string) string {
 	return "çeviri yok"
 }
 
-// langRows çeviri dil satırlarını DURUM bilgisiyle kurar (Faz 190).
-//
-// Neden gerekli: eski `langLinks` yalnız bağlantı üretiyordu ve "çeviri var
-// mı?" bilgisi kayboluyordu; 24 dilin 23'ü "+" bağlantısıydı ve hepsi GET
-// ile açıldığı için 404 dönüyordu (canlı ölçüm).
-//
-// Sıralama: kaynak dil → mevcut çeviriler → çevirisi olmayanlar. Editörün
-// en sık yaptığı iş "var olan çeviriyi düzenlemek"; 24 satırı her seferinde
-// taramak zorunda kalmamalı.
 func (s *Server) langRows(ctx context.Context, c repo.Content, isNew bool) []templkit.IcerikLang {
 	enabled := s.i18n.Enabled()
 	mevcut := map[string]repo.Content{}

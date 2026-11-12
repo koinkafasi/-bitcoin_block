@@ -1,21 +1,4 @@
-/* Ses oynatıcısı — SoundCloud benzeri dalga formu.
- *
- * Özellikler:
- *  - Dalga formu çubukları (transkriptteki waveform verisinden; yoksa
- *    sözde dalga formu çizilir, oynatıcı yine çalışır).
- *  - Dalga formuna tıklayınca/sürükleyince o saniyeye atlar.
- *  - Klavye: sol/sağ 5 sn (Shift 30 sn, Alt 1 sn), boşluk oynat/duraklat,
- *    Home/End baş/son.
- *  - Hız seçici (0,75× – 2×), süre göstergesi, çalınan kısmın vurgusu.
- *  - Transkript segmentine tıklayınca ilgili saniyeye atlar (eski davranış).
- *  - Karaoke vurgu: kelime zamanı varsa oynarken geçerli kelime işaretlenir
- *    ve transkript kutusunun içinde görünür tutulur (Faz 127).
- *  - Duraklatılan yerden devam ederken 2 sn geri sarar; kullanıcı elle
- *    sardıysa sarmaz.
- *  - Media Session: medya tuşları ve kilit ekranı kontrolleri.
- *
- * Hiçbir şeyi otomatik kaydetmez; yalnız oynatma durumunu yönetir.
- */
+
 (function () {
   "use strict";
 
@@ -34,7 +17,7 @@
 
   function pad(n) { return n < 10 ? "0" + n : String(n); }
 
-  /* Sözde dalga formu: gerçek veri yoksa görsel olarak makul bir desen. */
+  
   function syntheticWave(bars) {
     var out = [];
     for (var i = 0; i < bars; i++) {
@@ -134,11 +117,7 @@
       }
     }
 
-    /* Duraklatılan yerden devam ederken 2 sn geri sar. Transkript
-       düzeltmenin temel kuralı: son duyulan sözcükler tekrar duyulsun.
-       Kullanıcı duraklattıktan sonra elle bir yere sardıysa (dalga formu,
-       segment veya kelime tıklaması) geri sarma yapılmaz — yoksa tam
-       tıkladığı kelimeden uzaklaşırdı. */
+    
     var RESUME_REWIND = 2;
     var pausedAt = -1;
 
@@ -156,10 +135,7 @@
       }
     }
 
-    /* ---------------- Karaoke vurgu ----------------
-       Transkript, oynatıcının kardeşidir (aynı <article> içinde). Kelime
-       zamanı varsa oynarken geçerli kelime işaretlenir. Kelime yoksa bu
-       bölüm tamamen sessiz kalır ve oynatıcı eskisi gibi çalışır. */
+    
     var scope = root.closest("article") || document;
     var transcript = scope.querySelector("[data-transcript]");
     var words = [];
@@ -175,9 +151,7 @@
     }
     var activeIdx = -1;
 
-    /* Kelimeler zamana göre sıralı geldiği için ikili arama. timeupdate
-       saniyede ~4 kez tetiklenir; 6.000 kelimelik bir röportajda doğrusal
-       tarama her seferinde gereksiz iş olurdu. */
+    
     function findWord(ms) {
       var lo = 0, hi = words.length - 1, ans = -1;
       while (lo <= hi) {
@@ -191,8 +165,7 @@
       return -1;
     }
 
-    /* Vurgulanan kelimeyi transkript kutusunun içinde görünür tut. Yalnız
-       kutunun scrollTop'u değişir; sayfa kaydırması ele geçirilmez. */
+    
     function keepVisible(el) {
       if (!transcript) return;
       var box = transcript.getBoundingClientRect();
@@ -216,10 +189,7 @@
       if (!audio.paused) keepVisible(words[idx].el);
     }
 
-    /* ---------------- Media Session ----------------
-       Klavyenin medya tuşları, kilit ekranı ve işletim sistemi oynatma
-       kontrolleri. Oturum tarayıcıda tektir; bu yüzden sahiplik "play"
-       anında alınır — sayfada birden çok kayıt varsa son çalan kazanır. */
+    
     function claimMediaSession() {
       if (!("mediaSession" in navigator)) return;
       try {
@@ -229,7 +199,7 @@
             artist: "theblock — röportaj transkripsiyonu",
           });
         }
-      } catch (_) { /* yoksay */ }
+      } catch (_) {  }
       var acts = [
         ["play", function () { toggle(); }],
         ["pause", function () { audio.pause(); }],
@@ -246,11 +216,11 @@
         }],
       ];
       for (var i = 0; i < acts.length; i++) {
-        try { navigator.mediaSession.setActionHandler(acts[i][0], acts[i][1]); } catch (_) { /* yoksay */ }
+        try { navigator.mediaSession.setActionHandler(acts[i][0], acts[i][1]); } catch (_) {  }
       }
     }
 
-    /* Tıklama/sürükleme → konum. */
+    
     function seekFromEvent(ev) {
       var rect = wave.getBoundingClientRect();
       if (rect.width <= 0) return;
@@ -309,7 +279,7 @@
       if (totEl) totEl.textContent = "yüklenemedi";
     });
 
-    /* Hız: tercih hatırlanır. */
+    
     if (rateSel) {
       try {
         var saved = localStorage.getItem(RATE_KEY);
@@ -317,16 +287,16 @@
           var ok = [].some.call(rateSel.options, function (o) { return o.value === saved; });
           if (ok) rateSel.value = saved;
         }
-      } catch (_) { /* yoksay */ }
+      } catch (_) {  }
       audio.playbackRate = parseFloat(rateSel.value) || 1;
       rateSel.addEventListener("change", function () {
         var v = parseFloat(rateSel.value) || 1;
         audio.playbackRate = v;
-        try { localStorage.setItem(RATE_KEY, String(v)); } catch (_) { /* yoksay */ }
+        try { localStorage.setItem(RATE_KEY, String(v)); } catch (_) {  }
       });
     }
 
-    /* Pencere yeniden boyutlanınca çubuk sayısını yeniden hesapla. */
+    
     var resizeTimer = null;
     window.addEventListener("resize", function () {
       clearTimeout(resizeTimer);

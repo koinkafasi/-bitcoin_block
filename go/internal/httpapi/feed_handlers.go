@@ -93,50 +93,9 @@ func (s *Server) resolveFeedQuery(r *http.Request) (categoryID int64, slug, name
 	return
 }
 
-// handleAkisPage SSR akış sayfası (/akis).
+// handleAkisPage SSR akış sayfası (/akis) — yeni kabuk (bkz. handleCDAkis).
 func (s *Server) handleAkisPage(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-	locale := langOf(r, s)
-	site := s.siteByDomain(ctx, r.Host)
-	catID, slug, name, other, mode, day, rng := s.resolveFeedQuery(r)
-
-	page := parseIntOr(r.URL.Query().Get("sayfa"))
-	if page <= 0 {
-		page = 1
-	}
-	fq := repo.FeedQuery{SiteID: site.ID, CategoryID: catID, Other: other, Page: page, PerPage: feedPerPage}
-	if day != "" {
-		fq.Day = day
-	} else if rng == "hafta" {
-		fq.Since = dayMinus(6)
-	}
-	items, total, _ := repo.FeedPage(ctx, s.pool, fq)
-
-	d := s.baseView(locale, s.langBase(locale), "Akış")
-	d.LangBase = s.langBase(locale)
-	d.HomeURL = homeURL(locale)
-	d.NavCategories = s.navCategories(ctx)
-	d.Menu = s.publicMenu(ctx)
-	d.Footer = s.footerConfig(ctx)
-	d.Theme = themeFromReq(r)
-	q := ""
-	if slug != "" {
-		q = "kategori=" + slug + "&"
-	} else if other {
-		q = "sekme=diger&"
-	}
-	fq2 := q
-	if day != "" && rng == "" {
-		fq2 += "tarih=" + day + "&"
-	} else if rng != "" {
-		fq2 += "aralik=" + rng + "&"
-	}
-	d.Akis = &feedData{
-		Items: items, CatSlug: slug, CatName: name, Other: other, Guncel: slug == "" && !other,
-		Page: page, PerPage: feedPerPage, Total: total,
-		HasMore: page*feedPerPage < total, Mode: mode, BaseQS: q, FilterQS: fq2, Day: day, Range: rng, TabBase: "/akis",
-	}
-	s.renderPublic(w, r, "akis", d, cacheControlPublic)
+	s.handleCDAkis(w, r)
 }
 
 // handleAkisAPI sonsuz kaydırma için JSON akış.

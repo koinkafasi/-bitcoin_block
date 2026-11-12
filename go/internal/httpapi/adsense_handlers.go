@@ -101,16 +101,6 @@ func (s *Server) adsenseResult(w http.ResponseWriter, r *http.Request, kind, tex
 	s.flashRedirect(w, r, "/admin/adsense", kind, text)
 }
 
-// ga4MulkuKaydet GA4 mülk kimliğini TEK kanonik kaynağa yazar.
-//
-// Kanonik anahtar `trend/ga4_property`; eski `adsense/ga_property` geriye
-// dönük yedek olarak aynalanır. Neden tek kaynak: aynı değer iki yerde
-// tutulduğunda biri doldurulup diğeri unutuluyor ve panelin bir yarısı
-// "yapılandırılmadı" diyordu (ölçüldü: trend.ga4_property=16218714509 iken
-// AdSense panelinde alan boş görünüyordu).
-//
-// Boş/geçersiz değer mevcut ayarı BOZMAZ: panelde alanı temizleyip kaydetmek
-// GA4 raporlamasını sessizce kapatmamalı.
 func (s *Server) ga4MulkuKaydet(ctx context.Context, ham string) string {
 	ga := normalizeGA4PropertyID(ham)
 	if ga == "" {

@@ -12,18 +12,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// Tablo boş durumu sütun sayısı (Faz 174, A-5).
-//
-// NEDEN: boş liste satırı 25 yerde `class="muted"` tek satır, 13 yerde
-// elle `<tr><td colspan="N">` olarak yazılıydı. Sütun sayısı elle
-// yazıldığı için kayabiliyordu: içerik listesinde başlık 9 sütunken boş
-// satır colspan="8" idi ve tablonun sağında 134 px boş şerit kalıyordu
-// (tarayıcıda ölçüldü).
-//
-// Bu test kaynağı okuyup her tablonun <th> sayısını TabloBos çağrısındaki
-// sütun argümanıyla karşılaştırır. Yeni bir sütun eklenip boş durum
-// güncellenmezse test kırmızı olur.
-
 var (
 	tabloBlok = regexp.MustCompile(`(?s)<table class="table"[^>]*>(.*?)</table>`)
 	thSayisi  = regexp.MustCompile(`<th\b`)
@@ -67,10 +55,6 @@ func TestTabloBosColspan(t *testing.T) {
 	t.Logf("denetlenen tablo boş durumu: %d", kontrol)
 }
 
-// TestTabloBosElleYazilmaz: boş durum satırı elle yazılmamalı.
-//
-// Elle `<tr><td colspan="N" class="muted">…` yazıldığı sürece sütun sayısı
-// yukarıdaki testin kapsamı dışında kalır ve tutarsızlık geri gelir.
 func TestTabloBosElleYazilmaz(t *testing.T) {
 	dizin, err := filepath.Glob(filepath.Join("templkit", "*.templ"))
 	require.NoError(t, err)

@@ -7,15 +7,6 @@ import (
 	"unicode"
 )
 
-// Bu dosya alıntı doğrulamasıdır. Haber üretiminde en yüksek risk, modelin
-// transkriptte geçmeyen bir cümleyi tırnak içinde "alıntı" olarak yazmasıdır.
-// Google sıralamasından bağımsız olarak bu bir doğruluk/güvenilirlik sorunudur
-// (E-E-A-T ve düzeltme maliyeti).
-//
-// Yöntem deterministiktir: alıntı, kaynak metnin normalize edilmiş hâlinde
-// aranır. Küçük farklar (noktalama, büyük/küçük harf, fazladan bağlaç) tolere
-// edilir; anlamca değiştirilmiş veya uydurulmuş alıntı yakalanır.
-
 // AtifBulgu tek bir alıntının doğrulama sonucudur.
 type AtifBulgu struct {
 	Quote  string  `json:"quote"`
@@ -36,9 +27,6 @@ type AtifRapor struct {
 // OK doğrulanamayan alıntı yok mu?
 func (r AtifRapor) OK() bool { return len(r.Unverified) == 0 }
 
-// minQuoteWords bu uzunluğun altındaki alıntılar ("Evet.", "Hayır.")
-// doğrulanmış sayılır: kısa ünlemler transkriptte farklı yerde geçebilir ve
-// kontrol edilmesi yanlış pozitif üretir.
 const minQuoteWords = 4
 
 // verifyThreshold alıntının doğrulanmış sayılması için gereken sıralı
@@ -82,9 +70,6 @@ func VerifyQuotes(quotes []string, source string) AtifRapor {
 	return r
 }
 
-// sequentialOverlap alıntı sözcüklerinin kaynakta sırayla ne kadarının
-// bulunduğunu ölçer (0..1). Kaydırılmış eşleşme aranır: alıntının en uzun
-// bitişik parçasının oranı kullanılır.
 func sequentialOverlap(quote, src []string) float64 {
 	if len(quote) == 0 || len(src) == 0 {
 		return 0

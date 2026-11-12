@@ -11,18 +11,6 @@ import (
 	"theblock/site/internal/youtube"
 )
 
-// YouTube video sayfaları.
-//
-// NEDEN AYRI DOSYA: /videos eskiden `contents` tablosundaki tür="video"
-// kayıtlarını listeliyordu; yayında video içeriği hiç yoktu (boş durum).
-// Kullanıcı kararı (7 Kasım 2026): video alanı GERÇEK YouTube kanalından
-// beslenecek — /videos → kanal videoları, /videos/shorts → shorts,
-// /canli-yayin → canlı yayınlar. Veri scheduler'ın doldurduğu
-// `youtube_icerik` tablosundan okunur (migrations/0122).
-//
-// KANAL AYARI: `settings/youtube` (panel: /admin/video-yayin). Kanal
-// değiştirilirse kod değişmez.
-
 // cdVideoSekmeler üç video bölümünün üst gezinmesi.
 func (s *Server) cdVideoSekmeler(aktif string) []templkit.CDVideoSekme {
 	hepsi := []struct{ Kod, Ad, Href string }{
@@ -49,16 +37,6 @@ func ytZaman(k repo.YoutubeKayit) string {
 	return trGoreliZaman(*k.YayinAt, time.Now())
 }
 
-// ytKutu kaydı ızgara kartına çevirir.
-//
-// GÖRSEL KALİTESİ (11 Kasım 2026): kapağı DB'deki `gorsel` alanından
-// almak yetmiyordu — o alan ESKİ kayıtlarda `hqdefault` (480x360) taşıyor.
-// Bu yüzden adres BURADA türden yeniden üretiliyor:
-//
-//	short → oar2.jpg (1080x1920, 9:16)
-//	diğer → maxresdefault.jpg (1280x720) + srcset/yedek
-//
-// DB'deki değer yalnızca video kimliği yoksa (çok eski kayıt) kullanılır.
 func ytKutu(k repo.YoutubeKayit) templkit.CDVideoKutu {
 	img := k.Gorsel
 	if k.VideoID != "" {
@@ -111,13 +89,6 @@ func ytSatir(k repo.YoutubeKayit) templkit.CDVideoSatir {
 	}
 }
 
-// ytSatirlar toplu çeviri (en fazla adet).
-//
-// ADET 12 (11 Kasım 2026): 6 satırla sağ kolon 620 px'lik kutuyu neredeyse
-// dolduruyordu (ölçüm: 629 px içerik / 620 px kutu = 9 px kaydırma). Kullanıcı
-// "mouse ile alta doğru akış" istedi; 9 px'lik kaydırma akış hissi vermiyor,
-// tekerlek boşa basılmış gibi duruyor. 12 satırla gerçek bir akış oluşuyor
-// ve üst/alttaki saydam geçiş anlam kazanıyor.
 func ytSatirlar(kayitlar []repo.YoutubeKayit, haric string, adet int) []templkit.CDVideoSatir {
 	out := make([]templkit.CDVideoSatir, 0, adet)
 	for _, k := range kayitlar {
@@ -182,10 +153,6 @@ func ytHero(k repo.YoutubeKayit, etiket string) templkit.CDVideoHero {
 	}
 }
 
-// ytAyar panel ayarlarını kısa süre önbellekten okur (DB hatasında varsayılan).
-//
-// Ana sayfada üç video modülü aynı ayarları sorduğu için istek başına üç kez
-// okunuyordu; cachedYtAyar bunu tek okumaya indirir.
 func (s *Server) ytAyar(r *http.Request) youtube.Ayar {
 	return s.cachedYtAyar(r.Context())
 }
@@ -219,11 +186,6 @@ func (s *Server) handleCDVideos(w http.ResponseWriter, r *http.Request) {
 		heroID = videolar[heroIdx].VideoID
 	}
 
-	// "Sıradaki" listesi: SIRA ÖNEMLİ — önce videolar, sonra canlı yayınlar,
-	// en son short'lar. Kanal ağırlıklı short üretiyor; yalnız videolara
-	// bakılsaydı liste çoğu gün boş kalır ve sağ kolon (416 px) hiç
-	// basılmazdı — oynatıcı 937 yerine 1377 px'e yayılıp CoinDesk
-	// ölçüsünden sapardı (ölçüldü: 7 Kasım 2026).
 	havuz := make([]repo.YoutubeKayit, 0, len(videolar)+len(yayinlar)+len(shorts))
 	havuz = append(havuz, videolar...)
 	havuz = append(havuz, yayinlar...)
@@ -297,11 +259,6 @@ func (s *Server) handleCDShorts(w http.ResponseWriter, r *http.Request) {
 	s.renderCDVideoPage(w, r, v)
 }
 
-// handleCDCanli /canli-yayin
-//
-// OYNATICI KANALA BAĞLANIR (`live_stream?channel=`): yayın kimliği her gün
-// değişse de doğru akış açılır. Canlı yoksa YouTube "yayın yok" çerçevesi
-// gösterir; sayfa ayrıca son yayınları listeler.
 func (s *Server) handleCDCanli(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	ayar := s.ytAyar(r)
@@ -442,11 +399,6 @@ func (s *Server) renderCDVideoPage(w http.ResponseWriter, r *http.Request, v tem
 
 // ---- Ana sayfa modülleri (sol raydaki canlı + sağ raydaki video/klipler) ----
 
-// cdYoutubeVideolar "Bugünün Videoları" — kanalın son videoları.
-//
-// ÖNCEKİ DURUM: modül CoinDesk'ten alınmış GEÇİCİ veriyle doluydu
-// (cd_gecici.go). Artık gerçek kanal verisi: scheduler YouTube'a her yeni
-// video düştüğünde tabloyu günceller, modül kendiliğinden tazelenir.
 func (s *Server) cdYoutubeVideolar(r *http.Request, adet int) []templkit.CDVideo {
 	ayar := s.ytAyar(r)
 	if !ayar.VideoGoster {
@@ -462,14 +414,6 @@ func (s *Server) cdYoutubeVideolar(r *http.Request, adet int) []templkit.CDVideo
 		if etiket == "" {
 			etiket = "Video"
 		}
-		// KAPAK: DB'deki `gorsel` DEĞİL, kimlikten üretilen yüksek
-		// çözünürlüklü adres (kullanıcı bildirimi, 12 Kasım 2026: "Öne
-		// Çıkan Araştırma'daki video kapak kalitesi çok düşük").
-		//
-		// ÖLÇÜM: DB'de kayıtlı değer çoğu kayıtta `hqdefault.jpg`
-		// (480×360); anasayfa modülü onu DOĞRUDAN basıyordu, 290×163
-		// kartta 1.8× büyütme → bulanık. Video SAYFASI (ytKutu) 11
-		// Kasım'da düzeltilmişti, anasayfa modülleri atlanmıştı.
 		img := k.Gorsel
 		if k.VideoID != "" {
 			if u := youtube.GorselURL(k.VideoID, k.Tur); u != "" {
@@ -519,11 +463,6 @@ func (s *Server) cdYoutubeKlipler(r *http.Request, adet int) []templkit.CDKlip {
 	return out
 }
 
-// cdYoutubeCanli sol kolonun üstündeki canlı yayın modülü.
-//
-// ÖNCELİK: (1) şu an canlı olan yayın, (2) panelden elle işaretlenen video,
-// (3) en son yayın. Hiçbiri yoksa modül basılmaz — boş bir "canlı yayın"
-// kutusu sayfayı bozuk gösterir.
 func (s *Server) cdYoutubeCanli(r *http.Request) templkit.CDCanli {
 	ayar := s.ytAyar(r)
 	if !ayar.CanliGoster {

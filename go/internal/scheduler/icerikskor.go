@@ -10,16 +10,6 @@ import (
 	"theblock/site/internal/repo"
 )
 
-// RunIcerikSkor taslakların yayın önceliği eksenlerini tazeler.
-//
-// Neden periyodik: trend terimleri sürekli değişiyor (637 terim son 48
-// saatte görülmüş). Dün hiçbir terimle eşleşmeyen bir taslak bugün gündeme
-// girebilir; eşleşmesi yalnızca oluşturulurken hesaplansaydı o taslak
-// kuyruğun dibinde kalırdı.
-//
-// Tazelik burada HESAPLANMAZ — o, created_at'ten sorgu anında çıkar
-// (scoring.TazelikSQL) ve hiç bayatlamaz. Bu geçiş yalnız yavaş değişen
-// iki ekseni yazar: kaynak güveni ve trend eşleşmesi.
 func RunIcerikSkor(ctx context.Context, pool *pgxpool.Pool, logger *slog.Logger, every time.Duration) {
 	if every <= 0 {
 		every = 15 * time.Minute

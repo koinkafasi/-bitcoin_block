@@ -1,0 +1,86 @@
+package templkit
+
+// ---- Analiz akışı modülü (ana sayfa, Piyasa Nabzı'nın üstü) ----
+//
+// DÜZEN: üç kolon, ortadaki ters yönde olmak üzere sürekli akan kartlar;
+// kenarlar maskeyle sönüyor, imleç üstündeyken akış duruyor.
+//
+// İÇERİK GERÇEK: kartlar analiz ağırlıklı kategorilerin son yazılarından
+// geliyor (başlık + spot + kategori + tarih). Kaynak kalıpta "müşteri
+// yorumu" vardı; bir haber sitesinde karşılığı yok ve uydurma yorum
+// basmak yanlış olurdu. Akan düzen korundu, içerik yerine kendi
+// yayınlarımız kondu — böylece modül aynı zamanda İÇ LİNK dağıtıyor.
+//
+// KOPYA KARTLAR: kesintisiz döngü için her kolonun kartları iki kez
+// basılır. İkinci takım `aria-hidden` taşır; ekran okuyucu aynı başlığı
+// iki kez okumaz.
+//
+// JS YOK: akış CSS animasyonu. `prefers-reduced-motion` altında animasyon
+// durur ve kartlar normal ızgaraya döner (bkz. cd-giris.css).
+
+templ cdAnalizModul(kartlar []CDAnalizKart, sayi int) {
+	if len(kartlar) >= 6 {
+		<section class="cd-analiz" aria-labelledby="cd-analiz-bas">
+			<div class="cd-analiz__bas">
+				<span class="cd-analiz__etiket">Analiz</span>
+				<h2 class="cd-analiz__baslik" id="cd-analiz-bas">
+					@cdBasSimge()
+					Piyasayı okuyan yazılar
+				</h2>
+				if sayi > 0 {
+					<span class="cd-analiz__rozet">
+						{ cdAnalizRozet(sayi) }
+					</span>
+				}
+			</div>
+			<div class="cd-analiz__izgara">
+				@cdAnalizKolon(cdAnalizDilim(kartlar, 0), "1")
+				@cdAnalizKolon(cdAnalizDilim(kartlar, 1), "2")
+				@cdAnalizKolon(cdAnalizDilim(kartlar, 2), "3")
+			</div>
+		</section>
+	}
+}
+
+// cdAnalizKolon tek kolon: kartlar + kesintisiz döngü için kopyası.
+templ cdAnalizKolon(kartlar []CDAnalizKart, yon string) {
+	<div class="cd-analiz__kolon">
+		<div class="cd-analiz__serit" data-akis={ yon }>
+			for _, k := range kartlar {
+				@cdAnalizKart(k, false)
+			}
+			for _, k := range kartlar {
+				@cdAnalizKart(k, true)
+			}
+		</div>
+	</div>
+}
+
+templ cdAnalizKart(k CDAnalizKart, kopya bool) {
+	if kopya {
+		<article class="cd-analiz__kart" aria-hidden="true">
+			@cdAnalizKartIc(k, true)
+		</article>
+	} else {
+		<article class="cd-analiz__kart">
+			@cdAnalizKartIc(k, false)
+		</article>
+	}
+}
+
+templ cdAnalizKartIc(k CDAnalizKart, kopya bool) {
+	<div class="cd-analiz__ust">
+		<span class="cd-analiz__kat">{ k.Kategori }</span>
+		if k.Tarih != "" {
+			<time class="cd-analiz__tarih">{ k.Tarih }</time>
+		}
+	</div>
+	if kopya {
+		<h3 class="cd-analiz__kart-baslik">{ k.Baslik }</h3>
+	} else {
+		<h3 class="cd-analiz__kart-baslik">
+			<a href={ templ.SafeURL(k.Href) }>{ k.Baslik }</a>
+		</h3>
+	}
+	<p class="cd-analiz__spot">{ k.Spot }</p>
+}

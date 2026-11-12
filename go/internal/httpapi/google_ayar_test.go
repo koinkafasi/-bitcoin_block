@@ -15,20 +15,8 @@ import (
 	"theblock/site/internal/repo"
 )
 
-// Faz 206 — Google ayarlarının panelde tek kaynaktan okunup yazılması.
-//
-// ÖLÇÜM (3 Kasım 2026, üretim): trend.ga4_property = 16218714509 iken
-// AdSense panelindeki "GA4 Property ID" alanı BOŞ görünüyordu; çünkü panel
-// eski adsense/ga_property anahtarını okuyordu. Aynı değer iki ayrı yerde
-// tutulunca biri doldurulup diğeri unutuluyor.
-//
-// Bu testler gerçek DB ister (DATABASE_URL); yoksa atlanır.
-
 func testPool(t *testing.T) *pgxpool.Pool {
 	t.Helper()
-	// Bu testler AYAR YAZAR. Varsayılan kapalı olmalı: DATABASE_URL üretim
-	// veritabanını gösterirken kazara koşup gerçek GA4 mülk kimliğini
-	// ezebiliyor (bir kez oldu: trend.ga4_property 16218714509 → 555555555).
 	if os.Getenv("GOOGLE_AYAR_TEST") != "1" {
 		t.Skip("GOOGLE_AYAR_TEST=1 değil (ayar yazan test)")
 	}
@@ -45,12 +33,6 @@ func testPool(t *testing.T) *pgxpool.Pool {
 	return pool
 }
 
-// ayarlariGeriAl testin dokunduğu anahtarların ÖNCEKİ değerini saklar ve
-// test bitince geri yazar.
-//
-// Neden: bu testler gerçek ayar tablosuna yazar. Temizlik olmadan koşunca
-// üretimdeki gerçek GA4 mülk kimliği test değeriyle ezildi (ölçüldü:
-// trend.ga4_property 16218714509 → 555555555). Test, kendi çöpünü toplar.
 func ayarlariGeriAl(t *testing.T, pool *pgxpool.Pool) {
 	t.Helper()
 	type anahtar struct{ section, key string }
@@ -126,12 +108,6 @@ func TestGA4MulkPaneliKanonikKaynaktanOkur(t *testing.T) {
 		"AdSense paneli eski anahtara bakıp boş göstermemeli")
 }
 
-// Google Site Doğrulama: kod public <head>'e basılmalı, serbest metin
-// (HTML enjeksiyonu) kabul edilmemeli.
-//
-// ÖLÇÜM (3 Kasım 2026): panelde alan vardı, değer kaydediliyordu ama hiçbir
-// sayfada basılmıyordu; yönetici kodu girip Search Console'da doğrulamayı
-// yine başarısız görüyordu.
 func TestValidGVerification(t *testing.T) {
 	kabul := map[string]string{
 		"abc123DEF456ghi789":     "abc123DEF456ghi789",

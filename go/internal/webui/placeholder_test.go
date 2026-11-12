@@ -12,27 +12,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// Placeholder etiket yerine geçmez (Faz 179, A-9).
-//
-// NEDEN: A-9 taraması 675 form kontrolünde 114 adsız alan buldu. Ortak
-// desen şuydu: görünür etiket yok, alanın anlamı yalnız `placeholder`'da.
-//
-//	<input class="input" name="film" placeholder="Film adı">
-//
-// Yazı yazılmaya başlayınca placeholder kaybolur; ekran okuyucu alanı hiç
-// adlandıramaz. Tarih alanlarında daha kötüsü oluyordu (Faz 176): yerel
-// tarih alanı placeholder'ı hiç çizmez, yani alan tamamen adsız kalır.
-//
-// Kural: bir kontrolün erişilebilir adı OLMAK ZORUNDA — `aria-label`,
-// `aria-labelledby`, eşleşen `for`/`id` ya da sarmalayan `<label>`.
-
-// kontrolEtiketleri: `<input|select|textarea ...>` etiketlerini TIRNAK
-// FARKINDA ayrıştırır.
-//
-// NEDEN regex değil: `placeholder="<ins class=...>…</ins>"` gibi bir değerin
-// İÇİNDE `>` geçiyor. `[^>]*>` deseni etiketi orada kesiyor ve niteliğin
-// geri kalanı (aria-label dahil) görünmez oluyor — test yanlış kırmızı
-// veriyordu (reklamlar.templ:119, gerçekte etiketli).
 func kontrolEtiketleri(s string) []string {
 	adlar := []string{"input", "select", "textarea"}
 	var out []string
@@ -40,10 +19,6 @@ func kontrolEtiketleri(s string) []string {
 		if s[i] != '<' {
 			continue
 		}
-		// Etiket adını birebir oku: "<input" sonrası harf gelirse başka bir
-		// etikettir (<inputx). Bu kontrol ÖNEMLİ: önceki sürüm `s[i+7]`
-		// üzerinden bakıyordu ve `<input class=…>` içinde o karakter 'c'
-		// olduğu için BÜTÜN input'ları atlıyordu (306 yerine 32 etiket).
 		j := i + 1
 		for j < len(s) && isLetterByte(s[j]) {
 			j++

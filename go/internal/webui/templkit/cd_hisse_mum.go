@@ -1,14 +1,5 @@
 package templkit
 
-// Mum (candlestick) grafiği — hisse sayfasının "Advanced" kipi.
-//
-// NEDEN: CoinDesk hisse sayfasında Basic/Advanced düğmesi var (spec §10.6).
-// Basic alan+çizgi, Advanced mum grafiği. Düğme aynı grafiği gösteriyorsa
-// ölü kontroldür — bu yüzden mum geometrisi gerçekten üretilir.
-//
-// Koordinatlar CDGrafikYolu ile AYNI viewBox'ta (640×180, 6 px nefes payı):
-// iki kip arasında geçerken eksen ölçeği değişmez.
-
 // CDHisseMum tek mumun SVG geometrisi (viewBox birimi).
 type CDHisseMum struct {
 	X         float64 // mum merkezi
@@ -20,10 +11,6 @@ type CDHisseMum struct {
 	Up        bool
 }
 
-// CDMumlar OHLC serisinden mum geometrisi üretir.
-//
-// Diziler aynı uzunlukta olmalı; eksik/sıfır değerli bar ATLANIR.
-// Yüksek/düşük yoksa kapanış kullanılır (fitil sıfır uzunluk olur).
 func CDMumlar(acilis, yuksek, dusuk, kapanis []float64) []CDHisseMum {
 	n := len(kapanis)
 	if n < 2 {

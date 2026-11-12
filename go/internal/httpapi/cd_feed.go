@@ -9,20 +9,6 @@ import (
 	"theblock/site/internal/repo"
 )
 
-// RSS 2.0 beslemesi — CoinDesk biçimi.
-//
-// KAYNAK (ölçüldü, 7 Kasım 2026 — /arc/outboundfeeds/rss):
-// kanal: title, link, atom:link self, description, lastBuildDate,
-// language, copyright, generator, ttl=5, sy:updatePeriod,
-// sy:updateFrequency, image.
-// öğe: title (CDATA), link, media:content (800×450), guid isPermaLink=false,
-// pubDate, description (CDATA), dc:creator, content:encoded (boş),
-// dc:description (boş), category (bölüm + etiket + "News").
-//
-// NEDEN ÖNEMLİ: Google News ve toplayıcılar (Feedly, Inoreader) beslemeyi
-// bu alanlarla sınıflandırır. `dc:creator` yoksa yazar atfı kaybolur;
-// `media:content` yoksa görsel kartı çıkmaz.
-
 // cdRSSXML beslemeyi üretir.
 func (s *Server) cdRSSXML(baslik, link, aciklama, abs, self string, items []repo.Content, etiketler map[int64][]repo.Etiket) string {
 	var sb strings.Builder
@@ -94,10 +80,6 @@ func cdata(s string) string {
 	return strings.ReplaceAll(s, "]]>", "]]]]><![CDATA[>")
 }
 
-// etiketHaritasi öğe kimlikleri için toplu etiket sorgusu.
-//
-// NEDEN TOPLU: 50 öğe için 50 ayrı sorgu, beslemeyi 50 × gidiş-dönüş
-// yapardı. Sorgu hatası beslemeyi düşürmez — kategori satırı eksik kalır.
 func (s *Server) etiketHaritasi(ctx context.Context, items []repo.Content) map[int64][]repo.Etiket {
 	out := map[int64][]repo.Etiket{}
 	ids := make([]int64, 0, len(items))

@@ -10,21 +10,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// Faz 195 — çekmece (hamburger menü) renkleri.
-//
-// KULLANICI BİLDİRİMİ: "hamburger menüde yanda açılan bazı linkler renkleri
-// düzgün değil."
-//
-// ÖLÇÜM (tarayıcı, canlı): `.hp-drawer-group` rengi `--hp-footer-baslik`
-// idi — ALT BİLGİ token'ı. Çekmecede bu token tanımsız kalıp kök değere
-// düşüyordu (#a1a1aa):
-//
-//	açık tema  panel #ffffff → kontrast 2.56:1   ← okunmuyor (AA: 4.5)
-//	koyu tema  panel #0c1021 → kontrast 7.37:1   (kaza eseri iyi)
-//
-// Yani "Kategoriler / İçerikler / Hizmetler / Tercihler" başlıkları açık
-// temada neredeyse görünmüyordu. Düzeltme: çekmece kendi token'larını taşır.
-
 // blokToken verilen kural bloğundaki bir değişkenin değerini okur.
 func blokToken(t *testing.T, blok, ad string) string {
 	t.Helper()
@@ -110,9 +95,6 @@ func TestCekmeceOdakVeDokunmaHedefi(t *testing.T) {
 	assert.Contains(t, css, `.hp-drawer a[aria-current="page"]`)
 }
 
-// publicBlok verilen CSS metninde `seçici {` ile başlayan bloğun gövdesini
-// döndürür. token_test.go'daki blokBul admin-pano.css'e sabit; çekmece
-// token'ları public.css'te olduğu için ayrı bir yardımcı gerekiyor.
 func publicBlok(t *testing.T, css, secici string) string {
 	t.Helper()
 	i := strings.Index(css, "\n"+secici+" {")

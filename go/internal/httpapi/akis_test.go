@@ -153,9 +153,6 @@ func TestCatHeroEndMansetTuketimi(t *testing.T) {
 	assert.Equal(t, 0, catHeroEnd(nil, 30))
 }
 
-// TestCatListeAkisWithTrioHero akış vitrininin üstünde üçlü manşet
-// (3 + slider + 2) alanının basıldığını ve akışın manşetten sonra
-// başladığını doğrular.
 func TestCatListeAkisWithTrioHero(t *testing.T) {
 	tmpl := parseTestTemplates(t)
 	b := &homeBlock{
@@ -208,9 +205,6 @@ func TestCatListeAkisHeroOff(t *testing.T) {
 	assert.Equal(t, 26, strings.Count(out, `class="ak-item ak-type`), "akış 30-4=26 haberle başlamalı")
 }
 
-// TestCatListeAkisFont tek yazı ailesinin tüm akışa (ilk 4 kart + enerji
-// blokları) uygulandığını ve geri dönüşün (coinhit serif) mümkün olduğunu
-// doğrular.
 func TestCatListeAkisFont(t *testing.T) {
 	tmpl := parseTestTemplates(t)
 	d := &tmplData{Category: &categoryData{

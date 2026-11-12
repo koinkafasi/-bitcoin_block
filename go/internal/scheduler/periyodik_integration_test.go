@@ -12,16 +12,6 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-// Faz 208 (devam 3): periyodik sarmallar.
-//
-// Her `Run*` fonksiyonu: ilk koşuyu hemen yapar, sonra ticker'a bağlanır.
-// Burada "hemen yapılan ilk koşu" ve context iptaliyle temiz çıkış
-// sınanıyor. Tick'in kendisi ayrı testlerde; burada döngü sözleşmesi var.
-//
-// Dış ağa çıkan sarmallar (RunBot feed çekimi, RunServices/RunFinance canlı
-// servisler, RunGundem trend RSS) burada ÇALIŞTIRILMAZ: testi yavaşlatıp
-// dış servis durumuna bağlı hale getirirlerdi.
-
 // sarmalCalistir: fn'i ayrı goroutine'de başlatır, ilk koşunun bitmesini
 // bekler, sonra iptal edip dönüşünü doğrular.
 func sarmalCalistir(t *testing.T, ad string, pool *pgxpool.Pool, every time.Duration,

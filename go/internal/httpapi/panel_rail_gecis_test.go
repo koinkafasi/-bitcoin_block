@@ -1,30 +1,5 @@
 package httpapi
 
-// Panel yan menüsünün daralt/genişlet geçişi (kullanıcı isteği):
-// demo.codeandchill.store/pacely sol kolon menüsünün BİREBİR aynısı.
-//
-// Kaynak ölçümü (3 Kasım 2026, pacely paketi: assets/index-BlFqaHp6.js →
-// qt() ve Jt()):
-//
-//   DARALTMA
-//     etiketler  opacity 1→0, x 0→-8, 140 ms, power2.in
-//     menü       clip-path inset(0 0 0 0) → inset(0 (w-88)px 0 0),
-//                300 ms, power3.in
-//     bitince    sınıf değişir (width ANLIK), stiller temizlenir
-//   GENİŞLETME
-//     sınıf hemen değişir; clip-path
-//                inset(0 (w-88)px 0 0) → inset(0 0 0 0), 500 ms, expo.out
-//     etiketler  opacity 0→1, x -10→0, 550 ms, power3.out,
-//                gecikme 120 ms, kademe 10 ms
-//   ANA KOLON  her iki yönde FLIP telafisi, 600 ms, expo.out
-//
-// theblock'ta GSAP yok: aynı çağrılar Web Animations API ile yapılıyor.
-// Eğri karşılıkları:
-//   power2.in  cubic-bezier(.55,.085,.68,.53)
-//   power3.in  cubic-bezier(.55,.055,.675,.19)
-//   power3.out cubic-bezier(.215,.61,.355,1)
-//   expo.out   cubic-bezier(.19,1,.22,1)
-
 import (
 	"io/fs"
 	"regexp"
@@ -88,9 +63,6 @@ func TestPanelRailJsPacelyDegerleri(t *testing.T) {
 	assert.Contains(t, js, "(prefers-reduced-motion: reduce)")
 }
 
-// Perde miktarı DARALTMA öncesi, GENİŞLETME sonrası ölçülmeli.
-// Aksi hâlde genişletmede menü hâlâ 88 px olduğu için perde 0 px çıkar ve
-// geçiş görünmez olur (ölçüldü: inset(0px)→inset(0px), hiç animasyon yok).
 func TestPanelRailPerdeYonu(t *testing.T) {
 	js := statikOku(t, "admin-ui.js")
 

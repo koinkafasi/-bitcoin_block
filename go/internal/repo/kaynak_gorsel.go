@@ -8,26 +8,11 @@ import (
 	"strings"
 )
 
-// Kaynak görseli kaydı — kendi origin'imizden servis için.
-//
-// Ayrıntı ve gerekçe: migrations/0116_kaynak_gorsel.up.sql
-// (üçüncü taraf çerez → Lighthouse BP 73; dış CDN bağımlılığı).
-
-// KaynakGorselHash bir görsel adresinin kısa parmak izini üretir.
-//
-// 32 hex karakter (128 bit) yeterli: çakışma olasılığı pratikte yok,
-// URL'de kısa kalır. Aynı adres her zaman aynı anahtarı verir → CDN
-// önbelleği kalıcı olur (`immutable`).
 func KaynakGorselHash(url string) string {
 	h := sha256.Sum256([]byte(strings.TrimSpace(url)))
 	return hex.EncodeToString(h[:16])
 }
 
-// KaynakGorselKaydet adresi kaydeder (varsa dokunmaz). Dönüş: hash.
-//
-// Boş veya http(s) olmayan adres kaydedilmez ("" döner) — şablon o zaman
-// görsel basmaz. Gövde indirme burada YAPILMAZ: çekim, görsel ilk
-// istendiğinde olur (crawler turunu yavaşlatmamak için).
 func KaynakGorselKaydet(ctx context.Context, pool DB, rawURL string) string {
 	rawURL = GorselAdresiCoz(rawURL)
 	if rawURL == "" {
@@ -47,22 +32,6 @@ func KaynakGorselKaydet(ctx context.Context, pool DB, rawURL string) string {
 	return hash
 }
 
-// GorselAdresiCoz ara görsel proxy'sini gerçek CDN adresine indirger.
-//
-// SORUN (ölçüm, 6 Kasım 2026): CoinDesk görselleri Next.js görsel
-// proxy'sinden geliyor:
-//
-//	https://www.coindesk.com/_next/image?url=<CDN adresi>&w=1200&q=75
-//
-// Proxy bot koruması uyguluyor: sunucudan indirme denemeleri **HTTP 429**
-// dönüyordu (günlükte "kaynak görsel indirilemedi … HTTP 429"). Aynı
-// görselin CDN adresi doğrudan **200** veriyor (153 KB JPEG).
-//
-// Bu yüzden `url=` parametresi çözülür ve CDN adresi kullanılır. Çözüm
-// uygulanamazsa adres olduğu gibi döner (davranış değişmez).
-//
-// GÜVENLİK: yalnız `url` parametresinin kendisi alınır ve yalnız
-// http(s) kabul edilir; `javascript:`/`data:` gibi şemalar elenir.
 func GorselAdresiCoz(rawURL string) string {
 	rawURL = strings.TrimSpace(rawURL)
 	if rawURL == "" {

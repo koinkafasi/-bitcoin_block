@@ -9,15 +9,6 @@ import (
 	"theblock/site/internal/webui"
 )
 
-// Geliştirici aracı: editörü sunucusuz denemek için tek dosyalık sayfa üretir.
-//
-//	GAZETE_EDITOR_DENEME=/tmp/gzed/index.html go test ./internal/httpapi/ \
-//	    -run TestGazeteEditorDeneme
-//
-// Gerçek editör betiğini, gerçek baskı CSS'ini ve gerçek bir şablonu kullanır;
-// blok gövdeleri sunucudaki üreticiden önceden hesaplanıp boot verisine konur,
-// böylece ağ isteği gerekmez. Editörün sürükleme, ızgara, katman, stil ve
-// yakınlaştırma davranışı tarayıcıda denenebilir.
 func TestGazeteEditorDeneme(t *testing.T) {
 	hedef := os.Getenv("GAZETE_EDITOR_DENEME")
 	if hedef == "" {

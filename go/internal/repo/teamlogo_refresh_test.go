@@ -14,11 +14,6 @@ import (
 	"theblock/site/internal/platform"
 )
 
-// RefreshStandings artık TÜM ligleri yeniler.
-//
-// Eskiden yalnız varsayılan lig (Süper Lig) yenileniyordu; diğer liglerin
-// tablosu ilk ziyaretçide istek yolunda çekiliyordu ve logoları hiç
-// yerelleşmiyordu (yerelleştirme burada yapılıyor).
 func TestRefreshStandingsTumLigleriYazar(t *testing.T) {
 	withTempStorage(t)
 	srv := espnTestServer(t)
@@ -74,12 +69,6 @@ func TestRefreshStandingsRozetleriYerellestirir(t *testing.T) {
 	assert.True(t, platform.HasTeamLogo("e-111"), "logo diske yazılmalıydı")
 }
 
-// espnTestServer hem puan durumu JSON'unu hem logo PNG'sini aynı sunucudan
-// verir. Yol `*.png` ile bitiyorsa logo, aksi hâlde JSON döner.
-//
-// Rozet adresi ESPN desenini taşır (`/i/teamlogos/soccer/500/111.png`) ki
-// TeamLogoKey sayısal kimliği çıkarabilsin; ana bilgisayar test sunucusudur,
-// bu yüzden mirrorSourceURL onu yeniden yazmaz.
 func espnTestServer(t *testing.T) *httptest.Server {
 	t.Helper()
 	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

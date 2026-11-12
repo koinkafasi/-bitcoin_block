@@ -16,9 +16,6 @@ import (
 	"theblock/site/internal/repo"
 )
 
-// RunGSC Search Console ve GA4 verilerini günde bir kez tazeler.
-// Servis hesabı (SEO panelindeki gsc_service_account) kullanılır; böylece
-// tarayıcı oturumu gerekmez ve cron güvenilir çalışır.
 func RunGSC(ctx context.Context, pool *pgxpool.Pool, logger *slog.Logger, every time.Duration) {
 	if every <= 0 {
 		every = 6 * time.Hour

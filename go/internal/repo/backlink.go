@@ -18,10 +18,6 @@ func RelatedContents(ctx context.Context, pool *pgxpool.Pool, siteID, contentID 
 	if len(sugs) == 0 {
 		return nil, nil
 	}
-	// TEK SORGU: eskiden her öneri için GetContent çağrılıyordu (N+1).
-	// GetContent ayrıca ikinci bir `min_tier_weight` sorgusu atıyor; yani
-	// öneri başına 2 gidiş-dönüş. Ölçüm (10 Kasım 2026, soğuk makale):
-	// 6 öneri -> 12 sorgu, makale başına toplam 38 sorgunun %32'si.
 	ids := make([]int64, 0, len(sugs))
 	for _, s := range sugs {
 		ids = append(ids, s.ID)

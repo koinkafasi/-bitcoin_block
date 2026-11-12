@@ -27,9 +27,6 @@ type Content struct {
 	CoverMediaID  *int64
 	MansetMediaID *int64
 	SocialMediaID *int64
-	// VideoSeconds video içeriğinin süresi (saniye). Çoğu liste sorgusu bu
-	// sütunu okumaz; yalnız EKRANA BASILACAK video kartları için tek sorguda
-	// doldurulur (bkz. httpapi.fillVideoDurations) — N+1 olmasın diye.
 	VideoSeconds  *int
 	IsAM          bool
 	IsUM          bool
@@ -93,22 +90,13 @@ type ListFilter struct {
 	// (haber akışı ve "Son Haberler" gibi listeler için).
 	IncludeGallery bool
 	ExcludeGallery bool
-	// Audio yalnız ses/röportaj kaydı olan içerikleri süzer (admin liste
-	// filtresi): AudioHas → transkripti olan, AudioPending → işi süren/kuyrukta,
-	// AudioFailed → başarısız işi olan. Diğer değerler filtre uygulamaz.
-	Audio string
+	Audio          string
 	// Sort liste sıralaması (beyaz liste anahtarı; bkz. triyaj.go).
 	// Bilinmeyen değer varsayılana düşer, asla SQL'e yazılmaz.
 	Sort string
 	// MinScore 1..100 ise yalnız bu AI skorunun üstündeki içerikler.
 	// 0 = eşik yok. Triyajda "yayına değer taslakları göster" için.
 	MinScore int
-	// KokBazli true ise aynı makalenin dilleri TEK satıra indirilir
-	// (Faz 192). Admin listesi bunu kullanır.
-	//
-	// Ölçüm (üretim): 13.350 satırın 493'ü çeviri; "Yayında" sekmesinin ilk
-	// 40 satırının 40'ı da EN çeviriydi, TR asılları sonraki sayfalara
-	// düşüyordu. Yani editör Türkçe içerikleri listede göremiyordu.
 	KokBazli bool
 	// KokDil satırın hangi dilinin gösterileceğini belirler (varsayılan "tr").
 	// Yalnız KokBazli iken anlamlı.
@@ -124,13 +112,6 @@ const (
 
 const defaultPerPage = 25
 
-// contentCols içerik sorgularının ortak sütun listesi.
-//
-// `spot` NULL olabilir (şema `TEXT`, NOT NULL değil) ama `Content.Spot`
-// düz `string`. COALESCE olmadan pgx "cannot scan NULL into *string" hatası
-// veriyordu: spot'u boş bırakılmış bir içerik HİÇ okunamıyordu. Bu da
-// scheduler indekslemesini, bot akışını ve detay/liste ekranlarını
-// etkiliyordu (Faz 208'de ölçüldü).
 const contentCols = `c.id, c.type_key, c.status, c.title, COALESCE(c.spot,''), c.detail, c.slug,
 	c.category_id, c.author_id, c.mahrep_id, c.cover_media_id, c.manset_media_id, c.social_media_id,
 	c.is_am, c.is_um, c.is_dm, c.is_sd, c.is_fh, c.is_hk,
@@ -189,9 +170,6 @@ func GetContent(ctx context.Context, pool *pgxpool.Pool, id int64) (Content, err
 	return c, nil
 }
 
-// ContentMinWeight içerik için gereken en düşük katman ağırlığını döndürür.
-// Sorgu hatasi sessizce yutulmaz; güncellemede kademe korunacaksa hata
-// cagirana bildirilir.
 func ContentMinWeight(ctx context.Context, pool *pgxpool.Pool, id int64) (int, error) {
 	var n int
 	if err := pool.QueryRow(ctx, `SELECT min_tier_weight FROM contents WHERE id = $1`, id).Scan(&n); err != nil {
@@ -200,16 +178,6 @@ func ContentMinWeight(ctx context.Context, pool *pgxpool.Pool, id int64) (int, e
 	return n, nil
 }
 
-// ContentsByIDs birden çok içeriği TEK sorguda döndürür (id → içerik).
-//
-// NEDEN: liste hâlinde içerik yükleyen yerler (`RelatedContents`) her satır
-// için `GetContent` çağırıyordu — satır başına 2 gidiş-dönüş
-// (contentCols + ayrı `min_tier_weight` sorgusu). Ölçüm (10 Kasım 2026,
-// soğuk makale): 6 ilgili haber -> 12 sorgu.
-//
-// `min_tier_weight` BURADA contentCols'a eklenmez (kolonu tüm listelere
-// taşımak riskli); onun yerine ayrı bir toplu okuma yapılır. Yine de
-// satır başına 1 sorgu yerine toplam 2 sorgu olur.
 func ContentsByIDs(ctx context.Context, pool *pgxpool.Pool, ids []int64) (map[int64]Content, error) {
 	out := make(map[int64]Content, len(ids))
 	if len(ids) == 0 {
@@ -260,10 +228,6 @@ func ContentsByIDs(ctx context.Context, pool *pgxpool.Pool, ids []int64) (map[in
 	return out, nil
 }
 
-// ContentBySlug yayın URL'si için yalnız slug ile içerik döndürür.
-// NEDEN: CoinDesk URL deseni tarih taşır ve SON segment yalın slug'dır
-// (/{section}/{y}/{m}/{d}/{slug}). `slug` üzerinde tekil indeks var
-// (ux_contents_slug), bu yüzden arama güvenli.
 func ContentBySlug(ctx context.Context, pool *pgxpool.Pool, slug string) (Content, error) {
 	q := `SELECT ` + contentCols + ` FROM contents c
 		LEFT JOIN categories cat ON cat.id = c.category_id
@@ -326,10 +290,6 @@ func siteIDOr1(n int64) int64 {
 	return n
 }
 
-// UpdateContent var olan içeriği günceller (slug korunur; yayın zamanı güncellenebilir).
-//
-// c.Version > 0 ise iyimser kilitleme uygulanır: gönderilen sürüm veritabanındaki
-// sürümle eşleşmezse ErrConflict döner. Version=0 eski çağrılar için koşulsuzdur.
 func UpdateContent(ctx context.Context, pool *pgxpool.Pool, c *Content) error {
 	var version int
 	err := pool.QueryRow(ctx, `
@@ -364,26 +324,10 @@ func UpdateContent(ctx context.Context, pool *pgxpool.Pool, c *Content) error {
 	}
 	c.Version = version
 
-	// Faz 169: alaka puanını (ai_score) yeniden hesapla.
-	//
-	// Önceki durum: puan yalnız içerik OLUŞTURULURKEN ve "Uygunluğu hesapla"
-	// düğmesine basıldığında yazılıyordu. Editör başlığı kısaltıp, spotu
-	// silip, kapağı kaldırıp kaydettiğinde puan ESKİ hâlinde kalıyordu;
-	// kategori yayın kapısı (categories.min_score) bayat bir sayıya bakıyordu.
-	// (Faz 138'den beri bilinen borç.)
-	//
-	// Hata kaydı ENGELLEMEZ: skor ikincil bir alandır, kaydetmeyi düşürmek
-	// editörün işini kaybetmesi demek olurdu.
 	_ = tazeleAIScore(ctx, pool, c.ID, c.Title, c.Spot, c.CoverMediaID)
 	return nil
 }
 
-// tazeleAIScore içeriğin alaka puanını (ai_score) yeniden hesaplar.
-//
-// Sinyaller scoring paketinden gelir (tek kaynak): başlık uzunluğu, spot
-// uzunluğu, etiket sayısı, kapak ve kaynak varlığı. Etiket sayısı ve kaynak
-// varlığı veritabanından TEK sorguda okunur (otomatik kaydetme her 800 ms'de
-// bir çalışabildiği için sorgu sayısı önemli).
 func tazeleAIScore(ctx context.Context, pool *pgxpool.Pool, id int64, title, spot string, coverID *int64) error {
 	var etiket int
 	var kaynak bool
@@ -557,15 +501,6 @@ func ListContents(ctx context.Context, pool *pgxpool.Pool, f ListFilter) ([]Cont
 	return out, total, rows.Err()
 }
 
-// listContentsKokBazli aynı makalenin dillerini tek satıra indirir.
-//
-// Neden ayrı fonksiyon: filtreler satır bazında uygulanıp SONRA gruplama
-// yapılır (kullanıcı "yayında" dediğinde yayında olan sürüm temsilci olur).
-// Filtreyi köke uygulamak, çevirisi yayında olan bir makaleyi "Taslak"
-// sekmesinde gizlerdi.
-//
-// Sıra: filtre → kök başına DISTINCT ON (temsilci: önce kök dil, sonra en
-// yeni) → temsilci satırın tam içeriği → sayfalama.
 func listContentsKokBazli(ctx context.Context, pool *pgxpool.Pool, f ListFilter) ([]Content, int, error) {
 	kokDil := f.KokDil
 	if kokDil == "" {
@@ -695,12 +630,6 @@ type DilSurum struct {
 	Status string
 }
 
-// DillerOf verilen kök içeriklerin dil sürümlerini TEK sorguda döndürür.
-//
-// Neden tek sorgu: liste sayfası 40 satır; satır başına sorgu N+1 olurdu.
-// Koşul `id = ANY(...) OR translation_of = ANY(...)` yazıldı: birincisi PK,
-// ikincisi `ix_contents_translation` kısmi indeksini kullanır (ifade
-// üzerinden yazmak ikisini de devre dışı bırakıyordu).
 func DillerOf(ctx context.Context, pool *pgxpool.Pool, kokIDs []int64) map[int64][]DilSurum {
 	out := map[int64][]DilSurum{}
 	if len(kokIDs) == 0 {
@@ -959,18 +888,6 @@ func HomeHighlights(ctx context.Context, pool *pgxpool.Pool, siteID int64, local
 	return h, nil
 }
 
-// recentPublishedHome "son yayınlananlar" listesini anasayfa kapısıyla
-// birlikte TEK sorguda döndürür.
-//
-// NEDEN: eski kod önce RecentPublished ile listeyi çekiyor, sonra her içerik
-// için homepageAllowed'ı ayrı çağırıyordu — 48 içerikte 48 ek sorgu (klasik
-// N+1). Ölçüm (7 Kasım 2026, 50 eşzamanlı istemci): ana sayfa p50 191 ms,
-// /markets p50 87 ms; aradaki farkın baskın kısmı bu turdu. Eşik kategori
-// tablosunda durduğu için kapı SQL'e taşındı: aynı satırlar, tek gidiş-dönüş.
-//
-// Eşdeğerlik: eski homepageAllowed kategori bulunamazsa İZİN veriyordu.
-// COALESCE(c.ai_score,0) >= COALESCE(cat.homepage_min_score,0) bu davranışı
-// korur (kategori yok → 0 >= 0).
 func recentPublishedHome(ctx context.Context, pool *pgxpool.Pool, siteID int64, locale string, limit int) ([]Content, error) {
 	q := `SELECT ` + contentCols + ` FROM contents c
 		LEFT JOIN categories cat ON cat.id = c.category_id
@@ -1034,9 +951,6 @@ func TranslationsOf(ctx context.Context, pool *pgxpool.Pool, contentID int64) ([
 	return out, rows.Err()
 }
 
-// SetContentCategory içeriğin kategorisini değiştirir (toplu taşıma — Faz 26).
-// catID <= 0 ise kategori boşaltılır. Satır yoksa (içerik silinmiş olabilir)
-// ErrNotFound döner; toplu işlem raporunda "işlendi" denmesin diye önemli.
 func SetContentCategory(ctx context.Context, pool *pgxpool.Pool, id, catID int64) error {
 	var v any
 	if catID > 0 {
@@ -1052,13 +966,6 @@ func SetContentCategory(ctx context.Context, pool *pgxpool.Pool, id, catID int64
 	return nil
 }
 
-// SaveContentDraft yalnızca metin alanlarını (başlık/özet/gövde) yazar ve
-// updated_at'i ilerletir (Faz 27 — düzenleyici otomatik taslak kaydetme).
-//
-// BİLEREK sade tutulur: durum değişmez, audit yazılmaz, otomatik kapak/AI/
-// sosyal tetiklenmez. Amaç, tarayıcı çökerse metnin kaybolmaması — kaydet
-// düğmesinin işi normal kaydetmedir. Sürüm yine artırılır ve beklenen sürüm
-// kontrol edilir; böylece iki editörün autosave'i birbirini sessizce ezmez.
 func SaveContentDraft(ctx context.Context, pool *pgxpool.Pool, id, expectedVersion int64, title, spot string, detail []byte) (int, error) {
 	var version int
 	err := pool.QueryRow(ctx, `

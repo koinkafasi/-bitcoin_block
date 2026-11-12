@@ -86,7 +86,7 @@ func CDKurumsalSayfaView(v CDKurumsalSayfa) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		templ_7745c5c3_Err = cdHead(CDHead{Title: v.Title, Desc: v.Desc, Canonical: v.Canonical,
-			OGType: "website", SiteName: v.Shell.SiteName, RSSFeed: "/rss.xml",
+			OGType: "website", SiteName: v.Shell.SiteName, FaviconURL: v.Shell.FaviconURL, RSSFeed: "/rss.xml",
 			JSONLD: v.JSONLD, Locale: v.Locale, PageCategory: v.PageCategory,
 			ContentCategory: v.ContentCategory, BaseURL: v.BaseURL}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
@@ -111,7 +111,7 @@ func CDKurumsalSayfaView(v CDKurumsalSayfa) templ.Component {
 		var templ_7745c5c3_Var2 string
 		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(v.Baslik)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_kurumsal.templ`, Line: 71, Col: 21}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/cd_kurumsal.templ`, Line: 71, Col: 21}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
 		if templ_7745c5c3_Err != nil {
@@ -124,7 +124,7 @@ func CDKurumsalSayfaView(v CDKurumsalSayfa) templ.Component {
 		var templ_7745c5c3_Var3 string
 		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(v.Baslik)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_kurumsal.templ`, Line: 74, Col: 19}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/cd_kurumsal.templ`, Line: 74, Col: 19}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 		if templ_7745c5c3_Err != nil {
@@ -203,7 +203,7 @@ func cdIletisimBlok(c CDIletisim, flashTip, flashMetin string) templ.Component {
 			var templ_7745c5c3_Var6 string
 			templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.ResolveAttributeValue(templ.CSSClasses(templ_7745c5c3_Var5).String())
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_kurumsal.templ`, Line: 1, Col: 0}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/cd_kurumsal.templ`, Line: 1, Col: 0}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var6)
 			if templ_7745c5c3_Err != nil {
@@ -216,7 +216,7 @@ func cdIletisimBlok(c CDIletisim, flashTip, flashMetin string) templ.Component {
 			var templ_7745c5c3_Var7 string
 			templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(flashMetin)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_kurumsal.templ`, Line: 94, Col: 74}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/cd_kurumsal.templ`, Line: 94, Col: 74}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 			if templ_7745c5c3_Err != nil {
@@ -239,7 +239,7 @@ func cdIletisimBlok(c CDIletisim, flashTip, flashMetin string) templ.Component {
 			var templ_7745c5c3_Var8 templ.SafeURL
 			templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinURLErrs("mailto:" + c.Genel)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_kurumsal.templ`, Line: 98, Col: 55}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/cd_kurumsal.templ`, Line: 98, Col: 55}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 			if templ_7745c5c3_Err != nil {
@@ -252,7 +252,7 @@ func cdIletisimBlok(c CDIletisim, flashTip, flashMetin string) templ.Component {
 			var templ_7745c5c3_Var9 string
 			templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(c.Genel)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_kurumsal.templ`, Line: 100, Col: 22}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/cd_kurumsal.templ`, Line: 100, Col: 22}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 			if templ_7745c5c3_Err != nil {
@@ -271,7 +271,7 @@ func cdIletisimBlok(c CDIletisim, flashTip, flashMetin string) templ.Component {
 			var templ_7745c5c3_Var10 templ.SafeURL
 			templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinURLErrs("mailto:" + c.Haber)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_kurumsal.templ`, Line: 104, Col: 55}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/cd_kurumsal.templ`, Line: 104, Col: 55}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 			if templ_7745c5c3_Err != nil {
@@ -284,7 +284,7 @@ func cdIletisimBlok(c CDIletisim, flashTip, flashMetin string) templ.Component {
 			var templ_7745c5c3_Var11 string
 			templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(c.Haber)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_kurumsal.templ`, Line: 106, Col: 22}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/cd_kurumsal.templ`, Line: 106, Col: 22}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 			if templ_7745c5c3_Err != nil {
@@ -303,7 +303,7 @@ func cdIletisimBlok(c CDIletisim, flashTip, flashMetin string) templ.Component {
 			var templ_7745c5c3_Var12 templ.SafeURL
 			templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinURLErrs("mailto:" + c.Reklam)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_kurumsal.templ`, Line: 110, Col: 56}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/cd_kurumsal.templ`, Line: 110, Col: 56}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 			if templ_7745c5c3_Err != nil {
@@ -316,7 +316,7 @@ func cdIletisimBlok(c CDIletisim, flashTip, flashMetin string) templ.Component {
 			var templ_7745c5c3_Var13 string
 			templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(c.Reklam)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_kurumsal.templ`, Line: 112, Col: 23}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/cd_kurumsal.templ`, Line: 112, Col: 23}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 			if templ_7745c5c3_Err != nil {
@@ -335,7 +335,7 @@ func cdIletisimBlok(c CDIletisim, flashTip, flashMetin string) templ.Component {
 			var templ_7745c5c3_Var14 templ.SafeURL
 			templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinURLErrs("mailto:" + c.Duzeltme)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_kurumsal.templ`, Line: 116, Col: 58}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/cd_kurumsal.templ`, Line: 116, Col: 58}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
 			if templ_7745c5c3_Err != nil {
@@ -348,7 +348,7 @@ func cdIletisimBlok(c CDIletisim, flashTip, flashMetin string) templ.Component {
 			var templ_7745c5c3_Var15 string
 			templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(c.Duzeltme)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_kurumsal.templ`, Line: 118, Col: 25}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/cd_kurumsal.templ`, Line: 118, Col: 25}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
 			if templ_7745c5c3_Err != nil {
@@ -367,7 +367,7 @@ func cdIletisimBlok(c CDIletisim, flashTip, flashMetin string) templ.Component {
 			var templ_7745c5c3_Var16 templ.SafeURL
 			templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinURLErrs("tel:" + c.Telefon)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_kurumsal.templ`, Line: 122, Col: 54}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/cd_kurumsal.templ`, Line: 122, Col: 54}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
 			if templ_7745c5c3_Err != nil {
@@ -380,7 +380,7 @@ func cdIletisimBlok(c CDIletisim, flashTip, flashMetin string) templ.Component {
 			var templ_7745c5c3_Var17 string
 			templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(c.Telefon)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_kurumsal.templ`, Line: 124, Col: 24}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/cd_kurumsal.templ`, Line: 124, Col: 24}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
 			if templ_7745c5c3_Err != nil {
@@ -399,7 +399,7 @@ func cdIletisimBlok(c CDIletisim, flashTip, flashMetin string) templ.Component {
 			var templ_7745c5c3_Var18 string
 			templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.JoinStringErrs(c.Adres)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_kurumsal.templ`, Line: 130, Col: 22}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/cd_kurumsal.templ`, Line: 130, Col: 22}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var18))
 			if templ_7745c5c3_Err != nil {
@@ -418,7 +418,7 @@ func cdIletisimBlok(c CDIletisim, flashTip, flashMetin string) templ.Component {
 			var templ_7745c5c3_Var19 string
 			templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinStringErrs(c.Calisma)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_kurumsal.templ`, Line: 136, Col: 24}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/webui/templkit/cd_kurumsal.templ`, Line: 136, Col: 24}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var19))
 			if templ_7745c5c3_Err != nil {
@@ -434,7 +434,7 @@ func cdIletisimBlok(c CDIletisim, flashTip, flashMetin string) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		if c.FormAktif {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 34, "<form class=\"cd-doc__form\" method=\"post\" action=\"/iletisim\"><!-- Bot tuzağı: görünmez alan. Doldurulursa sunucu sessizce\n\t\t\t\t     başarılı görünür (contact.go). --><div class=\"cd-doc__tuz\" aria-hidden=\"true\"><label for=\"cd-web\">Web</label> <input id=\"cd-web\" name=\"web\" type=\"text\" tabindex=\"-1\" autocomplete=\"off\"></div><div class=\"cd-doc__alan\"><label for=\"cd-ad\">Adınız</label> <input id=\"cd-ad\" name=\"ad\" type=\"text\" required maxlength=\"120\"></div><div class=\"cd-doc__alan\"><label for=\"cd-eposta\">E-posta</label> <input id=\"cd-eposta\" name=\"eposta\" type=\"email\" required maxlength=\"200\"></div><div class=\"cd-doc__alan\"><label for=\"cd-telefon\">Telefon (isteğe bağlı)</label> <input id=\"cd-telefon\" name=\"telefon\" type=\"tel\" maxlength=\"40\"></div><div class=\"cd-doc__alan\"><label for=\"cd-konu\">Konu</label> <input id=\"cd-konu\" name=\"konu\" type=\"text\" maxlength=\"200\"></div><div class=\"cd-doc__alan\"><label for=\"cd-mesaj\">Mesajınız</label> <textarea id=\"cd-mesaj\" name=\"mesaj\" rows=\"6\" required maxlength=\"4000\"></textarea></div><!-- `onay` ZORUNLU: sunucu bu alan yoksa reddediyor\n\t\t\t\t     (\"aydınlatma metnini onaylamanız gerekir\"). --><label class=\"cd-doc__onay\"><input type=\"checkbox\" name=\"onay\" value=\"1\" required> <span>Kişisel verilerimin mesajımın yanıtlanması amacıyla işlenmesine ilişkin aydınlatma metnini okudum.</span></label> <button class=\"cd-btn cd-btn--kayit cd-doc__gonder\" type=\"submit\">Gönder</button></form>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 34, "<form class=\"cd-doc__form\" method=\"post\" action=\"/iletisim\"><div class=\"cd-doc__tuz\" aria-hidden=\"true\"><label for=\"cd-web\">Web</label> <input id=\"cd-web\" name=\"web\" type=\"text\" tabindex=\"-1\" autocomplete=\"off\"></div><div class=\"cd-doc__alan\"><label for=\"cd-ad\">Adınız</label> <input id=\"cd-ad\" name=\"ad\" type=\"text\" required maxlength=\"120\"></div><div class=\"cd-doc__alan\"><label for=\"cd-eposta\">E-posta</label> <input id=\"cd-eposta\" name=\"eposta\" type=\"email\" required maxlength=\"200\"></div><div class=\"cd-doc__alan\"><label for=\"cd-telefon\">Telefon (isteğe bağlı)</label> <input id=\"cd-telefon\" name=\"telefon\" type=\"tel\" maxlength=\"40\"></div><div class=\"cd-doc__alan\"><label for=\"cd-konu\">Konu</label> <input id=\"cd-konu\" name=\"konu\" type=\"text\" maxlength=\"200\"></div><div class=\"cd-doc__alan\"><label for=\"cd-mesaj\">Mesajınız</label> <textarea id=\"cd-mesaj\" name=\"mesaj\" rows=\"6\" required maxlength=\"4000\"></textarea></div><label class=\"cd-doc__onay\"><input type=\"checkbox\" name=\"onay\" value=\"1\" required> <span>Kişisel verilerimin mesajımın yanıtlanması amacıyla işlenmesine ilişkin aydınlatma metnini okudum.</span></label> <button class=\"cd-btn cd-btn--kayit cd-doc__gonder\" type=\"submit\">Gönder</button></form>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

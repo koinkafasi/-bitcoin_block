@@ -6,10 +6,6 @@ import (
 	"testing"
 )
 
-// TestCDVPlayerKontrolleri: kendi oynatıcının kontrol çubuğu eksiksiz
-// çizilmeli. NEDEN: oynatıcı JS'e bağlı; templ tarafında bir düğüm
-// (ilerleme çubuğu, ses, hız, tam ekran) düşerse JS sessizce çalışmaz hâle
-// gelir ve kullanıcı "play'e basınca bir şey olmuyor" der.
 func TestCDVPlayerKontrolleri(t *testing.T) {
 	v := CDVideoHero{
 		VideoID: "8oVvSLjkMv8", Baslik: "Örnek video",
@@ -41,15 +37,9 @@ func TestCDVPlayerKontrolleri(t *testing.T) {
 	if strings.Contains(out, "<iframe") {
 		t.Error("iframe baştan basılmamalı — kapak + oynat düğmesi beklenir")
 	}
-	// Kapak ve büyük düğme AYNI ANDA basılır ve iframe'in üstünde durur:
-	// oynatma engellenirse YouTube'un poster'ı değil bizim düğmemiz görünür
-	// (bkz. cd-player.js başlığı — "ortada play simgesi kalıyor" hatası).
 	if !strings.Contains(out, "data-cd-kapak") || !strings.Contains(out, "data-cd-buyuk") {
 		t.Error("kapak ve büyük oynat düğmesi birlikte basılmalı")
 	}
-	// Şeffaf etkileşim katmanı: iframe yüzeyi kapladığı için fare olayları
-	// dış belgeye ulaşmıyor; katman olmadan kontrol çubuğu bir kez
-	// gizlendikten sonra geri gelmiyor (ölçüldü, 8 Kasım 2026).
 	if !strings.Contains(out, "data-cd-katman") {
 		t.Error("etkileşim katmanı (data-cd-katman) basılmalı")
 	}

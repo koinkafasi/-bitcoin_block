@@ -7,12 +7,6 @@ import (
 
 // Faz 6 koruyucu testleri — specs/13-gazete-sayfa-duzenleyici.md
 
-// TestGazeteBaskiYaziTipiMevcut baskıda bildirilen ailenin sunucuda gerçekten
-// kurulu olduğunu doğrular.
-//
-// Eskiden CSS Georgia istiyordu ama kurulu değildi; çıktı sessizce DejaVu
-// Serif'e düşüyordu, yani gazete amaçlanan yazı tipiyle basılmıyordu ve bunu
-// ancak PDF'in font tablosuna bakınca görüyorduk.
 func TestGazeteBaskiYaziTipiMevcut(t *testing.T) {
 	kurulu := gazeteKuruluAileler()
 	if len(kurulu) == 0 {
@@ -40,9 +34,6 @@ func TestGazeteBaskiYaziTipiMevcut(t *testing.T) {
 	t.Logf("baskı yazı tipi: %s", secilen)
 }
 
-// TestGazeteYaziTipiCSSGuvenli şablondan gelen aile adının CSS'e güvenle
-// yazıldığını doğrular. Aile adı veridir; tırnak veya noktalı virgül taşırsa
-// kural gövdesinden çıkıp başka bildirim enjekte edebilirdi.
 func TestGazeteYaziTipiCSSGuvenli(t *testing.T) {
 	// Geçerli ad öne alınmalı.
 	got := gazeteYaziTipiCSS("Libre Baskerville")

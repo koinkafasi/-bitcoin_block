@@ -109,9 +109,6 @@ func TestGzipSeviyeHavuzuKirletmez(t *testing.T) {
 		}
 		boyut[lvl] = w.Body.Len()
 	}
-	// Seviye 9, seviye 1'den küçük çıktı üretmeli (yanlış writer alınsaydı
-	// boyutlar eşitlenirdi). Gövde YETERİNCE ÇEŞİTLİ olmalı: aşırı tekrarlı
-	// metinde her iki seviye de aynı tavana vurur ve test hiçbir şey sınamaz.
 	if boyut[9] >= boyut[1] {
 		t.Fatalf("seviye 9 (%d bayt) seviye 1'den (%d) küçük değil — havuz karışmış",
 			boyut[9], boyut[1])

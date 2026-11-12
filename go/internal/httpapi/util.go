@@ -37,6 +37,30 @@ func (s *Server) mediaPath(ctx context.Context, id int64) string {
 	return m.Path
 }
 
+func (s *Server) mediaAlt(ctx context.Context, id *int64) string {
+	if id == nil || *id <= 0 {
+		return ""
+	}
+	s.mediaMu.RLock()
+	a, ok := s.mediaAltCache[*id]
+	s.mediaMu.RUnlock()
+	if ok {
+		return a
+	}
+	m, err := repo.GetMedia(ctx, s.pool, *id)
+	if err != nil {
+		return ""
+	}
+	alt := ""
+	if m.Alt != nil {
+		alt = strings.TrimSpace(*m.Alt)
+	}
+	s.mediaMu.Lock()
+	s.mediaAltCache[*id] = alt
+	s.mediaMu.Unlock()
+	return alt
+}
+
 // publicMediaURL depolama yolundan temiz web URL'si üretir (/media/{yyyymm}/{dosya}).
 func publicMediaURL(stored *string) string {
 	if stored == nil || *stored == "" {
@@ -90,9 +114,6 @@ func (s *Server) mediaSrcset(id *int64) string {
 		*id, *id, *id, *id, *id, *id)
 }
 
-// catIconSVG kategori ikon anahtarlarını inline SVG çizimlerine eşler.
-// Emoji fontuna bağımlı kalmamak için (platform fontu yoksa tofu kutu
-// çıkabiliyor) vektör ikon kullanılır; viewBox/stroke tanımı ortaktır.
 var catIconSVG = map[string]string{
 	"news":      `<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 8h6M7 12h6M7 16h4"/><path d="M17 8h1v8h-1z"/>`,
 	"politics":  `<path d="M3 10h18L12 3 3 10z"/><path d="M5 21v-8M9.5 21v-8M14.5 21v-8M19 21v-8"/><path d="M3 21h18"/>`,
@@ -140,9 +161,6 @@ var catIconMap = map[string]string{
 const catIconSVGSkel = `<svg class="ci" viewBox="0 0 24 24" fill="none" stroke="currentColor" ` +
 	`stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">`
 
-// catIcon kategori ikon değerini inline SVG olarak döndürür. Panelden gelen
-// metin anahtar tablosunda yoksa varsayılan "news" ikonu kullanılır — böylece
-// çıktı her zaman güvenli, sabit ve kaçışlanmış HTML'dir.
 func catIcon(key string) template.HTML {
 	name := catIconMap[strings.ToLower(strings.TrimSpace(key))]
 	body, ok := catIconSVG[name]
@@ -314,15 +332,9 @@ func platformFileExt(filename string) (string, error) {
 	return "application/octet-stream", nil
 }
 
-// mediaKindByExt dosya uzantısından medya türünü çıkarır.
-// Görsel olmayanlar (ses/video/dosya) native yüklenir; önizleme yerine
-// tür ikonu basılır. Listede olmayan uzantılar reddedilir.
 func mediaKindByExt(filename string) (string, bool) {
 	switch strings.ToLower(filepath.Ext(filename)) {
 	case ".jpg", ".jpeg", ".png", ".webp", ".svg":
-		// SVG bir GÖRSEL değil XML belgesidir: yükleme yolunda ayrıca
-		// beyaz liste temizliğinden geçer (platform.SanitizeSVG) ve servis
-		// anında sıkı CSP ile sunulur. Burada yalnız tür ayrımı yapılıyor.
 		return "image", true
 	case ".mp3", ".wav", ".ogg", ".oga", ".m4a", ".aac", ".flac":
 		return "audio", true
@@ -354,3 +366,22 @@ func mediaKindIcon(kind string) []byte {
 }
 
 var _ = platform.Slugify
+
+// medyaOnbellekDusur medya yolu/alt metin onbellegini ve sayfa onbellegini
+// bosaltir. Bir gorsel degistiginde sayfalar eski dosyayi gostermesin.
+func (s *Server) medyaOnbellekDusur(id int64) {
+	s.mediaMu.Lock()
+	if id > 0 {
+		delete(s.mediaCache, id)
+		delete(s.mediaAltCache, id)
+	} else {
+		s.mediaCache = map[int64]string{}
+		s.mediaAltCache = map[int64]string{}
+	}
+	s.mediaMu.Unlock()
+	s.invalidateContentCache()
+	s.cdShellCache.Clear()
+	if s.sayfaCache != nil {
+		s.sayfaCache.temizle()
+	}
+}

@@ -12,17 +12,6 @@ import (
 	"theblock/site/internal/repo"
 )
 
-// UpdateContent alaka puanını tazelemeli (Faz 169).
-//
-// Bilinen borç: puan yalnız içerik oluşturulurken yazılıyordu. Editör başlığı
-// kısaltıp spotu silip kaydettiğinde ai_score ESKİ hâlinde kalıyordu; kategori
-// yayın kapısı (categories.min_score) bayat sayıya bakıyordu.
-//
-// Test kendi verisini kurar: boş bir test veritabanında içerik varsaymaz.
-// Ölçülen iki şey var:
-//  1. Puan 0'a çekilip kaydedilince yeniden hesaplanıyor mu?
-//  2. Başlık/spot kısaltılınca puan DÜŞÜYOR mu? (Yalnız "değişti" demek
-//     yetmez; hesabın yönü de doğru olmalı.)
 func TestUpdateContentAlakaPuaniniTazeler(t *testing.T) {
 	pool := intPool(t)
 	ctx := context.Background()

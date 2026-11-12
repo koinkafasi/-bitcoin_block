@@ -80,9 +80,6 @@ func CheckSources(ctx context.Context, pool *pgxpool.Pool, contentID int64) (int
 	return n, nil
 }
 
-// probeSource URL'yi 6 sn içinde okur; <HEAD/GET> snippet + erişim durumu.
-// Adres yazar tarafından girilen kaynak linkidir: SSRF korumalı istemci
-// kullanılır (iç ağ / metadata / loopback engellenir).
 func probeSource(url string) (snippet string, statusCode *int, accessible bool) {
 	u, err := neturl.Parse(url)
 	if err != nil || platform.ValidateOutboundURL(u) != nil {

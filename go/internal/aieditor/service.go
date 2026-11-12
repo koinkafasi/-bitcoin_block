@@ -283,10 +283,6 @@ func (s *Service) ProcessJob(ctx context.Context, jobID int64) (Result, error) {
 		{Role: ai.RoleSystem, Content: CommonSystemPrompt + "\n\nGÖREV:\n" + act.Instruction},
 		{Role: ai.RoleUser, Content: userPrompt(act, freshCtx, selection, body, instruction, angle, sources)},
 	}
-	// 1800 YETMİYOR: muhakeme tabanlı model (evren/deepseek-v4.1-flash)
-	// uzun istemlerde bütçenin tamamını düşünmeye harcayıp BOŞ içerik
-	// döndürüyordu (finish_reason=length). Ölçüm 6 Kasım 2026: `low` çaba +
-	// 4000 token ile yanıt 108-162 sn'de tam JSON olarak geldi.
 	maxTokens := 4000
 	switch {
 	case act.ID == "audio_draft":
@@ -320,13 +316,6 @@ func (s *Service) ProcessJob(ctx context.Context, jobID int64) (Result, error) {
 	if strings.TrimSpace(selection) == "" {
 		result.Warnings = append(result.Warnings, "Metin seçilmedi; işlem tüm haber gövdesi üzerinde çalıştı.")
 	}
-	// Olgu kapıları (Faz 116/119): tırnak içindeki cümleler ve tüm sayılar
-	// kaynakta geçmeli.
-	//
-	// Faz 193c — kapsam genişletildi. ÖNCE yalnız `audio_draft` için
-	// çalışıyordu; AI'ın yazdığı HABER taslaklarında uydurma rakam kapısı
-	// hiç yoktu. Kaynak metin: seçim varsa seçim, yoksa haberin gövdesi
-	// (küme özetinden gelen taslak) + araştırma kaynaklarının içeriği.
 	kaynakMetin := selection
 	if strings.TrimSpace(kaynakMetin) == "" {
 		kaynakMetin = body
@@ -542,9 +531,6 @@ func selectionLimit(act Action) int {
 	return 5000
 }
 
-// selectionExceedsLimit seçilen metnin eylem sınırını aşıp aşmadığını
-// söyler. Sınır aşılırsa createJob bunu iş bağlamına yazar; böylece kırpma
-// bilgisi SelectedText kısaltıldıktan sonra da korunur.
 func selectionExceedsLimit(act Action, s string) bool {
 	return len([]rune(strings.TrimSpace(s))) > selectionLimit(act)
 }

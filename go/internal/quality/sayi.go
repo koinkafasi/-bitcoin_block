@@ -8,13 +8,6 @@ import (
 	"unicode"
 )
 
-// Bu dosya sayı/olgu doğrulamasıdır. Modelin transkriptte geçmeyen bir sayı
-// (bütçe, tarih, oran, yaş, adet) yazması haberde en sık görülen ve en pahalı
-// hatadır. Alıntı kapısı cümleleri doğrular; bu kapı SAYILARI doğrular.
-//
-// Yöntem deterministiktir: metindeki sayısal ifadeler çıkarılır, kaynakta
-// aranır. Biçim farkları (1.500 / 1500 / 1 500) normalize edilir.
-
 // SayiBulgu tek bir sayısal ifadenin doğrulama sonucudur.
 type SayiBulgu struct {
 	Value  string `json:"value"`
@@ -41,11 +34,6 @@ var (
 	numRe = regexp.MustCompile(`\d+(?:[.,]\d+)*`)
 )
 
-// VerifyNumbers metindeki sayıları kaynağa karşı doğrular.
-//
-// Dışlananlar (yanlış pozitif üretmemek için):
-//   - 1-2 haneli küçük sayılar (sıra/adedi bağlamdan bağımsız geçebilir),
-//   - yüzyıl/yıl olmayan 4 haneli rastgele diziler değil — yıllar denetlenir.
 func VerifyNumbers(text, source string) SayiRapor {
 	srcNums := numberSet(source)
 	var found []string
@@ -101,9 +89,6 @@ func numberSet(source string) map[string]bool {
 	for _, y := range yearRe.FindAllString(source, -1) {
 		set[y] = true
 	}
-	// Türkçe yazıyla sayılar: "480 milyon" gibi ifadelerde sayı zaten
-	// rakamdır; yazıyla verilen "üç" gibi ifadeler kapsam dışıdır (belirsizlik
-	// yüksek, yanlış pozitif riski var).
 	return set
 }
 

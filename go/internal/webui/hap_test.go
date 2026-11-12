@@ -10,19 +10,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// Kayan "mürekkep hapı" testleri (Faz 155).
-//
-// Referans: Murmura'nın sekme geçişi. Hap, iki kenarı BAĞIMSIZ hareket eden
-// kırpılmış bir katman; içinde etiketlerin zıt renkli kopyaları var. Kırpma
-// penceresi etiketin üstüne geldiğinde renk tam kenarda değişiyor.
-//
-// Bu testler üç sessiz bozulmayı kilitliyor:
-//   1. Hap kimliği sayfa yüklemesinde rastgele üretilirse geçiş kaydı
-//      eşleşmez ve hap animasyonsuz, doğrudan hedefe oturur.
-//   2. Tıklamada TIKLANAN sekmenin konumu kaydedilirse yeni sayfada o sekme
-//      aktif olacağı için "eski = yeni" çıkar ve hap hiç kımıldamaz.
-//   3. İki kenar aynı süre/eğriyle sürülürse "esneme" hissi kaybolur.
-
 func hapJS(t *testing.T) string {
 	t.Helper()
 	b, err := os.ReadFile(filepath.Join("static", "admin-ui.js"))

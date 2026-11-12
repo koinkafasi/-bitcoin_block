@@ -7,17 +7,6 @@ import (
 	"theblock/site/internal/repo"
 )
 
-// handleAdminAra GET /admin/ara?q= — panel komut paleti varlık araması (Faz 162).
-//
-// Palet önceden yalnız 38 sabit rota listesiydi; kullanıcı bir içerik başlığı
-// yazınca sonuç gelmiyordu. Bu uç nokta içerik, kategori, etiket, medya ve
-// kişiyi gruplu döndürür.
-//
-// Sözleşme:
-//   - 2 karakterden kısa sorgu → boş grup listesi (200). Hata değil: palet
-//     açılır açılmaz boş sonuç göstermemesi için çağıran taraf da bunu bekler.
-//   - Sonuçlar site kapsamlı (tb_site çerezi).
-//   - HTML üretilmez; yalnız veri. Kaçış istemcide textContent ile yapılır.
 func (s *Server) handleAdminAra(w http.ResponseWriter, r *http.Request) {
 	q := strings.TrimSpace(r.URL.Query().Get("q"))
 	if len([]rune(q)) < 2 {

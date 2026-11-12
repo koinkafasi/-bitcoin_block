@@ -28,13 +28,6 @@ type aiEnrichCandidate struct {
 	NeedsCategoryOnly bool
 }
 
-// EnrichAISourceItems, HTML/sitemap kaynaklarından alınmış öğeler için
-// JSON-LD/meta özeti, yayın tarihi ve makale bölümüne göre kanonik kategori
-// çeker. Tam metin saklanmaz; yalnızca kısa açıklama ve künye alanları
-// güncellenir.
-//
-// Daha önce zenginleştirilmiş ama kategori kontrolü yapılmamış öğeler de
-// (category_checked_at IS NULL) kategori düzeltmesi için yeniden işlenir.
 func EnrichAISourceItems(ctx context.Context, pool *pgxpool.Pool, siteID int64, limit int) (AIEnrichResult, error) {
 	if siteID <= 0 {
 		siteID = 1

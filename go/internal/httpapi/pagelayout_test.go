@@ -36,10 +36,6 @@ func TestPageLayoutNoSidebar(t *testing.T) {
 	assert.True(t, v.HasCustom)
 }
 
-// TestPageLayoutMergeAlanBazliMiras kategori kayıtlarının yalnız kendi
-// yazdığı alanlarda genel kategori düzenini ezmekle yükümlü olduğunu;
-// diğer alanların genel ayardan geldiğini doğrular. Böylece "genel kategori
-// düzeninde gizle" tüm kategorilere yansır.
 func TestPageLayoutMergeAlanBazliMiras(t *testing.T) {
 	on := true
 	off := false
@@ -64,9 +60,6 @@ func TestPageLayoutMergeAlanBazliMiras(t *testing.T) {
 
 func ptrInt(v int) *int { return &v }
 
-// TestPageLayoutHideHeader kategori sayfası üst alanının (başlık, açıklama,
-// kırıntı) sayfaya özel gizlenebildiğini ve varsayılanın görünür olduğunu
-// doğrular.
 func TestPageLayoutHideHeader(t *testing.T) {
 	// Varsayılan: hepsi görünür.
 	v := pageLayoutViewFrom("kategori:ekonomi", pageLayoutConfig{}, true, false)

@@ -17,9 +17,6 @@ import (
 	"theblock/site/internal/repo"
 )
 
-// SEO alanlarının hedef uzunlukları. Google sonuç sayfasında başlık ~60,
-// açıklama ~155 karakterde kesiliyor; kesilen metin kullanıcıya yarım
-// cümle gösteriyor. Üretimi bu bandın içine zorluyoruz.
 const (
 	SeoBaslikMin = 30
 	SeoBaslikMax = 60
@@ -35,10 +32,6 @@ const (
 	seoGovdeLimiti = 2500
 )
 
-// SeoOneri üretilen SEO alanlarıdır.
-//
-// Alanlar DB'ye OTOMATİK yazılmaz (editör akışında); bot akışında yazılır.
-// İkisi de aynı üretim + doğrulama yolunu kullanır.
 type SeoOneri struct {
 	Baslik   string
 	Aciklama string
@@ -70,11 +63,6 @@ Kurallar:
 Şu JSON şemasını döndür:
 {"seo_title":"","meta_description":"","keywords":[""]}`
 
-// seoJSON modelin döndürdüğü JSON'u çözer.
-//
-// Modeller zaman zaman JSON'u ```json bloğuna sarıyor veya başına bir cümle
-// ekliyor. Katı çözüm bu yüzden tek başına yetmiyor; ilk { ... } aralığı
-// ayıklanır.
 func seoJSON(ham string) (map[string]any, error) {
 	ham = strings.TrimSpace(ham)
 	if i := strings.Index(ham, "{"); i > 0 {
@@ -94,16 +82,6 @@ func seoJSON(ham string) (map[string]any, error) {
 	}
 }
 
-// seoJSONKurtar KESİK JSON'dan alanları kurtarır.
-//
-// Sağlayıcı bazen yanıtı token sınırında ortasından kesiyor; canlı ölçümde
-// yanıtların bir kısmı "Unterminated string" / "unexpected end of JSON
-// input" ile geliyor ve içerik boş kalıyordu. Başlık ve açıklama genellikle
-// kesik metnin BAŞINDA olduğu için bunlar kurtarılabilir; uzunluk
-// doğrulaması zaten kırpar.
-//
-// Yalnız iki alan aranır ve ikisinden en az biri bulunmalıdır; aksi hâlde
-// "kurtarma" uydurma sayılır.
 func seoJSONKurtar(ham string) (map[string]any, bool) {
 	alan := func(ad string) string {
 		re := regexp.MustCompile(`"` + ad + `"\s*:\s*"((?:[^"\\]|\\.)*)`)
@@ -133,19 +111,7 @@ func seoJSONKurtar(ham string) (map[string]any, bool) {
 	return m, true
 }
 
-// seoTemizle metni tek satıra indirir: satır sonları, fazla boşluk, sarma
-// tırnakları ve kontrol karakterleri atılır.
-//
-// Neden gerekli: bu değerler <title> ve <meta content> içine giriyor; satır
-// sonu veya tırnak SEO çıktısını bozuyor (ve HTML kaçışı gereksiz yer
-// kaplıyor). Modelin tırnak içine alması sık görülüyor.
 func seoTemizle(s string) string {
-	// Kontrol karakterleri: boşluk olanlar (tab, satır sonu) boşluğa
-	// ÇEVRİLİR, diğerleri atılır.
-	//
-	// Doğrudan silmek kelimeleri yapıştırıyordu: "konutlar\tteslim" →
-	// "konutlarteslim" (testte yakalandı). Boşluğa çevrilince
-	// strings.Fields aşağıda tek boşluğa indiriyor.
 	s = strings.Map(func(r rune) rune {
 		switch {
 		case r == '\t' || r == '\n' || r == '\r' || r == '\v' || r == '\f':
@@ -158,18 +124,11 @@ func seoTemizle(s string) string {
 	// strings.Fields tüm Unicode boşluklarını (satır sonu, sekme, çoklu
 	// boşluk) tek boşluğa indirir; ayrı ReplaceAll çağrıları gereksizdi.
 	s = strings.Join(strings.Fields(s), " ")
-	// Sarma tırnakları: düz ve kıvrık. Raw string yerine yorumlanan
-	// string kullanılmalı: `\u201c` backtick içinde kaçış DEĞİL, dört
-	// karakterlik metindir (canlı testte kıvrık tırnak temizlenmiyordu).
 	s = strings.Trim(s, "\"'"+string(rune(0x201c))+string(rune(0x201d))+
 		string(rune(0x2018))+string(rune(0x2019)))
 	return strings.TrimSpace(s)
 }
 
-// seoKirp metni rune sınırında, kelimeyi bölmeden kısaltır.
-//
-// Byte ile kesmek Türkçe karakterleri bozuyor (ı, ş, ğ iki bayt). Cümle
-// ortasında kesmek yerine son tam kelimeye kadar geri gidilir.
 func seoKirp(s string, max int) string {
 	if utf8.RuneCountInString(s) <= max {
 		return s
@@ -218,21 +177,9 @@ func SeoDogrula(o SeoOneri) SeoOneri {
 	return o
 }
 
-// alanAdiDeseni alan adı benzeri tokenleri yakalar: "cumhuriyet.com.tr",
-// "https://x.com", "www.foo.net".
-//
-// Neden gerekli: model, kaynak yayının adını metne ekliyordu. Canlı ölçümde
-// gövdesinde "Cumhuriyet" GEÇMEYEN bir spor haberinin meta açıklaması
-// "… Cumhuriyet.com.tr'da" diye bitiyordu. Bu, olgusal olarak yanlış ve
-// başka bir yayına atıf; yayına girmemeli.
 var alanAdiDeseni = regexp.MustCompile(
 	`(?i)(?:https?://\S+|www\.[\w.-]+|\b[\w-]+(?:\.[\w-]+)*\.(?:com|net|org|gov|edu|info|io)(?:\.[a-z]{2})?\b)`)
 
-// seoAlanAdiTemizle metinde GEÇMEYEN alan adlarını içeren cümleleri atar.
-//
-// Kaynak metinde geçen bir alan adı korunur (haberin konusu olabilir).
-// Temizlik sonrası alan boş kalırsa alan boşaltılır: uydurma bir cümleyi
-// tutmaktansa alanı boş bırakıp uyarı vermek doğru.
 func seoAlanAdiTemizle(metin, kaynak string) (string, bool) {
 	if metin == "" {
 		return "", false
@@ -263,16 +210,6 @@ func seoAlanAdiTemizle(metin, kaynak string) (string, bool) {
 	return strings.Join(kalan, " "), degisti
 }
 
-// SeoAlanAdiKorumasi üretilen alanlardaki uydurma site adlarını temizler.
-//
-// Sahadan gelen gerçek vaka: gövdesinde "Cumhuriyet" geçmeyen bir spor
-// haberinin meta açıklaması "… Cumhuriyet.com.tr'da" diye bitiyordu.
-// Model kaynak yayının adını uydurmuştu; bu yanlış atıf yayına girmemeli.
-//
-// Temizlik SeoUret içinde satır içi yazıldığında testler yalnız
-// seoAlanAdiTemizle'yi doğruluyordu; uygulama silinse bile testler yeşil
-// kalıyordu (mutasyon denemesinde yakalandı). Bu yüzden tek saf fonksiyon:
-// hem üretim hem test aynı yolu kullanır.
 func SeoAlanAdiKorumasi(o SeoOneri, kaynak string) SeoOneri {
 	if temiz, degisti := seoAlanAdiTemizle(o.Baslik, kaynak); degisti {
 		o.Uyarilar = append(o.Uyarilar,
@@ -287,13 +224,6 @@ func SeoAlanAdiKorumasi(o SeoOneri, kaynak string) SeoOneri {
 	return o
 }
 
-// seoCumlelere metni cümlelere böler (sonlandırıcı cümlede kalır).
-//
-// Sonlandırıcı YALNIZ boşluk/bitiş ile takip ediliyorsa cümle bitirir.
-// Aksi hâlde alan adının içindeki nokta da bölme yapıyordu:
-// "Cumhuriyet.com.tr'da" → "Cumhuriyet." + " com." + " tr'da" (testte
-// yakalandı). Bu hem metni bozuyor hem alan adı korumasını etkisiz
-// kılıyordu.
 func seoCumlelere(s string) []string {
 	var out []string
 	var sb strings.Builder
@@ -351,11 +281,7 @@ func SeoUret(ctx context.Context, aiclient *ai.Client, c repo.Content) (SeoOneri
 			{Role: "system", Content: CommonSystemPrompt},
 			{Role: "user", Content: SeoInstruksiyon + "\n\n---\n" + kullanici.String()},
 		},
-		JSONMode: true,
-		// 400 token YETMİYOR: başlık + 155 karakterlik açıklama + 6 anahtar
-		// kelime JSON'u 465-500 token tutuyor ve yanıt ORTASINDAN kesiliyordu
-		// ("Unterminated string", canlı ölçümde 3 yanıttan 1'i). Kesilen
-		// yanıt ayrıştırılamıyor, içerik boş kalıyordu.
+		JSONMode:    true,
 		MaxTokens:   700,
 		Temperature: 0.2,
 	})
@@ -434,13 +360,6 @@ func seoGovde(detail []byte) string {
 	return strings.TrimSpace(blocksToText(detail))
 }
 
-// seoYazSQL SEO alanlarını yazan tek sorgudur.
-//
-// $1 id · $2 seo_title · $3 force · $4 seo_description
-//
-// force=false iken CASE yalnız BOŞ alanı doldurur; dolu alan kendi değerini
-// korur. Bu, arka plandaki işin editörün elle yazdığı metni sessizce
-// ezmesini engeller. RETURNING dolu alan sayısını verir (0 = değişiklik yok).
 const seoYazSQL = `
 	UPDATE contents SET
 		seo_title = CASE
@@ -456,13 +375,6 @@ const seoYazSQL = `
 		(CASE WHEN COALESCE(NULLIF(TRIM(seo_title),''),'') <> '' THEN 1 ELSE 0 END) +
 		(CASE WHEN COALESCE(NULLIF(TRIM(seo_description),''),'') <> '' THEN 1 ELSE 0 END)`
 
-// SeoYaz SEO alanlarını içeriğe yazar.
-//
-// force=false iken DOLU ALANLAR KORUNUR: editörün elle yazdığı SEO metni,
-// arka plandaki bir iş tarafından sessizce ezilmemeli. force=true yalnız
-// editörün açıkça "üzerine yaz" dediği yerde kullanılır.
-//
-// Dönen değer gerçekten yazılan alan sayısıdır (0 ise hiçbir şey değişmedi).
 func SeoYaz(ctx context.Context, pool *pgxpool.Pool, contentID int64, o SeoOneri, force bool) (int, error) {
 	if contentID <= 0 {
 		return 0, errors.New("geçersiz içerik")
@@ -479,11 +391,6 @@ func SeoYaz(ctx context.Context, pool *pgxpool.Pool, contentID int64, o SeoOneri
 	return n, nil
 }
 
-// SeoBosTaslaklar SEO alanları boş, kaynağı olan (otomatik çekilmiş)
-// taslakları döndürür. Bot akışı bu listeyi işler.
-//
-// Neden source_url: yalnız elle açılmış taslaklara dokunmuyoruz; editörün
-// kendi başlattığı içerikte SEO'yu kendisi yazmak isteyebilir.
 func SeoBosTaslaklar(ctx context.Context, pool *pgxpool.Pool, limit int) ([]repo.Content, error) {
 	if limit <= 0 {
 		limit = 5

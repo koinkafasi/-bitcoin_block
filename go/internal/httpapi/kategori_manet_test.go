@@ -11,9 +11,6 @@ import (
 	"theblock/site/internal/repo"
 )
 
-// TestKategoriManetSliderOpts kategori_liste bloğunun manşet slider'ı
-// ayarlarını (başlık arkası tasarımı, saydamlık, yükseklik, bulanıklık,
-// sayı çerçevesi ve gölge) slider modülüyle aynı anahtarlardan okur.
 func TestKategoriManetSliderOpts(t *testing.T) {
 	raw := []byte(`[{
 		"id":"k-liste","type":"kategori_liste","visible":true,

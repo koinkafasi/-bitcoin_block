@@ -32,12 +32,9 @@ type ThemeConfig struct {
 	DarkHeaderBg  string `json:"dark_header_bg"`
 	DarkFooterBg  string `json:"dark_footer_bg"`
 	Radius        int    `json:"radius"` // 0 = varsayılan
-	// RadiusSet, radius alanının açıkça kaydedildiğini gösterir. 0 geçerli
-	// bir değerdir (tamamen köşeli); boş bırakılırsa public.css varsayılanı
-	// (8px) kullanılır.
-	RadiusSet   bool   `json:"radius_set"`
-	Font        string `json:"font"`
-	HeadingFont string `json:"heading_font"`
+	RadiusSet     bool   `json:"radius_set"`
+	Font          string `json:"font"`
+	HeadingFont   string `json:"heading_font"`
 }
 
 var themeFontFamilies = map[string]string{

@@ -73,10 +73,6 @@ func TestEczaneTelefonDuzelt(t *testing.T) {
 	}
 }
 
-// TestEczaneRapidAPIGercek, gerçek API'ye karşı sözleşmeyi doğrular.
-// Varsayılan olarak ATLANIR: ağ gerektirir ve kota harcar (2 istek).
-//
-//	NOSYAPI_KEY=… go test ./internal/repo -run TestEczaneRapidAPIGercek -v
 func TestEczaneRapidAPIGercek(t *testing.T) {
 	anahtar := os.Getenv("NOSYAPI_KEY")
 	if anahtar == "" {

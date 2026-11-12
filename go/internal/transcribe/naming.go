@@ -2,9 +2,6 @@ package transcribe
 
 import "context"
 
-// ProviderNameOf sağlayıcının görünen adını döndürür. Dynamic sağlayıcıda
-// gerçek (yapılandırılmış) ad çözülür; iş kayıtlarına "dynamic" yazılmasını
-// önler.
 func ProviderNameOf(ctx context.Context, p Provider) string {
 	if p == nil {
 		return ""

@@ -9,25 +9,14 @@ import (
 	"theblock/site/internal/repo"
 )
 
-// ---- Sayfa şablonu (sütun düzeni) ----
-//
-// Sayfa Tasarımcısı'nda her sayfa (ana sayfa, yazı sayfası, kategori ve
-// kategori:<slug>) için sağ sütunun gösterilip gösterilmeyeceği, sağ sütun
-// genişliği ve tek sütun içerik genişliği ayrı ayrı saklanır. Ayarlar global
-// ölçü token'larından (olcu/ana) bağımsızdır; böylece aynı sitede ana sayfa
-// iki sütun, yazı sayfası tek sütun olabilir.
-
 const pageLayoutSection = "sayfa_duzen"
 
 // pageLayoutConfig settings tablosunda saklanan ham şablon ayarıdır.
 // Nil alan "varsayılanı kullan" anlamına gelir.
 type pageLayoutConfig struct {
-	Sidebar      *bool `json:"sidebar,omitempty"`
-	SidebarWidth *int  `json:"sidebarWidth,omitempty"`
-	ContentWidth *int  `json:"contentWidth,omitempty"`
-	// Kategori sayfası üst alanı (sayfaya özel): çerçeveli başlık, açıklama
-	// ve kırıntı görsel olarak gizlenebilir. Metin SEO/erişilebilirlik için
-	// DOM'da kalır (sr-only).
+	Sidebar        *bool `json:"sidebar,omitempty"`
+	SidebarWidth   *int  `json:"sidebarWidth,omitempty"`
+	ContentWidth   *int  `json:"contentWidth,omitempty"`
 	HideTitle      *bool `json:"hideTitle,omitempty"`
 	HideDesc       *bool `json:"hideDesc,omitempty"`
 	HideBreadcrumb *bool `json:"hideBreadcrumb,omitempty"`
@@ -127,11 +116,6 @@ func pageLayoutViewFrom(page string, cfg pageLayoutConfig, custom, usingGlobal b
 	return v
 }
 
-// mergePageLayout alan bazlı miras: yalnız override'da (kategoriye özel
-// kayıt) bulunan alanlar tabanın (genel kategori düzeni) yerine geçer;
-// olmayan alanlar tabandan gelir. Böylece genel düzende yapılan bir gizleme
-// tüm kategorilere yansır; kategori yalnız gerçekten değiştirdiği alanda
-// istisna olur.
 func mergePageLayout(base, over pageLayoutConfig) pageLayoutConfig {
 	m := base
 	if over.Sidebar != nil {
@@ -176,9 +160,6 @@ func (s *Server) pageLayoutFor(ctx context.Context, page string) *pageLayoutView
 	return pageLayoutViewFrom(page, cfg, custom, usingGlobal)
 }
 
-// handleBuilderPageLayoutGet sayfa şablonunun ham kaydını döndürür (yedekleme
-// ve arayüz için). Alan bazlı miras açıkça belirtilir: config yalnız bu
-// sayfada kayıtlı alanları içerir.
 func (s *Server) handleBuilderPageLayoutGet(w http.ResponseWriter, r *http.Request) {
 	page := builderPage(r)
 	cfg, custom := s.readPageLayout(r.Context(), page)
@@ -195,9 +176,6 @@ func (s *Server) handleBuilderPageLayoutGet(w http.ResponseWriter, r *http.Reque
 	})
 }
 
-// handleBuilderPageLayoutSave sayfa şablonu ayarını kaydeder. Gelen alanlar
-// mevcut kaydın üzerine yamalanır (alan bazlı miras korunur); böylece tek bir
-// ayarı değiştirmek diğer alanları genel düzenden kopardığı için sabitlemez.
 func (s *Server) handleBuilderPageLayoutSave(w http.ResponseWriter, r *http.Request) {
 	page := builderPage(r)
 	var req struct {

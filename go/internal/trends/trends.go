@@ -1,9 +1,3 @@
-// Package trends dış trend kaynaklarını (Google Trends / Google News / RSS)
-// normalize eder, skorlar ve kapsama analizine hazırlar.
-//
-// Tasarım ilkesi: dış servislerden gelen ham veri yalnızca bu pakette
-// yorumlanır; veritabanı ve HTTP katmanı bu saf tipleri kullanır. Böylece
-// parser ve skorlama davranışı fixture'larla test edilebilir.
 package trends
 
 import (
@@ -66,9 +60,6 @@ type Provider interface {
 	Fetch(ctx context.Context, src Source) (Result, error)
 }
 
-// NormalizeTerm Türkçe'ye duyarlı küçük harfe indirir, noktalama ve fazla
-// boşlukları temizler. "İ" → "i", "I" → "ı" eşlemesi Go'nun dil-bağımsız
-// strings.ToLower davranışından farklıdır; bu yüzden rune bazında yapılır.
 func NormalizeTerm(s string) string {
 	s = strings.TrimSpace(s)
 	var b strings.Builder

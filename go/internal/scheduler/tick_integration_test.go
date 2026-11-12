@@ -19,13 +19,6 @@ import (
 	"theblock/site/internal/db"
 )
 
-// Faz 208: `tick` gerçek Postgres'e karşı. Scheduler'ın statement'larının
-// büyük kısmı bu fonksiyonda; saf testlerle %45 hedefi tutmuyordu ve asıl
-// risk (yanlış kaydı yayına almak, canlı veriyi silmek) burada.
-//
-// Her test GEÇİCİ veritabanı oluşturur (tb_sch_<rastgele>), migration'ları
-// uygular, işini yapar ve veritabanını siler. Var olan veriye dokunmaz.
-
 func geciciPool(t *testing.T) *pgxpool.Pool {
 	t.Helper()
 	base := os.Getenv("TEST_DATABASE_URL")

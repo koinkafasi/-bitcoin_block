@@ -11,26 +11,6 @@ import (
 	"time"
 )
 
-// Nöbetçi eczane: gerçek kaynak (Faz 196).
-//
-// ÖLÇÜM (üretim, 2 Kasım 2026): `servis/eczane_kaynak` ayarı BOŞ olduğu için
-// 81 ilin tamamı DEMO listesiyle doluydu ("Merkez Eczanesi", "0 312 555 0023").
-// Sayfa bunu "demo (kaynak bekliyor)" rozetiyle dürüstçe bildiriyordu ama
-// okuyucuya yine de var olmayan eczane gösteriliyordu.
-//
-// KAYNAK ARAŞTIRMASI:
-//   - Kanews (WordPress teması) ticari bir API kullanıyor:
-//     kanews.codezenic.com/api/pharmacy/{il} — X-API-Key + X-Order-ID +
-//     X-License-Domain istiyor; anahtarsız yanıt 401 "API key gerekli".
-//     Lisans satın alınmadan kullanılamaz.
-//   - Kanews'in kendi kodunda belirttiği ASIL kaynak: eczaneler.org.
-//   - eczaneler.org'un /api/ yolu robots.txt'te YASAK; HTML sayfaları SERBEST.
-//     Bu yüzden veriyi izinli HTML sayfasından (79-536 KB) okuyoruz.
-//
-// Kaynak sayfa: https://eczaneler.org/{il-slug}-nobetci-eczaneleri
-// `cities.slug` sütunu bu desenle birebir uyuşuyor (ölçüldü: agri, sanliurfa,
-// kahramanmaras, afyonkarahisar, mersin … hepsi 200).
-
 // EczaneKaynakURL bir ilin nöbetçi eczane sayfasının adresidir.
 func EczaneKaynakURL(slug string) string {
 	return "https://eczaneler.org/" + slug + "-nobetci-eczaneleri"
@@ -55,15 +35,6 @@ var (
 	eczaneTarifRe = regexp.MustCompile(`mr-1">Tarif:</span><span class="line-clamp-2">([^<]{2,160})</span>`)
 )
 
-// eczaneCozHTML, eczaneler.org sayfasından eczane listesini çıkarır.
-//
-// Neden ayrıştırıcı (parser) bağımlılığı yok: sayfa Next.js çıktısı ama
-// kayıtlar sunucu tarafında basılıyor ve yalnız 3-4 sabit işaret var.
-// `golang.org/x/net/html` eklemek tüm bağımlılık ağacını büyütürdü.
-//
-// Kayıt sınırı TELEFON bağlantısıdır: her eczanede var, ad/adres gibi
-// koşullu değil. Kayıt penceresi telefon bağlantısından GERİYE bakılarak
-// alınır (ad → ilçe → mahalle → adres → tarif → telefon sırası).
 func eczaneCozHTML(il string, ham []byte) []Eczane {
 	s := string(ham)
 	telYerleri := eczaneTelRe.FindAllStringSubmatchIndex(s, -1)
@@ -117,16 +88,6 @@ func eczaneCozHTML(il string, ham []byte) []Eczane {
 	return eczaneTekrarsiz(out)
 }
 
-// eczaneTekrarsiz aynı eczanenin birden çok kez sayılmasını engeller.
-//
-// NEDEN (ölçüm, 2 Kasım 2026): eczaneler.org kartında TELEFON İKİ YERDE var
-// — künye satırında `tel:` bağlantısı ve alttaki "Ara" düğmesi. Kayıt
-// sınırını telefon bağlantısı aldığımız için her eczane iki kez çıkıyordu
-// (Ankara: 90 tel bağlantısı / 45 eczane → liste 88 satır). Sayfa bunu
-// olduğu gibi bastığı için kullanıcı her eczaneyi iki kez görüyordu.
-//
-// Anahtar ad + telefondur: aynı ilçede aynı adlı iki ayrı eczane (telefonları
-// farklı) korunur, aynı kaydın iki kartı tek satıra iner.
 func eczaneTekrarsiz(list []Eczane) []Eczane {
 	if len(list) < 2 {
 		return list
@@ -167,10 +128,6 @@ func turkceTelefon(onHaneli string) string {
 		onHaneli[6:8] + " " + onHaneli[8:10]
 }
 
-// eczaneEczanelerOrg bir ilin listesini eczaneler.org'dan çeker.
-//
-// Politika: izinli HTML sayfası (robots.txt yalnız /api/, /account/ ve
-// /unauthorized yollarını kapatıyor), açık User-Agent, tek istek, günde bir.
 func eczaneEczanelerOrg(ctx context.Context, slug string) ([]Eczane, error) {
 	raw, err := httpGetTarayici(ctx, EczaneKaynakURL(slug), eczaneHTTPTimeout)
 	if err != nil {
@@ -179,9 +136,6 @@ func eczaneEczanelerOrg(ctx context.Context, slug string) ([]Eczane, error) {
 	return eczaneCozHTML(slug, raw), nil
 }
 
-// tarayiciUA: bazı siteler Go'nun varsayılan User-Agent'ını engelliyor
-// (eczaneler.org /api/ yolunu 403 ile kapatıyor; HTML sayfası tarayıcı
-// başlıklarıyla 200 dönüyor).
 const tarayiciUA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
 	"(KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
 

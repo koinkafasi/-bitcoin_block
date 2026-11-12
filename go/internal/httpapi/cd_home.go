@@ -10,19 +10,7 @@ import (
 	"theblock/site/internal/webui/templkit"
 )
 
-// CoinDesk ana sayfası (bitcosar).
-//
-// Modül sırası docs/COINDESK-SPEC.md §6 ile BİREBİR; sapma yok.
-// Veri yoksa modül basılmaz, sıra korunur.
-//
-// Ayrı kod yolu bilinçli: mevcut `homeView` tasarımcı/blok motoruna bağlı.
-// CoinDesk düzeni SABİT sıra istiyor; blok motoruna sıkıştırmak o sırayı
-// veriye bağlardı. Eski düzen `/klasik` altında korunur.
-
 func (s *Server) handleCDHome(w http.ResponseWriter, r *http.Request) {
-	// WordPress kimlikli adres: /?p=<yazı kimliği> — kanonik adrese taşınır.
-	// `GET /{$}` kalıbı yolu "/" ile birebir eşlediği için istek buraya düşer;
-	// handlePublicSegment'e hiç uğramaz.
 	if wpID := wpKimlikSorgusu(r.URL.Query()); wpID > 0 {
 		s.eskiKimlikYonlendir(w, r, wpID)
 		return
@@ -36,7 +24,7 @@ func (s *Server) handleCDHome(w http.ResponseWriter, r *http.Request) {
 			Title: c.Title,
 			Spot:  c.Spot,
 			Href:  makaleURL(c),
-			Image: c.ImageURL,
+			Image: s.cdKapakGorsel(c),
 		}
 		if c.PublishedAt != nil {
 			st.Time = trGoreliZaman(*c.PublishedAt, simdi)
@@ -58,12 +46,6 @@ func (s *Server) handleCDHome(w http.ResponseWriter, r *http.Request) {
 		donus = append(donus, cevir(c))
 	}
 
-	// §8 manşet: 1 büyük + 8 görselli akış + 5 satır "Son Haberler".
-	//
-	// MANŞET GÖRSELLİ OLMALI: CoinDesk manşeti büyük görselli basar.
-	// Görselsiz haber manşete düşünce sayfanın üstü boş bir metin bloğu
-	// oluyordu (ölçüm: Fed bülteni manşette, görsel yok). Görselli haber
-	// yoksa ilk haber kullanılır — manşet yine dolar.
 	leadIdx := 0
 	for i := range donus {
 		if donus[i].Image != "" {
@@ -82,11 +64,13 @@ func (s *Server) handleCDHome(w http.ResponseWriter, r *http.Request) {
 		kullanildi[lead.Href] = true
 	}
 
-	// Orta kolon akışı: manşetten sonraki 8 GÖRSELLİ haber (ölçüldü:
-	// 152×86 küçük görsel + 20/26 başlık + 12/18 saat).
-	var akis []templkit.CDStory
+	var akis, gorselsiz []templkit.CDStory
 	for i, st := range donus {
-		if i == leadIdx || st.Image == "" || kullanildi[st.Href] {
+		if i == leadIdx || kullanildi[st.Href] {
+			continue
+		}
+		if st.Image == "" {
+			gorselsiz = append(gorselsiz, st)
 			continue
 		}
 		akis = append(akis, st)
@@ -94,6 +78,16 @@ func (s *Server) handleCDHome(w http.ResponseWriter, r *http.Request) {
 		if len(akis) == 8 {
 			break
 		}
+	}
+	for _, st := range gorselsiz {
+		if len(akis) >= 8 {
+			break
+		}
+		if kullanildi[st.Href] {
+			continue
+		}
+		akis = append(akis, st)
+		kullanildi[st.Href] = true
 	}
 
 	// §7A sol ray: CoinDesk'in "Son Haberler" modülü — 5 satır.
@@ -109,9 +103,6 @@ func (s *Server) handleCDHome(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// Sol rayın altındaki tek görselli manşet (CoinDesk canlı blog kartı
-	// yuvası; bizde canlı blog yok, aynı geometriyi görselli haberle
-	// dolduruyoruz).
 	var tekGorsel templkit.CDStory
 	for i, st := range donus {
 		if i == leadIdx || st.Image == "" || kullanildi[st.Href] {
@@ -168,11 +159,8 @@ func (s *Server) handleCDHome(w http.ResponseWriter, r *http.Request) {
 		Sections:  sections,
 		MostRead:  s.cdPopuler(r, 6),
 		Opinion:   s.cdUzmanlar(r, 4),
-		// hreflang: yalnız GERÇEK diller. Şu an içerik Türkçe; EN içerik
-		// üretildiğinde buraya eklenecek (çevirisi olmayan dili yazmak
-		// Google'da "aynı içerik" cezası riski).
-		Hreflang: map[string]string{"tr": s.kanonikKok(r) + "/"},
-		JSONLD:   string(orgJSONLD(s.siteName, s.kanonikKok(r), s.kanonikKok(r)+r.URL.Path)),
+		Hreflang:  map[string]string{"tr": s.kanonikKok(r) + "/"},
+		JSONLD:    string(orgJSONLD(s.siteName, s.kanonikKok(r), s.kanonikKok(r)+r.URL.Path)),
 		// "Explore more from CoinDesk" şeridi — gerçek veriyle.
 		Explore: s.cdExploreDoldur(r, sections),
 		// MODÜLER YERLEŞİM (9 Kasım 2026): sayfa tasarımcısının yazdığı
@@ -190,6 +178,9 @@ func (s *Server) handleCDHome(w http.ResponseWriter, r *http.Request) {
 
 	// Piyasa Nabzı: gerçek CryptoQuant verisi; anahtar yoksa boş kalır.
 	d.NabizFiyat, d.Nabiz = s.cdNabiz(r.Context())
+
+	// Analiz akışı (Piyasa Nabzı'nın üstü): son analiz yazıları.
+	d.Analiz, d.AnalizSayi = s.cdAnalizAkisi(r, 15)
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.Header().Set("Cache-Control", cacheControlPublic)
@@ -215,11 +206,6 @@ func (s *Server) cdPopuler(r *http.Request, adet int) []templkit.CDStory {
 	return out
 }
 
-// cdUzmanlar §20 "Görüş": avatarı olan uzman/editoryal profiller.
-//
-// NEDEN içerik değil PROFİL: CoinDesk "Opinion" modülünde yazar adı +
-// unvan + 48 px avatar basıyor; makale kartı değil. Profiller `users`
-// tablosunda (rol = Yazar); makale başlığı profilin öne çıkan yazısıdır.
 func (s *Server) cdUzmanlar(r *http.Request, adet int) []templkit.CDUzman {
 	items, err := repo.Uzmanlar(r.Context(), s.pool, adet)
 	if err != nil || len(items) == 0 {
@@ -249,7 +235,9 @@ func trGoreliZaman(t, simdi time.Time) string {
 		return strconv.Itoa(dk) + " dakika önce"
 	case dk < 60*24:
 		return strconv.Itoa(dk/60) + " saat önce"
-	default:
+	case dk < 60*24*30:
 		return strconv.Itoa(dk/(60*24)) + " gün önce"
+	default:
+		return repo.TarihTRUzun(t)
 	}
 }

@@ -5,12 +5,6 @@ import (
 	"testing"
 )
 
-// Kaynak gövdesi çekici — saf ayrıştırma testleri.
-//
-// Ağ çağrısı YOK: okuyucu proxy'sinin biçimi 6 Kasım 2026'da gözlemlenip
-// buraya sabitlendi. Biçim değişirse `govdeAyikla` boş paragraf döner,
-// bot RSS özetiyle devam eder (zenginleştirme opsiyonel).
-
 // okuyucuOrnegi r.jina.ai çıktısının kısaltılmış gerçek biçimidir.
 const okuyucuOrnegi = `Title: 18 years in, what has Bitcoin truly done?
 

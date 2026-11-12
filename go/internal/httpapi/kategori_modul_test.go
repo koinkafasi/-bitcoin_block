@@ -20,9 +20,6 @@ func TestCatItemSlice(t *testing.T) {
 	assert.Empty(t, catItemSlice(items, 0, 0))
 }
 
-// TestAssignCategoryModuleItemsExplicit siyaset dönüşümündeki açık
-// aralıkları doğrular: slider 0-9, sol 10-12, sağ 13-14, 4'lü 15-18,
-// akış 19'dan başlar.
 func TestAssignCategoryModuleItemsExplicit(t *testing.T) {
 	items := akisItems(25)
 	blocks := []homeBlock{
@@ -92,9 +89,6 @@ func TestAssignCategoryModuleItemsSkipsUsed(t *testing.T) {
 	assert.Equal(t, int64(1), blocks[1].CatItems[0].ID)
 }
 
-// TestAssignCategoryModuleItemsAutoAkisAfterExplicit açık aralıklı
-// modüllerden sonra gelen otomatik akışın kullanılmış haberleri atladığını
-// doğrular; aksi halde slider'daki haberler akışta tekrar basılırdı.
 func TestAssignCategoryModuleItemsAutoAkisAfterExplicit(t *testing.T) {
 	items := akisItems(20)
 	blocks := []homeBlock{
@@ -109,9 +103,6 @@ func TestAssignCategoryModuleItemsAutoAkisAfterExplicit(t *testing.T) {
 	assert.True(t, blocks[2].AkisStartSet)
 }
 
-// TestAssignCategoryModuleItemsAfterExplicitAkis açık aralıklı akışın
-// sonraki otomatik modüllere haber bırakmadığını doğrular; aksi halde aynı
-// haberler akışta ve ızgarada iki kez basılırdı.
 func TestAssignCategoryModuleItemsAfterExplicitAkis(t *testing.T) {
 	items := akisItems(20)
 	blocks := []homeBlock{
@@ -126,9 +117,6 @@ func TestAssignCategoryModuleItemsAfterExplicitAkis(t *testing.T) {
 	assert.Empty(t, blocks[2].CatItems, "akış aralığı sonraki otomatik modüle bırakılmamalı")
 }
 
-// TestGroupCatRows hero-* modüllerinin tek satırda birleştiğini, araya giren
-// normal blokların satırı böldüğünü ve orta slider ölçüsünün satıra
-// taşındığını doğrular.
 func TestGroupCatRows(t *testing.T) {
 	blocks := []homeBlock{
 		{Type: "manset2", Zone: "govde", Visible: true},
@@ -217,9 +205,6 @@ func TestGroupCatRowsIgnoresHiddenAndOtherZones(t *testing.T) {
 	assert.Len(t, rows[0].Blocks, 1)
 }
 
-// TestBuilderTypesForPage kategori modüllerinin yalnız kategori sayfası
-// paletinde göründüğünü, ana sayfa ve makale paletlerinde bulunmadığını
-// doğrular.
 func TestBuilderTypesForPage(t *testing.T) {
 	hasType := func(list []blockType, want string) bool {
 		for _, t := range list {
@@ -338,10 +323,6 @@ func TestCatGovdeRendersModules(t *testing.T) {
 	assert.Contains(t, out, "Enerji haberi 20")
 }
 
-// TestRenderBlockPointerCategoryModules tasarımcı önizlemesinin kullandığı
-// doğrudan render_block çağrısını doğrular. Şablonlar `$` üzerinden
-// withCatBlock'a *homeBlock beklediğinden blok adresi verilmelidir; değer
-// verilirse "wrong type for value" hatası oluşur.
 func TestRenderBlockPointerCategoryModules(t *testing.T) {
 	tmpl := parseTestTemplates(t)
 	items := akisItems(20)

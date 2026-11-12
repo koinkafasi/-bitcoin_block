@@ -7,19 +7,6 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-// ---- Pano 2.0 verisi ----
-//
-// Panelin ana ekranı (Faz 149) Pacely tarzı bir düzene geçti: dört renkli
-// KPI döşemesi, okunma akışı grafiği, kategori halkası, yayın ritmi
-// sütunları, en çok okunanlar ve sürüklenebilir yayın şeridi. Bu dosya o
-// ekranın ihtiyaç duyduğu TEK sorgu setini tutar; handler tarafında ham SQL
-// yok.
-
-// HitsPerDay son N günün toplam okunmasını (eskiden yeniye) döndürür.
-//
-// Kaynak hit_daily: counters_hit yalnız toplam tutuyor, trend çizilemiyordu.
-// Tablo 0096 ile geldi; öncesi için geriye dönük veri yok ve uydurulmadı —
-// grafikte ilk günler boş başlar, zamanla dolar.
 func HitsPerDay(ctx context.Context, pool *pgxpool.Pool, siteID int64, days int) []DayCount {
 	if days <= 0 {
 		days = 14
@@ -45,12 +32,6 @@ func HitsPerDay(ctx context.Context, pool *pgxpool.Pool, siteID int64, days int)
 	return out
 }
 
-// CategoryShare yayındaki içeriklerin kategori dağılımını (ilk N) verir.
-//
-// "diger" kategorisi tek başına kalabalık olduğu için ayrıca elenmez;
-// halka grafiği gerçek dağılımı göstermeli. Dilim sayısı sınırlanır, kalanı
-// "Diğer" diliminde toplanır (handler tarafında değil, burada: iki farklı
-// çağıran aynı kuralı uygulasın).
 type CatSlice struct {
 	Name  string
 	Count int
@@ -128,11 +109,6 @@ type PlanRow struct {
 	TypeKey  string
 }
 
-// PlannedUpcoming planlanmış + yakın geçmişte yayınlanmış içerikleri döndürür.
-//
-// Şerit "bugünün yayın akışı" gibi çalışır: saat ekseni üzerinde planlanmış
-// içerikler durur, sürüklenince yayın saati değişir. Bu yüzden hem
-// planlanmış hem de son 6 saatte yayınlanmış kayıtlar gelir.
 func PlannedUpcoming(ctx context.Context, pool *pgxpool.Pool, siteID int64, limit int) []PlanRow {
 	if limit <= 0 || limit > 60 {
 		limit = 24
@@ -162,9 +138,6 @@ func PlannedUpcoming(ctx context.Context, pool *pgxpool.Pool, siteID int64, limi
 	return out
 }
 
-// RescheduleContent yayın saatini değiştirir. Sürükle-bırak şeridin tek
-// yazma işlemi; site_id ile birlikte aranır ki panelden başka bir sitenin
-// içeriği taşınamasın.
 func RescheduleContent(ctx context.Context, pool *pgxpool.Pool, siteID, id int64, when time.Time) (int64, error) {
 	tag, err := pool.Exec(ctx, `
 		UPDATE contents SET published_at = $3, updated_at = now()

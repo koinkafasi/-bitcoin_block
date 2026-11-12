@@ -2,23 +2,6 @@ package httpapi
 
 import "theblock/site/internal/webui/templkit"
 
-// GEÇİCİ DIŞ MODÜL VERİSİ — CoinDesk ana sayfasından alınan GERÇEK
-// içerikler (6 Kasım 2026 ölçümü).
-//
-// NEDEN GEÇİCİ: sponsorlu içerik, basın bülteni ve metrikli araştırma kartı
-// üreten hat henüz yok (yayında 0). Kullanıcı isteği: "şimdilik CoinDesk
-// linkleriyle doldur, sonra güncellenecek". Bu yüzden her kart kaynağına
-// (coindesk.com) gider ve kaynak adı görünür; uydurma başlık/metrik
-// basılmıyor.
-//
-// VİDEO ARTIK BURADA DEĞİL (7 Kasım 2026): "Bugünün Videoları" ve
-// "Bugünün Klipleri" gerçek YouTube kanalından besleniyor
-// (cd_video.go + youtube_icerik tablosu). Sağ raydaki araştırma kartı ve
-// sol raydaki sponsorlu kart hâlâ geçici.
-//
-// KALDIRMA: ilgili içerik türü kendi arşivimizde yayına girdiğinde bu
-// dosya silinir; şablonlar aynı kalır, veri repo katmanından gelir.
-
 func cdGeciciDusunce() *templkit.CDDusunce {
 	return &templkit.CDDusunce{
 		Baslik:  "Regulated Cold Wallets with Instant Transaction Signing",
@@ -28,13 +11,6 @@ func cdGeciciDusunce() *templkit.CDDusunce {
 	}
 }
 
-// cdGeciciArastirma Öne Çıkan Araştırma kartları (GERÇEK CoinDesk verisi).
-//
-// NEDEN İKİ KART: CoinDesk bu modülü SLAYTLI gösteriyor — sağ altta iki ok
-// (önceki/sonraki) var, ölçüldü 7 Kasım 2026. Tek kartla oklar işlevsiz
-// kalırdı; kullanıcı iki modülün navigasyonunun AYNI konumda olmasını
-// istedi. Veriler CoinDesk'in kendi araştırma modülünden alındı (geçici,
-// kaynak bağlantısı görünür).
 func cdGeciciArastirma() []templkit.CDArastirma {
 	return []templkit.CDArastirma{
 		{

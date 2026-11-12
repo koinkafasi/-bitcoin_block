@@ -82,10 +82,6 @@ func TestBuilderZonesFor(t *testing.T) {
 			wantKeys: []string{"ust", "ana", "yan", "genis"},
 		},
 		{
-			// Kullanıcı isteği (28 Ekim 2026): yazı sayfasında EN ÜSTE şablon
-			// alanı — modül başlıktan önce, tam genişlikte eklensin.
-			// Faz 142: yazı gövdesi bölgesi ("ana") eklendi; gövde bloğu ve
-			// zengin metin buraya yerleşir.
 			name:     "article: ust/ana/yan/genis",
 			page:     "article",
 			wantKeys: []string{"ust", "ana", "yan", "genis"},
@@ -533,9 +529,6 @@ func TestBlockCategorySelectionStored(t *testing.T) {
 	assert.Equal(t, 6, blocks[0].Count)
 }
 
-// Servis bandı, ana sayfa dışındaki sayfalarda da (.D.Home yokken) basılmalı.
-// Regresyon: şablon `{{with .D.Home}}` ile başlıyordu; yazı/kategori/kurumsal
-// sayfa düzenlerine eklenen modül hiç görünmüyordu.
 func TestServisBandiHomeOlmadanRender(t *testing.T) {
 	tmpl := parseTestTemplates(t)
 	b := &homeBlock{

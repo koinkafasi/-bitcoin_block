@@ -7,28 +7,6 @@ import (
 	"unicode"
 )
 
-// Metin hijyeni — besleme (RSS) metninin veritabanına temiz girmesi.
-//
-// ÖLÇÜM (üretim, 2 Kasım 2026):
-//
-//	1094 içerikte gövdede "&nbsp;", 2405'inde sayısal varlık (&#39;),
-//	 318'inde &quot; — düz metin olarak saklanmış, okuyucuya "&nbsp;"
-//	    görünüyor.
-//	1088 içerikte "&nbsp;&nbsp;" ile YAPIŞTIRILMIŞ başlık listesi:
-//	    "…halkının zaferi olarak gördü&nbsp;&nbsp;Son DakikaBM'de ABD'nin
-//	     Küba ambargosunun kaldırılmasına destek geriledi&nbsp;&nbsp;Euronews.com…"
-//	    Bu agregatör beslemelerinin akış özeti; tek paragraf olarak kaydedilince
-//	    gövde anlamsız bir başlık yığınına dönüşüyor.
-//
-// Neden `stripHTML` yetmiyor: etiketleri siliyor ama VARLIKLARI (entity)
-// çözmüyor. `html.UnescapeString` tek başına da yetmiyor: çözülen `&nbsp;`
-// normal boşluğa dönüşüyor ama yapıştırma sınırı kayboluyor — bu yüzden
-// sınırı çözmeden ÖNCE işaretliyoruz.
-
-// varlikCoz HTML varlıklarını çözer ve ardışık boşlukları tekler.
-//
-// İki geçiş: bazı beslemeler çift kaçırılmış metin veriyor
-// ("&amp;nbsp;" → "&nbsp;"), tek geçişte bu kalıntı kalıyordu.
 func varlikCoz(s string) string {
 	if s == "" {
 		return s
@@ -65,12 +43,6 @@ func boslukToparla(s string) string {
 	return strings.Join(strings.Fields(s), " ")
 }
 
-// yapistirilmisBasliklar, metnin başlık listesi yapıştırması olup olmadığını
-// söyler ve ilk gerçek cümleyi döndürür.
-//
-// Ölçüt bilinçli olarak dar: yalnız "iki kırılmasız boşluk" dizisi VE
-// ardından büyük harfle başlayan yeni bir cümle VE bir site adı/ajans izi
-// varsa kesiyoruz. Tek başına nbsp geçen meşru metni kesmemek için.
 func yapistirilmisBasliklar(s string) (string, bool) {
 	// Çözmeden önce bakılır: &nbsp; varlığı da aynı işareti taşır.
 	isaret := strings.Index(s, "\u00a0\u00a0")
@@ -86,10 +58,6 @@ func yapistirilmisBasliklar(s string) (string, bool) {
 	if bas == "" {
 		return s, false
 	}
-	// Kaç yapıştırma sınırı var? Bu sınırın DIŞINDA en az bir sınır daha
-	// varsa metin kesin olarak başlık listesidir: ilk sınırda kesmek güvenli.
-	// (DİKKAT: kuyruğun başındaki çift boşluk da sayılırsa tek sınırlı meşru
-	// metin listeye benzer — bir kez bu hataya düşüldü.)
 	ekSinir := strings.Count(kuyruk, "  ") - 1
 	if ekSinir < 1 {
 		// Tek sınır + site adı: agregatör olabilir ama ilk parça kısaysa
@@ -112,13 +80,6 @@ func siteAdiVarMi(s string) bool {
 	return false
 }
 
-// cumleGuvenliKirp metni n KARAKTERE (rune) sığdırır, ama cümle/kelime
-// ortasında kesmez.
-//
-// ÖLÇÜM: CrawlFeed spot'u 240 rune'de körlemesine kesiyordu; yayındaki 94
-// içerikte spot cümle ortasında bitiyordu ("… his workplace", "… until now").
-// Artık: son cümle sonu (./!/?/…) noktasına kadar geri sarılır; uygun sınır
-// yoksa son boşluktan kesilip üç nokta eklenir.
 func cumleGuvenliKirp(s string, n int) string {
 	r := []rune(strings.TrimSpace(s))
 	if len(r) <= n {
@@ -144,14 +105,6 @@ func cumleGuvenliKirp(s string, n int) string {
 	return strings.TrimSpace(pencere) + "…"
 }
 
-// paragraflaraBol düz metni okunur paragraflara ayırır.
-//
-// ÖLÇÜM: yayındaki 986 içeriğin 982'si TEK paragraf. Nedeni `textToBlocksStmt`
-// yalnız "\n" üzerinde bölüyor; RSS özetlerinde satır sonu yok. Okuyucu için
-// gövde tek duvar hâline geliyordu.
-//
-// Kural: cümle sonlarından böl, her paragraf ~3 cümle veya ~320 karakter
-// olsun; çok kısa artıklar bir öncekine eklenir.
 func paragraflaraBol(s string) []string {
 	s = varlikCoz(s)
 	if s == "" {
@@ -228,14 +181,6 @@ func CumlelereBol(s string) []string {
 	return out
 }
 
-// IskeletGovde, gövdenin AI kaynak iskeleti olup olmadığını söyler.
-//
-// İskelet: "Kaynaklar:" başlığı ve/veya "• <kaynak>: <başlık>" madde listesi.
-// Bu bir ÇALIŞMA KÂĞIDI, haber metni değil; yayına çıkmamalı.
-//
-// ÖLÇÜM: küme→taslak yolu gövdeye 38 blokluk iskelet yazıyordu (1 taslakta
-// görüldü). AI sonucu editör tarafından uygulanana kadar içerik yayına hazır
-// değildir.
 func IskeletGovde(detail []byte) bool {
 	if len(detail) == 0 {
 		return false

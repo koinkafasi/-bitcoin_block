@@ -10,11 +10,6 @@ import (
 	"theblock/site/internal/repo"
 )
 
-// ---- Üye hesap merkezi (/hesabim) ----
-//
-// Tüm alt sayfalar aynı kabuğu (sol menü + içerik) kullanır. Oturum yoksa
-// /giris?redirect=hesabim adresine yönlendirilir.
-
 // hesapData /hesabim sayfalarının görünüm verisi.
 type hesapData struct {
 	Tab       string

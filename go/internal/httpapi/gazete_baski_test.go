@@ -14,12 +14,6 @@ import (
 	"theblock/site/internal/webui"
 )
 
-// Faz 1 koruyucu testleri — docs/SPEC-GAZETE-DUZENLEYICI.md
-//
-// Korunan davranış:
-//   K1 — baskı tasarımı tek kaynaktan gelir (gömülü statik dosya)
-//   K2 — sayfa ölçüsü ve tipografi tabanı CSS'te sabit değil, bildirilir
-
 // cssYorumsuz CSS'ten /* ... */ yorumlarını atar. Yorum metinleri kural
 // aramasını yanıltıyor (yorumda geçen "@page" gerçek kural sanılıyordu).
 func cssYorumsuz(css string) string {
@@ -48,9 +42,6 @@ func cssKurallar(t *testing.T, css string) map[string]string {
 	return out
 }
 
-// TestGazeteBaskiCSSParametrik baskı tasarımının sayfa ölçüsünü kendi içinde
-// sabitlemediğini doğrular. Ölçü sabitlenirse şablon başına sayfa boyu
-// seçilemez ve A4/A3 ayrımı çöker.
 func TestGazeteBaskiCSSParametrik(t *testing.T) {
 	ham := gazeteBaskiCSS()
 	if strings.Contains(ham, "okunamadi") {
@@ -105,10 +96,6 @@ func TestGazeteSayfaDegiskenleriKutu(t *testing.T) {
 	}
 }
 
-// TestGazeteA3TipografiKorunur A3 tabanının (9.5pt) baskı CSS'indeki
-// çarpanlarla eski sabit puntolara denk geldiğini doğrular. Bu test, sayfa
-// ölçüsünü parametrik yaparken A3 çıktısının görünümünü koruduğumuzun kanıtı:
-// biri çarpanı elle değiştirirse burada yakalanır.
 func TestGazeteA3TipografiKorunur(t *testing.T) {
 	const taban = 9.5 // A3 tipografi tabanı, gazeteBoyutlar["A3"].TipTab
 
@@ -159,9 +146,6 @@ func TestGazeteA3TipografiKorunur(t *testing.T) {
 	}
 }
 
-// TestGazeteBaskiCSSGomulu baskı tasarımının gerçekten gömülü statik dosyadan
-// geldiğini doğrular. Editör aynı dosyayı HTTP ile yükleyeceği için tek
-// render yolunun ön koşulu bu (SPEC K1).
 func TestGazeteBaskiCSSGomulu(t *testing.T) {
 	b, err := webui.FS.ReadFile("static/gazete-baski.css")
 	if err != nil {
@@ -172,9 +156,6 @@ func TestGazeteBaskiCSSGomulu(t *testing.T) {
 	}
 }
 
-// TestGazeteTekRenderYolu editörün kendi blok gövdesini üretmediğini
-// doğrular (SPEC K1). Editör yer tutucu çizerse "editörde sığdı ama baskıda
-// taştı" sınıfı geri gelir; bu yüzden gövde yalnız sunucudan gelmeli.
 func TestGazeteTekRenderYolu(t *testing.T) {
 	b, err := webui.FS.ReadFile("static/gazete-editor.js")
 	if err != nil {
@@ -208,9 +189,6 @@ func TestGazeteTekRenderYolu(t *testing.T) {
 	}
 }
 
-// TestGazeteBlokIcDisTutarli kapsayıcılı üretimin, iç gövdeyi olduğu gibi
-// sardığını doğrular. İkisi ayrışırsa baskı ile editör yine farklı HTML
-// gösterir.
 func TestGazeteBlokIcDisTutarli(t *testing.T) {
 	bloklar := []gazeteBlock{
 		{ID: "a", Tip: "baslik", X: 2, Y: 3, W: 96, H: 6, Baslik: "GÜNDEM"},
@@ -262,9 +240,6 @@ func TestGazeteBlokHTMLHaritasi(t *testing.T) {
 	}
 }
 
-// TestGazeteBaskiCSSPanelGuvenli paylaşılan baskı CSS'inin genel seçici
-// kullanmadığını doğrular. Dosya admin panelinde de yükleniyor; `body` veya
-// `*` kuralı panelin tamamını Georgia yapar.
 func TestGazeteBaskiCSSPanelGuvenli(t *testing.T) {
 	for sec := range cssKurallar(t, gazeteBaskiCSS()) {
 		for _, parca := range strings.Split(sec, ",") {
@@ -280,16 +255,7 @@ func TestGazeteBaskiCSSPanelGuvenli(t *testing.T) {
 	}
 }
 
-// TestGazeteBaskiMedyaMutlak baskıdaki görsel yollarının file:// altında
-// çözülebilir hale geldiğini doğrular.
-//
-// Baski dokümanı Chromium'a file:// ile veriliyor; "/media/x" orada dosya
-// sistemi köküne çözülüyordu ve depolama {STORAGE_DIR}/media altında olduğu
-// için üretilen gazete PDF'lerinde hiçbir görsel görünmüyordu.
 func TestGazeteBaskiMedyaMutlak(t *testing.T) {
-	// Gerçek bir dosya kur; dönüşen yol bu dosyayı göstermeli.
-	// Depolama kökü paket düzeyinde genel bir değer; diğer testleri
-	// etkilememesi için geri alınıyor.
 	onceki := platform.StorageDir()
 	t.Cleanup(func() { platform.SetStorageDir(onceki) })
 	kok := t.TempDir()

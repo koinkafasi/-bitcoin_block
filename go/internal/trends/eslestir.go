@@ -5,19 +5,6 @@ import (
 	"time"
 )
 
-// Belge merkezli eşleştirme.
-//
-// Coverage terim merkezlidir: "bu terimi hangi YAYINLAR işlemiş?" sorusunu
-// yanıtlar ve kapsama/boşluk analizinde kullanılır. Taslak puanlamasında
-// soru terstir: "bu TASLAK hangi terimle eşleşiyor, en güçlüsü hangisi?"
-//
-// Aynı ilkeller (Covered / MatchRatio) kullanılır; tek fark, terimlerin bir
-// kez ayrıştırılıp saklanmasıdır. 634 terim × 34.845 taslak için terim
-// tokenizasyonunu her karşılaştırmada tekrarlamak 22 milyon gereksiz
-// ayrıştırma demekti.
-//
-// TestHazirEslestirmeCoveredIleAyni iki yolun aynı sonucu verdiğini sabitler.
-
 // HazirTerim bir trend terimini önceden ayrıştırılmış hâlde tutar.
 type HazirTerim struct {
 	ID         int64
@@ -92,9 +79,6 @@ func (b HazirBelge) kapsiyor(t HazirTerim) (int, bool) {
 	return int(o * 100), true
 }
 
-// EnIyiEslesme belgeye en güçlü eşleşen terimi döndürür. Eşitlikte terimin
-// güncelliği belirler: aynı oranda eşleşen iki terimden daha yeni görüleni
-// seçilir, çünkü trend "şu an" demektir.
 func EnIyiEslesme(b HazirBelge, terimler []HazirTerim) (HazirTerim, int, bool) {
 	var en HazirTerim
 	enOran, bulundu := 0, false

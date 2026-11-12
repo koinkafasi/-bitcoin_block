@@ -2,23 +2,6 @@ package scoring
 
 import "fmt"
 
-// Tazelik ve öncelik SQL tarafında hesaplanır; neden:
-//
-// Tazelik zamanın fonksiyonudur. Sütuna yazılsaydı her saat bayatlardı ve
-// 34 bin satırı sürekli yeniden yazan bir iş gerekirdi — üstelik iki koşum
-// arasında sıralama yanlış kalırdı. created_at zaten tabloda olduğu için
-// tazeliği sorgu anında hesaplamak hem her zaman doğru hem bedava.
-//
-// Sütunda yalnız YAVAŞ DEĞİŞEN eksenler durur:
-//
-//	score_trend — trend eşleşmesi değiştiğinde yazılır
-//	score_guven — kaynağın feeds.trust değeri değiştiğinde yazılır
-//	ai_score    — tamlık; içerik düzenlendiğinde yazılır
-//
-// Ağırlıklar ve eğri Go sabitlerinden üretilir, elle yazılmaz: aksi hâlde
-// Go ile SQL zamanla ayrışır ve panelde görünen puan ile sıralama birbirini
-// tutmaz. TestSQLVeGoAyniOnceligiVerir bunu sabitler.
-
 // TazelikSQL, yaşa göre 0–100 arası tazeliği veren SQL ifadesini üretir.
 // alias, contents tablosunun sorgudaki takma adıdır (ör. "c").
 func TazelikSQL(alias string) string {

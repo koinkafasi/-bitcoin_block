@@ -8,22 +8,6 @@ import (
 	"strings"
 )
 
-// ---- panic kurtarma ----
-//
-// NEDEN GEREKLİ: Go'nun net/http sunucusu bir handler'da panic olursa
-// bağlantıyı sıfırlar (`readLoop`/`conn.serve` içindeki recover). Yani:
-//   - istemci 500 SAYFASI değil, KOPUK BAĞLANTI görür (curl'de "empty reply",
-//     tarayıcıda "bağlantı sıfırlandı"),
-//   - yanıt gövdesine hiçbir açıklama yazılmaz,
-//   - HTMX istemcisi yanıtı takas edemez; hata sessizce kaybolur,
-//   - cspWriter tamponu flush edilmediği için yazılmış kısım da kaybolur.
-//
-// withRecover bunu düzeltir: panic'i yakalar, günlüğe yığın iziyle yazar ve
-// istemciye düzgün bir 500 yanıtı döner (HTML istekte site kabuğu, API'de
-// JSON, HTMX'te kısa fragment).
-//
-// GÜVENLİK: yığın izi ve panic metni YALNIZ sunucu günlüğüne gider.
-// İstemciye sabit bir mesaj döner — iç yol, SQL, değişken değeri sızmaz.
 func (s *Server) withRecover(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		defer func() {
@@ -50,15 +34,6 @@ func (s *Server) withRecover(next http.Handler) http.Handler {
 	})
 }
 
-// panicYanit panic sonrası istemciye döndürülecek yanıtı seçer.
-//
-// ÖNEMLİ: handler yanıtı YAZMAYA BAŞLAMIŞ olabilir (kısmi gövde). O durumda
-// HTTP durum kodu artık değiştirilemez ve tam bir HTML belgesi eklemek
-// yanıtı bozar. Böyle bir durumda yalnız kısa bir işaret yazılır.
-//
-// Yazılıp yazılmadığını bilmek için ara katmanlar `YazildiMi()` sunar
-// (bkz. gzipResponseWriter, cspWriter). Sunmuyorsa "yazılmamış" varsayılır;
-// bu, cspWriter tamponladığı için normal akışta doğrudur.
 func (s *Server) panicYanit(w http.ResponseWriter, r *http.Request) {
 	if yazildi(w) {
 		s.logger.Warn("panic: yanıt zaten başlamıştı, durum kodu değiştirilemedi",
@@ -131,11 +106,6 @@ func istekJSON(r *http.Request, kabul string) bool {
 	return false
 }
 
-// hataSayfasiHTML sunucu hatası için sabit, bağımsız bir sayfa.
-//
-// NEDEN ŞABLON DEĞİL: panic anında şablon motoru veya tmplData hazır
-// olmayabilir; ikinci bir panic üretmek en kötü senaryodur. Bu yüzden
-// sayfa hiçbir dış veriye bağlı değil.
 const hataSayfasiHTML = `<!doctype html><html lang="tr"><head><meta charset="utf-8">` +
 	`<meta name="viewport" content="width=device-width,initial-scale=1">` +
 	`<meta name="robots" content="noindex">` +

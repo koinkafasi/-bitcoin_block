@@ -155,14 +155,6 @@ func CacheList(ctx context.Context, pool DB, kind string) ([]CacheRow, error) {
 	return out, rows.Err()
 }
 
-// PurgeServiceCache, `days` günden uzun süre güncellenmemiş önbellek
-// satırlarını siler ve silinen satır sayısını döndürür.
-//
-// Neden gerekli: anahtar şeması değiştiğinde eski satırlar (ör. `puan|ana`,
-// `fikstur|meta`) tabloda kalıyor ama hiçbir sorgu onları okumuyor — panelde
-// ve teşhis sorgularında yanlış "güncel" izlenimi veriyorlar. Önbellek olduğu
-// için silmek veri kaybı değildir: hâlâ okunan bir anahtar silinirse ilk
-// istekte yeniden doldurulur.
 func PurgeServiceCache(ctx context.Context, pool DB, days int) error {
 	if days <= 0 {
 		days = 7

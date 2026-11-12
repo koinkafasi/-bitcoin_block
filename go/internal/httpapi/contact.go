@@ -1,17 +1,5 @@
 package httpapi
 
-// İletişim bilgileri ve iletişim formu (Faz 145).
-//
-// Sorun: kurumsal sayfalarda e-posta adresleri ve alan adı metnin içine
-// gömülüydü. Alan adı değişince (ör. theblock.com.tr → yeni alan adı) tüm
-// sayfaları tek tek düzeltmek gerekiyordu.
-//
-// Çözüm: tek bir "İletişim" ayarı (alan adı + adresler + telefon/adres) ve
-// sayfa metinlerinde {eposta_info}, {domain} gibi yer tutucular. Yer tutucular
-// hem sayfa gövdesinde hem sayfa metinlerinde render sırasında doldurulur.
-// Böylece yönetimden alan adı değiştirildiğinde tüm sayfalar aynı anda
-// güncellenir; adresler istenirse tek tek de özelleştirilebilir.
-
 import (
 	"context"
 	"encoding/json"

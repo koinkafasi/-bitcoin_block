@@ -15,10 +15,6 @@ func testLogger(t *testing.T) *slog.Logger {
 	return slog.New(slog.NewTextHandler(io.Discard, nil))
 }
 
-// TestRecoverPanicYakalar handler panic'i istemciye 500 olarak dönmeli.
-//
-// Regresyon: bu ara katman yokken Go'nun net/http'si bağlantıyı SIFIRLIYOR,
-// istemci 500 sayfası değil kopuk bağlantı görüyordu.
 func TestRecoverPanicYakalar(t *testing.T) {
 	s := &Server{logger: testLogger(t)}
 	h := s.withRecover(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -122,9 +118,6 @@ func TestRecoverErrAbortHandlerYenidenFirlatilir(t *testing.T) {
 	h.ServeHTTP(httptest.NewRecorder(), httptest.NewRequest("GET", "/canli/icerik/1", nil))
 }
 
-// TestReadyzHazir SetReady(true) iken 200 dönmeli.
-// DB ping'i httptest'te gerçek havuz gerektirdiği için bu test yalnız
-// "draining" dalını ve durum makinesini kapsar.
 func TestReadyzDurumMakinesi(t *testing.T) {
 	SetReady(true)
 	if !Ready() {

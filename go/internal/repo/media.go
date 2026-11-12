@@ -255,11 +255,6 @@ func ListMediaCategories(ctx context.Context, pool *pgxpool.Pool, siteID int64) 
 	return out, rows.Err()
 }
 
-// MediaCategoryCounts chip sayaçları için kategori dağılımını döndürür.
-//
-// Fark: ListMediaCategories tüm kütüphaneyi sayar; burada aktif arama ve
-// tarih filtresi uygulanır, KATEGORİ filtresi uygulanmaz. Böylece chip'te
-// yazan sayı, chip'e tıklanınca gerçekten gelecek sonuç sayısıdır.
 func MediaCategoryCounts(ctx context.Context, pool *pgxpool.Pool, siteID int64, f MediaFilter) ([]MediaFacet, error) {
 	// Kategori filtresi kaldırılır; aksi hâlde yalnız seçili kategori sayılırdı.
 	f.Category = ""

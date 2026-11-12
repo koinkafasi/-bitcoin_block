@@ -191,16 +191,6 @@ func (s *Server) renderIceriklerPage(w http.ResponseWriter, r *http.Request, d *
 	s.render(w, r, "admin_bilesenler", d)
 }
 
-// dilEtiketleri liste satırının dil etiketlerini kurar (Faz 192).
-//
-// Kural:
-//   - Satırın kendi dili her zaman ilk sırada ve tıklanamaz ("bu satır").
-//   - Var olan çeviriler → düz bağlantı (o dilin editörünü açar).
-//   - Olmayanlar → AI ile çevir (Faz 190 kuyruğu), ama 24 dilin tamamı
-//     basılmaz: satır şişmesin diye en çok 4 etiket.
-//
-// Neden kök kimliği: çeviri isteği köke yazılır; çeviri kaydından istemek
-// zinciri uzatırdı.
 func (s *Server) dilEtiketleri(c repo.Content, surumler []repo.DilSurum) []templkit.IcerikDil {
 	kok := strconv.FormatInt(c.TranslationRootID(), 10)
 	out := []templkit.IcerikDil{{

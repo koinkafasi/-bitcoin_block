@@ -71,9 +71,6 @@ func (s *Server) handleLoginPost(w http.ResponseWriter, r *http.Request) {
 	}
 	http.SetCookie(w, cookie)
 
-	// sameSitePath yalnız site-içi yolları geçirir: "//evil.com" ve
-	// "/\\evil.com" gibi tarayıcının protokol-göreli saydığı değerler
-	// reddedilir (açık yönlendirme).
 	next := sameSitePath(r.URL.Query().Get("sonra"))
 	if next == "" {
 		next = "/admin"
@@ -81,24 +78,6 @@ func (s *Server) handleLoginPost(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, next, http.StatusFound)
 }
 
-// handleLogout oturumu sonlandırır.
-//
-// İKİ HATA (ölçüldü, 4 Kasım 2026 — kullanıcı bildirimi: "/admin/cikis
-// çalışmıyor ve çıkıştan sonra yeniden çıkış gerekiyor"):
-//
-//  1. Paneldeki "Çıkış" bağlantısı <a href="/admin/cikis"> ile GET
-//     gönderiyordu, rota ise yalnız POST'a kayıtlıydı. GET 404 dönüyor,
-//     oturum kapanmıyordu; kullanıcı düğmeye tekrar basıyordu.
-//
-//  2. Yalnız `tb_session` siliniyordu. Google/Stripe girişi ayrıca imzalı
-//     `tb_uye` çerezi yazıyor (stripe_handlers.go: memberCookieName).
-//     Panelden çıkan yönetici siteye gittiğinde hâlâ "üye" görünüyor ve
-//     ikinci kez çıkış yapmak zorunda kalıyordu. `handleUyeCikis` iki
-//     çerezi de siliyordu; panel çıkışı silmiyordu — asimetri buydu.
-//
-// GET ile çıkış YALNIZ aynı kaynaktan gelen gezinmede kabul edilir:
-// adres çubuğuna yazmak/yer imi çalışır, ama başka bir sitedeki
-// <img>/bağlantı ziyaretçiyi zorla çıkaramaz (forced-logout CSRF).
 func (s *Server) handleLogout(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodGet && !sameOriginRequest(r) {
 		s.logger.Warn("cikis: çapraz kaynak GET reddedildi",
@@ -122,11 +101,6 @@ func (s *Server) handleLogout(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/admin/giris", http.StatusFound)
 }
 
-// isHTTPS taban adresin HTTPS olup olmadığını söyler.
-//
-// Şema karşılaştırması büyük/küçük harf duyarsızdır: URI şemaları
-// tanım gereği duyarsızdır ve `HTTPS://…` yazan bir yapılandırma çerezleri
-// sessizce Secure'suz bırakırdı (Faz 208).
 func isHTTPS(baseURL string) bool {
 	return len(baseURL) >= 8 && strings.EqualFold(baseURL[:8], "https://")
 }

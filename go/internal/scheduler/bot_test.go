@@ -5,10 +5,6 @@ import (
 	"time"
 )
 
-// E-10'un ilk adımı: arka plan işlerinde test tabanı yoktu (1.224 satır,
-// 0 test). Bu dosya bot poller'ının en riskli kararını — ölü feed'e ne kadar
-// ara verileceğini — saf fonksiyon olarak korur.
-
 func TestBackoffDelayIlkHatadaEnAzOnBesDakika(t *testing.T) {
 	// Panelde 5 dakika ayarlıysa bile ölü feed 5 dakikada bir denenmez.
 	if got := backoffDelay(5*time.Minute, 1); got != 15*time.Minute {

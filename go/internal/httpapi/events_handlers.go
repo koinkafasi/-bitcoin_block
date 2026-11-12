@@ -151,9 +151,6 @@ func (s *Server) handleEventsPublic(w http.ResponseWriter, r *http.Request) {
 	site := s.siteByDomain(ctx, r.Host)
 	etkinlikler, _ := repo.UpcomingEvents(ctx, s.pool, site.ID, 90, 60)
 
-	// YENİ TASARIM (9 Kasım 2026): sayfa theblock'un `etkinlikler`
-	// şablonundan (site-header/site-footer) geliyordu; alt bilgideki
-	// "Etkinlikler" bağlantısı kullanıcıyı eski tasarıma düşürüyordu.
 	rows := make([]templkit.CDEtkinlik, 0, len(etkinlikler))
 	for _, e := range etkinlikler {
 		row := templkit.CDEtkinlik{

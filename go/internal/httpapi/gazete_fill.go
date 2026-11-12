@@ -20,16 +20,6 @@ import (
 	"theblock/site/internal/webui"
 )
 
-// ---- Gazete otomatik doldurma & baskı üretimi (Faz 3/4) ----
-//
-// Sayfa blokları JSON ile saklanır:
-//
-//	{id, tip, x, y, w, h, baslik, stil:{...}, kaynak:{tip, id, limit, icerikler},
-//	 metin, gorsel, icerik:{haberler:[...]}}
-//
-// x/y/w/h sayfa yüzdesi (%); otomatik doldurma kaynakları çözer ve "icerik"i
-// doldurur. Baskı (PDF) ve flip görüntüleyici aynı blok JSON'undan render eder.
-
 // gazeteArticle bloklara yerleşen haber özeti.
 type gazeteArticle struct {
 	ID       int64  `json:"id"`
@@ -314,24 +304,12 @@ func (s *Server) gazeteAutoFill(ctx context.Context, siteID, issueID int64) erro
 // gazeteBlockHTML blogu konumlandirilmis kapsayiciyla uretir (baski yolu).
 func gazeteBlockHTML(b gazeteBlock) string {
 	style := fmt.Sprintf("left:%.2f%%;top:%.2f%%;width:%.2f%%;height:%.2f%%;", b.X, b.Y, b.W, b.H)
-	// data-* nitelikleri dogrulama olcumu icin: rapor hangi blogun tastigini
-	// soyleyebilmeli. Baskida gorunmezler.
-	// Sarmalayici sinifi "gb-t-<tip>"; ic govde siniflariyla (.gb-metin,
-	// .gb-liste ...) CARPISMAMALI. Carpisinca icerik kurallari konumlanmis
-	// sarmalayiciya da uygulaniyordu: .gb-metin'in column-count'u sabit
-	// yukseklikli sarmalayiciyi cok sutunlu kaba cevirip metni alt satir
-	// yerine YANA akitiyor, overflow:hidden da kirpiyordu. Uzun metin
-	// bloklari baskida sessizce kayboluyordu.
-	// Stil jetonlari beyaz listeden gecer; serbest CSS asla enjekte edilmez.
 	return `<div class="gb gb-t-` + b.Tip + gazeteStilSinif(b.Stil) +
 		`" data-id="` + html.EscapeString(b.ID) +
 		`" data-tip="` + html.EscapeString(b.Tip) + `" style="` + style +
 		gazeteStilDeger(b.Stil) + `">` + gazeteBlockInnerHTML(b) + `</div>`
 }
 
-// gazeteBlockInnerHTML blogun yalniz ic govdesini uretir.
-// Editor kendi kapsayicisini kurup tutamak eklediği için ici ayrica gerekiyor;
-// boylece editor ile baski ayni govdeyi gosterir (SPEC K1 - tek render yolu).
 func gazeteBlockInnerHTML(b gazeteBlock) string {
 	var inner string
 	switch b.Tip {
@@ -403,9 +381,6 @@ func mediaAbs(p string) string {
 	return "/" + p
 }
 
-// firstLine metni tek satira indirip en fazla max KARAKTERE kisaltir.
-// Bayt bazli kesme Turkce metinde cok baytli bir harfi ortadan bolup
-// baskiya gecersiz UTF-8 yaziyordu; bu yuzden rune bazli sayilir.
 func firstLine(s string, max int) string {
 	s = strings.TrimSpace(strings.ReplaceAll(s, "\n", " "))
 	r := []rune(s)
@@ -415,11 +390,6 @@ func firstLine(s string, max int) string {
 	return s
 }
 
-// gazeteBloklariSirala bloklari boyama sirasina gore dizer.
-//
-// Katman paneli ile tuvalin ayni sirayi gostermesi sart: once z, esitlikte
-// dizideki yer. Eski kayitlarda z yok (hepsi 0), o durumda dizi sirasi
-// korunur, yani gorunum degismez.
 func gazeteBloklariSirala(bloklar []gazeteBlock) []gazeteBlock {
 	out := make([]gazeteBlock, len(bloklar))
 	copy(out, bloklar)
@@ -473,11 +443,6 @@ func (s *Server) gazetePrintHTMLOpt(ctx context.Context, siteID int64, iss repo.
 		"</style></head><body>" + body.String() + olcumBetigi(olcum) + "</body></html>", nil
 }
 
-// gazeteSayfaBoyut baskı sayfası ölçüsü ve tipografi tabanı.
-// Tipografi tabanı türetilmez, bildirilir (SPEC-GAZETE-DUZENLEYICI.md K2):
-// A3 ve A4 gazeteler birbirinin ölçekli kopyası değildir; oransal küçültme
-// A4'te okunamayan 6-7pt gövde üretir. Taban 9.5pt iken gazete-baski.css
-// çarpanları eski sabit puntolara birebir denk gelir, yani A3 çıktısı bozulmaz.
 type gazeteSayfaBoyut struct {
 	Ad     string // "A4", "A3"
 	W      string // sayfa genişliği, CSS uzunluğu
@@ -506,10 +471,6 @@ var gazeteBaskiCSSBir struct {
 	css string
 }
 
-// gazeteBaskiCSS baskı tasarımını gömülü statik dosyadan okur.
-// Chromium baskıyı file:// üzerinden açtığı için /static/... çözümlenemiyor;
-// bu yüzden aynı dosya satır içi gömülür. Editör ise onu HTTP ile yükler.
-// Tek render yolu (SPEC K1): editörde görünen ile basılan aynı CSS'ten gelir.
 func gazeteBaskiCSS() string {
 	gazeteBaskiCSSBir.bir.Do(func() {
 		b, err := webui.FS.ReadFile("static/gazete-baski.css")
@@ -522,17 +483,10 @@ func gazeteBaskiCSS() string {
 	return gazeteBaskiCSSBir.css
 }
 
-// gazeteSayfaDegiskenleri sayfa kutusunu ve tipografi tabanını bildirir.
-// @page içinde custom property güvenilir çalışmadığı için ölçü oraya
-// doğrudan yazılır; geri kalan tasarım gazete-baski.css'te.
 func gazeteSayfaDegiskenleri(b gazeteSayfaBoyut, tipOlcek float64) string {
 	return gazeteSayfaDegiskenleriTam(b, tipOlcek, "")
 }
 
-// gazeteSayfaDegiskenleriTam sayfa kutusunu, tipografi tabanini ve yazi
-// tipini bildirir. Yazi tipi sunucuda kurulu olanlar arasindan secilir
-// (bkz. gazete_yazitipi.go); eskiden Georgia isteniyor ama kurulu olmadigi
-// icin sessizce DejaVu Serif'e dusuyordu.
 func gazeteSayfaDegiskenleriTam(b gazeteSayfaBoyut, tipOlcek float64, yaziTipi string) string {
 	if tipOlcek <= 0 {
 		tipOlcek = 1
@@ -547,15 +501,6 @@ func gazeteSayfaDegiskenleriTam(b gazeteSayfaBoyut, tipOlcek float64, yaziTipi s
 		b.W, b.H, b.W, b.H, b.Kenar, b.TipTab, tipOlcek, gazeteYaziTipiCSS(yaziTipi))
 }
 
-// gazeteBaskiMedyaMutlak baski HTML'indeki /media/... yollarini file:// mutlak
-// yoluna cevirir.
-//
-// Baski dokumani Chromium'a file:// uzerinden veriliyor; orada "/media/x"
-// dosya sistemi kokune (file:///media/x) cozuluyordu ve depolama
-// {STORAGE_DIR}/media altinda oldugu icin hicbir gorsel yuklenmiyordu --
-// yani uretilen gazete PDF'leri gorselsiz cikiyordu. Yalniz baski yolunda
-// uygulanir; editor ayni HTML'i HTTP uzerinden aldigi icin orada /media/...
-// zaten dogru cozuluyor.
 func gazeteBaskiMedyaMutlak(doc string) string {
 	kok, err := filepath.Abs(platform.StorageDir())
 	if err != nil {
@@ -565,9 +510,6 @@ func gazeteBaskiMedyaMutlak(doc string) string {
 	return strings.ReplaceAll(doc, `src="/media/`, `src="`+onek)
 }
 
-// gazeteSayiBelgesi sayinin sablon belgesini cozer. Sablon yoksa ya da
-// cozulemezse varsayilan duzen dondurulur; sayi uretimi bir sablon
-// bozuklugu yuzunden durmamali.
 func (s *Server) gazeteSayiBelgesi(ctx context.Context, iss repo.GazeteIssue) gazeteSablonDoc {
 	vars := gazeteSablonDoc{
 		Surum:    1,
@@ -622,10 +564,6 @@ type gazeteTasma struct {
 	Oneri  string  `json:"oneri"`
 }
 
-// gazeteOlcumJS tarayicida calisip tasan bloklari rapor eden betik.
-// Sunucu tarafinda olculemez: tasma, yazi tipi ve satir kirilmasi gercekten
-// dizildikten sonra belli olur. Bu yuzden baskiyi uretecek olan AYNI
-// Chromium'da olculur -- "editorde sigdi ama PDF'te tasti" ancak boyle kapanir.
 const gazeteOlcumJS = `<script>
 (function(){
   function rapor(){
@@ -748,9 +686,6 @@ func gazeteTasmaAyikla(dom string) ([]gazeteTasma, error) {
 // findChrome baskı motoru için kullanılacak Chromium ikilisini arar.
 func findChrome() string {
 	if v := os.Getenv("GAZETE_CHROME"); v != "" {
-		// #nosec G703 -- Yol, sunucu yöneticisinin ayarladığı ortam
-		// değişkeninden gelir; HTTP girdisi değil. Yalnız var mı diye
-		// bakılır, içeriği okunmaz.
 		if _, err := os.Stat(v); err == nil {
 			return v
 		}
@@ -803,9 +738,6 @@ func (s *Server) gazeteGeneratePDF(ctx context.Context, siteID, issueID int64) (
 	defer func() { _ = os.RemoveAll(tmpDir) }()
 	htmlPath := filepath.Join(tmpDir, "baski.html")
 	pdfPath := filepath.Join(tmpDir, "gazete.pdf")
-	// Gorseller file:// altinda cozulebilsin diye mutlak yola cevrilir.
-	// #nosec G703 -- Yol, os.MkdirTemp'in geçici dizini + SABİT dosya adı
-	// ("baski.html"). Dış girdi yola girmiyor.
 	if err := os.WriteFile(htmlPath, []byte(gazeteBaskiMedyaMutlak(htmlDoc)), 0o644); err != nil {
 		return "", err
 	}
@@ -872,9 +804,6 @@ func (s *Server) handleGazetePDF(w http.ResponseWriter, r *http.Request) {
 	}
 	id := parseID(r.PathValue("id"))
 	sid := s.curSiteID(r)
-	// Tasma gecidi (SPEC K3): tasan blok varsa PDF sessizce uretilmez.
-	// Kullanici yine de uretmek isterse zorla=1 ile gecer -- karar onun,
-	// ama bilerek verilsin.
 	if r.FormValue("zorla") != "1" {
 		if tasmalar, derr := s.gazeteDogrula(r.Context(), sid, id); derr != nil {
 			// Olcum yapilamadiysa uretimi engelleme; sebebi gunluge yaz.

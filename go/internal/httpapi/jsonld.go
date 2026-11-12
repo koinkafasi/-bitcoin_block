@@ -24,10 +24,6 @@ func (s *Server) orgJSONLD() template.JS {
 	return template.JS(b)
 }
 
-// newsSitemap taşındı: cd_sitemaps.go (CoinDesk biçimi: lastmod +
-// image:image + CDATA başlık). Burada bırakılan kopya derleme hatası
-// veriyordu.
-
 // sitemapLangRefs çeviri köklerini gruplar (hreflang üretimi için).
 func sitemapLangRefs(refs []repo.LangRef) map[int64][]repo.LangRef {
 	out := map[int64][]repo.LangRef{}

@@ -19,11 +19,6 @@ func Config(ctx context.Context, pool *pgxpool.Pool) platform.SMTPConfig {
 	return ParseConfig(gs)
 }
 
-// ParseConfig ayar haritasından SMTP yapılandırması üretir.
-//
-// `Config`den ayrıldı: ayarların çözümlenmesi (JSON dizge / düz metin,
-// bozuk port, eksik alan) veritabanı olmadan test edilebilsin. Faz 208
-// öncesinde bu mantık `Config` içinde gömülüydü ve paketin kapsamı %0'dı.
 func ParseConfig(gs map[string][]byte) platform.SMTPConfig {
 	str := func(k string) string {
 		b, ok := gs[k]
@@ -66,11 +61,6 @@ func Send(ctx context.Context, pool *pgxpool.Pool, to, subject, html string) err
 	return SendConfig(Config(ctx, pool), to, subject, html)
 }
 
-// SendConfig verilen yapılandırmayla gönderir.
-//
-// SMTP yapılandırılmamışsa ya da alıcı boşsa **nil** döner: çağıranlar
-// (scheduler, bülten) e-posta kanalı olmadan da akışı sürdürmeli. Gerçek
-// gönderim hatası ise döner — sessizce yutulmaz.
 func SendConfig(cfg platform.SMTPConfig, to, subject, html string) error {
 	if !cfg.Configured() || strings.TrimSpace(to) == "" {
 		return nil

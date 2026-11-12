@@ -10,17 +10,6 @@ import (
 	"theblock/site/internal/repo"
 )
 
-// ---- Kategori Panelleri (haberpi tarzı alt bölümler) yönetimi ----
-//
-// Ana sayfadaki "Güncel / Siyaset / Ekonomi ..." panelleri artık her biri
-// ayrı bir "kategori_panel" modülüdür. Modül ayarlarında kategori, vitrin
-// düzeni (iki büyük | mozaik | büyük+liste …), renk ve haber sayısı bulunur;
-// sıralama/görünürlük diğer modüller gibi Sayfa Tasarımcısı'ndan yönetilir.
-//
-// Eski tek bloklu "kategori_bloklari" düzeni geriye dönük uyumluluk için
-// hâlâ render edilir. Tasarımcı açıldığında bu blok, kayıtlı panel ayarına
-// göre tek tek "kategori_panel" bloklarına genişletilir (expandCategoryPanelBlocks).
-
 const (
 	panelsSection = "kategori_panelleri"
 	panelsKey     = "ana"
@@ -243,10 +232,6 @@ func categoryBySlug(cats []repo.Category, slug string) (repo.Category, bool) {
 	return repo.Category{}, false
 }
 
-// catBlockFromItems tek kategori panelini haber listesinden üretir.
-// Kapak görseli olan ilk haber büyük manşet olur; kalanlardan en fazla adet
-// tanesi ızgaraya/listeye eklenir. Eski homeCatBlocks ve yeni
-// kategori_panel modülü aynı üretim yolunu kullanır.
 func catBlockFromItems(name, slug string, items []repo.Content, duzen, tone string, adet int) (catBlock, bool) {
 	if len(items) < 3 {
 		return catBlock{}, false
@@ -280,11 +265,6 @@ func catBlockFromItems(name, slug string, items []repo.Content, duzen, tone stri
 	return b, true
 }
 
-// expandCategoryPanelBlocks eski tek bloklu "kategori_bloklari" düzenini,
-// kayıtlı panel ayarına göre tek tek "kategori_panel" bloklarına genişletir.
-// Tasarımcı bu sayede eski düzeni de parçalanmış modüller olarak gösterir;
-// kullanıcı kaydettiğinde yeni bloklar kalıcı olur. Yeni blok zaten varsa
-// (geçiş tamamlanmışsa) düzen olduğu gibi bırakılır.
 func expandCategoryPanelBlocks(raw []byte, v *panelsView) []byte {
 	if len(raw) == 0 || v == nil {
 		return raw

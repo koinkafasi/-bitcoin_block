@@ -10,12 +10,6 @@ import (
 	"theblock/site/internal/repo"
 )
 
-// MenuRow tek menü satırı.
-//
-//	Slug  -> kategori slug'ı (boşsa özel link öğesidir, URL kullanılır)
-//	URL   -> özel link hedefi (yalnızca Slug boşken)
-//	Label -> menüde GÖRÜNEN isim (boşsa Slug'un kategori adı kullanılır)
-//	Sub   -> true: header "Diğer" alt menüsünde; false: ana menüde
 type MenuRow struct {
 	Slug  string `json:"slug"`
 	URL   string `json:"url,omitempty"`
@@ -310,11 +304,6 @@ func (s *Server) handleMenuReset(w http.ResponseWriter, r *http.Request) {
 	s.writeJSON(w, http.StatusOK, map[string]any{"ok": true})
 }
 
-// publicMenuLocale menüyü verilen dilde adlarla döndürür (Faz 189).
-//
-// Kategoriler tablosunda dil kolonu yok; ad çevirisi `translations`
-// tablosunda `category.<slug>` anahtarıyla tutulur. Çeviri yoksa Türkçe ad
-// korunur — böylece eksik çeviri menüyü bozmaz, yalnız o satır Türkçe kalır.
 func (s *Server) publicMenuLocale(ctx context.Context, locale string) []MenuRow {
 	rows := s.publicMenu(ctx)
 	if locale == "" || locale == "tr" || s.i18n == nil {
@@ -331,10 +320,6 @@ func (s *Server) publicMenuLocale(ctx context.Context, locale string) []MenuRow 
 		}
 		return v
 	}
-	// Slug boş olan satırlar ELLE eklenmiş menü kayıtlarıdır (URL taşır).
-	// Bunlarda slug'ı adresten türetiriz: /kategori/teknoloji → teknoloji.
-	// Aksi hâlde elle eklenmiş "Donanım" gibi satırlar İngilizce sayfada
-	// Türkçe kalıyordu (ölçüldü).
 	slugTuret := func(r MenuRow) string {
 		if r.Slug != "" {
 			return r.Slug
@@ -352,9 +337,6 @@ func (s *Server) publicMenuLocale(ctx context.Context, locale string) []MenuRow 
 	for i := range rows {
 		slug := slugTuret(rows[i])
 		rows[i].Name = cevir(slug, rows[i].Name)
-		// Şablon `Label`'ı `Name`'den ÖNCE tercih ediyor (menü ayarında elle
-		// yazılmış etiket). Yalnız Name'i çevirmek yetmiyordu: ayarda
-		// "Donanım" etiketi varsa İngilizce sayfada o görünüyordu (ölçüldü).
 		if rows[i].Label != "" {
 			rows[i].Label = cevir(slug, rows[i].Label)
 		}
@@ -369,10 +351,6 @@ func (s *Server) publicMenuLocale(ctx context.Context, locale string) []MenuRow 
 	return rows
 }
 
-// navCategoriesLang gezinme kategorilerini verilen dilde adlarla döndürür.
-//
-// Ad çevirisi `translations` tablosunda `category.<slug>` anahtarındadır;
-// yoksa Türkçe ad korunur.
 func (s *Server) navCategoriesLang(ctx context.Context, locale string) []repo.Category {
 	cats := s.navCategories(ctx)
 	if locale == "" || locale == "tr" || s.i18n == nil {

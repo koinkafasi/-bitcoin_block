@@ -2,12 +2,6 @@ package repo
 
 import "testing"
 
-// Faz 204 — gövde çözümleme iki biçimde de çalışmalı.
-//
-// ÖLÇÜM: yayındaki 986 içeriğin 982'si blok dizisi, 4'ü TipTap belgesi.
-// Yeniden yazım her ikisini de okuyabilmeli; aksi hâlde o 4 içerik
-// "gövdesi boş" sayılıp hiç önerilmezdi.
-
 func TestGovdeParagraflariBlokDizisi(t *testing.T) {
 	detail := []byte(`[{"type":"p","text":"Birinci paragraf."},{"type":"p","text":"İkinci paragraf."}]`)
 	p := GovdeParagraflari(detail)

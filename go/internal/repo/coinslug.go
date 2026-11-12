@@ -2,23 +2,6 @@ package repo
 
 import "strings"
 
-// CoinSlug coin ADINI kanonik fiyat yolu parçasına çevirir.
-//
-// NEDEN TAM AD, SEMBOL DEĞİL (spec §10.5): CoinDesk `/price/bitcoin`
-// kullanıyor. SEO'da "bitcoin price" aramasıyla birebir eşleşiyor;
-// `/price/btc` kısaltması o sorguda zayıf. Sembol adresleri 301 ile
-// kanonik adrese taşınır, yani eski bağlantılar kırılmaz.
-//
-// Örnekler:
-//
-//	"Bitcoin"       → "bitcoin"
-//	"Bitcoin Cash"  → "bitcoin-cash"
-//	"BNB"           → "bnb"
-//	"XRP"           → "xrp"
-//	"Staked Ether"  → "staked-ether"
-//
-// Yalnız a-z0-9 ve tek tire bırakır: adres güvenli, büyük/küçük harf
-// duyarsız ve yol aşımı üretemez.
 func CoinSlug(ad string) string {
 	ad = strings.ToLower(strings.TrimSpace(ad))
 	var b strings.Builder

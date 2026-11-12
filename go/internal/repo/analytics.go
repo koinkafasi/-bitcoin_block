@@ -10,11 +10,6 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-// IncrementHit okunma sayacını artırır (ilk okumada satır açar).
-//
-// Günlük kova da yazılır (hit_daily): toplam sayaç trend çizemiyor, panel
-// "son 14 gün" grafiği için günlük kırılım istiyor. İki yazım tek turda
-// gider; günlük satır düşse bile toplam sayaç bozulmaz.
 func IncrementHit(ctx context.Context, pool *pgxpool.Pool, contentID int64) error {
 	_, err := pool.Exec(ctx, `
 		INSERT INTO counters_hit (content_id, total) VALUES ($1, 1)
@@ -31,18 +26,6 @@ func IncrementHit(ctx context.Context, pool *pgxpool.Pool, contentID int64) erro
 	return nil
 }
 
-// IncrementHits biriktirilmiş okunma sayılarını TEK turda yazar.
-//
-// NEDEN: `IncrementHit` her makale görüntülemesinde İKİ UPSERT atıyor
-// (counters_hit + hit_daily). Ölçüm (9 Kasım 2026, makale sayfası):
-// c=8'de 24 rps → bu iki yazım kaldırılınca 80 rps (3,3×). Yazımlar
-// sıralı ve her biri bir gidiş-dönüş; istek yolunda olmamalı.
-//
-// Çağıran (httpapi/okunma.go) sayıları bellekte biriktirip ~2 sn'de bir
-// buraya verir. Toplamlar KAYBOLMAZ: biriktirme yalnız geciktirir, her
-// okunma tam olarak bir kez yazılır.
-//
-// Tek sorgu, dizi parametreleriyle: N ayrı UPSERT yerine 1 gidiş-dönüş.
 func IncrementHits(ctx context.Context, pool *pgxpool.Pool, sayilar map[int64]int64) error {
 	if len(sayilar) == 0 {
 		return nil
@@ -250,9 +233,6 @@ func AddComment(ctx context.Context, pool *pgxpool.Pool, contentID int64, author
 	return err
 }
 
-// LikeComment yorumu beğenir. Aynı (yorum, IP) çifti en fazla 1 kez sayılır
-// (comment_likes PK) — Faz 36. Dönen likes yeni toplamdır; newVote bu IP'nin
-// ilk beğenisi mi. IP boşsa oy atılmaz (0, false, nil).
 func LikeComment(ctx context.Context, pool *pgxpool.Pool, commentID int64, clientIP string) (likes int, newVote bool, err error) {
 	if clientIP == "" {
 		return 0, false, nil
@@ -293,14 +273,6 @@ func ListComments(ctx context.Context, pool *pgxpool.Pool, status string, siteID
 	return ListCommentsAra(ctx, pool, status, siteID, "")
 }
 
-// ListCommentsAra yorum listesini metin aramasıyla süzer (Faz 168).
-//
-// NEDEN: yorumlar sekmesinde yalnız DURUM süzgeci vardı; "şu kişinin
-// yorumunu bul" ya da "bu içeriğe gelen yorum" için 200 satırı gözle
-// taramak gerekiyordu. Medya kütüphanesinde arama varken burada olmaması
-// tutarsızdı.
-//
-// Türkçe katlama burada da geçerli: "saglik" → "Sağlık" (migration 0098).
 func ListCommentsAra(ctx context.Context, pool *pgxpool.Pool, status string, siteID int64, ara string) ([]CommentRow, error) {
 	q := `SELECT cm.id, cm.content_id, c.title, cm.author_name, cm.body, cm.status, cm.created_at
 	      FROM comments cm JOIN contents c ON c.id = cm.content_id WHERE 1=1`

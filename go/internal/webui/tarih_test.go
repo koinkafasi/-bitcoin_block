@@ -12,21 +12,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// Tarih alanları etiket taşımalı (Faz 176).
-//
-// NEDEN: yerel `<input type="date">` ve `<input type="datetime-local">`
-// tarayıcı tarafından çizilir ve `placeholder` niteliğini HİÇ göstermez
-// (HTML spec: bu tiplerde desteklenmez). Bu alanlarda placeholder tek
-// etiket olarak kullanılıyordu: 10 alanın anlamı ekranda hiç görünmüyor,
-// hiçbirinin de erişilebilir adı yoktu.
-//
-// Ölçüldü (tarayıcı): /admin/reklamlar `baslangic`/`bitis` ve
-// /admin/gazete `tarih` alanlarında aria-label, title ve görünür etiket
-// yoktu; yalnızca çizilmeyen bir placeholder vardı.
-//
-// Yerel alan KENDİ biçim ipucunu çizer (gg.aa.yyyy / mm/dd/yyyy) — o yüzden
-// alan boş görünmüyor. Eksik olan semantikti.
-
 var tarihGirdisi = regexp.MustCompile(`(?i)<input\b[^>]*\btype="(date|datetime-local)"[^>]*>`)
 
 // TestTarihAlanlariPlaceholderKullanmaz: yerel tarih alanında placeholder
@@ -76,10 +61,6 @@ func TestTarihAlanlariErisilebilirAd(t *testing.T) {
 			if len(idm) == 2 && strings.Contains(s, `for="`+idm[1]+`"`) {
 				continue
 			}
-			// Sarmalayan <label> … <input …> … </label>: input'un hemen
-			// önündeki metin bir <label> açılışı ve kapanışı taşıyorsa
-			// gerçekten sarmalanmış olur. Kardeş <label> YETMEZ (for/id
-			// olmadan ekran okuyucu ilişkilendiremez).
 			bas := m[0] - 120
 			if bas < 0 {
 				bas = 0

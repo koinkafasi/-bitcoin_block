@@ -33,7 +33,7 @@ ${m}`}}),a}function xb(t,e){let n={...t};return ca(t)&&ca(e)&&Object.keys(e).for
   white-space: break-spaces;
   -webkit-font-variant-ligatures: none;
   font-variant-ligatures: none;
-  font-feature-settings: "liga" 0; /* the above doesn't seem to work in Edge */
+  font-feature-settings: "liga" 0; 
 }
 
 .ProseMirror [contenteditable="false"] {

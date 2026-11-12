@@ -1,21 +1,5 @@
 package repo
 
-// Hisse profili (şirket bilgisi) — CoinDesk §10.6 "About …" bölümü.
-//
-// KAYNAK: Yahoo Finance `quoteSummary` ucu. Bu uç CRUMB ister:
-// `/v1/test/getcrumb` (çerezle) → crumb, sonra `?crumb=…`. Crumb iki
-// ek HTTP isteği demek; bu yüzden SÜREÇ İÇİ ÖNBELLEKTE tutulur ve
-// yalnız 401 alındığında yenilenir.
-//
-// NEDEN AYRI DOSYA: `hisse_detay.go` çizim (chart) ucunu kullanır ve
-// çerez gerektirmez. Profil akışı kendi durumunu (çerez kavanozu +
-// crumb) taşıdığı için ayrı tutuldu; karıştırılırsa her fiyat isteği
-// crumb yenileme yoluna girebilirdi.
-//
-// UYDURMA YOK: alan gelmezse boş/0 kalır, şablon o satırı basmaz.
-// Ölçüldü (9 Kasım 2026): META ve THYAO.IS için de longBusinessSummary,
-// sector/industry, fullTimeEmployees, website ve marketCap geliyor.
-
 import (
 	"context"
 	"encoding/json"
@@ -47,11 +31,6 @@ func (p HisseProfil) Bos() bool {
 	return p.Ozet == "" && p.PiyasaDeger == 0 && p.Sektor == "" && p.Calisan == 0
 }
 
-// yahooCrumb süreç içi crumb + çerez durumu.
-//
-// NEDEN ÖNBELLEK: crumb akışı 2 istek (404 sayfa + getcrumb) demek.
-// Her hisse sayfasında tekrarlanırsa sayfa başına 3 istek yerine 1
-// kalır. Yahoo crumb'ı uzun ömürlü; 6 saat güvenli.
 type yahooCrumb struct {
 	mu      sync.Mutex
 	jar     http.CookieJar
@@ -130,9 +109,6 @@ func (y *yahooCrumb) sifirla() {
 	y.zaman = time.Time{}
 }
 
-// HisseProfilCek sembolün şirket künyesini çeker.
-//
-// Hata durumunda sıfır değer döner; çağıran "About" bölümünü BASMAZ.
 func HisseProfilCek(ctx context.Context, sembol string) (HisseProfil, error) {
 	sym := strings.ToUpper(strings.TrimSpace(sembol))
 	if !HisseSembolGecerli(sym) {
@@ -273,10 +249,6 @@ func hisseProfilCoz(raw []byte) (HisseProfil, error) {
 	return p, nil
 }
 
-// OzetKirp iş tanımını cümle sınırında kısaltır.
-//
-// NEDEN: CoinDesk "About" bölümü 326×407 px (≈13 satır). Tam metin
-// (META'da 1988 karakter) taşırıyor; cümle ortasında kesmek de okunmuyor.
 func OzetKirp(ozet string, sinir int) string {
 	o := strings.Join(strings.Fields(ozet), " ")
 	if sinir <= 0 || len(o) <= sinir {

@@ -5,17 +5,6 @@ import (
 	"strconv"
 )
 
-// CDGiris — ana sayfanın GİRİŞ HERO'su (11 Kasım 2026).
-//
-// KAYNAK TASARIM: ghost.bitcosar.com ana sayfasındaki `.ch-hero`
-// (ölçüldü 11 Kasım 2026, 1440×900: yükseklik 532 px, ızgara
-// 1.05fr / 1fr / 300px, gap 30, dikey dolgu 56/60, görsel yuvası
-// min-height 400). Yerleşim birebir korunuyor; renkler ve yazı tipleri
-// cd tasarım jetonlarına bağlandı (site krem/koyu temalı).
-//
-// VERİ KURALI: sayı UYDURULMAZ. Karşılığı olmayan parça basılmaz —
-// FNG gelmezse o gösterge kartı, RSI gelmezse RSI kartı, sparkline
-// gelmezse grafik hiç çizilmez. `Hazir` yanlışsa modülün tamamı düşer.
 type CDGiris struct {
 	Hazir bool
 
@@ -77,20 +66,11 @@ type CDGirisMadde struct {
 	Metin string
 }
 
-// cdGirisYay yarım daire yayın dasharray değerini üretir.
-//
-// Yarıçap 84 (ghost ölçümü) → yay uzunluğu π·84 ≈ 264. Ghost bu değeri
-// JS ile yazıyordu; biz sunucuda hesaplıyoruz (CSP: script-src 'self',
-// harici JS yok).
 func cdGirisYay(pct int) string {
 	uzunluk := math.Pi * 84 * float64(cdGirisKirp(pct)) / 100
 	return strconv.FormatFloat(uzunluk, 'f', 1, 64) + " 264"
 }
 
-// cdGirisNoktaX / cdGirisNoktaY yayın ucundaki noktanın konumu.
-//
-// Yay 180°'den 0°'ye: p=0 → (16,100), p=100 → (184,100). Ghost'un
-// başlangıç dairesi cx=16 cy=100 ile birebir aynı.
 func cdGirisNoktaX(pct int) string {
 	x, _ := cdGirisNokta(pct)
 	return strconv.FormatFloat(x, 'f', 1, 64)

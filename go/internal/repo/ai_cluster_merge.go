@@ -108,9 +108,6 @@ func loadAIExistingClusterCandidates(ctx context.Context, pool *pgxpool.Pool, si
 	return out, rows.Err()
 }
 
-// refreshAIClusterCategory, kümenin öğe kategorilerine göre baskın
-// kategorisini yeniden hesaplar. Taslağa dönüşmüş kümelerin kategorisi
-// değiştirilmez.
 func refreshAIClusterCategory(ctx context.Context, pool *pgxpool.Pool, clusterID int64) error {
 	_, err := pool.Exec(ctx, `
 		UPDATE ai_story_clusters c
@@ -180,10 +177,6 @@ type aiMergePair struct {
 	Score float64
 }
 
-// MergeCrossCategoryAIStoryClusters, geçmişte ayrı kategorilerde oluşmuş ama
-// aynı olayı anlatan kümeleri birleştirir. Yalnızca taslağa dönüşmemiş,
-// yüksek benzerlikli kümeler işlenir; her turda en fazla limit kadar birleşme
-// yapılır.
 func MergeCrossCategoryAIStoryClusters(ctx context.Context, pool *pgxpool.Pool, siteID int64, limit int) (int, error) {
 	if siteID <= 0 {
 		siteID = 1

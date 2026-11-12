@@ -12,9 +12,6 @@ import (
 	"theblock/site/internal/repo"
 )
 
-// TestSearchAudioTranscripts gerçek şema + tsvector trigger üzerinde arama
-// yapar: kayıt eklendiğinde `search` otomatik dolar, arama bulur, alakasız
-// sözcük bulmaz ve ILIKE yedeği de çalışır.
 func TestSearchAudioTranscripts(t *testing.T) {
 	pool := intPool(t)
 	ctx := context.Background()

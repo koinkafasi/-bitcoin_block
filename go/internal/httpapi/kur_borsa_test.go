@@ -13,15 +13,6 @@ import (
 	"theblock/site/internal/webui"
 )
 
-// Kur & Borsa modülü: filtre + şablon çıktısı.
-//
-// Referans düzen Habertürk ekonomi şeridi (birebir):
-//   <a class="flex space-x-2">
-//     <span class="flex flex-col">  etiket / fiyat / yüzde
-//     <i class="setIcon h-8 w-3">   ok EN SAĞDA, altı noktalı
-//   </a>
-// Çerçeve yok, yalnız alt çizgi.
-
 func ornekKalemler() []piyasa.Kalem {
 	return []piyasa.Kalem{
 		{Anahtar: "bist100", Kisa: "BIST 100", Ad: "BIST 100", Deger: 11151.03, Degisim: -0.01, Ondalik: 2, Yon: -1},
@@ -186,12 +177,6 @@ func TestKbBgAyarOkuma(t *testing.T) {
 	assert.Equal(t, "yok", kbBgOf(map[string]any{"kb_bg": "bilinmeyen"}))
 }
 
-// Ortak "Arka plan rengi" (stBg) alanı finans modüllerinde modülün kendi
-// arka plan seçimiyle yönetilir; sarmalayıcıya asla basılmaz.
-//
-// Regresyon: kb_bg=yok seçilse bile stBg basılıyordu; kullanıcı "saydam"
-// istediği hâlde kutulu görünüyordu. Artık özel renk bölümün kendi inline
-// stiline (kbArkaPlanCSS) gider, sarmalayıcıya değil.
 func TestFinansBgOrtakRengiSusturur(t *testing.T) {
 	for _, tip := range []string{"kur_borsa", "hisseler", "kripto_para", "kur_cevirici", "servis_bandi"} {
 		for _, bg := range []string{"kart", "yok", "zemin", "ozel"} {

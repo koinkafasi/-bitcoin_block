@@ -1,7 +1,3 @@
-// SMS gönderim sağlayıcıları (Netgsm, Twilio).
-//
-// Twilio istemci deseni staticbackendhq/core (MIT lisanslı) sms.go örneğinden
-// esinlenmiştir; Netgsm (Türkiye) adaptörü eklenmiştir.
 package platform
 
 import (

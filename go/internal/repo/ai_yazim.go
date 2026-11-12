@@ -11,36 +11,11 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-// Otomatik AI ile yazım — veri katmanı (Faz 194).
-//
-// Akış:
-//  1. `YazimBekleyenTaslaklar` bot kaynaklı, henüz AI'dan geçmemiş taslakları
-//     döndürür.
-//  2. İşçi her biri için `news` işini kuyruğa yazar (ai_jobs).
-//  3. Var olan AI işçisi işi yürütür; sonuç `ai_jobs.result`ta bekler.
-//  4. `YazimUygulanacakIsler` tamamlanmış ama UYGULANMAMIŞ işleri döndürür;
-//     işçi sonucu içeriğe yazar ve `applied_at` işaretler.
-
 // yazimEylem AI haber yazımı eyleminin kimliğidir.
 const yazimEylem = "news"
 
-// yazimAzamiHata aynı içerik için kaç başarısız denemeden sonra vazgeçilir.
-//
-// Neden: başarısız içerik her turda yeniden denenirse sürekli AI maliyeti
-// doğar. İki denemeden sonra içerik elle ele alınmalı.
 const yazimAzamiHata = 2
 
-// YazimBekleyenTaslaklar bot kaynaklı, AI ile henüz yazılmamış taslakları
-// döndürür (en yeni önce).
-//
-// Ölçütler:
-//   - taslak, tr, çeviri değil, haber türü
-//   - `source_url` dolu (bot/ajans kaynağı; elle yazılan taslaklara dokunma)
-//   - başlığı ve gövdesi var (boş kayda AI çağrısı harcamak anlamsız)
-//   - bu içerik için TAMAMLANMIŞ `news` işi yok
-//   - başarısız `news` denemesi sınırı aşmamış
-//   - gövdesi AI kaynak iskeleti DEĞİLSE de dahil: iskeleti değiştirmek
-//     zaten bu işin amacı
 func YazimBekleyenTaslaklar(ctx context.Context, pool *pgxpool.Pool, siteID int64, limit int) ([]Content, error) {
 	if siteID <= 0 {
 		siteID = 1
@@ -149,24 +124,14 @@ func YazimUygulanacakIsler(ctx context.Context, pool *pgxpool.Pool, siteID int64
 
 // YazimSonucu içeriğe yazılacak AI çıktısıdır.
 type YazimSonucu struct {
-	Title string
-	Spot  string
-	// Ozet `contents.ai_summary` alanıdır: makale sayfasındaki özet kutusu
-	// (spec §10.2.2) yalnız bu alan DOLUYSA basılır. Boş bırakılırsa var
-	// olan özet korunur — AI'ın özet üretmemesi elle yazılmış özeti silmez.
+	Title    string
+	Spot     string
 	Ozet     string
 	Paragraf []string
 	SeoTitle string
 	SeoDesc  string
 }
 
-// SetContentYazim AI çıktısını içeriğe yazar.
-//
-// DAR kapsam: yalnız başlık, spot, gövde, SEO alanları. Kategori, görsel,
-// yazar, kaynak ve durum DEĞİŞMEZ — AI bunları bilmez, ezmemeli.
-//
-// `beklenenSurum` > 0 ise yalnız o sürümde yazar (editör bu arada içeriği
-// kaydettiyse AI sonucu onun değişikliğini ezmez). 0 = sürüm denetimi yok.
 func SetContentYazim(ctx context.Context, pool *pgxpool.Pool, id int64, surum int64, y YazimSonucu) error {
 	detay, err := yazimDetay(y.Paragraf)
 	if err != nil {
@@ -199,10 +164,6 @@ func SetContentYazim(ctx context.Context, pool *pgxpool.Pool, id int64, surum in
 	return nil
 }
 
-// yazimDetay paragrafları blok dizisine çevirir.
-//
-// Boş paragraflar atılır; hiç paragraf kalmazsa hata döner (boş gövde
-// yazmak içeriği bozardı).
 func yazimDetay(paragraflar []string) ([]byte, error) {
 	bloklar := make([]map[string]any, 0, len(paragraflar))
 	for _, p := range paragraflar {
@@ -216,10 +177,6 @@ func yazimDetay(paragraflar []string) ([]byte, error) {
 	return json.Marshal(bloklar)
 }
 
-// MarkAIJobApplied işi "uygulandı" olarak işaretler.
-//
-// İşaretlemeden sonra işçi aynı sonucu yeniden yazmaz; bu olmadan her turda
-// içerik sürümü artar ve editör düzeltmeleri ezilir.
 func MarkAIJobApplied(ctx context.Context, pool *pgxpool.Pool, jobID int64) error {
 	_, err := pool.Exec(ctx,
 		`UPDATE ai_jobs SET applied_at = now() WHERE id = $1 AND applied_at IS NULL`, jobID)

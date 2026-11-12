@@ -7,29 +7,11 @@ import (
 	"unicode"
 )
 
-// Bu dosya yakın-kopya (near-duplicate) ölçümüdür. Seri üretilen içeriğin en
-// yaygın sorunu, aynı metnin küçük değişikliklerle tekrarlanmasıdır. Google
-// bunu "scaled content abuse" kapsamında değerlendirir.
-//
-// Yöntem: shingle (n-gram sözcük) kümesi + Jaccard benzerliği. Deterministik,
-// bağımlılıksız ve açıklanabilir. Embedding tabanlı yaklaşım ileride eklenebilir
-// ama shingle tabanlı ölçüm kopyala-yapıştır ve küçük düzenlemeleri yakalar.
-
 // ShingleSize karşılaştırma için n-gram uzunluğu.
 const ShingleSize = 5
 
-// DuplicateThreshold bu oranın üzerindeki benzerlik "yakın kopya" sayılır.
-// Ölçüt, Jaccard ile kapsama (containment) oranının büyüğüdür: bir metin
-// diğerinin içine gömülmüş kopya ise kapsama oranı yüksek çıkar.
-//
-// Dışa açık: bot hattı agregatör kaynaklarda daha sıkı bir eşik kullanır
-// (bkz. repo.dedupeThresholdFor). Panel denetimi varsayılanı kullanır.
 const DuplicateThreshold = 0.60
 
-// similarity iki shingle kümesi arasındaki benzerliği döndürür: Jaccard ve
-// kapsama (kesişim / küçük küme) oranlarının büyüğü. Kapsama, kısa metnin
-// uzun metne gömülmesi durumunu yakalar; Jaccard ise eşit uzunluktaki
-// kopyaları. Tek başına Jaccard, kısa metinlerde kararsızdır.
 func similarity(a, b map[string]struct{}) float64 {
 	if len(a) == 0 || len(b) == 0 {
 		return 0
@@ -128,12 +110,6 @@ func CheckDuplicates(text string, candidates []Candidate) BenzerlikRapor {
 	return CheckDuplicatesAt(text, candidates, DuplicateThreshold)
 }
 
-// CheckDuplicatesAt eşiği çağıranın belirlediği sürümdür.
-//
-// Neden gerekli: agregatör kaynaklardan (MSN, Google News) gelen öğeler başka
-// yayıncıların yeniden yayımlanmış halleridir; başlık düzenlenip spot
-// kısaltıldığı için benzerlik 0,60'ın altında kalabiliyor. Bu kaynaklarda
-// eşiği düşürmek, orijinal kaynaklarda ise varsayılanda bırakmak gerekir.
 func CheckDuplicatesAt(text string, candidates []Candidate, threshold float64) BenzerlikRapor {
 	if threshold <= 0 || threshold > 1 {
 		threshold = DuplicateThreshold
@@ -183,9 +159,6 @@ func shortTitle(title, ref string) string {
 	return t
 }
 
-// normalizeTextForCompare karşılaştırma için metni sadeleştirir. tokenize
-// zaten küçük harfe indirir; burada yalnız HTML varlıkları ve işaretler
-// temizlenir (çağıran cleanForQuality'yi zaten uygulamış olabilir).
 func normalizeTextForCompare(s string) string {
 	var b strings.Builder
 	for _, r := range strings.ToLower(s) {

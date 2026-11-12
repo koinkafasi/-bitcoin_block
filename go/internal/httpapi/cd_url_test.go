@@ -9,11 +9,6 @@ import (
 	"theblock/site/internal/repo"
 )
 
-// CoinDesk URL deseni (§4): /{section}/{YYYY}/{MM}/{DD}/{slug}
-//
-// NEDEN TEST: bu desen SEO'nun temeli. Bozulursa tüm makale adresleri
-// değişir ve dizinlenmiş bağlantılar 404'e düşer — sessiz, pahalı hata.
-
 func TestMakaleURLTarihliDesen(t *testing.T) {
 	yayin := time.Date(2026, 11, 5, 9, 14, 0, 0, time.UTC)
 	slug := "bitcoin-80-bin-dolara-yukseldi"

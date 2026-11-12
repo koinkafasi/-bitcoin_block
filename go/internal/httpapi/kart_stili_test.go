@@ -16,9 +16,6 @@ import (
 
 // ---- Paylaşımlı kart stili (Bloomberg ve alternatifleri) ----
 
-// kartStiliTestVerisi iki içerik döndürür: cat_liste'nin "az içerik"
-// dalı doğrudan kart ızgarasını (cat-cards) basar; manşet/ray verisine
-// bağlı olmadan kart stilinin uygulandığını doğrular.
 func kartStiliTestVerisi() *categoryData {
 	return &categoryData{
 		Title: "Gündem", Slug: "gundem", View: "klasik",

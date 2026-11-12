@@ -11,9 +11,6 @@ import (
 	"theblock/site/internal/platform"
 )
 
-// AutoTagFromTitle başlıktan anahtar kelimeler çıkarır ve içerikle ilişkilendirir.
-// Alaka motorunun "etiket örtüşmesi" bileşeni bu etiketlerle beslenir.
-// Özel adlar (büyük harfle başlayan) öncelikli seçilir.
 func AutoTagFromTitle(ctx context.Context, pool *pgxpool.Pool, contentID int64, title string, maxTags int) ([]string, error) {
 	if maxTags <= 0 {
 		maxTags = 5

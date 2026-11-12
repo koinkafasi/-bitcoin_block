@@ -92,9 +92,6 @@ func (bp *botPoller) tick(ctx context.Context, pool *pgxpool.Pool) {
 		if cerr != nil {
 			fails++
 			bp.fails[f.ID] = fails
-			// Ölü feed her 5 dakikada bir yeniden denenmesin: 24 saatte 288
-			// gereksiz istek ve 288 gürültülü log satırı üretiyordu (ölçüm:
-			// 3.321 hata / 24 saat). Aralık üstel artar, 6 saatte durur.
 			bp.lastCrawl[f.ID] = now.Add(backoffDelay(base, fails))
 		} else {
 			bp.fails[f.ID] = 0
@@ -112,11 +109,6 @@ func (bp *botPoller) tick(ctx context.Context, pool *pgxpool.Pool) {
 	}
 }
 
-// backoffDelay başarısız çekimden sonra beklenecek süreyi verir.
-//
-// Kural: taban aralık (panelden ayarlanan dakika) ile en az 15 dakika; her
-// ardışık hatada ikiye katlanır, 6 saatte durur. Başarılı çekimde sayaç
-// sıfırlandığı için feed düzeldiğinde ilk denemede normale döner.
 func backoffDelay(base time.Duration, fails int) time.Duration {
 	const (
 		minDelay = 15 * time.Minute

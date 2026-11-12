@@ -18,16 +18,6 @@ import (
 	"theblock/site/internal/config"
 )
 
-// Faz 208 — panel çıkışı.
-//
-// KULLANICI BİLDİRİMİ (4 Kasım 2026): "/admin/cikis çalışmıyor ve
-// kullanıcı çıkışından yeniden çıkış gerekiyor."
-//
-// ÖLÇÜM: sidebar <a href="/admin/cikis"> ile GET gönderiyordu, rota yalnız
-// POST'a kayıtlıydı → GET 404, oturum açık kalıyordu. Ayrıca panel çıkışı
-// yalnız tb_session'ı siliyordu; Google/Stripe'ın yazdığı tb_uye çerezi
-// kalıyor, site kullanıcıyı hâlâ "üye" sayıyordu.
-
 func cikisSunucu(t *testing.T) (*Server, *http.ServeMux) {
 	t.Helper()
 	s := &Server{
@@ -61,9 +51,6 @@ func TestCikisPOSTRotasiVar(t *testing.T) {
 	assert.NotEqual(t, http.StatusNotFound, rec.Code, "POST /admin/cikis kayıtlı olmalı")
 }
 
-// Çapraz kaynak GET oturumu KAPATMAMALI: başka bir sitedeki <img> ya da
-// bağlantı ziyaretçiyi zorla çıkarabilmemeli (forced-logout CSRF).
-// Bu test DB'ye dokunmaz — guard DB'den ÖNCE devreye girer (pool nil).
 func TestCikisCaprazKaynakGETReddedilir(t *testing.T) {
 	s := &Server{
 		logger: slog.New(slog.NewTextHandler(io.Discard, nil)),

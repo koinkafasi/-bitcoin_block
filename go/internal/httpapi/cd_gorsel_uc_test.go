@@ -20,14 +20,6 @@ import (
 	"theblock/site/internal/platform"
 )
 
-// Ölçekli kaynak görsel ucu — HTTP seviyesinde.
-//
-// NEDEN BU TESTLER: /kg/{hash}/{genislik} iki şeyi birlikte yapıyor —
-// güvenlik kapısı (hash + kapalı genişlik listesi) ve üret-yaz-sun
-// önbelleği. Birim testleri yardımcıları ayrı ayrı sınıyor; burada ROTA'nın
-// kayıtlı olduğu ve akışın uçtan uca çalıştığı doğrulanıyor. Rota kaydı
-// unutulduğunda yardımcılar yeşil kalır, sayfa görselsiz çıkar.
-
 const ucTestHash = "80fe8a843afddb33661ff0f019b8ac11"
 
 func gorselUcSunucu(t *testing.T) *http.ServeMux {
@@ -55,10 +47,6 @@ func testJPEG(t *testing.T, g, y int) []byte {
 	return buf.Bytes()
 }
 
-// depoHazirla geçici depolama kökü kurar ve eskisini geri yükler.
-//
-// platform.StorageDir paket düzeyinde global; testten sonra geri alınmazsa
-// aynı paketteki diğer testler geçici dizine bakar.
 func depoHazirla(t *testing.T) string {
 	t.Helper()
 	eski := platform.StorageDir()
@@ -89,9 +77,6 @@ func TestKgOlcekliRotaVarDiskteniSunar(t *testing.T) {
 	assert.Equal(t, len(gorsel), rec.Body.Len())
 }
 
-// Varyant yoksa ORİJİNALDEN üretilir, diske YAZILIR ve ölçekli sunulur.
-//
-// Asıl kazanç bu dalda: 1600px'lik kaynak 480px'e inince gövde küçülür.
 func TestKgOlcekliUretirYazarSunar(t *testing.T) {
 	kok := depoHazirla(t)
 	asil := testJPEG(t, 1600, 900)

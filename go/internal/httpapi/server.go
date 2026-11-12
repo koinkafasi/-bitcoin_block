@@ -54,6 +54,9 @@ type Server struct {
 	i18nMu     sync.Mutex // çeviri paketi yeniden yüklenirken (Faz 45)
 	mediaMu    sync.RWMutex
 	mediaCache map[int64]string
+	// mediaAltCache medya alt metinleri. Yol önbelleğiyle aynı kilidi
+	// kullanır; ikisi de aynı kayıttan okunuyor ve birlikte geçersizleşiyor.
+	mediaAltCache map[int64]string
 
 	adMu    sync.Mutex
 	adCache map[int64]adCacheEntry
@@ -80,10 +83,6 @@ type Server struct {
 	sysMu     sync.Mutex
 	sysUserID int64
 
-	// CD (CoinDesk) yüzeyinin süreç içi önbellekleri. TTL `cdCacheTTL`.
-	// Kabuk verisi her sayfada aynı; liste verisi ise aynı sayfa adresine
-	// gelen eşzamanlı isteklerde aynı. HTTP yanıtı zaten s-maxage=300 ile
-	// önbellekte; bu katman yalnız DB'yi korur.
 	cdShellCache *ttlcache[cdShellData]
 	cdHomeCache  *ttlcache[[]repo.Content]
 	cdListeCache *ttlcache[cdListeSonuc]
@@ -122,23 +121,24 @@ func NewServer(cfg config.Config, logger *slog.Logger, pool *pgxpool.Pool, bundl
 // (gazete gibi arka plan işleri için).
 func NewServerApp(cfg config.Config, logger *slog.Logger, pool *pgxpool.Pool, bundle *i18n.Bundle, aiclient *ai.Client) (*http.Server, *Server) {
 	s := &Server{
-		cfg:        cfg,
-		logger:     logger,
-		pool:       pool,
-		i18n:       bundle,
-		ai:         aiclient,
-		aiEditor:   aieditor.NewService(pool, aiclient, logger),
-		spell:      quality.YeniImlaDenetleyici(cfg.HunspellBin, cfg.HunspellDict),
-		tts:        tts.New(cfg.OpenAIKey, cfg.OpenAIBase, cfg.TTSModel, cfg.TTSVoice),
-		mux:        http.NewServeMux(),
-		siteName:   "theblock.com.tr",
-		search:     searchsvc.NewClient(os.Getenv("SEARCH_SVC_URL")),
-		mediaCache: map[int64]string{},
-		adCache:    map[int64]adCacheEntry{},
-		redirCache: map[int64]redirCacheEntry{},
-		blockCache: map[string]bool{},
-		siteCache:  map[string]siteEntry{},
-		assetVer:   strconv.FormatInt(time.Now().Unix(), 36),
+		cfg:           cfg,
+		logger:        logger,
+		pool:          pool,
+		i18n:          bundle,
+		ai:            aiclient,
+		aiEditor:      aieditor.NewService(pool, aiclient, logger),
+		spell:         quality.YeniImlaDenetleyici(cfg.HunspellBin, cfg.HunspellDict),
+		tts:           tts.New(cfg.OpenAIKey, cfg.OpenAIBase, cfg.TTSModel, cfg.TTSVoice),
+		mux:           http.NewServeMux(),
+		siteName:      "theblock.com.tr",
+		search:        searchsvc.NewClient(os.Getenv("SEARCH_SVC_URL")),
+		mediaCache:    map[int64]string{},
+		mediaAltCache: map[int64]string{},
+		adCache:       map[int64]adCacheEntry{},
+		redirCache:    map[int64]redirCacheEntry{},
+		blockCache:    map[string]bool{},
+		siteCache:     map[string]siteEntry{},
+		assetVer:      strconv.FormatInt(time.Now().Unix(), 36),
 
 		cdShellCache:  newTTLCache[cdShellData](cdCacheTTL),
 		cdHomeCache:   newTTLCache[[]repo.Content](cdCacheTTL),
@@ -149,9 +149,6 @@ func NewServerApp(cfg config.Config, logger *slog.Logger, pool *pgxpool.Pool, bu
 		sayfaCache:    newSayfaOnbellek(),
 	}
 	s.siteName = s.initialSiteName()
-	// Statik varlık sürümünü templkit'e de ver: cd_head.templ `?v=` ile
-	// tarayıcı önbelleğini kırıyor. Sabit "1" kalınca tasarım değişiklikleri
-	// eski önbellekten servis ediliyordu (6 Kasım 2026'da yaşandı).
 	templkit.VarlikSurum = s.assetVer
 
 	funcs := templateFuncs()
@@ -175,19 +172,6 @@ func NewServerApp(cfg config.Config, logger *slog.Logger, pool *pgxpool.Pool, bu
 	}, s
 }
 
-// disKatman en dış iki ara katmanı sarar: gzip ve panic kurtarma.
-//
-// SIRA KRİTİK — withRecover, withGzip'in İÇİNDE olmalı:
-//
-// gzip ara katmanı `Content-Encoding: gzip` başlığını yazar ve gövdeyi
-// sıkıştırıcıya yönlendirir. Panic sonrası düz metni DOĞRUDAN ham yazıcıya
-// yazsaydık, istemci "gzip" başlığıyla sıkıştırılmamış bayt alırdı; yani
-// bozuk yanıt (ölçüm: `io.ReadAll` → `gzip: invalid header`). İçeride
-// kalınca hata yanıtı da sıkıştırıcıdan geçer ve çerçeve tutarlı kalır.
-//
-// Bu fonksiyon ayrı duruyor ki testler ÜRETİMDEKİ sırayı sınasın
-// (recover_gzip_test.go). Test kendi zincirini kursaydı, üretimdeki sıra
-// bozulsa bile test geçerdi — bu tuzağa bir kez düşüldü.
 func (s *Server) disKatman(ic http.Handler) http.Handler {
 	return s.withGzip(s.withRecover(ic))
 }
@@ -221,12 +205,6 @@ func (s *Server) initialSiteName() string {
 	return s.siteName
 }
 
-// uyeRoute üye/abonelik rotalarını kaydeder (yalnız öneksiz).
-//
-// Dil önekli adresler (ör. /tr/giris) için mux'tan ÖNCE çalışan
-// localeAliasMiddleware öneki soyar; böylece ServeMux'ta `{lang}` joker'i
-// açmak gerekmez (`/{lang}/x` ile `/ping/{date}` gibi kalıplar Go mux'ta
-// çakışıyor ve sunucu panic ile açılmıyordu).
 func (s *Server) uyeRoute(pattern string, h http.HandlerFunc) {
 	s.mux.HandleFunc(pattern, h)
 }
@@ -237,9 +215,6 @@ var uyePrefixes = []string{
 	"cikis", "abonelik", "hesabim", "uyelik",
 }
 
-// localeAliasPath "/<dil>/<üye-yolu>" biçimindeki yolu öneksiz hâle getirir.
-// Eşleşme yoksa ok=false döner. saf fonksiyon — birim testi kolay olsun diye
-// middleware'den ayrıdır.
 func localeAliasPath(path string, supported func(string) bool) (yeni, lang string, ok bool) {
 	if len(path) < 4 || path[0] != '/' {
 		return path, "", false
@@ -257,10 +232,6 @@ func localeAliasPath(path string, supported func(string) bool) (yeni, lang strin
 	return path, "", false
 }
 
-// localeAliasMiddleware "/<dil>/<üye-yolu>" isteğini "/<üye-yolu>" olarak
-// yeniden yazar. Metot, gövde ve çerezler korunur; yalnız üye/abonelik
-// yolları etkilenir (diğer sayfalar handlePublicSegment ile çalışmaya
-// devam eder).
 func (s *Server) localeAliasMiddleware(next http.Handler) http.Handler {
 	supported := func(code string) bool {
 		return s.i18n != nil && s.i18n.IsSupported(code)
@@ -285,20 +256,10 @@ func localeAliasHandler(next http.Handler, supported func(string) bool) http.Han
 }
 
 func (s *Server) routes() {
-	// Genel site: tek catch-all ile yol segmentlerine göre dağıtım yapılır
-	// (ServeMux'ta `/{lang}/...` jokerleri literal kalıplarla çakışabildiği için).
-	//
-	// NOT: Sitenin kanonik adresleri dil önekli olabilir (ör. /tr/...). Bu
-	// yüzden aşağıdaki üye/abonelik rotaları hem öneksiz hem `/{lang}/…`
-	// biçiminde kaydedilir; aksi halde şablonlardaki `{{.LangBase}}/giris`
-	// gibi form hedefleri 404/405 dönerdi (gerçek kullanıcı akışı kırılırdı).
 	s.mux.HandleFunc("GET /healthz", s.handleHealth)
 	s.mux.HandleFunc("GET /readyz", s.handleReadyz)
 	s.mux.HandleFunc("POST /csp-rapor", s.handleCSPReport)
 	s.mux.HandleFunc("GET /{$}", s.handleCDHome)
-	// Canlı piyasa verisi (11 Kasım 2026): ana sayfa hero'su ve üst şerit
-	// bunu yoklar. `/canli/` öneki sayfa önbelleğinden ve gzip'ten MUAF
-	// (bkz. sayfa_onbellek.go, gzip.go) — her istek sunucuya ulaşır.
 	s.mux.HandleFunc("GET /canli/giris", s.handleCDGirisCanli)
 	// Sunucudan İTME (SSE, 11 Kasım 2026): fiyat değiştiği anda tüm bağlı
 	// tarayıcılara yazılır. Tarayıcı yoklaması yerine bu kullanılıyor.
@@ -330,13 +291,6 @@ func (s *Server) routes() {
 	s.mux.HandleFunc("GET /kg/{hash}", s.handleKaynakGorsel)
 	// Ölçekli kaynak görsel; genişlik kapalı listeden (bkz. cd_gorsel.go).
 	s.mux.HandleFunc("GET /kg/{hash}/{genislik}", s.handleKaynakGorselOlcekli)
-	// CoinDesk bölüm adresleri (§4): /markets, /business, /tech, /policy …
-	// Tek segment; slug closure ile sabitlenir (mux PathValue literal
-	// desende boş döner — bu tuzak canlı testte yakalandı).
-	//
-	// DİKKAT: /videos ve /podcasts burada YOK — onların kendi handler'ları
-	// var (tür bazlı liste). İkisini birden kaydetmek mux'ta panic üretir
-	// ("conflicts with pattern"), ölçüldü: 53 kez yeniden başlama döngüsü.
 	for _, b := range []string{"markets", "business", "tech", "policy", "opinion",
 		"news-analysis", "latest-crypto-news", "focus", "research",
 		"press-release", "learn"} {
@@ -347,16 +301,10 @@ func (s *Server) routes() {
 	s.mux.HandleFunc("GET /takim-logo/{key}", s.handleTeamLogo)
 	s.mux.HandleFunc("GET /manifest.webmanifest", s.handleManifest)
 	s.mux.HandleFunc("GET /manifest.json", s.handleManifest)
-	// favicon.ico: tarayıcılar ve botlar KÖKTEN ister; rota yoksa her sayfa
-	// yüklemesinde 404 üretiyordu (ölçüldü, 6 Kasım 2026). ICO üretmek
-	// yerine PNG'nin aynısı sunuluyor — tarayıcılar MIME'a bakıyor.
 	s.mux.HandleFunc("GET /favicon.ico", s.handleFavicon)
 	s.mux.HandleFunc("GET /ads.txt", s.handleAdsTxt)
 	s.mux.HandleFunc("GET /sitemap.xml", s.handleSitemap)
 	s.mux.HandleFunc("GET /sitemap-news.xml", s.handleSitemapNews)
-	// CoinDesk'in BÖLÜNMÜŞ sitemap ailesi (7 Kasım 2026): indeks + sabit
-	// sayfalar + haber dilimleri + fiyat sayfaları. Tek dosyalık
-	// /sitemap.xml yukarıda korunuyor (BİK resmî ilanları orada).
 	s.mux.HandleFunc("GET /sitemap-index.xml", s.handleSitemapIndex)
 	// Go mux joker'i segment ORTASINDA kabul etmiyor (`articles-{n}.xml`
 	// panikliyor); tek joker alınıp dosya adı handler'da çözülüyor.
@@ -463,9 +411,6 @@ func (s *Server) routes() {
 	s.mux.HandleFunc("POST /admin/giris", s.handleLoginPost)
 	s.mux.HandleFunc("GET /admin/giris/2fa", s.handle2FALoginGet)
 	s.mux.HandleFunc("POST /admin/giris/2fa", s.handle2FALoginPost)
-	// Çıkış: GET (adres çubuğu / yer imi) ve POST (form) birlikte desteklenir.
-	// GET, requireAuth ile SARILMAZ: oturumu zaten bitmiş biri adresi
-	// yenilediğinde "giriş yap → yine çıkış" döngüsü oluşurdu.
 	s.mux.HandleFunc("GET /admin/cikis", s.handleLogout)
 	s.mux.Handle("POST /admin/cikis", s.requireAuth(http.HandlerFunc(s.handleLogout)))
 
@@ -475,9 +420,6 @@ func (s *Server) routes() {
 		h            http.HandlerFunc
 	}
 	adminRoutes := []route{
-		// Panelin giriş sayfası Pano 2.0 (Pacely düzeni). Önceden burada
-		// eski pano vardı ve yeni tasarım yalnız /admin/pano adresinden
-		// görülebiliyordu — yani yapılmış ama kullanıcıya ulaşmamıştı.
 		{"GET", "/admin", s.handlePano},
 		{"GET", "/admin/icerikler", s.handleContentsList},
 		{"GET", "/admin/icerikler/yeni", s.handleContentFormNew},
@@ -537,9 +479,6 @@ func (s *Server) routes() {
 		{"POST", "/admin/kategoriler", s.handleCatsCreate},
 		{"POST", "/admin/kategoriler/{id}", s.handleCatsUpdate},
 		{"POST", "/admin/kategoriler/{id}/sil", s.handleCatsDelete},
-		// Site Yönetim Merkezi kaldırıldı (kullanılmıyordu): iframe kabuğu
-		// yerine doğrudan panoya yönlendiriyoruz ki eski yer imleri ve
-		// tarayıcı geçmişi 404 görmesin.
 		{"GET", "/admin/merkez", s.handleMerkezKaldirildi},
 		{"GET", "/admin/pano", s.handlePano},
 		{"POST", "/admin/pano/tasi", s.handlePanoTasi},
@@ -627,10 +566,6 @@ func (s *Server) routes() {
 		{"POST", "/admin/bulten/ayar", s.handleBultenSave},
 		{"POST", "/admin/bulten/test", s.handleBultenTest},
 		{"POST", "/admin/bulten/gonder", s.handleBultenSend},
-		{"GET", "/admin/gazeteler", s.handleNewspapersAdmin},
-		{"POST", "/admin/gazeteler/yeni", s.handleNewspaperSave},
-		{"POST", "/admin/gazeteler/{id}/sil", s.handleNewspaperDelete},
-		{"POST", "/admin/gazeteler/cek", s.handleNewspaperFetch},
 		// ---- Gazete modülü (e-gazete) ----
 		{"GET", "/admin/gazete", s.handleGazeteAdmin},
 		{"POST", "/admin/gazete/lisans", s.handleGazeteLisans},
@@ -805,12 +740,6 @@ func (s *Server) routes() {
 	}
 }
 
-// requireAdmin, panel rotalarında hem geçerli oturum hem de personel rolü
-// ister. Eskiden yalnız requireAuth kullanılıyordu: halka açık /kayit ile
-// açılan "Üye" hesabı da tb_session aldığı için 284 /admin rotasının
-// tamamına girebiliyordu (yetki yükseltme). Artık Üye rolü hiçbir panel
-// rotasına giremez; ayrıca rota bazlı asgari rol (bkz. adminMinRole)
-// uygulanır.
 func (s *Server) requireAdmin(path string, next http.Handler) http.Handler {
 	return s.requireAuth(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		u := userFromContext(r.Context())
@@ -849,33 +778,6 @@ func (s *Server) handleHealth(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(`{"status":"ok","app":"theblock","time":"` + time.Now().UTC().Format(time.RFC3339) + `"}`))
 }
 
-// permissionsPolicy, sayfanın kullanmadığı tarayıcı yeteneklerini kapatır.
-// Kullanılanlar açık bırakılır:
-//   - microphone: dikte özelliği Web Speech API kullanıyor
-//     (static/editor.js, static/app.js)
-//   - autoplay / picture-in-picture / fullscreen / encrypted-media: kendi video
-//     oynatıcımız (static/cd-player.js) ve YouTube çerçevesi
-//
-// Kullanılmayanlar kapatılır: konum, kamera, ödeme API'si, USB, hareket
-// sensörleri. Kodda geolocation ve getUserMedia hiç geçmiyor.
-//
-// ---- YouTube çerçevesi (7 Kasım 2026 — GERÇEK HATA) ----
-// Önceki değer `autoplay=(self)` idi: yalnız BİZİM origin'imiz otomatik
-// oynatabiliyordu, çapraz kaynak çerçeve (youtube-nocookie.com) izin
-// ALMIYORDU. Sonuç sahada şöyle görünüyordu: kullanıcı oynat düğmesine
-// basıyor, YouTube çerçevesi otomatik oynatamıyor, kendi "play" poster'ında
-// kalıyor; video ancak çerçevenin İÇİNE ikinci kez tıklanınca başlıyordu
-// ("birden fazla tıklamadan oynamıyor, ortada play simgesi kalıyor").
-// Aynı kök neden iki belirti daha üretiyordu: `fullscreen=(self)` yüzünden
-// çerçeve tam ekran isteyemiyor, `picture-in-picture=(self)` yüzünden
-// konsola sürekli "Permissions policy violation" düşüyordu.
-//
-// ÇÖZÜM: izin listesine YouTube origin'leri EKLENDİ (self korunuyor).
-// `encrypted-media` da açıldı: YouTube bazı içerikleri EME ile sunuyor ve
-// kapalıyken oynatma sessizce düşebiliyor.
-//
-// GÜVENLİK NOTU: bu izinler yalnız bu origin'lere verilir; rastgele bir
-// üçüncü taraf çerçevesi otomatik oynatma/tam ekran yetkisi almaz.
 const permissionsPolicy = "accelerometer=(), " +
 	"autoplay=(self \"https://www.youtube.com\" \"https://www.youtube-nocookie.com\"), " +
 	"camera=(), display-capture=(), " +
@@ -886,11 +788,6 @@ const permissionsPolicy = "accelerometer=(), " +
 	"usb=(), xr-spatial-tracking=()"
 
 func (s *Server) withSecurityHeaders(next http.Handler) http.Handler {
-	// CSP burada HTML için AYARLANMAZ: politikadaki satır içi script
-	// hash'leri ancak render edilmiş gövdeden üretilebilir. Bu yüzden
-	// varsayılan (hash'siz, en kısıtlayıcı) politika konur; HTML üreten
-	// yollar (s.render, s.renderPublic, renderPartial, AMP, akış) gövdeyi
-	// tamponlayıp setCSPForHTML ile başlığı kendi hash'leriyle değiştirir.
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("X-Content-Type-Options", "nosniff")
 		w.Header().Set("X-Frame-Options", "SAMEORIGIN")
@@ -899,11 +796,6 @@ func (s *Server) withSecurityHeaders(next http.Handler) http.Handler {
 		w.Header().Set("Content-Security-Policy", buildCSP(nil, nil, collabURL(), s.cspRaporURL()))
 		// report-to grubu: CSP politikasındaki "report-to csp" ile eşleşir.
 		w.Header().Set("Report-To", `{"group":"csp","max_age":10886400,"endpoints":[{"url":"`+s.cspRaporURL()+`"}]}`)
-		// HSTS: yalnız sitenin genel adresi HTTPS ise gönderilir (yerel HTTP
-		// kurulumlarında tarayıcıyı kilitlememek için). includeSubDomains
-		// bilinçli olarak YOK: alt alan adlarından biri HTTP'ye bağımlıysa
-		// site komple erişilemez hâle gelirdi. Bir yıl, preload listesine
-		// başvurmadan geri alınabilir bir süre.
 		if s.secureCookie() {
 			w.Header().Set("Strict-Transport-Security", "max-age=31536000")
 		}
@@ -911,12 +803,6 @@ func (s *Server) withSecurityHeaders(next http.Handler) http.Handler {
 	})
 }
 
-// withSameOrigin, durum değiştiren isteklerde Origin/Referer başlığının kendi
-// host'umuza ait olduğunu doğrular. CSRF token'ı olmayan formlarda SameSite=Lax
-// tek savunmaydı; bu ara katman tarayıcıların gönderdiği Origin başlığını
-// kullanarak çapraz kaynak POST'ları reddeder. Origin/Referer hiç yoksa
-// (curl, sunucudan sunucuya webhook, e2e) istek geçer: bu durumlar tarayıcı
-// kaynaklı CSRF değildir.
 func (s *Server) withSameOrigin(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {

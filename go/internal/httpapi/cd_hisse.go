@@ -1,12 +1,5 @@
 package httpapi
 
-// Hisse detay sayfası (/price/stock/{sembol}) — CoinDesk §10.6.
-//
-// VERİ: Yahoo Finance grafik ucu (repo.HisseCek). Coin sayfasından farklı
-// olarak CryptoQuant kullanılmaz: zincir-üstü metrik hisse için yok.
-// Grafik de aynı uçtan gelen gerçek OHLC serisidir; veri yoksa grafik
-// basılmaz ve sayfa "veri alınamıyor" durumuna düşer.
-
 import (
 	"context"
 	"net/http"
@@ -18,11 +11,6 @@ import (
 	"theblock/site/internal/webui/templkit"
 )
 
-// hisseOnbellek: 60 sn süreç içi önbellek + singleflight.
-//
-// NEDEN: sayfa başına 2 uç çağrısı (seçilen aralık + performans için 1y)
-// gidiyor. Aynı hisseye gelen eşzamanlı istekler tek çağrıyı paylaşır;
-// 60 sn tazelik fiyat sayfası için yeterli (borsa verisi zaten gecikmeli).
 var hisseOnbellek = newTTLCache[repo.HisseDetay](60 * time.Second)
 
 // hisseCek önbellekli çekim. İkinci değer false ise veri YOK.
@@ -38,12 +26,6 @@ func (s *Server) hisseCek(r *http.Request, sym, aralik string) (repo.HisseDetay,
 	})
 }
 
-// hisseProfilOnbellek: profil 10 dakikada bir tazelenir.
-//
-// NEDEN UZUN TTL (fiyattan farklı): iş tanımı/sektör/çalışan sayısı
-// gün içinde değişmez; piyasa değeri de 60 sn'de bir değişecek kadar
-// kritik değil (asıl fiyat grafiğin kendisinde). Crumb akışı 2 ek istek
-// demek olduğu için tekrarını önlemek önemli.
 var hisseProfilOnbellek = newTTLCache[repo.HisseProfil](10 * time.Minute)
 
 // hisseProfilCek önbellekli profil çekimi. İkinci değer false ise veri YOK.
@@ -131,15 +113,6 @@ func (s *Server) handleCDHisse(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// Performans satırı ve profil ARKA PLANDA çekilir (paralel).
-	//
-	// NEDEN PARALEL: ana grafik geldikten sonra ikisi ardışık çalışınca
-	// soğuk istek 0.6 sn'ye çıkıyordu (ölçüldü, 9 Kasım 2026: 3 uç
-	// çağrısı sırayla). İkisi de birbirinden ve ana grafikten bağımsız;
-	// paralel çalıştırınca süre en yavaşlarına iner.
-	//
-	// Profil zaman aşımı 2 sn: gelmezse About/piyasa değeri satırları
-	// basılmaz, sayfa yine açılır (zenginleştirme, zorunluluk değil).
 	var (
 		performans []templkit.CDHisseDonem
 		profil     repo.HisseProfil
@@ -223,9 +196,6 @@ func (s *Server) handleCDHisse(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// OHLC: son seansın değerleri. Yüksek/düşük META'dan alınır (5 dakikalık
-	// barların uç değeri kaçırması "Gün aralığı" ile çelişki yaratıyordu:
-	// ölçüldü $606.96 vs $606.82). Açılış seriden (uçta gün açılışı yok).
 	var ohlcO, ohlcH, ohlcL string
 	if o, h, l, ok := repo.HisseGunOHLC(d.Noktalar, d.Dilim); ok {
 		if d.GunMaks > 0 {
@@ -315,10 +285,6 @@ func (s *Server) handleCDHisse(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// hissePerformansSatiri 1 yıllık seriden dönem hücrelerini üretir.
-//
-// Geçersiz dönem (seri o dönemi kapsamıyor) HİÇ basılmaz: sıfır yüzde
-// uydurmak yerine hücre atlanır.
 func hissePerformansSatiri(g1 repo.HisseDetay, onceki float64) []templkit.CDHisseDonem {
 	var out []templkit.CDHisseDonem
 	for _, p := range repo.HissePerformans(g1.Noktalar, onceki, time.Now()) {
@@ -332,10 +298,6 @@ func hissePerformansSatiri(g1 repo.HisseDetay, onceki float64) []templkit.CDHiss
 	return out
 }
 
-// hisseOzet About metnini üretir (cümle sınırında kırpılmış).
-//
-// 700 karakter: CoinDesk "About" bölümü 326×407 px ≈ 13 satır; tam metin
-// (META 1988, ASELS 1991 karakter) sol rayı taşırıyordu.
 func hisseOzet(p repo.HisseProfil, ok bool) string {
 	if !ok {
 		return ""

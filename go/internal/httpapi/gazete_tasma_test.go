@@ -5,11 +5,6 @@ import (
 	"testing"
 )
 
-// Faz 2 koruyucu testleri — specs/13-gazete-sayfa-duzenleyici.md K3
-//
-// Korunan davranış: taşan içerik sessizce kırpılmaz. Ölçülür, bildirilir ve
-// PDF üretimi kullanıcı bilerek zorlamadıkça durur.
-
 // TestGazeteOlcumBetigiYalnizDogrulamada ölçüm betiğinin baskı çıktısına
 // sızmadığını doğrular. PDF'e giren dokümanda script olmamalı.
 func TestGazeteOlcumBetigiYalnizDogrulamada(t *testing.T) {
@@ -140,14 +135,6 @@ func TestGazeteBlokKimligiBaskida(t *testing.T) {
 	}
 }
 
-// TestGazeteSarmalayiciSinifCarpismaz blok sarmalayicisinin sinifinin, ic
-// govde siniflariyla carpismadigini dogrular.
-//
-// Carpistiginda icerik kurallari konumlanmis sarmalayiciya da uygulaniyordu.
-// Olculdu: .gb-metin'in column-count kurali sabit yukseklikli sarmalayiciya
-// uygulaninca blok cok sutunlu kaba donusuyor ve sigmayan metin alt satira
-// degil YANA akiyor (scrollWidth 317 -> 3602), overflow:hidden da onu
-// kirpiyor. Yani uzun metin baskida sessizce kayboluyordu.
 func TestGazeteSarmalayiciSinifCarpismaz(t *testing.T) {
 	tipler := []string{"manset", "liste", "kart", "baslik", "metin",
 		"gorsel", "cizgi", "reklam", "kunye"}
@@ -165,9 +152,6 @@ func TestGazeteSarmalayiciSinifCarpismaz(t *testing.T) {
 			if i := strings.IndexAny(ad, " .:>["); i > 0 {
 				ad = ad[:i]
 			}
-			// gb-t-* sarmalayici sinifidir; sarmalayiciyi bilerek
-			// bicimlendirmek carpisma degil. Aranan sey, ic govde
-			// sinifinin ayni zamanda sarmalayici adi olmasi.
 			if strings.HasPrefix(ad, "gb-t-") {
 				continue
 			}

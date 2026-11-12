@@ -1,21 +1,5 @@
 package repo
 
-// Binance canlı fiyat kaynağı (anahtarsız).
-//
-// NEDEN EKLENDİ (11 Kasım 2026): "verileri canlı çalışır istiyorum"
-// isteğiyle hero + şerit yoklamaya açıldı. CoinGecko'nun ÜCRETSİZ katmanı
-// bu yükü kaldırmıyor — ölçüldü: kısa sürede HTTP 429 dönüyor ve fiyat
-// dakikalarca DONUYOR. Binance'in herkese açık REST ucu ise anahtarsız,
-// gerçek zamanlı ve çok yüksek limitli (10/10 ardışık istek 200 döndü).
-//
-// İŞ BÖLÜMÜ:
-//   - CoinGecko → 25 coinin ADI ve PİYASA DEĞERİ SIRASI (30 dk önbellek).
-//     Bu bilgi dakikada bir değişmez; 429 yesek de elimizdeki liste durur.
-//   - Binance   → FİYAT ve 24s DEĞİŞİM (20 sn önbellek). Canlı olan kısım.
-//
-// Eşleşmeyen sembol (Binance'te USDT paritesi olmayan coinler, ör. USDT'nin
-// kendisi) CoinGecko değerini korur. Uydurma değer yazılmaz.
-
 import (
 	"context"
 	"encoding/json"
@@ -33,15 +17,8 @@ const (
 	binanceKlinesURL = "https://api.binance.com/api/v3/klines"
 	binanceInfoURL   = "https://api.binance.com/api/v3/exchangeInfo"
 
-	// Canlı fiyat TTL'i. 6 sn: sunucu merkezi 5 sn'de bir tazeliyor
-	// (canli_hub.go), yani önbellek HEP sıcak; sayfa istekleri upstream'e
-	// hiç gitmiyor. TTL hub temposunun biraz üstünde ki yarışta iki kez
-	// çekilmesin. Binance limiti dakikada 1200 ağırlık; tek istek ~2-4.
 	binanceTTL = 6 * time.Second
 
-	// Binance'te işlem gören USDT pariteleri listesi (1 gün önbellek).
-	// NEDEN: `symbols=` parametresine geçersiz tek sembol yazmak isteğin
-	// TAMAMINI 400'e düşürüyor. Listeyi bir kez çekip kesişim alıyoruz.
 	binanceSembolTTL = 24 * time.Hour
 )
 
@@ -51,10 +28,6 @@ type binanceFiyat struct {
 	Degisim float64
 }
 
-// binanceSemboller Binance'te TRADING durumundaki USDT paritelerini döndürür.
-//
-// Sonuç `services_cache`te 1 gün tutulur: her yoklamada 2 MB'lık
-// exchangeInfo indirmek hem yavaş hem gereksiz.
 func binanceSemboller(ctx context.Context, pool DB) map[string]bool {
 	const kind, key = "fiyat", "binance-sembol"
 	if b, err := CacheGet(ctx, pool, kind, key); err == nil && len(b) > 0 {
@@ -73,9 +46,6 @@ func binanceSemboller(ctx context.Context, pool DB) map[string]bool {
 		}
 	}
 
-	// exchangeInfo 18 MB (ölçüldü!) — varsayılan 8 MB sınırı JSON'u
-	// KESİYOR, çözümlenemiyor ve sembol seti boş kalıyordu. Bu yüzden
-	// burada geniş sınır kullanılıyor.
 	govde, err := binanceCekSinir(ctx, binanceInfoURL, 32<<20)
 	if err != nil {
 		return nil
@@ -109,10 +79,6 @@ func binanceSemboller(ctx context.Context, pool DB) map[string]bool {
 	return out
 }
 
-// binanceFiyatlar verilen semboller için canlı fiyat + 24s değişim çeker.
-//
-// Dönen harita SEMBOL (BTC) → değer. Binance'te paritesi olmayan sembol
-// haritada YOKTUR (çağıran eski değeri korur).
 func binanceFiyatlar(ctx context.Context, pool DB, syms []string) map[string]binanceFiyat {
 	if len(syms) == 0 {
 		return nil
@@ -143,20 +109,11 @@ func binanceFiyatlar(ctx context.Context, pool DB, syms []string) map[string]bin
 	if err != nil {
 		return nil
 	}
-	// NEDEN QueryEscape: `symbols=["BTCUSDT","ETHUSDT"]` ham gönderilirse
-	// tırnak ve köşeli parantezler istek satırında kaçışsız kalır ve Binance
-	// HTTP 400 döner (denendi: fiyatlar hiç tazelenmedi). Sorgu değeri
-	// standart yüzde-kodlamayla yazılmalı.
 	sorgu := neturl.Values{}
 	sorgu.Set("symbols", string(dizi))
 	url := binanceTickerURL + "?" + sorgu.Encode()
 	govde, err := binanceCek(ctx, url)
 	if err != nil {
-		// TEK GEÇERSİZ SEMBOL TÜM İSTEĞİ 400'E DÜŞÜRÜR (yaşanmış hata,
-		// 11 Kasım 2026: CoinGecko ilk 25'inde Binance'te paritesi olmayan
-		// coinler var — STETH, LEO, HYPE… — fiyatlar hiç tazelenmedi).
-		// Kısa bir güvenli listeyle bir kez daha denenir; o da olmazsa
-		// boş dönülür (çağıran CoinGecko değerini korur).
 		govde, err = binanceCek(ctx, binanceGuvenliSorgu(pariteler))
 		if err != nil {
 			return nil
@@ -186,10 +143,6 @@ func binanceFiyatlar(ctx context.Context, pool DB, syms []string) map[string]bin
 	return out
 }
 
-// binanceKlines BTC'nin saatlik kapanışlarını (USD) döndürür.
-//
-// CoinGecko grafiği 429 yediğinde yedek kaynak: aynı şekil (eskiden
-// yeniye kapanış listesi) üretir, böylece çizgi boş kalmaz.
 func binanceKlines(ctx context.Context, sembol string, adet int) ([]float64, error) {
 	url := fmt.Sprintf("%s?symbol=%sUSDT&interval=1h&limit=%d", binanceKlinesURL, sembol, adet)
 	govde, err := binanceCek(ctx, url)
@@ -218,11 +171,6 @@ func binanceKlines(ctx context.Context, sembol string, adet int) ([]float64, err
 	return out, nil
 }
 
-// binanceGuvenliSorgu yalnız "kesin işlem gören" pariteleri ister.
-//
-// NEDEN: `symbols=` parametresinde tek geçersiz sembol isteğin tamamını
-// 400'e düşürüyor. Bu liste bir güvenlik ağı — yeni bir coin listede
-// yoksa fiyatı CoinGecko'dan gelmeye devam eder (uydurma değer yok).
 func binanceGuvenliSorgu(pariteler []string) string {
 	guvenli := map[string]bool{
 		"BTCUSDT": true, "ETHUSDT": true, "BNBUSDT": true, "SOLUSDT": true,

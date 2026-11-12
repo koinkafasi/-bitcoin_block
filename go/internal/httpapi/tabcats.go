@@ -10,10 +10,6 @@ import (
 	"theblock/site/internal/repo"
 )
 
-// Ana sayfa "Kategori Sekmeli" bloğunun sekmelerini yönetir.
-//
-// Ayar grubu: home / kategori_sekmeli -> sıralı kategori slug listesi.
-// Ayar boşsa blok eski davranışı korur: menüdeki ilk 8 kategori.
 const (
 	tabCatsGroup = "home"
 	tabCatsKey   = "kategori_sekmeli"

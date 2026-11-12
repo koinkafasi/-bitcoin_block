@@ -1,41 +1,16 @@
-/* cd-public.css — ESKİ (theblock) kabuğunu CoinDesk diline çeviren katman.
- *
- * NEDEN AYRI DOSYA: /hesabim dışındaki ~30 kamu sayfası (giriş, kayıt,
- * abonelik, bülten, podcast, etkinlikler, anketler, gazete, resmî ilanlar,
- * hava, namaz, eczane, borsa, fikstür, astroloji, akış, arama, 404 …)
- * hâlâ `partials.html` kabuğunu kullanıyor: kırmızı üst çubuk (#d10015),
- * Poppins, kırmızı alt bilgi, 8 px köşe. Sitenin geri kalanı CoinDesk
- * tasarımına geçtiği için bu sayfalar "başka site" gibi duruyordu
- * (ölçüldü, 7 Kasım 2026: gövde yazı tipi Poppins, 179 elemanda).
- *
- * YÖNTEM: 30 şablonu tek tek yeniden yazmak yerine ORTAK kabuk
- * (jetonlar + üst çubuk + alt bilgi + tipografi) CoinDesk'e çevriliyor.
- * Sayfa gövdeleri kendi sınıflarını koruyor; renk/köşe/tipografi jetonlar
- * üzerinden değiştiği için hepsi birlikte dönüyor. Tek noktada düzeltme,
- * otuz sayfada tutarlılık.
- *
- * KAYNAK: docs/COINDESK-TASARIM-SPEC.md §5 (renk), §4 (tipografi),
- * §6 (çizgi/köşe). Değerler orada ÖLÇÜLMÜŞ; burada yeniden uydurulmadı.
- *
- * YÜKLENME SIRASI: public.css'ten SONRA gelmeli (partials.html'de
- * public-gelistirme.css'in hemen ardından). Aksi hâlde eski değerler
- * kazanır.
- */
 
-/* ---- 1) Jetonlar: theblock paleti → CoinDesk paleti ---- */
+
 :root {
-  /* Marka vurgusu: CoinDesk'in marka sarısı siyah metinle kullanılır;
-     kırmızı (#d10015) tamamen kalkıyor. */
+  
   --hp-tema: #000000;
   --hp-tema-koyu: #262626;
 
-  /* Üst çubuk beyaz, menü metni koyu (CoinDesk ölçümü). */
+  
   --hp-header-bg: #ffffff;
   --hp-menu-renk: #262626;
   --hp-header-muted: #676767;
 
-  /* Gövde zemini beyaz: CoinDesk kartları zeminle aynı renkte,
-     ayrım yalnız 1 px çizgiyle. */
+  
   --hp-body-bg: #ffffff;
   --hp-surface: #ffffff;
   --hp-surface-2: #f4f4f4;
@@ -48,33 +23,29 @@
   --hp-border: #d9d9d9;
   --hp-border-2: #a6a6a6;
 
-  /* Alt bilgi: CoinDesk koyu zemin. */
+  
   --hp-footer-ust-bg: #000000;
   --hp-footer-bg: #0e1014;
   --hp-footer-baslik: #a6a6a6;
   --hp-footer-link: #d9d9d9;
 
-  /* Köşe: CoinDesk 4 px. */
+  
   --hp-radius: 4px;
   --hp-radius-sm: 4px;
   --hp-shadow: none;
   --hp-shadow-lg: 0 8px 30px rgba(0, 0, 0, .16);
 
-  /* Tipografi: CoinDesk iki fontlu sistem.
-     Sans → arayüz/menü/düğme · Serif → başlık/manşet.
-     cd.css ile AYNI yığın (Inter / Alegreya ikamesi). */
+  
   --hp-font: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
   --hp-serif: 'Alegreya', Georgia, 'Times New Roman', serif;
 
-  /* app.css köprüsü */
+  
   --accent: #000000;
   --border: #d9d9d9;
 }
 
 html[data-theme="dark"] {
-  /* Koyu palet (kullanıcı isteği, 9 Kasım 2026):
-     gövde #0a0b0e · üst çubuk/alt bilgi #0e1014 · yükseltilmiş
-     yüzey #16181d · çizgi #1f2329 / #3a4048 · metin #eaecef / #848e9c. */
+  
   --hp-body-bg: #0a0b0e;
   --hp-surface: #0a0b0e;
   --hp-surface-2: #16181d;
@@ -92,21 +63,14 @@ html[data-theme="dark"] {
   --hp-shadow-lg: 0 8px 30px rgba(0, 0, 0, .6);
 }
 
-/* ---- 2) Tipografi: Poppins → Inter (gövde) + Alegreya (başlık) ---- */
 body {
   font-family: var(--hp-font);
   -webkit-font-smoothing: antialiased;
   letter-spacing: normal;
-  /* Panel "Site arka planı" bir ağ deseni basıyor (ana-bg.svg). CoinDesk
-     düz beyaz zemin kullanıyor; desen haber metninin arkasında gürültü
-     yapıyordu. Kamu sayfalarında kapatılıyor — sayfa gövdesi ve jetonlar
-     yine panelden yönetilebilir. */
+  
   background-image: none !important;
 }
 
-/* Başlıklar serif: CoinDesk manşet/kart başlığı ailesi.
-   `h1`–`h3` ve sayfa başlığı sınıfları birlikte ele alınıyor; eski kabuk
-   başlıkları hem etiketten hem `.page-title` sınıfından geliyor. */
 h1, h2, h3,
 .page-title,
 .hesap-title,
@@ -117,15 +81,12 @@ h1, h2, h3,
   letter-spacing: -0.2px;
 }
 
-/* Ölçülen ölçek (spec §4.1): H1 36/44 w700, H2 24/32 w500. */
 h1, .page-title { font-size: 36px; line-height: 44px; font-weight: 700; }
 h2 { font-size: 24px; line-height: 32px; font-weight: 500; }
 h3 { font-size: 20px; line-height: 28px; font-weight: 500; }
 
-/* Etiket/üst bilgi satırları: CoinDesk 11/16 w500 büyük harf. */
 .hp-header-topbar, .fh, .tag, .badge { letter-spacing: 0.6px; }
 
-/* ---- 3) Üst çubuk: kırmızı → beyaz + 1 px çizgi ---- */
 .site-header {
   background: var(--hp-header-bg);
   color: var(--hp-menu-renk);
@@ -133,13 +94,6 @@ h3 { font-size: 20px; line-height: 28px; font-weight: 500; }
   box-shadow: none;
 }
 
-/* Hangi "skin" seçili olursa olsun CoinDesk görünümü kazanır:
-   panelden tema kırmızı seçilmiş olsa bile kamu sayfaları tutarlı kalır.
-
-   DİKKAT — ilk sürüm `--hp-header-bg: var(--hp-header-bg)` yazıyordu.
-   Bu DÖNGÜSEL bir tanım: CSS değişkeni kendine çözümlenemez, bildirim
-   geçersiz sayılır ve `.header-skin-accent` içindeki kırmızı kazanır
-   (ölçüldü, 7 Kasım 2026: headerBg rgb(209,0,21)). Değerler AÇIK yazılmalı. */
 .site-header.header-skin-accent,
 .site-header.header-skin-dark,
 .site-header.header-skin-light {
@@ -185,17 +139,14 @@ html[data-theme="dark"] .site-header.header-skin-light {
   text-decoration: none;
 }
 
-/* Mega menü: koyu temada panel de koyu, açık temada açık. */
 .nav-mega { border: 1px solid var(--hp-border); border-radius: var(--hp-radius); }
 
-/* Üst çubuk şeridi (varsa): siyah değil, ince gri. */
 .hp-header-topbar {
   background: var(--hp-surface-2);
   color: var(--hp-text-muted);
   border-bottom: 1px solid var(--hp-border);
 }
 
-/* ---- 4) Düğmeler: kırmızı dolgu → siyah/beyaz CoinDesk düğmesi ---- */
 .btn,
 button.btn,
 a.btn {
@@ -235,14 +186,12 @@ a.btn {
   color: #ffffff;
 }
 
-/* Marka sarısı yalnız vurgu düğmelerinde (CoinDesk "Sign Up"). */
 .btn.marka, .btn--marka {
   background: #fcc334;
   border-color: #fcc334;
   color: #000000;
 }
 
-/* ---- 5) Kartlar: kırmızı çerçeve/gölge → 1 px çizgi, 4 px köşe ---- */
 .card,
 .card-pad {
   background: var(--hp-surface);
@@ -253,7 +202,6 @@ a.btn {
 
 a.card:hover { border-color: var(--hp-border-2); background: var(--hp-surface); }
 
-/* Etiket rozetleri: kırmızı yerine nötr + siyah metin. */
 .tag {
   background: var(--hp-surface-2);
   color: var(--hp-text-2);
@@ -266,12 +214,10 @@ a.card:hover { border-color: var(--hp-border-2); background: var(--hp-surface); 
 
 .tag.ok { border-color: #218410; color: #218410; background: transparent; }
 
-/* Bağlantılar: mavi/kırmızı alt çizgi yerine koyu metin + alt çizgi. */
 a { color: inherit; }
 a:hover { color: #000000; }
 html[data-theme="dark"] a:hover { color: #ffffff; }
 
-/* Form alanları: Poppins + 8 px → Inter + 4 px + siyah odak çizgisi. */
 .input,
 input[type="text"],
 input[type="email"],
@@ -303,7 +249,6 @@ html[data-theme="dark"] input:focus,
 html[data-theme="dark"] textarea:focus,
 html[data-theme="dark"] select:focus { border-color: #ffffff; }
 
-/* ---- 6) Alt bilgi: kırmızı → CoinDesk koyu ---- */
 .site-footer,
 .site-footer.foot-skin-accent,
 .site-footer.foot-skin-dark {
@@ -348,7 +293,6 @@ html[data-theme="dark"] select:focus { border-color: #ffffff; }
   letter-spacing: 0.6px;
 }
 
-/* Sosyal ikonlar: kırmızı zemin → nötr daire. */
 .hp-social a,
 .hp-footer-ust .hp-social a {
   background: #262626;
@@ -358,7 +302,6 @@ html[data-theme="dark"] select:focus { border-color: #ffffff; }
 
 .hp-social a:hover { background: #ffffff; color: #000000; }
 
-/* ---- 7) Yapışkan "başa dön" ve okuma çubuğu ---- */
 .reading-bar { background: #fcc334; }
 .to-top {
   background: #000000;
@@ -368,10 +311,8 @@ html[data-theme="dark"] select:focus { border-color: #ffffff; }
 }
 html[data-theme="dark"] .to-top { background: #ffffff; color: #000000; }
 
-/* ---- 8) İçerik kapsayıcıları: 8 px yuvarlak kutular → 0/4 px ---- */
 .container { }
 
-/* Arama sayfası, arşiv ve modül başlıkları eski kabukta kırmızıydı. */
 .pg-more, .pg-more:hover {
   background: #000000;
   border-color: #000000;
@@ -379,66 +320,35 @@ html[data-theme="dark"] .to-top { background: #ffffff; color: #000000; }
   border-radius: var(--hp-radius);
 }
 
-/* Takip/anket/vb. küçük sayaç rozetleri */
 .hesap-nav-count, .badge {
   background: var(--hp-surface-2);
   color: var(--hp-text-muted);
   border-radius: 2px;
 }
 
-/* ---- 9) Karanlık modda beyaz zemin sızıntısı olmasın ---- */
 html[data-theme="dark"] body { background-color: var(--hp-body-bg); }
 html[data-theme="dark"] .site-header { border-bottom-color: #1f2329; }
 html[data-theme="dark"] .cd-girdi,
 html[data-theme="dark"] .input { background: #16181d; }
 
-/* ---- 10) Duyarlı: başlık ölçeği küçülür ---- */
 @media (max-width: 767px) {
   h1, .page-title { font-size: 28px; line-height: 36px; }
   h2 { font-size: 20px; line-height: 28px; }
 }
 
-/* ---- 11) Logo: metin "the block" → marka görseli (iki tema varyantı) ----
- *
- * NEDEN CSS'te: partials.html'deki eski brand bloğu metin logo basıyordu
- * ("the<b>block</b>") ve kırmızı vurguluydu; yeni CoinDesk kabuğu (cd.css)
- * ise `logo-bitcosar-*.png` görselini kullanıyor. İki kabuk arasında logo
- * farkı kalmaması için aynı dosyalar burada da basılıyor.
- *
- * Görünürlüğü TEMA belirler: açık temada koyu yazılı logo, koyu temada
- * beyaz yazılı logo. JavaScript simge değiştirmez (FOUC yok). */
 .brand-logo { display: block; height: 32px; width: auto; }
 
-/* ÖZGÜLLÜK TUZAĞI: public.css'te `.site-header .brand-img img` kuralı
-   (0,2,1) `display:block` veriyor ve tek sınıflı `.brand-logo--acik`
-   (0,1,0) kaybediyor — iki logo YAN YANA basıldı (ölçüldü, 7 Kasım 2026:
-   her ikisi de display:block, 173×38). Bu yüzden gizleme/gösterme
-   kuralları AYNI özgüllükle yazılıyor. */
 .site-header .brand-img .brand-logo--acik { display: none; }
 html[data-theme="dark"] .site-header .brand-img .brand-logo--koyu { display: none; }
 html[data-theme="dark"] .site-header .brand-img .brand-logo--acik { display: block; }
 .site-header .brand-img .brand-logo { height: 32px; }
 .brand.brand-img { display: inline-flex; align-items: center; }
 
-/* Alt bilgi logosu: tek varyant (koyu zemin üzerinde beyaz yazılı). */
 .site-footer .brand img,
 .site-footer .brand-logo { height: 28px; width: auto; display: block; }
 
-/* Üst çubuk yüksekliği: CoinDesk 64 px, görsel logo 32 px → 16 px dikey
-   dolgu. Eski kabuk metin logoya göre 56 px'ti. */
 .site-header .row { min-height: 64px; }
 
-/* ---- 12) Abonelik sayfası: segment düğmesi ve kart köşeleri ----
- *
- * HATA (ölçüldü, 7 Kasım 2026): koyu temada "Aylık" segment düğmesi
- * BEYAZ üstüne BEYAZ yazıyordu. Nedeni public.css'teki
- * `.abon-toggle-btn.is-active { background: var(--hp-text); color: #fff }`
- * kuralı: koyu temada `--hp-text` = #f4f4f4 (beyaz) olduğu için zemin de
- * metin de beyaz kalıyordu (kontrast 1:1).
- *
- * Çözüm: aktif segment CoinDesk diline çevrildi — açık temada siyah zemin
- * + beyaz metin, koyu temada beyaz zemin + siyah metin. Köşe 999 px
- * hap yerine 4 px (CoinDesk köşe jetonu). */
 .abon-toggle {
   background: var(--hp-surface);
   border: 1px solid var(--hp-border);
@@ -467,8 +377,6 @@ html[data-theme="dark"] .abon-toggle-btn.is-active {
   color: #000000;
 }
 
-/* Paket kartları: 12 px/999 px → 4 px; üst şerit 4 px renk çizgisi kalır
-   (CoinDesk kart ayırıcısı). */
 .abon-card { border-radius: var(--hp-radius); padding: 20px; }
 .abon-card.is-current { box-shadow: 0 0 0 1px var(--tier, #000000); }
 .abon-current {
@@ -490,6 +398,5 @@ html[data-theme="dark"] .abon-toggle-btn.is-active {
 .abon-price { font-family: var(--hp-serif); font-size: 32px; line-height: 40px; font-weight: 700; }
 .abon-price small { font-family: var(--hp-font); font-size: 12px; font-weight: 400; }
 
-/* SSS satırları: kesikli çizgi yerine 1 px düz (CoinDesk). */
 .abon-faq details,
 .faq details { border-bottom: 1px solid var(--hp-border); }

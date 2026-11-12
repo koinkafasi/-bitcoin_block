@@ -1,14 +1,4 @@
-/* ProseMirror (TipTap) temel yerleşim stilleri.
- *
- * Neden statik: TipTap bu CSS'i çalışma anında `<style data-tiptap-style>`
- * olarak enjekte ediyor. CSP `style-src` 'unsafe-inline' içermediğinde
- * (Faz 211) o blok engellenir ve editör yerleşimi bozulur. Aynı kurallar
- * burada statik olarak durur; enjeksiyon engellense de stil uygulanır.
- *
- * Kaynak: prosemirror-view/style/prosemirror.css (paket sürümü sabit).
- * CSP ayrıca bu sabit metnin hash'ini allowlist'e alır (csp.go) — böylece
- * tarayıcı konsolunda ihlal de görünmez.
- */
+
 .ProseMirror {
   position: relative;
 }
@@ -19,7 +9,7 @@
   white-space: break-spaces;
   -webkit-font-variant-ligatures: none;
   font-variant-ligatures: none;
-  font-feature-settings: "liga" 0; /* the above doesn't seem to work in Edge */
+  font-feature-settings: "liga" 0; 
 }
 
 .ProseMirror [contenteditable="false"] {

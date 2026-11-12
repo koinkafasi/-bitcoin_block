@@ -1,0 +1,166 @@
+package templkit
+
+// Akış (/akis) ve 404 — CoinDesk kabuğuna taşınmış iki sayfa (12 Kasım 2026).
+//
+// NEDEN: ikisi de hâlâ eski theblock kabuğunu (site-header/site-footer)
+// basıyordu; üst çubuk, şerit ve tipografi sitenin geri kalanından farklıydı.
+
+// CDAkisPage /akis verisi.
+type CDAkisPage struct {
+	Shell     CDShell
+	Title     string
+	Desc      string
+	Canonical string
+	// Baslik görünen H1 ("Güncel", kategori adı ya da "Diğer").
+	Baslik string
+	// Aciklama H1 altındaki tek satır.
+	Aciklama string
+	// Kategoriler filtre çipleri (kategoriler + "Diğer").
+	Kategoriler []CDCip
+	// Araliklar tarih filtreleri (bugün / dün / hafta).
+	Araliklar []CDCip
+	Stories   []CDStory
+	// BosMetin sonuç yoksa gösterilir.
+	BosMetin string
+	Page     int
+	PrevHref string
+	NextHref string
+	JSONLD   string
+
+	PageCategory    string
+	ContentCategory string
+	Locale          string
+	BaseURL         string
+}
+
+// CDCip tek filtre bağlantısı.
+type CDCip struct {
+	Ad     string
+	Href   string
+	Secili bool
+}
+
+templ CDAkisPageView(v CDAkisPage) {
+	<!doctype html>
+	<html lang="tr">
+		<head>
+			@cdHead(CDHead{Title: v.Title, Desc: v.Desc, Canonical: v.Canonical,
+				OGType: "website", SiteName: v.Shell.SiteName, FaviconURL: v.Shell.FaviconURL,
+				RSSFeed: "/rss.xml", NoIndex: v.Page > 1, JSONLD: v.JSONLD,
+				Locale: v.Locale, PageCategory: v.PageCategory, BaseURL: v.BaseURL,
+				ContentCategory: v.ContentCategory, EkCSS: []string{"/static/cd-sayfa.css"}})
+		</head>
+		<body class="cd">
+			@cdTopbar(v.Shell)
+			@cdTicker(v.Shell)
+			<main class="cd-wrap">
+				<header class="cd-section-title">
+					<h1>{ v.Baslik }</h1>
+					if v.Aciklama != "" {
+						<p class="cd-card__spot">{ v.Aciklama }</p>
+					}
+				</header>
+				<nav class="cd-filtre" aria-label="Akış filtreleri">
+					for _, c := range v.Kategoriler {
+						if c.Secili {
+							<span class="cd-cip is-secili" aria-current="page">{ c.Ad }</span>
+						} else {
+							<a class="cd-cip" href={ templ.SafeURL(c.Href) }>{ c.Ad }</a>
+						}
+					}
+					<span class="cd-filtre__ayrac" aria-hidden="true"></span>
+					for _, c := range v.Araliklar {
+						if c.Secili {
+							<span class="cd-cip is-secili" aria-current="true">{ c.Ad }</span>
+						} else {
+							<a class="cd-cip" href={ templ.SafeURL(c.Href) }>{ c.Ad }</a>
+						}
+					}
+				</nav>
+				<div class="cd-akis-liste">
+					if len(v.Stories) == 0 {
+						<div class="cd-bos">
+							<p>{ v.BosMetin }</p>
+						</div>
+					}
+					for i, s := range v.Stories {
+						if i > 0 {
+							<hr class="cd-tag-satir__cizgi"/>
+						}
+						@cdTagSatir(s)
+					}
+					if v.PrevHref != "" || v.NextHref != "" {
+						<nav class="cd-daha" aria-label="Sayfalama">
+							if v.PrevHref != "" {
+								<a class="cd-daha__geri" href={ templ.SafeURL(v.PrevHref) } rel="prev">← Önceki</a>
+							}
+							if v.NextHref != "" {
+								<a class="cd-daha__btn" href={ templ.SafeURL(v.NextHref) } rel="next">Daha fazla haber</a>
+							}
+						</nav>
+					}
+				</div>
+			</main>
+			@cdFooter(v.Shell)
+		</body>
+	</html>
+}
+
+// ---- 404 ----
+
+// CD404Page bulunamayan sayfa verisi.
+type CD404Page struct {
+	Shell     CDShell
+	Title     string
+	Desc      string
+	Canonical string
+	// Oneriler gerçek içerikten gelir; boşsa bölüm basılmaz.
+	Oneriler []CDStory
+	Locale   string
+	BaseURL  string
+}
+
+templ CD404PageView(v CD404Page) {
+	<!doctype html>
+	<html lang="tr">
+		<head>
+			@cdHead(CDHead{Title: v.Title, Desc: v.Desc, Canonical: v.Canonical,
+				OGType: "website", SiteName: v.Shell.SiteName, FaviconURL: v.Shell.FaviconURL,
+				RSSFeed: "/rss.xml", NoIndex: true, Locale: v.Locale, BaseURL: v.BaseURL,
+				PageCategory: "error_page", ContentCategory: "error_page",
+				EkCSS: []string{"/static/cd-sayfa.css"}})
+		</head>
+		<body class="cd">
+			@cdTopbar(v.Shell)
+			@cdTicker(v.Shell)
+			<main class="cd-wrap cd-404">
+				<p class="cd-404__kod" aria-hidden="true">404</p>
+				<h1 class="cd-404__baslik">Aradığınız sayfa bulunamadı</h1>
+				<p class="cd-404__metin">
+					Bağlantı taşınmış, silinmiş ya da hiç var olmamış olabilir.
+					Aşağıdan arama yapabilir veya ana sayfaya dönebilirsiniz.
+				</p>
+				<form class="cd-404__arama" method="get" action="/arama" role="search">
+					<input type="search" name="q" placeholder="Haber, coin veya konu ara…"
+						aria-label="Sitede ara" autocomplete="off"/>
+					<button type="submit">Ara</button>
+				</form>
+				<div class="cd-404__eylem">
+					<a class="cd-404__btn" href="/">Ana sayfa</a>
+					<a class="cd-404__btn cd-404__btn--sade" href="/akis">Son haberler</a>
+				</div>
+				if len(v.Oneriler) > 0 {
+					<section class="cd-404__oneri">
+						<h2>Son haberler</h2>
+						<div class="cd-grid cd-grid--3">
+							for _, s := range v.Oneriler {
+								@cdCard(s, false, YuvaKart)
+							}
+						</div>
+					</section>
+				}
+			</main>
+			@cdFooter(v.Shell)
+		</body>
+	</html>
+}

@@ -165,11 +165,6 @@ func (s *Server) handleTrendSourceEkle(w http.ResponseWriter, r *http.Request) {
 		s.botResult(w, r, "error", "Kaynak adı ve URL gerekli.")
 		return
 	}
-	// Adres sunucu tarafından çekilecek: kaydetmeden ÖNCE SSRF kurallarına
-	// uyduğu doğrulanır (yalnız http/https, genel alan adı, yerel/özel adres
-	// yok). Aksi hâlde iç ağ / bulut metadata adresleri kaynak olarak
-	// eklenebiliyordu. Çekim tarafında da aynı koruma var (bkz.
-	// scheduler.trendHTTPClient) — burada amaç erken ve anlaşılır hata.
 	if u, err := url.Parse(rawURL); err != nil {
 		s.botResult(w, r, "error", "Kaynak adresi geçersiz.")
 		return

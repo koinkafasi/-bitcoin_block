@@ -6,19 +6,6 @@ import (
 	"testing"
 )
 
-// Hisse detay sayfası (/price/stock/{sembol}) YAPI sözleşmesi.
-//
-// ÖLÇÜM (coindesk.com/price/stock/meta, spec §10.6):
-//
-//	içerik   : 1432 px, ızgara 392 + 976 (gap 32)
-//	sol ray  : breadcrumb + ad + büyük fiyat 28/42 w500, "Key Stats"
-//	sağ kolon: Basic/Advanced, 1D·5D·1M·YTD·1Y·All, OHLC okuması,
-//	           976×500 grafik, 88 px performans satırı
-//	<h1>     : CoinDesk'te YOK (ad küçük metin)
-//
-// NİYE TEST: bu şablon coin şablonundan ayrı; sekmeler/performans/OHLC
-// sessizce kaybolursa sayfa "coin sayfası"na döner ve kimse fark etmez.
-
 func hisseCiz(t *testing.T, v CDHisseSayfa) string {
 	t.Helper()
 	var sb strings.Builder
@@ -173,9 +160,6 @@ func TestCDHisseOlculer(t *testing.T) {
 	}
 }
 
-// TestCDHisseHariciJSYok CSP `script-src 'self'`: sayfa HARİCİ script
-// eklemez; grafik sunucuda üretiliyor. (Kabuk zaten site geneli CSP
-// betiğini basıyor — onun dışında ek yok.)
 func TestCDHisseHariciJSYok(t *testing.T) {
 	html := hisseCiz(t, ornekHisse())
 	if strings.Contains(html, "<script src=\"http") {
@@ -186,11 +170,6 @@ func TestCDHisseHariciJSYok(t *testing.T) {
 	}
 }
 
-// TestCDHisseAbout "About …" bölümü (CoinDesk §10.6) sözleşmesi.
-//
-// KAYNAK: Yahoo Finance assetProfile.longBusinessSummary. Metin İngilizce
-// gelir (çeviri hattı yok) — olduğu gibi basılır ama KAYNAK yazılır.
-// Veri yoksa bölüm HİÇ basılmamalı (uydurma tanıtım metni yazılmaz).
 func TestCDHisseAbout(t *testing.T) {
 	v := ornekHisse()
 	v.Ozet = "Meta Platforms, Inc. engages in the development of products."
@@ -218,11 +197,6 @@ func TestCDHisseAbout(t *testing.T) {
 	}
 }
 
-// TestCDHisseKeyStatsSatirlari Key Stats satırlarının sırası ve içeriği.
-//
-// CoinDesk sırası: Market Cap · Volume (24h) · 52-Week Range. Bizde ek
-// olarak gün aralığı/önceki kapanış/sektör/çalışan var (hepsi uçtan gelen
-// gerçek alanlar); sıra "en genel → en ayrıntılı" korunur.
 func TestCDHisseKeyStatsSatirlari(t *testing.T) {
 	v := ornekHisse()
 	v.Istatistik = []CDHisseStat{

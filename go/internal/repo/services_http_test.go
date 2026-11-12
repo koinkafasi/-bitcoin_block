@@ -11,11 +11,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// ---- HTTP mock yardımcıları ---------------------------------------
-//
-// ESPN/TheSportsDB uçları paket düzeyinde "var" olarak tanımlı; testlerde
-// httptest sunucusuna yönlendirilir. Böylece hiçbir dış ağ çağrısı yapılmaz.
-
 // withStubBase, paket değişkenlerini geçici olarak test sunucusuna bağlar.
 func withStubBase(t *testing.T, h http.HandlerFunc) *httptest.Server {
 	t.Helper()

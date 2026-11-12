@@ -1,18 +1,7 @@
-/* =============================================================================
-   theblock — Önyüz (public) stil katmanı
-   haberpi.com tasarım diliyle hizalanmıştır (spec 07 §3 "tüm önyüz").
-   Yalnızca public sayfalarda yüklenir (public_head). Panel app.css kullanmaya devam eder.
 
-   Tasarım belirteçleri (haberpi canlı önyüzünden okunan değerler):
-     header bg      #18181b        menü rengi      #ffffff
-     gövde zemini   #f3f3f3        tema vurgu      #d10015 (kırmızı)
-     footer üst     #0f0f12        footer ana      #18181b
-   Font: Poppins. Kartlar: beyaz, yuvarlatılmış, kategori rozeti sol üstte kırmızı.
-   ============================================================================= */
 
-/* ---- 1) Belirteçler ---- */
 :root {
-  /* haberpi canlı önyüzü: koyu değil, TEMA KIRMIZISI başlık + beyaz logo/menü */
+  
   --hp-header-bg: var(--hp-tema);
   --hp-menu-renk: #ffffff;
   --hp-body-bg: #f3f3f3;
@@ -23,8 +12,7 @@
   --hp-text: #18181b;
   --hp-text-2: #3f3f46;
   --hp-text-muted: #71717a;
-  /* Panel token adiyla ayni: public'te `--muted` hic tanimli degildi,
-     `color: var(--muted)` gecersiz bildirim olup rengi miras aliyordu. */
+  
   --muted-fg: var(--hp-text-muted);
   --hp-border: #e4e4e7;
   --hp-border-2: #d4d4d8;
@@ -32,24 +20,23 @@
   --hp-footer-bg: #18181b;
   --hp-footer-baslik: #a1a1aa;
   --hp-footer-link: #a1a1aa;
-  /* Çekmece kendi token'larını taşır: alt bilgi değerleri çekmecede
-     tanımsız kalıp okunmaz gri üretiyordu (ölçüm: 2.56:1). */
-  --hp-drawer-etiket: #52525b; /* 7.7:1 · beyaz panelde */
-  --hp-drawer-alt: #3f3f46;    /* 10.2:1 · alt kategori bağlantıları */
+  
+  --hp-drawer-etiket: #52525b; 
+  --hp-drawer-alt: #3f3f46;    
   --hp-radius: 8px;
   --hp-radius-sm: 6px;
   --hp-shadow: 0 1px 3px rgba(0, 0, 0, .07);
   --hp-shadow-lg: 0 8px 30px rgba(0, 0, 0, .12);
   --hp-font: 'Poppins', system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
 
-  /* app.css'in tema değişkenleriyle uyum için köprü */
+  
   --accent: var(--hp-tema);
   --border: var(--hp-border);
   --warn: #f59e0b;
 }
 
 html[data-theme="dark"] {
-  /* arka plan deseni koyu temada siyah zemin üzerinde en iyi okunuyor */
+  
   --hp-body-bg: #000000;
   --hp-surface: #18181b;
   --hp-surface-2: #1f1f23;
@@ -59,22 +46,19 @@ html[data-theme="dark"] {
   --muted-fg: var(--hp-text-muted);
   --hp-border: #27272a;
   --hp-border-2: #3f3f46;
-  /* Koyu tema: panel zemini sitenin koyu paleti (#0c1021–#18181b). */
+  
   --hp-drawer-etiket: #a1a1aa;
   --hp-drawer-alt: #d4d4d8;
   --hp-shadow: 0 1px 3px rgba(0, 0, 0, .5);
   --hp-shadow-lg: 0 8px 30px rgba(0, 0, 0, .6);
 }
 
-/* ---- 2) Taban ---- */
 * { box-sizing: border-box; }
 html { overflow-x: clip; scroll-padding-top: 74px; }
 body {
   margin: 0;
   background-color: var(--hp-body-bg);
-  /* Arka plan GÖRSELİ public_head içinde sürümlü URL ile basılır
-     (bkz. partials.html). Statik CSS'te url() sabit kalsaydı
-     Cloudflare eski kopyayı servis ederdi. */
+  
   background-repeat: no-repeat;
   background-position: center top;
   background-size: cover;
@@ -82,7 +66,7 @@ body {
   color: var(--hp-text);
   font-family: var(--hp-font);
   font-size: 16px;
-  /* haberpi ölçümü: gövde satır yüksekliği 24px (= 1.5) */
+  
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   overflow-x: clip;
@@ -104,17 +88,15 @@ hr { border: 0; border-top: 1px solid var(--hp-border); margin: 1.2rem 0; }
 .skip-link:focus { left: 0; }
 .honeypot { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
 
-/* Konteyner — haberpi ile aynı Tailwind kırılımları */
 .container {
   width: 100%; margin-inline: auto; padding-inline: 8px;
 }
-/* Serbest (absolute) modüller üst/geniş bölgede viewport'a değil,
-   sayfanın içerik çerçevesine göre konumlansın. */
+
 .page > .container { position: relative; }
 .blk-st { max-width: 100%; box-sizing: border-box; }
-/* Serbest modül, z-index verilmediyse akıştaki modüllerin altında kalmasın. */
+
 .blk-st.blk-abs { z-index: 20; }
-/* Modül bazında mobilde gizleme; içerik DOM'da kalır (SEO/erişilebilirlik). */
+
 @media (max-width: 47.99rem) {
   .blk-hide-mobile { display: none !important; }
 }
@@ -130,25 +112,22 @@ hr { border: 0; border-top: 1px solid var(--hp-border); margin: 1.2rem 0; }
 .page { padding: 12px 0 30px; }
 .gap { display: grid; gap: var(--tb-gap, 12px); }
 
-/* Okuma çubuğu */
 .reading-bar {
   position: fixed; top: 0; left: 0; height: 3px; width: 0;
   background: var(--hp-tema); z-index: 120; transition: width .1s linear;
 }
 
-/* ---- 3) Üst bar (haberpi: koyu, logolu, kalın menülü) ---- */
 .site-header {
   background: var(--hp-header-bg);
   color: var(--hp-menu-renk);
   position: sticky; top: 0; z-index: 100;
-  /* haberpi'de başlıkta alt çizgi yok (ölçü: toplam 56px) */
+  
   border-bottom: 0; box-shadow: none;
 }
 .site-header .container { max-width: none; padding-inline: 12px; }
 @media (min-width: 64rem) { .site-header .container { max-width: 80rem; padding-inline: 0; } }
 @media (min-width: 96rem) { .site-header .container { max-width: 96rem; } }
 
-/* ---- Header modelleri / renkleri / modülleri ---- */
 .hp-header-topbar {
   background: #0b0b0d; color: #d4d4d8; font-size: .72rem;
   border-bottom: 1px solid rgba(255,255,255,.08);
@@ -231,31 +210,27 @@ hr { border: 0; border-top: 1px solid var(--hp-border); margin: 1.2rem 0; }
   .site-header.header-model-model3 .header-tools,
   .site-header.header-model-model4 .header-tools { justify-self: auto; margin-left: auto; }
 }
-/* Not: app.css'te `.site-header .row { min-height: 60px }` var ve
-   min-height, height'i ezdiği için min-height de sıfırlanmalı. */
+
 .site-header > .container > .row { height: 56px; min-height: 0; gap: 10px; }
 @media (min-width: 64rem) {
   .site-header > .container > .row { height: 56px; min-height: 0; }
 }
 
 .brand {
-  /* haberpi: logo görseli ~44-52px yükseklikte, 56px'lik barı doldurur */
+  
   font-size: 1.9rem; font-weight: 800; letter-spacing: -.03em;
   line-height: 1; color: var(--hp-menu-renk); white-space: nowrap; flex-shrink: 0;
 }
-/* Kırmızı başlıkta logo tamamen beyaz (kırmızı "block" okunmaz olurdu) */
+
 .site-header .brand, .site-header .brand b { color: #fff; }
 .brand img { height: 40px; width: auto; }
 
-/* Masaüstü menü */
 .site-nav {
   display: none; align-items: center; gap: 0; margin-left: 10px;
   flex: 0 0 auto; min-width: 0; flex-wrap: nowrap;
 }
 @media (min-width: 64rem) { .site-nav { display: flex; } }
-/* Header: marka solda, menü ortada (sınırlı genişlik → dengeleyici taşanı
-   "Diğer"e taşır), araçlar sağda. Nav sınırlı olduğundan scrollWidth>clientWidth
-   ile taşma doğru ölçülür ve dar ekranda son menüler Diğer alt menüsüne geçer. */
+
 .site-header .row { display: flex; align-items: center; }
 .site-header .brand { flex: 0 0 auto; align-self: center; }
 .site-header .site-nav {
@@ -267,25 +242,15 @@ hr { border: 0; border-top: 1px solid var(--hp-border); margin: 1.2rem 0; }
   .site-header .site-nav { display: none; }
   .site-header .header-tools { margin-left: auto; }
 }
-/* haberpi menü ölçümü (1440px):
-     nav                        660.3x24
-     li.menu-border-custom-right 95x24  → padding-right 12px + 1px sağ çizgi
-     li > a                     82x23  → padding 0 12px, ayırıcı YOK
-   Yani ayırıcı çizgi metinden 24px sonra gelir; bu yüzden çizgi ve ek
-   boşluk bir sarmalayıcıda (.nav-item), dolgu ise bağlantıda tutulur. */
+
 .nav-item {
   display: flex; align-items: center;
   padding-right: 12px;
   border-right: 1px solid rgba(255, 255, 255, .12);
 }
-/* Üye avatarı header'a eklendiğinden 8 üst menü öğesinin 1440px'te
-   "Diğer"e taşmaması için masaüstünde dolgu 1-2px daraltılır
-   (ayırıcı çizgi konumu görsel olarak korunur). */
+
 @media (min-width: 64rem) {
-  /* Uye avatari da header'da oldugundan 8 ust menu ogesinin 1440px'te
-     "Diger"e tasmamasi icin yatay dolgu daraltilir. 1360px altindaki
-     masaustu genisliklerinde (1280 gibi) menu dengeleyicisi son ogeyi
-     "Diger"e alir; mega menu serit hizasi bu genisliklerde korunur. */
+  
   .site-nav .nav-item { padding-right: 9px; }
   .site-nav .nav-item > a, .site-nav > .nav-dd > .nav-dd-btn { padding: 0 11px; }
 }
@@ -293,8 +258,7 @@ hr { border: 0; border-top: 1px solid var(--hp-border); margin: 1.2rem 0; }
   .site-nav .nav-item { padding-right: 7px; }
   .site-nav .nav-item > a, .site-nav > .nav-dd > .nav-dd-btn { padding: 0 9px; }
 }
-/* haberpi: "Diğer" <li> öğesinde `menu-border-custom-right` YOK →
-   ek sağ dolgu/çizgi almaz (li 83.9x24, düğme 83.9x23). */
+
 .nav-item > a, .site-nav > .nav-dd > .nav-dd-btn {
   color: var(--hp-menu-renk); font-weight: 700; font-size: 1rem;
   padding: 0 12px; white-space: nowrap; line-height: 23px;
@@ -315,7 +279,7 @@ hr { border: 0; border-top: 1px solid var(--hp-border); margin: 1.2rem 0; }
 .nav-dd.open .nav-dd-menu { display: block; }
 .nav-dd-menu a { display: block; padding: 9px 16px; color: var(--hp-menu-renk); font-weight: 700; font-size: .92rem; }
 .nav-dd-menu a:hover { background: rgba(255, 255, 255, .08); }
-/* Ekrana sığmayınca JS, kategorileri Diğer'e taşır; taşınan öğeler menü bağlantısı gibi görünür */
+
 .nav-dd.tb-sakli { display: none; }
 .nav-dd-menu .nav-item { display: block; width: 100%; padding-right: 0; border-right: 0; }
 .nav-dd-menu .nav-item > a {
@@ -324,21 +288,20 @@ hr { border: 0; border-top: 1px solid var(--hp-border); margin: 1.2rem 0; }
   border: 0; border-radius: 0; background: none; white-space: normal;
 }
 .nav-dd-menu .nav-item > a:hover { background: rgba(255, 255, 255, .08); color: var(--hp-menu-renk); }
-/* "Diğer" içine taşınan öğelerde mega panel açılmaz; normal bağlantı kalır. */
+
 .nav-dd-menu .nav-mega { display: none !important; }
 .nav-item.has-mega { position: relative; }
 .nav-item.has-mega > a[data-mega-btn] { gap: 5px; }
 .nav-caret { transition: transform .15s ease; opacity: .8; }
 .nav-item.mega-open .nav-caret { transform: rotate(180deg); }
-/* Mega panel: başlığın hemen altında, kısa ve beyaz (mynet finans menüsü
-   gibi). İçerik yalnızca alt kategorilerdir; sayfayı kaplamaz. */
+
 .nav-mega {
   position: fixed; top: 56px; left: 0; right: 0; margin: 0 auto;
   width: min(760px, calc(100vw - 24px));
   z-index: 120; padding: 0;
 }
 .nav-mega[hidden] { display: none; }
-/* İkincil menü açılışı: yukarıdan aşağıya yumuşak giriş. */
+
 .nav-mega:not([hidden]) { animation: navMegaDrop .24s cubic-bezier(.22, .9, .32, 1) both; }
 @keyframes navMegaDrop {
   from { opacity: 0; transform: translateY(-10px); }
@@ -370,7 +333,6 @@ hr { border: 0; border-top: 1px solid var(--hp-border); margin: 1.2rem 0; }
 }
 .nav-mega-grid a:hover { background: #f4f4f5; color: var(--hp-tema); }
 
-/* Mega menü tasarımları (Yönetim → Menü → Menü Tasarımı) */
 .nav-mega-sayfa { width: 100%; max-width: none; left: 0; right: 0; margin: 0; }
 .nav-mega-sayfa .nav-mega-inner {
   min-height: calc(100vh - 56px); max-height: calc(100vh - 56px);
@@ -405,19 +367,14 @@ hr { border: 0; border-top: 1px solid var(--hp-border); margin: 1.2rem 0; }
 .nav-mega-genis .nav-mega-inner { padding: 18px 22px 20px; }
 .nav-mega-genis .nav-mega-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 4px 14px; }
 .nav-mega-genis .nav-mega-grid a { font-size: .92rem; padding: 9px 10px; }
-/* Sabit şerit: Primary Navigation'ın hemen altında ikinci menü sırası.
-   İçerik 80rem (1280px) gövde hizasında başlar; kategori eklendikçe
-   max-content genişliğiyle tam genişliğe kadar açılabilir. */
+
 .nav-mega-serit {
   width: 100%; max-width: none; left: 0; right: 0; margin: 0;
   background: #fff; border-top: 3px solid var(--hp-tema);
   box-shadow: 0 10px 26px rgba(0, 0, 0, .14);
 }
 .nav-mega-serit .nav-mega-inner {
-  /* Şerit bandı tam genişlik boyanır (beyaz zemin + üst çizgi tüm ekranı
-     kaplar) ama İÇERİK, üst menü ve gövdeyle aynı hizada ORTALANIR.
-     Faz 145'te içerik ekran kenarına yapışmıştı; artık `.container` gibi
-     --site-width azami genişliğinde ve margin auto ile ortalı. */
+  
   width: 100%; max-width: var(--site-width, 1280px);
   margin: 0 auto; padding: 0 12px;
   display: flex; align-items: center; gap: 12px;
@@ -457,8 +414,7 @@ hr { border: 0; border-top: 1px solid var(--hp-border); margin: 1.2rem 0; }
 .nav-mega-serit .nav-mega-foot { display: none; }
 .nav-mega-serit .nav-mega-close { width: 26px; height: 26px; font-size: 17px; }
 #main { transition: padding-top .26s cubic-bezier(.22, .9, .32, 1); }
-/* Şerit ile ilk modül arasında dengeli 4px nefes alanı; kapanınca
-   normal #main/.page boşluğuna otomatik döner. */
+
 body.mega-serit-open #main {
   padding-top: calc(var(--mega-serit-h, 36px) + var(--mega-serit-gap, 4px));
 }
@@ -485,10 +441,6 @@ body.mega-serit-open #main {
 }
 .nav-mega-others a:hover { color: var(--hp-tema); border-bottom-color: var(--hp-tema); }
 
-/* Mobil çekmecede alt kategoriler: akordeon (stiller liste kurallarından
-   sonra, .hp-drawer-cats altında tanımlanır). */
-
-/* Kategori sayfası: üst kategori etiketi + alt kategori sekmeleri */
 .cat-head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
 .cat-eyebrow {
   font-size: .7rem; font-weight: 700; letter-spacing: .12em;
@@ -504,7 +456,7 @@ body.mega-serit-open #main {
 }
 .cat-sub:hover { border-color: var(--hp-tema); color: var(--hp-tema); }
 .cat-sub.on { background: var(--hp-tema); border-color: var(--hp-tema); color: #fff; }
-/* Mynet finans tarzı yatay alt kategori çubuğu: yan yana, kaydırılabilir. */
+
 .cat-subs-bar {
   display: flex; flex-wrap: nowrap; gap: 0;
   margin: 2px 0 18px; padding: 0;
@@ -528,28 +480,21 @@ body.mega-serit-open #main {
 .cat-empty strong { display: block; margin-bottom: 4px; }
 .cat-intro { max-width: 72ch; margin: -2px 0 14px; color: var(--hp-text-2); font-size: .95rem; line-height: 1.55; }
 
-/* Sağ araçlar */
 .header-tools { display: flex; align-items: center; gap: 6px; margin-left: auto; flex-shrink: 0; }
 .header-tools .icon-btn { color: var(--hp-menu-renk); background: none; border: 0; cursor: pointer; padding: 6px; display: inline-flex; border-radius: 6px; }
 .header-tools .icon-btn:hover { background: rgba(255, 255, 255, .1); opacity: 1; }
 .header-tools .ti, .header-tools svg { width: 24px; height: 24px; }
-/* arama + lang + font selectörleri header'da gizli/ince (mobil + masaüstü arama overlay'de) */
+
 .header-tools .row-search, .header-tools .select { display: none; }
 @media (min-width: 64rem) { .header-tools .select { display: inline-block; } }
 
-/* Çekmece açma düğmesi: HER genişlikte görünür (Faz 28). Masaüstünde üst
-   menü yalnız kategori listesini gösterir; çekmece ayrıca 7+7 kategorinin
-   TAMAMINI + İçerikler/Servisler/Tercihler (dil, yazı boyutu) erişimini
-   verir — bu yüzden masaüstünde de gereklidir. */
 .menu-btn { display: inline-flex; }
 .search-btn { display: inline-flex; }
 
-/* Tema simgesi: app.js data-theme-btn ile değiştirir; CSS ile ay/güneş */
 .icon-sun { display: none; }
 html[data-theme="dark"] .icon-moon { display: none; }
 html[data-theme="dark"] .icon-sun { display: inline-block; }
 
-/* Search overlay */
 .hp-search {
   position: fixed; inset: 0; z-index: 130; display: none;
   background: rgba(0, 0, 0, .55); backdrop-filter: blur(2px);
@@ -560,7 +505,6 @@ html[data-theme="dark"] .icon-sun { display: inline-block; }
 .hp-search-form input { flex: 1; }
 .hp-search-hint { padding: 10px 2px 0; font-size: .8rem; }
 
-/* Mobil çekmece (Faz 19: panel temayı izler, kategoriler 7+7 iki sütun) */
 .hp-drawer { position: fixed; inset: 0; z-index: 130; display: none; }
 .hp-drawer.open { display: block; }
 .hp-drawer-bg { position: absolute; inset: 0; background: rgba(0, 0, 0, .55); }
@@ -570,8 +514,7 @@ html[data-theme="dark"] .icon-sun { display: inline-block; }
   border-left: 1px solid var(--hp-border); box-shadow: var(--hp-shadow-lg);
   overflow-y: auto; padding: 14px;
 }
-/* Faz 28: masaüstünde çekmece de açılıyor; panel biraz daha ferah olsun
-   (üst menünün kapsamadığı servis/tercih bağlantıları için okunma alanı). */
+
 @media (min-width: 64rem) { .hp-drawer-panel { max-width: 400px; padding: 18px 20px; } }
 .hp-drawer-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
 .hp-drawer-title { font-weight: 800; }
@@ -580,9 +523,6 @@ html[data-theme="dark"] .icon-sun { display: inline-block; }
 .hp-drawer a { display: block; padding: 10px 8px; border-radius: 6px; font-weight: 600; }
 .hp-drawer a:hover { background: color-mix(in srgb, var(--hp-tema) 14%, transparent); }
 
-/* Erişilebilirlik: klavyeyle gezinen kullanıcı nerede olduğunu görmeli.
-   ÖNCE çekmecede hiç odak stili yoktu (tarayıcı varsayılanı panelin
-   koyu zemininde görünmüyordu). */
 .hp-drawer a:focus-visible,
 .hp-drawer button:focus-visible,
 .hp-drawer select:focus-visible {
@@ -591,25 +531,20 @@ html[data-theme="dark"] .icon-sun { display: inline-block; }
   border-radius: 6px;
 }
 
-/* Geçerli sayfa: çekmecede hangi bağlantının açık olduğu belli olsun. */
 .hp-drawer a[aria-current="page"] {
   background: color-mix(in srgb, var(--hp-tema) 12%, transparent);
   color: var(--hp-tema);
 }
 
-/* Dokunma hedefi: mobilde 34px altı bağlantı yanlış tıklanıyor.
-   (İçerik/Hizmet ızgarası 8px dolguyla ~30px kalıyordu.) */
 .hp-drawer-grid > a { min-height: 34px; }
 .hp-drawer-list li a { min-height: 34px; }
-/* Kategoriler: solda 7, sağda 7 — iki ayrı <ul> grubu */
+
 .hp-drawer-cats { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 0 8px; align-items: start; }
-/* İçerikler/Servisler: dengeli iki sütun (Faz 24). column-count sütunları
-   yukarıdan aşağı eşit doldurur — sayaç ya da JS gerekmez. */
+
 .hp-drawer-grid { column-count: 2; column-gap: 6px; }
 .hp-drawer-grid > a {
   break-inside: avoid; -webkit-column-break-inside: avoid;
-  /* Uzun servis adları iki satıra bölünüp satır ritmini bozmasın diye
-     kısaltılır (kategorilerle aynı davranış). */
+  
   padding: 8px 6px; font-size: .86rem; line-height: 1.25;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
@@ -620,8 +555,7 @@ html[data-theme="dark"] .icon-sun { display: inline-block; }
   padding: 7px 8px; font-size: .88rem; line-height: 1.3;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
-/* Alt kategoriler: akordeon. Varsayılan kapalı; yalnızca açılan üst
-   kategori altında iki sütunlu ince bağlantı listesi. */
+
 .hp-drawer-cat { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; }
 .hp-drawer-cat > a { grid-column: 1; grid-row: 1; }
 .hp-drawer-subtoggle {
@@ -643,8 +577,7 @@ html[data-theme="dark"] .icon-sun { display: inline-block; }
 .hp-drawer-subs[hidden] { display: none; }
 .hp-drawer-cats .hp-drawer-subs a {
   display: block; width: auto;
-  /* 0.72rem + #71717a 11.5px'te sınırdaydı (4.8:1) ve kirli görünüyordu.
-     0.78rem + koyu ton: 10.2:1. Dokunma hedefi 30px'e çıkarıldı. */
+  
   min-height: 30px; padding: 5px 6px; border: 0; border-radius: 5px;
   background: none; color: var(--hp-drawer-alt);
   font-size: .78rem; font-weight: 600; line-height: 1.35;
@@ -654,7 +587,7 @@ html[data-theme="dark"] .icon-sun { display: inline-block; }
   background: var(--hp-surface-2); color: var(--hp-tema);
 }
 .hp-drawer-cats .hp-drawer-subs a.all { color: var(--hp-tema); font-weight: 700; }
-/* GZT tarzı ikinci panel: ana kategori listesi yerine alt kategori görünümü */
+
 .hp-drawer-subview { padding: 2px 4px 24px; }
 .hp-drawer-subview[hidden] { display: none; }
 .hp-drawer-panel.sub-open .hp-drawer-main { display: none; }
@@ -694,7 +627,6 @@ html[data-theme="dark"] .icon-sun { display: inline-block; }
 }
 .hp-drawer .select { width: 100%; background: var(--hp-surface-2); color: var(--hp-text); border-color: var(--hp-border-2); }
 
-/* ---- 4) Servis bandı: beyaz yuvarlak çubuk (piyasa + şehir + hava) ---- */
 .hp-ticker, .servis-bandi {
   background: var(--hp-surface); color: var(--hp-text);
   border-radius: var(--hp-radius); box-shadow: var(--hp-shadow);
@@ -735,7 +667,6 @@ html[data-theme="dark"] .icon-sun { display: inline-block; }
 .hp-ticker .up { color: #22c55e; }
 .hp-ticker .down { color: #ef4444; }
 
-/* ---- 5) Son dakika bandı ---- */
 .breaking, .son-dakika-band {
   background: var(--hp-tema); color: #fff; overflow: hidden;
 }
@@ -759,8 +690,6 @@ html[data-theme="dark"] .icon-sun { display: inline-block; }
 .event-ribbon > .container { display: flex; align-items: center; gap: 14px; padding: 7px 12px; font-size: .85rem; flex-wrap: wrap; }
 .event-ribbon .tag { background: var(--hp-tema); color: #fff; }
 
-/* ---- 6) Bölüm başlığı (haberpi: düz kalın başlık + sağa uzayan ince çizgi;
-   app.css'in sol kırmızı çubuğu sıfırlanır) ---- */
 .page-title, .blk-title {
   font-size: 1.15rem; font-weight: 700; line-height: 24px;
   display: flex; align-items: center; gap: 12px;
@@ -771,10 +700,6 @@ html[data-theme="dark"] .icon-sun { display: inline-block; }
   content: ""; flex: 1; height: 0; border-top: 2px solid var(--hp-border);}
 .page-title .tum, .blk-title .tum { font-size: .82rem; font-weight: 700; color: var(--hp-tema); order: 2; }
 
-/* Modül başlığı işaret stilleri — tüm .blk-title / .galeri-etiket / .side-h
-   başlıklarında kullanılabilir. Varsayılan (line) mevcut sağa uzayan çizgidir.
-   Sidebar/galeri başlıklarının temel kırmızı zeminini de sıfırlar; böylece
-   seçilen stil gerçekten görünür. */
 .blk-title.head-mark-line::after,
 .side-h.head-mark-line::after,
 .galeri-etiket.head-mark-line::after {
@@ -878,7 +803,6 @@ html[data-theme="dark"] .icon-sun { display: inline-block; }
   height: auto; line-height: 1.35; background: transparent; color: var(--hp-text); padding: 0; border-radius: 0;
 }
 
-/* Modül görünüm şablonları — blok sarmalayıcısına uygulanır. */
 .blk-st.blk-mod-boxed {
   background: var(--hp-surface); border: 1px solid var(--hp-border);
   border-radius: var(--hp-radius); padding: 16px;
@@ -899,7 +823,6 @@ html[data-theme="dark"] .blk-st.blk-mod-glass {
   background: rgba(24, 24, 27, .72); border-color: rgba(255, 255, 255, .12);
 }
 
-/* Zengin metin bloğu (Faz 6) */
 .blk-rich{font-size:1rem;line-height:1.65;color:var(--hp-metin);overflow-wrap:break-word}
 .blk-rich p{margin:0 0 .9em}
 .blk-rich h2,.blk-rich h3,.blk-rich h4{margin:1.1em 0 .5em;line-height:1.3;font-weight:700}
@@ -913,21 +836,15 @@ html[data-theme="dark"] .blk-st.blk-mod-glass {
 .blk-rich table{border-collapse:collapse;margin:.8em 0;width:100%;font-size:.95rem}
 .blk-rich td,.blk-rich th{border:1px solid var(--line);padding:.4em .6em;text-align:left}
 
-/* ---- 6b) Ana düzen: içerik + sağ sütun (haberpi 2 kolon) ---- */
 .home-grid { display: grid; gap: var(--tb-gap-col, 12px); grid-template-columns: minmax(0, 1fr); position: relative; }
 .home-main { position: relative; }
 @media (min-width: 64rem) { .home-grid { grid-template-columns: minmax(0, 1fr) minmax(0, var(--pg-side-w, 33%)); } }
 .home-side { display: flex; flex-direction: column; gap: var(--tb-gap-side, 10px); min-width: 0; position: relative; }
 @media (min-width: 64rem) { .home-side { border-left: var(--tb-side-bw, 1px) solid var(--hp-border); padding-left: var(--tb-side-pad, 12px); } }
-/* Sayfa şablonu: sağ sütunu kaldır → tek sütun, isteğe bağlı azami genişlik. */
+
 .home-grid.pg-no-side { grid-template-columns: minmax(0, 1fr); max-width: var(--pg-single-w, 1280px); margin-inline: auto; }
 .home-grid.pg-no-side > .home-side { display: none; }
 
-/* Sayfa şablonu: modüller arası dikey boşluk.
-   .blk-zone sarmalayıcıları normalde display:contents ile görünmez kalır;
-   .pg-blk-gap varsa bölge flex kolona dönüşür ve modüllerin kendi dikey
-   kenar boşlukları yerine tek bir gap kullanılır. Blok bazlı inline
-   margin'ler (stGapTop/stGapBottom) bu kuralı ezmeye devam eder. */
 .blk-zone { display: contents; }
 .pg-blk-gap .blk-zone,
 .pg-blk-gap .home-main.blk-zone-main {
@@ -944,14 +861,12 @@ html[data-theme="dark"] .blk-st.blk-mod-glass {
 .pg-blk-gap .art-side {
   gap: var(--pg-blk-gap, 0px);
 }
-/* Bölgeler arası boşluk: üst bölge ile iki kolonlu düzen arası, iki kolonlu
-   düzen ile alt (tam genişlik) bölge arası. Boş bölgeler boşluk üretmez. */
+
 .pg-blk-gap .blk-zone-ust { margin-bottom: var(--pg-blk-gap, 0px); }
 .pg-blk-gap .blk-zone-genis { margin-top: var(--pg-blk-gap, 0px); }
 .pg-blk-gap .blk-zone-ust:empty,
 .pg-blk-gap .blk-zone-genis:empty { margin-top: 0; margin-bottom: 0; }
 
-/* Canlı yayın kırmızı şeridi */
 .side-live {
   background: var(--hp-tema); color: #fff; font-weight: 800; font-size: .9rem;
   text-align: center; padding: 8px; border-radius: var(--hp-radius-sm);
@@ -973,7 +888,6 @@ html[data-theme="dark"] .blk-st.blk-mod-glass {
   background: linear-gradient(to top, rgba(0, 0, 0, .9), transparent);
 }
 
-/* ---- 7) Kart: beyaz, çerçevesiz; kategori rozeti SİYAH (haberpi) ---- */
 .card {
   background: var(--hp-surface); border: var(--tb-bw, 0px) solid var(--hp-border);
   border-radius: var(--hp-radius); overflow: hidden; box-shadow: var(--hp-shadow);
@@ -981,7 +895,7 @@ html[data-theme="dark"] .blk-st.blk-mod-glass {
 }
 a.card:hover { opacity: 1; transform: translateY(-2px); box-shadow: var(--hp-shadow-lg); }
 .card-pad { padding: 10px; display: flex; flex-direction: column; flex: 1; }
-/* Başlık büyüdükçe kartın altına yapışmasın: meta satırı dibe itilir. */
+
 .card-pad h3 { flex: 1; }
 .card .shape { margin-top: auto; padding-top: 6px; }
 .card h3 { font-size: 1rem; font-weight: 700; margin: 0 0 4px; }
@@ -989,10 +903,6 @@ a.card:hover { opacity: 1; transform: translateY(-2px); box-shadow: var(--hp-sha
 .card .shape { font-size: .78rem; color: var(--hp-text-muted); }
 .card .spot, .spot { font-size: .85rem; color: var(--hp-text-muted); }
 
-/* Kategori rozeti — haberpi ölçümü:
-   `absolute left-2 top-2 px-5 py-1 font-semibold tema-bg text-white
-    bg-opacity-80 z-10 text-sm rounded-lg`
-   → 14px/600, radius 8px, dolgu 4px 20px, kırmızı %80 opak */
 .card-badge, .manset-cat, .um-card .um-cat {
   position: absolute; left: 8px; top: 8px; z-index: 10;
   background: rgba(209, 0, 21, .8); color: #fff;
@@ -1007,7 +917,6 @@ a.card:hover { opacity: 1; transform: translateY(-2px); box-shadow: var(--hp-sha
   left: var(--cat-left, 8px); right: auto;
 }
 
-/* Kategori etiket biçimleri (modül başına seçilebilir). */
 .m6-cat.cat-shape-pin, .m2-cat.cat-shape-pin, .hero-cat.cat-shape-pin,
 .manset-cat.cat-shape-pin, .um-cat.cat-shape-pin, .card-badge.cat-shape-pin,
 .one-cat.cat-shape-pin {
@@ -1051,14 +960,12 @@ a.card:hover { opacity: 1; transform: translateY(-2px); box-shadow: var(--hp-sha
   padding: 2px 9px; border-radius: 5px;
 }
 
-/* Slider rozeti kaplama içinde satır içi durur */
 .hero-cat {
   display: inline-block; background: var(--hp-tema); color: #fff;
   font-size: .76rem; font-weight: 600; padding: 4px 14px; border-radius: var(--hp-radius-sm);
 }
 .card-wrap { position: relative; }
 
-/* Izgaralar */
 .grid-2 { display: grid; gap: var(--blk-gap-y, var(--tb-gap, 12px)) var(--blk-gap-x, var(--tb-gap, 12px)); grid-template-columns: repeat(2, minmax(0, 1fr)); }
 @media (min-width: 48rem) { .grid-2 { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 @media (min-width: 80rem) { .grid-2 { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
@@ -1067,18 +974,6 @@ a.card:hover { opacity: 1; transform: translateY(-2px); box-shadow: var(--hp-sha
 .hp-grid-2 { display: grid; gap: var(--blk-gap-y, var(--tb-gap, 12px)) var(--blk-gap-x, var(--tb-gap, 12px)); grid-template-columns: minmax(0, 1fr); }
 @media (min-width: 48rem) { .hp-grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 
-/* ---- 8) Hikayeler (haberpi "hikaye" şeridi: daire + etiket) ----
-   haberpi ölçümü (1440px):
-     #stories            1280x124.2, display:flex, dolgu yok
-     öğe arası boşluk    18.2px  (12 öğe tam 1280px'i doldurur)
-     .story / .item-link 90x124.2
-     .item-preview       90x90, radius %50, dolgu 2px,
-                         background: radial-gradient(at 70% 70%,
-                           #ee583f %8, #d92d77 %42, #bd3381 %58)
-     img                 86x86, radius %50, 3px BEYAZ çerçeve
-     .info               margin-top 8px, tek satır
-     strong.name         14px / 600 / #18181b
-     span.time           şeritte display:none (haberpi gizliyor) */
 .hp-stories {
   display: flex; gap: var(--blk-gap-y, 18px) var(--blk-gap-x, 18px); overflow-x: auto; scrollbar-width: none;
   padding: 0; align-items: flex-start;
@@ -1094,23 +989,17 @@ a.card:hover { opacity: 1; transform: translateY(-2px); box-shadow: var(--hp-sha
   width: 100%; height: 100%; border-radius: 50%; object-fit: cover;
   border: 3px solid #fff; background: #fff; display: block;
 }
-/* haberpi .info: inline-block (satır kutusunun alt boşluğu şerit
-   yüksekliğini 124.2px yapar) — bu yüzden block değil inline-block. */
+
 .hp-story .info { display: inline-block; width: 100%; margin-top: 8px; line-height: 19.2px; }
 .hp-story .info .name {
   display: block; font: 600 14px/19.2px var(--hp-font, inherit); color: #18181b;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
-/* haberpi şeritte zamanı gizliyor; ayrı bir görünümde açılabilir */
+
 .hp-story .info .time { display: none; }
 .hp-story:hover .ci-ring img { transform: scale(1.05); }
 .hp-story .ci-ring img { transition: transform .2s; }
 
-/* ---- Hikaye şeridi + viewer (Zuck.js Snapgram) — haberpi ile birebir ----
-   Daireler, açılış animasyonu, geçişler ve modal görünümü kaynakla aynıdır.
-   (Haberpi referans: styles.css → "Hikaye yuvarlaklar büyüt" ve "Hikaye viewer".) */
-
-/* Hikaye yuvarlaklar büyüt */
 #stories ul {
     padding-bottom: 0 !important;
     margin-bottom: 0 !important;
@@ -1137,7 +1026,6 @@ a.card:hover { opacity: 1; transform: translateY(-2px); box-shadow: var(--hp-sha
     }
 }
 
-/* Hikaye kategori adı — pill kaldırıldı, metin kaldı */
 #stories > ul > li > a .name,
 #stories .story .info .name,
 #stories .name {
@@ -1158,7 +1046,6 @@ a.card:hover { opacity: 1; transform: translateY(-2px); box-shadow: var(--hp-sha
     }
 }
 
-/* Masaüstünde 8+ daire varsa alana eşit dağılım (sağ boşluk önlenir) */
 @media (min-width: 1024px) {
     #stories.stories:has(.story:nth-child(8)) {
         display: flex;
@@ -1170,15 +1057,12 @@ a.card:hover { opacity: 1; transform: translateY(-2px); box-shadow: var(--hp-sha
     }
 }
 
-/* Dark mod: şerit yazıları */
 html[data-theme="dark"] #stories > ul > li > a .name,
 html[data-theme="dark"] #stories .story .info .name,
 html[data-theme="dark"] #stories .name,
 html[data-theme="dark"] .hp-story .info .name { color: #fff !important; }
 html[data-theme="dark"] #stories li .time { color: #bbb !important; }
 
-/* Hikaye viewer (Zuck.js 2.1.1) — slider % tabanlı düzeltmeler, slaytta
-   resim ortada, arkada bulanık zemin, başlık resmin altında (cümle düzeninde). */
 #zuck-modal,
 #zuck-modal-content {
     width: 100% !important;
@@ -1201,7 +1085,6 @@ html[data-theme="dark"] #stories li .time { color: #bbb !important; }
     width: 100% !important;
 }
 
-/* Slayt: resim ortada (oran korunur), başlık altında, arkada bulanık zemin */
 #zuck-modal #zuck-modal-content .story-viewer .slides .item {
     background: #0d0d0f;
 }
@@ -1214,7 +1097,7 @@ html[data-theme="dark"] #stories li .time { color: #bbb !important; }
     padding: 72px 28px 40px;
     box-sizing: border-box;
 }
-/* app.js'in eklediği bulanık arka plan */
+
 #zuck-modal #zuck-modal-content .story-viewer .slides .item .zuck-blur-bg {
     position: absolute;
     inset: -15%;
@@ -1239,7 +1122,7 @@ html[data-theme="dark"] #stories li .time { color: #bbb !important; }
     z-index: 1;
     flex: 0 1 auto;
 }
-/* Başlık: resmin altında, ortalı, cümle düzeni (büyük harf yok) */
+
 #zuck-modal #zuck-modal-content .story-viewer .slides .item .tip.link {
     position: relative;
     left: auto;
@@ -1269,11 +1152,10 @@ html[data-theme="dark"] #stories li .time { color: #bbb !important; }
     }
 }
 
-/* ---- 8b) Üst manşet: kart şeridi / ızgara + görsel üstü başlık stilleri ---- */
 .ust-manset {
   display: flex; gap: var(--blk-gap-y, 10px) var(--blk-gap-x, 10px); overflow-x: auto; scrollbar-width: none;
   padding-bottom: 4px; scroll-snap-type: x proximity;
-  /* Blok ayarlarından gelen görünüm değişkenleri (boşsa varsayılan). */
+  
   --um-title-color: #fff;
   --um-title-bg: rgba(11, 10, 17, .82);
   --um-title-size: .98rem;
@@ -1281,7 +1163,7 @@ html[data-theme="dark"] #stories li .time { color: #bbb !important; }
   --um-grad-color: #0b0a11;
   --um-grad-opacity: .88;
   --um-shadow: 0 1px 3px rgba(0, 0, 0, .55);
-  /* Kart kabuğu: açık/koyu tema ayrı; boşsa tema yüzeyi kullanılır. */
+  
   --um-card-bg-light: var(--hp-surface);
   --um-card-bg-dark: var(--hp-surface);
   --um-card-bg: var(--um-card-bg-light);
@@ -1295,8 +1177,7 @@ html[data-theme="dark"] #stories li .time { color: #bbb !important; }
   background: var(--um-card-bg); border-radius: var(--hp-radius);
   overflow: hidden; box-shadow: var(--um-card-shadow); display: block;
 }
-/* 16/9: kart yüksekliği 3 satırlık başlığa yer verecek kadar kalır,
-   aksi halde son satır kırpılıyordu. */
+
 .um-card img { width: 100%; aspect-ratio: 16 / 9; object-fit: cover; display: block; }
 .um-card .um-t {
   font-size: .92rem; font-weight: 700; line-height: 1.5; color: var(--hp-text);
@@ -1309,7 +1190,6 @@ html[data-theme="dark"] #stories li .time { color: #bbb !important; }
 .ust-manset > .um-card:hover { box-shadow: var(--um-card-shadow-hover); }
 @media (min-width: 64rem) { .ust-manset > .um-card { flex-basis: 300px; } }
 
-/* Izgara düzeni: haberturk tarzı eşit kartlar (mobilde 2 sütun). */
 .ust-manset.um-layout-izgara {
   display: grid; gap: var(--blk-gap-y, 10px) var(--blk-gap-x, 10px); overflow: visible; padding-bottom: 0;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1321,7 +1201,6 @@ html[data-theme="dark"] #stories li .time { color: #bbb !important; }
   .ust-manset.um-layout-izgara.um-cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 }
 
-/* ---- Görsel üstü başlık ortak katman ---- */
 .um-card.um-ov { position: relative; }
 .um-card.um-ov .um-media { position: relative; display: block; overflow: hidden; }
 .um-card.um-ov .um-shade {
@@ -1334,14 +1213,12 @@ html[data-theme="dark"] #stories li .time { color: #bbb !important; }
   color: var(--um-title-color); font-size: var(--um-title-size);
   padding: 12px 14px 14px; text-shadow: var(--um-shadow);
 }
-/* Kırpma iç elemanda: dış elemanda dolgu varken `-webkit-line-clamp`
-   taşan satırın birkaç pikselini alt dolgu bandında gösteriyordu. */
+
 .um-tx {
   display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;
   line-clamp: 3; overflow: hidden; overflow-wrap: anywhere;
 }
 
-/* Görsel üstü — üst hizalı: gradyan yukarıdan aşağı, başlık üstte. */
 .um-style-overlay-top .um-card.um-ov .um-shade {
   background: linear-gradient(to bottom, var(--um-grad-color), transparent 72%);
 }
@@ -1349,21 +1226,18 @@ html[data-theme="dark"] #stories li .time { color: #bbb !important; }
   bottom: auto; top: 0;
 }
 
-/* Yarı saydam bant: başlık görselin altında düz renkli bantta. */
 .um-style-band .um-card.um-ov .um-shade { display: none; }
 .um-style-band .um-card.um-ov .um-t {
   background: var(--um-title-bg); text-shadow: none;
   padding: 10px 12px;
 }
 
-/* Çerçeveli kutu: başlık görsel üstünde ayrı bir kutu içinde. */
 .um-style-frame .um-card.um-ov .um-t {
   left: 10px; right: 10px; bottom: 10px; border-radius: 8px;
   background: var(--um-title-bg); text-shadow: none;
   padding: 9px 11px; border: 1px solid rgba(255, 255, 255, .18);
 }
 
-/* Köşe etiketli: başlık alt köşede, sol kenarda vurgu çizgisi. */
 .um-style-corner .um-card.um-ov .um-t {
   left: 10px; right: 10px; bottom: 10px;
   border-left: 4px solid var(--hp-tema, #c90914);
@@ -1372,16 +1246,12 @@ html[data-theme="dark"] #stories li .time { color: #bbb !important; }
   border-radius: 0 8px 8px 0;
 }
 
-/* Etiket görsel üstünde kalır; küçük kartlarda taşmasın. */
 .um-card.um-ov .um-media .um-cat { z-index: 3; }
 
-/* ---- 8c) Büyük slider + sağ ray ---- */
-/* Ray yüksekliği slider'a eşitlenir; aksi halde slider satır boyunca
-   uzayıp altında siyah boşluk bırakıyordu. */
 .hero-row { display: grid; gap: var(--blk-gap-y, 10px) var(--blk-gap-x, 10px); grid-template-columns: minmax(0, 1fr); }
 @media (min-width: 64rem) {
   .hero-row { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); align-items: stretch; }
-  /* haberpi ölçümü: slider bölümü ~530px */
+  
   .hero-row .hero-slider { height: 530px; }
   .hero-row .hero-slide {
     position: absolute; inset: 0; display: block; opacity: 0; visibility: hidden;
@@ -1411,9 +1281,7 @@ html[data-theme="dark"] #stories li .time { color: #bbb !important; }
     background: linear-gradient(to top, rgba(0, 0, 0, .9), transparent);
   }
 }
-/* ---- 8d) Döviz + hava servis bandı (haberpi "hava + piyasa bandı") ----
-   Slider altı; beyaz rounded bar: solda BİST/DOLAR/EURO/ALTIN grupları,
-   sağda il seçici + hava ikonu/sıcaklık/açıklama (AJAX ile güncellenir). */
+
 .hp-ticker-bar { margin: 10px 0 16px; }
 .tk-inner {
   display: flex; align-items: center; gap: 16px;
@@ -1422,8 +1290,7 @@ html[data-theme="dark"] #stories li .time { color: #bbb !important; }
   border-radius: var(--hp-radius); padding: 8px 12px;
   overflow-x: auto; scrollbar-width: none;
 }
-/* Servis bandı arka planı: "yok" yüzeyi/kenarlığı kaldırır; zemin/özel
-   renk bölümden --sv-bg değişkeniyle gelir. */
+
 .sv-bg-yok .tk-inner { background: transparent; border-color: transparent; }
 .tk-inner::-webkit-scrollbar { display: none; }
 .tk-markets { display: flex; align-items: center; gap: 2px; flex: 1 1 auto; min-width: 0; }
@@ -1457,7 +1324,7 @@ html[data-theme="dark"] #stories li .time { color: #bbb !important; }
 .tk-weather:hover { opacity: .82; text-decoration: none; }
 .tk-wi { width: 44px; height: 44px; display: inline-flex; align-items: center; justify-content: center; color: #f59e0b; }
 .tk-wi svg { width: 100%; height: 100%; }
-/* Servis bandı ikonları: harici ikon fontu yerine hafif metin/SVG. */
+
 .tk-ico { display: inline-flex; align-items: center; justify-content: center; }
 .tk-sym { font-size: 18px; line-height: 1; font-weight: 800; color: currentColor; }
 .tk-wi svg { width: 100%; height: 100%; }
@@ -1479,56 +1346,13 @@ html[data-theme="dark"] .tk-il { background: #18181b; color: #e4e4e7; border-col
 @media (max-width: 47.99rem) {
   .tk-hava { display: none; }
 }
-/* Servis bandı: daraldıkça piyasa gruplarını SAĞDAN sırayla gizle
-   (ONS → BTC → ALTIN → EUR → USD) ki hava durumu ile üst üste binmesin. */
+
 @media (max-width: 1500px) { .tk-mk.tk-ONS { display: none; } }
 @media (max-width: 1250px) { .tk-mk.tk-BTC { display: none; } }
 @media (max-width: 1050px) { .tk-mk.tk-ALTIN { display: none; } }
 @media (max-width: 900px)  { .tk-mk.tk-EUR { display: none; } }
 @media (max-width: 760px)  { .tk-mk.tk-USD { display: none; } }
-/* ---- Kur & Borsa modülü — Habertürk ekonomi şeridiyle BİREBİR ----
-   Referans yapı (haberturk.com/ekonomi):
-     <a class="flex space-x-2">
-       <div class="flex flex-col">  etiket / fiyat / yüzde (dikey)
-       <i class="setIcon h-8 w-3">  ok EN SAĞDA, 12x32, dikey ortalı
-     </a>
 
-   Genişlik kuralı: kalemler kapsayıcıyı EŞİT paylaşır (flex:1 1 0) ve
-   taşma gizlenir. Böylece 1280 px ana genişlikte tam oturur, altta kaydırma
-   çubuğu çıkmaz. Dar ekranda satır sarar — yatay kaydırma yok.
-   Çerçeve YOK: ne kenarlık ne alt çizgi (kullanıcı isteği). */
-/* ---- Kur & Borsa modülü — Habertürk ekonomi şeridiyle BİREBİR ----
-   Referans yapı (haberturk.com/ekonomi):
-     <a class="flex space-x-2">
-       <div class="flex flex-col">  etiket / fiyat / yüzde (dikey)
-       <i class="setIcon h-8 w-3">  ok EN SAĞDA, 12x32, dikey ortalı
-     </a>
-   Referans tipografi (Tailwind): etiket text-xs (12px), fiyat text-xl
-   (20px, font-bold), yüzde text-xxs (~10px), leading-none. Font: Poppins.
-
-   Genişlik/taşma kuralı (mobil kaymayı bitirir):
-     • .pys-item taban boyutu flex-basis'tir (96px), içerik değil — aksi
-       hâlde white-space:nowrap yüzünden kalemler küçülmez, taşar ve
-       SAYFA yatay kayar.
-     • min-width:0 + overflow:hidden → uzun metin kırpılır, taşmaz.
-     • flex-wrap:wrap → sığmayınca satır sarar, yatay kaydırma yok.
-   Çerçeve YOK: ne kenarlık ne alt çizgi (kullanıcı isteği). */
-/* ---- Kur & Borsa modülü — Habertürk ekonomi şeridiyle BİREBİR ----
-   Referans yapı (haberturk.com/ekonomi):
-     <a class="flex space-x-2">
-       <div class="flex flex-col">  etiket / fiyat / yüzde (dikey)
-       <i class="setIcon h-8 w-3">  ok EN SAĞDA, 12x32, dikey ortalı
-     </a>
-
-   Kaydırma: üst manşetle (.ust-manset) AYNI desen — yatay kaydırma,
-   gizli kaydırma çubuğu, scroll-snap. Dokunmatikte parmakla, masaüstünde
-   fareyle sürükleyerek (piyasa.js) veya shift+tekerlek ile gezilir.
-
-   Referans tipografi (Tailwind): etiket text-xs (12px), fiyat text-xl
-   (20px, font-bold), yüzde text-xxs (~10px), leading-none. Font: Poppins.
-   Kaydırma olduğu için fiyat TAM 20px — referansla birebir.
-
-   Çerçeve YOK: ne kenarlık ne alt çizgi. */
 .pys-strip {
   margin: 10px 0 16px;
   max-width: 100%;
@@ -1540,20 +1364,19 @@ html[data-theme="dark"] .tk-il { background: #18181b; color: #e4e4e7; border-col
   border-radius: 0;
   padding: 0 0 4px;
   max-width: 100%;
-  overflow-x: auto;             /* kaydırılabilir (üst manşet gibi) */
+  overflow-x: auto;             
   overflow-y: hidden;
-  scrollbar-width: none;        /* kaydırma çubuğu gizli */
+  scrollbar-width: none;        
   -ms-overflow-style: none;
   scroll-snap-type: x proximity;
   -webkit-overflow-scrolling: touch;
-  overscroll-behavior-x: contain; /* sayfa yatay kaymasın */
+  overscroll-behavior-x: contain; 
 }
 .pys-scroll::-webkit-scrollbar { display: none; width: 0; height: 0; }
-/* Fareyle sürüklerken metin seçimi engellenir (piyasa.js). */
+
 .pys-scroll.is-dragging { cursor: grabbing; scroll-snap-type: none; }
 .pys-scroll.is-dragging * { user-select: none; }
-/* Kalem: solda 3 satırlık sütun, sağda ok. Genişlik sabit (üst manşetteki
-   .um-card gibi) → içerik kırpılmaz, taşma kaydırmaya dönüşür. */
+
 .pys-item {
   display: flex; align-items: center; gap: 8px;
   flex: 0 0 auto;
@@ -1567,36 +1390,35 @@ html[data-theme="dark"] .tk-il { background: #18181b; color: #e4e4e7; border-col
 }
 .pys-item:last-child { padding-right: 0; }
 .pys-item:hover { text-decoration: none; opacity: .88; }
-/* Sol sütun: etiket / fiyat / yüzde — referanstaki flex flex-col. */
+
 .pys-col {
   display: flex; flex-direction: column;
   line-height: 1.15;
   min-width: 0;
 }
 .pys-name {
-  font-size: .75rem; line-height: 1.1; font-weight: 400;   /* text-xs 12px */
+  font-size: .75rem; line-height: 1.1; font-weight: 400;   
   color: var(--hp-text-muted, #71717a);
   white-space: nowrap;
 }
 .pys-price {
-  font-size: 1.25rem; line-height: 1.15; font-weight: 700; /* text-xl 20px */
+  font-size: 1.25rem; line-height: 1.15; font-weight: 700; 
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
   color: var(--hp-text);
 }
 .pys-chg {
-  font-size: .625rem; line-height: 1.1; font-weight: 400;  /* text-xxs ~10px */
+  font-size: .625rem; line-height: 1.1; font-weight: 400;  
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
   color: var(--hp-text-muted, #71717a);
 }
-/* Renk: referans fiyatı da yön renginde yazıyor (green-700 / red-700). */
+
 .pys-up .pys-price { color: #15803d; }
 .pys-down .pys-price { color: #b91c1c; }
 .pys-up .pys-chg { color: #15803d; }
 .pys-down .pys-chg { color: #b91c1c; }
 
-/* Ok: 12x32 kutu, dikey ortalı, rengi yön rengini izler (currentColor). */
 .pys-ico {
   display: block; flex: 0 0 auto;
   width: 12px; height: 32px;
@@ -1606,21 +1428,17 @@ html[data-theme="dark"] .tk-il { background: #18181b; color: #e4e4e7; border-col
 .pys-down .pys-ico { color: #bd1b2e; }
 .pys-ico-svg { display: block; width: 100%; height: 100%; fill: currentColor; }
 .pys-ico-stroke { fill: none; stroke: currentColor; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
-/* Noktalı kuyruk: referans SVG'sindeki kesikli çizgi. Düşüş varyantı
-   180° döndürülür (referansta da rotate(180) var). */
+
 .pys-ico-noktali .pys-ico-svg { overflow: visible; }
 .pys-ico-down .pys-ico-svg { transform: rotate(180deg); }
 
-/* Arka plan: varsayılan "yok" = saydam. */
 .pys-meta {
   font-size: .625rem; color: var(--hp-text-muted, #71717a);
   padding: 4px 0 0; text-align: right;
 }
 
-/* --- Şablon varyantları --------------------------------------------------- */
-/* sade: fiyat nötr, yalnız yüzde renkli */
 .pys-style-sade .pys-price { color: var(--hp-text); }
-/* kart: her kalem kendi çerçevesinde (bilinçli seçim) */
+
 .pys-style-kart .pys-scroll {gap: var(--blk-gap-y, 8px) var(--blk-gap-x, 8px); }
 .pys-style-kart .pys-item {
   padding: 10px 14px;
@@ -1629,7 +1447,7 @@ html[data-theme="dark"] .tk-il { background: #18181b; color: #e4e4e7; border-col
   border-radius: var(--hp-radius, 8px);
 }
 .pys-style-kart .pys-item:hover { opacity: 1; background: var(--hp-surface-2, #f4f4f5); }
-/* dar: tek satır kompakt (yan sütun) — etiket ve fiyat yan yana */
+
 .pys-style-dar .pys-item { padding-right: 16px; gap: 5px; min-width: 0; }
 .pys-style-dar .pys-col { flex-direction: row; align-items: baseline; gap: 5px; }
 .pys-style-dar .pys-name { font-size: .625rem; }
@@ -1648,10 +1466,6 @@ html[data-theme="dark"] .pys-style-kart .pys-item { background: #18181b; border-
 html[data-theme="dark"] .pys-style-kart .pys-item:hover { background: #27272a; }
 html[data-theme="dark"] .pys-style-sade .pys-price { color: #f4f4f5; }
 
-/* --- Duyarlı (responsive) ---
-   1280 px'de kalemler doğal genişliğinde; sığmayan kısım kaydırılır
-   (tıpkı üst manşet gibi). Ekran daraldıkça kalem daralır ki aynı anda
-   2-3 kalem görünsün ve kaydırma anlamlı olsun. Kaydırma çubuğu gizli. */
 @media (max-width: 1200px) {
   .pys-item { min-width: 126px; }
 }
@@ -1672,13 +1486,6 @@ html[data-theme="dark"] .pys-style-sade .pys-price { color: #f4f4f5; }
   .pys-ico { height: 22px; }
 }
 
-/* ---- Hisseler (hss-) — Habertürk ekonomi "HİSSELER" düzeni ----
-   Referans: haberturk.com/ekonomi → stores bölümü
-     HİSSELER + yatay çizgi + TÜMÜ
-     çerçeveli kutu içinde kesintisiz kayan hisse şeridi:
-       kod (küçük) / fiyat (büyük, yön renginde) / yön oku
-   Şerit CSS ile akar: liste iki kez basılır, -50% kaydırınca dikişsiz döner.
-   Önek hss- : pys-/pss-/kb- ile çakışmasın. */
 .hss-block { margin: 14px 0; }
 .hss-head { display: flex; align-items: center; gap: 14px; margin-bottom: 10px; }
 .hss-title { font-size: 1.25rem; font-weight: 900; letter-spacing: -.01em; margin: 0; color: var(--hp-text); }
@@ -1711,8 +1518,7 @@ html[data-theme="dark"] .pys-style-sade .pys-price { color: #f4f4f5; }
 .hss-code { font-size: .6875rem; font-weight: 700; letter-spacing: .02em; color: var(--hp-text-muted, #52525b); }
 .hss-price { font-size: 1.125rem; font-weight: 800; font-variant-numeric: tabular-nums; }
 .hss-chg { font-size: .75rem; font-weight: 700; font-variant-numeric: tabular-nums; }
-/* Yön göstergesi: kb_ok şablonu (hss- sınıf önekiyle). Kur & Borsa'daki
-   .pys-ico ile birebir aynı ölçü ve renk dili. */
+
 .hss-ico {
   display: block; flex: 0 0 auto;
   width: 12px; height: 32px;
@@ -1727,12 +1533,9 @@ html[data-theme="dark"] .pys-style-sade .pys-price { color: #f4f4f5; }
 .hss-meta { margin: 6px 0 0; font-size: .6875rem; color: var(--hp-text-muted, #71717a); }
 @keyframes hss-scroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
 
-/* JS varsa CSS animasyonu kapanır: hareket piksel/sn sabit hızla rAF ile
-   sürülür (içerik genişliği değişince hız kaymasın). */
 .hss-js .hss-track { animation: none; will-change: auto; }
 .hss-js .hss-frame:hover .hss-track { animation-play-state: running; }
 
-/* Modül altındaki hisse arama kutusu (Tüm Hisseler sayfasına götürür). */
 .hss-search {
   display: flex; align-items: center; gap: 0;
   margin: 8px 0 0; max-width: 420px;
@@ -1754,16 +1557,12 @@ html[data-theme="dark"] .pys-style-sade .pys-price { color: #f4f4f5; }
 .hss-search:focus-within { border-color: var(--hp-tema); }
 .hss-search-t { font-size: .75rem; }
 
-/* Ok çizimleri (kb_ok şablonundaki SVG'ler hss- sınıflarını alır). */
 .hss-ico-svg { display: block; width: 100%; height: 100%; fill: currentColor; }
 .hss-ico-stroke { fill: none; stroke: currentColor; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
 .hss-ico-noktali .hss-ico-svg { overflow: visible; }
 .hss-ico-down .hss-ico-svg { transform: rotate(180deg); }
 .hss-ico-flat { color: var(--hp-text-muted, #71717a); }
 
-/* Canlı güncellemede kesikli kuyruk akışı: son 3 nokta sırayla söner/parlar.
-   hisse.js yalnız gerçek değer değişiminde .fin-ok-akis sınıfını ekler;
-   ilk yüklemede ve hareket azaltmada çalışmaz. */
 @keyframes finOkAkis {
   0%, 100% { opacity: 1; }
   40%      { opacity: .3; }
@@ -1772,14 +1571,10 @@ html[data-theme="dark"] .pys-style-sade .pys-price { color: #f4f4f5; }
 .fin-ok-akis rect:nth-last-of-type(2) { animation: finOkAkis .6s ease-in-out .09s; }
 .fin-ok-akis rect:nth-last-of-type(1) { animation: finOkAkis .6s ease-in-out .18s; }
 
-/* --- Görünüm şablonları: Kur & Borsa ile aynı sözlük ------------------- */
-/* sade: fiyat nötr, yalnız yüzde değişimi renkli.
-   Seçici .hss-item'ı içerir: .hss-item.hss-down .hss-price (0,3,0) ile
-   eşit özgüllükte olup sonra geldiği için kazanır. */
 .hss-style-sade .hss-item .hss-price { color: var(--hp-text); }
 .hss-style-sade .hss-ico, .hss-style-sade .hss-item.hss-up .hss-ico,
 .hss-style-sade .hss-item.hss-down .hss-ico { color: var(--hp-text-muted, #71717a); }
-/* kart: her hisse kendi çerçevesinde; şerit boşluğu modül boşluğunu izler */
+
 .hss-style-kart .hss-frame { background: transparent; border: 0; padding: 0; overflow: visible; }
 .hss-style-kart .hss-track { gap: var(--blk-gap-y, 8px) var(--blk-gap-x, 8px); }
 .hss-style-kart .hss-item {
@@ -1789,7 +1584,7 @@ html[data-theme="dark"] .pys-style-sade .pys-price { color: #f4f4f5; }
 .hss-style-kart .hss-item:hover { background: var(--hp-surface-2, #f4f4f5); }
 .hss-style-kart .hss-group .hss-item:last-child { border-right: 1px solid var(--hp-border, rgba(0, 0, 0, .08)); }
 .hss-style-kart .hss-ico { height: 26px; }
-/* dar: tek satır kompakt (yan sütun) — kod ve fiyat yan yana */
+
 .hss-style-dar .hss-item { padding: 2px 14px; gap: 5px; min-width: 0; }
 .hss-style-dar .hss-txt { flex-direction: row; align-items: baseline; gap: 5px; }
 .hss-style-dar .hss-code { font-size: .625rem; }
@@ -1798,9 +1593,6 @@ html[data-theme="dark"] .pys-style-sade .pys-price { color: #f4f4f5; }
 .hss-style-dar .hss-ico { height: 20px; }
 .hss-style-dar .hss-meta { display: none; }
 
-/* Arka plan: kart = modülün kendi çerçevesi (varsayılan); yok = tam
-   saydam; zemin/ozel renk bölüme inline gelir (kbArkaPlanCSS). İç çerçeve
-   yüzeyi/kenarlığı bu durumlarda kaldırılır ki çift kutu oluşmasın. */
 .hss-bg-yok .hss-frame {
   background: transparent; border-color: transparent; padding: 0;
 }
@@ -1808,7 +1600,6 @@ html[data-theme="dark"] .pys-style-sade .pys-price { color: #f4f4f5; }
   background: transparent; border-color: transparent;
 }
 
-/* Izgara şablonu: aynı kartlar sabit ızgarada (şerit istemeyen yerler için). */
 .hss-izgara .hss-frame { padding: 0; }
 .hss-izgara .hss-track {
   display: grid; width: auto; animation: none;
@@ -1821,7 +1612,7 @@ html[data-theme="dark"] .pys-style-sade .pys-price { color: #f4f4f5; }
   background: var(--hp-surface, #fff);
 }
 .hss-izgara .hss-item:hover { background: var(--hp-surface-2, #f4f4f5); }
-/* Izgarada kart şablonu: hücreler arası boşluk + yuvarlak köşe. */
+
 .hss-izgara.hss-style-kart .hss-track { gap: var(--blk-gap-y, 8px) var(--blk-gap-x, 8px); background: transparent; }
 .hss-izgara.hss-style-kart .hss-item { border: 1px solid var(--hp-border, rgba(0, 0, 0, .08)); border-radius: var(--hp-radius, 8px); }
 .hss-izgara.hss-style-dar .hss-track { grid-template-columns: repeat(auto-fill, minmax(116px, 1fr)); }
@@ -1842,17 +1633,13 @@ html[data-theme="dark"] .hss-style-sade .hss-item .hss-price { color: #f4f4f5; }
   .hss-item { min-width: 104px; padding: 2px 12px; }
   .hss-price { font-size: 1rem; }
 }
-/* Hareket azaltma tercihi: animasyon durur, şerit elle kaydırılabilir olur. */
+
 @media (prefers-reduced-motion: reduce) {
   .hss-track { animation: none; }
   .hss-frame { overflow-x: auto; -webkit-overflow-scrolling: touch; }
   .hss-frame::-webkit-scrollbar { height: 0; }
 }
 
-/* ---- Tüm Hisseler sayfası (hsp-) — Habertürk tum-hisseler düzeni ----
-   Arama kutusu + A-Z dizini + tablo (HİSSE ADI · FİYAT · FARK).
-   Tablo yatay kaydırmaz: 3 sütun her ekrana sığar; sayfa 633 satırla
-   uzun olur, arama ve harf dizini ile daraltılır. */
 .hsp-wrap { margin-top: 6px; }
 .hsp-search {
   display: flex; align-items: center; gap: 8px;
@@ -1937,9 +1724,6 @@ html[data-theme="dark"] .hsp-chg.hss-down { color: #f87171; }
   .hsp-av { width: 24px; height: 24px; font-size: .75rem; }
 }
 
-/* ---- Kripto Para (krp-) — Habertürk ekonomi "KRİPTO PARA" düzeni ----
-   Başlık + çizgi + TÜMÜ; ızgarada ikon, ad/kod, fiyat ve %24s.
-   Renk dili Kur & Borsa ile aynı (yeşil yükseliş / kırmızı düşüş). */
 .krp-block { margin: 14px 0; }
 .krp-head { display: flex; align-items: center; gap: 14px; margin-bottom: 10px; }
 .krp-title { font-size: 1.25rem; font-weight: 900; letter-spacing: -.01em; margin: 0; }
@@ -1952,17 +1736,14 @@ html[data-theme="dark"] .hsp-chg.hss-down { color: #f87171; }
 .krp-cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 .krp-cols-5 { grid-template-columns: repeat(5, minmax(0, 1fr)); }
 .krp-cols-6 { grid-template-columns: repeat(6, minmax(0, 1fr)); }
-/* Ekran daralınca sütun azalt (geniş bölgeler için yedek). */
+
 @media (max-width: 64rem) {
   .krp-cols-4, .krp-cols-5, .krp-cols-6 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 @media (max-width: 40rem) {
   .krp-cols-3, .krp-cols-4, .krp-cols-5, .krp-cols-6 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
-/* Modül dar bir sütuna (sağ ray) konursa 4-6 sütun sıkışmasın: kapsayıcı
-   sorgusu ile otomatik daralır. Ekran değil MODÜL genişliği ölçüt alınır,
-   çünkü aynı modül ana kolonda geniş, yan sütunda dar olabilir. Bu blok
-   medya sorgularından SONRA gelir ki dar modülde 1 sütun kazanabilsin. */
+
 .krp-block { container-type: inline-size; }
 @container (max-width: 46rem) {
   .krp-cols-4, .krp-cols-5, .krp-cols-6 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
@@ -1997,7 +1778,6 @@ html[data-theme="dark"] .hsp-chg.hss-down { color: #f87171; }
 .krp-meta { margin: 8px 0 0; font-size: .6875rem; color: var(--hp-text-muted, #71717a); }
 .krp-page .krp-price { font-size: 1rem; }
 
-/* --- Kripto şerit yerleşimi (Hisseler ile aynı hareket motoru) --- */
 .krp-frame {
   border: 1px solid var(--hp-border); border-radius: var(--hp-radius, 8px);
   background: var(--hp-surface, #fff); overflow: hidden; padding: 8px 0;
@@ -2017,26 +1797,24 @@ html[data-theme="dark"] .hsp-chg.hss-down { color: #f87171; }
 .krp-serit .krp-group:last-child .krp-card:last-child { border-right: 0; }
 .krp-serit .krp-card:hover { background: var(--hp-surface-2, #f4f4f5); }
 @keyframes krp-scroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
-/* JS varsa CSS yedeği kapanır (piksel/sn sabit hız rAF ile sürülür). */
+
 .mq-js .hss-track, .mq-js .krp-track { animation: none; will-change: auto; }
 .mq-js .hss-frame:hover .hss-track,
 .mq-js .krp-frame:hover .krp-track { animation-play-state: running; }
 
-/* --- Kripto görünüm şablonları: Kur & Borsa / Hisseler ile aynı --- */
-/* sade: çerçevesiz, nötr fiyat */
 .krp-style-sade .krp-card {
   border-color: transparent; background: transparent; padding: 6px 8px;
 }
 .krp-style-sade .krp-card:hover { background: var(--hp-surface-2, #f4f4f5); }
 .krp-style-sade .krp-card .krp-price { color: var(--hp-text); }
-/* kart: belirgin kart (gölge) */
+
 .krp-style-kart .krp-card {
   border-color: var(--hp-border-2, #d4d4d8);
   box-shadow: 0 1px 3px rgba(0, 0, 0, .06);
   padding: 12px 14px;
 }
 .krp-style-kart .krp-card:hover { box-shadow: 0 4px 14px rgba(0, 0, 0, .1); }
-/* dar: tek satır kompakt (yan sütun) */
+
 .krp-style-dar .krp-card { padding: 6px 10px; gap: 6px; }
 .krp-style-dar .krp-name { font-size: .75rem; }
 .krp-style-dar .krp-price { font-size: .8125rem; }
@@ -2044,7 +1822,6 @@ html[data-theme="dark"] .hsp-chg.hss-down { color: #f87171; }
 .krp-style-dar .krp-ico, .krp-style-dar .krp-ico img { width: 20px; height: 20px; }
 .krp-style-dar .krp-meta { display: none; }
 
-/* --- Kripto sayfası (kps-) --- */
 .kps-wrap { margin-top: 6px; }
 .kps-search { margin-bottom: 10px; }
 .kps-bar {
@@ -2071,9 +1848,7 @@ html[data-theme="dark"] .hsp-chg.hss-down { color: #f87171; }
 }
 html[data-theme="dark"] .kps-chg.hss-up { color: #4ade80; }
 html[data-theme="dark"] .kps-chg.hss-down { color: #f87171; }
-/* --- Kripto liste şablonları: yan sütun (rail) ve mini ---
-   Sağ raya taşınan modül "otomatik" seçiliyse kendiliğinden buraya geçer.
-   Her coin tek satır: ikon · kod/ad · fiyat + %24s. */
+
 .krp-list { display: flex; flex-direction: column; }
 .krp-row {
   display: flex; align-items: center; gap: 8px;
@@ -2097,19 +1872,19 @@ html[data-theme="dark"] .kps-chg.hss-down { color: #f87171; }
 .krp-row.krp-up .krp-chg { color: #15803d; }
 .krp-row.krp-down .krp-chg { color: #b91c1c; }
 .krp-row.krp-flat .krp-chg { color: var(--hp-text-muted, #71717a); }
-/* rail: üstte ince çerçeve, satırlar arası ayraç (yan sütun listesi) */
+
 .krp-list-rail {
   border: 1px solid var(--hp-border); border-radius: var(--hp-radius, 8px);
   background: var(--hp-surface, #fff); overflow: hidden;
 }
-/* mini: çerçevesiz, çok sıkı — sayfa içi küçük şerit */
+
 .krp-list-mini .krp-row { padding: 4px 2px; }
 .krp-list-mini .krp-row-code { font-size: .75rem; }
 .krp-list-mini .krp-row-name { display: none; }
 .krp-list-mini .krp-row-ico { width: 18px; height: 18px; }
 .krp-list-mini .krp-row-ico img { width: 18px; height: 18px; }
 .krp-list-mini .krp-row .krp-price { font-size: .8125rem; }
-/* Yan sütunda uzun disclaimer satırı widget'ı şişirmesin (Hisseler ile aynı). */
+
 .krp-dar .krp-meta { display: none; }
 html[data-theme="dark"] .krp-list-rail { background: #18181b; border-color: #27272a; }
 html[data-theme="dark"] .krp-row { border-bottom-color: #27272a; }
@@ -2117,8 +1892,6 @@ html[data-theme="dark"] .krp-row:hover { background: #27272a; }
 html[data-theme="dark"] .krp-row.krp-up .krp-chg { color: #4ade80; }
 html[data-theme="dark"] .krp-row.krp-down .krp-chg { color: #f87171; }
 
-/* Kripto arka plan seçimi: kart = iç kart/çerçeve yüzeyi (varsayılan);
-   yok = tam saydam; zemin/ozel renk bölüme inline gelir. */
 .krp-bg-yok .krp-card,
 .krp-bg-yok .krp-frame,
 .krp-bg-yok .krp-list-rail,
@@ -2134,8 +1907,7 @@ html[data-theme="dark"] .krp-row.krp-down .krp-chg { color: #f87171; }
 .krp-bg-ozel .krp-list-rail { background: transparent; border-color: transparent; }
 .krp-bg-zemin .krp-card,
 .krp-bg-ozel .krp-card { box-shadow: none; }
-/* Koyu temada da arka plan seçimi geçerli: koyu tema kuralları (0,2,1)
-   taban sınıflardan daha özgül olduğu için burada açıkça eşitlenir. */
+
 html[data-theme="dark"] .krp-bg-yok .krp-card,
 html[data-theme="dark"] .krp-bg-yok .krp-frame,
 html[data-theme="dark"] .krp-bg-yok .krp-list-rail,
@@ -2154,9 +1926,6 @@ html[data-theme="dark"] .krp-bg-ozel .krp-card:hover { background: transparent; 
 html[data-theme="dark"] .sv-bg-yok .tk-inner { background: transparent; border-color: transparent; }
 html[data-theme="dark"] .kcr-block.kcr-bg-yok { background: transparent; border-color: transparent; }
 
-/* --- Hisseler: dar bölge (sağ ray) otomatik görünümü ---
-   "otomatik" seçiliyken yan sütunda tek satır kompakt stile geçer;
-   ayrıca şerit genişliği daralır ve meta satırı gizlenir. */
 .hss-dar .hss-item { min-width: 0; padding: 2px 10px; gap: 6px; }
 .hss-dar .hss-code { font-size: .625rem; }
 .hss-dar .hss-price { font-size: .875rem; }
@@ -2174,8 +1943,6 @@ html[data-theme="dark"] .krp-card:hover { background: #27272a; }
 html[data-theme="dark"] .krp-card.krp-up .krp-chg { color: #4ade80; }
 html[data-theme="dark"] .krp-card.krp-down .krp-chg { color: #f87171; }
 
-/* ---- Kur Çevirici (kcr-) — Habertürk "KUR ÇEVİRİCİ" düzeni ----
-   Tutar + kaynak + ⇄ + hedef + DÖNÜŞTÜR; altında sonuç ve bilgi notu. */
 .kcr-block {
   margin: 14px 0; padding: 14px 16px;
   border: 1px solid var(--hp-border); border-radius: var(--hp-radius, 8px); background: var(--hp-surface, #fff);
@@ -2207,7 +1974,7 @@ html[data-theme="dark"] .krp-card.krp-down .krp-chg { color: #f87171; }
 .kcr-result b { font-size: 1.125rem; }
 .kcr-note { margin: 6px 0 0; font-size: .6875rem; color: var(--hp-text-muted, #71717a); }
 html[data-theme="dark"] .kcr-block { background: #18181b; border-color: #27272a; }
-/* "Yok" (saydam) seçimi koyu temada da kutu yüzeyini kaldırır. */
+
 .kcr-block.kcr-bg-yok { background: transparent; border-color: transparent; }
 html[data-theme="dark"] .kcr-field input,
 html[data-theme="dark"] .kcr-field select,
@@ -2218,14 +1985,6 @@ html[data-theme="dark"] .kcr-swap { background: #111113; border-color: #27272a; 
   .kcr-go { flex: 1 1 100%; }
 }
 
-/* ---- Puan Durumu Şeridi (pss-) — Habertürk spor yazısı düzeni BİREBİR ----
-   Referans: haberturk.com spor makalesi
-     <h2 class="font-black text-xl">PUAN DURUMU</h2> + yatay çizgi
-     <div class="flex space-x-2 overflow-auto">
-       <div class="flex-none md:flex-1 w-10 border">   ← takım kartı
-         logo · kısa kod · puan (üstte ince çizgi)
-   Kart eşit genişlikte esner; dar ekranda daralır, sığmayan kısım kaydırılır.
-   Önek pss- : projedeki kb-/um-/puan- sınıflarıyla çakışmasın. */
 .pss-block { margin: 10px 0 18px; }
 .pss-head {
   display: flex; align-items: center; gap: 14px;
@@ -2254,7 +2013,7 @@ html[data-theme="dark"] .kcr-swap { background: #111113; border-color: #27272a; 
 .pss-scroll::-webkit-scrollbar { display: none; width: 0; height: 0; }
 .pss-scroll.is-dragging { cursor: grabbing; scroll-snap-type: none; }
 .pss-scroll.is-dragging * { user-select: none; }
-/* Takım kartı: referanstaki .w-10 border — ince çerçeve, eşit genişlik. */
+
 .pss-card {
   flex: 1 1 0; min-width: 62px; max-width: 120px;
   border: 1px solid var(--hp-border, rgba(0, 0, 0, .12));
@@ -2269,7 +2028,7 @@ html[data-theme="dark"] .kcr-swap { background: #111113; border-color: #27272a; 
   height: 100%; cursor: grab;
 }
 .pss-team:hover { text-decoration: none; background: var(--hp-surface-2, #f4f4f5); }
-/* Logo: referansta kare (aspect 1/1), kart genişliğine göre ölçeklenir. */
+
 .pss-logo {
   display: block; width: 100%; padding: 7px 9px 3px;
   box-sizing: border-box;
@@ -2283,7 +2042,7 @@ html[data-theme="dark"] .kcr-swap { background: #111113; border-color: #27272a; 
   width: 100%; aspect-ratio: 1 / 1;
   font-size: .68rem; font-weight: 800; color: var(--hp-text-muted, #71717a);
 }
-/* Kısa kod: referansta text-xxs, ortalı. */
+
 .pss-code {
   display: block; width: 100%; text-align: center;
   font-size: .625rem; line-height: 1.2; font-weight: 500;
@@ -2291,7 +2050,7 @@ html[data-theme="dark"] .kcr-swap { background: #111113; border-color: #27272a; 
   padding: 0 2px 4px;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-/* Puan: referansta üstte ince çizgi, ortalı, text-xs. */
+
 .pss-pts {
   display: block; width: 100%; text-align: center;
   font-size: .75rem; line-height: 1.1; font-weight: 700;
@@ -2304,9 +2063,7 @@ html[data-theme="dark"] .kcr-swap { background: #111113; border-color: #27272a; 
 html[data-theme="dark"] .pss-card { background: #18181b; border-color: #27272a; }
 html[data-theme="dark"] .pss-team:hover { background: #27272a; }
 html[data-theme="dark"] .pss-pts { border-top-color: #27272a; }
-/* Duyarlı: 18 takım 1280'de tek satır; dar ekranda kart daralır ve
-   sığmayan kısım kaydırılır. Çok dar ekranda min-width küçülür ki
-   aynı anda 4-5 kart görünsün. */
+
 @media (max-width: 900px) {
   .pss-card { min-width: 56px; }
   .pss-title { font-size: 1.1rem; }
@@ -2317,15 +2074,12 @@ html[data-theme="dark"] .pss-pts { border-top-color: #27272a; }
   .pss-title { font-size: 1rem; }
 }
 
-/* Mobilde hava bloğu gizlendiği için piyasa kalemlerini tekrar göster;
-   bar yatay kaydırılabilir kalır, böylece servis bandı boşalmaz. */
 @media (max-width: 47.99rem) {
   .hp-ticker-bar .tk-inner { flex-wrap: nowrap; }
   .hp-ticker-bar .tk-markets { flex: 0 0 auto; }
   .hp-ticker-bar .tk-markets .tk-mk { display: inline-flex; }
 }
-/* Not: app.css'teki .manset-* kuralları (absolute kaplama, 96x66 küçük görsel)
-   sıfırlanır; aksi halde public kuralları yalnızca eksik özelliklerde geçerli kalır. */
+
 .manset-grid {
   display: grid; gap: var(--blk-gap-y, 10px) var(--blk-gap-x, 10px); grid-template-columns: minmax(0, 1fr);
   margin: 10px 0 6px;
@@ -2361,8 +2115,6 @@ html[data-theme="dark"] .pss-pts { border-top-color: #27272a; }
 .manset-overlay--plain { padding: 0; }
 .manset-side, .manset-info { display: contents; }
 
-/* ---- 9) Hero slider ---- */
-/* app.css'teki sabit 440px yükseklik ve absolute slayt kuralı sıfırlanır. */
 .hero-slider {
   position: relative; height: auto; background: #000;
   border-radius: var(--hp-radius); overflow: hidden; margin: 8px 0;
@@ -2393,8 +2145,7 @@ html[data-theme="dark"] .pss-pts { border-top-color: #27272a; }
   color: #d4d4d8; margin: 6px 0 0; font-size: .9rem; max-width: 70ch;
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
 }
-/* Sade, düz beyaz chevron oklar (mynet/haberpi tarzı): daire yok, hafif
-   gölge; yalnızca hover/odakta çok hafif koyu daire. */
+
 .hero-nav {
   position: absolute; top: 50%; transform: translateY(-50%); z-index: 4;
   width: 44px; height: 44px; border: 0; border-radius: 50%; cursor: pointer; padding: 0;
@@ -2412,8 +2163,7 @@ html[data-theme="dark"] .pss-pts { border-top-color: #27272a; }
 .hero-nav:hover, .hero-nav:focus-visible { background: rgba(0, 0, 0, .38); opacity: 1; }
 .hero-nav:focus-visible { outline: 2px solid rgba(255, 255, 255, .7); outline-offset: 2px; }
 .hero-prev { left: 10px; } .hero-next { right: 10px; }
-/* app.css'teki "tam genişlik + ortalı" kuralı sıfırlanır; noktalar
-   kaplama metninin sağ alt köşesine taşınır. */
+
 .hero-dots {
   position: absolute; left: auto; right: 14px; bottom: 12px;
   display: flex; gap: 6px; justify-content: flex-end; z-index: 3;
@@ -2424,7 +2174,7 @@ html[data-theme="dark"] .pss-pts { border-top-color: #27272a; }
   background: rgba(255, 255, 255, .55); cursor: pointer; padding: 0;
   transition: width .2s ease, background-color .22s ease, color .22s ease;
 }
-/* haberpi'de etkin nokta geniş bir kırmızı hap */
+
 .hero-dot.on { background: var(--pager-color, var(--hp-tema)); width: 26px; border-radius: 999px; }
 .hero-dots--pos-left { left: 14px; right: auto; }
 .hero-dots--pos-center { left: 50%; right: auto; transform: translateX(-50%); }
@@ -2446,8 +2196,6 @@ html[data-theme="dark"] .pss-pts { border-top-color: #27272a; }
 .hero-all em { font-size: 1.7rem; font-style: normal; margin-top: 12px; }
 .hero-dot-all { width: auto !important; min-width: 24px; padding: 0 7px; border-radius: 6px; background: var(--pager-color, var(--hp-tema)) !important; font-size: .72rem; font-weight: 700; }
 
-/* Başlık harf biçimi (slider + modüller). Stil şablonlarındaki
-   text-transform kurallarını da geçersiz kılabilmesi için !important. */
 .title-case-none { text-transform: none !important; }
 .title-case-uppercase { text-transform: uppercase !important; }
 .title-case-capitalize { text-transform: capitalize !important; }
@@ -2455,10 +2203,6 @@ html[data-theme="dark"] .pss-pts { border-top-color: #27272a; }
 .title-case-sentence { text-transform: lowercase !important; }
 .title-case-sentence::first-letter { text-transform: uppercase !important; }
 
-/* ---- Slider stil şablonları ----
-   Stil 1: Edirne Gerçek düzeni — bulanık alt bant + görselin altında
-   tam genişliğe yayılan sayısal gezinme çubuğu.
-   Stil 2: Minimal, Stil 3: Magazin, Stil 4: Sinema. */
 .hero-style-edirne .hero-slide img { aspect-ratio: 16 / 9; }
 .hero-style-edirne .hero-overlay {
   inset: auto 0 34px 0;
@@ -2483,7 +2227,7 @@ html[data-theme="dark"] .pss-pts { border-top-color: #27272a; }
   max-width: none; width: auto; height: 34px; padding: 0;
   display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr);
   gap: 2px; overflow: hidden; background: #0b0a11;
-  /* Görselin bittiği çizgi ile sayı barı arasındaki subpixel 1px boşluğu kapat. */
+  
   box-shadow: 0 -1px 0 #0b0a11;
 }
 .hero-style-edirne .hero-dots--numbers .hero-dot,
@@ -2524,8 +2268,7 @@ html[data-theme="dark"] .pss-pts { border-top-color: #27272a; }
   letter-spacing: -.025em;
 }
 .hero-style-sinema .hero-slide img { filter: saturate(1.08) contrast(1.03); }
-/* Tam alanı kaplayan, üstte şeffaflaşan yumuşak sinema gradyanı.
-   Eski yatay gradyan alttan yukarı kesik bir şerit gibi görünüyordu. */
+
 .hero-style-sinema .hero-overlay {
   inset: 0;
   display: flex;
@@ -2540,10 +2283,8 @@ html[data-theme="dark"] .pss-pts { border-top-color: #27272a; }
   text-shadow: 0 2px 18px rgba(0,0,0,.72);
 }
 
-/* Stil 5 — Manşet II düzeni: yarım görsel, renkli geçiş, tam genişlik sayı barı. */
 .hero-style-stil5 { background: var(--m2-bg, #0c1021); }
-/* Manşet II'deki gibi gerçek çapraz geçiş: tüm slaytlar absolute kalır,
-   görünürlük opacity ile yumuşakça değişir (display:none sıçraması yok). */
+
 .hero-style-stil5 .hero-slide {
   display: block; position: absolute; inset: 0 0 34px 0;
   background: var(--m2-bg, #0c1021);
@@ -2559,7 +2300,7 @@ html[data-theme="dark"] .pss-pts { border-top-color: #27272a; }
 .hero-style-stil5 .hero-slide img {
   width: 55%; height: 100%; margin-left: 45%;
   aspect-ratio: auto; object-fit: cover;
-  /* Görselin arka plana giren kenarını da yumuşat. */
+  
   -webkit-mask-image: linear-gradient(to right, transparent 0%, #000 22%);
   mask-image: linear-gradient(to right, transparent 0%, #000 22%);
 }
@@ -2643,7 +2384,6 @@ html[data-theme="dark"] .pss-pts { border-top-color: #27272a; }
 @keyframes heroSlideIn { from { opacity: 0; } to { opacity: 1; } }
 .hero-slide.on { animation: heroSlideIn .3s ease; }
 
-/* ---- 9b) 6'lı Manşet (mynet tarzı: tam genişlik hero + solda dikey numaralı pager) ---- */
 .m6 {
   position: relative; overflow: hidden; margin: 8px 0;
   border-radius: var(--hp-radius); background: #0b0b0d;
@@ -2655,7 +2395,7 @@ html[data-theme="dark"] .pss-pts { border-top-color: #27272a; }
   transition: opacity .55s ease; text-decoration: none;
 }
 .m6-slide.on { opacity: 1; visibility: visible; }
-/* Responsive: daralmada JS ile fazla slayt/pager gizlenir (6→5→4) */
+
 .m6-off { display: none !important; }
 .m6-slide img { width: 100%; height: 100%; object-fit: cover; object-position: center; display: block; }
 .m6-shade {
@@ -2675,7 +2415,7 @@ html[data-theme="dark"] .pss-pts { border-top-color: #27272a; }
   font-size: clamp(1.2rem, 2.5vw, 2.15rem); text-shadow: 0 2px 14px rgba(0,0,0,.55);
   max-width: 36ch; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
 }
-/* mynet'teki gibi solda dikey numaralı pager (1..6), aktif tema rengi */
+
 .m6-pager {
   position: absolute; left: 10px; top: 24px; bottom: 24px; width: 50px; z-index: 8;
   margin: 0; padding: 10px 0; list-style: none;
@@ -2703,7 +2443,7 @@ html[data-theme="dark"] .pss-pts { border-top-color: #27272a; }
 .m6-arrow:hover, .m6-arrow:focus-visible { background: rgba(0, 0, 0, .38); opacity: 1; }
 .m6-arrow:focus-visible { outline: 2px solid rgba(255, 255, 255, .7); outline-offset: 2px; }
 .m6-prev { left: 68px; } .m6-next { right: 12px; }
-/* Dokunmatik cihazlarda hover olmadığından oklar görünür kalsın */
+
 @media (hover: none) {
   .hero-nav, .m6-arrow { opacity: 1; }
 }
@@ -2721,7 +2461,7 @@ html[data-theme="dark"] .pss-pts { border-top-color: #27272a; }
   }
   .m6-arrow { display: none; }
 }
-/* Blok ayarı: dikey/yatay sayısal gösterge ve nokta gösterge */
+
 .m6-pager.m6-pager--vertical {
   left: 10px; right: auto; top: 24px; bottom: 24px; width: 50px; height: auto;
   flex-direction: column; justify-content: space-between; gap: 0; padding: 10px 0;
@@ -2752,7 +2492,6 @@ html[data-theme="dark"] .pss-pts { border-top-color: #27272a; }
 .m6-all-cap .m6-title { max-width: none; }
 .m6-num-all { background: var(--pager-color, var(--hp-tema)) !important; }
 
-/* ---- 9c) Manşet II: renkli arka plan + yarım görsel + 23'lü sayı barı ---- */
 .m2 {
   position: relative; height: var(--m2-height, 330px); min-height: 220px;
   margin: 8px 0 16px; border-radius: var(--hp-radius);
@@ -2875,18 +2614,16 @@ html[data-theme="dark"] .pss-pts { border-top-color: #27272a; }
   .m2-title { -webkit-line-clamp: 3; }
 }
 
-/* ---- 10) Kategori sekmeli blok ---- */
 .kat-sekmeli {
   margin-bottom: 8px;
-  /* Sekme stili/renkleri blok ayarlarından gelir; boşsa bu varsayılanlar. */
+  
   --kt-bg: #e4e4e7;
   --kt-fg: #3f3f46;
   --kt-active-bg: var(--hp-tema);
   --kt-active-fg: #fff;
   --kt-radius: 8px;
 }
-/* Sekme çubuğu haberpi ile birebir: gri segment barı, aktif buton tema renginde.
-   flex-wrap:nowrap — sekmeler tek satırda kalır, yatay kayar (haberpi `flex-nowrap`). */
+
 .kat-tabs-wrap {
   display: flex; flex-wrap: nowrap; gap: 4px; overflow-x: auto; scrollbar-width: none;
   background: var(--kt-bg); border-radius: 10px; padding: 4px; margin-bottom: 14px;
@@ -2901,38 +2638,31 @@ html[data-theme="dark"] .pss-pts { border-top-color: #27272a; }
 .kat-tab:hover { background: rgba(0, 0, 0, .06); color: #18181b; }
 .kat-tab.on { background: var(--kt-active-bg); color: var(--kt-active-fg); }
 
-/* Köşe düz: düz butonlar, aktif sekme kare köşeli. */
 .kt-square .kat-tabs-wrap { background: transparent; border-radius: 0; padding: 0; gap: 2px; border-bottom: 2px solid #e4e4e7; }
 .kt-square .kat-tab { border-radius: 0; padding: 10px 20px; }
 .kt-square .kat-tab:hover { background: rgba(0, 0, 0, .05); }
 .kt-square .kat-tab.on { border-radius: 0; }
 
-/* Kapsül: yuvarlak haplar. */
 .kt-pill .kat-tabs-wrap { background: transparent; padding: 0; gap: 8px; }
 .kt-pill .kat-tab { --kt-radius: 999px; border-radius: 999px; padding: 9px 20px; border: 1px solid #d4d4d8; }
 .kt-pill .kat-tab.on { border-color: var(--kt-active-bg); }
 
-/* Alt çizgi: sade bar, aktif sekmenin altı çizilir. */
 .kt-underline .kat-tabs-wrap { background: transparent; padding: 0; gap: 18px; border-bottom: 1px solid #e4e4e7; }
 .kt-underline .kat-tab { border-radius: 0; padding: 10px 2px; }
 .kt-underline .kat-tab.on { background: transparent; color: var(--kt-active-bg); box-shadow: inset 0 -3px 0 var(--kt-active-bg); }
 
-/* Çerçeveli: her sekme çerçeveli kutu. */
 .kt-boxed .kat-tabs-wrap { background: transparent; padding: 0; gap: 8px; }
 .kt-boxed .kat-tab { border: 1px solid #d4d4d8; padding: 9px 20px; }
 .kt-boxed .kat-tab.on { border-color: var(--kt-active-bg); }
 
-/* Sade: yalnız metin; aktif sekme vurgu renginde. */
 .kt-minimal .kat-tabs-wrap { background: transparent; padding: 0; gap: 16px; border-bottom: 1px solid #e4e4e7; }
 .kt-minimal .kat-tab { border-radius: 0; padding: 9px 2px; }
 .kt-minimal .kat-tab.on { background: transparent; color: var(--kt-active-bg); }
 
-/* Sekme (dosya): tarayıcı sekmesi görünümü. */
 .kt-tab .kat-tabs-wrap { background: transparent; padding: 0; gap: 2px; align-items: flex-end; border-bottom: 1px solid #e4e4e7; }
 .kt-tab .kat-tab { border: 1px solid #e4e4e7; border-bottom: 0; border-radius: 8px 8px 0 0; padding: 9px 18px; background: #f4f4f5; }
 .kt-tab .kat-tab.on { background: #fff; color: var(--kt-active-bg); position: relative; top: 1px; }
 
-/* Sekme (dosya, köşeli): aynı dosya görünümü, kenarları yumuşak değil düz. */
 .kt-tabflat .kat-tabs-wrap { background: transparent; padding: 0; gap: 2px; align-items: flex-end; border-bottom: 1px solid #e4e4e7; }
 .kt-tabflat .kat-tab { border: 1px solid #e4e4e7; border-bottom: 0; border-radius: 0; padding: 9px 18px; background: #f4f4f5; }
 .kt-tabflat .kat-tab:hover { background: #eceef2; }
@@ -2940,7 +2670,6 @@ html[data-theme="dark"] .pss-pts { border-top-color: #27272a; }
 .kat-panel { display: none; }
 .kat-panel.on { display: block; }
 
-/* Sekme içi sayfalama: sağ/sol oklar ve sayfa noktaları */
 .kat-view { position: relative; }
 .kat-pages { min-width: 0; }
 .kat-page[hidden] { display: none; }
@@ -2972,7 +2701,6 @@ html[data-theme="dark"] .pss-pts { border-top-color: #27272a; }
   .kat-next { right: 6px; }
 }
 
-/* Panel düzeni: solda tek büyük manşet, sağda 2x2 = 4 küçük manşet (haberpi) */
 .kat-yap { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--blk-gap-y, 16px) var(--blk-gap-x, 16px); }
 @media (min-width: 48rem) { .kat-yap { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: stretch; } }
 
@@ -2981,7 +2709,7 @@ html[data-theme="dark"] .pss-pts { border-top-color: #27272a; }
   overflow: hidden; box-shadow: var(--hp-shadow); display: flex;
 }
 .kat-buyuk > a { display: flex; flex-direction: column; height: 100%; flex: 1; min-width: 0; }
-/* Görsel kalan yüksekliği doldurur → büyük kart sağdaki 4 kartla eşitlenir */
+
 .kat-buyuk img {
   width: 100%; flex: 1 1 auto; min-height: 220px;
   aspect-ratio: 16 / 9; object-fit: cover; object-position: top;
@@ -3003,11 +2731,7 @@ html[data-theme="dark"] .pss-pts { border-top-color: #27272a; }
 }
 .kat-mini-gorsel { display: block; overflow: hidden; }
 .kat-mini img { width: 100%; aspect-ratio: 16 / 9; object-fit: cover; object-position: top; display: block; }
-/* haberpi ile birebir: dolguyu esnayan sarmalayıcı + onun İÇİNDE başlık.
-   Not: bu tarayıcı `-webkit-box`'ı `flow-root` olarak çözüyor, `-webkit-line-clamp`
-   UYGULANMIYOR (3 satır çizip karttan taşıyordu).line-clamp destekleyenler için
-   bırakıldı; asıl sınır `height: 2.9em` (line-height 1.45 × 2 satır) ile garanti
-   ediliyor — tarayıcıdan bağımsız, üçüncü satır `overflow:hidden` ile kesilir. */
+
 .kat-mini-sar { display: flex; flex: 1; flex-direction: column; padding: 12px 14px 14px; }
 .kat-mini-mt {
   font-size: .92rem; font-weight: 700; line-height: 1.45; color: var(--hp-text);
@@ -3030,14 +2754,13 @@ html[data-theme="dark"] .pss-pts { border-top-color: #27272a; }
 .kat-meta { font-size: .75rem; color: var(--hp-text-muted); padding: 0 10px 12px; }
 .kat-count { font-size: .75rem; color: var(--hp-text-muted); }
 .kat-tum { display: inline-block; margin: 12px 0 4px; font-weight: 700; color: var(--hp-tema); font-size: .88rem; }
-/* Kategori kartı ikonu — vektör (emoji fontuna bağlı değil) */
+
 .kat-izgara .kat-icon {
   display: flex; align-items: center; justify-content: center;
   height: 46px; color: var(--hp-tema);
 }
 .kat-izgara .kat-icon svg.ci { width: 28px; height: 28px; }
 
-/* ---- 11) Trend (numaralı liste, haberpi) ---- */
 .trend-num { margin-bottom: 8px; }
 .trend-list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--blk-gap-y, var(--tb-gap-sm, 8px)) var(--blk-gap-x, var(--tb-gap-sm, 8px)); }
 @media (min-width: 64rem) { .trend-list { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
@@ -3058,7 +2781,6 @@ html[data-theme="dark"] .pss-pts { border-top-color: #27272a; }
 .trend-item:first-child .trend-rank { background: var(--hp-tema); }
 .trend-item a { color: var(--hp-text); }
 
-/* Trend etiketleri */
 .trend-tags { display: flex; flex-wrap: wrap; gap: var(--blk-gap-y, 8px) var(--blk-gap-x, 8px); }
 .trend-tag {
   background: var(--hp-surface); border: 1px solid var(--hp-border); border-radius: 999px;
@@ -3066,25 +2788,16 @@ html[data-theme="dark"] .pss-pts { border-top-color: #27272a; }
 }
 .trend-tag .trend-count { color: var(--hp-tema); font-weight: 700; margin-left: 4px; }
 
-/* ---- 11b) Sidebar: kırmızı başlık etiketi + Trend listesi ---- */
 .side-h {
   display: inline-block; background: var(--hp-tema); color: #fff;
   font-size: 1rem; font-weight: 700; line-height: 24px;
   padding: 0 40px; border-radius: 8px; margin: 0 0 10px; height: 24px;
 }
 .side-trend-list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--blk-gap-y, 6px) var(--blk-gap-x, 6px); }
-/* haberpi ölçümü (Trend listesi öğesi):
-   `bg-white group flex items-center rounded-lg overflow-hidden my-1 w-full h-24`
-   görsel `w-40 h-24` → 160x96px
-   numara `tema-bg shrink-0 h-24 flex items-center justify-center px-3
-           text-white text-xl` → kırmızı, 12px dolgu, 20px yazı
-   (ilk öğe kırmızı, diğerleri zinc-600) */
+
 .st-item {
   display: flex; align-items: stretch; background: var(--hp-surface);
-  /* Köşeler (Faz 197d): sol köşeler görselin (tema yarıçapı), sağ köşeler
-     sayısal alanın. Sayısal alan düzleştirildiğinde `--tn-sag:0` bu iki
-     köşeyi de düzler — `overflow:hidden` kırpması yüzünden sayı kutusunun
-     dış köşesi ancak karttan kontrol edilebilir. */
+  
   border-start-start-radius: var(--hp-radius, 8px);
   border-end-start-radius: var(--hp-radius, 8px);
   border-start-end-radius: var(--tn-sag, var(--hp-radius, 8px));
@@ -3096,8 +2809,7 @@ html[data-theme="dark"] .pss-pts { border-top-color: #27272a; }
 .st-item > a {
   flex: 1; min-width: 0; padding: 8px; align-self: center;
   font-size: 1rem; font-weight: 400; line-height: 1.4; color: var(--hp-text);
-  /* haberpi `line-clamp-2 px-2 text-md` → başlık en fazla 2 satır,
-     böylece öğe tam 96px'de kalır */
+  
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -3106,44 +2818,23 @@ html[data-theme="dark"] .pss-pts { border-top-color: #27272a; }
   align-items: center; justify-content: center; padding: 0 12px;
   background: var(--tn-bg, #52525b); color: var(--tn-fg, #fff);
   font-weight: 700; font-size: 1.25rem;
-  /* İç (sol) köşe: sayı kutusu ile görsel arasındaki kenar.
-     Varsayılan 0 = düz; `--tn-radius` verilirse kendi yarıçapını alır. */
+  
   border-start-start-radius: var(--tn-radius, 0);
   border-end-start-radius: var(--tn-radius, 0);
 }
 .st-item:first-child .st-n { background: var(--tn-bg, var(--hp-tema)); }
 
-/* =====================================================================
-   Trend Haberler — sayısal alan stilleri (Faz 197d)
-   =====================================================================
-   Kullanıcı isteği: "kartların sağındaki alanda sayısal alan köşeleri
-   düzleştirme ayarı ekle, stil türleri de ekle."
-
-   Taban (tn-blok) mevcut görünümdür. Diğer stiller YALNIZ sayı kutusunu
-   değiştirir; kart düzeni (görsel + başlık + sayı) aynı kalır, böylece
-   modül başka bölgeye taşınsa da kırılmaz.
-   ===================================================================== */
-
-/* Dış (sağ) köşe: sayı kutusu kartın sağ kenarına yapışık olduğu için
-   dış köşeyi ancak KARTIN köşesi belirler (overflow:hidden kırpması).
-   Yalnız kenara yapışan dolu stillerde geçerli; rozet/kontur/büyük sayı
-   kendi kutusunu taşıdığı için kartın köşesi tema yarıçapında kalır. */
 .tn-blok, .tn-serit, .tn-duz {
   --tn-sag: var(--tn-radius, var(--hp-radius, 8px));
 }
 
-/* Düz: dolu blok, hem iç hem dış köşe tamamen düz. Değişken üst öğede
-   (bölümde) tanımlanır ki sayı kutusu da miras alsın. */
 .tn-duz { --tn-radius: 0px; --tn-sag: 0px; }
 
-/* İnce şerit: dolgu daralır, sayı küçülür, blok incelir. */
 .tn-serit .st-n {
   padding: 0 9px; font-size: 1rem; font-weight: 800;
   letter-spacing: .02em; min-width: 34px;
 }
 
-/* Rozet: dikeyde ortalanmış rozet; varsayılan daire, yarıçap verilirse
-   o kadar yuvarlanır (0 = kare rozet). */
 .tn-rozet .st-n {
   align-self: center; margin: 0 10px 0 0; padding: 0;
   width: 2.35rem; height: 2.35rem; min-width: 2.35rem;
@@ -3152,7 +2843,6 @@ html[data-theme="dark"] .pss-pts { border-top-color: #27272a; }
 }
 .tn-rozet .st-n .st-n-i { line-height: 1; }
 
-/* Büyük sayı: arka plansız, tema renginde iri rakam. */
 .tn-buyuk .st-n {
   background: transparent; color: var(--tn-fg, var(--hp-tema));
   font-size: 1.75rem; font-weight: 800; padding: 0 14px;
@@ -3162,8 +2852,6 @@ html[data-theme="dark"] .pss-pts { border-top-color: #27272a; }
 }
 .tn-buyuk .st-item:first-child .st-n { background: transparent; }
 
-/* Kontur: çerçeveli kutu, saydam zemin; kenar boşluğu olduğu için dört
-   köşe de kendi yarıçapını kullanır. */
 .tn-kontur .st-n {
   background: transparent; color: var(--tn-fg, var(--hp-text));
   font-size: 1.05rem; font-weight: 800;
@@ -3176,15 +2864,12 @@ html[data-theme="dark"] .pss-pts { border-top-color: #27272a; }
   border-color: var(--hp-tema);
 }
 
-/* Hareket azaltma: stil geçişi animasyonsuz. */
 @media (prefers-reduced-motion: reduce) {
   .st-n { transition: none; }
 }
 
-/* Sidebar'da birden fazla trend öğesi arka arkaya → 4px dikey boşluk */
 .side-trend-list {gap: var(--blk-gap-y, 4px) var(--blk-gap-x, 4px); }
 
-/* Sidebar kategori ızgarası: tek kolon kompakt */
 .home-side .kat-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
 .home-side .kat-card { flex-direction: row; align-items: center; gap: 8px; padding: 8px 10px; }
 .home-side .kat-card .kat-icon { height: auto; flex: 0 0 auto; }
@@ -3193,15 +2878,11 @@ html[data-theme="dark"] .pss-pts { border-top-color: #27272a; }
 .home-side .kat-count { display: none; }
 .home-side .blk-title { font-size: 1rem; margin-top: 4px; }
 
-/* ---- Kategori ızgarası (kategori_izgara bloğu) ----
-   Sidebar'da `.home-side .kat-card` satır düzeni kartı 36px'e sıkıştırıp
-   haber sayısını gizliyordu. Blok artık kendi dilini kullanır:
-   ikon rozeti + ad + haber sayısı. */
 .kat-izgara .kat-grid {gap: var(--blk-gap-y, 8px) var(--blk-gap-x, 8px); grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .kat-izgara .kat-card {
   display: flex; flex-direction: row; align-items: center; gap: 10px;
   padding: 10px 12px; min-height: 58px;
-  text-align: left;   /* app.css'teki dikey ortalı kart düzeni satır düzenine uymuyordu */
+  text-align: left;   
 }
 .kat-izgara .kat-card:hover { opacity: .92; }
 .kat-izgara .kat-icon {
@@ -3217,12 +2898,8 @@ html[data-theme="dark"] .pss-pts { border-top-color: #27272a; }
 }
 .kat-izgara .kat-count { display: block; padding: 1px 0 0; font-size: .72rem; color: var(--hp-text-muted); }
 
-/* ---- Foto/Video Galeri sağ kolona taşındı (zone: yan) ----
-   Tam genişlikte 3 kolona çıkan ızgara, sidebar'da tek kolona inip
-   görseller alt alta diziliyor; kaplama yazısı ve başlık küçülür. */
 .home-side .galeri-grid { grid-template-columns: minmax(0, 1fr); gap: var(--blk-gap-y, 6px) var(--blk-gap-x, 6px); }
-/* Yükseklik app.css'teki sabit 130px kuralından gelir; orantılı
-   ölçek denemesi (16:9) çok yüksek geldiği geri alındı. */
+
 .home-side .galeri-item img { height: 130px; }
 .home-side .galeri-overlay {
   font-size: .78rem; line-height: 1.35; padding: 22px 10px 9px;
@@ -3230,7 +2907,6 @@ html[data-theme="dark"] .pss-pts { border-top-color: #27272a; }
 .home-side .galeri-head { margin-bottom: 8px; }
 .home-side .galeri-head > a { font-size: .78rem; }
 
-/* ---- 12) Galeri ---- */
 .galeri-blok { margin-bottom: 8px; }
 .galeri-head { display: flex; align-items: center; justify-content: space-between; }
 .galeri-head a { color: var(--hp-tema); font-weight: 700; font-size: .85rem; }
@@ -3243,19 +2919,16 @@ html[data-theme="dark"] .pss-pts { border-top-color: #27272a; }
   padding: 26px 10px 10px; background: linear-gradient(to top, rgba(0, 0, 0, .85), transparent);
 }
 
-/* ---- 13) Reklam alanları ---- */
 .reklam-blok { margin: 16px 0; text-align: center; }
 .reklam-label { font-size: .68rem; text-transform: uppercase; letter-spacing: .08em; color: var(--hp-text-muted); margin-bottom: 4px; }
 .ad-band { margin: 10px auto; text-align: center; }
 .ad-sticky { position: fixed; bottom: 0; left: 0; right: 0; z-index: 90; background: var(--hp-surface); border-top: 1px solid var(--hp-border); text-align: center; padding: 4px; }
 @media (min-width: 64rem) { .ad-sticky { display: none; } }
 
-/* ---- 14) Akış (feed) ---- */
 .kat-tabs, .mod-toggle, .tarih-cips { display: flex; gap: 4px; flex-wrap: wrap; }
 .kat-tabs { border-bottom: 2px solid var(--hp-border); margin-bottom: 10px; overflow-x: auto; scrollbar-width: none; }
 .kat-tabs a { padding: 8px 12px; font-weight: 700; font-size: .9rem; color: var(--hp-text-muted); white-space: nowrap; }
-/* app.css'teki `.kat-tabs a.on` kırmızı zemin + beyaz yazı kullanıyor;
-   yalnızca rengi değiştirmek yazıyı görünmez yapardı. */
+
 .kat-tabs a.on {
   background: var(--hp-tema); color: #fff; border-color: var(--hp-tema);
   box-shadow: none;
@@ -3284,7 +2957,6 @@ html[data-theme="dark"] .pss-pts { border-top-color: #27272a; }
 .feed-manset .feed-item:first-child img { aspect-ratio: 21 / 9; }
 .feed-manset .feed-item:first-child h3 { font-size: 1.3rem; }
 
-/* İskelet yükleyici */
 .skel { display: flex; gap: 12px; background: var(--hp-surface); border-radius: var(--hp-radius); overflow: hidden; }
 .skel .s-img { width: 160px; height: 105px; background: var(--hp-border); flex-shrink: 0; animation: p 1.2s infinite; }
 .skel .s-body { flex: 1; padding: 12px; }
@@ -3292,14 +2964,13 @@ html[data-theme="dark"] .pss-pts { border-top-color: #27272a; }
 .s-line.w85 { width: 85%; } .s-line.w60 { width: 60%; }
 @keyframes p { 50% { opacity: .5; } }
 
-/* ---- 15) Makale ---- */
 .article { position: relative; background: var(--hp-surface); border-radius: var(--hp-radius); box-shadow: var(--hp-shadow); padding: 20px 18px 28px; }
 @media (min-width: 64rem) { .article { padding: 26px 34px 34px; } }
 .breadcrumb { font-size: .82rem; color: var(--hp-text-muted); margin-bottom: 12px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
 .breadcrumb a { color: var(--hp-tema); font-weight: 600; }
 .bc-sep { color: var(--hp-border-2); }
 .bc-cur { display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
-/* Sağ üstteki çerçevesiz Kaydet ikonuna yer aç. */
+
 .article .breadcrumb { padding-right: 42px; }
 .bc-cat { display: inline-flex; align-items: center; gap: 6px; }
 .bc-follow {
@@ -3311,7 +2982,7 @@ html[data-theme="dark"] .pss-pts { border-top-color: #27272a; }
   -webkit-tap-highlight-color: transparent;
   transition: color .15s, border-color .15s, background .15s, transform .1s;
 }
-/* Görsel boyut aynı kalırken dokunma alanını 26px'e çıkarır. */
+
 .bc-follow::before { content: ""; position: absolute; inset: -4px; border-radius: 50%; }
 .bc-follow:hover { color: var(--hp-tema); border-color: var(--hp-tema); background: color-mix(in srgb, var(--hp-tema) 10%, transparent); }
 .bc-follow:active { transform: scale(.92); }
@@ -3366,7 +3037,6 @@ html[data-theme="dark"] .pss-pts { border-top-color: #27272a; }
 .badge.b-sd { background: var(--hp-tema); } .badge.b-am { background: #0284c7; }
 .tag { display: inline-block; background: var(--hp-surface-2); border: 1px solid var(--hp-border); border-radius: 999px; padding: 3px 10px; font-size: .8rem; }
 
-/* ---- 16) Formlar / butonlar / tablolar ---- */
 .input, .select, .textarea {
   width: 100%; background: var(--hp-surface); color: var(--hp-text);
   border: 1px solid var(--hp-border-2); border-radius: var(--hp-radius-sm);
@@ -3393,7 +3063,6 @@ html[data-theme="dark"] .pss-pts { border-top-color: #27272a; }
 .table td { padding: 10px 12px; border-bottom: 1px solid var(--hp-border); }
 .table tr:last-child td { border-bottom: 0; }
 
-/* ---- 17) Footer (haberpi: KIRMIZI üst şerit + koyu kolonlu gövde) ---- */
 .site-footer {
   margin-top: 0; padding: 0; border-top: 0;
   background: var(--hp-footer-bg);
@@ -3415,7 +3084,7 @@ html[data-theme="dark"] .pss-pts { border-top-color: #27272a; }
 }
 .site-footer .brand { color: #fff; }
 .site-footer .brand b { color: #fff; }
-/* haberpi'de üst şerit koyu değil, TEMA KIRMIZISIDIR */
+
 .hp-footer-ust { background: var(--hp-tema); }
 .hp-footer-ust .container { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 0; }
 .hp-footer-links { display: flex; flex-wrap: wrap; gap: 4px 6px; }
@@ -3432,7 +3101,7 @@ html[data-theme="dark"] .pss-pts { border-top-color: #27272a; }
 .hp-s-fb { background: #3b5998; } .hp-s-x { background: #000; }
 .hp-s-in { background: #0a66c2; } .hp-s-yt { background: #dc2626; }
 .hp-s-ig { background: #d6249f; }
-/* haberpi'de sağ altta kırmızı zeminli logo bloğu */
+
 .hp-footer-brand { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; text-align: right; }
 .hp-logo-box {
   background: var(--hp-tema); border-radius: 6px; padding: 12px 26px; margin-bottom: 4px;
@@ -3442,7 +3111,7 @@ html[data-theme="dark"] .pss-pts { border-top-color: #27272a; }
 .hp-logo-box img { height: 30px; width: auto; display: block; }
 .site-header .brand-img img { height: 38px; width: auto; display: block; }
 .hp-copy { background: var(--hp-footer-alt-bg); color: var(--hp-footer-link); font-size: .8rem; padding: 12px; text-align: center; }
-/* Footer yöneticisi: logo konumu + model stilleri */
+
 .foot-brand-row {
   max-width: var(--site-width, 1280px); margin: 0 auto; padding: 0 8px 6px;
   display: flex; flex-direction: column; align-items: flex-start; gap: 6px;
@@ -3457,7 +3126,6 @@ html[data-theme="dark"] .pss-pts { border-top-color: #27272a; }
 .foot-layout-sade .foot-brand-row { padding-top: 26px; align-items: center; text-align: center; }
 .foot-sade-strip { justify-content: center; border-top: 0; padding-top: 8px; }
 
-/* Footer renk modları */
 .site-footer.foot-skin-dark {
   --hp-footer-bg: #0b0b0d; --hp-footer-alt-bg: #050505;
   --hp-footer-link: #d4d4d8; --hp-footer-baslik: #fff;
@@ -3483,7 +3151,7 @@ html[data-theme="dark"] .pss-pts { border-top-color: #27272a; }
   max-width: var(--site-width, 1280px); margin: 0 auto; padding: 16px 8px 6px;
   border-top: 1px solid rgba(255, 255, 255, .08);
 }
-/* Başa dön */
+
 .to-top {
   position: fixed; right: 16px; bottom: 20px; z-index: 95; width: 44px; height: 44px;
   border-radius: 50%; border: 0; background: var(--hp-tema); color: #fff; font-size: 1.3rem;
@@ -3491,12 +3159,10 @@ html[data-theme="dark"] .pss-pts { border-top-color: #27272a; }
 }
 .to-top.show { display: block; }
 
-/* ---- 18) Animasyon ---- */
 .animate-in { animation: fadeUp .35s ease both; }
 @keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) { .animate-in { animation: none; } }
 
-/* ---- 19) Yardımcı: eski blok sınıfları (app.css'ten devralınan) uyumlama ---- */
 .lead-grid { display: grid; gap: var(--blk-gap-y, 12px) var(--blk-gap-x, 12px); }
 @media (min-width: 64rem) { .lead-grid { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); } }
 .lead { position: relative; display: block; border-radius: var(--hp-radius); overflow: hidden; background: #000; }
@@ -3506,19 +3172,16 @@ html[data-theme="dark"] .pss-pts { border-top-color: #27272a; }
 .overlay .spot { color: #d4d4d8; }
 .one-cikanlar .grid-2 { margin-top: 4px; }
 
-/* ---- 7b) Kategori sayfası karma düzeni (haberpi) ---- */
-/* kırmızı hap başlık: "Güncel Haberleri" */
 .cat-pill {
   display: inline-block; background: var(--hp-tema); color: #fff;
   font-size: 1rem; font-weight: 800; padding: 7px 18px; border-radius: 6px;
   margin: 4px 0 14px;
 }
-/* üst sıra: 1 büyük dikey + 2 yatay kart */
+
 .cat-lead { display: grid; gap: var(--blk-gap-y, 10px) var(--blk-gap-x, 10px); grid-template-columns: minmax(0, 1fr); margin-bottom: 14px; align-items: stretch; }
 @media (min-width: 64rem) {
   .cat-lead { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
-  /* Sol büyük manşet sağdaki iki kartın toplam yüksekliğini doldurur;
-     eskiden 16/9 oranı yüzünden altında boşluk kalıyordu. */
+  
   .cl-main { aspect-ratio: auto; height: 100%; min-height: clamp(320px, 28vw, 430px); }
 }
 .cl-main {
@@ -3545,8 +3208,7 @@ html[data-theme="dark"] .pss-pts { border-top-color: #27272a; }
   line-height: 1.35; padding: 12px; background: #000;
   display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
 }
-/* Portre kategori manşeti: solda 5 slaytlı dikey slider + sağda 2 manşet.
-   Sol genişlik/oran blok ayarından; satır yüksekliği iki tarafta ortaktır. */
+
 .cat-hero {
   display: grid; gap: var(--blk-gap-y, 10px) var(--blk-gap-x, 10px); grid-template-columns: minmax(0, 1fr);
   align-items: stretch; margin-bottom: 14px;
@@ -3571,8 +3233,7 @@ html[data-theme="dark"] .pss-pts { border-top-color: #27272a; }
   width: 100%; height: 100%; aspect-ratio: auto; object-fit: cover;
 }
 .cat-hero .hero-overlay { padding: 78px 16px 42px; }
-/* Başlık gölgesi (blok ayarı): yalnız seçildiğinde eklenir; varsayılan
-   görünüm değişmez. */
+
 .cat-hero .hero-title.has-shadow { text-shadow: 0 2px 10px rgba(0, 0, 0, .68); }
 .cat-hero .hero-title { font-size: clamp(1.12rem, 1.75vw, 1.55rem); line-height: 1.28; }
 .cat-hero .hero-spot { font-size: .86rem; max-width: 100%; }
@@ -3593,15 +3254,14 @@ html[data-theme="dark"] .pss-pts { border-top-color: #27272a; }
   display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical;
   line-clamp: 4; overflow: hidden; overflow-wrap: anywhere;
 }
-/* Üçlü manşet: solda 3, ortada slider, sağda 2 manşet. Aynı satır
-   yüksekliğini paylaşır; yan raylar kendi içinde eşit yüksekliğe dağılır. */
+
 .cat-hero-trio { grid-template-columns: minmax(0, 1fr); }
 .cat-hero-trio .cat-trio-left { grid-template-rows: repeat(3, minmax(0, 1fr)); }
 .cat-hero-trio .cat-trio-right { grid-template-rows: repeat(2, minmax(0, 1fr)); }
 .cat-hero-trio .cat-hero-slider { order: 1; }
 .cat-hero-trio .cat-trio-left { order: 2; }
 .cat-hero-trio .cat-trio-right { order: 3; }
-/* Yan manşetlerde görsel kartı doldurur, başlık altta okunaklı bindirme. */
+
 .cat-hero-trio .cat-hero-rail > a { display: block; }
 .cat-hero-trio .cat-hero-rail .chr-media {
   position: absolute; inset: 0; width: auto; flex: none;
@@ -3614,15 +3274,10 @@ html[data-theme="dark"] .pss-pts { border-top-color: #27272a; }
 }
 .cat-hero-trio .cat-hero-rail .chr-tx { -webkit-line-clamp: 3; line-clamp: 3; }
 
-/* ---- Bağımsız kategori modülleri ----
-   Slider, seçimli manşet rayları, 4'lü ızgara ve akış ayrı bloklardır.
-   row_layout ile hero-left/center/right aynı .cat-hero satırında birleşir;
-   yuva sınıfları DOM sırasından bağımsız olarak sütun atar. */
 .cat-hero > .cat-slot-left { grid-column: 1; }
 .cat-hero > .cat-slot-center { grid-column: 2; }
 .cat-hero > .cat-slot-right { grid-column: 3; }
-/* Aynı manşet satırındaki tüm yuvalar tek satırda kalır; auto-placement
-   ikinci bir satıra taşmasın. */
+
 .cat-hero > .cat-slot-left,
 .cat-hero > .cat-slot-center,
 .cat-hero > .cat-slot-right { grid-row: 1; }
@@ -3633,13 +3288,12 @@ html[data-theme="dark"] .pss-pts { border-top-color: #27272a; }
 .cat-hero.cat-row-c > .cat-slot-center,
 .cat-hero.cat-row-l > .cat-slot-left,
 .cat-hero.cat-row-r > .cat-slot-right { grid-column: 1; }
-/* Slider oranı hem sarmalayıcıdan hem kendi sınıfından uygulanabilir. */
+
 .cat-hero-slider.cat-ratio-4-5 { aspect-ratio: 4 / 5; }
 .cat-hero-slider.cat-ratio-3-4 { aspect-ratio: 3 / 4; }
 .cat-hero-slider.cat-ratio-1-1 { aspect-ratio: 1 / 1; }
 .cat-hero-slider.cat-ratio-16-9 { aspect-ratio: 16 / 9; }
-/* Tek başına slider: manşet satırı yokken slaytlar bölümü doldurur; aksi
-   halde görsel yüksekliği ile seçilen oran arasında boş alan kalır. */
+
 .cat-hero-slider.cat-slider-solo .hero-slide {
   position: absolute; inset: 0; display: block;
   opacity: 0; visibility: hidden;
@@ -3652,8 +3306,7 @@ html[data-theme="dark"] .pss-pts { border-top-color: #27272a; }
 .cat-hero-slider.cat-slider-solo .hero-slide img {
   width: 100%; height: 100%; aspect-ratio: auto; object-fit: cover;
 }
-/* Ray kartları: overlay görünümünde görsel kartı doldurur, başlık altta
-   gradyanla okunur; yatay görünümde görsel solda kalır. */
+
 .cat-hero-rail.cat-rail-overlay { grid-template-rows: none; grid-auto-rows: minmax(104px, 1fr); }
 .cat-hero-rail.cat-rail-overlay > a { display: block; }
 .cat-hero-rail.cat-rail-overlay .chr-media { position: absolute; inset: 0; width: auto; flex: none; }
@@ -3664,9 +3317,7 @@ html[data-theme="dark"] .pss-pts { border-top-color: #27272a; }
 }
 .cat-hero-rail.cat-rail-overlay .chr-tx { -webkit-line-clamp: 3; line-clamp: 3; }
 .cat-hero-rail.cat-rail-yatay { grid-template-rows: none; grid-auto-rows: minmax(104px, 1fr); }
-/* Tek başına kullanılan modüllerin alt boşluğu. Seçimli manşetler kendi
-   satırındayken yatay kart şeridi olarak yayılır; manşet satırına
-   katıldığında dikey ray olarak kalır. */
+
 .home-main > .cat-hero-slider,
 .home-main > .cat-hero-rail { margin-bottom: 14px; }
 .home-main > .cat-hero-rail {
@@ -3697,7 +3348,7 @@ html[data-theme="dark"] .pss-pts { border-top-color: #27272a; }
   .cat-hero.cat-row-r { grid-template-columns: minmax(0, 1fr); }
 }
 @media (max-width: 47.99rem) {
-  /* Telefonda tek sütun kalır; aşırı uzun portre görseli viewport'a sığdır. */
+  
   .cat-hero-slider { max-height: 70vh; }
   .cat-hero-trio .cat-trio-left,
   .cat-hero-trio .cat-trio-right {
@@ -3719,7 +3370,7 @@ html[data-theme="dark"] .pss-pts { border-top-color: #27272a; }
   .cat-hero-trio .cat-trio-right { order: 0; }
   .cat-hero:not(.cat-hero-trio) .cat-hero-rail .chr-media { flex-basis: 44%; }
 }
-/* Alt kart ızgarası: 2/3/4 sütun seçilebilir; mobilde daima 2 sütun. */
+
 .cat-cards {
   display: grid; gap: var(--blk-gap-y, 10px) var(--blk-gap-x, 10px); grid-template-columns: repeat(2, minmax(0, 1fr));
   margin: 0 0 14px;
@@ -3749,7 +3400,7 @@ html[data-theme="dark"] .pss-pts { border-top-color: #27272a; }
   .grid-2.cat-cols-4 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 @media (min-width: 64rem) {
-  /* 4 sütun seçilen kategori kartları masaüstünde gerçekten 4 sütun. */
+  
   .cat-cards.cat-cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   .grid-2.cat-cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 }
@@ -3759,13 +3410,7 @@ html[data-theme="dark"] .pss-pts { border-top-color: #27272a; }
   .grid-2.cat-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .grid-2.cat-cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 }
-/* ---- 10b) Kategori akış vitrini (coinhit/enerji modeli) ----
-   İlk 4 haber 4 sütunlu kart ızgarasında (.ak-first); sonrası 3 sütun ×
-   4 kartlık enerji bloklarıyla akar. Referans: coinhit.net/enerji.
-   Başlıklar görselin üstüne taşan beyaz kutuda. Yazı ailesi tüm akışta
-   tektir: --ak-font seçildiğinde her kart onu kullanır; seçilmemişse
-   sayfa başlıkları (slider manşeti) ile aynı font geçerli olur. Coinhit'in
-   serif görünümü için tasarımcıdan "Coinhit (Serif)" seçilir. */
+
 .ak-first, .ak-flow, .ak-more-wrap, .ak-end { font-family: var(--ak-font, inherit); }
 .ak-first .card-pad h3,
 .ak-t, .ak-t5 { font-family: var(--ak-font, var(--hp-heading-font, var(--hp-font))); }
@@ -3775,16 +3420,15 @@ html[data-theme="dark"] .pss-pts { border-top-color: #27272a; }
 .ak-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--blk-gap-y, 16px) var(--blk-gap-x, 16px); }
 @media (min-width: 48rem) { .ak-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 .ak-col { display: flex; flex-direction: column; gap: var(--blk-gap-y, 12px) var(--blk-gap-x, 12px); min-width: 0; }
-/* Bitişik sütunlar arasında referanstaki gibi 16px boşluk. */
+
 @media (min-width: 48rem) { .ak-col {gap: var(--blk-gap-y, 16px) var(--blk-gap-x, 16px); } }
 
 .ak-item { min-width: 0; }
 .ak-item .ak-link { display: block; }
-/* Referans: tip5 dışındaki kartlarda alt çizgi + alt boşluk. */
+
 .ak-item:not(.ak-type5) { border-bottom: 1px solid var(--hp-border); padding-bottom: 8px; margin-bottom: 2px; }
 .ak-type5 { padding-bottom: 0; }
 
-/* --- tip5: kare görsel + görselin üstüne taşan beyaz başlık kutusu --- */
 .ak-fig5 { margin: 0; border-bottom: 1px solid var(--hp-border); padding-bottom: 8px; }
 .ak-img5 {
   display: block; position: relative; overflow: hidden;
@@ -3802,7 +3446,6 @@ html[data-theme="dark"] .pss-pts { border-top-color: #27272a; }
 }
 @media (min-width: 120rem) { .ak-t5 { font-size: 1.5rem; } }
 
-/* --- tip2 / tip4: solda veya sağda kare görsel, yanında başlık --- */
 .ak-fig { display: flex; gap: 8px; margin: 0; align-items: stretch; }
 .ak-fig .ak-thumb {
   flex: 0 0 33.3333%; width: 33.3333%; max-width: 160px;
@@ -3819,12 +3462,11 @@ html[data-theme="dark"] .pss-pts { border-top-color: #27272a; }
   font-weight: 700; font-size: 1rem; line-height: 1.45; color: var(--hp-text);
 }
 @media (min-width: 120rem) { .ak-t { font-size: 1.25rem; } }
-/* tip1: yalnız metin (kategorisi ve başlığı ile) */
+
 .ak-fig-text .ak-cap { gap: 4px; }
 .ak-fig-text .ak-t { -webkit-line-clamp: 2; line-clamp: 2; }
 .ak-item:hover .ak-t, .ak-item:hover .ak-t5 { color: var(--hp-tema); }
 
-/* --- yükleme: düğme + sonsuz kaydırma --- */
 .ak-more-wrap { display: flex; justify-content: center; margin: 26px 0; }
 .ak-more {
   display: inline-flex; align-items: center; justify-content: center; gap: 8px;
@@ -3839,15 +3481,13 @@ html[data-theme="dark"] .pss-pts { border-top-color: #27272a; }
 .ak-sentinel { height: 1px; }
 .ak-end { text-align: center; color: var(--hp-text-muted); font-size: .82rem; margin: 18px 0 6px; }
 
-/* 3 kartlı dikey sıra */
 .cat-row-3 { display: grid; gap: var(--blk-gap-y, 10px) var(--blk-gap-x, 10px); grid-template-columns: minmax(0, 1fr); margin: 0 0 14px; }
 @media (min-width: 48rem) { .cat-row-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 .cat-row-3 .card, .grid-2 .card { position: relative; }
 .cat-row-3 .thumb, .grid-2 .thumb { width: 100%; aspect-ratio: 16 / 10; object-fit: cover; display: block; }
 
-/* ---- Kategori liste görünümleri (Faz 9) ---- */
 .clamp-2{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-/* Sıkı Liste */
+
 .cat-liste{display:flex;flex-direction:column;gap:0;margin-bottom:6px}
 .cl-row{display:flex;gap:12px;padding:11px 2px;border-bottom:1px solid var(--line);align-items:flex-start}
 .cl-row:last-child{border-bottom:0}
@@ -3858,10 +3498,10 @@ html[data-theme="dark"] .pss-pts { border-top-color: #27272a; }
 .cl-row-t{font-weight:600;line-height:1.35;color:var(--hp-metin)}
 .cl-row:hover .cl-row-t{color:var(--hp-tema)}
 .cl-row-s{font-size:.85rem;color:var(--muted-fg);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-/* Izgara Kartlar */
+
 .cat-izgara{display:grid; gap: var(--blk-gap-y, 12px) var(--blk-gap-x, 12px);grid-template-columns:repeat(auto-fill,minmax(215px,1fr));margin-bottom:10px}
 .cat-izgara .card{overflow:hidden}
-/* Mozaik */
+
 .cat-mozaik{display:grid; gap: var(--blk-gap-y, 12px) var(--blk-gap-x, 12px);grid-template-columns:minmax(0,1fr);margin-bottom:12px}
 @media (min-width:48rem){.cat-mozaik{grid-template-columns:minmax(0,1.6fr) minmax(0,1fr)}}
 .cm-feat{position:relative;display:block;border-radius:12px;overflow:hidden;min-height:200px}
@@ -3876,7 +3516,6 @@ html[data-theme="dark"] .pss-pts { border-top-color: #27272a; }
 .cm-t{font-size:.85rem;line-height:1.3;font-weight:600;color:var(--hp-metin)}
 .cm-cell:hover{border-color:var(--hp-tema)}
 
-/* ---- Önerilen Video (Faz 12) — yazı gövdesi sonundaki video kartı ---- */
 .rel-video{margin:16px 0 6px}
 .rv-label{display:inline-block;font-size:.74rem;font-weight:800;letter-spacing:.5px;color:var(--hp-tema,#d01);margin-bottom:8px}
 .rv-card{display:flex;gap:12px;align-items:stretch;background:var(--surface-2);border:1px solid var(--line);border-radius:12px;overflow:hidden;transition:border-color .15s}
@@ -3892,7 +3531,6 @@ html[data-theme="dark"] .pss-pts { border-top-color: #27272a; }
 .rv-card:hover .rv-meta strong{color:var(--hp-tema,#d01)}
 .rv-spot{font-size:.85rem;color:var(--muted-fg);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 
-/* ---- SIRADAKİ/ÖNCEKİ HABER bandı — tek kutuda iki yön (Faz 13/14/22) ---- */
 .haber-nav {
   display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px;
   max-width: 720px;
@@ -3901,19 +3539,18 @@ html[data-theme="dark"] .pss-pts { border-top-color: #27272a; }
   background: linear-gradient(135deg, var(--hp-surface-2), var(--hp-surface));
   box-shadow: var(--hp-shadow);
 }
-/* Kutu içindeki iki kartın kendi çerçevesi olmasın — tek kutu hissi. */
+
 .haber-nav .next-haber {
   margin: 0; border: 0; background: transparent; border-radius: 10px;
   padding: 2px; box-shadow: none;
 }
 .haber-nav .next-haber:hover { background: color-mix(in srgb, var(--hp-tema) 7%, transparent); }
-/* Yön ipuçları kutu başlığında; ok gövdede kalıyor (ekran okuyucu için aria-hidden). */
+
 .haber-nav .nh-path { padding: 8px 10px 0; }
 @media (max-width:40rem){
   .haber-nav { grid-template-columns: minmax(0,1fr); gap: 6px; }
 }
-/* Komşu haber kartlarında görsel üstte, başlık/açıklama tam genişlikte.
-   İki kart yan yana kalır; uzun başlık 145px'lik dar sütuna sıkışmaz. */
+
 .haber-nav .nh-body { flex-direction: column; align-items: stretch; gap: 8px; }
 .haber-nav .nh-thumb { flex: none; width: 100%; aspect-ratio: 16 / 9; }
 .haber-nav .nh-arrow { display: none; }
@@ -3930,19 +3567,14 @@ html[data-theme="dark"] .pss-pts { border-top-color: #27272a; }
 .nh-spot{font-size:.85rem;color:var(--muted-fg);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .nh-arrow{font-size:1.5rem;color:var(--hp-tema,#d01);font-weight:700}
 
-/* ---- Kategori rozeti: video kartı + komşu haber bandları (Faz 16) ---- */
 .rv-badges{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
 .rv-cat,.nh-cat{align-self:flex-start;display:inline-block;max-width:100%;padding:2px 9px;border-radius:20px;font-size:.68rem;font-weight:800;letter-spacing:.04em;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;background:color-mix(in srgb,var(--hp-tema,#d01) 12%,transparent);color:var(--hp-tema,#d01)}
 
-/* Video süre rozeti (Faz 17) — koyu zemin, kapak üstünde de okunur */
 .rv-sure{flex:none;padding:2px 8px;border-radius:6px;font-size:.68rem;font-weight:700;font-variant-numeric:tabular-nums;background:rgba(0,0,0,.72);color:#fff;backdrop-filter:blur(2px)}
 
-/* ---- ÖNCEKİ HABER bandı (Faz 14) — SIRADAKI'nın simetriği ---- */
 .prev-haber{margin:20px 0 6px}
 .prev-haber .nh-arrow{order:-1}
 
-/* sayfalama: kırmızı hap */
-/* Video süre rozeti: kart/galeri/canlı yayın görsellerinin köşesinde (Faz 21) */
 .kart-sure {
   position: absolute; right: 8px; bottom: 8px; z-index: 3;
   background: rgba(0,0,0,.72); color: #fff; padding: 2px 7px; border-radius: 6px;
@@ -3951,7 +3583,7 @@ html[data-theme="dark"] .pss-pts { border-top-color: #27272a; }
 }
 .cl-row-img { position: relative; }
 @media (max-width:30rem){ .kart-sure { right: 6px; bottom: 6px; font-size: .66rem; } }
-/* galeri oynat simgesi sağ üstte; süre sağ altta çakışmasın */
+
 .galeri-play { z-index: 2; }
 
 .pager { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin: 22px 0 6px; }
@@ -3964,18 +3596,16 @@ html[data-theme="dark"] .pss-pts { border-top-color: #27272a; }
 .pg:hover, .pg-more:hover { border-color: var(--hp-tema); color: var(--hp-tema); opacity: 1; }
 .pg.on { background: var(--hp-tema); color: #fff; border-color: var(--hp-tema); }
 
-/* ---- 15b) Makale sayfası: beyaz kart + sağ sütun (haberpi) ---- */
 .art-wrap { display: grid; gap: 12px; grid-template-columns: minmax(0, 1fr); align-items: start; }
 @media (min-width: 64rem) { .art-wrap { grid-template-columns: minmax(0, 1fr) minmax(0, var(--pg-side-w, 33%)); } }
 .art-side { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
-/* Sayfa şablonu: yazı sayfasında sağ sütunu kaldır → ortalanmış tek sütun. */
+
 .art-wrap.pg-no-side { grid-template-columns: minmax(0, 1fr); max-width: var(--pg-single-w, 960px); margin-inline: auto; }
 .art-wrap.pg-no-side > .art-side { display: none; }
 @media (min-width: 64rem) { .art-side { position: sticky; top: 74px; } }
 .art-side .side-h { margin-bottom: 8px; }
 .art-side .side-h.dark { background: var(--hp-text); }
 
-/* Sidebar'daki büyük ilk kart + yatay liste */
 .side-big {
   display: block; background: var(--hp-surface); border-radius: var(--hp-radius);
   overflow: hidden; box-shadow: var(--hp-shadow); margin-bottom: 6px;
@@ -3997,11 +3627,9 @@ html[data-theme="dark"] .pss-pts { border-top-color: #27272a; }
   display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
 }
 
-/* Sesli okuma vurgusu — CSS Custom Highlight API */
 ::highlight(tts-sentence) { background-color: color-mix(in srgb, var(--hp-tema) 12%, transparent); }
 ::highlight(tts-word) { background-color: var(--hp-tema); color: #fff; }
 
-/* Sesli haber oynatıcısı — görselin altında, metnin hemen üstünde */
 .art-audio {
   display: flex; flex-direction: column; gap: 9px;
   margin: 4px 0 18px; padding: 11px 13px;
@@ -4057,7 +3685,6 @@ html[data-theme="dark"] .pss-pts { border-top-color: #27272a; }
   .art-audio-time { min-width: 64px; }
 }
 
-/* Mobil sabit mini oynatıcı: yazı uzunken duraklat/ilerleme kontrolü */
 .art-audio-mini { display: none; }
 @media (max-width: 760px) {
   .art-audio-mini {
@@ -4090,13 +3717,11 @@ html[data-theme="dark"] .pss-pts { border-top-color: #27272a; }
   }
 }
 
-/* Başlık üstü künye: yazar / editör bağlantısı */
 .art-meta-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .art-byline { display: inline-flex; align-items: center; gap: 5px; }
 .art-byline-name { color: var(--hp-text); font-weight: 700; text-decoration: none; }
 .art-byline-name:hover { color: var(--hp-tema); text-decoration: underline; }
 
-/* Yazar & editör dizini / profili (Faz 51) */
 .people-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; margin: 18px 0 30px; }
 .person-card {
   display: flex; gap: 12px; align-items: flex-start; padding: 14px;
@@ -4134,8 +3759,6 @@ html[data-theme="dark"] .pss-pts { border-top-color: #27272a; }
   .person-name-lg { font-size: 1.3rem; }
 }
 
-/* "Google News'ta kaynak ekle" rozeti (site adresi bağlantıya gömülü) */
-/* Görsel üstü Google News kaynak bağlantısı (gzt.com'daki gibi sade) */
 .art-source-above { display: flex; align-items: center; gap: 10px; margin: 12px 0 2px; }
 .src-badge {
   display: inline-flex; align-items: center; gap: 7px;
@@ -4148,7 +3771,6 @@ html[data-theme="dark"] .pss-pts { border-top-color: #27272a; }
 .src-badge .gl { width: 18px; height: 18px; flex: 0 0 auto; }
 .src-badge:focus-visible { outline: 2px solid #EA4335; outline-offset: 3px; border-radius: 4px; }
 
-/* Gözden kaçmasın (haberpi alt reklam bloğu) */
 .missed {
   display: flex; align-items: stretch; border-radius: var(--hp-radius);
   overflow: hidden; margin: 22px 0 8px; box-shadow: var(--hp-shadow);
@@ -4164,10 +3786,8 @@ html[data-theme="dark"] .pss-pts { border-top-color: #27272a; }
   font-weight: 700; font-size: .85rem; padding: 7px 14px; border-radius: 6px;
 }
 
-/* Gövdede kırmızı önek (haberpi: "HABERPİ–") */
 .article .body > p:first-of-type::first-letter { color: var(--hp-tema); }
 
-/* ---- 4b) Piyasa bandı kartları (haberpi: ikon + etiket + değer + değişim) ---- */
 .ticker-markets { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 .mk {
   display: inline-flex; align-items: center; gap: 8px;
@@ -4199,9 +3819,6 @@ html[data-theme="dark"] .pss-pts { border-top-color: #27272a; }
 }
 .hv-ico svg { width: 20px; height: 20px; }
 
-/* ---- 8d) Ana kolon karma kart ızgarası (haberpi mozaik) ---- */
-/* haberpi ana sütunda dikey (görsel üstte) ve yatay (görsel solda)
-   kartları karışık kullanır. */
 .kari-izgara { display: flex; flex-direction: column; gap: var(--blk-gap-y, 10px) var(--blk-gap-x, 10px); }
 .kari-izgara .kr { display: grid; gap: 10px; grid-template-columns: minmax(0, 1fr); }
 @media (min-width: 48rem) {
@@ -4230,17 +3847,8 @@ html[data-theme="dark"] .pss-pts { border-top-color: #27272a; }
 .kari-izgara .ky-yatay h3 { padding: 0 12px; align-self: center; }
 .kari-izgara .ky:hover { box-shadow: var(--hp-shadow-lg); opacity: 1; }
 
-/* ---- 20) Çerez onay çubuğu ----
-   Buradaki .cerez-bar / .cb-in / .cb-eylem kuralları kaldırıldı: o sınıfları
-   kullanan hiçbir markup yoktu. Gerçek bant cerez.js tarafından .cerez-bant
-   sınıflarıyla üretilir ve stilini de oradan alır. */
-
-/* ---- 21) Mobil geçersiz kılmalar ----
-   Bu blok bilinçli olarak dosyanın sonundadır: aynı özgüllükteki temel
-   kuralları geçersiz kılması gerekir (kaynak sırası). */
 @media (max-width: 63.99rem) {
-  /* Slider kaplaması görselden taşıyordu: görsel oranı ve boşluklar
-     haberpi'deki mobil oranlara çekildi, spot gizlendi. */
+  
   .hero-slide img { aspect-ratio: 4 / 3; }
   .hero-overlay { padding: 34px 12px 34px; }
   .hero-spot { display: none; }
@@ -4253,18 +3861,15 @@ html[data-theme="dark"] .pss-pts { border-top-color: #27272a; }
   .st-item img { width: 92px; flex: 0 0 92px; }
 }
 
-/* ---- 12b) Galeri paneli (haberpi: etiket + "Tümü"; video koyu zeminde) ---- */
 .galeri-blok { margin: 12px 0 0; }
 .galeri-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
-/* haberpi: `text-gray-500 hover:text-gray-800 font-bold text-sm` — 14px/700,
-   gri (#71717a), dolgusuz */
+
 .galeri-head > a {
   color: #71717a; font-weight: 700; font-size: .875rem; padding: 0;
   line-height: 20px;
 }
 .galeri-head > a:hover { color: var(--hp-text); opacity: 1; }
-/* haberpi ölçümü: h3 · 16px/700 · rounded-lg 8px · padding 0 40px
-   · yükseklik 24px · yazı rengi beyaz. Ok/pencere YOK. */
+
 .galeri-etiket {
   display: inline-block; background: var(--hp-tema); color: #fff;
   font-size: 1rem; font-weight: 700; line-height: 24px;
@@ -4276,12 +3881,10 @@ html[data-theme="dark"] .pss-pts { border-top-color: #27272a; }
   padding: 14px; margin: 16px 0;
 }
 .galeri-koyu .galeri-head > a { color: #d4d4d8; }
-/* haberpi: Foto Galeri = zinc-800 (#27272a), Video Galeri = zinc-900 (#18181b) */
+
 .galeri-blok:not(.galeri-koyu) .galeri-etiket { background: #27272a; }
 .galeri-koyu .galeri-etiket { background: #18181b; }
-/* Başlık işaret stili galeri etiketinde de gerçekten çalışsın: yukarıdaki
-   panel zeminleri (0,3,0) daha güçlü olduğundan aynı özgüllükte ezip
-   seçilen stilin zemini/ölçüsü uygulanır. */
+
 .galeri-blok .galeri-etiket.head-mark-line,
 .galeri-koyu .galeri-etiket.head-mark-line,
 .galeri-blok .galeri-etiket.head-mark-bar,
@@ -4330,8 +3933,7 @@ html[data-theme="dark"] .pss-pts { border-top-color: #27272a; }
   height: auto; line-height: 1.35; padding: 6px 16px; border-radius: 8px;
 }
 .galeri-koyu .galeri-item { box-shadow: none; background: #1f1f23; }
-/* Kategori paneli başlıkları da aynı işaret stillerini kullanır; panelin
-   kendi chip zemini (0,2,0) seçilen stili ezmesin. */
+
 .kat-panel-blok .galeri-etiket:is(.head-mark-line, .head-mark-bar,
   .head-mark-underline, .head-mark-dot, .head-mark-boxed, .head-mark-none) {
   background: transparent; color: var(--hp-text); height: auto;
@@ -4362,7 +3964,7 @@ html[data-theme="dark"] .pss-pts { border-top-color: #27272a; }
 .galeri-video { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 @media (min-width: 64rem) {
   .galeri-video { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-  /* orta kart iki satır kaplar (haberpi) */
+  
   .galeri-video .galeri-item:nth-child(2) { grid-row: span 2; }
   .galeri-video .galeri-item:nth-child(2) img { height: 100%; aspect-ratio: auto; }
 }
@@ -4374,7 +3976,6 @@ html[data-theme="dark"] .pss-pts { border-top-color: #27272a; }
 .galeri-play svg { width: 22px; height: 22px; margin-left: 2px; }
 .galeri-koyu .galeri-overlay { color: #fff; }
 
-/* ---- 12c) Kategori paneli (haberpi: renkli panel + büyük kart + yan ızgara) ---- */
 .kat-panel-blok {
   --kp-chip: var(--hp-tema);
   --kp-tint: var(--hp-surface);
@@ -4385,7 +3986,7 @@ html[data-theme="dark"] .pss-pts { border-top-color: #27272a; }
 }
 .kat-panel-blok .galeri-etiket { background: var(--kp-chip); }
 .kat-panel-blok .galeri-head > a { color: var(--kp-link); }
-/* Renk (ton) seçenekleri */
+
 .kat-panel-blok.yesil    { --kp-chip:#16a34a; --kp-tint:#f2fbf4; --kp-line:rgba(22,101,52,.2);  --kp-link:#16a34a; }
 .kat-panel-blok.mavi     { --kp-chip:#2563eb; --kp-tint:#eff6ff; --kp-line:rgba(37,99,235,.2);  --kp-link:#2563eb; }
 .kat-panel-blok.turuncu  { --kp-chip:#ea580c; --kp-tint:#fff7ed; --kp-line:rgba(234,88,12,.2);  --kp-link:#ea580c; }
@@ -4400,7 +4001,7 @@ html[data-theme="dark"] .kat-panel-blok.mor      { --kp-tint:#150f22; }
 html[data-theme="dark"] .kat-panel-blok.sari     { --kp-tint:#1a1708; }
 html[data-theme="dark"] .kat-panel-blok.lacivert { --kp-tint:#0c1122; }
 html[data-theme="dark"] .kat-panel-blok.gri      { --kp-tint:#141416; }
-/* Kategori panelleri (tümü) — haberpi düzeni */
+
 .kp-head { justify-content: flex-start; gap: 10px; margin-bottom: 16px; }
 .kp-line { flex: 1; height: 0; border-top: 1px solid var(--hp-border); }
 .kat-panel-blok .kp-line { border-top-color: var(--kp-line); }
@@ -4422,8 +4023,6 @@ html[data-theme="dark"] .kat-panel-blok.gri      { --kp-tint:#141416; }
 html[data-theme="dark"] .gc-it { color: #f4f4f5; }
 html[data-theme="dark"] .kat-panel-blok.yesil .gc-it { color: #d1fae5; }
 
-/* Mozaik düzeni (haberpi Siyaset birebir): 3 kolon — 1 büyük + 4 küçük,
-   yükseklik 340px, gap 12px, büyük başlık text-xl, küçük başlık text-md */
 .mo-grid { display: grid; gap: var(--blk-gap-y, 12px) var(--blk-gap-x, 12px); grid-template-columns: minmax(0, 1fr); }
 .mo-big { height: 260px; }
 .mo-col { display: flex; flex-direction: column; gap: var(--blk-gap-y, 12px) var(--blk-gap-x, 12px); }
@@ -4442,7 +4041,6 @@ html[data-theme="dark"] .kat-panel-blok.yesil .gc-it { color: #d1fae5; }
 .mo-big .mo-t { font-size: 1.25rem; padding: 12px; }
 .mo-item .mo-t { font-size: 1rem; padding: 8px; }
 
-/* Büyük + 3 kolonlu liste (haberpi Ekonomi) */
 .ec-big { position: relative; display: block; border-radius: var(--hp-radius); overflow: hidden; height: 260px; margin-bottom: 12px; background: #000; }
 .ec-big img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .3s; }
 .ec-big:hover img { transform: scale(1.05); }
@@ -4456,7 +4054,7 @@ html[data-theme="dark"] .kat-panel-blok.yesil .gc-it { color: #d1fae5; }
 .ec-it { font-weight: 700; color: var(--hp-text); font-size: .92rem; line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .ec-item:hover .ec-it { color: var(--hp-tema); }
 
-/* Sol büyük + sağ 2 üst üste + altta 3 kart (haberpi Siyaset alternatif) */.sb-top { display: grid; gap: var(--blk-gap-y, 12px) var(--blk-gap-x, 12px); grid-template-columns: minmax(0, 1fr); }
+.sb-top { display: grid; gap: var(--blk-gap-y, 12px) var(--blk-gap-x, 12px); grid-template-columns: minmax(0, 1fr); }
 @media (min-width: 48rem) { .sb-top { grid-template-columns: repeat(2, minmax(0, 1fr)); height: 480px; } }
 .sb-big { position: relative; display: block; border-radius: var(--hp-radius); overflow: hidden; background: #000; height: 260px; }
 @media (min-width: 48rem) { .sb-big { height: 100%; } }
@@ -4479,7 +4077,6 @@ html[data-theme="dark"] .kat-panel-blok.yesil .gc-it { color: #d1fae5; }
 .sb-ct { font-weight: 700; color: var(--hp-text); font-size: 1rem; line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .sb-card:hover .sb-ct { color: var(--hp-tema); }
 
-/* Üstte 3 kart (16:9) + altta 2 yatay kart (haberpi Güncel alternatif) */
 .u3-top { display: grid; gap: var(--blk-gap-y, 16px) var(--blk-gap-x, 16px); grid-template-columns: minmax(0, 1fr); margin-bottom: 16px; }
 @media (min-width: 48rem) { .u3-top { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 .u3-card { display: block; }
@@ -4497,11 +4094,6 @@ html[data-theme="dark"] .kat-panel-blok.yesil .gc-it { color: #d1fae5; }
 .u3-row:hover { background: var(--hp-surface-2); }
 .u3-row:hover .u3-rt { color: var(--kp-link, var(--hp-tema)); }
 
-/* ---- Habertürk Ekonomi vitrini (birebir) ----
-   Panel çerçevesiz; başlık siyah kalın + ince çizgi + TÜMÜ.
-   4 sütunlu ızgara: solda 2 sütun × 2 satır büyük KARE kart,
-   sağda iki sütunda 2'şer kart (kare + 16:9 dönüşümlü).
-   Başlıklar görselin ALTINDA; renkli chip/gradyan yok. */
 .kat-panel-blok.kp-ht {
   background: transparent; border: 0; border-radius: 0; padding: 0; margin: 20px 0;
   --kp-line: #e5e7eb; --kp-link: var(--hp-text);
@@ -4515,8 +4107,7 @@ html[data-theme="dark"] .kat-panel-blok.kp-ht { --kp-line: #27272a; }
   margin: 0 20px 0 0; padding: 0; border: 0; border-radius: 0; height: auto; box-shadow: none;
   flex: 0 0 auto; width: auto; white-space: nowrap;
 }
-/* Birebir görünüm yalnız düz başlık stilinde geçerli: kullanıcı başka bir
-   işaret stili (pill, tab, gradient…) seçtiyse o korunur. */
+
 .kat-panel-blok.kp-ht .galeri-etiket:is(.head-mark-line, .head-mark-none)::before,
 .kat-panel-blok.kp-ht .galeri-etiket:is(.head-mark-line, .head-mark-none)::after {
   content: none !important; display: none !important;
@@ -4547,8 +4138,7 @@ html[data-theme="dark"] .kat-panel-blok.kp-ht { --kp-line: #27272a; }
   font-size: .875rem; line-height: 1.5rem;
   padding: 12px 8px;
 }
-/* Kırpma iç elemanda; dolgu dış elemanda kalır (alt dolgu bandında taşan
-   satırın görünmesini engeller). */
+
 .ek-tx {
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
   line-clamp: 2; overflow: hidden; overflow-wrap: anywhere;
@@ -4556,13 +4146,9 @@ html[data-theme="dark"] .kat-panel-blok.kp-ht { --kp-line: #27272a; }
 }
 .ek-card:hover .ek-t { color: var(--kp-link, var(--hp-tema)); }
 @media (min-width: 48rem) { .ek-t { font-size: 1rem; line-height: 1.75rem; min-height: 60px; } }
-/* Habertürk kırılımı: lg (1024px) → text-xl / leading-8 */
+
 @media (min-width: 64rem) { .ek-t { font-size: 1.25rem; line-height: 2rem; } }
 
-/* ---- Habertürk GASTRO vitrini (birebir) ----
-   Yatay kaydırmalı (swiper) şerit; kartlar 1:2 dikey portre görselli.
-   Görünür kart: mobil 2, md 3, lg 4. Kart aralığı 16px (8px + 8px).
-   Başlıklar dönüşümlü: çift sırada altta, tek sırada üstte. */
 .kat-panel-blok.kp-gs .gs-scroll {
   overflow-x: auto; overflow-y: hidden; scrollbar-width: none;
   scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch;
@@ -4581,7 +4167,7 @@ html[data-theme="dark"] .kat-panel-blok.kp-ht { --kp-line: #27272a; }
   .kat-panel-blok.kp-gs .gs-card { flex-basis: 25%; max-width: 25%; }
 }
 .kat-panel-blok.kp-gs .gs-fig { display: flex; flex-direction: column; }
-/* Habertürk'teki flex-col-reverse: başlık görselin üstünde. */
+
 .kat-panel-blok.kp-gs .gs-rev .gs-fig { flex-direction: column-reverse; }
 .kat-panel-blok.kp-gs .gs-img {
   display: block; overflow: hidden; background: var(--hp-surface-2);
@@ -4609,7 +4195,6 @@ html[data-theme="dark"] .kat-panel-blok.kp-ht { --kp-line: #27272a; }
 }
 .kat-panel-blok.kp-gs .gs-card:hover .gs-t { color: var(--kp-link, var(--hp-tema)); }
 
-/* ---- Puan Durumu & Fikstür widget (mynet tarzı) ---- */
 .fx-widget { background: var(--hp-surface); border: 1px solid var(--hp-border); border-radius: var(--hp-radius); overflow: hidden; margin-top: 12px; }
 .fx-tabs { display: flex; border-bottom: 1px solid var(--hp-border); }
 .fx-tab { flex: 1; padding: 13px; background: none; border: 0; cursor: pointer; font-weight: 800; font-size: .9rem; letter-spacing: .02em; color: var(--hp-text-muted); border-bottom: 3px solid transparent; }
@@ -4673,30 +4258,23 @@ html[data-theme="dark"] .kat-panel-blok.kp-ht { --kp-line: #27272a; }
   background: var(--hp-surface); border-radius: var(--hp-radius-sm);
   overflow: hidden; border: 1px solid var(--hp-border);
 }
-/* Görsele sabit oran verilir; kart yüksekliği metinden büyükse metin
-   taşmaz, kırpılmaz (eski hâlde height:100% + min-height döngüsü vardı). */
+
 .kb-item img {
   width: 42%; flex: 0 0 42%; height: auto; aspect-ratio: 4 / 3;
   object-fit: cover; align-self: flex-start;
 }
-/* Metin, görselden uzunsa kart büyür ve kırpma olmaz:
-   görsel esnemez, metin kendi yüksekliğini belirler. */
+
 .kb-item .kb-t {
   flex: 1 1 auto; min-width: 0; padding: 12px;
   font-size: .86rem; font-weight: 600; line-height: 1.45; color: var(--hp-text);
   overflow-wrap: anywhere;
   display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden;
 }
-/* 4 satırlık metin + 24px iç boşluk, kartın taban yüksekliğidir */
+
 .kb-yan { grid-auto-rows: minmax(min-content, auto); }
 .kb-yan .kb-item { min-height: 96px; }
 .kb-item:hover, .kb-lead:hover { opacity: .92; }
 
-/* ---- 11c) Trend listesi otomatik kayma (haberpi) ----
-   Kırpma (overflow) ve maske SABİT kalan `.trend-scroll` penceresinde
-   olmalı; transform yalnız içerik listesine uygulanır. Aksi halde
-   kayan öğeyle birlikte pencere de oynar, blok her turda ~100px
-   zıplayıp geri gelir. */
 .trend-scroll {
   max-height: 420px; overflow: hidden;
   -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 14px,
@@ -4713,14 +4291,10 @@ html[data-theme="dark"] .kat-panel-blok.kp-ht { --kp-line: #27272a; }
   }
 }
 
-/* ---- 11d) Hikaye etiketi: haberpi mobilde 13px'e düşürüyor
-   (1440px'te 14px, 900px ve 390px'te 13px). Mobil kurallar dosyanın
-   sonunda olmalı; aksi halde kaynak sırası nedeniyle ezilirler. ---- */
 @media (max-width: 63.99rem) {
   .hp-story .info .name { font-size: 13px; line-height: 18.2px; }
 }
 
-/* ---- Puan Durumu (Takım) — haberpi'nin yeşil standıyla birebir ---- */
 .puan-blk { background: #dcfce7; border: 1px solid rgba(22, 101, 52, .12); border-radius: var(--hp-radius); overflow: hidden; }
 html[data-theme="dark"] .puan-blk { background: #0f1a12; border-color: #1d3a26; }
 .puan-head { display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: #16a34a; color: #fff; }
@@ -4748,7 +4322,6 @@ html[data-theme="dark"] .puan-table thead th, html[data-theme="dark"] .puan-tabl
 .puan-more:hover { text-decoration: underline; }
 html[data-theme="dark"] .puan-more { color: #4ade80; }
 
-/* --- Yorum etkileşimi (Faz 36): beğeni + yanıt --- */
 .yorum-begen, .yorum-yanitla {
   background: none; border: 1px solid var(--hp-border, rgba(128,128,128,.35));
   border-radius: 999px; padding: 4px 12px; font-size: .8rem; cursor: pointer;
@@ -4759,7 +4332,6 @@ html[data-theme="dark"] .puan-more { color: #4ade80; }
 .yorum-yanit { margin-left: 1.4rem; border-left: 3px solid rgba(128,128,128,.25); }
 .yorum-yanit-form input, .yorum-yanit-form textarea { margin-bottom: 6px; }
 
-/* --- Makale kanal paylaşım düğmeleri (Faz 44) --- */
 .art-paylas { display: inline-flex; gap: 4px; align-items: center; }
 .art-paylas a, .art-paylas-kopyala {
   display: inline-flex; align-items: center; justify-content: center;
@@ -4771,10 +4343,6 @@ html[data-theme="dark"] .puan-more { color: #4ade80; }
 }
 .art-paylas a:hover, .art-paylas-kopyala:hover { border-color: var(--hp-tema, #e11d48); color: #e11d48; }
 
-/* ---- Faz 109: tek site genişliği -------------------------------------
-   Sayfa Tasarımcısı > Yerleşim & Ölçü'den ayarlanır (--site-width).
-   Üst menü, gövde container'ları ve footer aynı azami genişliği kullanır.
-   Eski 95rem footer / 96rem header kırılımları bu kuralla ezilir. */
 .container {
   max-width: var(--site-width, 1280px);
 }
@@ -4787,10 +4355,6 @@ html[data-theme="dark"] .puan-more { color: #4ade80; }
   max-width: var(--site-width, 1280px);
 }
 
-/* ---- Faz 111: makale içerik hizası ve komşu/ilgili haber düzeltmeleri ----
-   Yeni 1280px site genişliğinde makale kolonu genişledi; okunabilir metin
-   ölçüsü (720px) korunur ve hero, gövde, önceki/sonraki haber ile ilgili
-   haberler aynı hizada tutulur. */
 .article .body {
   max-width: 720px;
   margin-left: auto;
@@ -4800,7 +4364,7 @@ html[data-theme="dark"] .puan-more { color: #4ade80; }
   max-width: 720px;
   margin-left: auto;
   margin-right: auto;
-  /* Sabit oran: görsel yüklenirken layout kaymasını (CLS) önler. */
+  
   aspect-ratio: 16 / 9;
   object-fit: cover;
   width: 100%;
@@ -4855,19 +4419,12 @@ html[data-theme="dark"] .puan-more { color: #4ade80; }
   .article .art-related { grid-template-columns: minmax(0, 1fr); }
 }
 
-/* Makale kartındaki tüm içerik (başlık, hero, gövde, etiketler, yazar,
-   yorumlar, komşu ve ilgili haberler) tek bir 720px içerik kolonunda.
-   Böylece genişlik ayarı değişse de başlık/gövde hizası kaymaz. */
 .art-content {
   max-width: 720px;
   margin-left: auto;
   margin-right: auto;
 }
 
-/* ---- Faz 112: makale yan sütunu okunabilirlik düzeltmeleri ----
-   Trend listesinde line-clamp'e rağmen üçüncü satırın yarısı görünüyordu;
-   metin kutusu tam iki satır yüksekliğine sabitlendi. Video/foto galeri
-   sidebar'da 3 dar kolona sıkışıp başlıkları kesiyordu; tek kolona alındı. */
 .st-item > a {
   padding: 0 8px;
   max-height: 2.8em;
@@ -4897,9 +4454,6 @@ html[data-theme="dark"] .puan-more { color: #4ade80; }
   overflow: hidden;
 }
 
-/* ---- Faz 113: makale üst araçları + hover paylaşım menüsü ----
-   Dil solda, kullanıcı işlemleri sağda; görsel altında yazı boyutu solda,
-   görüntülenme ortada, paylaş sağda. Paylaş menüsü hover/klavye ile açılır. */
 .art-topbar {
   display: flex; align-items: center; justify-content: space-between;
   gap: 10px; flex-wrap: wrap; margin: 2px 0 10px;
@@ -4935,8 +4489,7 @@ html[data-theme="dark"] .puan-more { color: #4ade80; }
 .art-share-btn-ico { width: 17px; height: 17px; flex: 0 0 auto; }
 .art-share-caret { width: 14px; height: 14px; opacity: .7; flex: 0 0 auto; transition: transform .2s ease; }
 .art-share.open .art-share-caret { transform: rotate(180deg); }
-/* Paylaşım sürgüsü: butonun solunda, arka plansız, tek sıra. Kapalıyken
-   genişliği sıfırdır; tıklanınca boşluğa doğru sola açılır. */
+
 .art-share-menu {
   order: -1;
   display: flex; flex-direction: row; align-items: center; justify-content: flex-end;
@@ -4960,7 +4513,7 @@ html[data-theme="dark"] .puan-more { color: #4ade80; }
 .art-share-item:active { transform: scale(.92); }
 .art-share-item:focus-visible { outline: 2px solid var(--hp-tema); outline-offset: -2px; }
 .art-share-item.copied { background: var(--hp-tema); color: #fff; }
-/* Şerit ikon-only: etiket yalnız ekran okuyucu ve tooltip için. */
+
 .art-share-label {
   position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
   overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
@@ -4978,7 +4531,7 @@ html[data-theme="dark"] .puan-more { color: #4ade80; }
 @media (max-width: 560px) {
   .art-toolbar { gap: 6px; }
   .art-user-actions { width: 100%; margin-left: 0; }
-  /* Dar ekranda sürgüye yer açmak için paylaş düğmesi ikona küçülür. */
+  
   .art-share.open .art-share-btn { width: 36px; padding: 0; gap: 0; justify-content: center; }
   .art-share.open .art-share-btn > span,
   .art-share.open .art-share-btn .art-share-caret { display: none; }
@@ -4986,11 +4539,10 @@ html[data-theme="dark"] .puan-more { color: #4ade80; }
   .art-share.open .art-share-menu { max-width: min(300px, calc(100vw - 96px)); }
   .art-share-menu { gap: 3px; }
   .art-share-item { width: 32px; height: 32px; }
-  /* Sürgü açıkken dar ekranda font kontrolleri yerini sürgüye bırakır. */
+  
   .art-toolbar:has(.art-share.open) .art-tools { display: none; }
 }
 
-/* RSS akış listesi */
 .rss-head { display: flex; align-items: center; gap: 10px; margin: 8px 0 6px; }
 .rss-badge { display: inline-flex; align-items: center; justify-content: center; width: 46px; height: 46px; border-radius: 12px; background: var(--hp-tema); color: #fff; font-weight: 800; font-size: .72rem; letter-spacing: .04em; }
 .rss-badge svg { width: 26px; height: 26px; display: block; }
@@ -5011,7 +4563,6 @@ html[data-theme="dark"] .puan-more { color: #4ade80; }
 .rss-card:hover .rss-arrow { color: var(--hp-tema); }
 @media (max-width: 48rem) { .rss-grid { grid-template-columns: minmax(0, 1fr); } }
 
-/* Kart geri bildirimi: Buna benzer daha fazla / daha az */
 .card-react-shell { position: relative; display: flex; flex-direction: column; min-width: 0; }
 .card-react-shell > a.card { flex: 1 1 auto; }
 .card-react-shell > a.card .card-pad { position: relative; padding-bottom: 30px; }
@@ -5031,7 +4582,7 @@ html[data-theme="dark"] .puan-more { color: #4ade80; }
 .cr-btn:hover, .cr-btn:focus-visible { background: transparent; color: var(--hp-tema); }
 .cr-btn.on { background: transparent; color: var(--hp-tema); }
 .cr-btn:focus-visible { outline: 2px solid var(--hp-tema); outline-offset: 1px; }
-/* Kapak görseli üzerindeki ikonlar beyaz ve gölgeli okunur. */
+
 .card-react-shell.has-cover .cr-btn {
   color: #fff;
   filter: drop-shadow(0 1px 2px rgba(0, 0, 0, .65));
@@ -5039,7 +4590,7 @@ html[data-theme="dark"] .puan-more { color: #4ade80; }
 .card-react-shell.has-cover .cr-btn:hover,
 .card-react-shell.has-cover .cr-btn:focus-visible,
 .card-react-shell.has-cover .cr-btn.on { color: #ffc2c6; }
-/* Kart altı yorum çağrısı */
+
 .card-comment {
   position: absolute; left: 10px; bottom: 5px; z-index: 12;
   display: inline-flex; align-items: center; gap: 4px;
@@ -5048,7 +4599,7 @@ html[data-theme="dark"] .puan-more { color: #4ade80; }
 .card-comment svg { width: 14px; height: 14px; flex: 0 0 auto; }
 .card-comment:hover { color: var(--hp-tema); }
 #yorum-yaz { scroll-margin-top: 82px; }
-/* Açıklama yalnızca hover/focus'ta görünür (MSN tarzı). */
+
 .cr-btn > span {
   position: absolute; right: 0; top: calc(100% + 8px); z-index: 30;
   padding: 6px 9px; border-radius: 6px;
@@ -5079,7 +4630,6 @@ html[data-theme="dark"] .puan-more { color: #4ade80; }
   .cr-btn { font-size: .64rem; }
 }
 
-/* ---- TipTap içerik blokları ---- */
 .editor-image { margin: 18px 0; }
 .editor-image-frame { position: relative; display: block; }
 .editor-image img { display: block; width: 100%; height: auto; border-radius: 10px; }
@@ -5101,7 +4651,6 @@ html[data-theme="dark"] .puan-more { color: #4ade80; }
 .editor-embed { margin: 18px 0; border-radius: 10px; overflow: hidden; background: #000; }
 .editor-embed iframe { display: block; width: 100%; aspect-ratio: 16/9; border: 0; }
 .editor-embed-link { margin: 18px 0; padding: 14px 16px; border: 1px solid var(--line); border-radius: 9px; background: var(--bg2, #f7f7f6); }
-/* ---- TipTap sonu ---- */
 
 .editor-toggle { margin: 16px 0; border: 1px solid var(--line); border-radius: 9px; padding: 10px 14px; background: var(--bg2, #f7f7f6); }
 .editor-toggle summary { cursor: pointer; font-weight: 700; }
@@ -5134,7 +4683,6 @@ a.editor-image-credit { color: inherit; text-decoration: underline; }
 
 .sr-only { position: absolute !important; width: 1px !important; height: 1px !important; padding: 0 !important; margin: -1px !important; overflow: hidden !important; clip: rect(0,0,0,0) !important; white-space: nowrap !important; border: 0 !important; }
 
-/* ---- Üye girişi / üyelik sayfaları ---- */
 .member-btn { text-decoration: none; position: relative; }
 .member-avatar { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 50%; background: var(--hp-tema); color: #fff; font-size: .78rem; font-weight: 800; line-height: 1; }
 .site-header.header-skin-light .member-avatar { background: var(--hp-tema); color: #fff; }
@@ -5163,7 +4711,6 @@ a.editor-image-credit { color: inherit; text-decoration: underline; }
 .flash.error { background: #fef2f2; border-color: #fecaca; color: #991b1b; }
 @media (max-width: 520px) { .uye-card { padding: 22px 18px 18px; border-radius: 10px; } .uye-wrap { padding: 20px 0 36px; } }
 
-/* ---- Hesap merkezi (/hesabim) ---- */
 .hesap-wrap { display: grid; grid-template-columns: 250px minmax(0, 1fr); gap: 22px; padding: 26px 0 56px; align-items: start; }
 .hesap-nav { position: sticky; top: 76px; display: grid; gap: 2px; background: var(--hp-surface); border: 1px solid var(--hp-border); border-radius: 12px; padding: 10px; }
 .hesap-nav-user { display: grid; grid-template-columns: 38px minmax(0, 1fr); gap: 10px; align-items: center; padding: 8px; border-radius: 9px; text-decoration: none; color: inherit; margin-bottom: 4px; }
@@ -5224,10 +4771,8 @@ a.editor-image-credit { color: inherit; text-decoration: underline; }
   .hesap-nav-user, .hesap-nav-group, .hesap-nav-cikis { grid-column: 1 / -1; }
 }
 
-/* Header üye avatarı + okunmamış bildirim sayacı */
 .member-badge { position: absolute; top: 0; right: 0; min-width: 15px; height: 15px; padding: 0 3px; border-radius: 9px; background: var(--hp-tema); color: #fff; font-size: .6rem; font-weight: 800; line-height: 15px; text-align: center; box-shadow: 0 0 0 2px var(--hp-header-bg); }
 
-/* ---- Abonelik / fiyat sayfası ---- */
 .abon-header { text-align: center; padding: 30px 0 10px; }
 .abon-header h1 { margin: 0 0 6px; font-size: 2rem; font-weight: 800; letter-spacing: -.02em; }
 .abon-sub { margin: 0 auto 16px; max-width: 560px; color: var(--hp-text-muted); font-size: .95rem; }
@@ -5260,33 +4805,8 @@ a.editor-image-credit { color: inherit; text-decoration: underline; }
 .abon-modal-head h2 { margin: 0; font-size: 1.1rem; }
 .abon-modal-close { border: 0; background: none; font-size: 1.5rem; line-height: 1; cursor: pointer; color: var(--hp-text-muted); }
 
-/* Kilitli içerik kutusu (paywall CTA) */
 .art-locked { border: 1px solid var(--hp-border); border-left: 4px solid var(--hp-tema); background: var(--hp-surface-2); margin: 14px 0; text-align: center; display: grid; gap: 6px; justify-items: center; }
 
-/* =============================================================================
-   KART STİLİ AİLESİ — paylaşımlı (kategori ızgarası, akış kartları,
-   üst manşet, öne çıkanlar)
-   -----------------------------------------------------------------------------
-   Kullanım: modül kabına  class="cs-scope cs-<stil>"  eklenir.
-   Renkler CSS değişkenleriyle yöneticiden gelir; açık/koyu tema ayrı ayrı
-   seçilebilir (inline stil yalnız --cs-light-* / --cs-dark-* yazar, böylece
-   [data-theme="dark"] kuralı ezilmez):
-
-     --cs-light-bg / --cs-light-fg   açık temada bant arka planı / yazı rengi
-     --cs-dark-bg  / --cs-dark-fg    koyu temada bant arka planı / yazı rengi
-     --cs-accent                     vurgu (çizgi, köşe, etiket)
-     --cs-size                       başlık boyutu
-
-   Stiller:
-     cs-bloomberg        başlık bandı görselin ÜSTÜNDE (Bloomberg düzeni)
-     cs-bloomberg-cizgi  Bloomberg II: başlık kutusu görselin üstüne taşar
-     cs-bant-alt         görsel üstte, bant başlık altta (klasik gazete)
-     cs-vurgu            aksan renginde dolu bant
-     cs-cerceve          başlık ince çerçeveli kutuda
-     cs-kose             köşe vurgulu bant
-     cs-cam              yarı saydam, bulanık (glass) bant
-     cs-alt-cizgi        bant + alt aksan çizgisi
-   ============================================================================= */
 .cs-scope {
   --cs-light-bg: #0f172a;
   --cs-light-fg: #ffffff;
@@ -5297,7 +4817,7 @@ a.editor-image-credit { color: inherit; text-decoration: underline; }
   --cs-accent: var(--hp-tema);
   --cs-size: .98rem;
   --cs-pad: 10px 12px;
-  /* Kart kabuğu: açık/koyu tema ayrı; boşsa tema yüzeyi kullanılır. */
+  
   --cs-card-light-bg: var(--hp-surface);
   --cs-card-dark-bg: var(--hp-surface);
   --cs-card-bg: var(--cs-card-light-bg);
@@ -5310,8 +4830,6 @@ a.editor-image-credit { color: inherit; text-decoration: underline; }
   --cs-card-bg: var(--cs-card-dark-bg);
 }
 
-/* Kart gövdesi (kabuk) arka planı ve gölgesi. Yönetici renk seçerse
-   açık/koyu tema ayrı uygulanır; gölge kapatıldığında hover dahil kalkar. */
 .cs-scope .card,
 .cs-scope .cat-card {
   background: var(--cs-card-bg);
@@ -5322,7 +4840,6 @@ a.editor-image-credit { color: inherit; text-decoration: underline; }
   box-shadow: var(--cs-shadow-hover);
 }
 
-/* Ortak başlık bandı görünümü (tüm stillerin temeli) */
 .cs-scope .cat-card .card-pad,
 .cs-scope .card .card-pad,
 .cs-scope .um-card .um-t {
@@ -5348,10 +4865,6 @@ a.editor-image-credit { color: inherit; text-decoration: underline; }
   opacity: .74;
 }
 
-/* Akış (akis görünümü) kartları — ilk 4 karttan SONRA gelen ızgara.
-   ak-item'lerde card-pad yok; figcaption banda dönüştürülür. Tüm stiller
-   için görsel üstte / bant altta başlar; Bloomberg bandı order:-1 ile
-   görselin üstüne geçer, Bloomberg II ise kutuyu görselin üstüne taşırır. */
 .cs-scope .ak-fig,
 .cs-scope .ak-fig5 {
   display: flex;
@@ -5362,7 +4875,7 @@ a.editor-image-credit { color: inherit; text-decoration: underline; }
 .cs-scope .ak-fig5 { border-bottom: 0; padding-bottom: 0; }
 .cs-scope .ak-cap,
 .cs-scope .ak-cap5 {
-  order: 1; /* görsel üstte, bant altta (Bloomberg order:-1 yapar) */
+  order: 1; 
   flex: 0 0 auto;
   width: 100%;
   margin: 0;
@@ -5373,9 +4886,7 @@ a.editor-image-credit { color: inherit; text-decoration: underline; }
   border-radius: 0;
 }
 .cs-scope .ak-cap5 { position: static; }
-/* tip5: kare görsel + görselin üstüne taşan başlık kutusu; kart stilinde
-   diğer akış kartları gibi tam genişlik 16:9 görsel + ayrı bant olur.
-   Böylece ak-fig5/ak-cap5 de Bloomberg ve diğer stillerden payını alır. */
+
 .cs-scope .ak-img5 {
   order: 0;
   flex: 0 0 auto;
@@ -5390,7 +4901,7 @@ a.editor-image-credit { color: inherit; text-decoration: underline; }
   display: block;
 }
 .cs-scope .ak-fig .ak-thumb {
-  order: 0; /* tip4'teki order:2'yi sıfırla; DOM sırası yerine görsel önce */
+  order: 0; 
   flex: 0 0 auto;
   width: 100%;
   max-width: none;
@@ -5410,7 +4921,6 @@ a.editor-image-credit { color: inherit; text-decoration: underline; }
 .cs-scope .ak-item:hover .ak-t,
 .cs-scope .ak-item:hover .ak-t5 { color: var(--cs-fg); }
 
-/* 1) Bloomberg: başlık bandı görselin ÜSTÜNDE */
 .cs-bloomberg .card,
 .cs-bloomberg .cat-card,
 .cs-bloomberg .um-card {
@@ -5430,16 +4940,8 @@ a.editor-image-credit { color: inherit; text-decoration: underline; }
 .cs-bloomberg .ak-cap,
 .cs-bloomberg .ak-cap5 { order: -1; }
 
-/* 2) Bloomberg II: başlık kutusu görselin üstüne taşar (tip5 görünümü).
-   Görsel tam genişlikte kalır; bant %91.67 genişlikte, görselin son 48px'i
-   üzerine biner. Bloomberg'in "bant üstte" düzeninden bu taşma ile ayrılır.
-   Görseli olmayan metin kartlarında taşma uygulanmaz. Varsayılan renkler
-   tema yüzeyi/yazısıdır (açık/koyu geçişi kategorideki tip5 kartıyla aynı);
-   yönetici renk seçerse inline değişkenler bu varsayılanları ezer. */
 .cs-bloomberg-cizgi {
-  /* Varsayılan kutu rengi tema yüzeyi/yazısıdır; böylece koyu temada
-     kategorideki tip5 kartıyla aynı renge geçer. Yönetici renk seçerse
-     inline --cs-light-* / --cs-dark-* değerleri bunları ezer. */
+  
   --cs-light-bg: var(--hp-surface);
   --cs-light-fg: var(--hp-text);
   --cs-dark-bg: var(--hp-surface);
@@ -5486,7 +4988,7 @@ a.editor-image-credit { color: inherit; text-decoration: underline; }
   margin-top: 0;
   padding: var(--cs-pad);
 }
-/* tip5'teki gibi başlık iki satırda kırpılır; tam metin DOM'da kalır. */
+
 .cs-bloomberg-cizgi .cat-card h3,
 .cs-bloomberg-cizgi .um-card .um-tx,
 .cs-bloomberg-cizgi .ak-t,
@@ -5495,7 +4997,6 @@ a.editor-image-credit { color: inherit; text-decoration: underline; }
   line-clamp: 2;
 }
 
-/* 3) Bant altta: görsel üstte, başlık dolu bantta altta */
 .cs-bant-alt .card .card-pad,
 .cs-bant-alt .cat-card .card-pad,
 .cs-bant-alt .um-card .um-t {
@@ -5503,7 +5004,6 @@ a.editor-image-credit { color: inherit; text-decoration: underline; }
   color: var(--cs-fg);
 }
 
-/* 4) Vurgu: aksan renginde dolu bant, yazı kontrastı tema rengine göre */
 .cs-vurgu .card .card-pad,
 .cs-vurgu .cat-card .card-pad,
 .cs-vurgu .um-card .um-t {
@@ -5527,7 +5027,6 @@ a.editor-image-credit { color: inherit; text-decoration: underline; }
 .cs-vurgu .ak-tx { color: #fff; }
 .cs-vurgu .ak-cat { color: rgba(255, 255, 255, .82); }
 
-/* 5) Çerçeve: başlık ince çerçeveli kutuda, kart zemini saydam */
 .cs-cerceve .card .card-pad,
 .cs-cerceve .cat-card .card-pad,
 .cs-cerceve .um-card .um-t {
@@ -5558,7 +5057,6 @@ a.editor-image-credit { color: inherit; text-decoration: underline; }
 .cs-cerceve .ak-tx { color: var(--hp-text); }
 .cs-cerceve .ak-cat { color: var(--hp-text-muted); }
 
-/* 6) Köşe: bant köşesinde aksan üçgeni */
 .cs-kose .card .card-pad,
 .cs-kose .cat-card .card-pad,
 .cs-kose .um-card .um-t {
@@ -5598,7 +5096,6 @@ a.editor-image-credit { color: inherit; text-decoration: underline; }
   pointer-events: none;
 }
 
-/* 7) Cam (glass): yarı saydam + bulanık bant */
 .cs-cam .card .card-pad,
 .cs-cam .cat-card .card-pad,
 .cs-cam .um-card .um-t {
@@ -5615,7 +5112,6 @@ a.editor-image-credit { color: inherit; text-decoration: underline; }
   backdrop-filter: blur(10px) saturate(1.1);
 }
 
-/* 8) Alt çizgi: bant + alt aksan çizgisi */
 .cs-alt-cizgi .card .card-pad,
 .cs-alt-cizgi .cat-card .card-pad,
 .cs-alt-cizgi .um-card .um-t {
@@ -5626,54 +5122,28 @@ a.editor-image-credit { color: inherit; text-decoration: underline; }
   border-bottom: 3px solid var(--cs-accent);
 }
 
-/* Üst manşet: başlık metninin sol/sağ iç boşluğu modül ayarından gelir.
-   Yalnız ayar verildiğinde (um-title-pad sınıfı) stilin kendi yatay
-   dolgusunu ezer; böylece Bloomberg II'nin varsayılan 16px'i korunur,
-   istenirse 0 yapılarak tip5'in bitişik görünümü geri alınır. */
 .ust-manset.um-title-pad > .um-card .um-t {
   padding-left: var(--um-title-pad-x);
   padding-right: var(--um-title-pad-x);
 }
 
-/* Erişilebilirlik: hareket azaltma tercihinde geçişleri kapat */
 @media (prefers-reduced-motion: reduce) {
   .cs-scope .card,
   .cs-scope .cat-card,
   .cs-scope .um-card { transition: none; }
 }
 
-/* ---- Slider stili: SAYILI ŞERİT (Habertürk spor/basketbol düzeni) ----
-   Kaynaktan çözüldü (haberturk.com/spor/basketbol, 28 Ekim 2026).
-
-   Üst düzen : <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-               → 50/50 iki kolon. Sol kare slider, sağ 2x2 kare ızgara.
-               Kare hücreler sayesinde iki kolonun yüksekliği tam eşit.
-   Görsel    : aspect-w-1 aspect-h-1 (1:1), arka plan bg-gray-600.
-   Başlık    : figcaption → text-2xl (24px) / leading-6 / font-bold /
-               line-clamp-2 / pt-10 pb-14 px-3 / gradient from-black.
-   Sağ kart  : text-lg (18px) font-bold, 2 satır, alttan siyah gradient.
-   ŞERİT     : swiper-pagination flex !bottom-0 bg-black/15; her hücre
-               w-full h-8 bg-white/20 rounded-none; içinde -skew-x-12
-               zemin + sağda 1px #1f1f1f çizgi. Aktif hücrenin eğik zemini
-               hsla(0,0%,100%,.3) (kaynaktaki .bg-transfer-white kuralı).
-               Son hücre "+" (slides.length-1). */
-
-/* 50/50 — referans grid-cols-2. */
 .hero-row-sayili { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--blk-gap-y, 20px) var(--blk-gap-x, 20px); }
 
-/* Sol: kare slider. Referans aspect-w-1 aspect-h-1 + bg-gray-600.
-   margin:0 → sağ ızgarayla üstten hizalı. */
 .hero-row-sayili .hero-slider {
   height: auto;
   aspect-ratio: 1 / 1;
   margin: 0;
   border-radius: var(--hp-radius);
   overflow: hidden;
-  background: #4b5563;              /* bg-gray-600 */
+  background: #4b5563;              
 }
-/* Slaytlar her kırılımda mutlak konumlu olmalı: mobilde taban kural
-   position:relative + 21/9 oranı uyguluyor, bu da kare slider'ın altında
-   boş bir bant bırakıyordu. */
+
 .hero-row-sayili .hero-slide {
   position: absolute; inset: 0; display: block;
   opacity: 0; visibility: hidden;
@@ -5687,25 +5157,22 @@ a.editor-image-credit { color: inherit; text-decoration: underline; }
 .hero-style-sayili .hero-slide { border-radius: var(--hp-radius); overflow: hidden; }
 .hero-style-sayili .hero-slide img {
   width: 100%; height: 100%;
-  aspect-ratio: auto;               /* mobildeki 21/9'u ez */
+  aspect-ratio: auto;               
   object-fit: cover;
 }
 
-/* Başlık: tam olarak text-2xl / leading-6 / font-bold / pt-10 pb-14 px-3,
-   alttan siyaha gradient (from-black). */
 .hero-style-sayili .hero-overlay {
   background: linear-gradient(to top, #000, transparent);
   padding: 40px 12px 56px;
 }
 .hero-style-sayili .hero-title {
-  font-size: 1.5rem;                /* text-2xl = 24px */
-  line-height: 1.5rem;              /* leading-6 = 24px */
-  font-weight: 700;                 /* font-bold */
-  -webkit-line-clamp: 2;            /* line-clamp-2 */
+  font-size: 1.5rem;                
+  line-height: 1.5rem;              
+  font-weight: 700;                 
+  -webkit-line-clamp: 2;            
   margin: 0;
 }
 
-/* Sağ: 2x2 kare ızgara (referans grid grid-cols-2 gap-5). */
 .hero-row-sayili .hero-rail {
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   grid-template-rows: minmax(0, 1fr) minmax(0, 1fr); gap: var(--blk-gap-y, 20px) var(--blk-gap-x, 20px);
@@ -5720,11 +5187,11 @@ a.editor-image-credit { color: inherit; text-decoration: underline; }
   min-height: 0;
 }
 .hero-row-sayili .hero-rail img { width: 100%; height: 100%; object-fit: cover; display: block; }
-/* Küçük kart başlığı: text-lg / font-bold / 2 satır / alttan gradient. */
+
 .hero-row-sayili .hero-rail .rail-t {
   position: absolute; inset: auto 0 0 0;
   padding: 8px;
-  font-size: 1.125rem;              /* text-lg = 18px */
+  font-size: 1.125rem;              
   line-height: 1.35;
   font-weight: 700;
   color: #fff;
@@ -5733,19 +5200,16 @@ a.editor-image-credit { color: inherit; text-decoration: underline; }
   overflow: hidden;
 }
 
-/* ---- NUMARALI ŞERİT ----
-   Referans: .swiper-pagination.flex.items-center.!bottom-0.m-0.bg-black/15
-   Hücre: w-full h-8 bg-white/20 rounded-none, bitişik (gap yok). */
 .hero-style-sayili .hero-dots {
   left: 0; right: 0; bottom: 0;
-  transform: none;                  /* pos-center'dan kalan -50% kayması */
+  transform: none;                  
   max-width: 100%;
   display: flex; gap: 0;
   justify-content: stretch;
-  height: 32px;                     /* h-8 (her kırılımda) */
+  height: 32px;                     
   padding: 0;
   overflow: hidden;
-  background: rgba(0, 0, 0, .15);   /* bg-black/15 */
+  background: rgba(0, 0, 0, .15);   
   border-radius: 0 0 var(--hp-radius) var(--hp-radius);
   z-index: 4;
 }
@@ -5753,10 +5217,10 @@ a.editor-image-credit { color: inherit; text-decoration: underline; }
   flex: 1 1 0; min-width: 0;
   width: auto; height: 100%;
   border: 0; border-radius: 0;
-  background: rgba(255, 255, 255, .20);   /* bg-white/20 */
+  background: rgba(255, 255, 255, .20);   
   color: #fff;
-  font-size: .75rem;                /* text-xs → lg:text-sm */
-  font-weight: 400;                 /* referansta kalınlaştırma yok */
+  font-size: .75rem;                
+  font-weight: 400;                 
   line-height: 1;
   display: flex; align-items: center; justify-content: center;
   position: relative; overflow: hidden;
@@ -5764,8 +5228,7 @@ a.editor-image-credit { color: inherit; text-decoration: underline; }
   padding: 0;
   transition: background-color .18s ease;
 }
-/* Eğik zemin: -skew-x-12 + sağda 1px #1f1f1f çizgi.
-   Normalde saydam; AKTİF hücrede hsla(0,0%,100%,.3). */
+
 .hero-style-sayili .hero-dot::before {
   content: "";
   position: absolute; top: 0; bottom: 0; left: -10%; right: -10%;
@@ -5775,8 +5238,7 @@ a.editor-image-credit { color: inherit; text-decoration: underline; }
   z-index: 0;
 }
 .hero-style-sayili .hero-dot-n { position: relative; z-index: 1; }
-/* Aktif: kaynaktaki ".swiper-pagination-bullet-active .bg-transfer-white"
-   kuralı → hsla(0,0%,100%,.3). Hücre zemini değişmez. */
+
 .hero-style-sayili .hero-dot.on {
   width: auto; height: 100%;
   border-radius: 0;
@@ -5790,7 +5252,6 @@ a.editor-image-credit { color: inherit; text-decoration: underline; }
   color: #fff !important;
 }
 
-/* Oklar: w-11 h-11 bg-white/30 (referansta yalnız lg ve üzeri görünür). */
 .hero-style-sayili .hero-nav {
   background: rgba(255, 255, 255, .30);
   color: #fff;
@@ -5799,7 +5260,6 @@ a.editor-image-credit { color: inherit; text-decoration: underline; }
 }
 .hero-style-sayili .hero-nav:hover { background: rgba(255, 255, 255, .45); }
 
-/* Mobil: referans grid-cols-1 → alt alta; kare oranlar korunur. */
 @media (max-width: 64rem) {
   .hero-row-sayili { grid-template-columns: minmax(0, 1fr); }
   .hero-row-sayili .hero-rail {
@@ -5809,14 +5269,9 @@ a.editor-image-credit { color: inherit; text-decoration: underline; }
   }
 }
 @media (min-width: 64rem) {
-  .hero-style-sayili .hero-dot { font-size: .875rem; }   /* lg:text-sm */
+  .hero-style-sayili .hero-dot { font-size: .875rem; }   
 }
 
-/* ---- Canlı finans geri bildirimi (Faz 138) ----
-   Kur & Borsa, Hisseler, Kripto Para, servis bandı ve çevirici aynı
-   davranışı paylaşır: değişen değer kısa süre yeşil/kırmızı vurgulanır,
-   "Canlı" rozeti ve son güncelleme saati tazelenir. Animasyon yalnız
-   değer gerçekten değiştiğinde eklenir; ilk yüklemede sessizdir. */
 .fin-live {
   display: inline-flex;
   align-items: center;
@@ -5856,7 +5311,6 @@ a.editor-image-credit { color: inherit; text-decoration: underline; }
   100% { background-color: transparent; }
 }
 
-/* Hareket azaltma: animasyon yerine statik, kısa süreli renk vurgusu. */
 [data-fin-fld].fin-tint-up { background-color: rgba(22, 163, 74, .18); border-radius: 3px; }
 [data-fin-fld].fin-tint-down { background-color: rgba(220, 38, 38, .16); border-radius: 3px; }
 
@@ -5884,10 +5338,6 @@ html[data-theme="dark"] [data-fin-fld].fin-tint-down { background-color: rgba(24
   .fin-ok-akis rect { animation: none; }
 }
 
-/* ---- Kurumsal / yasal sayfalar (Faz 144) ---------------------------------
-   Kullanım koşulları, KVKK, çerez, telif gibi metin sayfaları. Habertürk
-   benzeri okunabilir düzen: büyük başlık, alt başlıklar, madde listeleri ve
-   alıntı kutusu. Tasarımcıdan gelen modül bölgeleri aynı sarmalayıcıda kalır. */
 .page-doc .page-title {
   font-size: 2rem; line-height: 1.22; font-weight: 800;
   display: block; margin: 20px 0 18px; letter-spacing: -.01em;
@@ -5930,7 +5380,6 @@ html[data-theme="dark"] [data-fin-fld].fin-tint-down { background-color: rgba(24
   .page-body h2 { font-size: 1.18rem; }
 }
 
-/* ---- İletişim sayfası: kartlar + form (Faz 145) ------------------------- */
 .page-doc-wide { max-width: 1100px; }
 .page-doc-wide .page-body { max-width: 820px; }
 .contact-block { margin: 26px 0 8px; }
@@ -5956,7 +5405,7 @@ html[data-theme="dark"] [data-fin-fld].fin-tint-down { background-color: rgba(24
 .contact-form .cf-check input { margin-top: 3px; }
 .contact-form .btn { justify-self: start; }
 .contact-block .flash { margin: 0 0 14px; }
-/* Form gönderim bildirimi (Faz 145): ok/error renkleri. */
+
 .flash.ok { border-left-color: #16a34a; background: #eafbf0; color: #14532d; }
 html[data-theme="dark"] .flash.ok { background: #0f2d1c; color: #86efac; }
 .contact-block { scroll-margin-top: 90px; }

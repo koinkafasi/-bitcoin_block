@@ -23,10 +23,6 @@ func GetSetting(ctx context.Context, pool DB, section, key string) ([]byte, erro
 	return settingText(v), err
 }
 
-// SetSetting JSON değerini yazar/upsert eder. Verilen baytlar geçerli JSON
-// DEĞİLSE otomatik olarak JSON string'e sarılır; aksi halde jsonb yazımı
-// sessizce başarısız olurdu (ör. saat "09:41", API anahtarları, kaynak
-// metinleri kaydedilemiyordu).
 func SetSetting(ctx context.Context, pool DB, section, key string, value []byte) error {
 	_, err := pool.Exec(ctx, `
 		INSERT INTO settings (section, key, value) VALUES ($1, $2, $3::jsonb)
@@ -87,13 +83,6 @@ func GetSettings(ctx context.Context, pool DB, section string) (map[string][]byt
 	return out, rows.Err()
 }
 
-// GetSettingsText bir bölümün tüm anahtarlarını, saklanan JSON sarmalı
-// çözülmüş METİN olarak döndürür.
-//
-// NEDEN: GetSettings ham jsonb değerini verir (kaydederken json.Marshal ile
-// sarmalandığı için `"bitcosar"` gibi tırnaklı gelir). Tek tek GetSetting
-// çağıran kod settingText ile bunu çözüyordu; tek sorguya geçen çağıranlar
-// aynı çözümü tekrar yazmasın diye burada yapılır.
 func GetSettingsText(ctx context.Context, pool DB, section string) (map[string]string, error) {
 	raw, err := GetSettings(ctx, pool, section)
 	if err != nil {

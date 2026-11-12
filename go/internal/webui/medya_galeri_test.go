@@ -11,20 +11,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// Medya galerisi — kart görünümü, sürükleme alanı, yükleme halkası (Faz 186).
-//
-// Referans (Murmura /library/media) yalnız ÖLÇÜLDÜ; değerler:
-//
-//	kart yarıçapı      20px
-//	kart gölgesi       inset 0 1px rgba(255,255,255,.5), 0 18px 30px -22px
-//	ızgara             grid-auto-rows 4px, column-gap 14px
-//	masonry            gridRowEnd = yükseklik / 4
-//	sürükleme kutusu   1.5px dashed, radius 20px, .2s geçiş
-//	ikon dairesi       52x52, tam yuvarlak
-//	yükleme halkası    64x64 SVG, r=22, stroke 5, dasharray 2π·22 = 138.23
-//
-// Kod/varlık alınmadı; yalnız bu ölçüler kendi uygulamamıza taşındı.
-
 func medyaCSS(t *testing.T) string {
 	t.Helper()
 	b, err := os.ReadFile(filepath.Join("static", "admin-only.css"))
@@ -39,11 +25,6 @@ func medyaTempl(t *testing.T) string {
 	return string(b)
 }
 
-// medyaKural, verilen SEÇİCİYLE BAŞLAYAN kuralın gövdesini döndürür.
-//
-// Alt dize aramak yetmiyor: `.media-panel:not(.media-list-view) .media-item`
-// metni kart kuralı kaldırılsa bile diğer (`.media-open`, `.mi-actions`)
-// seçicilerde geçmeye devam ediyor, yani mutasyon yakalanmıyordu.
 func medyaKural(t *testing.T, css, secici string) string {
 	t.Helper()
 	for _, satir := range strings.Split(css, "\n") {
@@ -69,9 +50,6 @@ func TestMedyaKartGorunumu(t *testing.T) {
 		"masonry satır yüksekliği 4px olmalı (ölçüldü)")
 	assert.Contains(t, grid, "column-gap: 14px", "sütun aralığı 14px")
 
-	// Kapsam: liste görünümü aynı DOM'u kullanıyor. Kart kuralı kapsamsız
-	// olursa `.media-item img{height:100%}` listedeki 82px'lik satırları
-	// da bozardı (ölçüldü: itemH 800, imgH 0).
 	kart := medyaKural(t, s, ".media-panel:not(.media-list-view) .media-item")
 	assert.Contains(t, kart, "border-radius: 20px", "kart yarıçapı 20px")
 	assert.Contains(t, kart, "0 18px 30px -22px", "kart gölgesi ölçülen değer")
@@ -150,9 +128,6 @@ func TestMedyaMasonryDongusu(t *testing.T) {
 	assert.Greater(t, iApply, iMasonry,
 		"görünüm bloğu masonry sabitlerinden önce çalışmamalı (TDZ)")
 
-	// Kırık görsel yedeği: dinleyici çağrısı ve yer tutucu sınıfı ayrı ayrı
-	// aranır. Yalnız "'error'" aramak yetmiyordu — açıklama yorumunda da
-	// aynı metin geçtiği için dinleyici silinse bile test yeşil kalıyordu.
 	assert.Contains(t, s, "panel.addEventListener('error'",
 		"kırık görsel yakalanmalı (kırık ikon + alt metin kartın üstüne biniyordu)")
 	assert.Contains(t, s, "mi-kirik",
@@ -196,12 +171,6 @@ func TestMedyaGridSabitDegerleri(t *testing.T) {
 	assert.Regexpf(t, re, blok, "masonry satır yüksekliği")
 }
 
-// TestMedyaKartOraniSinirli: kart yüksekliği özgün dosya oranından değil
-// EKRANDAKİ görselin oranından gelmeli ve sınırlanmalı.
-//
-// Gerçek vaka: özgün ölçü 750×15873 (uzun şerit ekran görüntüsü), thumb
-// 422×422. Özgün oranla kart 215×4554 px oluyordu (ölçüldü: span 1142,
-// ızgarada tek başına bir sütun boyu boşluk).
 func TestMedyaKartOraniSinirli(t *testing.T) {
 	b, err := os.ReadFile(filepath.Join("static", "media.js"))
 	require.NoError(t, err)

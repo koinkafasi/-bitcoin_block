@@ -16,15 +16,6 @@ import (
 	"theblock/site/internal/webui/templkit"
 )
 
-// CoinDesk bölüm sayfaları (§8): /markets, /business, /tech, /policy,
-// /opinion, /latest-crypto-news.
-//
-// URL deseni CoinDesk ile aynı: /{section}. Sayfalama `?sayfa=N`.
-//
-// NEDEN ayrı handler: mevcut /kategori/{slug} theblock şablonunu kullanıyor.
-// CoinDesk yapısında bölüm adresi kökte ve tek segment; SEO'da kanonik
-// adres budur.
-
 // cdSectionMeta bölüm tanımı (slug → ad + açıklama).
 var cdSectionMeta = map[string]struct{ Ad, Aciklama string }{
 	"markets":            {"Piyasalar", "Kripto piyasaları: fiyat hareketleri, likidite, türevler ve kurumsal akış."},
@@ -47,15 +38,6 @@ func (s *Server) cdBolumHandler(slug string) http.HandlerFunc {
 	}
 }
 
-// cdBolumMeta bölüm başlığı ve açıklaması.
-//
-// İKİ KAYNAK: önce sabit harita (CoinDesk bölümleri), sonra DB
-// kategorileri (`/kategori/{slug}` adresleri buradan gelir).
-//
-// NEDEN: `/kategori/{slug}` sayfası theblock şablonunu kullanıyordu —
-// menüden tıklanan kategori eski kabuğa düşüyordu (kullanıcı bildirimi,
-// 9 Kasım 2026). Aynı içerik iki ayrı şablonla iki farklı görünümde
-// basılıyordu. Artık tek şablon: `/tech` ve `/kategori/tech` birebir aynı.
 func (s *Server) cdBolumMeta(ctx context.Context, slug string) (ad, aciklama string, ok bool) {
 	if m, var_ := cdSectionMeta[slug]; var_ {
 		return m.Ad, m.Aciklama, true
@@ -114,13 +96,6 @@ func (s *Server) handleCDSection(w http.ResponseWriter, r *http.Request, slug st
 
 	kanonik := s.kanonikKok(r) + "/" + slug
 
-	// PARÇA (`?sayfa=N&parca=1`): cd-daha.js "Daha fazla haber"a basınca
-	// bu yanıtı çeker ve satırları listenin sonuna ekler — sayfa geçişi
-	// OLMAZ (CoinDesk davranışı: URL değişmez, sayfa yenilenmez).
-	//
-	// Parçada o sayfanın TÜM haberleri DÜZ satır olarak gider: lead/alt/
-	// ray bölmesi yalnız tam sayfada (JS'siz fallback) uygulanır. Nav da
-	// parçada: JS yeni href'lerle yeniler.
 	if r.URL.Query().Get("parca") == "1" {
 		var prev, next string
 		if sayfa > 1 {
@@ -157,14 +132,6 @@ func (s *Server) handleCDSection(w http.ResponseWriter, r *http.Request, slug st
 		v.NabizFiyat, v.Nabiz = s.cdNabiz(r.Context())
 	}
 
-	// YERLEŞİM (CoinDesk /markets ölçümü, 8 Kasım 2026):
-	//   lead      : 1 haber (yatay kart, metin %31 / görsel %67)
-	//   alt       : sonraki 4 haber (239 px kart ızgarası)
-	//   ray       : sonraki 6 haber (görselsiz başlık + saat)
-	//   stories   : kalanlar ("More From" satırları, 1032 px)
-	//
-	// Önceki sürüm 1 lead + 3 yan + kalan dikey kart kullanıyordu; CoinDesk'te
-	// bu sayfada yan sütun ve dikey kart YOK (ölçüldü).
 	const altAdet, rayAdet = 4, 6
 	if len(kartlar) > 0 {
 		v.Lead = kartlar[0]
@@ -209,12 +176,6 @@ func sayfaURL(n int) string {
 	return "?sayfa=" + strconv.Itoa(n)
 }
 
-// kategoriID slug'dan kategori kimliği bulur (yoksa 0).
-// kategoriID bölüm slug'ını kimliğe çevirir (10 sn önbellekli).
-//
-// NEDEN ÖNBELLEK: ana sayfa render'ı bölüm panelleri için AYNI dört slug'ı
-// çeviriyor (4 sorgu/istek, ölçüldü 10 Kasım 2026). Kategori kimliği
-// pratikte hiç değişmez; 10 sn'lik süreç içi katman yeter.
 func (s *Server) kategoriID(ctx context.Context, slug string) int64 {
 	if s.kategoriCache == nil {
 		var id int64
@@ -241,11 +202,6 @@ func (s *Server) kategoriID(ctx context.Context, slug string) int64 {
 	return v
 }
 
-// cdShellOturum oturum bilgisini kabuğa işler (üst çubuk menüsü).
-//
-// Giriş bağlantıları TEMİZLENİR: şablon `LoggedIn` dalına geçiyor ama
-// başka bir tüketici (mobil panel) `LoginHref`'e bakarsa ölü bir "Giriş"
-// bağlantısı basmasın.
 func cdShellOturum(sh *templkit.CDShell, u auth.User) {
 	sh.LoggedIn = true
 	// Ad KIRPILIR: kenar boşluklu ad menüde ve aria-label'da aynen
@@ -282,15 +238,9 @@ func (s *Server) cdShellCtx(ctx context.Context, r *http.Request, aktif string) 
 		Nav:        nav,
 		LoginHref:  "/giris",
 		SignupHref: "/kayit",
-		// Dil seçici: yalnız GERÇEK diller listelenir. Şu an içerik Türkçe;
-		// EN içerik hattı gelince "en" de eklenir (çevirisi olmayan dil
-		// kullanıcıyı boş sayfaya götürür).
-		Diller: []templkit.CDDil{{Kod: "tr", Ad: "Türkçe", Aktif: true}},
+		Diller:     []templkit.CDDil{{Kod: "tr", Ad: "Türkçe", Aktif: true}},
 	}
 
-	// ÜST ÇUBUK OTURUMU: giriş yapılmışken Oturum Aç/Kaydol yerine
-	// kullanıcı simgesi + hesap menüsü basılır (bkz. cdHesapMenu).
-	// Çerez YOKSA DB'ye gitmez — anonim ziyaretçi ek tur ödemez.
 	if r != nil {
 		if u, err := s.currentUser(r); err == nil && u.ID > 0 {
 			cdShellOturum(&sh, u)
@@ -298,19 +248,12 @@ func (s *Server) cdShellCtx(ctx context.Context, r *http.Request, aktif string) 
 		}
 	}
 
-	// Kabuk verisi: etiketler + menü coinleri + bölüm doluluğu.
-	// Üçü de istekten bağımsız ve her sayfada aynı → 10 sn önbellek +
-	// singleflight (bkz. cd_cache.go). Tek tek sorgulamak istek başına
-	// 3 tur ekliyordu.
 	kabuk := s.cdShellVeri(ctx)
 
 	// Etiket sütunu: yalnız İÇERİĞİ OLAN etiketler. Boş etiket sayfasına
 	// bağlantı vermek 404'e götürür (ölçüm: /tag/xrp 404 idi).
 	for _, e := range kabuk.Tags {
 		ad := etiketMenuAdi(e.Ad)
-		// Sütun başlığı zaten "Crypto News": adı yalnız "News"/"Haber"
-		// olan genel etiket satırı bilgi katmıyor (ölçüm: menüde
-		// "Crypto News → News").
 		if ad == "" || strings.EqualFold(ad, "News") || strings.EqualFold(ad, "Haber") {
 			continue
 		}
@@ -334,16 +277,9 @@ func (s *Server) cdShellCtx(ctx context.Context, r *http.Request, aktif string) 
 		})
 	}
 
-	// Bölüm doluluğu: menüye yalnız YAYINDA İÇERİĞİ OLAN bölüm yazılır.
-	// Ölçüm (6 Kasım 2026): Focus · Videos · Podcasts · News Analysis ·
-	// Press Releases bölümlerinde 0 içerik vardı; menü beş ölü bağlantı
-	// veriyordu. Sorgu başarısızsa harita boş kalır ve filtre uygulanmaz.
 	if kabuk.DoluOk {
 		dolu := kabuk.Dolu
 		sh.MenuBolumler = dolu
-		// Üst gezinme de aynı kurala uyar: "Video" yayında videosu yokken
-		// basılmaz. /latest-crypto-news ve /price gibi liste sayfaları
-		// bölüm sayılmadığı için etkilenmez.
 		nav2 := make([]templkit.CDNavLink, 0, len(sh.Nav))
 		for _, n := range sh.Nav {
 			if slug := strings.Trim(strings.TrimSpace(n.Href), "/"); slug != "" &&
@@ -354,13 +290,6 @@ func (s *Server) cdShellCtx(ctx context.Context, r *http.Request, aktif string) 
 		}
 		sh.Nav = nav2
 	}
-	// PİYASA ŞERİDİ: tüm CD sayfalarında aynı veri. Tek yerden doldurulur
-	// (kullanıcı bildirimi, 8 Kasım 2026: "diğer sayfalarda kur alanı yok").
-	// Fiyatlar 60 sn önbellekli; sayfa başına maliyet bir DB okuması.
-	//
-	// SEKME: `?serit=stocks` istek parametresi okunur. Önce şablon sekmeyi
-	// çiziyordu ama veri her zaman kripto kalıyordu — "Hisse Senetleri"
-	// sekmesi ölü bağlantıydı.
 	sekme := "markets"
 	if r != nil {
 		if strings.TrimSpace(r.URL.Query().Get("serit")) == "stocks" {
@@ -375,11 +304,6 @@ func (s *Server) cdShellCtx(ctx context.Context, r *http.Request, aktif string) 
 	}
 	sh.Ticker = s.cdTickerDoldurSekme(ctx, sekme)
 
-	// MARKA: panelden yüklenen logo/favicon/slogan (11 Kasım 2026).
-	//
-	// NEDEN BURADA: cdShellCtx her cd sayfasının tek kabuk kaynağı.
-	// Markayı sayfa sayfa doldurmak 30+ çağrı yerini değiştirmek olurdu
-	// ve biri unutulunca o sayfa eski logoyu gösterirdi.
 	if bc := s.brandConfig(ctx); bc != nil {
 		u := func(id *int64) string {
 			if id == nil || *id <= 0 {
@@ -419,11 +343,6 @@ func (s *Server) cdShellCtx(ctx context.Context, r *http.Request, aktif string) 
 	return sh
 }
 
-// etiketMenuAdi menüdeki etiket satırının adını üretir.
-//
-// CoinDesk deseni "Bitcoin News", "Ethereum News" biçiminde. Ancak kaynaktan
-// gelen etiket zaten "News" ise son ek eklemek "News News" üretiyordu
-// (ölçüm: 5 Kasım 2026 menüde görüldü).
 func etiketMenuAdi(ad string) string {
 	ad = strings.TrimSpace(ad)
 	if ad == "" {
@@ -445,10 +364,6 @@ func (s *Server) cdStoryCevir(c repo.Content, simdi time.Time) templkit.CDStory 
 		Title: c.Title,
 		Spot:  c.Spot,
 		Href:  makaleURL(c),
-		// KAPAK ÖNCELİĞİ: editörün yüklediği görsel (cover_media_id),
-		// yoksa kaynağın görseli. Önce `image_url` okunuyordu; editör
-		// görseli değiştirdiğinde liste kartları eski görseli gösteriyordu
-		// (ölçüldü, 10 Kasım 2026). Ayrıntı: s.cdKapakGorsel.
 		Image: s.cdKapakGorsel(c),
 	}
 	if c.PublishedAt != nil {

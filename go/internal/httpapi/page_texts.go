@@ -1,18 +1,5 @@
 package httpapi
 
-// Sayfa Tasarımcısı şablon metinleri (Faz 142).
-//
-// Kategori başlığı/açıklaması ve yazı sayfası etiketleri kodda sabit
-// kalıyordu. Bu dosya metinlerin tanımını (registry), override çözümleme
-// sırasını ve tasarımcı kaydetme ucunu bir arada tutar.
-//
-// Çözümleme sırası (ilk dolu değer kazanır):
-//  1. sayfa anahtarı + istenen dil
-//  2. taban sayfa anahtarı + istenen dil   (ör. kategori:<slug> → kategori)
-//  3. sayfa anahtarı + varsayılan dil
-//  4. taban sayfa anahtarı + varsayılan dil
-//  5. koddaki varsayılan (def.Default / categoryIntros)
-
 import (
 	"context"
 	"encoding/json"
@@ -63,9 +50,6 @@ const (
 	defArticleAnasayfa   = "Anasayfa"
 )
 
-// pageTextDefsFor sayfanın düzenlenebilir metin tanımlarını döndürür.
-// Kategori intro varsayılanı kategoriye göre değiştiği için burada boş
-// bırakılır; çağıran categoryTextDefs ile doldurur.
 func pageTextDefsFor(page string) []pageTextDef {
 	switch {
 	case isKategoriPage(page):

@@ -8,29 +8,6 @@ import (
 	"theblock/site/internal/repo"
 )
 
-// ---- Panel yetkilendirmesi ----
-//
-// Yetki hiyerarşisi auth.roleRank'te tanımlıdır:
-// Yönetici > Editör > Muhabir > Yazar > Üye.
-//
-// requireAdmin her panel isteğinde önce "personel mi" (auth.StaffRoles)
-// sonra rota bazlı asgari rolü denetler. Üye rolü, oturumu olsa bile panelin
-// hiçbir yerine giremez.
-
-// adminOwnerPrefixes yalnızca Yönetici'nin erişebildiği alanlar: site/servis
-// yapılandırması, ödeme ve abone verileri, sosyal medya anahtarları, ekip.
-//
-// `/admin/ses-ayarlari` burada: sayfa sağlayıcı API anahtarını ve dış servis
-// adresini (base_url) kaydediyor. Editör seviyesinde bırakılsaydı, kendi
-// anahtarını yazabilen biri transkripsiyonu kendi sunucusuna yönlendirebilir,
-// mevcut anahtarı silebilir ya da ücretli sağlayıcıyı değiştirebilirdi.
-//
-// `/admin/trend/gsc` ve `/admin/trend/ga4`: aynı ayarların `/admin/ayarlar/gsc`
-// altındaki ikinci kapısı. O kapı Yönetici'nde, bu kapı Yazar'daydı — yani
-// aynı veriye iki farklı yetki seviyesinden erişilebiliyordu.
-//
-// `/admin/trend/kaynak`: kaynak adresi sunucuya çektirilir (SSRF yüzeyi) ve
-// tüm sitenin gündem akışını besler.
 var adminOwnerPrefixes = []string{
 	"/admin/ayarlar",
 	"/admin/servisler",
@@ -73,16 +50,9 @@ var adminEditorPrefixes = []string{
 	"/admin/bulten",
 	"/admin/raporlar",
 	"/admin/olcu",
-	// İletişim: yalnız adres/telefon değil, SİTE ALAN ADI ve tüm sayfa
-	// gövdelerindeki alan adı metinleri tek istekte değişiyor
-	// (repo.ReplaceTextInPages). Site genelini yeniden yazan bir işlem
-	// içerik üreticisinin değil, yayın yapılandırmasının işi.
 	"/admin/iletisim",
 }
 
-// adminMinRole bir panel rotası için asgari rolü döndürür.
-// Bilinmeyen rotalar en düşük personel rolünü (Yazar) ister; böylece yeni
-// eklenen bir rota yanlışlıkla daha geniş yetki vermez.
 func adminMinRole(path string) string {
 	if hasPathPrefix(path, adminOwnerPrefixes) {
 		return "Yönetici"
@@ -128,9 +98,6 @@ func (s *Server) forbidden(w http.ResponseWriter, r *http.Request) {
 	http.Error(w, "Bu işlem için yetkiniz yok.", http.StatusForbidden)
 }
 
-// canEditContent içerik düzenleme yetkisini belirler.
-// Yönetici ve Editör tüm içerikleri, Muhabir/Yazar yalnızca kendi içeriklerini
-// düzenleyebilir. Üye ve bilinmeyen roller düzenleyemez.
 func canEditContent(u auth.User, c repo.Content) bool {
 	if u.ID == 0 {
 		return false

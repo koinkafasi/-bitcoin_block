@@ -1,11 +1,5 @@
 //go:build integration
 
-// Resmî ilanlar: kalıcı ilan adresleri, filtreler ve site haritası.
-//
-// Neden önemli: BİK tebliği, içeriklere ait TAM URL adreslerinin ve son
-// güncelleme zamanlarının XML site haritasında bulunmasını istiyor. İlanlar
-// yalnız liste sayfasında yaşasaydı kalıcı adresleri olmaz, site haritasına
-// giremez ve liste günü geçtiğinde erişilemez hâle gelirdi.
 package httpapi_test
 
 import (
@@ -26,9 +20,6 @@ import (
 	"theblock/site/internal/i18n"
 )
 
-// ilanTestSunucu kendi sunucusunu kurar: menü/kategori gibi değerler TTL
-// önbellekli okunuyor ve paketin ortak sunucusu testten önce boş hâli
-// önbelleğe almış olabiliyor.
 func ilanTestSunucu(t *testing.T) *httptest.Server {
 	t.Helper()
 	bundle, err := i18n.Load(t.Context(), itPool)
@@ -102,9 +93,6 @@ func TestIlanDetaySayfasiVeKanonikYonlendirme(t *testing.T) {
 	assert.Equal(t, 404, r4.StatusCode)
 }
 
-// Şehir/kurum ile daraltıldığında arama TÜM TARİHLERE genişlemeli: aksi
-// hâlde filtre yalnız en son güne uygulanır ve kullanıcı dünkü ilanı
-// bulamaz.
 func TestIlanFiltresiTumTarihlereGenisler(t *testing.T) {
 	skipIfNoDB(t)
 	ilanEkle(t)

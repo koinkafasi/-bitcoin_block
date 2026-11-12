@@ -51,12 +51,9 @@ func (s *Server) handleGazeteDuzen(w http.ResponseWriter, r *http.Request) {
 
 	// Editör başlatma verisi: {issue, sayfalar:[{no,ad,bloklar}], sablonlar}
 	type edPage struct {
-		No     int             `json:"no"`
-		Ad     string          `json:"ad"`
-		Blocks json.RawMessage `json:"bloklar"`
-		// BlokHTML blok kimligi -> sunucuda uretilmis govde ve sarmalayici
-		// sinifi. Editor bunlari oldugu gibi basar; boylece tuvalde gorunen
-		// ile basilan ayni HTML+CSS'ten gelir (SPEC K1).
+		No       int                        `json:"no"`
+		Ad       string                     `json:"ad"`
+		Blocks   json.RawMessage            `json:"bloklar"`
 		BlokHTML map[string]gazeteBlokGovde `json:"blokHtml"`
 	}
 	belge := s.gazeteSayiBelgesi(ctx, iss)
@@ -108,11 +105,6 @@ func (s *Server) handleGazeteDuzen(w http.ResponseWriter, r *http.Request) {
 	raw = bytes.ReplaceAll(raw, []byte("<"), []byte("\\u003c"))
 	v.PageJSON = template.JS(raw)
 	d.Gazete = v
-	// Baski tasarimi editore de yuklenir: tuval gercek .gazete-sayfa/.gb
-	// siniflarini kullaniyor. gazete.css yalniz editor kabugunu ve tutamaklari
-	// stillendirir. Sira onemli: once baski, sonra editor eklentileri.
-	// Tuval sablonun bildirdigi sayfa boyunda kurulur; editor ile baski
-	// ayni olcude olsun (SPEC K1/K2).
 	kok := fmt.Sprintf(
 		`<style>#gz-canvas{--gz-sayfa-w:%s;--gz-sayfa-h:%s;--gz-kenar:%s;`+
 			`--gz-tip-tab:%s;--gz-tip-olcek:%g;--gz-yazi:%s;`+
@@ -139,11 +131,6 @@ type edTpl struct {
 	Name string `json:"ad"`
 }
 
-// gazeteBlokGovde editore gonderilen blok gorunumu.
-//
-// Sinif ve Stil de sunucuda hesaplanir: stil beyaz listesi tek yerde kalsin
-// (SPEC K1). Editor bunlari JS'te yeniden hesaplasaydi iki uygulama olur ve
-// er gec ayrisirlardi -- nitekim ayrismisti: zemin renkleri tuvalde yoktu.
 type gazeteBlokGovde struct {
 	HTML  string `json:"html"`
 	Sinif string `json:"sinif"`
@@ -175,13 +162,6 @@ func gazeteBlokHTMLHaritasi(raw json.RawMessage) map[string]gazeteBlokGovde {
 	return out
 }
 
-// handleGazeteBlokHTML POST /admin/gazete/sayilar/{id}/blok-html
-// Editor, blok eklendiginde veya haber kaynagi degistiginde gercek govdeyi
-// bu uctan ister; kendi yer tutucusunu cizmez (SPEC K1 - tek render yolu).
-//
-// Kaynagi olan bloklarin icerigi yeniden cozumlenip geri doner ve editor onu
-// bloga yazar. Bu sart: aksi halde yeni eklenen blok editorde dolu gorunur
-// ama kaydedilen JSON'da icerik olmadigi icin PDF'te bos cikar.
 func (s *Server) handleGazeteBlokHTML(w http.ResponseWriter, r *http.Request) {
 	if !s.requireGazete(w, r, gazeteActionEdit) {
 		return
@@ -211,13 +191,6 @@ func (s *Server) handleGazeteBlokHTML(w http.ResponseWriter, r *http.Request) {
 	s.writeJSON(w, http.StatusOK, out)
 }
 
-// handleGazeteDogrula POST /admin/gazete/sayilar/{id}/dogrula
-// Baskiyi uretmeden yalniz olcer: hangi bloklar sayfaya sigmiyor?
-//
-// Olcum, baskiyi uretecek olan AYNI Chromium'da yapilir (SPEC K3). Tasma
-// yazi tipi ve satir kirilmasi gercekten dizildikten sonra belli oldugu icin
-// sunucuda hesaplanamaz; tarayicida olculur. Boylece "editorde sigdi ama
-// PDF'te tasti" sinifi kapanir.
 func (s *Server) handleGazeteDogrula(w http.ResponseWriter, r *http.Request) {
 	if !s.requireGazete(w, r, gazeteActionEdit) {
 		return

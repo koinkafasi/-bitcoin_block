@@ -13,13 +13,6 @@ import (
 	"theblock/site/internal/webui/templkit"
 )
 
-// CoinDesk SEO katmanı kapısı (7 Kasım 2026).
-//
-// NEDEN: SEO etiketleri sessizce kaybolur — kimse fark etmez, Google fark
-// eder. Bu testler COINDESK-TASARIM-SPEC.md §11.13'teki ölçülen deseni
-// kilitler: sayfa tipi → page_category, JSON-LD tipi, robots.txt, sitemap
-// ailesi, RSS alanları.
-
 func TestCDYuzdeSayi(t *testing.T) {
 	for _, c := range []struct {
 		giris string

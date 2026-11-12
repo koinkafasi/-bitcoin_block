@@ -1,18 +1,5 @@
 package webui
 
-// app.css hem public hem admin tarafından yüklenir; admin-only.css yalnızca
-// panelde. Bu testler iki yönlü sızmayı engeller:
-//
-//   - app.css içinde, bütün virgüllü seçicileri yalnızca admin sınıfından
-//     oluşan bir kural kalmamalı (ziyaretçiye boşuna inen CSS).
-//   - admin-only.css içinde, public tarafta da kullanılan bir sınıfı tek
-//     başına hedefleyen bir kural olmamalı (public'in stilini götürür).
-//
-// Bir sınıf "admin-only" sayılır: public şablonlarda, public JS/CSS'te ve
-// Go'nun ürettiği HTML'de hiç geçmiyor ama admin şablonlarında geçiyorsa.
-// Kararsız kalan her durum public sayılır — yani test yalnızca kesin
-// durumlarda taşımaya izin verir.
-
 import (
 	"os"
 	"path/filepath"
@@ -38,13 +25,6 @@ var (
 	adminAssets = filepath.Join("..", "httpapi", "adminassets.go")
 )
 
-// splitAssets, bir varlığın hangi tarafta yüklendiğini partials.html'den ve
-// adminassets.go'daki sayfa başına betik listelerinden türetir. Elle liste
-// tutmak çürüyor; burada tek doğruluk kaynağı kodun kendisi.
-//
-// Yön önemli: bir dosyayı yanlışlıkla PUBLIC saymak yalnızca iyileştirmeyi
-// kaçırtır, ADMIN saymak ise public'in stilini götürebilir. Bu yüzden
-// bilinmeyen her dosya ve iki tarafta da yüklenen app.js PUBLIC sayılır.
 func splitAssets(t *testing.T, pubHead, admHead string) (pub, adm map[string]bool) {
 	t.Helper()
 	pub, adm = map[string]bool{}, map[string]bool{}
@@ -76,16 +56,6 @@ type cssBlock struct {
 	body string // tam blok metni
 }
 
-// splitCSS üst düzey blokları ayırır. Parantez eşlemesi yapar; iç içe
-// @media bloklarını tek blok olarak döndürür.
-// splitCSS CSS'i kural bloklarına ayırır.
-//
-// DİKKAT: yorumlar ÖNCE temizlenir. Aksi hâlde bir yorumun İÇİNDEKİ `{`
-// karakteri (ör. "kapsamsız `.media-item img{height:100%}` kuralı") blok
-// sınırlarını kaydırıyor ve takip eden tüm kurallar yanlış ayrıştırılıyordu.
-// Belirti: yorum metni "seçici" sanılıp `TestAdminOnlyCSSHasNoPublicRules`
-// yanlış kırmızı veriyordu. Yorumlar analizde gerekmediği için baştan
-// silmek güvenli.
 func splitCSS(css string) []cssBlock {
 	css = reCSSNote.ReplaceAllString(css, " ")
 
@@ -183,11 +153,6 @@ func classPools(t *testing.T) (pub, adm string) {
 		admParts = append(admParts, string(b))
 	}
 
-	// JS dosyaları da sınıf ekliyor (ör. ses_player.js dalga çubuklarını,
-	// ai_editor.js çekmece durumlarını JS'te üretiyor). public.css de public
-	// kanıtı sayılır. Admin CSS dosyaları (admin-theme/admin-shadcn) havuza
-	// GIRMEZ: bir sınıfın orada stillenmiş olması işaretlemede kullanıldığının
-	// kanıtı değil — ölü CSS de olabilir.
 	pubAsset, admAsset := splitAssets(t, pubHead, admHead)
 	assets, err := filepath.Glob(filepath.Join("static", "*.js"))
 	require.NoError(t, err)
@@ -204,11 +169,6 @@ func classPools(t *testing.T) (pub, adm string) {
 		}
 	}
 
-	// Go kaynağı da HTML üretiyor: tiptap.go makale gövdesini, gazete_fill.go
-	// gazete sayfasını, puan_serit.go puan şeridini renderlıyor ve bunlar
-	// PUBLIC sayfalarda görünüyor. Bu yüzden .go dosyalarındaki class="..."
-	// jetonları public sayılır. *_templ.go hariç: onlar admin templ
-	// dosyalarından üretilmiş kopyalar, kaynakları zaten admin havuzunda.
 	seen := map[string]bool{}
 	err = filepath.Walk(filepath.Join("..", ".."), func(p string, fi os.FileInfo, err error) error {
 		if err != nil || fi.IsDir() || !strings.HasSuffix(p, ".go") {
@@ -254,9 +214,6 @@ func adminOnlyClasses(css, pub, adm string) map[string]bool {
 	return out
 }
 
-// selectorIsAdminOnly: seçici grubunun HER virgüllü parçası en az bir
-// admin-only sınıf içeriyor mu. ".ai-drawer .btn" evet; ".ai-drawer, .btn"
-// hayır — ikincisi .btn'in public stilini taşır.
 func selectorIsAdminOnly(sel string, adminOnly map[string]bool) bool {
 	parts := strings.Split(sel, ",")
 	n := 0
@@ -279,9 +236,6 @@ func selectorIsAdminOnly(sel string, adminOnly map[string]bool) bool {
 	return n > 0
 }
 
-// adKapsamliAtKurali: @keyframes gibi SEÇİCİ değil İSİM tanımlayan
-// at-kuralları. İç blokları seçici değil adımdır (0%, 100%), bu yüzden
-// seçici kuralına göre değerlendirilemezler.
 func adKapsamliAtKurali(sel string) bool {
 	l := strings.ToLower(strings.TrimSpace(sel))
 	for _, p := range []string{"@keyframes", "@-webkit-keyframes", "@font-face", "@property", "@counter-style"} {
@@ -297,9 +251,6 @@ func blockIsAdminOnly(b cssBlock, adminOnly map[string]bool) bool {
 		return selectorIsAdminOnly(b.sel, adminOnly)
 	}
 	if adKapsamliAtKurali(b.sel) {
-		// Taşıma kararına girmez: ne app.css'ten çıkarılması önerilir
-		// ne de admin-only.css'te sorun sayılır. Adının public'ten
-		// referans edilmediği ayrı testte doğrulanır.
 		return false
 	}
 	inner := reInnerSel.FindAllStringSubmatch(
@@ -360,9 +311,6 @@ func TestAdminOnlyCSSHasNoPublicRules(t *testing.T) {
 			"stilini götürür:\n%s", len(leaked), strings.Join(leaked, "\n"))
 }
 
-// Yükleme sırası davranışı belirler: taşınan kurallar app.css'ten sonra,
-// admin-theme.css'ten önce gelmeli. Aksi hâlde aynı özgüllükteki
-// çakışmalarda kazanan değişir.
 func TestAdminOnlyCSSLoadOrder(t *testing.T) {
 	raw, err := os.ReadFile(filepath.Join("templates", "partials.html"))
 	require.NoError(t, err)
@@ -385,11 +333,6 @@ func TestAdminOnlyCSSLoadOrder(t *testing.T) {
 	require.Less(t, iOnly, iTheme, "admin-only.css admin-theme.css'ten ÖNCE gelmeli")
 }
 
-// admin-pano.css panelin TAMAMINI giydiriyor (Faz 151): kabuk, kart, KPI,
-// tablo, form, sekme. Üç şeyi kilitliyoruz:
-//  1. Public head'e sızmamalı (yoksa ön yüz panel görünümüne döner).
-//  2. admin-shadcn.css'ten SONRA yüklenmeli (token'ları devralır).
-//  3. Marka rengine (--accent) dokunmamalı; marka kiti her zaman kazanmalı.
 func TestAdminPanoSkin(t *testing.T) {
 	raw, err := os.ReadFile(filepath.Join("templates", "partials.html"))
 	require.NoError(t, err)
@@ -420,15 +363,6 @@ func TestAdminPanoSkin(t *testing.T) {
 		"shadcn paletini hsl() ile değil, sıcak nötr tonlarla eşlemeli")
 }
 
-// Ray katlama her genişlikte İKİ YÖNDE de çalışmalı.
-//
-// Regresyon: medya sorgusunda `.admin-side { width: 84px }` vardı. Aynı
-// özgüllükte olduğu için `html.admin-rail .admin-side` kuralıyla çakışıyor
-// ve menü 1280 px altında ASLA açılamıyordu — düğme "bozuk" görünüyordu.
-// Ölçüm: 1500 px'te 252→84, 1280/1200/1024'te 84→84 (hiç değişmiyordu).
-//
-// Faz 159: Pacely'nin ray genişliği ölçüldü — 88px (84 değil). Dar mod
-// değeri güncellendi; katlama mantığı aynı.
 func TestAdminRailHerGenislikteCalisir(t *testing.T) {
 	raw, err := os.ReadFile(filepath.Join("static", "admin-pano.css"))
 	require.NoError(t, err)
@@ -438,9 +372,6 @@ func TestAdminRailHerGenislikteCalisir(t *testing.T) {
 	require.Contains(t, css, "html.admin-rail .admin-side { width: 88px; }",
 		"dar mod kuralı html.admin-rail üzerinden tanımlanmalı")
 
-	// Hiçbir medya sorgusu menü genişliğini koşulsuz sabitlememeli.
-	// (`.admin-side` seçicisini içeren ama .admin-rail geçmeyen width kuralı
-	// katlamayı tek yönlü kılar.)
 	for _, blok := range medyaBloklari(css) {
 		for _, satir := range strings.Split(blok, "\n") {
 			s := strings.TrimSpace(satir)
@@ -467,9 +398,6 @@ func TestAdminRailHerGenislikteCalisir(t *testing.T) {
 		"admin_head ray tercihini ilk boyamadan önce uygulamalı")
 }
 
-// medyaBloklari @media gövdelerini kaba ama yeterli biçimde ayıklar.
-// Test yalnız "width" satırlarını aradığı için iç içe blok çözümlemesi
-// gerekmiyor: ilk { ile son } arası yeterli.
 func medyaBloklari(css string) []string {
 	var out []string
 	for {
@@ -500,9 +428,6 @@ func medyaBloklari(css string) []string {
 	}
 }
 
-// admin-only.css'teki @keyframes gibi ad tanımları yalnız panelde yüklenir.
-// Public bir kural o ada atıf yaparsa animasyon/font public'te bulunamaz ve
-// sessizce çalışmaz. Bu test o sessiz kırılmayı yakalar.
 func TestAdminOnlyAtKuralAdlariPublictenKullanilmiyor(t *testing.T) {
 	raw, err := os.ReadFile(filepath.Join("static", "admin-only.css"))
 	require.NoError(t, err)

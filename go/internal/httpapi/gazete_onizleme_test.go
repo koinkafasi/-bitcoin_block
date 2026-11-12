@@ -7,13 +7,6 @@ import (
 	"testing"
 )
 
-// Geliştirici aracı: baskı yolunu gözle doğrulamak için HTML üretir.
-// Normal koşuda atlanır; çalıştırmak için:
-//
-//	GAZETE_ONIZLEME=/tmp/gz/index.html go test ./internal/httpapi/ -run TestGazeteOnizlemeUret
-//
-// Üretilen dosya gerçek üreticileri ve gerçek baskı CSS'ini kullanır; yani
-// tarayıcıda görülen, PDF'e giden HTML'in aynısıdır.
 func TestGazeteOnizlemeUret(t *testing.T) {
 	hedef := os.Getenv("GAZETE_ONIZLEME")
 	if hedef == "" {

@@ -13,13 +13,6 @@ import (
 	"theblock/site/internal/repo"
 )
 
-// Otomatik çeviri (Faz 189).
-//
-// Sahadaki sorun: 24 dil açık, /en 200 dönüyor ama ana sayfada manşet YOK
-// (TR'de 150 hero öğesi, EN'de 0) ve başlık Türkçe kalıyordu. Sebep içerik
-// sorgularının `locale = $1` ile sıkı filtrelenmesi ve hiç İngilizce
-// içerik olmaması. Bu paket o boşluğu doldurur.
-
 func TestParagraflarBlokDizisi(t *testing.T) {
 	detail := []byte(`[{"type":"p","text":"Birinci"},{"type":"p","text":"İkinci"}]`)
 	p := Paragraflar(detail)
@@ -118,9 +111,6 @@ func TestKaydetParagrafSayisiKontrolu(t *testing.T) {
 }
 
 func TestCeviriInstruksiyonKurallari(t *testing.T) {
-	// Faz 190: istem ikiye ayrıldı (başlık/spot ve gövde). Kurallar artık
-	// GERÇEK istem üreten fonksiyonlarda doğrulanır; tek bir sabit metin
-	// kullanılmadığı için onu test etmek yanıltıcıydı.
 	govde := ceviriInstruksiyonGovde("English")
 	assert.Contains(t, govde, "AYNI uzunlukta")
 	assert.Contains(t, govde, "DEĞİŞTİRME")
@@ -159,9 +149,6 @@ func TestDilAdi(t *testing.T) {
 // çeviri de paragraf istemez; kayıt engellenmemeli.
 func TestParagrafSayisiToleransi(t *testing.T) {
 	kaynak := repo.Content{ID: 7, Locale: "tr", Detail: nil, Title: "Başlık"}
-	// Paragraf yok → kontrol atlanır, DB'ye gidilir (nil pool panikler;
-	// burada yalnız kontrolün atlandığını doğruluyoruz: hata "paragraf"
-	// içermemeli).
 	defer func() { _ = recover() }()
 	_, err := Kaydet(t.Context(), nil, kaynak, "en", Ceviri{Baslik: "Title"}, "yayinda")
 	if err != nil {
@@ -169,11 +156,6 @@ func TestParagrafSayisiToleransi(t *testing.T) {
 	}
 }
 
-// TestHataSayaci: kalıcı başarısız içerik 3 denemeden sonra atlanmalı.
-//
-// Neden: kayıt FK/veri hatasıyla sürekli düşerse kuyruğun başında kalır ve
-// her turda yeniden denenir (her deneme AI maliyeti). İzole ortamda
-// `contents_category_id_fkey` hatası tam olarak bunu gösterdi.
 func TestHataSayaci(t *testing.T) {
 	h := &hataSayaci{sayi: map[int64]int{}}
 	assert.False(t, h.asildi(1))
@@ -211,15 +193,6 @@ func mustOku(t *testing.T, yol string) string {
 	return string(b)
 }
 
-// TestGecerliReferanslarSifirGirdi — canlıda yakalanan FK hatasının kökü.
-//
-// Sahadan gelen gerçek vaka: `contents_category_id_fkey` ihlali. Silinmiş
-// kategoriye işaret eden kaynak, çeviri kaydını patlatıyordu ve kullanıcıya
-// ham SQL hatası gösteriliyordu. Aynı hata arka plan kuyruğunda kaydı her
-// turda düşürüyordu.
-//
-// Bu testler nil/0 girdide nil dönmeyi (panik yok) doğrular; asıl FK
-// doğrulaması entegrasyon testinde DB ile çalışır.
 func TestGecerliReferanslarSifirGirdi(t *testing.T) {
 	// nil havuz + nil kimlik: panik olmadan nil.
 	assert.Nil(t, gecerliKategori(t.Context(), nil, nil))
@@ -255,15 +228,6 @@ func TestKaydetGecerliReferansKullanir(t *testing.T) {
 		"ham kategori kimliği kullanılmamalı (FK patlıyordu)")
 }
 
-// TestParcaliUretim — canlıda yakalanan kesik yanıt hatası.
-//
-// Ölçüm 1: 28 paragraflık haberin çeviri yanıtı 1200 token sınırını aştı ve
-// ORTASINDAN kesildi ("unexpected end of JSON input"); iki deneme de
-// başarısız oldu, içerik çevirisiz kaldı.
-//
-// Ölçüm 2: yalnız PARAGRAF sayısına bakmak yetmedi — 6 uzun paragraf da
-// 1200 tokenı doldurdu (completion_tokens=1200, iki deneme). Sınır artık
-// karakter: 2200.
 func TestParcaliUretim(t *testing.T) {
 	src := mustOku(t, "ceviri.go")
 
@@ -293,10 +257,6 @@ func TestParcaliUretim(t *testing.T) {
 	assert.Contains(t, src, "Paragraf BİRLEŞTİRME veya BÖLME")
 }
 
-// TestParcalaraBol: bölme sırayı ve bütünlüğü korur.
-//
-// Kural: her parça en fazla parcaBoyu paragraf ve ~parcaKarakter karakter;
-// tek paragraf sınırı aşsa bile ilerler (aksi hâlde döngü kilitlenir).
 func TestParcalaraBol(t *testing.T) {
 	// 28 paragraf × 300 karakter = 8400 → 4 parça (2200'lük sınır).
 	var p []string
@@ -341,12 +301,6 @@ func TestParcalaraBol(t *testing.T) {
 	assert.Empty(t, parcalaraBol(nil))
 }
 
-// TestKesilenParcaBolunur — canlıda yakalanan ikinci kesilme.
-//
-// Ölçüm: 2200 karakterlik parça bile 1600 tokenı doldurdu
-// (completion_tokens=1600 → "unexpected end of JSON input"). O durumda tüm
-// makaleyi baştan çevirmek 3,5 dakika kaybettiriyordu. Parça ikiye bölünür,
-// hata o parçayla sınırlı kalır.
 func TestKesilenParcaBolunur(t *testing.T) {
 	src := mustOku(t, "ceviri.go")
 
@@ -360,18 +314,15 @@ func TestKesilenParcaBolunur(t *testing.T) {
 	assert.Contains(t, src, "ceviriParcaGuvenli(ctx, aiclient, grup, dilAdiMetin)")
 }
 
-// TestKopyaCeviriEngeli — aynı dile ikinci kayıt oluşmamalı.
-//
-// Ölçüm: editör isteği 3,5 dk sürerken otomatik tur aynı içeriği çevirdi.
-// Kayıt öncesi son kontrol olmasa iki EN çevirisi oluşuyordu (contents
-// tablosunda (translation_of, locale) benzersiz kısıtı YOK).
 func TestKopyaCeviriEngeli(t *testing.T) {
 	src := mustOku(t, "istek.go")
 
 	i := strings.Index(src, "nid, err := Kaydet(")
 	require.Greater(t, i, 0)
 	once := src[:i]
-	j := strings.LastIndex(once, "// Üretim sürerken otomatik tur")
+	// Kaydet'ten hemen onceki kopya kontrolu: ayni blok icinde
+	// TranslationsOf cagrisi ve istekBitir olmali (KOD isareti).
+	j := strings.LastIndex(once, "repo.TranslationsOf(")
 	require.Greater(t, j, 0, "Kaydet öncesi kopya kontrolü yok")
 	kontrol := once[j:]
 	assert.Contains(t, kontrol, "repo.TranslationsOf(")

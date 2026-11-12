@@ -11,19 +11,6 @@ import (
 	"theblock/site/internal/trends"
 )
 
-// Yayın önceliği eksenlerinin veritabanı tarafı (spec 11 §5).
-//
-// Sütuna yalnız YAVAŞ DEĞİŞEN eksenler yazılır: score_guven (kaynağın
-// feeds.trust değeri değiştiğinde) ve score_trend (trend terimleri
-// tazelendiğinde). Tazelik sütuna yazılmaz; created_at'ten sorgu anında
-// hesaplanır (scoring.TazelikSQL), böylece hiç bayatlamaz.
-
-// RefreshGuvenScores içeriğin kaynak güvenini tek geçişte yazar.
-//
-// contents.source_name ↔ feeds.name eşleşmesi üretimde %100 tutuyor
-// (34.842/34.845; eşleşmeyen 3 kayıt elle oluşturulmuş, kaynaksız).
-// Eşleşmeyenlere 50 yazılır: ne ödüllendirilir ne cezalandırılır —
-// scoring.KaynakGuveni ile aynı kural.
 func RefreshGuvenScores(ctx context.Context, pool *pgxpool.Pool, siteID int64) (int64, error) {
 	guven := scoring.GuvenSQL("f")
 	tag, err := pool.Exec(ctx, fmt.Sprintf(`
@@ -51,9 +38,6 @@ func RefreshGuvenScores(ctx context.Context, pool *pgxpool.Pool, siteID int64) (
 	return n + tag2.RowsAffected(), nil
 }
 
-// trendTerimTazelikSaat: bundan eski terimler puanlamaya girmez. Google
-// Trends "şu an" demektir; scoring.TrendUyumu da aynı sınırı uygular, bu
-// sorgu yalnız gereksiz karşılaştırmayı baştan eler.
 const trendTerimTazelikSaat = 48
 
 // TrendSkorSonuc RefreshTrendScores'un raporudur.
@@ -66,15 +50,6 @@ type TrendSkorSonuc struct {
 	Sure    time.Duration
 }
 
-// RefreshTrendScores taslakları taze trend terimleriyle eşleştirip
-// contents.score_trend yazar.
-//
-// trend_matches tablosuna YAZMAZ. O tablo kapsama analizinindir ("bu konuyu
-// yayınladık mı?") ve bilerek yalnız yayındaki içeriğe bakar; taslakları
-// oraya eklemek coverage_count'u şişirir ve editöre işlenmemiş konuyu
-// "kapsandı" gösterirdi. İki soru ayrı, iki depo ayrı.
-//
-// dry=true iken hiçbir şey yazılmaz, yalnız dağılım raporlanır.
 func RefreshTrendScores(ctx context.Context, pool *pgxpool.Pool, siteID int64, batch int, dry bool) (TrendSkorSonuc, error) {
 	basladi := time.Now()
 	out := TrendSkorSonuc{Dagilim: map[int]int{}}
@@ -117,9 +92,6 @@ func RefreshTrendScores(ctx context.Context, pool *pgxpool.Pool, siteID int64, b
 	simdi := time.Now()
 	lastID := int64(0)
 	for {
-		// Tazelik penceresinin dışındaki taslaklar zaten 0 tazelikte;
-		// trend puanlarını tazelemek sıralamayı değiştirmez, yalnız iş
-		// üretir. Sınır scoring'den gelir ki iki taraf ayrışmasın.
 		prows, err := pool.Query(ctx, fmt.Sprintf(`
 			SELECT id, title, COALESCE(spot,''), COALESCE(score_trend,0)
 			  FROM contents

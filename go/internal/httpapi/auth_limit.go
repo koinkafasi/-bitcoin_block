@@ -8,20 +8,6 @@ import (
 	"time"
 )
 
-// ---- Kimlik doğrulama hız sınırları ----
-//
-// Panel girişinde (/admin/giris) hiç hız sınırı yoktu: 8+ karakterli her
-// parola sınırsız denenebiliyordu. Okuyucu girişinde ise yalnız e-posta
-// bazlı sayaç vardı; bu da bilinen bir e-postayı 5 hatalı denemeyle
-// kilitleyerek hizmet engellemeye (DoS) izin veriyordu.
-//
-// Bu sayaç süreç içidir (yeniden başlatmada sıfırlanır) ve yalnız
-// BAŞARISIZ denemeleri sayar:
-//   - IP başına genel üst sınır → tek kaynaktan toplu deneme,
-//   - (IP + hesap) çifti başına sınır → tek hesaba hedefli deneme.
-// Başarılı giriş sayaçları temizler; meşru kullanıcı yanlış parola yazdığında
-// kendi IP'sini kalıcı olarak kilitlemez.
-
 type denemeSayaci struct {
 	n   int
 	ilk time.Time
@@ -138,12 +124,6 @@ func kayitSay(ip string) {
 
 // ---- İstemci IP'si ----
 
-// clientIP istemci IP'sini döndürür.
-//
-// Cloudflare/tünel başlıklarına YALNIZ istek yerel/özel bir adresten
-// (127.0.0.1, 10.x, 172.16-31.x, 192.168.x) geldiğinde güvenilir. Aksi hâlde
-// doğrudan bağlanan bir istemci X-Forwarded-For uydurup hız sınırlarını ve
-// bot tuzağını atlatabilirdi.
 func clientIP(r *http.Request) string {
 	host, _, err := net.SplitHostPort(r.RemoteAddr)
 	if err != nil {

@@ -14,12 +14,6 @@ import (
 	"time"
 )
 
-// Deepgram ikinci ASR sağlayıcısıdır. REST "pre-recorded" akışı kullanılır:
-// ses dosyası tek istekte gönderilir, sağlayıcı yanıtı iş bitince döner.
-// Uzun kayıtlarda worker'ın kendi iptal/ilerleme mantığı korunur.
-//
-// Neden ikinci sağlayıcı: AssemblyAI kesintisinde işler tamamen durmasın ve
-// Türkçe doğruluk benchmark'ı iki sağlayıcıyla karşılaştırılabilsin.
 type Deepgram struct {
 	apiKey  string
 	baseURL string
@@ -178,11 +172,6 @@ func convertDeepgram(dr deepgramResponse, requestedLang, provider, model string)
 	alt := ch.Alternatives[0]
 	res.Text = strings.TrimSpace(alt.Transcript)
 
-	// Deepgram yalnız kelime dizisi döndürür (utterance yok). Her kelimeyi
-	// ayrı segment yapmak panelde binlerce tek kelimelik satır üretirdi;
-	// bunun yerine AssemblyAI ile aynı gruplayıcıdan geçirilir: konuşmacı
-	// değişimi, cümle sonu veya 40 kelimede segment kapanır. Kelime zamanları
-	// segmentin içinde korunur.
 	speakerSet := map[string]bool{}
 	words := make([]wordItem, 0, len(alt.Words))
 	for _, w := range alt.Words {

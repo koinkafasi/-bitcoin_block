@@ -8,23 +8,6 @@ import (
 	"theblock/site/internal/webui/templkit"
 )
 
-// CoinDesk SEO yapısal verisi — sayfa tipi başına üretici.
-//
-// KAYNAK (ölçüldü, 7 Kasım 2026 — gerçek Chrome + DOM):
-//
-//	/                          → JSON-LD YOK
-//	/policy                    → CollectionPage + mainEntity.ItemList (11 NewsArticle)
-//	/policy/2026/11/06/{slug}  → NewsArticle (tek nesne, @graph YOK)
-//	/tag/tokenization          → JSON-LD YOK
-//	/author/{slug}             → WebPage + mainEntity.Person
-//	/price/bitcoin             → [WebPage+FinancialProduct, BreadcrumbList,
-//	                              FAQPage, ItemList]
-//
-// Bizde etiket sayfası CollectionPage basıyor (eksik bırakmak yerine doğru
-// tip), FAQPage basmıyoruz: FAQ metni elimizde yok, uydurmak yanlış bilgi
-// olurdu. Ana sayfada Organization + WebSite korunuyor (Google site
-// bağlantıları ve arama kutusu için tek geçerli sinyal).
-
 // cdLDItem liste öğesi (bölüm/etiket/fiyat listeleri).
 type cdLDItem struct {
 	Headline  string // haber başlığı (fiyat listesinde varlık adı)
@@ -34,10 +17,6 @@ type cdLDItem struct {
 	Type      string // "NewsArticle" (varsayılan) | "FinancialProduct"
 }
 
-// cdCollectionJSONLD CollectionPage + ItemList üretir.
-//
-// CoinDesk `description` alanına bölüm adını koyuyor (kendi meta
-// açıklamasını değil); aynı desen korunuyor ki yapı birebir olsun.
 func cdCollectionJSONLD(siteName, base, name, canonical string, items []cdLDItem) template.HTML {
 	liste := make([]any, 0, len(items))
 	for i, it := range items {
@@ -95,11 +74,6 @@ func cdKoleksiyonAciklama(name, canonical string) string {
 	return canonical
 }
 
-// cdCoinJSONLD /price/{coin}: WebPage + FinancialProduct.
-//
-// CoinDesk alan seti: url/name/image/logo/additionalProperty (Ticker Symbol,
-// Price Change 24h %, Volume-to-Market-Cap Ratio, Price). Oranı
-// hesaplamadığımız için BASILMAZ (0.00000 uydurma değer olurdu).
 func cdCoinJSONLD(siteName, canonical, name, sym, price, change string) template.HTML {
 	props := []any{
 		map[string]any{"@type": "PropertyValue", "name": "Ticker Symbol", "value": sym},
@@ -163,10 +137,6 @@ func cdFiyatListesiJSONLD(name string, items []cdLDItem) template.HTML {
 	})
 }
 
-// cdKisiJSONLD /yazar/{slug}: WebPage + mainEntity.Person.
-//
-// CoinDesk alan seti: name, jobTitle, worksFor, description, url, image,
-// sameAs. Boş alan basılmaz — eksik alan yanlış alandan iyidir.
 func cdKisiJSONLD(siteName, canonical, name, rol, aciklama, gorsel string, sameAs []string) template.JS {
 	kisi := map[string]any{
 		"@type": "Person",
@@ -249,11 +219,6 @@ func cdYuzdeSayi(s string) (float64, bool) {
 	return isaret * (tam + kesir), true
 }
 
-// cdMakaleMetas CoinDesk makale sayfasının Arc/Parse.ly meta seti.
-//
-// NEDEN: CoinDesk her makalede bu alanları basıyor; editör/analitik
-// araçları ve bazı tarayıcı eklentileri doğrudan bu adları okuyor.
-// Yalnız GERÇEK veriyi yazar — boş olan alan hiç basılmaz.
 func cdMakaleMetas(siteName string, v makaleMetaGirdi) []templkit.CDMeta {
 	var out []templkit.CDMeta
 	ekle := func(name, content string) {

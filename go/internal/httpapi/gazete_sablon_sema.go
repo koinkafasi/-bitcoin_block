@@ -7,14 +7,6 @@ import (
 	"strings"
 )
 
-// Gazete şablon belgesi — specs/13-gazete-sayfa-duzenleyici.md §5.3
-//
-// Şablon, sayfanın "peyzajını" taşır: hangi blok nerede, hangi içeriğe bağlı,
-// hangi sayfa boyunda ve hangi ızgarada. Sayı oluşturulurken uygulanır.
-//
-// Geriye dönük uyum: eski biçim düz bir sayfa dizisiydi (`[{no,ad,bloklar}]`).
-// Çözücü ikisini de kabul eder; düz dizi gelirse A4 varsayılanlarıyla sarılır.
-
 // gazeteSayfaAyar şablonun sayfa ölçüsü ve tipografi bildirimi (K2).
 type gazeteSayfaAyar struct {
 	Boyut     string  `json:"boyut"`     // A4 | A3
@@ -117,11 +109,6 @@ func gazeteBlokTipiGecerli(t string) bool {
 	return false
 }
 
-// gazeteSablonDogrula şablonu denetler ve sorunları insan diliyle döner.
-// Boş dilim = şablon geçerli.
-//
-// Sessiz kabul etmiyoruz: sayfa dışına taşan ya da tipi bilinmeyen bir blok,
-// baskıda görünmeyen veya yanlış yerde duran içerik demektir.
 func gazeteSablonDogrula(d gazeteSablonDoc) []string {
 	var sorun []string
 	ekle := func(f string, a ...any) { sorun = append(sorun, fmt.Sprintf(f, a...)) }
@@ -188,12 +175,6 @@ func gazeteSablonDogrula(d gazeteSablonDoc) []string {
 	sort.Strings(sorun)
 	return sorun
 }
-
-// ---- Stil beyaz listesi (SPEC §5.2) ----
-//
-// `stil` serbest bir sözlük; doğrudan CSS'e geçirmek enjeksiyon yüzeyi açar.
-// Bu yüzden yalnız bilinen anahtarlar ve bilinen DEĞERLER kabul edilir;
-// değerler jeton, serbest renk değil. Liste dışı anahtar sessizce atılır.
 
 var gazeteStilDegerleri = map[string][]string{
 	"zemin":     {"yok", "lacivert", "turuncu", "koyu", "acik", "beyaz"},

@@ -6,10 +6,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// spotEsitBaslik: başlık tekrarı sayfada iki kez basılmasın.
-//
-// ÖLÇÜM (5 Kasım 2026): Fed/ECB feed'lerinde `<description>` = `<title>`.
-// Ana sayfada manşet başlığı altında aynı metin bir kez daha görünüyordu.
 func TestSpotEsitBaslik(t *testing.T) {
 	vakalar := []struct {
 		spot, baslik string

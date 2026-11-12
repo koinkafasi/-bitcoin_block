@@ -12,20 +12,6 @@ import (
 	"theblock/site/internal/repo"
 )
 
-// Canlı finans akışı.
-//
-// Kur & Borsa, Hisseler, Kripto Para ve Kur Çevirici aynı önbellekleri
-// kullanır; sayfa ilk açıldığında değerler sunucuda basılır. Bu uç nokta
-// yalnız DEĞİŞEN değerleri değil, önbellekteki güncel değerleri kompakt
-// JSON olarak döndürür. İstemci (hisse.js) yalnızca görünür sekmede,
-// 30 saniyede bir çağırır; değer değişmediyse ETag sayesinde 304 alır.
-//
-// Sözleşme:
-//   - Veri yoksa ilgili anahtar hiç basılmaz (uydurma fiyat üretilmez).
-//   - Demo olarak işaretlenmiş piyasa kalemleri akışa alınmaz.
-//   - Zaman damgaları önbelleğin son yazılma anıdır; istemci "Son
-//     güncelleme" satırını bununla tazeler.
-
 type finansZaman struct {
 	HM string `json:"hm"` // 15:04
 	DT string `json:"dt"` // 29.10.2026 15:04
@@ -193,22 +179,10 @@ func (s *Server) finansCanliVeri(ctx context.Context, istenen map[string]bool) f
 	return out
 }
 
-// servisKurlar üst servis bandının kur kalemlerini üretir.
-//
-// Kaynak sırası:
-//  1. piyasa/ana — USD, EUR, gram altın, BIST (truncgil + Yahoo, 2 dakikada bir)
-//  2. kur/ana   — eksik kalan döviz/altın için yedek (floatrates/truncgil)
-//  3. borsa/ana — BTC, ONS ve (gerekirse) BIST
-//
-// Demo/sıfır değerler banda hiç girmez: sahte fiyat gösterilmez.
 func servisKurlar(ctx context.Context, pool repo.DB) ([]repo.Kur, bool) {
 	kur := map[string]repo.Kur{}
 	demo := false
 
-	// 1) Canlı piyasa göstergeleri (truncgil + Yahoo, 2 dakikada bir tazelenir).
-	//    Servis bandı USD/EUR/gram altın'ı buradan alır: eski `kur/ana`
-	//    önbelleği floatrates'e bağlıydı ve kaynak düştüğünde bantta yalnız
-	//    BIST/BTC/ONS kalıyordu; altın ise hiç gerçek değer almıyordu.
 	for _, k := range repo.PiyasaOf(ctx, pool).Kalemler {
 		if k.Demo || k.Deger <= 0 {
 			continue

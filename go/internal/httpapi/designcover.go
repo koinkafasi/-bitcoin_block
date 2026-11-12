@@ -9,9 +9,6 @@ import (
 	"theblock/site/internal/repo"
 )
 
-// systemUserID oturumsuz sistemsel üretim (blok kapak şablonu) için
-// kullanılacak ilk aktif yönetici kullanıcıyı döndürür (önbellekli).
-// Bulunamazsa 0 döner — o durumda medya kaydı yapılamaz, kapak sessizce atlanır.
 func (s *Server) systemUserID(ctx context.Context) int64 {
 	s.sysMu.Lock()
 	defer s.sysMu.Unlock()
@@ -26,18 +23,6 @@ func (s *Server) systemUserID(ctx context.Context) int64 {
 	return id
 }
 
-// ---- Blok başına kapak şablonu eşlemesi (Faz 3) ----
-//
-// Tasarımcıda bir blok (slider/manset6/manset/one_cikanlar/ust_manset) bir
-// Manşet Editörü şablonu (headline_designs) seçebilir. Bu durumda bloğun
-// içerikleri kendi görselini kullanmak yerine seçilen şablonun üzerinden
-// otomatik kapak ile render edilir (başlık/özet/kategori/görsel içerikten
-// doldurularak). Sonuç medya olarak saklanır ve (içerik_id, şablon_id) ile
-// önbelleğe alınır; içerik güncellenince otomatik yeniden üretilir.
-
-// applyDesignCover bloğun Slider/Items görsellerini seçilen şablonla üretilen
-// kapak medyasıyla değiştirir. Şablon yoksa veya içerik hatası çıkarsa içeriğin
-// kendi görseli bozulmadan kalır (sessiz hata, görsel yolundan düşme).
 func (s *Server) applyDesignCover(ctx context.Context, b *homeBlock) {
 	if b.KapakTasarimID <= 0 {
 		return
@@ -58,9 +43,6 @@ func (s *Server) applyCoverToItems(ctx context.Context, items []repo.Content, de
 	}
 }
 
-// ensureContentDesignCover bir içerik için şablon kapak görselini üretir ve
-// (içerik, şablon) önbelleğine yazar. Daha önce üretilmişse ve içerik
-// güncellenmemişse önbellekten okur.
 func (s *Server) ensureContentDesignCover(ctx context.Context, c repo.Content, designID int64) (*int64, error) {
 	if designID <= 0 || c.ID <= 0 {
 		return nil, nil

@@ -13,11 +13,6 @@ import (
 	"theblock/site/internal/webui"
 )
 
-// Faz 197d — Trend Haberler: kartın sağındaki sayısal alan.
-//
-// Kullanıcı isteği: "Trend Haberler modülünde kartların sağındaki alanda
-// sayısal alan köşeleri düzleştirme ayarı ekle, stil türleri de ekle."
-
 func tnItems() []repo.Content {
 	slug := func(s string) *string { return &s }
 	return []repo.Content{

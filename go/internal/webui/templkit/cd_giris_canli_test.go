@@ -1,14 +1,5 @@
 package templkit
 
-// Canlı veri kancaları (11 Kasım 2026) — şablon tarafı testleri.
-//
-// NEDEN: /canli/giris ucunu yoklayan JS, DOM'u `data-cg` kancalarıyla
-// bulur. Bir kanca adı değişirse JS sessizce hiçbir şey güncellemez —
-// hata çıkmaz, sadece veri donar. Bu testler adları sabitler.
-//
-// Ayrıca: canlı betik YALNIZ ana sayfada yüklenmeli (her sayfaya
-// 4 KB'lık gereksiz istek eklemeyelim).
-
 import (
 	"bytes"
 	"context"

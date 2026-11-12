@@ -5,16 +5,6 @@ import (
 	"strings"
 )
 
-// Altyazı üretimi: transkript segmentlerinden SRT ve WebVTT.
-//
-// Neden bölmek gerekiyor: segmentlerimiz konuşmacı değişimine, cümle sonuna
-// veya 40 kelimeye kadar uzayabiliyor (bkz. groupWordItems). 40 kelimelik bir
-// altyazı karesi okunamaz — yerleşik altyazı pratiği en çok 2 satır ve satır
-// başına ~42 karakterdir. Bu yüzden segmentler kare boyutuna indirilir.
-//
-// Kelime zamanı varsa (Faz 126) bölme kelime sınırlarında ve **gerçek**
-// zamanlarla yapılır. Kelime yoksa karakter oranıyla doğrusal tahmin edilir —
-// daha kaba ama kullanılabilir; eski kayıtlar da altyazı üretebilir.
 const (
 	subMaxLineChars = 42
 	subMaxLines     = 2
@@ -127,9 +117,6 @@ func splitByWords(seg Segment, start, end int64) []Cue {
 	return out
 }
 
-// splitByChars kelime zamanı yokken metni kelime sınırlarından böler ve
-// zamanları karakter oranına göre doğrusal dağıtır. Konuşma hızı sabit
-// olmadığı için yaklaşıktır; kelime zamanı varsa splitByWords yeğlenir.
 func splitByChars(seg Segment, text string, start, end int64) []Cue {
 	words := strings.Fields(text)
 	total := 0
@@ -181,10 +168,6 @@ func splitByChars(seg Segment, text string, start, end int64) []Cue {
 	return out
 }
 
-// normalizeCues kareleri oynatıcıların kabul edeceği hâle getirir: sıfır veya
-// negatif süreli kare kalmaz ve kareler çakışmaz. Çakışan kare çoğu oynatıcıda
-// öncekini ekrandan siler, bu yüzden önce önceki kare kısaltılır; yer yoksa
-// sonraki kare ileri alınır.
 func normalizeCues(cues []Cue) []Cue {
 	for i := range cues {
 		if cues[i].EndMS <= cues[i].StartMS {
@@ -207,9 +190,6 @@ func normalizeCues(cues []Cue) []Cue {
 	return cues
 }
 
-// SRT kareleri SubRip biçiminde yazar (sıra no, zaman aralığı, metin).
-// Konuşmacı adı metnin başına "A: " olarak eklenir; SRT'de konuşmacı için
-// standart bir alan yoktur.
 func SRT(cues []Cue) string {
 	var b strings.Builder
 	n := 0
@@ -248,9 +228,6 @@ func WebVTT(cues []Cue) string {
 	return b.String()
 }
 
-// wrapLines metni satır başına ~42 karaktere böler. En çok 2 satır hedeflenir
-// ama metin sığmıyorsa satır eklenir — altyazıdan metin düşürmek, uzun satır
-// göstermekten kötüdür.
 func wrapLines(text string) string {
 	words := strings.Fields(text)
 	if len(words) == 0 {
@@ -270,9 +247,6 @@ func wrapLines(text string) string {
 	return strings.Join(lines, "\n")
 }
 
-// vttEscape WebVTT'de anlamlı olan karakterleri kaçırır. Transkript
-// sağlayıcıdan gelen denetlenmemiş metindir; "<" kaçırılmazsa ses/stil
-// etiketi gibi yorumlanır.
 func vttEscape(s string) string {
 	s = strings.ReplaceAll(s, "&", "&amp;")
 	s = strings.ReplaceAll(s, "<", "&lt;")

@@ -10,9 +10,6 @@ import (
 	"time"
 )
 
-// Bing News RSS, MSN Türkiye için doğrudan RSS yayını olmadığından kullanılan
-// toplayıcı adaptördür. Bing'in apiclick yönlendirmesinden gerçek msn.com
-// adresi çıkarılır; kategori MSN URL yolundan okunur.
 const bingNewsMaxBodyBytes = 4 << 20
 
 func FetchBingNews(ctx context.Context, rawURL string) ([]RSSItem, error) {
@@ -93,24 +90,8 @@ func msnSection(raw string) string {
 	return ""
 }
 
-// keşifAzamiYas: keşif kaynağında bundan eski öğeler ATILIR.
-//
-// Gerekçe: Bing News `site:` sorgusu arşivden de sonuç veriyor (gözlem
-// 6 Kasım 2026: opinion sonuçlarının bir kısmı 2024 tarihli). Eski bir
-// köşe yazısını bugün "yeni" gibi taslağa almak, sitenin yayın akışında
-// yanlış bir tazelik izlenimi üretirdi.
 const kesifAzamiYas = 180 * 24 * time.Hour
 
-// FetchBingLinkFeed Bing News RSS'ini HEDEFLİ SİTE keşif kaynağı olarak
-// kullanır (`q=site:ornek.com/yol`).
-//
-// NEDEN: CoinDesk'in bölüm sayfaları bot korumasıyla 429 dönüyor, RSS ise
-// yalnız ana akışı veriyor (opinion/research gibi bölümler yok). Bing News
-// aynı makaleleri siteye göre listeliyor ve bağlantı apiclick
-// yönlendirmesinin `url=` parametresinde GERÇEK makale adresi duruyor.
-//
-// `izinliHost`: boş değilse yalnız bu alan adındaki (ve alt alan adlarındaki)
-// makaleler kabul edilir — arama sonucuna karışan başka siteler elenir.
 func FetchBingLinkFeed(ctx context.Context, rawURL, izinliHost string) ([]RSSItem, error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, rawURL, nil)
 	if err != nil {
@@ -152,9 +133,6 @@ func FetchBingLinkFeed(ctx context.Context, rawURL, izinliHost string) ([]RSSIte
 				continue
 			}
 		}
-		// Tazelik süzgeci: arşivden gelen eski öğe "yeni" gibi girmez.
-		// Tarih okunamıyorsa öğe KORUNUR: tarih bilgisiz eleme, tek seferlik
-		// biçim değişikliğinde tüm kaynağı susuz bırakırdı.
 		if !it.PubDate.IsZero() && time.Since(it.PubDate) > kesifAzamiYas {
 			continue
 		}

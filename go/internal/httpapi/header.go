@@ -16,10 +16,6 @@ type HeaderButton struct {
 	Style string `json:"style"` // primary | ghost
 }
 
-// HeaderConfig üst alanın model ve görünüm ayarları.
-//
-// Model: model1 (klasik) | model2 (satır içi) | model3 (ortada logo) |
-// model4 (logo sol, menü alt satır)
 type HeaderConfig struct {
 	Model       string `json:"model"`
 	Skin        string `json:"skin"`  // auto | dark | light | accent

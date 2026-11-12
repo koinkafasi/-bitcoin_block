@@ -12,12 +12,6 @@ import (
 	"theblock/site/internal/webui/templkit"
 )
 
-// Yardım merkezi (Faz 165).
-//
-// NEDEN: bilgi docs/ içinde kalıyordu. Ayrıca Faz 162'de komut paletine
-// "/admin/yardim" eklendiği hâlde rota yoktu — paletten açılan bağlantı
-// 404 veriyordu. Bu testler hem rotanın hem içeriğin varlığını kilitler.
-
 func TestYardimIcerigiDolu(t *testing.T) {
 	assert.GreaterOrEqual(t, len(yardimKisayollari()), 6, "en az 6 klavye kısayolu")
 	assert.GreaterOrEqual(t, len(yardimIpuclari()), 8, "en az 8 ekran ipucu")
@@ -98,11 +92,6 @@ func TestLowerTRTurkceKucultme(t *testing.T) {
 	}
 }
 
-// lowerTRTest, templkit'teki yardımcının test kopyası.
-//
-// NEDEN KOPYA: lowerTR templkit paketinde ve dışa açık değil; şablon
-// yardımcısı olduğu için API yüzeyine eklemek istemedik. Davranış burada
-// kilitleniyor, uygulama aynı kuralla yazılı.
 func lowerTRTest(v string) string {
 	return strings.ToLower(strings.NewReplacer("İ", "i", "I", "ı").Replace(v))
 }

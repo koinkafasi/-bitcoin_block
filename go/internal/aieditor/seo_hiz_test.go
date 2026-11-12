@@ -9,13 +9,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// Otomatik SEO doldurma hızı (Faz 188b).
-//
-// Ölçülen gerçek akış: bot günde 3.593 taslak ekliyor ≈ 150/saat.
-// Eski yapı "2 dakikada 5" = 150/saat idi: akış hızına tam eşit, yani
-// birikmiş 10.400 kişilik kuyruk HİÇ erimiyordu. Bu testler temponun
-// akışı geçtiğini ve bekleme hesabının doğru olduğunu kilitliyor.
-
 func TestSeoBeklemeTempo(t *testing.T) {
 	// dakika=20 → öğe başına 3 sn. 10 öğe = 30 sn hedef.
 	// Tur 12 sn sürdüyse 18 sn beklenir.
@@ -44,9 +37,6 @@ func TestSeoDakikaSinirlari(t *testing.T) {
 	assert.Equal(t, 15, sinirDakika(15))
 }
 
-// TestSeoTempoAkisiGecer: varsayılan hız, gözlenen bot akışını geçmeli.
-//
-// Bu, özelliğin vaadinin ölçülebilir hâli: kuyruk erimeli, büyümemeli.
 func TestSeoTempoAkisiGecer(t *testing.T) {
 	const saatlikAkis = 150 // ölçüm: 24 saatte 3.593 taslak
 	saatlikKapasite := SeoVarsayilanDakika * 60
@@ -72,10 +62,6 @@ func TestSeoHizAyarAnahtari(t *testing.T) {
 		"tempo döngüde uygulanmalı")
 }
 
-// TestSeoEszamanliIsleme: kuyruk erimesi için tur eşzamanlı olmalı.
-//
-// Sıralı işlemede sağlayıcı gecikmesi (20-83 sn) hızı 1-2/dk'ya düşürüyordu;
-// 10 binlik kuyruk hiç erimiyordu. 3 paralel istek sağlayıcıda ölçüldü.
 func TestSeoEszamanliIsleme(t *testing.T) {
 	src := mustReadAieditor(t, "seo_worker.go")
 
@@ -90,10 +76,6 @@ func TestSeoEszamanliIsleme(t *testing.T) {
 	assert.Contains(t, src, "i < baslatilan")
 }
 
-// TestSeoMaxTokenYeterli: JSON yanıtı kesilmemeli.
-//
-// Canlı ölçüm: 400 token'da yanıtların bir kısmı ORTASINDAN kesiliyordu
-// ("Unterminated string"), ayrıştırma başarısız olup içerik boş kalıyordu.
 func TestSeoMaxTokenYeterli(t *testing.T) {
 	src := mustReadAieditor(t, "seo.go")
 	assert.NotContains(t, src, "MaxTokens:   400")
@@ -111,11 +93,6 @@ func TestAIZamanAsimiYeterli(t *testing.T) {
 		"60 sn sağlıklı yanıtları kesiyordu")
 }
 
-// TestSeoUretTekrar: tek denemede bırakmak içeriği kalıcı boş bırakıyordu.
-//
-// Ölçüm: sağlayıcı isteklerin bir kısmında görünmeyen akıl yürütmeye token
-// harcayıp içeriği hiç yazmıyor (finish=length, 14 karakter). Böyle bir
-// yanıt ne JSON ne kurtarılabilir.
 func TestSeoUretTekrar(t *testing.T) {
 	src := mustReadAieditor(t, "seo_worker.go")
 

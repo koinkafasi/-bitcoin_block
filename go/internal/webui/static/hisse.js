@@ -1,28 +1,13 @@
-/* Hisseler modülü + "Tüm Hisseler" sayfası.
- *
- * 1) Şerit hareketi — iki model (blok ayarından):
- *      data-model="surekli" : Habertürk modeli, kesintisiz sabit hız (px/sn)
- *      data-model="adim"    : aralıklı — her turda yumuşak kayma + bekleme
- *
- *    CSS'te de bir yedek animasyon var (JS yoksa çalışır). JS varsa
- *    .hss-js sınıfı eklenir ve CSS animasyonu kapanır; hareket rAF ile
- *    piksel bazında sürülür. Nedeni: yüzde tabanlı CSS animasyonu içerik
- *    genişliği değiştiğinde (yazı tipi/görsel yüklenmesi) hızı değiştiriyor,
- *    "bir an yavaşlıyor sonra hızlanıyor" gibi görünüyordu. Piksel/sn sabit
- *    hız bu sorunu tamamen kaldırır.
- *
- * 2) Tüm Hisseler sayfasında canlı arama: satırlar zaten DOM'da olduğu için
- *    ağ isteği yok; Türkçe karakter duyarsız (ışık → isik) filtre uygulanır.
- */
+
 (function () {
   'use strict';
 
   var reduce = false;
   try {
     reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  } catch (e) { /* eski tarayıcı */ }
+  } catch (e) {  }
 
-  /* ---------------- 1) Şerit ---------------- */
+  
 
   function initSerit(el) {
     // Hisseler (hss-) ve Kripto (krp-) aynı hareket motorunu kullanır.
@@ -57,7 +42,7 @@
       track.style.transform = 'translate3d(' + x.toFixed(2) + 'px,0,0)';
     }
 
-    /* sürekli: her karede hız*dt kadar sola kay */
+    
     function tickSurekli(now) {
       if (!last) last = now;
       var dt = (now - last) / 1000;
@@ -70,7 +55,7 @@
       rafId = window.requestAnimationFrame(tickSurekli);
     }
 
-    /* adım: bekle → yumuşak kaydır (bir görünür genişlik) → tekrar */
+    
     function tickAdim() {
       if (paused) {
         window.setTimeout(tickAdim, 400);
@@ -145,7 +130,7 @@
     for (var i = 0; i < list.length; i++) initSerit(list[i]);
   }
 
-  /* ---------------- 2) Tüm Hisseler araması ---------------- */
+  
 
   function trNorm(s) {
     s = String(s || '');
@@ -199,8 +184,7 @@
     if (input.value) filtre();
   }
 
-  /* Kripto sayfası: tablo/kart/kompakt — hepsinde satır/kart öğeleri
-     data-arama taşır. Ortak filtre mantığı. */
+  
   function initKriptoArama(kok) {
     var input = kok.querySelector('[data-kps-q]');
     var body = kok.querySelector('[data-kps-body]');
@@ -235,19 +219,7 @@
     if (input.value) filtre();
   }
 
-  /* ---------------- 3) Canlı finans akışı ----------------
-   *
-   * Kur & Borsa, Hisseler, Kripto Para, servis bandı ve Kur Çevirici aynı
-   * /api/piyasa/canli ucundan beslenir. Davranış:
-   *   • Yalnız görünür sekmede, 30 sn'de bir istek (ETag → çoğu zaman 304).
-   *   • İlk yüklemede sessiz: sunucudan gelen değerlerle aynıysa parlamaz.
-   *   • Değer değiştiyse fiyat hücresi 1,2 sn yeşil/kırmızı parlar; yön
-   *     oku ve yüzde aynı anda güncellenir.
-   *   • "Canlı" rozeti ve "Son güncelleme" satırı tazelenir.
-   *   • Hareket azaltma açıksa animasyon yerine statik renk vurgusu.
-   *   • Hata sessizce yutulur; 30→60→120 sn geri çekilme ile yeniden denenir.
-   *     Eski değerler asla sıfırlanmaz/uydurulmaz.
-   */
+  
 
   var FIN_POLL = 30000;
   var FIN_MAX = 120000;
@@ -284,7 +256,7 @@
     return s;
   }
 
-  /* paraKisa (Go) ile aynı kısaltmalar: bin → b, milyon → mn, milyar → mr. */
+  
   function finKisa(v) {
     if (!isFinite(v) || v <= 0) return '—';
     if (v >= 1e12) return finTR(v / 1e12, 2) + ' tn';
@@ -476,7 +448,7 @@
       list[i].setAttribute('data-rate', String(v));
     }
     if (degisti) {
-      try { document.dispatchEvent(new Event('fin:kur')); } catch (e) { /* eski tarayıcı */ }
+      try { document.dispatchEvent(new Event('fin:kur')); } catch (e) {  }
     }
   }
 
@@ -583,7 +555,7 @@
     if (window.AbortController) {
       ctrl = new AbortController();
       zaman = window.setTimeout(function () {
-        try { ctrl.abort(); } catch (e) { /* yoksay */ }
+        try { ctrl.abort(); } catch (e) {  }
       }, 12000);
     }
     var secenek = { headers: basliklar, credentials: 'same-origin', cache: 'no-store' };

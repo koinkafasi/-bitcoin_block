@@ -5,28 +5,8 @@ import (
 	"sync"
 )
 
-// cspHashCacheSayisi önbellekte tutulacak en fazla CSP başlığı.
-//
-// Her giriş ~1 KB (başlık metni). 512 giriş ≈ 0,5 MB; süreç ömrü boyunca
-// sabit kalır. Sayfa çeşidi (bölüm + sayfa + makale) bundan çok daha az
-// olduğu için pratikte tüm sıcak sayfalar önbellekte durur.
 const cspHashCacheSayisi = 512
 
-// cspHashCache gövde özetinden CSP başlığına giden süreç içi önbellek.
-//
-// NEDEN: `buildCSP` her HTML yanıtında gövdeyi iki kez tarıyor (script ve
-// style blokları) ve bulduğu her blok için sha256 hesaplıyor. Profil
-// (8 Kasım 2026, ana sayfa yükü): `indexFold` tek başına CPU'nun ~%9'u —
-// yani istek yolunda sorgulardan sonra en pahalı saf-CPU işi.
-//
-// ANAHTAR GÖVDENİN KENDİSİ: CSP hash'leri yalnız gövdeye bağlı olduğu için
-// (collab/rapor adresleri süreç başına sabit) aynı gövde → aynı başlık.
-// Gövde özeti, taramadan çok daha ucuz: 80 KB için ~30 µs'ye karşı iki tam
-// tarama + N adet sha256.
-//
-// YANLIŞ POZİTİF RİSKİ YOK: anahtar 256 bit özet; farklı gövde aynı anahtara
-// düşerse CSP yanlış olurdu, ama bu olasılık kriptografik olarak yok sayılır
-// (ikinci ön-kare saldırısı gerekir).
 type cspHashCache struct {
 	mu    sync.Mutex
 	m     map[[32]byte]string

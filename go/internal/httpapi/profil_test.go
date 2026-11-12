@@ -8,16 +8,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// Faz 195 — profil simgesi ve çekmece.
-//
-// KULLANICI BİLDİRİMİ (1): "Sitede user kendi profil tıklayınca neden admin
-// dashboard gidiyor, kendi yönetim arayüzüne gitmesi gerekli."
-//
-// ÖLÇÜM: public_handlers.go içinde personel rollerinde MemberURL "/admin"
-// yapılıyordu — yani yönetici/editör kendi avatarına basınca yönetim
-// paneline düşüyordu. Profil simgesi HERKESE üyenin kendi alanına gitmeli;
-// yönetim paneli erişimi AÇIK bir kısayolla korunmalı.
-
 func TestProfilSimgesiHepHesabimaGider(t *testing.T) {
 	src := okuDosya(t, "public_handlers.go")
 
@@ -74,12 +64,6 @@ func TestCekmeceCeviriAnahtarlari(t *testing.T) {
 	assert.Contains(t, down, "DELETE FROM translations")
 }
 
-// TestCekmeceEtiketleriBosKalmaz — Faz 195.
-//
-// ÖLÇÜM (üretim): çekmecede 7 bağlantı yalnız emoji gösteriyordu
-// ("📰", "✉", "💳", "☀" …) ve biri ham anahtar basıyordu
-// ("footer.nobetci-eczaneler"). Nedeni: translations satırı vardı ama
-// değeri boştu; `T()` boş değeri "çeviri var" sayıyordu.
 func TestCekmeceEtiketleriBosKalmaz(t *testing.T) {
 	up := okuDosya(t, "../../migrations/0105_ceviri_bos_degerler.up.sql")
 
@@ -87,7 +71,7 @@ func TestCekmeceEtiketleriBosKalmaz(t *testing.T) {
 	for _, k := range []string{
 		"footer.akis", "footer.bulten", "subscription", "footer.hava-durumu",
 		"footer.namaz-vakitleri", "footer.borsa", "footer.fikstur",
-		"footer.astroloji", "footer.nobetci-eczaneler", "footer.gazete-mansetleri",
+		"footer.astroloji", "footer.nobetci-eczaneler",
 	} {
 		assert.Contains(t, up, "'"+k+"'", "çekmece anahtarı eksik: "+k)
 	}

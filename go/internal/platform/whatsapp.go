@@ -11,12 +11,6 @@ import (
 	"time"
 )
 
-// ---- WhatsApp Business Cloud API (Meta) — gazete bülten dağıtımı ----
-//
-// PDF gönderimi onaylı şablon mesajı (document) ile yapılır; opt-in zorunludur.
-// Yapılandırma settings('whatsapp'): token, phone_id, api_version, template.
-// Anahtar yoksa sağlayıcı "yapılandırılmamış" döner; çağıran e-postaya düşer.
-
 // WhatsAppConfig Meta Cloud API yapılandırması.
 type WhatsAppConfig struct {
 	Token      string

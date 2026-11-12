@@ -212,9 +212,6 @@ func TestServisKurlarEksikDegerAtlanir(t *testing.T) {
 	}
 }
 
-// Piyasa önbelleği (truncgil + Yahoo) doluysa servis bandı USD/EUR/gram
-// altın'ı oradan almalı; eski `kur/ana` (floatrates) kaynağı düşse bile bant
-// eksik kalmamalı.
 func TestServisKurlarPiyasaOnbelleginiKullanir(t *testing.T) {
 	db := finansFakeDB{kayit: map[string][]byte{
 		"piyasa/ana": []byte(`{"guncel":"2026-11-02T12:00:00Z","kalemler":[

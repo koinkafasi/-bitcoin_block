@@ -8,16 +8,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// Faz 192 — içerik listesinde dil tekilleştirmesi.
-//
-// Sahadaki sorun (ölçüm, üretim): "Yayında" sekmesinin ilk 40 satırının 39'u
-// EN çeviriydi; TR asılları sonraki sayfalara düşüyordu. Yani editör Türkçe
-// içerikleri liste üzerinden bulamıyordu. Aynı makale her dilde ayrı satır
-// olarak tekrarlanıyordu (492 makale = 984 satır).
-//
-// Bu testler sözleşmeyi korur: tek satır + Dil kolonu (Tip'ten ÖNCE) +
-// etikete tıklayınca o dilin editörü.
-
 // TestListeDilKolonuTipdenOnce: Dil kolonu Tip'in solunda olmalı.
 func TestListeDilKolonuTipdenOnce(t *testing.T) {
 	tpl := okuDosya(t, "../webui/templkit/icerikler.templ")
@@ -101,19 +91,6 @@ func TestEditorDilSeridi(t *testing.T) {
 	assert.Contains(t, css, ".dil-pill.is-yok")
 }
 
-// TestDilKolonuTabloHucresiKalir — Faz 192c.
-//
-// Kullanıcı bildirimi: "liste dil kolon diğer satırlardan yükseklik ve kolon
-// hizalı değil".
-//
-// Ölçüm (tarayıcı): hücre `display:flex` idi → tablo hücresi yerleşiminden
-// çıkıyordu:
-//
-//	satır 138px · dil hücresi 40px · üst kenar 434 (diğerleri 433)
-//	dikey ortalama YOK
-//
-// Bir <td>'ye `display:flex` vermek tablo yerleşimini bozar. Hücre table-cell
-// kalmalı; etiketler satır içi öğe olarak dizilmeli.
 func TestDilKolonuTabloHucresiKalir(t *testing.T) {
 	css := okuDosya(t, "../webui/static/admin-only.css")
 

@@ -1,21 +1,5 @@
 package httpapi
 
-// Canlı piyasa ucu: GET /canli/giris
-//
-// NEDEN VAR (kullanıcı isteği, 11 Kasım 2026: "verileri canlı olarak
-// çalışır istiyorum"): ana sayfa önbellekli HTML olarak servis ediliyor ve
-// şerit sunucuda basılıyor. Sayfa açık kaldıkça fiyatlar DONUYORDU.
-//
-// AKIŞ: tarayıcı 30 sn'de bir BURAYA sorar. Burası CoinGecko'ya değil,
-// repo önbelleğine bakar (fiyat 60 sn, grafik 10 dk). Yani:
-//   - ziyaretçi sayısı ne olursa olsun upstream istek sayısı sabit
-//     (ölçüldü: CoinGecko ücretsiz katmanı 6 istek/30 sn'de 429 veriyor),
-//   - ekrandaki fiyat en fazla ~60 sn eski olur.
-//
-// "CANLI" ADI: uç canlı fiyat akışı değil, önbellekli fiyatın en taze
-// hâlini verir. Yaş (`cekildi`) yanıtta var; arayüz "az önce" yazar.
-// Okuyucuya olmayan bir gerçek zamanlılık vaat etmiyoruz.
-
 import (
 	"encoding/json"
 	"net/http"
@@ -24,10 +8,6 @@ import (
 	"theblock/site/internal/repo"
 )
 
-// girisCanliYanit tarayıcıya giden JSON.
-//
-// Alan adları KISA ve sabit: JS bunları doğrudan okur. Türkçe metin
-// sunucuda biçimlenmiş gelir (fiyat/para birimi kuralı tek yerde kalsın).
 type girisCanliYanit struct {
 	Sa      int64 `json:"sa"`      // sunucu saati (UNIX)
 	Cekildi int64 `json:"cekildi"` // fiyatın çekildiği an
@@ -103,9 +83,6 @@ func (s *Server) handleCDGirisCanli(w http.ResponseWriter, r *http.Request) {
 			Var: true, Deger: g.RSI, Etiket: g.RSIEtiket, Up: g.RSIUp,
 		}
 	}
-	// Şerit: fiyat önbelleği zaten bellekte; ek maliyet yok. Yalnız
-	// kripto kalemleri — BIST fiyatları ayrı kaynaktan (Yahoo) geliyor ve
-	// bu uçta güncellenmiyor, eski değer yazmak yanıltıcı olurdu.
 	for _, f := range repo.Fiyatlar(ctx, s.pool) {
 		if len(y.Serit) >= 7 {
 			break

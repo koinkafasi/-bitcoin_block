@@ -12,31 +12,6 @@ import (
 	"time"
 )
 
-// Nöbetçi eczane — NosyAPI (RapidAPI) kaynağı.
-//
-// NEDEN: eczaneler.org küme çıkış IP'sinden Cloudflare 403 alıyor
-// (bkz. eczane_aeo.go başı); resmi eczacı odası adaptörü yalnız Ankara'yı
-// kapsıyor. NosyAPI 81 ili veriyor ve veri merkezi IP'sinden erişilebiliyor
-// (5 Kasım 2026'da doğrulandı).
-//
-// UÇ: RapidAPI anahtarıyla `pharmacies-on-duty/all` AÇIK DEĞİL (404).
-// Yalnız şehir bazlı uç var:
-//
-//	GET https://nobetci-eczane-api-turkiye.p.rapidapi.com/pharmacies-on-duty?city=ankara
-//	X-RapidAPI-Key: …
-//	X-RapidAPI-Host: nobetci-eczane-api-turkiye.p.rapidapi.com
-//
-//	{"status":"success","rowCount":49,"creditUsed":0,
-//	 "data":[{"pharmacyID":1452,"pharmacyName":"…","address":"…",
-//	          "city":"Ankara","cityId":6,"district":"Çankaya","town":"",
-//	          "directions":"…","phone":"0 (312) 512-26-12", …}]}
-//
-// `cityId` il plakasıyla birebir aynıdır (Ankara 6, Bayburt 69 — ölçüldü).
-//
-// MALİYET: il başına günde bir istek (81 istek/gün). Yanıtlar il bazında
-// GÜN BOYU önbelleklenir; aynı gün "Şimdi Yenile" veya boş il yeniden
-// denemeleri ek istek harcamaz. Anahtar boşsa kaynak tamamen kapalıdır.
-
 const (
 	eczaneRapidAPIHost = "nobetci-eczane-api-turkiye.p.rapidapi.com"
 	eczaneRapidAPIPath = "/pharmacies-on-duty"
@@ -73,11 +48,6 @@ type eczaneRapidAPISatir struct {
 	Telefon2   string `json:"phone2"`
 }
 
-// eczaneAPISehir, bir ilin listesini günlük önbellekten okur; yoksa
-// API'den bir kez çekip yazar. İkinci dönüş: kaynak erişilebilir mi?
-//
-// Erişilemediyse çağıran eczaneler.org'a düşer. Erişildi ama liste boşsa
-// "bugün nöbetçi eczane yok"tur; demo/uydurma liste basılmaz.
 func eczaneAPISehir(ctx context.Context, pool DB, anahtar, slug string, plaka int) ([]Eczane, bool) {
 	bugun := time.Now().Format("2006-01-02")
 	cacheKey := strconv.Itoa(plaka)
@@ -132,10 +102,6 @@ func eczaneRapidAPISehir(ctx context.Context, anahtar, slug string) ([]Eczane, e
 	return eczaneRapidAPICoz(govde)
 }
 
-// eczaneRapidAPICoz, tek il yanıtını Eczane listesine çevirir.
-//
-// Bozuk/eksik kayıtlar atılır; adı olmayan eczane gösterilmez. Aynı kayıt
-// birden çok kez gelirse eczaneTekrarsiz tekilleştirir.
 func eczaneRapidAPICoz(govde []byte) ([]Eczane, error) {
 	var y eczaneRapidAPIYanit
 	if err := json.Unmarshal(govde, &y); err != nil {
@@ -183,9 +149,6 @@ func eczaneRapidAPIAdres(s eczaneRapidAPISatir) string {
 	return strings.TrimSpace(adres + " (Tarif: " + tarif + ")")
 }
 
-// eczaneTelefonDuzelt, API'nin "0 (312) 512-26-12" biçimini sitede
-// kullanılan "0 312 512 26 12" biçimine çevirir. Çözülemeyen değer
-// olduğu gibi bırakılır — uydurma numara üretilmez.
 func eczaneTelefonDuzelt(ham string) string {
 	ham = strings.TrimSpace(ham)
 	rakam := strings.Map(func(r rune) rune {

@@ -6,11 +6,6 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-// RecentPublishedForCompare yayındaki son içerikleri karşılaştırma için
-// döndürür. Yakın-kopya (near-duplicate) denetiminde kullanılır; tam metin
-// araması yerine son N içerik yeterlidir.
-//
-// excludeID verilen içerik atlanır (kendisiyle karşılaştırma olmasın).
 func RecentPublishedForCompare(ctx context.Context, pool *pgxpool.Pool, siteID, excludeID int64, limit int) ([]Content, error) {
 	if limit <= 0 || limit > 200 {
 		limit = 50

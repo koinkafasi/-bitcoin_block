@@ -1,12 +1,5 @@
 package repo
 
-// Hisse performans satırı (CoinDesk §10.6 sağ kolon).
-//
-// Değerler SEÇİLEN aralığın serisinden değil, tek bir 1 yıllık günlük
-// seriden hesaplanır: aynı seriden 24 saat/5 gün/1 ay/YTD/1 yıl yüzdeleri
-// türetilir. Böylece sayfa aralık değiştikçe farklı yüzdeler göstermez
-// (CoinDesk'te de satır sabittir).
-
 import "time"
 
 // HisseDonem tek performans dönemi.
@@ -16,12 +9,6 @@ type HisseDonem struct {
 	Gecerli bool    // seri dönemi KAPSAMIYORSA false
 }
 
-// hissePerformansTanim dönem tanımı + kapsama toleransı.
-//
-// TOLERANS NEDEN: seri istenen tarihten çok sonra başlıyorsa (yeni halka
-// arz, veri kesintisi) o dönemin yüzdesi YANLIŞ olur — 2 günlük veriden
-// "1 yıl" yüzdesi hesaplanmaz. Tolerans, normal hafta sonu/tatil
-// boşluklarını hoş görür ama gerçek kapsama eksiğini yakalar.
 type hissePerformansTanim struct {
 	ad        string
 	geriye    time.Duration // sabit geriye bakış (0 = takvim hesabı)
@@ -31,9 +18,6 @@ type hissePerformansTanim struct {
 	tolerans  time.Duration
 }
 
-// HissePerformans 1 yıllık seriden dönem yüzdelerini hesaplar.
-//
-// `onceki` önceki kapanış (24 saat için), `simdi` hesabın "şimdi"si.
 func HissePerformans(seri []HisseNokta, onceki float64, simdi time.Time) []HisseDonem {
 	if len(seri) == 0 {
 		return nil

@@ -10,14 +10,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// Gazete panelindeki şablon galerisi (Faz 184).
-//
-// NEDEN: panelde "Şablonlar" düz bir tabloydu — yalnız ad ve açıklama
-// görünüyordu. Şablonun neye benzediğini görmek için ayrı sayfaya
-// (/admin/gazete/sablonlar) gitmek gerekiyordu; kullanıcı "şablonları
-// seçilebilir şekilde düzgün görebilmek için" dedi.
-//
-// Ayrıca 10 sayfalık önizleme tek satırda taşıyordu.
 func TestGazeteSablonGalerisi(t *testing.T) {
 	b, err := os.ReadFile(filepath.Join("templkit", "gazete.templ"))
 	require.NoError(t, err)

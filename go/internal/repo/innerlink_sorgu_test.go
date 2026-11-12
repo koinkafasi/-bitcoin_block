@@ -5,19 +5,6 @@ import (
 	"testing"
 )
 
-// TestLinkSuggestionsSorgusu: alaka havuzu sorgusunun iki PERFORMANS/
-// TUTARLILIK sözleşmesini kilitler.
-//
-//  1. ADAY CTE'Sİ: etiketler yalnız 400 aday için toplanmalı. CTE
-//     kaldırılıp eski tek bloklu biçime dönülürse sorgu tüm yayın
-//     havuzunu (3 492 satır) + tüm etiket bağlarını (25 290 satır)
-//     gruplar: ölçülen maliyet 40,2 ms → 9,9 ms.
-//
-//  2. TIE-BREAK: `id DESC` olmadan sıra PLAN'A bağlıdır. Üretimde binlerce
-//     içerik aynı `updated_at` değerini taşıyor; tie-break yokken aynı sorgu
-//     farklı planla farklı "İlgili Haberler" listesi döndürüyordu (ölçüldü:
-//     {7128,8443,…} vs {6117,6119,6116}). Bu, sayfanın kendiliğinden
-//     değişmesi demek.
 func TestLinkSuggestionsSorgusu(t *testing.T) {
 	s := strings.Join(strings.Fields(linkSuggestionsSQL), " ")
 

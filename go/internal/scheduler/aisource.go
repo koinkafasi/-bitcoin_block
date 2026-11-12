@@ -10,9 +10,6 @@ import (
 	"theblock/site/internal/repo"
 )
 
-// RunAISource, AI Kaynak Merkezi için RSS kaynaklarını periyodik tarar ve
-// benzer haber kümelerini oluşturur. Taslak üretmez; üretim editör onayına
-// bağlıdır.
 func RunAISource(ctx context.Context, pool *pgxpool.Pool, logger *slog.Logger, every time.Duration) {
 	if every <= 0 {
 		every = 15 * time.Minute

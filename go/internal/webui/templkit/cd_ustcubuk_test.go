@@ -9,14 +9,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// ÜST ÇUBUK OTURUM KAPISI (kullanıcı isteği, 8 Kasım 2026): "üst menüde
-// login giriş yapmışken neden hâlâ oturum aç ve kaydol gösteriyor".
-//
-// NEDEN TEST: iki dal sessizce değişebilir. Giriş yapılmış kullanıcıya
-// hâlâ "Oturum Aç" basılırsa site "giriş yapamadım" izlenimi verir; giriş
-// YOKKEN bağlantılar kaybolursa anonim ziyaretçi kayıt olamaz. İkisi de
-// tek kapıdan kilitlenir (üst çubuk + mobil panel AYNI kararı verir).
-
 // ustCubukCiz üst çubuğu (arama paneli dahil) çizer.
 func ustCubukCiz(t *testing.T, s CDShell) string {
 	t.Helper()

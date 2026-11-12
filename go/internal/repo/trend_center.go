@@ -213,14 +213,6 @@ func TrendSourceFetched(ctx context.Context, pool *pgxpool.Pool, id int64, etag,
 	if n >= 3 {
 		minutes = 360
 	}
-	// next_retry_at: geri çekilme aralığı.
-	//
-	// DİKKAT: burada `($3::text || ' minutes')::interval` yazılıydı ve
-	// pgx `minutes` int'ini text parametresi olarak kodlayamadığı için
-	// ("cannot find encode plan") UPDATE hiç çalışmıyordu. Çağıran taraf
-	// hatayı `_ =` ile yuttuğu için trend kaynağı hataları panele hiç
-	// yansımıyor, ölü kaynak sağlıklı görünüyordu (Faz 208'de ölçüldü).
-	// make_interval doğrudan int alır; kodlama sorunu kalmaz.
 	_, err := pool.Exec(ctx, `UPDATE trend_sources SET last_fetch_at=now(), last_status=$1,
 		last_error=$2, consecutive_errors=consecutive_errors+1,
 		next_retry_at=now()+make_interval(mins => $3), updated_at=now() WHERE id=$4`,
@@ -303,9 +295,6 @@ type TrendSparkPoint struct {
 	Rank       float64
 }
 
-// LoadTrendSparklines verilen terimlerin son 7 günlük sıralama serisini
-// 6 saatlik kovalara indirger. Tek sorgu çalıştırır; panelde terim başına
-// ayrı sorgu (N+1) oluşmaz.
 func LoadTrendSparklines(ctx context.Context, pool *pgxpool.Pool, termIDs []int64, since time.Time) (map[int64][]TrendSparkPoint, error) {
 	out := make(map[int64][]TrendSparkPoint, len(termIDs))
 	if len(termIDs) == 0 {
@@ -470,12 +459,6 @@ type TrendMatchContent struct {
 	PublishedAt time.Time
 }
 
-// ListTrendMatchContents son N saatte yayınlanan içerikleri döndürür.
-//
-// Pencere, kapsama analizinin "bu konuda içeriğimiz var mı?" sorusunu
-// cevaplayacak kadar geniş olmalıdır (varsayılan 180 gün —
-// TrendCoverageHours). Daha önce 72 saatte sabitti; yayın temposu bu
-// pencereye uymadığında eşleşme hiç bulunamıyordu.
 func ListTrendMatchContents(ctx context.Context, pool *pgxpool.Pool, siteID int64, hours, limit int) ([]TrendMatchContent, error) {
 	if hours <= 0 {
 		hours = defaultTrendCoverageHours
@@ -1040,9 +1023,6 @@ func TrendAlertThreshold(ctx context.Context, pool *pgxpool.Pool) int {
 	return 70
 }
 
-// Kapsama pencereleri. İkisinin ayrı olmasının gerekçesi trends.Coverage
-// belgesindedir: biri "arşivde var mı", diğeri "bu haber döngüsünde işledik
-// mi" sorusunu cevaplar.
 const (
 	defaultTrendCoverageHours = 180 * 24 // 180 gün: "bu konuda içeriğimiz var mı?"
 	defaultTrendRecentHours   = 72       // 3 gün: "bu haber döngüsünde işledik mi?"

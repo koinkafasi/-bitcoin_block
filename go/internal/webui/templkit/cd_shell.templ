@@ -31,21 +31,19 @@ package templkit
 templ cdLogoMark(sh CDShell) {
 	<a class="cd-logo" href="/" aria-label={ sh.SiteName + " ana sayfa" }>
 		if sh.LogoURL != "" || sh.LogoSimgeURL != "" {
-			<!-- MARKA KİLİDİ — "simge | yazı + slogan" (11 Kasım 2026).
-			     Kullanıcı isteği: "logodaki nesneleri 2'ye böl, soldaki site
-			     simgesi yuvarlak olan, sağdaki logo yazı; sloganı da altına
-			     koy… panelden logo ve simge değiştirilebilir olsun ama 3'lü
-			     tasarım bozulmadan tek parça görünsün".
-
-			     NEDEN YAPISAL: tek dosyalık logoda simge ve yazı aynı tuvalde;
-			     sloganı yazının başladığı harfin altına hizalamak için dosya
-			     içindeki yatay konumu bilmek gerekir — sunucu SVG içeriğini
-			     yorumlayamaz, girinti tahmini kırılgandı (64 px denedik,
-			     logo değişince kayıyor). Parçalar ayrılınca slogan YAZININ
-			     sütununda durur: hizalama kendiliğinden doğru, ölçü yok.
-
-			     GERİ UYUMLU: simge yüklenmediyse eski tek dosya düzeni
-			     aynen çalışır (aşağıdaki else). -->
+						// MARKA KİLİDİ — "simge | yazı + slogan" (11 Kasım 2026).
+			// Kullanıcı isteği: "logodaki nesneleri 2'ye böl, soldaki site
+			// simgesi yuvarlak olan, sağdaki logo yazı; sloganı da altına
+			// koy… panelden logo ve simge değiştirilebilir olsun ama 3'lü
+			// tasarım bozulmadan tek parça görünsün".
+			// NEDEN YAPISAL: tek dosyalık logoda simge ve yazı aynı tuvalde;
+			// sloganı yazının başladığı harfin altına hizalamak için dosya
+			// içindeki yatay konumu bilmek gerekir — sunucu SVG içeriğini
+			// yorumlayamaz, girinti tahmini kırılgandı (64 px denedik,
+			// logo değişince kayıyor). Parçalar ayrılınca slogan YAZININ
+			// sütununda durur: hizalama kendiliğinden doğru, ölçü yok.
+			// GERİ UYUMLU: simge yüklenmediyse eski tek dosya düzeni
+			// aynen çalışır (aşağıdaki else).
 			<span class="cd-logo__kilit" style={ cdLogoStil(sh.LogoHedefYukseklik, sh.LogoAzamiGenislik, sh.SloganGirinti) }>
 				if sh.LogoSimgeURL != "" {
 					<span class="cd-logo__simge" style={ cdSimgeStil(sh.LogoSimgeYukseklik, sh.LogoHedefYukseklik) }>
@@ -54,12 +52,12 @@ templ cdLogoMark(sh CDShell) {
 					</span>
 				}
 				<span class="cd-logo__grup">
-					<!-- Yalnız SİMGE yüklendiyse yazı yuvası boş kalır:
-					     `src=""` basmak tarayıcıda kırık görsel simgesi
-					     çizer. Bu yüzden yazı görselleri koşullu. -->
+										// Yalnız SİMGE yüklendiyse yazı yuvası boş kalır:
+					// `src=""` basmak tarayıcıda kırık görsel simgesi
+					// çizer. Bu yüzden yazı görselleri koşullu.
 					if sh.LogoURL != "" {
-						<!-- KOYU tema yazısı; AÇIK tema dosyası yoksa o da bu
-						     dosyayı gösterir (açık temada logo kaybolmaz). -->
+												// KOYU tema yazısı; AÇIK tema dosyası yoksa o da bu
+						// dosyayı gösterir (açık temada logo kaybolmaz).
 						<img class="cd-logo__img cd-logo__img--koyu cd-logo__img--yuklenen"
 							src={ sh.LogoURL }
 							width={ cdLogoOlcu(sh.LogoGenislik, 146) }
@@ -108,10 +106,10 @@ templ cdTicker(s CDShell) {
 	<div class="cd-ticker" role="region" aria-label="Piyasa şeridi">
 		<div class="cd-wrap">
 			<div class="cd-ticker__inner">
-				<!-- Mobilde "Canlı Piyasalar" etiketi sekmelerin ÜSTÜNE
-				     çıkar (CoinDesk mobil ölçümü: sol küme 122×59,
-				     etiket 10/15 + 8 px + sekmeler 36). Masaüstünde
-				     ikisi yan yana kalır. -->
+								// Mobilde "Canlı Piyasalar" etiketi sekmelerin ÜSTÜNE
+				// çıkar (CoinDesk mobil ölçümü: sol küme 122×59,
+				// etiket 10/15 + 8 px + sekmeler 36). Masaüstünde
+				// ikisi yan yana kalır.
 				<div class="cd-ticker__sol">
 					<span class="cd-ticker__canli">
 						<span class="cd-ticker__nokta" aria-hidden="true"></span>
@@ -127,24 +125,24 @@ templ cdTicker(s CDShell) {
 						}
 					</div>
 				</div>
-				<!-- data-cg-sym: canlı akış (/canli/piyasa, SSE) bu kalemi
-				     sembolle bulup fiyatını DEĞİŞTİĞİ ANDA tazeler
-				     (cd-canli.js). Yorum döngünün DIŞINDA: içeride her
-				     kalem için tekrarlanıp HTML'i şişiriyordu. -->
-				<!-- data-cg-sym: canlı akış (/canli/piyasa, SSE) bu kalemi
-				     sembolle bulup fiyatını DEĞİŞTİĞİ ANDA tazeler
-				     (cd-canli.js). Yorum döngünün DIŞINDA: içeride her
-				     kalem için tekrarlanıp HTML'i şişiriyordu. -->
+								// data-cg-sym: canlı akış (/canli/piyasa, SSE) bu kalemi
+				// sembolle bulup fiyatını DEĞİŞTİĞİ ANDA tazeler
+				// (cd-canli.js). Yorum döngünün DIŞINDA: içeride her
+				// kalem için tekrarlanıp HTML'i şişiriyordu.
+								// data-cg-sym: canlı akış (/canli/piyasa, SSE) bu kalemi
+				// sembolle bulup fiyatını DEĞİŞTİĞİ ANDA tazeler
+				// (cd-canli.js). Yorum döngünün DIŞINDA: içeride her
+				// kalem için tekrarlanıp HTML'i şişiriyordu.
 				for i, it := range s.Ticker {
 					if i > 0 {
-						<!-- Kalemler arası dikey ayırıcı — CoinDesk'te
-						     1×32 px `role="separator"` (ölçüldü). -->
+												// Kalemler arası dikey ayırıcı — CoinDesk'te
+						// 1×32 px `role="separator"` (ölçüldü).
 						<div class="cd-ticker__ayirici" role="separator"
 							aria-orientation="vertical"></div>
 					}
-					<!-- HREF: kripto kalemleri /price/{slug}'a, BIST kalemleri
-					     /markets'e gider. `Href` boşsa bağlantı kurulmaz
-					     (ölü "/price/BIST" adresi basılmaz). -->
+										// HREF: kripto kalemleri /price/{slug}'a, BIST kalemleri
+					// /markets'e gider. `Href` boşsa bağlantı kurulmaz
+					// (ölü "/price/BIST" adresi basılmaz).
 					if it.Href != "" {
 						<a class="cd-ticker__item" data-cg-sym={ it.Sym } href={ templ.SafeURL(it.Href) }>
 							<span class="cd-ticker__sym">{ it.Sym }</span>
@@ -181,10 +179,10 @@ templ cdTopbar(s CDShell) {
 	<header class="cd-topbar">
 		<div class="cd-wrap">
 			<div class="cd-topbar__inner">
-				<!-- MOBİL SOL KÜME — CoinDesk ölçümü (9 Kasım 2026):
-				     hamburger 32×32 x=16, arama 36×32 x=48. Masaüstünde
-				     gizli; mobilde mega nav ve aksiyon şeridi yerine
-				     bunlar görünür (CoinDesk mobil başlığı). -->
+								// MOBİL SOL KÜME — CoinDesk ölçümü (9 Kasım 2026):
+				// hamburger 32×32 x=16, arama 36×32 x=48. Masaüstünde
+				// gizli; mobilde mega nav ve aksiyon şeridi yerine
+				// bunlar görünür (CoinDesk mobil başlığı).
 				<div class="cd-topbar__sol">
 					@cdMobilNav(s)
 					<a class="cd-mobil-arama" href={ s.SearchHref } data-arama-ac
@@ -200,14 +198,14 @@ templ cdTopbar(s CDShell) {
 				@cdLogoMark(s)
 				@cdMegaNav(s)
 				<div class="cd-topbar__actions">
-					<!-- ARAMA — CoinDesk'te bağlantı değil, HAP biçimli düğme:
-					     200×40, zemin surface-subtle, köşe 9999, 16 px büyüteç +
-					     "Ara" + sağda "/" ipucu (24×24 daire, 1 px çerçeve).
-					     Tıklayınca sayfa değişmez, ARAMA PANELİ açılır (ölçüm
-					     7 Kasım 2026, coindesk.com). -->
-					<!-- Bağlantı olarak yazıldı: JS kapalıysa /arama sayfasına
-					     gider (ilerlemeli geliştirme); JS varsa csp-delegated.js
-					     varsayılanı iptal edip paneli açar. -->
+										// ARAMA — CoinDesk'te bağlantı değil, HAP biçimli düğme:
+					// 200×40, zemin surface-subtle, köşe 9999, 16 px büyüteç +
+					// "Ara" + sağda "/" ipucu (24×24 daire, 1 px çerçeve).
+					// Tıklayınca sayfa değişmez, ARAMA PANELİ açılır (ölçüm
+					// 7 Kasım 2026, coindesk.com).
+										// Bağlantı olarak yazıldı: JS kapalıysa /arama sayfasına
+					// gider (ilerlemeli geliştirme); JS varsa csp-delegated.js
+					// varsayılanı iptal edip paneli açar.
 					<a class="cd-arama-ac" href={ s.SearchHref } data-arama-ac
 						aria-label="Aramayı aç" aria-expanded="false" aria-controls="cd-arama">
 						<svg class="cd-arama-ac__ikon" viewBox="0 0 24 24" width="16" height="16"
@@ -219,17 +217,17 @@ templ cdTopbar(s CDShell) {
 						<span class="cd-arama-ac__metin">Ara</span>
 						<span class="cd-arama-ac__ipucu" aria-hidden="true">/</span>
 					</a>
-					<!-- Tema anahtarı. Varsayılan GİZLİ (`display:none`); init
-					     betiği `html.cd-js` ekleyince görünür. JS yoksa ölü
-					     düğme göstermiyoruz. Tercih localStorage'da.
-					     Simge SVG: projede templ dosyalarında emoji YASAK
-					     (emoji_test.go, TestTumTemplDosyalariEmojisiz). -->
+										// Tema anahtarı. Varsayılan GİZLİ (`display:none`); init
+					// betiği `html.cd-js` ekleyince görünür. JS yoksa ölü
+					// düğme göstermiyoruz. Tercih localStorage'da.
+					// Simge SVG: projede templ dosyalarında emoji YASAK
+					// (emoji_test.go, TestTumTemplDosyalariEmojisiz).
 					<button class="cd-tema" type="button" data-tema
 						aria-label="Karanlık moda geç" aria-pressed="false">
-						<!-- İKİ İKON DA DOM'DA: açık temada AY, koyu temada GÜNEŞ.
-						     Görünürlüğü tema sınıfı belirliyor (CSS) — JS ile ikon
-						     değiştirmek FOUC ve eksik-durum riski taşıyordu.
-						     İkonlar CoinDesk'in kendi yolları (ölçüm 7 Kasım 2026). -->
+												// İKİ İKON DA DOM'DA: açık temada AY, koyu temada GÜNEŞ.
+						// Görünürlüğü tema sınıfı belirliyor (CSS) — JS ile ikon
+						// değiştirmek FOUC ve eksik-durum riski taşıyordu.
+						// İkonlar CoinDesk'in kendi yolları (ölçüm 7 Kasım 2026).
 						<svg class="cd-tema__ikon cd-tema__ay" viewBox="0 0 24 24" width="20" height="20"
 							aria-hidden="true" focusable="false" fill="none"
 							stroke="currentColor" stroke-width="2" stroke-linecap="round"
@@ -252,8 +250,8 @@ templ cdTopbar(s CDShell) {
 						</svg>
 					</button>
 					if len(s.Diller) > 1 {
-						<!-- Dil seçici: satır içi olay YOK (CSP 'unsafe-inline'
-						     kapatıldı). data-git ile csp-delegated.js yönlendirir. -->
+												// Dil seçici: satır içi olay YOK (CSP 'unsafe-inline'
+						// kapatıldı). data-git ile csp-delegated.js yönlendirir.
 						<label class="cd-lang">
 							<span class="cd-visually-hidden">Dil</span>
 							<select class="cd-lang__sec" data-git aria-label="Dil">
@@ -282,20 +280,20 @@ templ cdTopbar(s CDShell) {
 							</span>
 						}
 					}
-					<!-- Dil ile oturum kümesi arasındaki DİKEY AYIRICI — CoinDesk
-					     ölçümü (7 Kasım 2026): 1×40 px, `#d9d9d9`, `role="separator"`.
-					     İki yanında 8 px boşluk var (kapsayıcı gap'i). -->
+										// Dil ile oturum kümesi arasındaki DİKEY AYIRICI — CoinDesk
+					// ölçümü (7 Kasım 2026): 1×40 px, `#d9d9d9`, `role="separator"`.
+					// İki yanında 8 px boşluk var (kapsayıcı gap'i).
 					if len(s.Diller) > 0 && (s.LoginHref != "" || s.LoggedIn) {
 						<div class="cd-topbar__ayirici" role="separator"
 							aria-orientation="vertical"></div>
 					}
-					<!-- OTURUM DALI (kullanıcı isteği, 8 Kasım 2026: "giriş
-					     yapmışken neden hâlâ oturum aç ve kaydol gösteriyor"):
-					     oturum YOKKEN iki bağlantı (CoinDesk ölçümü 104×40 +
-					     77×40); oturum VARKEN ikisi de kalkar, yerine kullanıcı
-					     simgesi + hesap menüsü gelir. Menü <details> — JS'siz
-					     açılır, klavye/dokunmatik çalışır (CSP 'unsafe-inline'
-					     yok; mobil menüyle aynı desen). -->
+										// OTURUM DALI (kullanıcı isteği, 8 Kasım 2026: "giriş
+					// yapmışken neden hâlâ oturum aç ve kaydol gösteriyor"):
+					// oturum YOKKEN iki bağlantı (CoinDesk ölçümü 104×40 +
+					// 77×40); oturum VARKEN ikisi de kalkar, yerine kullanıcı
+					// simgesi + hesap menüsü gelir. Menü <details> — JS'siz
+					// açılır, klavye/dokunmatik çalışır (CSP 'unsafe-inline'
+					// yok; mobil menüyle aynı desen).
 					if s.LoggedIn {
 						@cdHesapMenu(s)
 					} else {
@@ -307,28 +305,26 @@ templ cdTopbar(s CDShell) {
 						}
 					}
 				</div>
-				<!-- MOBİL SAĞ — CoinDesk'te "Sign In": 40 px yükseklik,
-				     0 16 dolgu, 16/24 w400, radius 4. Oturum açıkken
-				     aynı yerde avatar bağlantısı durur. -->
+								// MOBİL SAĞ — CoinDesk'te "Sign In": 40 px yükseklik,
+				// 0 16 dolgu, 16/24 w400, radius 4. Oturum açıkken
+				// aynı yerde avatar bağlantısı durur.
 				if s.LoggedIn {
 					<a class="cd-mobil-hesap" href={ s.UserHref } aria-label="Hesabım">
 						<span class="cd-hesap-ac__avatar" aria-hidden="true">{ s.UserInitial }</span>
 					</a>
 				} else {
 					if s.LoginHref != "" {
-						<!-- MOBİL GİRİŞ: "Oturum Aç" YAZISI yerine kullanıcı
-						     simgesi + altına açılan panel (kullanıcı isteği,
-						     11 Kasım 2026: "Oturum Aç simge çevir icon
-						     kurtarır bence … üstüne tıklayınca alta açılan
-						     button çıkar görsel uygun bir tasarımla").
-
-						     NEDEN: 390 px'te metin düğmesi 113 px yer
-						     kaplıyordu ve ORTALANMIŞ logoyla çakışıyordu
-						     (ölçüldü: kilit sağ 276, düğme sol 247 = 29 px
-						     çakışma). Simge 40×40 → 73 px yer açılıyor.
-
-						     JS YOK: details mobil menüyle aynı desen;
-						     dışarı tıklama/Escape betikten gelir. -->
+												// MOBİL GİRİŞ: "Oturum Aç" YAZISI yerine kullanıcı
+						// simgesi + altına açılan panel (kullanıcı isteği,
+						// 11 Kasım 2026: "Oturum Aç simge çevir icon
+						// kurtarır bence … üstüne tıklayınca alta açılan
+						// button çıkar görsel uygun bir tasarımla").
+						// NEDEN: 390 px'te metin düğmesi 113 px yer
+						// kaplıyordu ve ORTALANMIŞ logoyla çakışıyordu
+						// (ölçüldü: kilit sağ 276, düğme sol 247 = 29 px
+						// çakışma). Simge 40×40 → 73 px yer açılıyor.
+						// JS YOK: details mobil menüyle aynı desen;
+						// dışarı tıklama/Escape betikten gelir.
 						<details class="cd-hesap-ac cd-mobil-giris-menu" data-giris-menu>
 							<summary class="cd-mobil-giris" aria-label="Oturum aç veya kaydol">
 								<svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-user"></use></svg>
@@ -479,9 +475,9 @@ templ cdFooter(s CDShell) {
 		<div class="cd-footer__ic">
 			<a class="cd-footer__logo" href="/">{ s.SiteName }<span>.</span></a>
 
-			<!-- DÖRT sütun; her sütunda 2-3 bölüm ÜST ÜSTE (CoinDesk ölçümü).
-			     Sütun başına tek bölüm basan eski yapı alt bilgiyi yarıya
-			     indiriyordu (497 px vs 942). -->
+						// DÖRT sütun; her sütunda 2-3 bölüm ÜST ÜSTE (CoinDesk ölçümü).
+			// Sütun başına tek bölüm basan eski yapı alt bilgiyi yarıya
+			// indiriyordu (497 px vs 942).
 			<div class="cd-footer__cols">
 				for _, sut := range cdFooterSutunlari(s) {
 					<div class="cd-footer__sutun">
@@ -503,8 +499,8 @@ templ cdFooter(s CDShell) {
 
 			<hr/>
 
-			<!-- Yasal bağlantılar solda, sosyal ikonlar SAĞDA (ölçüldü:
-			     CoinDesk /tr alt bilgisi; 10/16 link, 16-24 px ikon, gap 16). -->
+						// Yasal bağlantılar solda, sosyal ikonlar SAĞDA (ölçüldü:
+			// CoinDesk /tr alt bilgisi; 10/16 link, 16-24 px ikon, gap 16).
 			<div class="cd-footer__yasal">
 				<div class="cd-footer__yasal-sol">
 					<a href="/gizlilik-politikasi">Gizlilik</a>
@@ -579,9 +575,9 @@ templ cdFooter(s CDShell) {
 // `aria-hidden` ve odaklanamaz.
 templ cdBasSimge() {
 	<svg class="cd-bas-simge" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-		<rect x=".5" y="5" width="5.6" height="6.4" rx="1" fill="currentColor" opacity=".32"></rect>
-		<rect x="5" y=".5" width="17" height="16.4" rx="1.6" fill="currentColor" opacity=".68"></rect>
-		<rect x="11" y="13" width="12.5" height="10.5" rx="1.6" fill="currentColor"></rect>
+		<rect x="0" y="6" width="6" height="7" rx=".8" fill="currentColor" opacity=".5"></rect>
+		<rect x="7.5" y="1" width="9.5" height="12" rx="1.2" fill="currentColor" opacity=".78"></rect>
+		<rect x="13" y="14.5" width="11" height="8.5" rx="1.2" fill="currentColor"></rect>
 	</svg>
 }
 

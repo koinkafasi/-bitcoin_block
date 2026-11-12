@@ -8,12 +8,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// ---- fikstür sayfası: "hafta" parametresi doğrulama ----------------
-//
-// Sözleşme: yalnızca 1..Rounds aralığında tam sayı kabul edilir. Diğer
-// her durumda güncel hafta (meta.Round) kullanılır — bozuk sorgu
-// parametresi sayfayı bozmamalı, boş hafta göstermemeli.
-
 func TestParseFiksturRound(t *testing.T) {
 	meta := repo.FiksturMeta{Season: "2026-2027", Round: 8, Rounds: 34}
 

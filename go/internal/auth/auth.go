@@ -42,9 +42,6 @@ func VerifyPassword(hash, plain string) bool {
 	return bcrypt.CompareHashAndPassword([]byte(hash), []byte(plain)) == nil
 }
 
-// CreateSession yeni oturum açar ve id döndürür.
-// scope oturumun hangi kapıdan açıldığını kaydeder (ScopePanel / ScopeUye);
-// boş bırakılırsa panel kabul edilir (mevcut çağrıların davranışı korunur).
 func CreateSession(ctx context.Context, pool *pgxpool.Pool, userID int64, userAgent string) (string, error) {
 	return CreateSessionScoped(ctx, pool, userID, userAgent, ScopePanel)
 }
@@ -80,9 +77,6 @@ func SessionUser(ctx context.Context, pool *pgxpool.Pool, sessionID string) (Use
 	return u, err
 }
 
-// RevokeUserSessions kullanıcının tüm oturumlarını (isteğe bağlı olarak
-// belirli bir kapsam dışındakileri) sonlandırır. Rol değişiminde eski
-// yetkilerle açılmış çerezlerin ayakta kalmaması için kullanılır.
 func RevokeUserSessions(ctx context.Context, pool *pgxpool.Pool, userID int64, keepScope string) (int64, error) {
 	var (
 		tag pgconn.CommandTag

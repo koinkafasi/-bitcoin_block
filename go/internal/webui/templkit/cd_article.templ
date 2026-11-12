@@ -16,10 +16,12 @@ templ CDArticle(v CDArticleView) {
 		<head>
 			@cdHead(CDHead{Title: v.Title, Desc: v.Desc, Canonical: v.Canonical,
 				OGType: "article", Image: v.Image, ImageAlt: v.ImageAlt,
-				SiteName: v.Shell.SiteName, Locale: v.Locale,
+				SiteName: v.Shell.SiteName, FaviconURL: v.Shell.FaviconURL, Locale: v.Locale,
 				PageCategory: v.PageCategory, ContentCategory: v.ContentCategory,
 				Metas: v.Metas, JSONLD: v.JSONLD,
-				BreadcrumbJSONLD: v.BreadcrumbJSONLD, BaseURL: v.BaseURL,
+				BreadcrumbJSONLD: v.BreadcrumbJSONLD, FAQJSONLD: v.FAQJSONLD, BaseURL: v.BaseURL,
+				// Tepki çubuğunu açan betik; `defer` ile basılır.
+				EkJS: []string{"/static/cd-tepki.js"},
 				Hreflang: v.Hreflang})
 		</head>
 		<body class="cd">
@@ -41,11 +43,11 @@ templ CDArticle(v CDArticleView) {
 						}
 					</div>
 
-					<!-- Tarih bloğu: Güncellendi + Yayınlandı.
-					     "Güncellendi" YALNIZ gerçekten sonradan düzenlendiyse
-					     basılır; her içerikte `updated_at` yayından birkaç
-					     dakika sonra olduğu için eşik 1 saat (ölçüldü:
-					     126/126 içerik "güncellenmiş" görünüyordu). -->
+										// Tarih bloğu: Güncellendi + Yayınlandı.
+					// "Güncellendi" YALNIZ gerçekten sonradan düzenlendiyse
+					// basılır; her içerikte `updated_at` yayından birkaç
+					// dakika sonra olduğu için eşik 1 saat (ölçüldü:
+					// 126/126 içerik "güncellenmiş" görünüyordu).
 					if v.PublishedAt != "" {
 						<div class="cd-article__tarih">
 							if v.UpdatedAt != "" {
@@ -57,12 +59,12 @@ templ CDArticle(v CDArticleView) {
 						</div>
 					}
 
-					<!-- ÇEVİRİ ETİKETİ — CoinDesk §10.2: tarih bloğunun ALTINDA
-					     (y=510), eylem şeridinin ÜSTÜNDE; 160×25, 14/21.
-					     YALNIZ çeviri kayıtlarında (translation_of dolu)
-					     basılır; orijinal içerikte etiket YOKTUR.
-					     Etiket ORİJİNAL makaleye bağlanır: okuyucu çevirinin
-					     kaynağını tek tıkla görebilmeli. -->
+										// ÇEVİRİ ETİKETİ — CoinDesk §10.2: tarih bloğunun ALTINDA
+					// (y=510), eylem şeridinin ÜSTÜNDE; 160×25, 14/21.
+					// YALNIZ çeviri kayıtlarında (translation_of dolu)
+					// basılır; orijinal içerikte etiket YOKTUR.
+					// Etiket ORİJİNAL makaleye bağlanır: okuyucu çevirinin
+					// kaynağını tek tıkla görebilmeli.
 					if v.CeviriEtiketi != "" {
 						if v.CeviriHref != "" {
 							<a class="cd-ceviri" href={ v.CeviriHref } aria-label={ v.Dil.CeviriIpucu }>
@@ -85,7 +87,7 @@ templ CDArticle(v CDArticleView) {
 						}
 					}
 
-					<!-- Eylem şeridi: üç pill (spec §10.2.3), hepsi 32 px. -->
+										// Eylem şeridi: üç pill (spec §10.2.3), hepsi 32 px.
 					<div class="cd-aksiyon">
 						<span class="cd-pill">
 							<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"
@@ -103,11 +105,11 @@ templ CDArticle(v CDArticleView) {
 								<a href={ templ.SafeURL(v.ShareLinkedIn) } rel="nofollow noopener" target="_blank">LinkedIn'de paylaş</a>
 							</div>
 						</details>
-						<!-- "Preferred on Google" — CoinDesk makale sayfasındaki
-						     hap düğme (ölçüm 7 Kasım 2026: 319×32, radius 9999,
-						     1 px #d9d9d9, pad 4×12, satıra SAĞA yaslı).
-						     Yalnız ≥1024 px'te görünür (CoinDesk `hidden
-						     lg:inline-flex`): dar ekranda satır taşıyordu. -->
+												// "Preferred on Google" — CoinDesk makale sayfasındaki
+						// hap düğme (ölçüm 7 Kasım 2026: 319×32, radius 9999,
+						// 1 px #d9d9d9, pad 4×12, satıra SAĞA yaslı).
+						// Yalnız ≥1024 px'te görünür (CoinDesk `hidden
+						// lg:inline-flex`): dar ekranda satır taşıyordu.
 						<a class="cd-pill cd-google"
 							href="https://www.google.com/preferences/source?q=bitcosar.com"
 							rel="noopener" target="_blank"
@@ -123,11 +125,11 @@ templ CDArticle(v CDArticleView) {
 							if cdKgOlcekli(v.Image) {
 								<img src={ cdKgSrc(v.Image, YuvaMakaleKapak) }
 									srcset={ cdKgSrcset(v.Image, YuvaMakaleKapak) }
-									sizes={ cdKgSizes(YuvaMakaleKapak) } alt=""
+									sizes={ cdKgSizes(YuvaMakaleKapak) } alt={ v.ImageAlt }
 									referrerpolicy="no-referrer" loading="eager"
 									fetchpriority="high"/>
 							} else {
-								<img src={ v.Image } alt="" referrerpolicy="no-referrer"
+								<img src={ v.Image } alt={ v.ImageAlt } referrerpolicy="no-referrer"
 									loading="eager" fetchpriority="high"/>
 							}
 							if v.ImageCredit != "" {
@@ -136,17 +138,16 @@ templ CDArticle(v CDArticleView) {
 						</figure>
 					}
 
-					<!-- Özet kutusu — CoinDesk deseni (ölçüldü, 8 Kasım 2026).
-					     Kaynak HTML: gradient sarmalayıcı (7 px, 2 px dolgu)
-					     → beyaz iç kutu (5 px, pad 20/20/12) → başlık satırı
-					     (sparkle ikon + "Summary" w500 solda, "Show" + chevron
-					     sağda, mb 16) → önizleme (TEK satır, `truncate`).
-
-					     YAPI KRİTİK: `<summary>` HTML'de `<details>`in
-					     DOĞRUDAN çocuğu olmak zorunda. Eski sürüm onu
-					     `<div class="cd-ozet__ic">` içine koyuyordu;
-					     tarayıcı geçersiz summary'yi yok sayıp yerine
-					     "Details" yazıyordu (ekran görüntüsünde görüldü). -->
+										// Özet kutusu — CoinDesk deseni (ölçüldü, 8 Kasım 2026).
+					// Kaynak HTML: gradient sarmalayıcı (7 px, 2 px dolgu)
+					// → beyaz iç kutu (5 px, pad 20/20/12) → başlık satırı
+					// (sparkle ikon + "Summary" w500 solda, "Show" + chevron
+					// sağda, mb 16) → önizleme (TEK satır, `truncate`).
+					// YAPI KRİTİK: `<summary>` HTML'de `<details>`in
+					// DOĞRUDAN çocuğu olmak zorunda. Eski sürüm onu
+					// `<div class="cd-ozet__ic">` içine koyuyordu;
+					// tarayıcı geçersiz summary'yi yok sayıp yerine
+					// "Details" yazıyordu (ekran görüntüsünde görüldü).
 					if v.Summary != "" {
 						<details class="cd-ozet">
 							<summary class="cd-ozet__ic">
@@ -184,7 +185,7 @@ templ CDArticle(v CDArticleView) {
 						@templ.Raw(v.BodyHTML)
 					</div>
 
-					<!-- Kaynak atfı: toplayıcı sitede ZORUNLU ve görünür -->
+										// Kaynak atfı: toplayıcı sitede ZORUNLU ve görünür
 					if v.SourceName != "" {
 						<div class="cd-source">
 							<strong>Kaynak:</strong>
@@ -197,6 +198,27 @@ templ CDArticle(v CDArticleView) {
 						</div>
 					}
 
+										// TEPKİ ÇUBUĞU: tek tıkla geri bildirim. Üyelik
+					// istemez; JS kapalıysa `hidden` kalır ve çalışmayan
+					// düğme gösterilmez. Yorum bölümünden önce gelen
+					// düşük sürtünmeli adım.
+					if v.ContentID != "" {
+						<div class="cd-tepki" data-tepki={ v.ContentID } hidden>
+							<span class="cd-tepki__soru">Bu haber işine yaradı mı?</span>
+							<span class="cd-tepki__dugmeler">
+								<button type="button" class="cd-tepki__dugme" data-yon="fazla" aria-pressed="false">
+									Evet, işime yaradı
+								</button>
+								<button type="button" class="cd-tepki__dugme" data-yon="az" aria-pressed="false">
+									Pek değil
+								</button>
+							</span>
+							<span class="cd-tepki__tesekkur" data-tepki-tesekkur hidden>
+								Teşekkürler — bu geri bildirim önerilerimizi düzeltiyor.
+							</span>
+						</div>
+					}
+
 					if len(v.Tags) > 0 {
 						<div class="cd-tags">
 							for _, t := range v.Tags {
@@ -205,9 +227,9 @@ templ CDArticle(v CDArticleView) {
 						</div>
 					}
 
-					<!-- Yazar kutusu + editör politikası (E-E-A-T sinyali).
-					     CoinDesk'te makale altında "Disclosure" kutusu var;
-					     toplayıcı sitede karşılığı KAYNAK + ŞEFFAFLIK kutusu. -->
+										// Yazar kutusu + editör politikası (E-E-A-T sinyali).
+					// CoinDesk'te makale altında "Disclosure" kutusu var;
+					// toplayıcı sitede karşılığı KAYNAK + ŞEFFAFLIK kutusu.
 					<div class="cd-yazar">
 						<strong>{ v.Author }</strong>
 						<p>
@@ -229,10 +251,10 @@ templ CDArticle(v CDArticleView) {
 					</section>
 				}
 
-				<!-- Sayfalama YALNIZ iki uçtan biri varsa basılır: boş `<nav>`
-				     kendi dış boşluğunu (32 px üst / 8 px alt) yine yazıyor
-				     ve makale sonunda 40 px ölü alan bırakıyordu (mobilde
-				     ölçüldü: nav 358×0, margin 32 0 8). -->
+								// Sayfalama YALNIZ iki uçtan biri varsa basılır: boş `<nav>`
+				// kendi dış boşluğunu (32 px üst / 8 px alt) yine yazıyor
+				// ve makale sonunda 40 px ölü alan bırakıyordu (mobilde
+				// ölçüldü: nav 358×0, margin 32 0 8).
 				if v.PrevHref != "" || v.NextHref != "" {
 					<nav class="cd-pager" aria-label="Haber gezinmesi">
 						if v.PrevHref != "" {

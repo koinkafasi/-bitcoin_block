@@ -11,26 +11,6 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-// Toplu AI ile yeniden yazım — veri katmanı (Faz 204).
-//
-// SORUN (ölçüm, üretim, 3 Kasım 2026): yayındaki 986 içeriğin 982'si TEK
-// paragraf (491 TR + 491 EN), 602'si 200 karakterin altında. AI ile yazım
-// hattı Faz 194'te kuruldu ama yalnız YENİ taslaklara uygulanıyor; yayında
-// duran metinlere hiç dokunulmadı.
-//
-// NEDEN ONAY: yayımlanmış bir metni AI çıktısıyla değiştirmek editoryal bir
-// karardır. Öneri `yeniden_yazim` tablosunda bekler; `contents` satırı
-// editör onaylayana kadar DEĞİŞMEZ.
-//
-// Akış:
-//
-//	YenidenYazimAdaylari  → ince yayınları listeler
-//	YenidenYazimPilot     → seçilen kökler için TR+EN öneri satırı açar
-//	YenidenYazimSahiplen  → işçi bekleyenleri "kuyrukta" yapar (yarış yok)
-//	YenidenYazimKaydet    → AI çıktısı + kalite uyarıları, durum "hazir"
-//	YenidenYazimOnayla    → sürüm korumalı yazma + revizyon arşivi
-//	YenidenYazimReddet    → öneri kapanır, içerik dokunulmaz
-
 // Yeniden yazım durumları (DB'de metin).
 const (
 	YenidenBekliyor   = "bekliyor"
@@ -41,22 +21,11 @@ const (
 	YenidenReddedildi = "reddedildi"
 )
 
-// Yeniden yazım modları (Faz 205).
-//
-// ÖLÇÜM (3 Kasım 2026): yayındaki 982 ince içeriğin kaynağı 94-228
-// karakterlik tek cümlelik RSS özeti. Yalnız mevcut metni düzenlemek
-// ("yeniden"), "yeni olgu uydurma" kuralıyla 700 karakterlik haber
-// üretemiyor — pilot 20/20 kapıda kaldı. Gerçek çözüm kaynak eklemek
-// ("arastirmali"): Brave araması + sayfa metni.
 const (
 	YenidenModYeniden     = "yeniden"
 	YenidenModArastirmali = "arastirmali"
 )
 
-// YenidenKaynak öneri üretilirken kullanılan gerçek web kaynağıdır.
-//
-// Saklanır çünkü onaydan sonra "bu haberi neye dayanarak yazdın" sorusunun
-// cevabı veritabanında kalmalı (BİK / düzeltme / telif).
 type YenidenKaynak struct {
 	Ref       string `json:"ref,omitempty"`
 	Baslik    string `json:"baslik"`
@@ -66,10 +35,6 @@ type YenidenKaynak struct {
 	YayinTari string `json:"yayin_tari,omitempty"`
 }
 
-// YenidenAzamiDeneme aynı öneri için kaç kez AI çağrısı yapılacağıdır.
-//
-// Neden sınır: sağlayıcı düştüğünde her turda yeniden denemek sürekli token
-// maliyeti doğurur. Üç denemeden sonra öneri "hata" olarak editöre düşer.
 const YenidenAzamiDeneme = 3
 
 // YenidenAday yayındaki ince bir içeriktir.
@@ -81,10 +46,7 @@ type YenidenAday struct {
 	Blok      int
 	Karakter  int
 	Version   int
-	// Hit öneri sırasını belirler: trafiği olan içerik önce genişletilir.
-	// Ölçüm (3 Kasım 2026): ince içeriklerin 548'i 1-9, 426'sı 10-99 hit
-	// alıyor; en çok okunan 668. Sıra rastgele değil, kanıtlanmış değere göre.
-	Hit int
+	Hit       int
 }
 
 // YenidenYazim tek bir içerik/dil için AI yeniden yazım önerisidir.
@@ -147,11 +109,6 @@ type YenidenYazimIs struct {
 	SourceName string
 }
 
-// GovdeParagraflari içerik gövdesini paragraf listesine çevirir.
-//
-// İki biçim birlikte yaşıyor: blok dizisi (`[{"type":"p","text":...}]`) ve
-// TipTap belgesi (`{"type":"doc","content":[...]}`). Ölçüm: 982 içeriğin
-// 978'i blok dizisi, 4'ü TipTap.
 func GovdeParagraflari(detail []byte) []string {
 	if len(detail) == 0 {
 		return nil
@@ -198,13 +155,6 @@ func GovdeMetni(detail []byte) string {
 	return strings.Join(GovdeParagraflari(detail), "\n\n")
 }
 
-// YenidenYazimAdaylari yayındaki ince içerikleri döndürür.
-//
-// İnce ölçütü: TEK blok (ya da daha az) VEYA metin `enFazlaKarakter` altında.
-// Zaten paragraflı bir metni yeniden yazmak gereksiz maliyet ve risk olurdu.
-//
-// `aktifOlanlarHaric` true ise bu içerik için bekleyen/kuyrukta/hazır/hata
-// durumunda bir öneri varsa listelenmez (aynı iş iki kez üretilmez).
 func YenidenYazimAdaylari(ctx context.Context, pool *pgxpool.Pool, siteID int64, locale string, enFazlaKarakter int, aktifOlanlarHaric bool, limit int) ([]YenidenAday, error) {
 	if siteID <= 0 {
 		siteID = 1
@@ -258,13 +208,6 @@ func YenidenYazimAdaylari(ctx context.Context, pool *pgxpool.Pool, siteID int64,
 	return out, rows.Err()
 }
 
-// YenidenYazimPilot seçilen sayıda haber KÖKÜ için TR ve EN önerisi açar.
-//
-// Neden kök: aynı haberin TR ve EN satırı ayrı içeriktir; pilot iki dilde de
-// ölçüm vermeli. 10 kök → 20 öneri.
-//
-// Var olan aktif önerisi olan içerik atlanır (unique index zaten engeller,
-// burada sessizce atlıyoruz: pilot düğmesine iki kez basmak hata vermez).
 func YenidenYazimPilot(ctx context.Context, pool *pgxpool.Pool, siteID int64, kokSayisi int, mod string) (int, error) {
 	if kokSayisi <= 0 {
 		kokSayisi = 10
@@ -328,9 +271,6 @@ func YenidenYazimPilot(ctx context.Context, pool *pgxpool.Pool, siteID int64, ko
 	return olusan, nil
 }
 
-// YenidenYazimAc içeriğin mevcut hâlini öneri satırına kopyalar.
-//
-// Dönen bool: satır gerçekten açıldı mı (aktif öneri varsa false).
 func YenidenYazimAc(ctx context.Context, pool *pgxpool.Pool, c Content, mod string) (bool, error) {
 	if mod != YenidenModYeniden {
 		mod = YenidenModArastirmali
@@ -363,20 +303,10 @@ func YenidenYazimAc(ctx context.Context, pool *pgxpool.Pool, c Content, mod stri
 	return true, nil
 }
 
-// YenidenYazimSahiplen bekleyen önerileri "kuyrukta" yapar ve işi döndürür.
-//
-// `FOR UPDATE SKIP LOCKED`: iki işçi aynı öneriyi almaz; işçi çökerse satır
-// "kuyrukta" kalır ve `YenidenYazimKuyrukBirak` ile geri verilir.
 func YenidenYazimSahiplen(ctx context.Context, pool *pgxpool.Pool, limit int) ([]YenidenYazimIs, error) {
 	if limit <= 0 {
 		limit = 1
 	}
-	// Bayat sahiplenmeyi geri ver.
-	//
-	// ÖLÇÜM (pilot, 3 Kasım 2026): 20 öneriden 2'si "kuyrukta" kaldı ve
-	// bir daha işlenmedi — işçi AI çağrısı sırasında düştü/yeniden başladı,
-	// satır sahipsiz kaldı. 10 dakika, AI zaman aşımının (120 sn) çok
-	// üzerinde: canlı bir çağrıyı çalmaz, ölü sahiplenmeyi kurtarır.
 	if _, err := pool.Exec(ctx, `
 		UPDATE yeniden_yazim
 		   SET status = 'bekliyor', updated_at = now()
@@ -512,14 +442,6 @@ func YenidenYazimHata(ctx context.Context, pool *pgxpool.Pool, id int64, mesaj s
 	return err
 }
 
-// YenidenYazimGeciciHata geçici bir hatayı sayar ve öneriyi geri kuyruğa
-// koyar (deneme sınırı aşılmadıysa).
-//
-// Neden: pilot ölçümünde 20 önerinin 4'ü sağlayıcı zaman aşımıyla düştü
-// (araştırma istemi uzun, üretim 120 sn'yi aşıyor). Tek seferlik zaman
-// aşımını kalıcı "hata" saymak, işi editöre yarım bırakıyordu.
-//
-// Dönen bool: yeniden denenecek mi (true) yoksa kalıcı hata mı (false).
 func YenidenYazimGeciciHata(ctx context.Context, pool *pgxpool.Pool, id int64, mesaj string) (bool, error) {
 	if len(mesaj) > 500 {
 		mesaj = mesaj[:500]
@@ -614,13 +536,6 @@ func yenidenTara(rows pgx.Rows) ([]YenidenYazim, error) {
 	return out, rows.Err()
 }
 
-// YenidenYazimOnayla öneriyi yayındaki içeriğe yazar.
-//
-// SÜRÜM KORUMASI: öneri üretilirken içerik sürümü `content_version`a
-// yazıldı. Editör bu arada kaydettiyse sürüm tutmaz ve yazma reddedilir:
-// AI kimsenin değişikliğini ezmez.
-//
-// Eski hâl `content_revisions`a arşivlenir (geri alınabilir).
 func YenidenYazimOnayla(ctx context.Context, pool *pgxpool.Pool, id int64, userID *int64) error {
 	tx, err := pool.Begin(ctx)
 	if err != nil {

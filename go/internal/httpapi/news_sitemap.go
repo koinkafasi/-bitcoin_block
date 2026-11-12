@@ -6,15 +6,6 @@ import (
 	"time"
 )
 
-// Google News sitemap doğrulaması (Faz 23)
-//
-// Search Console'a gönderilen `sitemap-news.xml` bozuksa Google sessizce yok
-// sayar — hata bildirilmez. Editör gönderemeden önce burada yapısal kontrol
-// yapabilsin diye üretilen XML ayrıştırılıp eksik alanlar sayılır.
-//
-// NOT: Ağ isteği yapılmaz; doğrulanan şey sitemap'i ÜRETEN kodun çıktısıdır
-// (aynı fonksiyon HTTP uç noktasında da kullanılır).
-
 // NewsSitemapReport doğrulama sonucu.
 type NewsSitemapReport struct {
 	URL       string // mutlak sitemap adresi

@@ -4,32 +4,6 @@ import (
 	"strings"
 )
 
-// Puan Durumu Şeridi — Habertürk spor yazısı düzeninin birebir kopyası.
-//
-// Referans (haberturk.com/spor/... makale sayfası, 28 Ekim 2026):
-//
-//	<section data-type="standingsSummary">
-//	  <h2 class="font-black text-xl">PUAN DURUMU</h2>  + yatay çizgi
-//	  <div id="standings-container" class="flex space-x-2 overflow-auto">
-//	    <div class="flex-none md:flex-1 w-10 border">   ← her takım dikey kart
-//	      <a class="flex flex-col">
-//	        <img logo72>                                 ← kare logo
-//	        <span class="text-xxs">GS</span>             ← kısa kod
-//	        <div class="border-t"><span>22</span></div>  ← puan
-//	      </a>
-//	    </div>
-//	    … 18 takım, yatay kaydırmalı
-//	  </div>
-//	</section>
-//
-// Yani tablo DEĞİL: takım başına dikey kart, yatay şerit. Mevcut
-// `puan_durumu` bloğu klasik tablodur; bu ayrı bir modüldür.
-
-// takimKisaRef referanstaki kısa kodlar (Habertürk'ün 18 takımı).
-//
-// Neden sabit tablo: kodlar kısaltma kuralıyla üretilemiyor
-// ("Galatasaray" → GS, "Beşiktaş" → BJK). Bilinmeyen takım için
-// takimKisa() genel kurala düşer, böylece yeni takımda da bir kod çıkar.
 var takimKisaRef = map[string]string{
 	"galatasaray":              "GS",
 	"fenerbahce":               "FB",
@@ -62,11 +36,6 @@ var takimKisaRef = map[string]string{
 	"bodrum":                   "BOD",
 }
 
-// takimKisa takım adından kısa kod üretir (rozet metni).
-//
-// Sıra: bilinen tablo → kelime baş harfleri → ilk üç harf.
-// Türkçe sadeleştirme yapılır ki anahtar eşleşmesi büyük/küçük harf ve
-// aksan farkından etkilenmesin ("Beşiktaş" = "besiktas").
 func takimKisa(name string) string {
 	ad := strings.TrimSpace(name)
 	if ad == "" {

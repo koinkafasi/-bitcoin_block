@@ -1,20 +1,11 @@
-/* cd-menu.css — CoinDesk mega menü (bitcosar)
- *
- * cd.css'in ÜSTÜNE biner; kendi jetonunu tanımlamaz, yalnız --cd-*
- * kullanır. Kural aynı: gölge YOK, ayırma ÇİZGİYLE, köşe 2 px.
- *
- * Açılma JS'siz: :hover + :focus-within. Klavyeyle sekme atan kullanıcı
- * başlığa gelince menü açılır, içindeki bağlantılar sırayla gezilir.
- */
+
 
 .cd-nav--mega { position: relative; }
 
-/* Başlık + açılır kabı: menü başlığın altına hizalanır. */
 .cd-nav__grup { position: relative; display: flex; align-items: center; }
 
 .cd-nav__link--acilir { display: inline-flex; align-items: center; gap: 5px; }
 
-/* Küçük ok. Ayrı karakter yerine CSS üçgeni: fontdan bağımsız. */
 .cd-nav__ok {
   width: 0; height: 0;
   border-left: 4px solid transparent;
@@ -26,62 +17,35 @@
 .cd-nav__grup:hover .cd-nav__ok,
 .cd-nav__grup:focus-within .cd-nav__ok { opacity: 1; transform: rotate(180deg); }
 
-/* ---- Açılır panel ---- */
-/* ÖLÇÜM (spec §7.2A): radius 8px · border-left + border-top 1px ·
-   padding 20px 24px · bg surface-default. */
 .cd-mega {
   position: absolute;
   top: 100%;
   left: 0;
   z-index: 60;
-  /* Panel zemini `--cd-surface-panel`: açık temada beyaz, koyu temada
-     #0e1014 (mobil menü ve arama paneliyle aynı katman). */
+  
   background: var(--cd-surface-panel);
   border: 1px solid var(--cd-border);
   border-radius: var(--cd-radius-lg);
-  /* ÜÇ KATMANLI yükselti gölgesi — menünün KENDİ jetonu. Sayfadaki diğer
-     gölge (0 0 10px) ile aynı değil; CoinDesk de menüde ayrı bir yükselti
-     kullanıyor (ölçüldü: 0 2px 2px -1px .04 / 0 4px 6px -2px .03 /
-     0 12px 16px -4px .08). Panel sayfanın üstünde yüzdüğü için tek
-     çizgiyle ayrım yetmiyor. */
+  
   box-shadow:
     0 2px 2px -1px rgba(10, 10, 10, 0.04),
     0 4px 6px -2px rgba(10, 10, 10, 0.03),
     0 12px 16px -4px rgba(10, 10, 10, 0.08);
   padding: 20px 24px;
-  /* Rengi ÜST ÇUBUKTAN DEVRALMASIN: topbar `color: #f5f5f5` taşıyor
-     (koyu zemin için). Panel kendi (açık) zemininde açıldığı için bu
-     devralma, rengi açıkça yazılmamış her metni beyaz-üstü-beyaz yapar.
-     Jeton tabanlı renk hem açık hem koyu temada doğru. */
+  
   color: var(--cd-fg);
 
-  /* Kapalıyken DOM'da kalır ama ekran okuyucuya ve fareye kapalı. */
+  
   visibility: hidden;
   opacity: 0;
-  /* AÇILIŞ EFEKTİ YOK — ölçüldü (spec §7.2A): CoinDesk'te transition 0s,
-     animation none, transform none. Panel anında görünüyor. Bizde de öyle:
-     transform/opacity geçişi YOK. Panelin anında açılması, fareyle
-     gezinen kullanıcı için "menü nerede" belirsizliği bırakmıyor. */
+  
 }
-/* ---- KOYU TEMADA MEGA MENÜ DE KOYU (kullanıcı isteği, 9 Kasım 2026) ----
- *
- * ÖNCEKİ KARAR (7 Kasım 2026) paneli açık temaya sabitliyordu: koyu sayfada
- * beyaz panel. Kullanıcı bildirimi: "mega menüde dark moda geçince bu renkde
- * olması gerek, beyaz kalıyor". Artık panel koyu paleti izliyor.
- *
- * Panel zemini `--cd-surface-panel` (#0e1014) — mobil menü ve arama paneliyle
- * AYNI katman. Üst çubuk #04080b, gövde #0a0b0e: panel ikisinin arasında
- * kalıyor, yükselti algısı korunuyor ve panel sayfadan ayrışıyor.
- *
- * Burada yalnız ÇİZGİ ve YÜKSELTİ ayarlanıyor; metin renkleri artık kök
- * jetonlardan geliyor, ayrıca ezilmiyor (önceki sürümün jeton sabitlemesi
- * kaldırıldı — koyu temada beyaz panelin tek nedeni oydu). */
+
 html.dark .cd-mega,
 :root:not(.light):not(.dark) .cd-mega {
   background: var(--cd-surface-panel);
   border-color: var(--cd-border);
-  /* Koyu zeminde üç katmanlı açık gölge görünmüyor; paneli sayfadan
-     ayıran şey çizgi + daha koyu gölge. */
+  
   box-shadow:
     0 2px 2px -1px rgba(0, 0, 0, 0.5),
     0 4px 6px -2px rgba(0, 0, 0, 0.4),
@@ -96,27 +60,16 @@ html.dark .cd-mega,
   opacity: 1;
 }
 
-/* Panel genişliği MENÜ BAŞINA (spec §7.2A). Değerler CoinDesk'ten
-   ölçülen üç kademe; sınıf adı da genişliği söylüyor ki şablonda
-   eşleme aramak gerekmesin. */
 .cd-nav__grup--589 > .cd-mega { width: 589px; }
 .cd-nav__grup--750 > .cd-mega { width: 750px; }
 .cd-nav__grup--836 > .cd-mega { width: 836px; }
-/* Son başlık: panel SAĞA hizalı — ama doğru referansa göre.
-   Naïf `right: 0` grubun kendi sağ kenarına hizalar; menü ortalanmış
-   olduğu için panel ekranın ortasında açılıyordu (ölçüldü: sol 494 px,
-   başlık ~1400 px'te). Doğru referans NAV: grubu `static` yapıp paneli
-   nav'a göre konumluyoruz, böylece sağ kenar menünün sağ kenarı oluyor
-   ve panel ekrandan taşmıyor (spec §7.2A istisnası). */
+
 .cd-nav--mega { position: relative; }
 .cd-nav__grup--sag { position: static; }
 .cd-nav__grup--sag > .cd-mega { left: auto; right: 0; }
-/* Köprü `--sag` grubunda işe yaramaz (grup static): panel zaten grubun
-   altında başlıyor, arada boşluk yok. Tüm nav genişliğinde bir köprü
-   başka başlıkların hover'ını da yakalardı. */
+
 .cd-nav__grup--sag::after { display: none; }
 
-/* Başlıkla panel arasında fare boşluğu kalmasın: köprü. */
 .cd-nav__grup::after {
   content: "";
   position: absolute;
@@ -124,8 +77,6 @@ html.dark .cd-mega,
   height: 10px;
 }
 
-/* ---- Panel başlığı (spec §7.2A) ----
-   ikon 32×32 + ad 16/24 w700 + ok svg 9×18, gap 8. */
 .cd-mega__bas {
   display: flex;
   align-items: center;
@@ -134,7 +85,11 @@ html.dark .cd-mega,
   padding-bottom: 12px;
   border-bottom: 1px solid var(--cd-border);
 }
-.cd-mega__ikon { display: inline-flex; flex: none; color: var(--cd-fg); }
+
+.cd-mega__ikon { display: inline-flex; flex: none; color: var(--cd-brand); }
+.cd-mega__ikon .cd-bas-simge { width: 30px; height: 30px; margin: 0; vertical-align: 0; }
+
+.cd-mega__baslik .cd-bas-simge { width: .95em; height: .95em; margin-right: .4em; vertical-align: -.14em; }
 .cd-mega__ad {
   font-size: 16px;
   line-height: 24px;
@@ -149,7 +104,6 @@ html.dark .cd-mega,
   align-items: flex-start;
 }
 
-/* Sütunlar çizgiyle ayrılır (gölgeyle değil). */
 .cd-mega__sutun {
   list-style: none;
   margin: 0;
@@ -163,7 +117,6 @@ html.dark .cd-mega,
 
 .cd-mega__sutun li { margin: 0; }
 
-/* Satır 14/22 w400 (ölçüldü). */
 .cd-mega__sutun a {
   display: block;
   padding: 4px 0;
@@ -176,8 +129,6 @@ html.dark .cd-mega,
 }
 .cd-mega__sutun a:hover { color: var(--cd-fg-strong); text-decoration: underline; }
 
-/* Grup başlığı 14/21 w700 (ölçüldü: `font-metadata-lg font-bold`).
-   Önceki sürüm 12/16 w500'dü — ölçümle uyuşmuyordu. */
 .cd-mega__baslik {
   padding: 4px 0 8px;
   font-size: 14px;
@@ -187,7 +138,6 @@ html.dark .cd-mega,
 }
 .cd-mega__baslik + li a { padding-top: 0; }
 
-/* "Tümünü gör": 14/21 w700, sütun sonunda (ölçüldü). */
 .cd-mega__tumu {
   margin-top: 8px;
   padding-top: 10px;
@@ -200,9 +150,6 @@ html.dark .cd-mega,
   color: var(--cd-fg);
 }
 
-/* ---- Açıklamalı kart ızgarası (spec §7.2A Tip B) ----
-   3 sütun × 256.656 px, sütun arası 16; kart 257×96, padding 12/16,
-   radius 8. Başlık 14/20 w500 + açıklama 12/16 w400 subtle. */
 .cd-mega__kartlar {
   display: grid;
   grid-template-columns: repeat(3, 256px);
@@ -245,36 +192,12 @@ html.dark .cd-mega,
   color: var(--cd-muted);
 }
 
-/* Hareket azaltma: panelde geçiş yok (zaten yok — spec §7.2A "açılış
-   efekti YOK"), yalnız sekme oku dönüşü kapatılıyor. */
 @media (prefers-reduced-motion: reduce) {
   .cd-nav__ok { transition: none; }
 }
 
-/* Mobil: cd.css .cd-nav'ı gizliyor; gezinme hamburger panelinde
- * (cd_mobil.templ). Burada ek kural gerekmiyor. */
-
-/* ---------------------------------------------------------------- mobil gezinme */
-/* CoinDesk'in JS'SİZ hamburger menüsü — BİREBİR.
-   ÖLÇÜM: coindesk.com, 390×844, iPhone UA, JavaScript KAPALI (9 Kasım 2026).
-   CoinDesk iki varyant basıyor: JS açıkken kayan panel, JS kapalıyken
-   `<details name="cd-nav-section">` akordiyonu. İlkemiz JS'siz çalışmak
-   olduğu için no-JS varyantı alındı; aşağıdaki ölçüler ondan:
-
-     panel        : header'ın hemen altı, tam genişlik, beyaz, gölge,
-                    max-h calc(100vh - 57px), dikey kaydırma
-     iç dolgu     : 16 px (alt 192 px — CoinDesk pb-48)
-     satır        : 64 px (16 + 32 satır + 16)
-     başlık       : 14/32 w700, x=32
-     chevron      : 24×24, sağda 40 px kutuda, DÖNMEZ (ölçüldü)
-     alt bağlantı : 14/32 w400, dolgu 16 0 16 24 → 64 px satır
-     ayraç        : tam genişlik 1 px
-     alt blok     : 32 px üst boşluk; Dil · Tema · Oturum, aralarında 32 px
-
-   Masaüstünde gizli; mobilde mega menü gizlenir. */
 .cd-mobil { display: none; }
 
-/* Hamburger: 32×32, ikon 20×20 ortada (CoinDesk ölçümü). */
 .cd-mobil__dugme {
   display: flex;
   align-items: center;
@@ -294,7 +217,6 @@ html.dark .cd-mega,
 .cd-mobil__dugme::marker { content: ""; }
 .cd-mobil__ikon { display: block; width: 20px; height: 20px; }
 
-/* Panel — header'ın hemen altından, tam genişlik. */
 .cd-mobil__panel {
   position: absolute;
   left: 0;
@@ -306,19 +228,14 @@ html.dark .cd-mega,
   overflow-x: hidden;
   overflow-y: auto;
   max-height: calc(100vh - var(--cd-header-h));
-  /* Panel görüntü alanının TAMAMINI kaplar (kullanıcı bildirimi, 9 Kasım
-     2026: menü kısa olduğunda ALTINDA sayfa içeriği görünüyordu). Liste
-     kısaysa bile yükseklik viewport'a sabitlenir; içerik uzunsa
-     `max-height` sınırı kaydırmayı devreye sokar. */
+  
   min-height: calc(100vh - var(--cd-header-h));
-  /* Panel zemini gövdeden bir ton açık yüzey (koyu temada #0e1014):
-     üst çubuk, şerit ve alt bilgiyle aynı katman. */
+  
   background: var(--cd-surface-panel);
   box-shadow: 0 12px 24px rgba(0, 0, 0, 0.12);
 }
 .cd-mobil__ic { padding: 16px 16px 192px; }
 
-/* Liste: satır arası 8 px (CoinDesk `my-2`). */
 .cd-mobil__liste { list-style: none; margin: 0; padding: 0; }
 .cd-mobil__li {
   display: flex;
@@ -326,7 +243,6 @@ html.dark .cd-mega,
   margin: 8px 0;
 }
 
-/* Akordiyon başlığı — 64 px satır. */
 .cd-mobil__grup { width: 100%; }
 .cd-mobil__grup-baslik {
   display: flex;
@@ -349,10 +265,9 @@ html.dark .cd-mega,
   width: 40px;
   flex: none;
 }
-/* Chevron DÖNMEZ — CoinDesk no-JS menüsünde de sabit (ölçüldü). */
+
 .cd-mobil__ok { display: block; width: 24px; height: 24px; color: var(--cd-fg); }
 
-/* Alt bağlantılar — 14/32 w400, sol 24 px. */
 .cd-mobil__alt { list-style: none; margin: 0; padding: 0 0 8px; }
 .cd-mobil__alt-li > a {
   display: block;
@@ -366,7 +281,7 @@ html.dark .cd-mega,
   background: var(--cd-surface-soft);
   text-decoration: none;
 }
-/* Alt liste başlığı (CoinDesk `ml-2 pt-6 pb-4`). */
+
 .cd-mobil__alt-baslik {
   display: block;
   margin-left: 8px;
@@ -376,7 +291,6 @@ html.dark .cd-mega,
   font-weight: 700;
 }
 
-/* Sütunsuz grup: düz bağlantı, akordiyon başlığıyla AYNI satır ölçüsü. */
 .cd-mobil__duz {
   display: block;
   padding: 16px;
@@ -387,10 +301,8 @@ html.dark .cd-mega,
 }
 .cd-mobil__duz:hover { background: var(--cd-surface-soft); text-decoration: none; }
 
-/* Tam genişlik ayraç: panel dolgusunu taşırır (CoinDesk `-mx-4`). */
 .cd-mobil__ayrac { height: 1px; margin: 0 -16px; background: var(--cd-border); }
 
-/* Alt blok: 32 px üst boşluk, satırlar arası 32 px. */
 .cd-mobil__alt-blok {
   display: flex;
   flex-direction: column;
@@ -398,8 +310,6 @@ html.dark .cd-mega,
   margin-top: 32px;
 }
 
-/* Dil satırı: etiket 14/21 w500; hap 12/16 büyük harf, 1 px çerçeve,
-   9999 köşe, dolgu 8 16, ikon arası 4 px. */
 .cd-mobil__dil {
   display: flex;
   align-items: center;
@@ -462,8 +372,6 @@ details.cd-mobil__dil { display: block; }
   color: var(--cd-muted);
 }
 
-/* Tema segmenti: kap surface-subtle, 4 px dolgu, 8 px köşe, aralık 4 px;
-   seçili düğme beyaz zemin + gölge. */
 .cd-mobil__tema {
   display: flex;
   align-items: center;
@@ -496,7 +404,6 @@ details.cd-mobil__dil { display: block; }
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
 }
 
-/* Oturum: iki tam genişlik 48 px düğme, aralarında 12 px. */
 .cd-mobil__oturum {
   display: flex;
   flex-direction: column;
@@ -526,15 +433,11 @@ details.cd-mobil__dil { display: block; }
   background: var(--cd-brand);
   color: var(--cd-dark);
 }
-/* ÖZGÜLLÜK: `.cd a { color: inherit }` (0,1,1) tek sınıflı kuralı ezip
-   koyu temada marka düğmesinin yazısını BEYAZ yapıyordu (sarı üstüne
-   beyaz = 1,4:1). Aynı tuzak `.cd-btn--kayit`'ta da yaşanmıştı. */
+
 a.cd-mobil__btn--birincil { color: var(--cd-dark); }
 .cd-mobil__btn--birincil:hover { background: var(--cd-brand); opacity: 0.9; }
 .cd-mobil__cikis { display: flex; width: 100%; margin: 0; }
 
-/* Masaüstünde mobil gezinme gizli; mobilde mega menü gizlenir.
-   Üst çubuk CoinDesk'te mobilde YAPIŞKAN DEĞİL (xl altında static). */
 @media (max-width: 1023px) {
   .cd-mobil { display: block; }
   .cd-nav--mega { display: none; }

@@ -16,32 +16,9 @@ import (
 	"theblock/site/internal/repo"
 )
 
-// Otomatik AI ile yazım (Faz 194).
-//
-// SORUN: bot hattı RSS özetini olduğu gibi taslağa yazıyor. Ölçüm (2 Kasım
-// 2026, üretim): yayındaki 986 içeriğin 982'si TEK paragraf, 598'i 200
-// karakterin altında. AI ile yazım yolu vardı ama ELLE tetikleniyordu
-// (`AI Kaynak Merkezi → küme → taslak`).
-//
-// ÇÖZÜM: isteğe bağlı otomatik hat. Ayar açıksa:
-//
-//	bot taslağı (kaynaklı, AI'dan geçmemiş)
-//	  → `news` işi kuyruğa yazılır        (ai_jobs, mevcut AI işçisi yürütür)
-//	  → sonuç hazır olunca içeriğe YAZILIR (başlık, spot, gövde, SEO)
-//	  → `applied_at` işaretlenir          (aynı sonuç iki kez yazılmaz)
-//
-// Durum bilinçli olarak `taslak` kalır: yayın kapısı (skor, YMYL, iskelet,
-// çeviri) editörün kararıdır. Otomatik hat YAZAR, yayınlamaz.
-
 // YazimAyarlar otomatik AI ile yazımın açık/kapalı ve hız bilgisidir.
 type YazimAyarlar struct {
-	Aktif bool
-	// Dakika: DAKİKADA kuyruğa yazılacak iş sayısı.
-	//
-	// Ölçüm: bot günde ~3.600 taslak ekliyor (~2,5/dk). Tek AI haber isteği
-	// 60–120 sn sürüyor ve AI işçisi 2 eşzamanlı çalışıyor → pratik hız
-	// ~1–2/dk. Varsayılan 3 bu hızı zorlamaz; kuyruk birikir ve işçi
-	// yetiştikçe erir. Panelden düşürülebilir.
+	Aktif  bool
 	Dakika int
 }
 
@@ -54,9 +31,6 @@ const YazimMaksDakika = 60
 // YazimTurLimiti tek turda ele alınacak en fazla taslak.
 const YazimTurLimiti = 6
 
-// YazimAyarlariOku ayarları okur. Varsayılan KAPALI: bu hat AI maliyeti
-// doğurur ve yazılan metin doğrudan taslağa girer; açılması bilinçli karar
-// olmalı (Faz 188 SEO doldurmadan farkı: o yalnız boş alanları doldurur).
 func YazimAyarlariOku(ctx context.Context, pool *pgxpool.Pool) YazimAyarlar {
 	a := YazimAyarlar{Aktif: false, Dakika: YazimVarsayilanDakika}
 	if b, err := repo.GetSetting(ctx, pool, "bot", "yazim_otomatik"); err == nil {
@@ -93,11 +67,6 @@ func sinirYazimDakika(n int) int {
 	return n
 }
 
-// yazimDeneme başarısız içerikleri işaretler.
-//
-// Neden: aynı içerik her turda yeniden kuyruğa girmesin. repo katmanı da
-// `ai_jobs` başarısızlıklarını sayar; bu sayaç kuyruğa YAZMA kararını verir
-// (iş hiç oluşmadan önce).
 type yazimDeneme struct {
 	mu   sync.Mutex
 	sayi map[int64]int
@@ -121,11 +90,6 @@ func (d *yazimDeneme) basarili(id int64) {
 	delete(d.sayi, id)
 }
 
-// RunYazimDoldurma otomatik AI ile yazım döngüsünü başlatır.
-//
-// Ayar KAPALIYKEN hiçbir şey yapmaz (AI çağrısı yok, DB taraması yok).
-// Açıldığında bir sonraki turda (en çok 1 dakika) devreye girer; süreç
-// yeniden başlatmaya gerek yok.
 func RunYazimDoldurma(ctx context.Context, pool *pgxpool.Pool, aiclient *ai.Client, logger *slog.Logger, every time.Duration) {
 	if every <= 0 {
 		every = time.Minute
@@ -145,11 +109,6 @@ func RunYazimDoldurma(ctx context.Context, pool *pgxpool.Pool, aiclient *ai.Clie
 	}
 }
 
-// yazimTuru tek tur: bekleyenleri kuyruğa yaz, hazır sonuçları uygula.
-//
-// İki iş ayrı: kuyruğa yazma hızlı (DB), uygulama da hızlı (DB). AI çağrısı
-// burada YAPILMAZ — var olan AI işçisine bırakılır (eşzamanlılık, yeniden
-// deneme, maliyet kaydı orada).
 func yazimTuru(ctx context.Context, pool *pgxpool.Pool, aiclient *ai.Client, logger *slog.Logger, d *yazimDeneme) {
 	ayar := YazimAyarlariOku(ctx, pool)
 	if !ayar.Aktif {
@@ -195,16 +154,10 @@ func yazimTuru(ctx context.Context, pool *pgxpool.Pool, aiclient *ai.Client, log
 		if d.asildi(c.ID) {
 			continue
 		}
-		// Sistem kullanıcısı: bot yazarı. İzin denetimi `Enqueue`da editöre
-		// bakar; otomatik hatta kullanıcı yok. Enqueue yerine createJob
-		// kullanılıyor ki sahipsiz iş 30 dakikada düşmesin.
 		act, ok := ActionByID("news")
 		if !ok {
 			return
 		}
-		// `ai_jobs.user_id` bir kullanıcıyı gösterir; 0 yazmak FK ihlali
-		// olurdu. İçeriğin yazarı (bot editörü) sahip olarak yazılır: iş
-		// geçmişinde kimin içeriği olduğu görünür kalır.
 		req := Request{
 			ContentID: c.ID,
 			User:      auth.User{ID: c.AuthorID},
@@ -278,10 +231,6 @@ func yazimSonuclariUygula(ctx context.Context, pool *pgxpool.Pool, logger *slog.
 	return n, nil
 }
 
-// yazimSonucu AI sonucundan yazılacak alanları çıkarır.
-//
-// Öncelik `Fields`ta (normalizeResult oraya yazıyor), yoksa Sections.
-// Gövde yoksa sonuç uygulanmaz: boş gövde içeriği bozardı.
 func yazimSonucu(res Result) (repo.YazimSonucu, bool) {
 	title := strings.TrimSpace(res.Fields["title"])
 	if title == "" {

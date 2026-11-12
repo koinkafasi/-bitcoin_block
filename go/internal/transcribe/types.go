@@ -1,6 +1,3 @@
-// Package transcribe röportaj ses kayıtlarını metne çevirir. Sağlayıcıdan
-// bağımsız bir arayüz sunar; MVP'de AssemblyAI kullanılır, testlerde fake
-// sağlayıcı çalışır.
 package transcribe
 
 import (
@@ -13,13 +10,6 @@ import (
 // ErrDisabled sağlayıcı anahtarı yoksa döner.
 var ErrDisabled = errors.New("transkripsiyon sağlayıcısı yapılandırılmadı")
 
-// Word tek bir kelimenin zaman damgasıdır. Karaoke vurgu (oynarken geçerli
-// kelimeyi işaretleme), kelimeye tıklayıp o saniyeye sarma ve kelime
-// hassasiyetinde altyazı üretimi bu veriye dayanır.
-//
-// Konuşmacı alanı yoktur: kelimeler her zaman bir segmentin içinde durur ve
-// segmentin konuşmacısını paylaşır. Alanı tekrarlamak 40 dakikalık bir
-// röportajda ~6.000 kez gereksiz yer tutardı.
 type Word struct {
 	StartMS    int64   `json:"start_ms"`
 	EndMS      int64   `json:"end_ms"`
@@ -60,9 +50,6 @@ type Result struct {
 	ProviderJobID string
 }
 
-// ProgressFunc 0–100 arası ilerlemeyi ve varsa sağlayıcı iş kimliğini
-// bildirir. Sağlayıcı poll döngüsünde çağırır; servis bu sinyalle DB'yi ve
-// iptal durumunu günceller.
 type ProgressFunc func(percent int, providerJobID string)
 
 // Provider tek bir ASR sağlayıcısıdır.

@@ -35,9 +35,6 @@ func (s *Server) handleMediaURLUpload(w http.ResponseWriter, r *http.Request) {
 	}
 	ctx, cancel := context.WithTimeout(r.Context(), 20*time.Second)
 	defer cancel()
-	// #nosec G704 -- Hedef validateBookmarkURL'den geçti (yalnız http/https,
-	// özel/loopback IP reddi) ve istemci safeRemoteHTTPClient (yönlendirmede
-	// yeniden doğrulama). gosec sanitizer'ı tanımıyor; SSRF kapalı.
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, target.String(), nil)
 	if err != nil {
 		mediaErr("Adres geçersiz.")

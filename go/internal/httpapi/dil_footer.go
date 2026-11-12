@@ -10,16 +10,6 @@ func (s *Server) footerConfigLang(ctx context.Context, locale string) *FooterCon
 	return s.footerYerellestir(s.footerConfig(ctx), locale)
 }
 
-// footerYerellestir var olan bir alt bilgi yapılandırmasını yerelleştirir.
-//
-// Varsayılan alt bilgi bağlantıları Türkçe sabittir ("Künyemiz", "Bize
-// Ulaşın"). Çeviri `translations` tablosunda `footer.<url-slug>`
-// anahtarıyla tutulur; yoksa Türkçe etiket korunur.
-//
-// Neden ayrı fonksiyon: alt bilgi onlarca handler'da `s.footerConfig(ctx)`
-// ile kuruluyor. Hepsini tek tek değiştirmek yerine renderPublic içinde tek
-// noktada yerelleştiriliyor; aksi hâlde /en/arama gibi sayfalarda alt bilgi
-// Türkçe kalıyordu (ölçüldü).
 func (s *Server) footerYerellestir(fc *FooterConfig, locale string) *FooterConfig {
 	if fc == nil || locale == "" || locale == "tr" || s.i18n == nil {
 		return fc

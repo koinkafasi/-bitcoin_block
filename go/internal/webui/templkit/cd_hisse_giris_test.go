@@ -6,12 +6,6 @@ import (
 	"testing"
 )
 
-// cdHisseGiris: /price → hisse detay köprüsü sözleşmesi.
-//
-// NEDEN TEST: bu bileşen hisse sayfalarının sitedeki TEK giriş noktası.
-// Bağlantı üretimi sessizce bozulursa (Href boş, bölüm hiç basılmaz)
-// sayfalar yalnız doğrudan adresle açılır hâle döner ve kimse fark etmez.
-
 func hisseGirisCiz(t *testing.T, rows []CDPriceRow, tumHref string) string {
 	t.Helper()
 	var sb strings.Builder

@@ -1,6 +1,4 @@
-/* media.js — medya kütüphanesi paneli etkileşimleri (templ'den ayrıldı).
- * Düzenleme modalı, dönüşümler, URL kopyalama, sürükle-bırak yükleme,
- * ızgara/liste görünümü. HTMX swap sonrası otomatik yeniden bağlanır. */
+
 (function () {
   'use strict';
 
@@ -93,7 +91,7 @@
         if (form.requestSubmit) form.requestSubmit(); else form.submit();
       });
     });
-    /* ---- Faz 186: kart galerisi ---- */
+    
     const durum = { surukle: 0 };
     const hareketAz = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -102,15 +100,7 @@
     const ROW = 4;
     const GAP = 14;
 
-    /* Oran sınırları.
-     *
-     * Bir kart sütun genişliğinin en çok 2 katı yüksek (ORAN_MIN = .5),
-     * en çok 2.5 katı geniş (ORAN_MAX) olabilir.
-     *
-     * Sınır neden gerekli: bir medyanın ÖZGÜN ölçüsü 750×15873 (uzun
-     * şerit ekran görüntüsü), thumb'ı ise 422×422. Sınırsız oranla kart
-     * 215×4554 px oluyordu; ızgarada tek başına bir sütun boyu boşluk
-     * (ölçüldü: span 1142). */
+    
     const ORAN_MIN = 0.5;
     const ORAN_MAX = 2.5;
     function sinirla(r) {
@@ -171,12 +161,7 @@
       boyutZaman = setTimeout(masonry, 120);
     });
 
-    /* Görsel yüklenince gerçek oranı karta yaz ve ızgarayı tazele.
-     *
-     * Izgara ilk kurulduğunda görseller henüz yüklenmemiş olabiliyor; o
-     * anda oran sunucunun verdiği özgün ölçüden geliyor ki bu thumb'la
-     * uyuşmayabiliyor. 'load' olayı kabarcıklanmadığı için yakalama
-     * fazında dinleniyor (aynı 'error' gibi). */
+    
     let oranZaman = null;
     const oranTazele = () => {
       clearTimeout(oranZaman);
@@ -193,11 +178,7 @@
       oranTazele();
     }, true);
 
-    /* Kırık görsel yedeği.
-     * Thumb üretilemeyen/404 olan medyada tarayıcı kırık ikon + alt metni
-     * basıyor; alt metin kart başlığının üstüne biniyordu (ölçüldü: izole
-     * ortamda 60 kartın 8'i). Kart yerine nötr bir yer tutucu gösterilir.
-     * 'error' olayı kabarcıklanmadığı için yakalama fazında dinleniyor. */
+    
     panel.addEventListener('error', (ev) => {
       const img = ev.target;
       if (!img || img.tagName !== 'IMG') return;
@@ -221,7 +202,7 @@
     });
     secimGuncelle();
 
-    /* ---- Sürükle-bırak: galerinin her yeri hedef ---- */
+    
     const dropInput = panel.querySelector('[data-mg-file]');
     const browseBtn = panel.querySelector('[data-mg-browse]');
     if (browseBtn && dropInput) {
@@ -258,7 +239,7 @@
       yukle(dosyalar);
     });
 
-    /* ---- Yükleme: halka + yüzde + dosya adı ---- */
+    
     const CEVRE = 2 * Math.PI * 22; // referansla aynı: r=22
     function yuklemeKarti(ad) {
       const el = document.createElement('figure');
@@ -377,11 +358,7 @@
       sirayla(0);
     }
 
-    /* Görünüm anahtarı EN SONDA: applyView masonry() çağırıyor ve masonry
-     * yukarıdaki ROW/GAP sabitlerini kullanıyor. Bu blok daha önce
-     * çalıştığında "Cannot access 'GAP' before initialization" hatası
-     * veriyordu (TDZ): init yarıda kalıyor, ne ızgara kuruluyor ne de
-     * görünüm düğmeleri bağlanıyordu. */
+    
     const viewButtons = panel.querySelectorAll('[data-media-view]');
     const applyView = (view) => {
       panel.classList.toggle('media-list-view', view === 'list');
@@ -390,15 +367,7 @@
       // span kalırsa kart 800px yüksekliğe uzuyordu.
       if (typeof masonry === 'function') masonry();
     };
-    /* ---- Sonsuz kaydırma sonrası bakım (Faz 187) ----
-     *
-     * Sunucu sayfaları yıl/ay gruplarına böler. Sayfa sınırı bir ayın
-     * ortasına düşebiliyor; o zaman aynı ay etiketi iki bölüm olarak
-     * geliyor. Burada ikinci bölümün kartları birinciye taşınır, bölüm
-     * silinir ve sayaç yeniden yazılır — kullanıcı tek grup görür.
-     *
-     * Ayrıca yeni kartlar için masonry span'ları ve seçim durumu
-     * tazelenir. */
+    
     const gruplariBirlestir = () => {
       const liste = document.getElementById('medyaListe');
       if (!liste) return;
@@ -433,13 +402,13 @@
     window.__tbMediaTazele = listeTazele;
 
     let savedView = 'grid';
-    try { savedView = localStorage.getItem('tb-media-view') || 'grid'; } catch (_) { /* yoksay */ }
+    try { savedView = localStorage.getItem('tb-media-view') || 'grid'; } catch (_) {  }
     applyView(savedView);
     viewButtons.forEach((btn) => {
       btn.onclick = () => {
         const view = btn.dataset.mediaView === 'list' ? 'list' : 'grid';
         applyView(view);
-        try { localStorage.setItem('tb-media-view', view); } catch (_) { /* yoksay */ }
+        try { localStorage.setItem('tb-media-view', view); } catch (_) {  }
       };
     });
   }

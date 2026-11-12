@@ -1,14 +1,5 @@
 package templkit
 
-// Bağımlılıksız inline SVG grafik.
-//
-// NEDEN SVG + KENDİ KODUMUZ: site CSP'si `script-src 'self'`; harici grafik
-// kütüphanesi (Chart.js vb.) yüklenemez. Ayrıca grafik sunucuda üretilir:
-// JS kapalıyken de görünür, ilk boyamada hazırdır, istemci maliyeti sıfırdır.
-//
-// Koordinatlar `viewBox` içinde 0..W / 0..H normalize edilir; SVG
-// `preserveAspectRatio="none"` ile kart genişliğine yayılır (ölçüler CSS'te).
-
 // CDGrafikKart tek bir grafik paneli (fiyat ya da zincir-üstü metrik).
 type CDGrafikKart struct {
 	Baslik    string
@@ -31,10 +22,6 @@ const (
 	GrafikH = 180.0
 )
 
-// CDGrafikYolu değerleri SVG yoluna çevirir.
-//
-// Dönen: çizgi yolu, dolgu yolu, en küçük, en büyük, geçerli mi.
-// Tek değer ya da tamamı eşitse düz çizgi üretilir (sıfıra bölme yok).
 func CDGrafikYolu(deger []float64) (yol, alan string, min, maks float64, ok bool) {
 	if len(deger) < 2 {
 		return "", "", 0, 0, false

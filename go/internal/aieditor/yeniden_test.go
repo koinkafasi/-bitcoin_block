@@ -5,11 +5,6 @@ import (
 	"testing"
 )
 
-// Faz 204 — toplu yeniden yazımın kalite kapısı.
-//
-// ÖLÇÜM: yayındaki 982 içeriğin tamamı tek paragraf. Kapı, AI çıktısı
-// tekrar ince kalırsa öneriyi yazmaz; uyarı ise öneriyle birlikte görünür.
-
 func yenidenIyiMetin() []string {
 	// Her paragraf farklı: tekrar cümle kapısı özdeş metni yakalar.
 	return []string{
@@ -63,9 +58,6 @@ func TestYenidenKapisiKisaGovdeyiEngeller(t *testing.T) {
 	}
 }
 
-// Pilot ölçümü (3 Kasım 2026): kaynak 94-226 karakterlik RSS özetiydi, model
-// 300-540 karakter yazdı ve sabit 700 eşiği 20/20 öneriyi reddetti. Eşik
-// kaynağa göre ölçeklenince aynı çıktı geçerli olmalı — uydurma zorlanmadan.
 func TestYenidenKapisiKisaKaynaktaEsigiOlecekler(t *testing.T) {
 	paragraflar := []string{
 		"Hizmet üretim endeksi ağustosta yıllık yüzde 2,3 artış gösterdi. " +

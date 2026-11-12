@@ -5,9 +5,6 @@ import (
 	"testing"
 )
 
-// TestRSSOkuTurlarBağlantıdanBelirlenir: short ile normal video AYNI RSS'te
-// gelir; ayrım yalnız bağlantı yolundan yapılır. Karıştırılırsa ana sayfada
-// dikey klip yuvasına 16:9 video düşer.
 func TestRSSOkuTurlarBaglantidanBelirlenir(t *testing.T) {
 	rss := `<?xml version="1.0" encoding="UTF-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom" xmlns:yt="http://www.youtube.com/xml/schemas/2015" xmlns:media="http://search.yahoo.com/mrss/">
@@ -62,10 +59,6 @@ func TestRSSOkuTurlarBaglantidanBelirlenir(t *testing.T) {
 	}
 }
 
-// TestYayinlarOkuKendiBasligi: sayfada her video birkaç kez geçer; kimlik ve
-// başlık AYRI toplanıp indeksle eşleştirilirse başlıklar kayar (ölçüldü:
-// 30 kimlik / 30 başlık, kimlikler tekrarlı). Bu test, her kilit nesnesinin
-// KENDİ başlığının alındığını doğrular.
 func TestYayinlarOkuKendiBasligi(t *testing.T) {
 	html := `<html><script>var ytInitialData = {"contents":{"a":[` +
 		`{"lockupViewModel":{"contentId":"MctQ1WmwSaA","metadata":{"lockupMetadataViewModel":{"title":{"content":"Birinci yayın"}}}}},` +
@@ -84,9 +77,6 @@ func TestYayinlarOkuKendiBasligi(t *testing.T) {
 	}
 }
 
-// TestCanliVideoID: kanal canlı değilken /live sayfasının canonical'ı KANAL
-// adresidir; canlıyken izleme adresidir. İkisi karıştırılırsa ana sayfada
-// "CANLI" rozeti yanlış yanar.
 func TestCanliVideoID(t *testing.T) {
 	canli := `<html><head><link rel="canonical" href="https://www.youtube.com/watch?v=abc12345678"></head><body>"isLive":true</body></html>`
 	if id := CanliVideoID(canli); id != "abc12345678" {

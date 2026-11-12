@@ -35,10 +35,6 @@ func collabServiceUp(raw string) bool {
 	if !strings.Contains(host, ":") {
 		host += ":80"
 	}
-	// #nosec G704 -- Hedef COLLAB_URL ortam değişkeninden gelir (operatör
-	// yapılandırması), HTTP isteğiyle gelen veriden DEĞİL. Meslektaş
-	// servis iç ağda olduğu için genel-IP doğrulaması (SafeFetchClient)
-	// burada bilinçli olarak uygulanmaz. Yalnız TCP el sıkışması yapılır.
 	conn, err := net.DialTimeout("tcp", host, 400*time.Millisecond)
 	if err != nil {
 		return false
@@ -78,12 +74,6 @@ func (s *Server) handleCollabToken(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// collabYerelAğ collab uçlarına yalnız yerel/özel ağdan erişime izin verir.
-//
-// Bu rotalar public mux üzerinde duruyordu; tek koruma paylaşılan sırdı.
-// Sır sızarsa (günlük, yapılandırma hatası) dışarıdan içerik okunup
-// yazılabiliyordu. Collab sunucusu aynı makinede/özel ağda çalıştığı için
-// kaynağı da yerel olmak zorunda; dışarıdan gelen istekler 404 görür.
 func collabYerelAğ(r *http.Request) bool {
 	return isPrivateIP(clientIP(r))
 }
@@ -117,9 +107,6 @@ func (s *Server) handleCollabSave(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "geçersiz doküman", http.StatusBadRequest)
 		return
 	}
-	// İyimser eşzamanlılık: istemci okuduğu sürümü X-Collab-Version ile
-	// bildirir. Arada başka bir kaynak (panel formu) yazdıysa 409 döner;
-	// böylece sessiz "son yazan kazanır" veri kaybı yerine çakışma görünür.
 	expected := 0
 	if v := strings.TrimSpace(r.Header.Get("X-Collab-Version")); v != "" {
 		if n, err := strconv.Atoi(v); err == nil && n > 0 {

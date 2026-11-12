@@ -1,16 +1,4 @@
-/* =====================================================================
-   Üye girişi / kayıt — huddle davranışı (Faz 198)
-   =====================================================================
-   Tek kaynak: `.auth[data-mood]`. Bu betik yalnız o özniteliği ve form
-   durumlarını yönetir; çizim tamamen CSS'te.
 
-   Durumlar: idle → nosy (e-posta) → shy (şifre) → exposed (şifre açık)
-   + busy (gönderiliyor) + wrong (sunucu reddi). "win" yok: giriş başarılı
-   olunca sayfa sunucudan /hesabim'e yönlenir.
-
-   Fare: yalnız gerçek fare (pointerType === "mouse") izlenir; dokunmatikte
-   bakış sabit kalır. Hareket azaltma açıksa izleme ve nabız kapalıdır.
-   ===================================================================== */
 (function () {
   "use strict";
 
@@ -45,9 +33,7 @@
     if (state.busy) return "busy";
     if (state.refused) return "wrong";
     if (state.revealed && passwordEl && passwordEl.value) return "exposed";
-    /* Kayıt formunda `#login` yok; karşılaştırmayı alanın kendisi üzerinden
-       yapmak `null === null` yüzünden kayıt sayfasını sürekli "nosy"
-       bırakıyordu (ölçüldü). */
+    
     if (state.focus && state.focus.type === "password") return "shy";
     if (state.focus) return "nosy";
     return "idle";
@@ -59,12 +45,12 @@
     schedulePeek(mood === "shy");
   }
 
-  /* --- utangaçken bir tanesi dayanamaz, bakar ------------------------ */
+  
   var peekTimer = null;
   var peekOff = null;
 
   function schedulePeek(active) {
-    var ink = auth.querySelector('[data-mate="ink"]');
+    var ink = auth.querySelector('[data-mate="eth"]');
     if (!ink) return;
     if (!active || lessMotion.matches) {
       window.clearTimeout(peekTimer);
@@ -84,13 +70,71 @@
     peekTimer = window.setTimeout(cycle, 1400);
   }
 
-  /* --- fareyi izleyen bakış ------------------------------------------ */
+  
   var box = null;
   var gaze = { x: 0, y: 0, tx: 0, ty: 0 };
   var frame = null;
 
   function measure() {
     if (huddle) box = huddle.getBoundingClientRect();
+    matesOlc();
+  }
+
+  
+  var mates = [];
+
+  function matesOlc() {
+    var list = auth.querySelectorAll("[data-mate]");
+    if (!mates.length) {
+      for (var j = 0; j < list.length; j++) {
+        mates.push({ el: list[j], cx: 0, cy: 0, yaricap: 1, near: 0, spinAt: 0 });
+      }
+    }
+    for (var i = 0; i < mates.length; i++) {
+      var r = mates[i].el.getBoundingClientRect();
+      if (!r.width) continue;
+      mates[i].cx = r.left + r.width / 2;
+      mates[i].cy = r.top + r.height / 2;
+      // Etki yarıçapı kutudan biraz geniş: fare yaklaşırken tepki
+      // kutunun kenarında birden başlamasın.
+      mates[i].yaricap = Math.max(r.width, r.height) * 0.78;
+    }
+    olcumZamani = Date.now();
+  }
+
+  
+  var olcumZamani = 0;
+
+  function yakinlik(x, y) {
+    if (Date.now() - olcumZamani > 500) matesOlc();
+    for (var i = 0; i < mates.length; i++) {
+      var m = mates[i];
+      var dx = x - m.cx;
+      var dy = y - m.cy;
+      var n = clamp(1 - Math.sqrt(dx * dx + dy * dy) / m.yaricap, 0, 1);
+      if (Math.abs(n - m.near) > 0.012) {
+        m.near = n;
+        m.el.style.setProperty("--near", n.toFixed(2));
+      }
+      if (n > 0.88) cevir(m);
+    }
+  }
+
+  function cevir(m) {
+    var now = Date.now();
+    if (now - m.spinAt < 2800) return;
+    m.spinAt = now;
+    m.el.classList.add("is-spinning");
+    window.setTimeout(function () {
+      m.el.classList.remove("is-spinning");
+    }, 960);
+  }
+
+  function yakinligiBosalt() {
+    for (var i = 0; i < mates.length; i++) {
+      mates[i].near = 0;
+      mates[i].el.style.setProperty("--near", "0");
+    }
   }
 
   function clamp(v, min, max) {
@@ -131,15 +175,20 @@
 
   if (!lessMotion.matches) {
     window.addEventListener("pointermove", function (e) {
-      if (e.pointerType === "mouse") lookAt(e.clientX, e.clientY);
+      if (e.pointerType !== "mouse") return;
+      lookAt(e.clientX, e.clientY);
+      yakinlik(e.clientX, e.clientY);
     }, { passive: true });
+    // Fare pencereden çıkınca kahramanlar normal boyutlarına döner.
+    document.addEventListener("pointerleave", yakinligiBosalt);
+    window.addEventListener("blur", yakinligiBosalt);
     window.addEventListener("resize", measure, { passive: true });
     window.addEventListener("scroll", measure, { passive: true });
     window.addEventListener("load", measure);
     measure();
   }
 
-  /* --- alan hataları -------------------------------------------------- */
+  
   function errBox(name) {
     return auth.querySelector('[data-err="' + name + '"]');
   }
@@ -171,9 +220,37 @@
     setError(passwordEl, "");
   }
 
+  
+  var pozTimer = null;
+
+  function pozYaz(metin) {
+    var etiketler = auth.querySelectorAll("[data-kur-poz]");
+    for (var i = 0; i < etiketler.length; i++) etiketler[i].textContent = metin;
+  }
+
+  function pozisyon(tip) {
+    window.clearTimeout(pozTimer);
+    if (!tip) {
+      auth.removeAttribute("data-pos");
+      pozYaz("");
+      return;
+    }
+    auth.dataset.pos = tip;
+    pozYaz(tip === "long" ? "LONG" : "SHORT");
+    if (tip === "short") {
+      // Isınma bir an sürer; sonra kahramanlar sakin hâline döner.
+      pozTimer = window.setTimeout(function () { pozisyon(null); }, 2800);
+    }
+  }
+
+  function pozToparla() {
+    if (auth.dataset.pos === "long") pozisyon("short");
+  }
+
   function refuse(el, msg) {
     setError(el, msg);
     state.refused = true;
+    pozisyon("long");
     render();
     say(msg);
     if (el) {
@@ -182,8 +259,7 @@
     }
   }
 
-  /* Form alanları: odak durumu karakterlerin tek girdisi. Kayıt formunda
-     ad/e-posta da grubu meraklandırır (yalnız giriş alanı değil). */
+  
   auth.querySelectorAll(".afield input").forEach(function (el) {
     el.addEventListener("focus", function () {
       state.focus = el;
@@ -196,6 +272,8 @@
     });
     el.addEventListener("input", function () {
       if (state.refused) state.refused = false;
+      // Düzeltmeye başlamak pozisyonu çevirir: buz çözülür, ısınırlar.
+      pozToparla();
       if (errBox(el.name) && errBox(el.name).hasAttribute("data-shown")) setError(el, "");
       render();
     });
@@ -207,7 +285,7 @@
     });
   }
 
-  /* --- Caps Lock ------------------------------------------------------ */
+  
   var capsOn = false;
   function capsCheck(e) {
     var on = typeof e.getModifierState === "function" && e.getModifierState("CapsLock");
@@ -227,7 +305,7 @@
     });
   }
 
-  /* --- şifreyi göster ------------------------------------------------- */
+  
   if (peek && passwordEl) {
     peek.addEventListener("click", function () {
       state.revealed = !state.revealed;
@@ -236,7 +314,7 @@
       try {
         passwordEl.setSelectionRange(sel.start, sel.end);
       } catch (e) {
-        /* tür değişimi seçimi sıfırlayabilir; zararsız */
+        
       }
       peek.setAttribute("aria-pressed", String(state.revealed));
       if (peekLabel) peekLabel.textContent = state.revealed ? "Şifreyi gizle" : "Şifreyi göster";
@@ -246,7 +324,7 @@
     });
   }
 
-  /* --- gönderim (yalnız giriş formu) ---------------------------------- */
+  
   if (form && form.getAttribute("data-form") === "giris") {
     form.addEventListener("submit", function (e) {
       if (state.busy) {
@@ -277,7 +355,7 @@
     });
   }
 
-  /* Kayıt formu: tarayıcı doğrulaması geçtiyse düğme "gönderiliyor" olur. */
+  
   if (form) {
     form.addEventListener("submit", function (e) {
       if (e.defaultPrevented) return;
@@ -286,18 +364,24 @@
     });
   }
 
-  /* Geri dönüşte (bfcache) düğme "gönderiliyor" durumunda kalmasın. */
+  
   window.addEventListener("pageshow", function () {
     state.busy = false;
     if (cta) cta.removeAttribute("data-busy");
     render();
   });
 
-  /* --- açılış --------------------------------------------------------- */
+  
   // Sunucudan hata ile gelindiyse karakterler "wrong" kalır (sarsıntı bir kez
   // oynar); kullanıcı alana yazmaya başlayınca sakinleşirler. Zamanlayıcıyla
   // 1,4 sn sonra gülümsemeye dönmek, hata kutusu ekranda dururken yanlış
   // mesaj veriyordu.
+  if (auth.dataset.mood === "wrong") {
+    // Sunucu reddiyle gelindi: kur rozetleri açılır, pozisyon LONG.
+    // Rozetler gelişin (auth-arrive) bitmesini bekler, yoksa aşağıdan
+    // süzülen kahramanların üstünde havada asılı kalıyorlar.
+    window.setTimeout(function () { pozisyon("long"); }, 900);
+  }
   if (loginEl && auth.dataset.mood === "wrong") {
     loginEl.focus({ preventScroll: true });
     if (loginEl.value) loginEl.select();

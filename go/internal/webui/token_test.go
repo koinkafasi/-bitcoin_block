@@ -10,15 +10,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// Tasarım token'ı eşitliği (Faz 159).
-//
-// Pacely'nin derlenmiş CSS'inden token'lar ÇIKARILDI ve bizimkilerle
-// karşılaştırıldı. Kopyalanan şey DEĞER (renk, yükseklik, yarıçap, eğri);
-// kod değil — ölçülmüş tasarım değerleri telif konusu değil.
-//
-// Bu testler değerlerin sessizce kaymasını engelliyor: birisi "biraz daha
-// koyu olsun" diye --sh-border'ı değiştirirse burada durur.
-
 func cssMetni(t *testing.T) string {
 	t.Helper()
 	b, err := os.ReadFile(filepath.Join("static", "admin-pano.css"))
@@ -167,11 +158,6 @@ func TestSabitleDugmesiEmojiKullanmaz(t *testing.T) {
 	assert.Contains(t, s, "aria-label", "düğmenin erişilebilir adı olmalı")
 }
 
-// TestFormAlanlariPacelyIleAyni: 42px, r12, iç çizgi, 0 13px, 14px/500.
-//
-// Ölçüm (izole örnek, /admin/icerikler): alanlar 36px yüksekliğindeydi ve
-// 1px KENARLIK taşıyordu. Kenarlık kutu ölçüsüne girdiği için ızgara
-// hücreleri 2px kayıyordu; Pacely iç çizgi (inset shadow) kullanıyor.
 func TestFormAlanlariPacelyIleAyni(t *testing.T) {
 	blok := blokBul(t, ".input, .select, .textarea")
 	assert.Contains(t, blok, "height: 42px")
@@ -187,11 +173,6 @@ func TestFormAlanlariPacelyIleAyni(t *testing.T) {
 		"odak halkası iç çizgi olmalı; dış çizgi alanı büyütüyordu")
 }
 
-// TestSelectOkuPacelyIleAyni: tarayıcının oku değil, iki çizgili ok.
-//
-// appearance:none olmadan ok, seçicinin iç boşluğuna göre kayıyor ve her
-// işletim sisteminde farklı boyutta çiziliyor (Windows'ta geniş, macOS'ta
-// ince). Ölçüm: ok konumu Pacely'de sağdan 17/12px.
 func TestSelectOkuPacelyIleAyni(t *testing.T) {
 	blok := blokBul(t, "select.input, select.select")
 	assert.Contains(t, blok, "appearance: none")
@@ -200,11 +181,6 @@ func TestSelectOkuPacelyIleAyni(t *testing.T) {
 	assert.Contains(t, blok, "background-size: 5px 5px")
 }
 
-// TestFiltreIzgarasiHizali: satır içi max-width'ler yerine eşit sütunlar.
-//
-// Regresyon: her filtre alanına satır içi max-width verilmişti
-// (150/170/130/150/150/190/185/110). 2 sütunlu ızgarada her hücre kendi
-// genişliğinde kaldığı için sağ kenarlar tırtıklı çıkıyordu.
 func TestFiltreIzgarasiHizali(t *testing.T) {
 	blok := blokBul(t, ".filtre-grid")
 	assert.Contains(t, blok, "grid-template-columns: repeat(6, minmax(0, 1fr))")
@@ -216,10 +192,6 @@ func TestFiltreIzgarasiHizali(t *testing.T) {
 
 	assert.Contains(t, s, `class="filtre-grid"`)
 
-	// Yalnız filtre formunun İÇİNE bakıyoruz: toplu işlem çubuğu ve
-	// "görünümü kaydet" satırı flex; oradaki max-width'ler meşru (öğeler
-	// içeriğe göre daralsın diye). Filtre formunda ise satır içi genişlik
-	// sütunları bozuyordu.
 	i := strings.Index(s, `class="filtre-grid"`)
 	require.Greater(t, i, 0)
 	j := strings.Index(s[i:], "</form>")
@@ -232,10 +204,6 @@ func TestFiltreIzgarasiHizali(t *testing.T) {
 		"arama ve sıralama iki sütun kaplamalı")
 }
 
-// TestFiltreEtiketlerindeEmojiYok: emoji öneki etiketi kirletiyordu.
-//
-// Emoji, simge seti yerel SVG'ye geçtikten (Faz 153) sonra kalan tek
-// karışık öğeydi; ayrıca emoji yazı tipi olmayan sistemlerde kutu çiziliyor.
 func TestFiltreEtiketlerindeEmojiYok(t *testing.T) {
 	b, err := os.ReadFile(filepath.Join("templkit", "icerikler.templ"))
 	require.NoError(t, err)
@@ -246,10 +214,6 @@ func TestFiltreEtiketlerindeEmojiYok(t *testing.T) {
 	}
 }
 
-// TestYikiciDugmeDoluKirmiziDegil: Pacely .btn--danger kart + kırmızı metin.
-//
-// 40 satırlık tabloda her satırda dolu kırmızı düğme sayfanın en ağır öğesi
-// oluyordu; her satır bir alarm gibi duruyordu.
 func TestYikiciDugmeDoluKirmiziDegil(t *testing.T) {
 	blok := blokBul(t, ".btn.danger")
 	assert.Contains(t, blok, "background: var(--card)")
@@ -270,12 +234,6 @@ func TestYikiciDugmeDoluKirmiziDegil(t *testing.T) {
 		"hayalet düğme beyaz kart üstünde çerçevesiz düz metin gibi okunuyordu")
 }
 
-// TestBlokTutamaciKonumlanir: tutamaç etiketin üstüne biniyordu.
-//
-// Tiptap drag-handle dinlenirken top:0;left:0 bırakıyor. .block-editor
-// konumlanmış olmadığı için tutamaç daha yukarıdaki bir kapsayıcıya göre
-// yerleşiyordu — ölçüm: 280,127, yani "İçerik Türü" etiketinin tam üstü.
-// Düzeltmeden sonra 281,642 (editörün sol üst köşesi).
 func TestBlokTutamaciKonumlanir(t *testing.T) {
 	b, err := os.ReadFile(filepath.Join("templkit", "icerikform.templ"))
 	require.NoError(t, err)

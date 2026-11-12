@@ -7,14 +7,6 @@ import (
 	"theblock/site/internal/repo"
 )
 
-// attachQuoteSources her alıntıyı transkript segmentine bağlar (Faz 124).
-//
-// `extra["media_id"]` ses taslağı akışında doldurulur. Segmentler yüklenir,
-// alıntının en iyi örtüştüğü segment bulunur ve saniyesi/kullanıcısı sonuca
-// yazılır. Böylece editör alıntının kaynağını görüp kaydı oradan dinleyebilir.
-//
-// Hata durumunda sessizce döner: alıntı listesi yine gösterilir, yalnız
-// saniye bağlantısı olmaz.
 func (s *Service) attachQuoteSources(ctx context.Context, extra map[string]any, r *Result) {
 	if len(r.Quotes) == 0 || extra == nil {
 		return

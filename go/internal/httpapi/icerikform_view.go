@@ -155,33 +155,17 @@ func (s *Server) icerikFormViewFrom(d *tmplData) templkit.IcerikFormView {
 	for _, r := range f.Rozets {
 		v.Rozets = append(v.Rozets, templkit.IcerikRozet{Code: r.Code, On: r.On})
 	}
-	// Faz 190 — dil satırları durum bilgisiyle gelir (formData'da hazırlanır).
-	//
-	// Eski eşleme yalnız {URL, Label, Active} kopyalıyordu; şablondaki "+"
-	// bağlantıları GET ile açılıp 404 dönüyordu.
 	v.Langs = f.LangRows
 	v.CeviriSayisi = f.CeviriSayisi
 	v.IcerikLocale = f.Content.Locale
 	v.IcerikLocaleAd = s.dilAdiTR(f.Content.Locale)
 	v.CeviriMi = f.Content.TranslationOf != nil
-	// Kaynak kimliği: çeviri kökü. Çeviri DEĞİLSE içeriğin kendisi kaynaktır.
-	//
-	// Bu alan boş kalınca AI çeviri düğmeleri hiç basılmıyordu (canlı ölçüm:
-	// 24 satır, 0 düğme). Şablon hx-post'u bu kimlikten kuruyor.
 	if v.CeviriMi {
 		v.KaynakID = strconv.FormatInt(f.Content.TranslationRootID(), 10)
 	} else if f.Content.ID != 0 {
 		v.KaynakID = strconv.FormatInt(f.Content.ID, 10)
 	}
 
-	// Çeviri bağlamı (kaynak başlık/spot/gövde) formData'da hazırlanır:
-	// bu katman istek nesnesi taşımıyor, ctx yok.
-	// Faz 192 — "Gelişmiş / türe özel alanlar" paneli.
-	//
-	// Ölçüm (üretim): 13.486 içeriğin 13.470'i `haber`. Panelin gövdesi
-	// `haber` için yalnız GİZLİ bir alan taşıyordu (424 bayt, görünen alan
-	// 0) — kullanıcı açtığında boş kutu görüp "açılmıyor" diyordu.
-	// Alan listesi artık tek yerde; boşsa panel HİÇ basılmaz.
 	v.GelismisVar, v.GelismisIpucu = gelismisAlanlar(f.TypeKey)
 
 	v.KaynakBaslik = f.KaynakBaslik
@@ -265,16 +249,6 @@ func derefStr(p *string) string {
 	return *p
 }
 
-// gelismisAlanlar, içerik türüne göre "Gelişmiş" panelinde gösterilecek
-// alanları söyler. Dönüş false ise panel hiç render edilmez.
-//
-// NEDEN: panel koşulsuz basılıyordu ama türe özel alanlar yalnız `video`
-// (süre) ve `hesaplayici` (şema) için vardı. Diğer türlerde gövde boş
-// kalıyordu — kullanıcı bunu "panel açılmıyor, bir şey göremiyorum" diye
-// bildirdi. Boş kutu göstermek yerine paneli gizlemek dürüst davranış.
-//
-// Yeni bir türe özel alan eklenirse (galeri sırası, anket bağlantısı,
-// ilan künyesi…) yalnız bu tabloya ve şablona satır eklenir.
 func gelismisAlanlar(typeKey string) (bool, string) {
 	switch typeKey {
 	case "video":

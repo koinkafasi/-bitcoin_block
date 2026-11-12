@@ -2,19 +2,6 @@ package classify
 
 import "strings"
 
-// CoinDesk bölüm sınıflandırması (bitcosar).
-//
-// NEDEN AYRI: `classify` theblock'un Türkçe taksonomisine (gundem, ekonomi,
-// piyasalar…) eşliyor. Kripto portalında bölümler CoinDesk'in bölümleri
-// (docs/COINDESK-SPEC.md §4). Aynı paketi iki taksonomiye zorlamak yerine
-// ayrı ve açık bir eşleme tutuluyor.
-//
-// GİRDİ: kaynağın GERÇEK RSS <category> değerleri. Ölçüm (5 Kasım 2026,
-// 179 içerik): CoinDesk "Markets/Policy/Regulation/Tech", Decrypt
-// "Bitcoin/DeFi/NFT", The Block "Markets/Companies" gönderiyor.
-//
-// KURAL: en özgül bölüm kazanır (policy > tech > business > markets).
-// Hiçbiri eşleşmezse "markets" — kripto portalında varsayılan bölüm.
 func CoinDeskSection(etiketler []string, baslik, spot string) string {
 	metin := strings.ToLower(strings.Join(etiketler, " ") + " " + baslik + " " + spot)
 	metin = turkceKucult(metin)
@@ -67,9 +54,6 @@ func CoinDeskSection(etiketler []string, baslik, spot string) string {
 	return "markets"
 }
 
-// turkceKucult Türkçe I/İ sorununu ele alır: strings.ToLower "I" harfini
-// "i" yapar ama Türkçe'de "I" → "ı". Karşılaştırma için ikisini de "i"
-// kabul etmek yeterli; burada yalnız arama metni üretiliyor.
 func turkceKucult(s string) string {
 	r := strings.NewReplacer("ı", "i", "İ", "i", "I", "i", "ş", "s", "ğ", "g",
 		"ü", "u", "ö", "o", "ç", "c")

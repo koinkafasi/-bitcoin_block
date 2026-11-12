@@ -20,17 +20,6 @@ func (s *Server) cdTickerDoldur(r *http.Request) []templkit.CDTickerItem {
 	return s.cdTickerDoldurSekme(r.Context(), sekme)
 }
 
-// cdTickerDoldurSekme şerit kalemlerini doldurur.
-//
-// ŞERİT HER SAYFADA (kullanıcı bildirimi, 8 Kasım 2026: "diğer sayfalarda
-// kur alanı neden yok"). Önceki sürümde `Shell.Ticker` yalnız ana sayfada
-// dolduruluyordu; şablon her sayfada `cdTicker` çağırdığı hâlde diğer
-// sayfalarda liste boş olduğu için şerit HİÇ basılmıyordu. Artık kabuk
-// verisi (cdShellCtx) şeridi de dolduruyor — tek yerden tüm sayfalar.
-//
-// SEKMELER: "markets" = kripto (CoinGecko, 60 sn önbellek), "stocks" =
-// BIST. Hisse sekmesi önceden ÖLÜ BAĞLANTIYDI: `?serit=stocks` hiçbir
-// yerde okunmuyor, sekme her zaman kripto gösteriyordu.
 func (s *Server) cdTickerDoldurSekme(ctx context.Context, sekme string) []templkit.CDTickerItem {
 	if sekme == "stocks" {
 		// BIST verisi `services` işinin önbelleğinden gelir (Yahoo Finance).
@@ -41,9 +30,6 @@ func (s *Server) cdTickerDoldurSekme(ctx context.Context, sekme string) []templk
 		}
 		out := make([]templkit.CDTickerItem, 0, len(bd.Rows))
 		for _, r := range bd.Rows {
-			// `borsa/ana` önbelleği kripto satırlarını da taşır (TRY fiyat).
-			// Hisse sekmesinde yalnız endeks + hisse gösterilir; aksi hâlde
-			// sekme "BTC / ETH" listeliyordu (ölçüldü, 8 Kasım 2026).
 			if r.Kind == "kripto" {
 				continue
 			}
@@ -51,10 +37,7 @@ func (s *Server) cdTickerDoldurSekme(ctx context.Context, sekme string) []templk
 				continue
 			}
 			out = append(out, templkit.CDTickerItem{
-				Sym: strings.TrimSuffix(r.Code, ".IS"),
-				// BIST kalemleri KENDİ hisse detayına gider. Önceki sürüm
-				// hepsini /markets'e yolluyordu (o zaman hisse sayfası
-				// yoktu); artık `/price/stock/{KOD}.IS` gerçek veri basıyor.
+				Sym:    strings.TrimSuffix(r.Code, ".IS"),
 				Href:   "/price/stock/" + hisseBorsaKodu(r.Code),
 				Price:  repo.FiyatBicimP(r.Value, r.Para),
 				Change: repo.DegisimBicim(r.Delta),
@@ -132,12 +115,6 @@ func (s *Server) cdDigerVarliklar(r *http.Request, adet int, haricSym string) []
 	return out
 }
 
-// hisseBorsaKodu BIST kodunu Yahoo sembolüne çevirir.
-//
-// NEDEN: `BorsaRow.Code` ".IS" eki KALDIRILMIŞ olarak saklanır (şeritte
-// "THYAO" görünsün diye). Hisse detay ucu ise Yahoo'nun ".IS" ekli
-// sembolünü bekliyor; eksik ek `/price/stock/THYAO` → 404 veriyordu
-// (ölçüldü, 9 Kasım 2026: 9 bağlantının 9'u 404). Ek tek yerde eklenir.
 func hisseBorsaKodu(code string) string {
 	c := strings.ToUpper(strings.TrimSpace(code))
 	if c == "" || strings.HasSuffix(c, ".IS") {
@@ -146,14 +123,6 @@ func hisseBorsaKodu(code string) string {
 	return c + ".IS"
 }
 
-// cdOndeGelenHisseler /price sayfasının hisse giriş listesi.
-//
-// KAYNAK: `borsa/ana` önbelleği (2 dakikada bir yenilenen gerçek BIST
-// kotasyonları). Sıra sabit bir liste değil, önbelleğin kendi sırası —
-// yani şeritte görünen hisselerle AYNI kaynak. Endeks satırı (XU100)
-// listeye girmez: bu tablo hisse listesi.
-//
-// Demo veri varsa BOŞ döner: demo bayrağı açıkken fiyat uydurma olur.
 func (s *Server) cdOndeGelenHisseler(ctx context.Context, adet int) []templkit.CDPriceRow {
 	bd := repo.BorsaOf(ctx, s.pool)
 	if bd.Demo {
@@ -180,9 +149,6 @@ func (s *Server) cdOndeGelenHisseler(ctx context.Context, adet int) []templkit.C
 	return out
 }
 
-// handleCDPrice /price — CoinDesk fiyat sayfası.
-//
-// Yapı: H1 + açıklama → fiyat tablosu (25 varlık) → bölüm bağlantıları.
 func (s *Server) handleCDPrice(w http.ResponseWriter, r *http.Request) {
 	rows := s.cdFiyatSatirlari(r, 50)
 	base := strings.TrimRight(s.cfg.BaseURL, "/")

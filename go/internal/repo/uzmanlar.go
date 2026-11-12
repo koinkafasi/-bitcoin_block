@@ -6,13 +6,6 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-// Uzman ana sayfa "Görüş" modülündeki tek profil.
-//
-// Kaynak: `users` (rol = Yazar, durum = aktif, avatar_url dolu).
-// `Makale`/`MakaleURL` profil sahibinin öne çıkan yazısıdır; şimdilik
-// `socials` JSON'unda taşınıyor (son_makale, son_makale_url). Ayrı sütun
-// açmak yerine mevcut yapı kullanıldı: bu alanlar profil verisinin
-// parçası, içerik tablosuna yabancı anahtar gerektirmiyor.
 type Uzman struct {
 	Slug         string
 	Ad           string
@@ -23,11 +16,6 @@ type Uzman struct {
 	MakaleKaynak string
 }
 
-// Uzmanlar avatarı olan aktif yazarları döndürür.
-//
-// NEDEN avatar şartı: avatarı olmayan profili "Görüş" satırında basmak
-// CoinDesk düzenini bozar (sağda 48 px boşluk kalır). Avatar yoksa profil
-// yayına girmemiş sayılır; modül bir sonraki profille dolar.
 func Uzmanlar(ctx context.Context, pool *pgxpool.Pool, adet int) ([]Uzman, error) {
 	if adet <= 0 {
 		adet = 4

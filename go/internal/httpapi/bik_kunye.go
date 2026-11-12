@@ -10,20 +10,6 @@ import (
 	"theblock/site/internal/repo"
 )
 
-// BİK künye standardı — Tebliğ, künyede on zorunlu alanın bulunmasını ve her
-// birinin kendi kimliğiyle etiketlenmiş bir div içinde yer almasını istiyor.
-// Kurum kontrolü bu kimliklerle otomatik yapılıyor.
-//
-// Neden şablondan üretiliyor, sayfa metninden değil: künye bir `pages`
-// kaydıdır ve içeriği editör tarafından serbestçe yazılır. Kimlikleri
-// metne gömmek, her düzenlemede kaybolma riski taşır — bir editörün
-// yanlışlıkla sildiği div, uyumu sessizce bozar. Blok burada üretilince
-// kimliklerin varlığı koda bağlanır; editör yalnız DEĞERLERİ değiştirir.
-//
-// Değerler settings tablosunun "kunye" bölümünden okunur. Üçü zaten
-// yönetimde var olan iletişim ayarlarına düşer (telefon, e-posta, adres);
-// böylece aynı bilgi iki yerde tutulmaz.
-
 // bikKunyeAlan tek bir zorunlu künye alanıdır.
 type bikKunyeAlan struct {
 	ID    string // BİK'in beklediği div kimliği
@@ -55,9 +41,6 @@ func (s *Server) bikKunyeDoldur(ctx context.Context) []bikKunyeAlan {
 	alanlar := bikKunyeAlanlari()
 	gs, _ := repo.GetSettings(ctx, s.pool, "kunye")
 
-	// Üç alan için yönetimdeki iletişim ayarları yedek kaynaktır: aynı
-	// bilgiyi iki yerde tutup birini güncellemeyi unutmak, künyeyi sessizce
-	// yanlışlar.
 	c := s.contactConfig(ctx)
 	yedek := map[string]string{
 		"telefon":      strings.TrimSpace(c.Telefon),
@@ -87,11 +70,6 @@ func bikKunyeEksikler(alanlar []bikKunyeAlan) []string {
 	return eksik
 }
 
-// bikKunyeHTML künye bloğunu üretir.
-//
-// Değer boş olsa bile div BASILIR: Kurum kontrolü kimliğin varlığına bakıyor,
-// eksik kimlik doğrudan başarısızlık demek. Boş değer yerine "—" yazılır ki
-// sayfa okunabilir kalsın ve eksiklik gözle de görülsün.
 func bikKunyeHTML(alanlar []bikKunyeAlan) template.HTML {
 	var b strings.Builder
 	b.WriteString(`<section class="bik-kunye" aria-label="Künye bilgileri">`)

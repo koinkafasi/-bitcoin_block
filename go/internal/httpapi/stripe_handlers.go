@@ -118,9 +118,6 @@ func (s *Server) handleStripeWebhook(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "geçersiz olay", http.StatusBadRequest)
 		return
 	}
-	// İdempotens: daha önce İŞLENMİŞ olay tekrar çalışmaz. Kayıt yalnızca
-	// işlem BAŞARIYLA bittikten sonra atılır; hata durumunda Stripe'ın tekrar
-	// deneyebilmesi için olay "görüldü" sayılmaz.
 	if ev.ID != "" {
 		var seen bool
 		_ = s.pool.QueryRow(r.Context(), `SELECT EXISTS(SELECT 1 FROM stripe_events WHERE id=$1)`, ev.ID).Scan(&seen)

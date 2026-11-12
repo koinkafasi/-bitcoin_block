@@ -12,20 +12,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// Etiket bağı ve kimlik tekilliği (Faz 177, A-8).
-//
-// NEDEN: `.field` deseninde etiket ile kontrol KARDEŞ duruyordu ve aralarında
-// bağ yoktu. Ölçüm: 61 `.field` alanında `for`/`id` yoktu; ekran okuyucu
-// alanı adlandıramıyor, etikete tıklayınca alan odaklanmıyordu.
-//
-// Dönüşüm sırasında iki hata sınıfı ortaya çıktı ve bu testler ikisini de
-// kilitliyor:
-//
-//  1. Döngü içinde literal `id` -> aynı kimlik belgede tekrar eder.
-//     (Bir dönüşüm denemesinde "f_rozet" altı kez basıldı; tarayıcıda
-//     yakalandı, düzeltildi.)
-//  2. `for` hedefi var olmayan bir kimliğe işaret eder (kırık bağ).
-
 var (
 	labelFor  = regexp.MustCompile(`<label\b[^>]*\bfor="([^"]+)"`)
 	literalID = regexp.MustCompile(`\bid="([^"{}]+)"`)
@@ -57,9 +43,6 @@ func TestLabelForHedefiVar(t *testing.T) {
 		require.NoError(t, err)
 		s := string(b)
 		for _, m := range labelFor.FindAllStringSubmatch(s, -1) {
-			// Değer bir şablon ifadesi olabilir (site_public.html:
-			// for="yorum-tuzak-r-{{.C.ID}}"). O durumda da kimliğin AYNI
-			// ifadeyle yazılmış olması gerekir; literal karşılaştırma yeter.
 			if strings.Contains(s, `id="`+m[1]+`"`) {
 				continue
 			}
@@ -96,9 +79,6 @@ func TestLiteralIdTekil(t *testing.T) {
 	assert.Emptyf(t, cift, "aynı dosyada yinelenen id: %v", cift)
 }
 
-// TestFieldEtiketiBagli: tek kontrollü `.field` bloğunda kontrol ya etiketle
-// bağlı (id + for) ya da kendi adını taşımalı (aria-label). Döngüde literal
-// id yasak olduğu için orada aria-label beklenir.
 func TestFieldEtiketiBagli(t *testing.T) {
 	var eksik []string
 	denetlenen := 0
@@ -151,10 +131,6 @@ func TestFieldEtiketiBagli(t *testing.T) {
 				continue
 			}
 
-			// Etiket ile kontrol bağı: blokta geçen herhangi bir for="X" için
-			// aynı blokta id="X" bulunmalı. (Etiketin İÇİNDE başka bir
-			// kimlik olabilir — manset "Yoğunluk <span id=…>" — bu yüzden
-			// ilk id'ye değil, for değerine bakılır.)
 			bagli := false
 			for _, fm := range labelFor.FindAllStringSubmatch(blok, -1) {
 				if strings.Contains(blok, `id="`+fm[1]+`"`) {

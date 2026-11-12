@@ -1,17 +1,5 @@
 package repo
 
-// Canlı fiyat mimarisi testleri (11 Kasım 2026).
-//
-// NEDEN: "canlı veri" isteğiyle fiyat kaynağı ikiye bölündü (CoinGecko =
-// ad+sıra, Binance = fiyat). Sessizce bozulabilecek üç yer var:
-//   1) Birleştirme: Binance'te paritesi olmayan sembol SIFIR yazarsa
-//      ekranda "$0.00" çıkar. Bu test onu engeller.
-//   2) Günlük kapanış: saatlik seriden RSI üretimi kayarsa gösterge
-//      yanlış seviyeyi gösterir, hata vermez.
-//   3) Sparkline: tek noktalı/eşit seri NaN üretirse SVG bozulur.
-//
-// Ağ YOK: hepsi saf fonksiyon, DB gerekmez.
-
 import (
 	"math"
 	"strings"

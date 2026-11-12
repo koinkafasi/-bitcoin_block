@@ -1,21 +1,7 @@
-/* theblock — Panel girişi ("Blok" nöbetçi kedi).
- *
- * Kaynak tasarım birebir alındı: demo.codeandchill.store/mochi
- * (Mochi — Sign in © 2026 Hasib / OVERSHOOT). Yapı, ölçüler, süreler ve
- * eğriler korundu; yalnız marka renkleri ve metinler theblock'a uyarlandı.
- *
- * YAZI TİPİ: Mochi Fredoka + Inter'i Google Fonts'tan çekiyor. Panelde
- * Urbanist zaten KENDİ SUNUCUMUZDAN geliyor (fonts-admin.css); aynı
- * geometrik-yuvarlak hissi verdiği için onunla kalındı. Böylece giriş
- * ekranı açan herkesin IP'si üçüncü tarafa gitmiyor (KVKK, 6698 s.K. m.9).
- *
- * Neden ayrı dosya: giriş ekranı panelin geri kalanından tamamen farklı
- * bir kabuk (koyu kart, iki sütun, kedi sahnesi). app.css/admin-pano.css
- * yüklenseydi iki ayrı tema üst üste binerdi.
- */
+
 
 :root {
-  /* Yüzeyler: sitenin koyu paleti (#0c1021–#18181b) ile aynı aile. */
+  
   --bg-0: #07080c;
   --bg-1: #0d0f15;
   --surface-1: #14161d;
@@ -27,8 +13,7 @@
   --muted-fg: #a2abbd;
   --faint: #808b9f;
 
-  /* Marka: theblock kırmızısı. Saf kırmızı koyu zeminde titreşiyor;
-   * bir ton yumuşatılmış çift (accent-lo → accent-fill) kullanıldı. */
+  
   --accent: #ff6a5e;
   --accent-fill: #f0402f;
   --accent-lo: #ff8776;
@@ -42,7 +27,7 @@
 
   --r-card: 28px;
   --r-field: 14px;
-  /* Mochi'nin gölgesi: dış çizgi + iç rim + derin gölge + marka parıltısı. */
+  
   --shadow:
     0 0 0 1px var(--border),
     0 1px 0 rgba(255, 255, 255, .05) inset,
@@ -83,7 +68,6 @@ body {
   will-change: transform;
 }
 
-/* ---- Sahne (sol sütun) ---- */
 .pet {
   grid-column: 1;
   grid-row: 1;
@@ -97,7 +81,6 @@ body {
   border-right: 1px solid var(--border);
 }
 
-/* Pati izi dokusu: %5.5 opaklıkta, beyaz. */
 .pet::before {
   content: "";
   position: absolute;
@@ -108,7 +91,6 @@ body {
   background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='96' height='96' viewBox='0 0 96 96'><g fill='%23ffffff'><ellipse cx='26' cy='32' rx='9.5' ry='8'/><circle cx='15' cy='20' r='4.2'/><circle cx='25' cy='16' r='4.4'/><circle cx='35' cy='18' r='4.2'/><circle cx='42' cy='26' r='3.5'/></g><g fill='%23ffffff' transform='translate(50,48) rotate(20)'><ellipse cx='17' cy='21' rx='7.6' ry='6.4'/><circle cx='8' cy='12' r='3.4'/><circle cx='16' cy='9' r='3.6'/><circle cx='24' cy='10' r='3.4'/><circle cx='30' cy='16' r='2.8'/></g></svg>");
 }
 
-/* Alt kenarda zemine doğru marka ışıması. */
 .pet::after {
   content: "";
   position: absolute;
@@ -120,7 +102,6 @@ body {
   pointer-events: none;
 }
 
-/* Fare kartın üstündeyken kedinin arkasında gezinen ışık lekesi. */
 .sheen {
   position: absolute;
   top: 0;
@@ -138,7 +119,6 @@ body {
 }
 .card:hover .sheen { opacity: 1; }
 
-/* Kediye dokunma alanı (başını sallar). */
 .pet__pat {
   position: absolute;
   inset: 34px 8px 8px;
@@ -161,7 +141,6 @@ body {
   pointer-events: none;
 }
 
-/* ---- Kedi renkleri ---- */
 .cat__shadow { fill: #00000057; }
 .cat__body { fill: url(#mFur); }
 .cat__head { fill: url(#mFur); }
@@ -190,10 +169,6 @@ body {
 .cat__bell-slit { fill: none; stroke: #b87a1e; stroke-width: 3; stroke-linecap: round; }
 .cat__bell-hi { fill: #fff3cc; opacity: .85; }
 
-/* ---- Konuşma balonu ----
- * Bulut = tek yuvarlak gövde + yedi tümsek, hepsi aynı renkte: birleşip
- * tek bir loplu siluet veriyor. Sabit SVG yerine böyle yapıldı çünkü metin
- * uzunluğu değişiyor ve gerilmiş SVG tümsekleri yassıltıyor. */
 .bubble {
   position: absolute;
   top: 48px;
@@ -248,7 +223,6 @@ body {
 .bubble.is-bad { --bubble-bg: #ff6b6b; color: #2b0808; }
 .bubble.is-good { --bubble-bg: var(--ok); color: var(--on-ok); }
 
-/* ---- Form ---- */
 .form {
   grid-column: 2;
   grid-row: 1;
@@ -259,7 +233,6 @@ body {
   justify-content: center;
 }
 
-/* Odaklanan alanın hizasına kayar (Mochi'deki .rail). */
 .rail {
   position: absolute;
   left: 16px;
@@ -316,7 +289,6 @@ body {
 }
 .form__sub { margin: 0 0 22px; font-size: 13.5px; color: var(--muted-fg); }
 
-/* Sunucudan gelen mesaj (JS yoksa görünür kalır; JS varsa balona taşınır). */
 .flash {
   margin: 0 0 14px;
   padding: 9px 12px;
@@ -373,7 +345,6 @@ body {
 .card.is-bad .form input { border-color: rgba(229, 72, 77, .55); }
 .field:focus-within label { color: var(--accent); }
 
-/* Caps Lock uyarısı: yüksekliği sabit, boşken görünmez. */
 .caps {
   height: 17px;
   margin: 6px 0 0 2px;
@@ -386,7 +357,6 @@ body {
 }
 .caps:empty { opacity: 0; }
 
-/* Şifreyi göster: göz simgesinin üstündeki çizgi çizilerek kaybolur. */
 .peek {
   position: absolute;
   top: 50%;
@@ -429,7 +399,6 @@ body {
 }
 .link:hover { text-decoration: underline; text-underline-offset: 3px; }
 
-/* ---- Gönder ---- */
 .submit {
   position: relative;
   margin-top: 6px;
@@ -466,7 +435,6 @@ body {
   opacity: 0;
 }
 
-/* Başarılı giriş: düğme yeşile döner, etiket küçülür, tik çizilir. */
 .card.is-good .submit {
   background: linear-gradient(180deg, var(--ok), var(--ok-fill));
   color: var(--on-ok);
@@ -483,7 +451,6 @@ body {
   transition: stroke-dashoffset .42s ease .06s, opacity .1s ease;
 }
 
-/* Durum satırı: balondaki mesajın yazılı karşılığı (ekran okuyucu). */
 .status {
   margin: 12px 0 0;
   min-height: 19px;
@@ -511,9 +478,6 @@ body {
 }
 .divider::before, .divider::after { content: ""; flex: 1; height: 1px; background: var(--border); }
 
-/* Güvenlik rozetleri (Mochi'deki OAuth düğmelerinin yerinde): aynı
- * yükseklik ve ritim, ama tıklanacak bir şey varmış gibi görünmesinler
- * diye <span>, düğme değil. */
 .badges { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .badge {
   height: 44px;
@@ -534,7 +498,6 @@ body {
 .foot a { color: var(--accent); font-weight: 600; text-decoration: none; }
 .foot a:hover { text-decoration: underline; text-underline-offset: 3px; }
 
-/* Alt bilgi şeridi. */
 .demo {
   margin: 12px 0 0;
   padding-top: 11px;
@@ -548,8 +511,6 @@ body {
 :focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; border-radius: 6px; }
 ::selection { background: rgba(255, 106, 94, .32); color: #fff; }
 
-/* ---- Duyarlı: tek sütun ----
- * Mochi'de kedi ÜSTTE, form ALTTA; aynı sıra korunuyor. */
 @media (max-width: 839px) {
   .pet { grid-column: 1; grid-row: 1; }
   .form { grid-column: 1; grid-row: 2; }
@@ -560,7 +521,6 @@ body {
   .bubble { top: 30px; }
 }
 
-/* Hareketi azalt: tüm geçişler pratikte anlık (Mochi ile aynı kural). */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     transition-duration: .01ms !important;

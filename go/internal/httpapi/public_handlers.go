@@ -33,9 +33,6 @@ func (s *Server) handleHome(w http.ResponseWriter, r *http.Request) {
 	s.renderPublic(w, r, "home", d, cacheControlPublic)
 }
 
-// homeView ana sayfanın şablon verisini kurar. handleHome ve tasarımcının
-// önizleme ucu AYNI veri yolunu kullanır; böylece önizlemede görünen ile
-// sitede görünen birebir aynıdır (ayrı kod yolu = ayrı görünüm riski).
 func (s *Server) homeView(r *http.Request) *tmplData {
 	ctx := r.Context()
 	lang := r.PathValue("lang")
@@ -47,29 +44,8 @@ func (s *Server) homeView(r *http.Request) *tmplData {
 	}
 	locale := lang
 	site := s.siteByDomain(ctx, r.Host)
-	// İstenen dilde içerik yoksa varsayılan dile düşülür (Faz 189).
-	//
-	// Ölçüm: /en 200 dönüyordu ama manşet BOŞTU (TR'de 150 hero öğesi,
-	// EN'de 0) çünkü sorgular `locale = $1` ile sıkı filtreleniyor ve hiç
-	// İngilizce içerik yoktu. Boş manşet alanı tasarımı kırık gösteriyordu.
-	// Düşüş varsa sayfa noindex'lenir ve canonical varsayılan dilin
-	// adresine verilir: aynı Türkçe içerik kopya olarak dizinlenmesin.
 	icerikLocale, dusus := s.icerikDili(ctx, site.ID, lang)
 
-	// ---- Bağımsız okumalar PARALEL ----
-	//
-	// ÖLÇÜM (8 Kasım 2026): ana sayfa p50 51 ms, diğer sayfalar 21–29 ms.
-	// Profil: istek başına CPU yalnızca ~4 ms; kalan süre PostgreSQL
-	// gidiş-dönüşlerinin BEKLENMESİ. Tek istekte ~24 sorgu sırayla
-	// çalışıyordu, her biri ~2 ms → ~48 ms.
-	//
-	// Bu bloklar birbirine bağımlı değil (hepsi site.ID + locale ile
-	// çalışır), bu yüzden birlikte uçurulur. Derinlik 24 sıralı turdan
-	// 2 tura iner; p50 en yavaş bloğun süresine yaklaşır.
-	//
-	// Hata davranışı DEĞİŞMEDİ: her çağrı eskisi gibi kendi hatasını
-	// yutuyor (log/boş değer). Bir blok patlarsa yalnız o blok boş kalır;
-	// sayfa eskiden de böyle davranıyordu.
 	var (
 		highlights  *repo.Highlights
 		layoutRaw   []byte
@@ -135,9 +111,6 @@ func (s *Server) homeView(r *http.Request) *tmplData {
 		// Kategori sekmeli bölümler tembel kurulur: yalnız bu blok sayfada
 		// varsa buildBlocksFrom içinde TEK sorguyla doldurulur (performans).
 		_, d.Home.TabCatsSelected = tabCatSlugs(ctx, s)
-		// Eski tek bloklu kategori panelleri yalnız düzende hâlâ
-		// "kategori_bloklari" varsa üretilir; yeni "kategori_panel"
-		// modülleri kendi verisini buildBlocksFrom içinde çeker.
 		if strings.Contains(string(layoutRaw), `"kategori_bloklari"`) {
 			d.Home.CatBlocks = s.homeCatBlocks(ctx, site.ID, locale, 6)
 		}
@@ -185,10 +158,6 @@ func (s *Server) homeView(r *http.Request) *tmplData {
 	return d
 }
 
-// homeCatBlocks ana sayfa için kategori panellerini üretir.
-// Artık hangi kategoriler, sıra ve düzen Sayfa Tasarımcısı'ndan yönetilir
-// (kategori_panelleri ayarı). Ayar yoksa tüm yayındaki kategoriler varsayılan
-// düzenle gösterilir.
 func (s *Server) homeCatBlocks(ctx context.Context, siteID int64, locale string, maxBlocks int) []catBlock {
 	cats, err := repo.ListCategories(ctx, s.pool, siteID)
 	if err != nil {
@@ -285,21 +254,6 @@ func num(v any) float64 {
 	return 0
 }
 
-// staticCacheControl statik dosyanın önbellek politikasını seçer.
-//
-// asset() sürüm parametresi (?v=…) ekler; o adresler içerik değişince
-// değiştiği için sonsuza kadar önbelleklenebilir. Ama her statik dosya
-// asset()'ten geçmiyor: ikon sprite'ı şablonlarda 40 yerde sürümsüz
-// çağrılıyor (<use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-bell">).
-//
-// Önceden ikisine de "immutable" veriliyordu ve `immutable` tarayıcıya
-// "bir daha sorma" demektir. Ölçüm: sprite 41 ikondan 621'e çıkarıldıktan
-// sonra taze istek 239.282 bayt ve ti-bell içeriyordu; önbellekten gelen
-// 11.412 bayt ve içermiyordu. Olmayan ikon hata vermez, SESSİZCE boş kutu
-// basılır — kullanıcı "ikonlar kayboldu" der, günlükte iz olmaz.
-//
-// Sürümsüz dosya için kısa süre + revalidate: bayatlık beş dakikayla
-// sınırlı kalır, her sayfada yeniden indirme olmaz.
 func staticCacheControl(rawQuery string) string {
 	if strings.Contains(rawQuery, "v=") {
 		return "public, max-age=31536000, immutable"
@@ -380,19 +334,6 @@ func (s *Server) handlePublicSegment(w http.ResponseWriter, r *http.Request) {
 	seg := segs[i]
 	r.SetPathValue("lang", lang)
 
-	// MAKALE YOLU BÖLÜM ADINDAN ÖNCE ÇÖZÜLÜR.
-	//
-	// Tuzak (canlıda görüldü, 10 Kasım 2026): `/borsa/2023/04/17/<slug>`
-	// adresi makale değil BORSA fiyat sayfası olarak açılıyordu — çünkü
-	// aşağıdaki `case seg == "borsa"` bölüm eşleşmesi, tarihli makale
-	// deseninden önce geliyordu. Aynı hata `etkinlikler`, `sinemalar`,
-	// `arsiv` gibi tüm literal bölüm adları için geçerliydi: o adlarla
-	// başlayan makaleler yanlış sayfaya (ve yanlış canonical'a) düşüyordu.
-	//
-	// Çözüm: tarihli makale deseni (/{bölüm}/{YYYY}/{MM}/{DD}/{slug})
-	// literal eşleşmelerden ÖNCE denenir. Desen takvimsel olarak geçerli
-	// olmalı (makaleTarihDeseni), bu yüzden `/borsa/hisseler` gibi gerçek
-	// bölüm adresleri etkilenmez.
 	if s.makaleYolu(w, r, segs[i:], lang) {
 		return
 	}
@@ -425,8 +366,6 @@ func (s *Server) handlePublicSegment(w http.ResponseWriter, r *http.Request) {
 		s.handleEventsPublic(w, r)
 	case seg == "anketler":
 		s.handlePollsPublic(w, r)
-	case seg == "gazete-mansetleri":
-		s.handleNewspapersPublic(w, r)
 	case seg == "sinemalar":
 		s.handleFilmsPublic(w, r)
 	case seg == "resmi-ilanlar" && i+1 < len(segs):
@@ -487,9 +426,6 @@ func (s *Server) handlePublicSegment(w http.ResponseWriter, r *http.Request) {
 			s.handleCDArticle(w, r, lang, slug, id)
 			return
 		}
-		// Kök adresli kurumsal sayfa (Faz 143): /kullanim-kosullari gibi.
-		// Rezerve segmentler yukarıda tükendiği için burada yalnız kalan
-		// adlar denenir; içerik adresleri her zaman "-<id>" ile biter.
 		if p, err := repo.GetPageBySlug(r.Context(), s.pool, seg, true); err == nil {
 			r.SetPathValue("slug", p.Slug)
 			s.handlePage(w, r)
@@ -534,23 +470,10 @@ func uniqueContent(items []repo.Content) []repo.Content {
 	return out
 }
 
-// handleContentPreview taslağı/yayın dışı içeriği okuyucu görünümüyle önizler
-// (Faz 46). Yönetim rotası arkasındadır; yayın kapısı atlanır, hit SAYILMAZ,
-// cache no-store.
 func (s *Server) handleContentPreview(w http.ResponseWriter, r *http.Request) {
-	// ÖNİZLEME = CANLI ŞABLON (kullanıcı bildirimi, 10 Kasım 2026:
-	// "ön izlemde yeni resim var ve bu önizleme eski theblock tasarımına
-	// ait"). Burada `handleArticle` (theblock) çağrılıyordu; editör yeni
-	// görseli eklediğinde önizlemede eski tasarımı görüyordu.
-	//
-	// Artık canlı makale ile AYNI cd şablonu kullanılıyor. Tek fark:
-	// durum kapısı yok (taslak/planlanmış da açılır) ve okunma sayılmaz.
 	s.handleCDArticleOnizleme(w, r)
 }
 
-// havaFromCache servis bandındaki varsayılan şehir (Ankara) havasını
-// önbellekten okur. Ana sayfa dışındaki sayfalarda veri havuzunda hava
-// olmadığı için tasarımcı/blok yolu da bu yardımcıyı kullanır.
 func (s *Server) havaFromCache(ctx context.Context) *WeatherS {
 	ak, err := repo.GetCitySlug(ctx, s.pool, "ankara")
 	if err != nil {
@@ -567,10 +490,6 @@ func (s *Server) havaFromCache(ctx context.Context) *WeatherS {
 	return &WeatherS{City: w.City, Slug: ak.Slug, Sicak: w.Sicaklik, Aciklama: w.Aciklama, Demo: w.Demo}
 }
 
-// categoryBlockHome kategori liste sayfası bloklarının veri havuzunu kurar.
-// Ana sayfayla aynı homeData şekli kullanılır; liste içerikleri o kategoriye
-// ait olduğundan top/sağ bloklar (slider, 6'lı manşet, son haberler) doğru
-// içerikle dolar.
 func (s *Server) categoryBlockHome(ctx context.Context, siteID int64, locale string, items []repo.Content) *homeData {
 	h := &homeData{SiteID: siteID}
 	h.Recent = items
@@ -602,15 +521,6 @@ func (s *Server) handleCategory(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, target, http.StatusMovedPermanently)
 		return
 	}
-	// YENİ KABUK — kullanıcı bildirimi (9 Kasım 2026): "/kategori/ … hâlâ
-	// theblock'tan kalma stil ve şablon". Aynı içerik iki ayrı şablonla iki
-	// farklı görünümde basılıyordu; artık `/tech` ile `/kategori/tech`
-	// birebir aynı CoinDesk bölüm sayfası.
-	//
-	// PANEL DÜZENİ KORUNUR: kategoriye özel bir düzen (`kategori:<slug>`)
-	// varsa eski motor kullanılır — editörün elle kurduğu modüller sessizce
-	// kaybolmasın. Ölçüm: page_layouts tablosu şu an BOŞ, yani her kategori
-	// yeni kabuğa geçiyor.
 	if !s.sayfaDuzeniVar(ctx, "kategori:"+slug) {
 		s.handleCDSection(w, r, slug)
 		return
@@ -651,9 +561,6 @@ func (s *Server) handleCategory(w http.ResponseWriter, r *http.Request) {
 	pt := s.pageTextsFor(ctx, site.ID, "kategori:"+slug, locale, categoryTextDefs(slug),
 		map[string]string{"kategori": cat.Name})
 	intro := pt["kategori.intro"]
-	// İstenen dilde içerik yoksa varsayılan dile düşülür: boş kategori
-	// sayfası yerine anlamlı liste gösterilir, ama noindex + canonical
-	// varsayılan dilin adresine verilir (kopya dizinlenmesin).
 	icerikLocale, dusus := s.kategoriIcerikDili(ctx, site.ID, slug, locale)
 	// Bir fazla içerik çekilir: "sonraki sayfa var mı" ancak böyle anlaşılır.
 	items, err := repo.PublishedBySlug(ctx, s.pool, site.ID, slug, icerikLocale, perPage*page+1)
@@ -776,11 +683,6 @@ func (s *Server) handleCategory(w http.ResponseWriter, r *http.Request) {
 	s.renderPublic(w, r, "category", d, cacheControlPublic)
 }
 
-// handleCategoryAkisParca kategori akış vitrininin sonraki 12'lik bloğunu
-// HTML olarak döndürür. Sınır/sayfa boyutu ve etiket gizleme ayarı kategori
-// düzenindeki akış bloğundan okunur; istemci yalnız "bas" (mutlak sıra) verir.
-// Yanıt: <div class="ak-grid">…</div> blokları + X-Akis-Son / X-Akis-Bas
-// başlıkları (JS bunları okur).
 func (s *Server) handleCategoryAkisParca(w http.ResponseWriter, r *http.Request, slug, locale string) {
 	ctx := r.Context()
 	site := s.siteByDomain(ctx, r.Host)
@@ -893,10 +795,6 @@ func (s *Server) handleArchive(w http.ResponseWriter, r *http.Request) {
 	locale := langOf(r, s)
 	site := s.siteByDomain(ctx, r.Host)
 
-	// YENİ KABUK — kullanıcı bildirimi (9 Kasım 2026): theblock şablonu
-	// kalan sayfalar yeni tasarıma geçsin. Arşiv eski kabuğun son büyük
-	// listesiydi (site_header/site_footer). Panelde bu sayfa için özel
-	// düzen varsa eski motor korunur.
 	if !s.sayfaDuzeniVar(ctx, "arsiv") {
 		s.cdArsivSayfasi(w, r, locale, site.ID)
 		return
@@ -939,10 +837,6 @@ func (s *Server) handlePage(w http.ResponseWriter, r *http.Request) {
 	// Yer tutucular ({domain}, {eposta_info}…) yönetimdeki iletişim
 	// bilgileriyle doldurulur (Faz 145).
 	body = template.HTML(s.applyContactTokens(ctx, string(body)))
-	// Künye sayfası: BİK tebliğinin zorunlu tuttuğu on alan, Kurum
-	// kontrolünün aradığı kimliklerle birlikte gövdenin sonuna eklenir.
-	// Kimlikler koddan geldiği için editörün sayfa metnini değiştirmesi
-	// uyumu bozmaz (bik_kunye.go).
 	if p.Slug == "kunye" {
 		body = template.HTML(string(body) + string(bikKunyeHTML(s.bikKunyeDoldur(ctx))))
 	}
@@ -990,22 +884,7 @@ func (s *Server) handlePage(w http.ResponseWriter, r *http.Request) {
 		cc = "no-store" // form + flash mesajı önbelleğe girmemeli
 	}
 
-	// YENİ TASARIM (9 Kasım 2026): kurumsal sayfalar theblock'un `page`
-	// şablonundan (site-header/site-footer) geliyordu; alt bilgiden bir
-	// bağlantıya basan kullanıcı başka bir siteye geçmiş gibi görüyordu.
-	// Düzen (tasarımcı blokları) YOKSA bitcosar kabuğu basılır.
-	//
-	// NEDEN KOŞUL: sayfa tasarımcısı bu sayfalara modül eklediyse (ör.
-	// "Son Haberler" ızgarası) o bloklar `site_public.html` motoruyla
-	// çiziliyor. Blokları yeni kabuğa taşımadan zorla cd-* basmak, panelden
-	// eklenen modülleri sessizce yok ederdi. Bugün `sayfa:*` için kayıtlı
-	// düzen YOK (ölçüldü, 9 Kasım 2026) — yani tüm kurumsal sayfalar yeni
-	// kabukta.
 	if !duzenVar {
-		// BreadcrumbJSONLD sadece JSON gövdesi döner (eski şablon `<script>`
-		// etiketini kendisi sarıyordu). CDHead ham HTML beklediği için etiket
-		// BURADA sarılır — yoksa JSON sayfanın tepesine düz metin olarak
-		// basılıyordu (ölçüldü: /iletisim, 9 Kasım 2026).
 		ld := ""
 		if s := strings.TrimSpace(string(d.BreadcrumbJSONLD)); s != "" {
 			ld = `<script type="application/ld+json">` + s + `</script>`
@@ -1076,22 +955,11 @@ func (s *Server) pageBlockHome(ctx context.Context, siteID int64, locale string)
 }
 
 func (s *Server) handleNotFound(w http.ResponseWriter, r *http.Request) {
-	locale := langOf(r, s)
-	d := s.baseView(locale, s.langBase(locale), "404")
-	d.HomeURL = homeURL(locale)
-	d.NavCategories = s.navCategories(r.Context())
-	d.Theme = themeFromReq(r)
-	w.WriteHeader(http.StatusNotFound)
-	s.renderPublic(w, r, "notfound", d, "no-store")
+	s.handleCD404(w, r)
 }
 
 // ---- yorum + hit ----
 
-// buildCommentTree onaylı yorumları kök + yanıt zinciri olarak sıralar (Faz 36).
-// Bir yorum, zincirinin EN ÜST KÖKÜNÜN altında toplanır (yanıt-yanıtı dahil);
-// zinciri köke ulaşmayan (kök silinmiş/onaysız) yorum kök gibi gösterilir.
-// Döngü koruması vardır. Sıralama: kökler yorum sırasına göre, yanıtlar kendi
-// kökünün altında aynı akışla — sorgu created_at ASC döndürdüğü için doğaldır.
 func buildCommentTree(comments []repo.Comment) []commentTreeNode {
 	if len(comments) == 0 {
 		return nil
@@ -1179,9 +1047,6 @@ func (s *Server) handleAddComment(w http.ResponseWriter, r *http.Request) {
 		s.flashRedirect(w, r, url, kind, msg)
 	}
 
-	// Faz 35 — spam koruması.
-	// 1) Honeypot: gizli "web" alanını dolduran bot sessizce düşer (kayıt YOK).
-	//    Bota "işlem başarılı" sinyali gider ki davranışını değiştirmesin.
 	if strings.TrimSpace(r.FormValue("web")) != "" {
 		_ = repo.LogBotTrap(ctx, s.pool, ip, r.UserAgent(), "/yorum/honeypot", r.Referer())
 		geri("info", "Yorumunuz onay sonrası yayınlanacak.")
@@ -1228,11 +1093,6 @@ func (s *Server) handleHit(w http.ResponseWriter, r *http.Request) {
 
 // ---- feed / sitemap / robots ----
 
-// googleSourceURL Google News'te siteyi "kaynak" ekleme bağlantısını üretir:
-// https://www.google.com/preferences/source?q=<domain>
-//
-// Sorgu değerinde YALNIZCA domain olur — şema (http/https) ve yol yok.
-// Google bu biçimi bekler. Host'da port varsa (yalnız geliştirme) korunur.
 func googleSourceURL(base string) string {
 	host := strings.TrimSpace(base)
 	if u, err := url.Parse(host); err == nil && u.Host != "" {
@@ -1248,9 +1108,6 @@ func googleSourceURL(base string) string {
 
 // absBase mutlak site kökü (sitemap/JSON-LD için); istek başlığından düşer.
 func (s *Server) absBase(r *http.Request) string {
-	// Alan adı farkındalığı: canlıda bitcosar.com, önizlemede demo.
-	// (Eskiden koşulsuz cfg.BaseURL dönüyordu; sitemap/robots canlıya
-	// geçildiğinde demo adresini gösterecekti.)
 	if b := s.kanonikKok(r); b != "" {
 		return b
 	}
@@ -1276,7 +1133,7 @@ func (s *Server) handleSitemap(w http.ResponseWriter, r *http.Request) {
 	}
 	sb.WriteString(`<xhtml:link rel="alternate" hreflang="x-default" href="` + abs + `/"/></url>`)
 	// statik hizmet sayfaları
-	for _, p := range []string{"/bulten", "/ping", "/yazarlar", "/arsiv", "/borsa", "/fikstur", "/astroloji", "/etkinlikler", "/anketler", "/gazete-mansetleri", "/sinemalar", "/resmi-ilanlar", "/akis", "/hava-durumu", "/namaz-vakitleri", "/imsakiye", "/nobetci-eczaneler", "/rss-listesi"} {
+	for _, p := range []string{"/bulten", "/ping", "/yazarlar", "/arsiv", "/borsa", "/fikstur", "/astroloji", "/etkinlikler", "/anketler", "/sinemalar", "/resmi-ilanlar", "/akis", "/hava-durumu", "/namaz-vakitleri", "/imsakiye", "/nobetci-eczaneler", "/rss-listesi"} {
 		sb.WriteString("<url><loc>" + abs + p + "</loc></url>")
 	}
 	cs, _ := repo.ListCategories(ctx, s.pool, site.ID)
@@ -1314,9 +1171,6 @@ func (s *Server) handleSitemap(w http.ResponseWriter, r *http.Request) {
 			sb.WriteString("<url><loc>" + abs + "/" + html.EscapeString(p.Slug) + "</loc></url>")
 		}
 	}
-	// Resmî ilanlar: her ilan kendi kalıcı adresinde yayımlanıyor. BİK
-	// tebliği, içeriklere ait TAM URL adreslerinin ve son güncelleme
-	// zamanlarının site haritasında bulunmasını istiyor.
 	if notices, err := repo.NoticesForSitemap(ctx, s.pool, site.ID, 2000); err == nil {
 		for _, n := range notices {
 			loc := abs + publicNoticeURL("", n)
@@ -1364,15 +1218,6 @@ func (s *Server) handleSitemapNews(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(s.newsSitemap(abs, items)))
 }
 
-// handleRobots /robots.txt — CoinDesk yapısı.
-//
-// KAYNAK (ölçüldü, 7 Kasım 2026): genel kurallar (API/dahili yollar kapalı,
-// arama parametreleri kapalı), ardından AI tarayıcıları için "yalnız fiyat
-// sayfaları" bloğu, en sonda sitemap listesi.
-//
-// NEDEN AI BLOĞU: CoinDesk içerik lisansı gereği AI tarayıcılarına yalnız
-// fiyat sayfalarını açıyor. Toplayıcı site olarak aynı politikayı
-// uyguluyoruz — atıf vermeyen model eğitimi trafiği sunucu maliyeti.
 func (s *Server) handleRobots(w http.ResponseWriter, r *http.Request) {
 	abs := s.absBase(r)
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
@@ -1448,9 +1293,6 @@ func (s *Server) handleMedia(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(`<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675"><rect width="100%" height="100%" fill="#eef1f6"/></svg>`))
 		return
 	}
-	// Kripto ikonları: gömülü CC0 kütüphaneden servis edilir. Dosya adı
-	// tek bir yol parçası olmalı; cryptoicon.Bytes yalnız bilinen sembolü
-	// döndürür, bilinmeyen ve "../" gibi girişler 404 olur.
 	if strings.HasPrefix(path, "crypto/") {
 		name := strings.TrimPrefix(path, "crypto/")
 		name = strings.TrimSuffix(name, ".svg")
@@ -1487,15 +1329,6 @@ func (s *Server) handleMedia(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", ct)
 	w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
 	w.Header().Set("Content-Length", strconv.Itoa(len(data)))
-	// SVG: İKİNCİ SAVUNMA KATMANI (11 Kasım 2026).
-	//
-	// Yüklerken platform.SanitizeSVG beyaz liste temizliği yapıyor; bu
-	// başlık, temizlik bir gün atlansa/atlatılsa bile SVG BELGESİ içinde
-	// hiçbir script, dış kaynak ya da form eylemi çalışmamasını garanti
-	// eder (`default-src 'none'`). SVG ayrı sekmede açılırsa da zararsız.
-	//
-	// `sandbox` bilinçli olarak YOK: dosya <img src> ile yükleniyor,
-	// sandbox'lı SVG bazı tarayıcılarda hiç çizilmiyor (logo kaybolurdu).
 	if ct == "image/svg+xml" {
 		w.Header().Set("Content-Security-Policy",
 			"default-src 'none'; style-src 'unsafe-inline'; img-src data:")
@@ -1646,15 +1479,6 @@ func publicArticleURL(locale, slug string, id int64) string {
 	return base + slug + "-" + itoa(int(id))
 }
 
-// makaleURL CoinDesk URL deseniyle makale adresi üretir:
-//
-//	/{locale}/{section}/{YYYY}/{MM}/{DD}/{slug}
-//
-// NEDEN: CoinDesk deseni (spec §4) tarihi URL'de taşır — Google Haber'de
-// tazelik sinyali ve kaynakla birebir uyum. Yayın tarihi yoksa (taslak,
-// planlanmış) eski `slug-id` biçimine düşer; kırık bağlantı üretilmez.
-//
-// Bölüm (kategori) yoksa tarih köke yakın kalır: /{YYYY}/{MM}/{DD}/{slug}.
 func makaleURL(c repo.Content) string {
 	base := homeURL(c.Locale)
 	yol := ""
@@ -1671,10 +1495,6 @@ func makaleURL(c repo.Content) string {
 	return base + yol + t.Format("2006/01/02") + "/" + c.DisplaySlug()
 }
 
-// makaleIDMi /{section}/{y}/{m}/{d}/{slug} desenini çözer.
-//
-// (yil, ay, gun) değerleri takvimsel olarak geçerli olmalı; aksi hâlde
-// desen sayılmaz (ör. /kategori/3/5 gibi başka bir yol olabilir).
 func makaleTarihDeseni(segs []string) (slug string, ok bool) {
 	if len(segs) < 4 {
 		return "", false
@@ -1699,9 +1519,6 @@ func makaleTarihDeseni(segs []string) (slug string, ok bool) {
 	return slug, true
 }
 
-// hreflangLinks, yazı sayfasının <head> bölümüne basılacak alternatif dil
-// etiketlerini mutlak adreslerle kurar. links aktif dilde URL taşımaz; kendi
-// adresi selfURL'den gelir. Tek dilde hreflang anlamsız olduğu için nil döner.
 func hreflangLinks(absBase, selfURL, defaultLocale string, links []langLink) []langLink {
 	if len(links) < 2 {
 		return nil
@@ -1774,12 +1591,6 @@ func (s *Server) renderPublic(w http.ResponseWriter, r *http.Request, name strin
 			d.MemberLoggedIn = true
 			d.MemberName = u.Name
 			d.MemberInitial = memberInitial(u.Name)
-			// Profil simgesi HER ZAMAN üyenin kendi alanına gider.
-			//
-			// ÖNCE personel rollerinde "/admin" yazıyordu: yönetici/editör
-			// kendi avatarına basınca yönetim paneline düşüyordu (kullanıcı
-			// bildirimi). Personel için yönetim kısayolu artık /hesabim
-			// sayfasında ve çekmecede AÇIK bir bağlantı.
 			d.MemberURL = "/hesabim"
 			d.MemberUnread = s.uyeBildirimSayisi(r.Context(), u.ID)
 			d.MemberStaff = auth.StaffRoles[u.Role]
@@ -1788,9 +1599,6 @@ func (s *Server) renderPublic(w http.ResponseWriter, r *http.Request, name strin
 	if d.Footer == nil {
 		d.Footer = s.footerConfig(r.Context())
 	}
-	// Tek darboğaz: sayfa kendi alt bilgisini kursa da kurmasa da son söz
-	// burada söylenir. Aksi hâlde /en/arama gibi sayfalarda alt bilgi
-	// Türkçe kalıyordu (ölçüldü).
 	d.Footer = s.footerYerellestir(d.Footer, d.Lang)
 	if d.Menu == nil {
 		d.Menu = s.publicMenuLocale(r.Context(), d.Lang)
@@ -1815,10 +1623,6 @@ func (s *Server) renderPublic(w http.ResponseWriter, r *http.Request, name strin
 		d.OGImageGenis = true
 	}
 	if d.OGImage == "" {
-		// Sosyal kartlarda görselsiz kalmamak için kurumsal ikon yedeği.
-		// 512x512 kare: geniş kart iddiasında bulunulmaz, aksi halde X/Facebook
-		// görseli kırpıp ortasını gösterir. Panelden marka OG görseli (1200x630)
-		// yüklenirse yukarıdaki dal devreye girer ve geniş karta dönülür.
 		d.OGImage = strings.TrimRight(s.absBase(r), "/") + "/static/icon-512.png"
 		d.OGImageGenis = false
 	}
@@ -1859,9 +1663,6 @@ func (s *Server) handleManifest(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 		return
 	}
-	// Marka alanları sunucudaki ayarlardan gelir: ad değişince manifest
-	// de değişir, iki yerde farklı isim kalması (PWA kurulumunda eski ad)
-	// önlenir.
 	var m map[string]any
 	if json.Unmarshal(b, &m) == nil {
 		m["name"] = s.siteName
@@ -1877,16 +1678,6 @@ func (s *Server) handleManifest(w http.ResponseWriter, r *http.Request) {
 	_, _ = w.Write(b)
 }
 
-// handleFavicon /favicon.ico — kök ikon.
-//
-// NEDEN AYRI ROTA: tarayıcılar ve botlar `/favicon.ico`'yu head'de bağlantı
-// olmasa da KÖKTEN ister. Rota yokken her sayfa yüklemesinde 404 üretiyordu
-// (ölçüldü, 6 Kasım 2026 — sayfadaki tek 404 kaynağı buydu).
-//
-// ICO biçimi üretmiyoruz: PNG'yi `image/png` olarak sunuyoruz. Tarayıcılar
-// favicon'da MIME'a bakar, uzantıya bakmaz; ayrı bir ikili üretmek
-// gereksiz. Cache uzun: ikon içerik-adresli değil ama değişince `?v=`
-// ile değil dosya değişimiyle gelir — bu yüzden 1 gün makul.
 func (s *Server) handleFavicon(w http.ResponseWriter, r *http.Request) {
 	staticFS, err := fs.Sub(webui.FS, "static")
 	if err != nil {
@@ -1941,12 +1732,6 @@ func extOf(path string) string {
 	return ""
 }
 
-// sayfaDuzeniVar bir sayfa anahtarı için panelden kaydedilmiş ÖZEL düzen
-// olup olmadığını söyler.
-//
-// NEDEN: modüler şablonlar (page_layouts) panelde elle kurulmuş modüller
-// taşıyor; yeni kabuk bunları basmıyor. Düzen VARSA eski motor korunur ki
-// editörün işi sessizce yok olmasın. Düzen YOKSA yeni kabuk kullanılır.
 func (s *Server) sayfaDuzeniVar(ctx context.Context, pageKey string) bool {
 	b, err := repo.GetLayout(ctx, s.pool, 1, pageKey)
 	if err != nil {
@@ -1957,11 +1742,6 @@ func (s *Server) sayfaDuzeniVar(ctx context.Context, pageKey string) bool {
 	return trim != "" && trim != "[]" && trim != "null"
 }
 
-// cdArsivSayfasi /arsiv — son yayınlanan içerikler, yeni kabukta.
-//
-// ESKİ ŞABLON: site_header + "cat_liste" ızgarası. Yeni kabukta aynı
-// içerik `.cd-grid--3` kart ızgarasıyla basılır; üst çubuk, şerit ve alt
-// bilgi ortak cd bileşenlerinden gelir.
 func (s *Server) cdArsivSayfasi(w http.ResponseWriter, r *http.Request, locale string, siteID int64) {
 	ctx := r.Context()
 	items, _ := repo.RecentPublished(ctx, s.pool, siteID, locale, 100)

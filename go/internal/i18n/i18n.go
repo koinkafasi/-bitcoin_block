@@ -70,12 +70,6 @@ func Load(ctx context.Context, pool *pgxpool.Pool) (*Bundle, error) {
 
 // T verilen yerel için anahtarı döndürür; yoksa tr'ye, o da yoksa anahtara düşer.
 func (b *Bundle) T(locale, key string) string {
-	// BOŞ değer "çeviri yok" demektir, "boş metin" değil.
-	//
-	// Ölçüm (üretim): `footer.akis` gibi anahtarların satırı vardı ama tr
-	// değeri boştu; eski kod boş dizeyi döndürüp etiketi siliyordu →
-	// çekmecede yalnız emoji kalan bağlantılar. Boş değer atlanınca tr
-	// karşılığı, o da yoksa anahtarın kendisi kullanılır.
 	if v, ok := b.msgs[locale+"\x00"+key]; ok && v != "" {
 		return v
 	}

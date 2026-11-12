@@ -1,32 +1,3 @@
-// Package scoring içeriğin yayın öncesi alaka puanını (0–100) üretir.
-//
-// Puan iki yerde de aynı fonksiyonla hesaplanır:
-//   - bot hattında, içerik oluşturulurken (repo.CrawlFeed),
-//   - panelde "Uygunluğu hesapla" düğmesine basıldığında
-//     (httpapi.handleAIScore).
-//
-// Tek kaynak olmasının nedeni somut bir hataydı: puan yalnızca panelde
-// hesaplandığı için 39.211 taslağın 39.209'u `ai_score=0` ile duruyordu.
-// Kategori yayın kapısı (`categories.min_score`) bu alana baktığı için kapı
-// hiçbir taslakta çalışmıyordu — eşiği 80 yapmak da 0 puanlı taslakları
-// sessizce durdururdu. İki ayrı kopya tutmak zamanla ayrışacağı için tek
-// fonksiyon, saf ve test edilebilir tutuldu.
-//
-// # Bu puanın NE ÖLÇMEDİĞİ
-//
-// Adı "alaka" ama ölçtüğü şey üstveri eksiksizliğidir: başlık ve spot
-// uzunluğu, etiket sayısı, kapak görselinin ve kaynak bağlantısının varlığı.
-// Konuyla, güncellikle ya da Google Trends uyumuyla ilgili tek bir sinyal
-// içermez ve içinde AI yoktur. 29 Ekim 2026 ölçümü bunun sonucunu gösterdi:
-// bot her taslağı aynı biçimde ürettiği için sinyaller neredeyse sabit ve
-// 34.156 taslağın %87,9'u tek bir 60–79 bandına düşüyor. Bu yüzden
-// `min_score` eşiği için kullanışlı bir ara değer yok (60 → %94 geçer,
-// 80 → %94 durur). Ayrıntı: specs/11-bot-ve-icerik-akisi.md §5.
-//
-// Explain bu yüzden var: editöre 72 sayısını değil, 72'nin nereden geldiğini
-// göstermek için. Puanı ayırt edici yapmak ayrı bir iştir (konuya bağlı
-// sinyal gerekir) ve bu paketin aritmetiğini değiştirmeden yapılamaz —
-// değiştirildiğinde kayıtlı 34 bin puan ile yenileri kıyaslanamaz hâle gelir.
 package scoring
 
 import (
@@ -68,12 +39,6 @@ const (
 // Taban puan: hiçbir sinyal yokken bile içerik sıfırdan başlamaz.
 const taban = 20
 
-// Explain puanı ve onu oluşturan kalemleri döndürür.
-//
-// Kalemlerin Puan toplamı, kırpma (clamp) öncesi ham puana eşittir; test bunu
-// sabitler. Aritmetik Relevance ile birebir aynıdır ve bilerek öyle tutulur:
-// kayıtlı 34 bin puan bu formülle üretildi, değiştirmek onları kıyaslanamaz
-// yapardı.
 func Explain(in Input) (int, []Signal) {
 	sig := make([]Signal, 0, 7)
 	// ham sıfırdan başlar; taban puanı da bir kalem olarak eklenir, böylece
@@ -145,9 +110,6 @@ func Explain(in Input) (int, []Signal) {
 			Ipucu: "Doğrulanabilirlik için kaynak bağlantısı ekle."})
 	}
 
-	// Başlıkta tekrar eden sözcük. Bilerek "bilgi" kalemi: editöre "sözcük
-	// tekrarla" demek istemeyiz — bu sinyal konunun başlıkta merkezde
-	// olduğunun kaba göstergesi olarak tasarlandı, hedef değil.
 	kd := KeywordDensity(in.Title)
 	ekle(Signal{Ad: "Başlıkta tekrar eden sözcük", Puan: kd, Enb: 15,
 		Durum: DurumBilgi})
@@ -155,10 +117,6 @@ func Explain(in Input) (int, []Signal) {
 	return clamp(ham), sig
 }
 
-// Relevance puanı ve gerekçe metnini döndürür.
-//
-// Ağırlıklar bilinçli olarak açıklanabilir: her sinyalin katkısı sabit ve
-// ölçülebilir. Kalem kalem dökümü için Explain kullanılır.
 func Relevance(in Input) (int, string) {
 	score, _ := Explain(in)
 	return score, Note

@@ -5,12 +5,6 @@ import (
 	"testing"
 )
 
-// Faz 193a — metin hijyeni.
-//
-// ÖLÇÜM (üretim): 1094 içerikte gövdede "&nbsp;", 2405'inde sayısal varlık,
-// 1088'inde agregatör başlık yığını; yayındaki 982/986 gövde TEK paragraf;
-// 94 spot cümle ortasında bitiyordu.
-
 func TestVarlikCoz(t *testing.T) {
 	cases := []struct{ in, out string }{
 		{"Mardin&#039;in Kızıltepe ilçesinde", "Mardin'in Kızıltepe ilçesinde"},

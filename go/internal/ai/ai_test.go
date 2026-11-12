@@ -6,9 +6,6 @@ import (
 	"testing"
 )
 
-// TestMockStructuredTitleUsesValidJSON, mock sağlayıcının tırnak/ters bölü
-// içeren Türkçe girdide bile geçerli JSON dizi ürettiğini doğrular.
-// Önceden fmt.Sprintf ile kurulan dizi, alıntı içeren başlıkta bozuluyordu.
 func TestMockStructuredTitleUsesValidJSON(t *testing.T) {
 	p := &mockProvider{}
 	input := `Türkçe "alıntı" \ başlık şğüöçİı`

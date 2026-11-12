@@ -8,12 +8,6 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
-// YouTube video arşivi (bkz. migrations/0122_youtube_icerik).
-//
-// Tablo, scheduler'ın periyodik çektiği YouTube içeriğini tutar; sayfalar
-// buradan okur. Yönetim bayrakları (`one_cikan`, `canli`, `gizli`, `sira`)
-// yalnız panelden değişir — senkronizasyon bunları EZMEZ.
-
 // YoutubeKayit tek bir arşiv satırı.
 type YoutubeKayit struct {
 	VideoID   string
@@ -45,12 +39,6 @@ func youtubeTara(row pgx.Row) (YoutubeKayit, error) {
 	return k, err
 }
 
-// YoutubeKaydet çekilen kayıtları ekler/günceller.
-//
-// YALNIZ YouTube'dan gelen alanlar yazılır: başlık, açıklama, görsel, süre,
-// izlenme, yayın zamanı. `canli/one_cikan/gizli/sira` DOKUNULMAZ — editörün
-// "öne çıkar" veya "gizle" kararı her senkronizasyonda korunmalı.
-// (Canlı işareti ayrı çağrıyla, YoutubeCanliAyarla ile yazılır.)
 func YoutubeKaydet(ctx context.Context, pool DB, items []YoutubeKayit) (int, error) {
 	n := 0
 	for i, it := range items {
@@ -202,9 +190,6 @@ func YoutubeBayrak(ctx context.Context, pool DB, videoID, alan string, deger boo
 	return err
 }
 
-// YoutubeSil kaydı arşivden kaldırır. Senkronizasyon bir sonraki turda
-// YouTube'da hâlâ duruyorsa yeniden ekler; kalıcı silmek için panelden
-// "gizle" kullanılır (bkz. panel açıklaması).
 func YoutubeSil(ctx context.Context, pool DB, videoID string) error {
 	_, err := pool.Exec(ctx, `DELETE FROM youtube_icerik WHERE video_id = $1`, videoID)
 	return err

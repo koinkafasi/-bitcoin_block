@@ -8,24 +8,6 @@ import (
 	"testing"
 )
 
-// `data-confirm` projede iki ayrı anlamda kullanılıyor ve ayrımı DEĞERİ
-// belirliyor:
-//
-//	"/..." ile başlar → POST edilecek URL   (form dışındaki öğeler, app.js)
-//	aksi halde        → onay METNİ          (form içindeki öğeler, admin-ui.js)
-//
-// app.js'teki belge düzeyi tık dinleyicisi bu ayrımı yapmıyordu: metin
-// taşıyan formları da yakalıyor, gerçek gönderimi `preventDefault` ile iptal
-// edip onay metnini URL sanarak POST ediyordu. Sonuç: gazete panelindeki
-// "Sil" ve "Gönder" düğmeleri hiçbir şey yapmıyordu — istek
-// `/admin/Sayı silinsin mi?` gibi anlamsız bir adrese gidiyordu.
-//
-// İkinci hata: onay metni düğmede, formda değilse (`<button type=submit
-// data-confirm="...">`) hiç onay sorulmuyordu; "Varsayılana Dön" ve
-// "Tümünde değiştir" doğrudan gönderiliyordu.
-//
-// Aşağıdaki testler bu iki hatanın geri gelmesini engeller.
-
 func webuiOkuStatic(t *testing.T, ad string) string {
 	t.Helper()
 	b, err := os.ReadFile(filepath.Join("static", ad))
@@ -82,15 +64,6 @@ func TestDataConfirmFormKuraliDevirli(t *testing.T) {
 	}
 }
 
-// TestDataConfirmKullanimlariTutarli şablonlardaki her kullanımın değerine
-// ve öğe türüne göre doğru kurala oturduğunu doğrular.
-//
-//	<form data-confirm>            → METİN (formun tamamı için onay)
-//	<button type=submit data-confirm> → METİN (yalnız o düğme için onay)
-//	<a>/<span>… data-confirm       → URL   (app.js POST eder)
-//
-// Bağlantının form içinde olması sorun değil: tıklama form göndermez.
-// Karışırsa iki hata sınıfından biri geri gelir.
 func TestDataConfirmKullanimlariTutarli(t *testing.T) {
 	oznitelik := regexp.MustCompile(`data-confirm="([^"]*)"`)
 	// data-confirm'in bulunduğu öğenin açılış etiketi (geriye doğru).

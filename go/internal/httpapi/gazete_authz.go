@@ -7,15 +7,6 @@ import (
 	"theblock/site/internal/repo"
 )
 
-// ---- Gazete yetkilendirme (plan §8) ----
-//
-// Yetki iki katmandan doğar:
-//  1. Kullanıcı rolü (Yönetici > Editör > ...) — taban yetki.
-//  2. gazete_user_roles ile site bazlı atama (sorumlu/editor/izleyici) — atama kazanır.
-//
-// Ayrıca tüm gazete işlemleri site lisansına (site_features 'gazete') bağlıdır;
-// yalnızca Yönetici lisanssızken yapılandırmaya erişebilir.
-
 const (
 	gazeteActionView     = "goruntule"
 	gazeteActionEdit     = "duzenle"

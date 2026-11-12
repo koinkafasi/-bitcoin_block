@@ -9,13 +9,6 @@ import (
 	"theblock/site/internal/repo"
 )
 
-// Faz 208: panel yetki matrisi ve saf yardımcılar.
-//
-// `adminAllowed`/`adminMinRole` tüm panelin erişim kararını veriyor; burada
-// kilitlenmemesi en tehlikeli regresyon türü (yanlış rota → yanlış rol).
-// Kurallar `authz.go` içindeki önek listelerinden türetilmiyor, elle
-// yazılıyor: liste değişirse test bilinçli olarak kırılsın.
-
 // --- hasPathPrefix ---
 
 func TestHasPathPrefixSinirDuyarli(t *testing.T) {
@@ -43,10 +36,6 @@ func TestHasPathPrefixSinirDuyarli(t *testing.T) {
 // --- adminMinRole: bilinen rotalar ---
 
 func TestAdminMinRoleSahipRotalari(t *testing.T) {
-	// Yönetici dışına kapalı olması gereken çekirdek rotalar.
-	//
-	// Her satırın gerekçesi authz.go'daki yorumda; burada kilitlenen şey
-	// "hangi rota hangi rolden itibaren açılır" kararı.
 	rotalar := []string{
 		"/admin/ayarlar",
 		"/admin/ayarlar/gsc",

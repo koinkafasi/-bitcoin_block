@@ -28,14 +28,6 @@ type EvergreenRow struct {
 	YasGun int
 }
 
-// LinkSuggestions hedef içerik için site içi link önerileri üretir.
-// Puanlama: aynı konu kümesi (+6), ortak etiket (+3/her, en çok 3),
-// aynı kategori (+2), başlık kelime örtüşmesi (+1/kelime, en çok 4).
-// linkSuggestionsSQL alaka havuzunu üretir.
-//
-// Sabit olarak dışarıda: bu sorgunun performansı ve SIRALAMASI sözleşme.
-// Regresyon testi tie-break'in (`id DESC`) ve aday CTE'sinin yerinde
-// kaldığını bu sabit üzerinden doğrular.
 const linkSuggestionsSQL = `
 	WITH aday AS (
 		SELECT c.id, c.title, COALESCE(c.slug,'') AS slug, c.locale, c.category_id,
@@ -72,21 +64,6 @@ func LinkSuggestions(ctx context.Context, pool *pgxpool.Pool, siteID, contentID 
 	}
 	tgtTokens := titleTokens(tc.Title)
 
-	// ADAY LİSTESİ ÖNCE DARALTILIR, etiketler YALNIZ o 400 satır için toplanır.
-	//
-	// ÖLÇÜM (10 Kasım 2026, EXPLAIN ANALYZE): eski tek bloklu sorgu TÜM
-	// yayındaki içerikleri (3 492 satır) ve tüm etiket bağlarını (25 290
-	// satır) gruplayıp sonra 400'e indiriyordu — **40,2 ms**, 93 ms'lik
-	// soğuk makale üretiminin %43'ü. CTE ile aynı sonuç **9,9 ms**.
-	//
-	// KASITLI SAPMA — SIRALAMA ARTIK DETERMİNİSTİK. Eski sorgu yalnız
-	// `ORDER BY c.updated_at DESC` diyordu ve eşitliklerde tie-break YOKTU.
-	// Üretimde binlerce içerik AYNI `updated_at` değerini taşıyor (toplu
-	// güncelleme); bu yüzden eski sıra PLAN'A bağlıydı: aynı sorgu
-	// `enable_hashagg=off` ile çalıştırıldığında ilk 5 kimlik
-	// {7128,8443,…} yerine {6117,6119,6116} dönüyor (ölçüldü). Yani
-	// "İlgili Haberler" listesi plan/sürüm değişiminde kendiliğinden
-	// değişebiliyordu. `id DESC` tie-break'i bunu sabitler.
 	rows, err := pool.Query(ctx, linkSuggestionsSQL, siteID, contentID)
 	if err != nil {
 		return nil, err

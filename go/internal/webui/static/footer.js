@@ -1,5 +1,4 @@
-/* footer.js — Footer Yönetimi paneli: şerit/sütun link satırı düzenleme,
- * sıralama, JSON kaydetme. HTMX swap sonrası yeniden bağlanır. */
+
 (function () {
   'use strict';
 

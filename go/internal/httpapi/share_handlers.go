@@ -347,9 +347,6 @@ func (s *Server) autoShare(ctx context.Context, siteID, contentID int64) {
 	if s.paylasimSetting(ctx, "auto") != "1" {
 		return
 	}
-	// #nosec G118 -- Bilinçli: paylaşım yanıtı bloklamamalı. İstek
-	// context'i yanıt bitince iptal olur; arka plan işi kendi
-	// context'ini (zaman aşımlı) kullanır.
 	go func() {
 		_, _ = s.shareContent(context.Background(), siteID, contentID)
 	}()

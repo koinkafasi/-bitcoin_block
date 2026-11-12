@@ -43,14 +43,10 @@ templ cdMegaNav(s CDShell) {
 						</a>
 					}
 					<div class="cd-mega" id={ cdMenuID(g.Label) }>
-						<!-- Panel başlığı: ikon 32×32 + ad 16/24 w700 + ok -->
+												// Panel başlığı: ikon 32×32 + ad 16/24 w700 + ok
 						<div class="cd-mega__bas">
 							<span class="cd-mega__ikon" aria-hidden="true">
-								<svg viewBox="0 0 32 32" width="32" height="32" focusable="false">
-									<rect x="4" y="6" width="24" height="2" fill="currentColor"/>
-									<rect x="4" y="15" width="24" height="2" fill="currentColor"/>
-									<rect x="4" y="24" width="16" height="2" fill="currentColor"/>
-								</svg>
+								@cdBasSimge()
 							</span>
 							<span class="cd-mega__ad">{ g.Label }</span>
 							<svg class="cd-mega__ok" viewBox="0 0 9 18" width="9" height="18"
@@ -103,7 +99,7 @@ templ cdMenuSutun(s CDShell, sut CDMenuColumn) {
 		<ul class="cd-mega__sutun">
 			for _, it := range sut.Items {
 				if it.Kind == "baslik" {
-					<li class="cd-mega__baslik">{ it.Label }</li>
+					<li class="cd-mega__baslik">@cdBasSimge() { it.Label }</li>
 				} else if it.Kind == "tumu" {
 					<li class="cd-mega__tumu">
 						<a href={ templ.SafeURL(s.LangBase + it.Href) }>{ it.Label }</a>

@@ -68,9 +68,6 @@ func TestTTLCacheBasarisizSonucOnbellegeYazilmaz(t *testing.T) {
 	}
 }
 
-// TestTTLCacheSingleflight: aynı ana için eşzamanlı çağrılar TEK yükleme
-// yapar. Yük testinde (50 eşzamanlı) önbellek boşken oluşan sürüyü bu
-// engelliyor.
 func TestTTLCacheSingleflight(t *testing.T) {
 	c := newTTLCache[int](time.Minute)
 	ctx := context.Background()

@@ -15,17 +15,6 @@ import (
 	"theblock/site/internal/repo"
 )
 
-// Editörden tetiklenen AI çeviri istekleri.
-//
-// Neden kuyruk: AI çeviri 20–160 sn sürüyor. İsteği HTTP yanıtı içinde
-// bekletmek iki sert sınırı aşıyordu (ölçüm: 28 paragraflık haber 160 sn,
-// istek HTTP 000 ile düştü):
-//   - sunucu WriteTimeout: 60 sn
-//   - Cloudflare proxy: ~100 sn (524)
-//
-// Düğme artık yalnız `ceviri_istek` satırı yazar; ceviri.Run döngüsü bu
-// satırları otomatik kuyruktan ÖNCE işler; panel 2 sn'de bir durumu yoklar.
-
 // İstek durumları (DB'de metin olarak durur).
 const (
 	IstekBekliyor  = "bekliyor"
@@ -46,11 +35,6 @@ type Istek struct {
 	UpdatedAt time.Time
 }
 
-// IstekEkle içerik+dil için çeviri isteği yazar.
-//
-// Aynı çift için tek satır vardır (benzersiz indeks). Bekleyen/çalışan bir
-// istek varsa dokunulmaz: düğmeye iki kez basmak iki çeviri üretmemeli.
-// Bitmiş/hatalı istek yeniden denenebilsin diye sıfırlanır.
 func IstekEkle(ctx context.Context, pool *pgxpool.Pool, contentID int64, locale string) error {
 	if pool == nil {
 		return errors.New("veritabanı yok")
@@ -92,10 +76,6 @@ func IstekDurum(ctx context.Context, pool *pgxpool.Pool, contentID int64, locale
 	return i, true, nil
 }
 
-// istekAl sıradaki bekleyen isteği sahiplenir.
-//
-// SKIP LOCKED: süreç iki kez başlarsa (deploy sırasında kısa örtüşme) aynı
-// istek iki kez işlenmez.
 func istekAl(ctx context.Context, pool *pgxpool.Pool) (*Istek, error) {
 	var i Istek
 	err := pool.QueryRow(ctx, `
@@ -143,9 +123,6 @@ func istekIsle(ctx context.Context, pool *pgxpool.Pool, aiclient *ai.Client, log
 			"dil", is.Locale, "error", err)
 		return false
 	}
-	// Üretim sürerken otomatik tur aynı çeviriyi yazmış olabilir (ölçüm:
-	// 3,5 dk süren istek sırasında otomatik tur 554'ü çevirdi). Kaydetmeden
-	// önce son kontrol: kopya çeviri oluşturmayalım.
 	if trs, err := repo.TranslationsOf(ctx, pool, src.TranslationRootID()); err == nil {
 		for _, t := range trs {
 			if t.Locale == is.Locale && t.ID != src.ID {
@@ -159,11 +136,6 @@ func istekIsle(ctx context.Context, pool *pgxpool.Pool, aiclient *ai.Client, log
 
 	nid, err := Kaydet(ctx, pool, src, is.Locale, cev, durum)
 	if err != nil {
-		// Kayıt düştüyse nedeni "çeviri zaten var" olabilir: contents
-		// tablosunda (translation_of, locale) benzersiz kısıtı YOK, ama
-		// otomatik tur aynı çeviriyi bizimle aynı anda yazmış olabilir.
-		// Kullanıcıya hata göstermek yanlış olur — çeviri VAR. Mevcut
-		// kayda bağla.
 		if trs, terr := repo.TranslationsOf(ctx, pool, src.TranslationRootID()); terr == nil {
 			for _, t := range trs {
 				if t.Locale == is.Locale && t.ID != src.ID {
@@ -225,10 +197,6 @@ func hataMetni(err error) string {
 	return "Çeviri üretilemedi. Ayrıntı sunucu günlüğüne yazıldı."
 }
 
-// kayitHataMetni veritabanı hatasını editöre gösterilecek metne çevirir.
-//
-// Ham SQL metni gösterilmez: FK ihlali doğrudan sızıyordu
-// ("insert or update on table contents violates foreign key constraint").
 func kayitHataMetni(err error) string {
 	msg := strings.ToLower(err.Error())
 	switch {

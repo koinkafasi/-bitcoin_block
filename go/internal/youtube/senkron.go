@@ -36,13 +36,6 @@ func VarsayilanAyar() Ayar {
 	}
 }
 
-// AyarlariOku settings/youtube bölümünü okur; eksik alanlar varsayılanda kalır.
-//
-// TEK SORGU: alanlar tek tek okunuyordu ve settings tablosuna anahtar başına
-// bir gidiş-dönüş yapılıyordu (10 sorgu). Ana sayfada üç ayrı video bloğu
-// ayarları okuduğu için istek başına 30 sorgu ediyordu — ölçüm (8 Kasım 2026,
-// log_statement=all, tek ana sayfa isteği): 54 sorgunun 30'u buydu.
-// Bölümün tamamı tek sorguda alınıp bellekte eşlenir.
 func AyarlariOku(ctx context.Context, pool repo.DB) Ayar {
 	a := VarsayilanAyar()
 	tum, err := repo.GetSettingsText(ctx, pool, "youtube")
@@ -144,10 +137,6 @@ func VideoIDCikar(s string) string {
 	return ""
 }
 
-// Senkron kanalı bir kez çeker ve arşive yazar.
-//
-// Dönen Sonuc panel "Şimdi çek" düğmesinde özet göstermek için kullanılır.
-// Hata olsa bile yazılabilen kısım yazılır (RSS düşse canlı yayın güncellenir).
 func Senkron(ctx context.Context, pool repo.DB, logger *slog.Logger) (Sonuc, error) {
 	a := AyarlariOku(ctx, pool)
 	if !a.Aktif {

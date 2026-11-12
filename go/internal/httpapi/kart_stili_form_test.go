@@ -7,11 +7,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// Tasarımcı, blok seçeneklerini JSON olarak saklar (opts nesnesi).
-// Aşağıdaki testler kart stili alanlarının bu JSON'dan doğru
-// ayrıştırıldığını ve renk/boyut değerlerinin güvenli biçimde CSS
-// değişkenlerine dönüştüğünü doğrular.
-
 func parseTekBlok(t *testing.T, opts string) homeBlock {
 	t.Helper()
 	raw := []byte(`[{"id":"b1","type":"ust_manset","visible":true,"opts":` + opts + `}]`)

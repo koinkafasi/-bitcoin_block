@@ -7,9 +7,6 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-// ContentAfterBuSitede yayın sırasına göre verilen zamanın hemen SONRAKİ içeriğini
-// döndürür (aynı site + dil, yayında, video/galeri dışı). "SIRADAKİ HABER" bandı
-// için (Faz 13). categoryID > 0 ise yalnız o kategoriden arar; 0 ise tümü.
 func ContentAfter(ctx context.Context, pool *pgxpool.Pool, siteID int64, after time.Time, locale string, excludeID, categoryID int64) (Content, error) {
 	var c Content
 	q := `
@@ -32,9 +29,6 @@ func ContentAfter(ctx context.Context, pool *pgxpool.Pool, siteID int64, after t
 	return c, nil
 }
 
-// ContentBefore, ContentAfter'ın simetriği: yayın sırasına göre verilen
-// zamanın hemen ÖNCEKİ içeriğini döndürür. "ÖNCEKİ HABER" bandı için (Faz 14).
-// categoryID > 0 ise yalnız o kategoriden arar; 0 ise tümü.
 func ContentBefore(ctx context.Context, pool *pgxpool.Pool, siteID int64, before time.Time, locale string, excludeID, categoryID int64) (Content, error) {
 	var c Content
 	q := `

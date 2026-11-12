@@ -1,33 +1,4 @@
-/* cd-vkaydir.js — video sayfası SAĞ KOLON akışı.
- *
- * KULLANICI İSTEĞİ (11 Kasım 2026): "sağda scroll yok ve sağdaki video alta
- * yukarı doğru bir hafif transparan geçiş var tasarımda ve sağdaki içerikler
- * mouse ile alta doğru çok profesyonel bir akış alıyor" (CoinDesk referansı).
- *
- * ÜÇ PARÇA:
- *   1) Kaydırma çubuğu GİZLİ          → CSS (scrollbar-width: none)
- *   2) Üst/altta saydam geçiş (maske) → CSS (mask-image gradyanı)
- *   3) Fare tekerleğiyle YUMUŞAK akış → bu dosya
- *
- * NEDEN JS: tarayıcının varsayılan tekerlek kaydırması "sıçrar" (tek tıkla
- * ~100 px, animasyon yok). CSS `scroll-behavior: smooth` yalnız PROGRAMATİK
- * kaydırmayı yumuşatır, tekerleği DEĞİL — tekerlek sıçramaya devam ederdi.
- *
- * ZAMANA BAĞLI YUMUŞATMA (ölçüm dersi): ilk sürüm kare başına sabit oranla
- * (`fark * 0.14`) yaklaşıyordu. Kare hızı düştüğünde (arka plan sekmesi,
- * güç tasarrufu) akış BİTİYORDU — ölçümde 15 karede 1 px ilerledi. Artık
- * ilerleme GEÇEN ZAMANA göre hesaplanıyor: 60 fps'te de 10 fps'te de aynı
- * sürede aynı mesafe. Kare hızı yalnız akıcılığı etkiler, hızı değil.
- *
- * DOĞRU DAVRANIŞ (aksini yapmak rahatsız edici olurdu):
- *   • Liste başındayken YUKARI, sonundayken AŞAĞI tekerlek → olay
- *     yakalanmaz, SAYFA kayar (kullanıcı listede mahsur kalmaz).
- *   • Kaydırma sırasında sayfa kaymaz (preventDefault) — çift hareket yok.
- *   • Dokunmatik cihazda DEVRE DIŞI: tarayıcının ataletli kaydırması daha
- *     iyi; çift davranış olmasın.
- *   • `prefers-reduced-motion: reduce` → yumuşatma YOK, doğrudan atlar
- *     (hareket hassasiyeti olan kullanıcı yavaş akış istemez).
- */
+
 (function () {
   'use strict';
 

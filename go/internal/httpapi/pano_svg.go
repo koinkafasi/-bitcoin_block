@@ -7,16 +7,6 @@ import (
 	"strings"
 )
 
-// ---- Pano grafikleri (saf SVG) ----
-//
-// Neden kütüphane yok: panel zaten sunucu tarafında render ediliyor ve
-// grafikler yalnız dört biçimde (alan, halka, sütun, yatay çubuk). 100 KB'lık
-// bir grafik paketi yüklemek yerine burada deterministik SVG üretiyoruz;
-// çıktı test edilebilir, tema renklerini CSS değişkeninden alır.
-//
-// Tüm işlevler saf: girdi seridir, çıktı HTML'dir. Testte koordinatlar
-// doğrulanabilsin diye yuvarlama tek yerde.
-
 // panoSeri grafik için normalleştirilmiş seri.
 type panoSeri struct {
 	Values []int
@@ -57,11 +47,6 @@ func panoNokta(vals []int, w, h float64, pad float64) [][2]float64 {
 	return pts
 }
 
-// panoEgri noktalardan yumuşak bir yol üretir.
-//
-// Kübik Bézier, kontrol noktaları yatayda 1/3 aralıkta: Pacely'deki spark
-// eğrileriyle aynı görünüm. Gerilim (overshoot) yok — değerler arasında
-// şişme olursa grafik yalan söyler.
 func panoEgri(pts [][2]float64) string {
 	if len(pts) == 0 {
 		return ""
@@ -87,14 +72,6 @@ func panoAlan(pts [][2]float64, h, pad float64) string {
 	return egri + fmt.Sprintf(" L%.1f,%.1f L%.1f,%.1f Z", pts[len(pts)-1][0], taban, pts[0][0], taban)
 }
 
-// panoAlanChart alan + çizgi grafiği üretir. Noktalar veri ipucu taşır:
-// JS fareyle üzerine gelince balon gösterir.
-//
-// kim: gradyan kimliğine eklenen ayırt edici. Pano aynı sayfada ÜÇ seri
-// (7/14/30 gün) çiziyor; sabit `id="pnAlanGrad"` üç kez basılıyordu ve bu
-// geçersiz HTML (id tekil olmalı). Tarayıcıda ölçüldü: pnAlanGrad×3.
-// `fill="url(#…)"` ilk tanıma çözüldüğü için görüntü bozulmuyordu, ama
-// belge geçersizdi ve ileride gradyanı seriye göre değiştirmek imkânsızdı.
 func panoAlanChart(s panoSeri, w, h int, kim string) template.HTML {
 	if len(s.Values) < 2 {
 		return template.HTML(`<div class="pn-bos">Henüz veri yok</div>`)

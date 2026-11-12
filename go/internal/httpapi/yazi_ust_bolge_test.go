@@ -11,12 +11,6 @@ import (
 	"theblock/site/internal/webui"
 )
 
-// Yazı sayfası "Üst" bölgesi.
-//
-// Kullanıcı isteği: "Yazı sayfası şablon düzeninden en üste şablon alanı
-// ayarla, oraya ekleyeceğim" — yazı sayfasında başlıktan ÖNCE, tam genişlik
-// bir bölge olmalı ve panelde seçilebilmeli.
-
 func TestYaziSayfasiUstBolgesiVar(t *testing.T) {
 	zones := builderZonesFor("article")
 	require.NotEmpty(t, zones)

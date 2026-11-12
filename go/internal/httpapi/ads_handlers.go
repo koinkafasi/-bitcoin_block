@@ -53,9 +53,6 @@ func (s *Server) fillAdSlots(ctx context.Context, siteID int64, d *tmplData) {
 	}
 }
 
-// buildAdHTML bir reklamı render/hazır HTML'e çevirir.
-// - reklamda özel HTML verildiyse süzülmüş hâliyle,
-// - yoksa görsel + bağlantı (tıklama sayacı): <a href="/api/ad-tikla/{id}?y=hedef">
 func buildAdHTML(a repo.Ad, idx int) string {
 	beacon := fmt.Sprintf(`<img src="/api/ad-gorselleme?id=%d" width="1" height="1" alt="" aria-hidden="true" style="width:1px;height:1px;border:0;display:block;margin:0 auto">`, a.ID)
 	// Depodaki kayıt süzgeçten geçmiş olsa da (adFromForm) eski satırlar ham
@@ -302,11 +299,6 @@ func parseIntOr(v string) int {
 
 // ---- Public ölçüm ----
 
-// handleAdClick tıklamayı sayar ve hedefe yönlendirir.
-//
-// Güvenlik: yönlendirme hedefi öncelikle reklamın DB'de kayıtlı target_url'i
-// olur (yönetici kontrollü). Kullanıcı kontrollü ?y= parametresi yalnızca
-// site-içi göreli yol için kabul edilir; böylece açık yönlendirme engellenir.
 func (s *Server) handleAdClick(w http.ResponseWriter, r *http.Request) {
 	id := parseID(r.PathValue("id"))
 	site := s.siteByDomain(r.Context(), r.Host)

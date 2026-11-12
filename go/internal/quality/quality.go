@@ -1,17 +1,3 @@
-// Package quality içerik metnini editoryal kalite açısından ölçer.
-//
-// Tasarım ilkesi: burada "AI dedektörü" taklit edilmez. Üçüncü taraf AI
-// dedektörleri güvenilmez (yanlış pozitif oranları yüksek) ve Google sıralama
-// sinyali olarak kullanılmaz. Bunun yerine okunabilirliği, özgünlüğü ve
-// tekrarı ölçen deterministik metrikler üretilir; sonuç editöre "neden zayıf"
-// bilgisini verir, otomatik yayın kararı vermez.
-//
-// Ölçülenler:
-//   - cümle uzunluğu ortalaması ve değişkenliği (tekdüze ritim kötü yazıdır),
-//   - sözcük çeşitliliği (MATTR — hareketli ortalama tip-token oranı),
-//   - dil bazlı klişe ifadeler,
-//   - uzun aralıklı birebir tekrar (kendi kendini tekrar / şablon metin),
-//   - paragraf yapısı.
 package quality
 
 import (
@@ -216,10 +202,6 @@ func Analyze(text, lang string) Report {
 	return finish(m, blockers, warnings, imla)
 }
 
-// finish skoru ve notu hesaplar. Ağırlıklar bilinçli olarak muhafazakâr:
-// uyarılar bilgilendirir, engelleyiciler yayın öncesi çözülmelidir. Bir
-// engelleyici varsa skor "yayına hazır değil" bandına (<= 50) çekilir;
-// böylece kısa/boş metin yüksek not alamaz.
 func finish(m Metrics, blockers, warnings []Finding, imla []ImlaBulgu) Report {
 	score := 100
 	if len(blockers) > 0 {
@@ -381,9 +363,6 @@ type phraseCount struct {
 	n    int
 }
 
-// repeatedPhrases n-gram'ları sayar; yalnız tekrar edenleri döndürür.
-// Aynı metnin kaydırılmış kopyaları (a b c d e f g / b c d e f g h) tek
-// sayılsın diye ardışık tekrarlar birleştirilir.
 func repeatedPhrases(words []string, n int) []phraseCount {
 	if n <= 0 || len(words) < n {
 		return nil

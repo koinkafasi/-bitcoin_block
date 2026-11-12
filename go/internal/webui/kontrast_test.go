@@ -12,24 +12,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// Küçük metin kontrastı — token değerleri (Faz 180, A-7).
-//
-// NEDEN: panelde birkaç küçük metin WCAG AA (4.5) altında kalıyordu.
-// Ölçülen değerler:
-//
-//	beyaz / --accent #fa0000      4.15   (buton, rozet dolgusu)
-//	beyaz / --ok     #16a34a      3.30   (rozet)
-//	beyaz / --warn   #d97706      3.19   (rozet)
-//	--pn-sig / kart               3.95   (12.5px bağlantı)
-//	--pn-good / rozet zemini      4.20   (delta rozeti)
-//	--accent / sayfa zemini       3.70   (bağlantı metni)
-//
-// ÇÖZÜM: hiçbir MARKA token'ı değiştirilmedi. Yalnızca "aynı rengin metin
-// ya da dolgu olarak kullanılan" türetilmiş tonları eklendi:
-// --accent-fill, --accent-text, --ok-fill, --warn-fill, --pn-sig-fg,
-// --pn-good-fg. Bu test, türetilmiş tonların eşiği geçtiğini kaynak
-// değerlerden doğrular.
-
 func linKanal(v float64) float64 {
 	v /= 255
 	if v <= 0.03928 {
@@ -108,9 +90,6 @@ func TestKucukMetinKontrasti(t *testing.T) {
 	}
 }
 
-// TestMarkaTokenlariKorundu: A-7 düzeltmesi MARKA rengine dokunmamalı.
-// Bu testler, birisi "kontrastı düzeltiyorum" diye marka tonunu değiştirirse
-// durur.
 func TestMarkaTokenlariKorundu(t *testing.T) {
 	// Marka rengi kullanıcı seçimi; varsayılanı app.css'te.
 	assert.Equal(t, "#e11d48", tokenDegeriDosya(t, "app.css", "--accent"),

@@ -102,12 +102,6 @@ func DeleteContactMessage(ctx context.Context, pool DB, id int64) error {
 	return err
 }
 
-// ReplaceTextInPages kurumsal sayfa gövdelerinde ve Sayfa Tasarımcısı metin
-// override'larında düz metin değişimi yapar (Faz 145).
-//
-// Kullanım: alan adı değiştiğinde gömülü kalmış eski adresler tek seferde
-// düzeltilir. Yalnız verilen metni taşıyan kayıtlar güncellenir; dönüş, kaç
-// sayfa ve kaç metin kaydının değiştiğidir.
 func ReplaceTextInPages(ctx context.Context, pool DB, from, to string) (int64, int64, error) {
 	if from == "" || from == to {
 		return 0, 0, nil

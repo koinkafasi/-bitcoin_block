@@ -5,16 +5,6 @@ import (
 	"strings"
 )
 
-// ---- Reklam HTML'i süzgeci ----
-//
-// Reklam kaydındaki "özel HTML" alanı public sayfalarda ham olarak basılıyordu
-// (ads_handlers.buildAdHTML → template.HTML). Panelde yetki denetimi olsa bile
-// bir yazım hatası ya da ele geçirilmiş bir editör hesabı kalıcı XSS'e
-// dönüşüyordu. Bu süzgeç yalnız reklam için gereken alt kümeyi korur:
-// AdSense <ins> işaretleri, görsel/iframe, temel metin etiketleri ve
-// data-*/aria-* öznitelikleri. <script>, <style> gövdesiyle birlikte,
-// olay öznitelikleri (on*) ve javascript:/data:text gibi URL'ler çıkarılır.
-
 // adAllowTags reklamda izin verilen etiketler.
 var adAllowTags = map[string]bool{
 	"ins": true, "div": true, "span": true, "a": true, "img": true, "iframe": true,
@@ -76,9 +66,6 @@ func SanitizeAdHTML(in string) string {
 			name = extractTagName(raw[1:])
 		}
 		if !adAllowTags[name] {
-			// Tehlikeli/izin dışı etiket: script ve style gibi blokların
-			// gövdesi de atılmalı, aksi hâlde içerik sayfaya düz metin
-			// olarak sızıp yorum/JS kalıntısı bırakır.
 			if name == "script" || name == "style" || name == "title" || name == "textarea" {
 				end := strings.ToLower(in[i:])
 				if c := strings.Index(end, "</"+name+">"); c >= 0 {

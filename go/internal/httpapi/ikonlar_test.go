@@ -13,13 +13,6 @@ import (
 	"theblock/site/internal/webui"
 )
 
-// İkon kütüphanesi testleri (Faz 153).
-//
-// Arka plan: sprite elle seçilmiş 41 ikondan oluşuyordu ve kodda kullanılan
-// 6 ikon sprite'ta YOKTU (ti-bell, ti-layout-grid, ti-layout-sidebar-left-
-// collapse…). Olmayan sembol sessizce boş kutu olarak basılıyor; ne hata ne
-// uyarı çıkıyor. Bu testler o sessiz bozulmayı kapatıyor.
-
 var (
 	reSembol   = regexp.MustCompile(`id="(ti-[a-z0-9-]+)"`)
 	reKullanim = regexp.MustCompile(`#(ti-[a-z0-9-]+)`)
@@ -37,9 +30,6 @@ func spriteSembolleri(t *testing.T, dosya string) map[string]bool {
 	return out
 }
 
-// TestIkonSpriteKoddaKullanilanlariKapsar: depodaki HER #ti- referansı
-// sprite'ta bulunmalı. Yeni bir ikon adı yazıp sprite'ı üretmeyi unutmak
-// bu testte durur.
 func TestIkonSpriteKoddaKullanilanlariKapsar(t *testing.T) {
 	sembol := spriteSembolleri(t, "tabler-icons.svg")
 	require.NotEmpty(t, sembol, "sprite boş")
@@ -77,9 +67,6 @@ func TestIkonSpriteKoddaKullanilanlariKapsar(t *testing.T) {
 		strings.Join(eksik, "\n"))
 }
 
-// TestIkonCekirdekSpritePublicIcinYeterli: public head tam sprite'ı değil
-// çekirdeği yükler. Public'te kullanılan her ikon çekirdekte olmalı; yoksa
-// 233 KB'lık dosyayı geri koymak gerekirdi (ve bunu kimse fark etmezdi).
 func TestIkonCekirdekSpritePublicIcinYeterli(t *testing.T) {
 	cekirdek := spriteSembolleri(t, "ikon-cekirdek.svg")
 	require.NotEmpty(t, cekirdek)

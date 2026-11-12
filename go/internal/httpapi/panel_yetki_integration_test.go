@@ -1,11 +1,5 @@
 //go:build integration
 
-// Panel yetki matrisi — K1 regresyon testi.
-//
-// Denetimde bulunan açık: /admin/* rotaları yalnız oturum varlığını
-// denetliyordu; halka açık /kayit ile açılan "Üye" hesabı 284 panel rotasının
-// tamamına girebiliyordu. Bu test gerçek HTTP sunucusuna rol/oturum kapsamı
-// matrisiyle istek atar.
 package httpapi_test
 
 import (

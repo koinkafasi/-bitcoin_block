@@ -1,5 +1,4 @@
-/* header.js — Header Yönetimi paneli: buton satırları, senkron, JSON kaydetme.
- * Yapılandırma #header-config (gizli JSON girdisinden) okunur. */
+
 (function () {
   'use strict';
 

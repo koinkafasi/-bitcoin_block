@@ -15,11 +15,6 @@ import (
 	"time"
 )
 
-// Faz 208 (devam): tek seferlik iş fonksiyonları. `tick` dışındaki işler
-// (trend üretimi, içerik skoru, arama indeksleme, IndexNow bildirimi,
-// bot poller'ı) kendi tetikleyicileriyle çalışıyor ve hiçbiri test
-// edilmiyordu. Burada gerçek Postgres + sahte dış servis ile sınanıyor.
-
 // --- yardımcılar ---
 
 func yeniBotPoller(logger *slog.Logger) *botPoller {

@@ -116,10 +116,6 @@ func (s *Server) servicesResult(w http.ResponseWriter, r *http.Request, kind, te
 	s.flashRedirect(w, r, "/admin/servisler", kind, text)
 }
 
-// handleServicesSettingsSave POST /admin/servisler/ayar — servis anahtarlarını kaydeder.
-//
-// Her alan BAĞIMSIZ kaydedilir: iki ayrı form aynı uca post ediyor; biri
-// gönderilmediğinde diğerinin anahtarını silmemeli.
 func (s *Server) handleServicesSettingsSave(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	_ = r.ParseForm()
@@ -171,11 +167,6 @@ func (s *Server) handleServicesRefresh(w http.ResponseWriter, r *http.Request) {
 	s.servicesResult(w, r, "info", "Servis yenileme arka planda başlatıldı; birkaç saniye içinde güncellenir.")
 }
 
-// handleBorsaPage piyasa (BIST + kripto) sayfası.
-//
-// TASARIM (9 Kasım 2026): sayfa theblock'un `borsa` şablonundan
-// (site-header/site-footer, `.card` + satır içi `style`) geliyordu. Artık
-// `cd-*` kabuğu; veri (`repo.BorsaOf`) ve para birimi aynı.
 func (s *Server) handleBorsaPage(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	borsa := repo.BorsaOf(ctx, s.pool)
@@ -223,17 +214,6 @@ func (s *Server) handleBorsaPage(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// handleHisselerPage "Tüm Hisseler" sayfası: arama + A-Z dizini + tablo.
-//
-// Referans: haberturk.com/ekonomi/borsa/tum-hisseler. Fiyatlar hisse
-// önbelleğinden gelir (istek yolunda ağa çıkılmaz); veri yoksa satır yine
-// basılır ama fiyat "—" olur — uydurma değer gösterilmez.
-//
-// TASARIM (9 Kasım 2026): sayfa `site_public.html` içindeki eski
-// `{{define "hisseler"}}` bloğundan geliyordu; yani theblock'tan kalan
-// kabuk (site-header/site-footer, `hsp-*`). Yeni temaya geçmiş her sayfa
-// `cd-*` kabuğunu kullanırken bu sayfa geride kalmıştı. Artık
-// `templkit.CDHisselerPageView` basılıyor: aynı veri, bitcosar kabuğu.
 func (s *Server) handleHisselerPage(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	q := strings.TrimSpace(r.URL.Query().Get("q"))
@@ -249,9 +229,6 @@ func (s *Server) handleHisselerPage(w http.ResponseWriter, r *http.Request) {
 		}
 		if h.Var {
 			row.Fiyat = piyasaNum(h.Value, 2)
-			// piyasaChg "%" İÇERMEZ ("+1,25"); yüzde işareti burada eklenir.
-			// (İlk sürüm "%%" yazmıştı — Go'da bu bir kaçış dizisi değil,
-			// ekranda "%%1,25" çıkıyordu; ölçümle yakalandı.)
 			row.Yuzde = "%" + piyasaChg(h.Delta)
 			row.Up = h.Delta > 0
 			// Tam sıfır "yükseliş" değildir: yeşil rozet yanıltıcı olur.
@@ -292,11 +269,6 @@ func (s *Server) handleHisselerPage(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// handleKriptoPage /borsa/kripto: arama + görünüm seçici + liste.
-//
-// Referans: haberturk.com/ekonomi/kripto-para (Kripto Para Ara + tablo).
-// Görünüm `?stil=tablo|kart|kompakt` ile seçilir; arama `?q=` (sunucu) ve
-// istemci tarafı canlı filtre ile çalışır.
 func (s *Server) handleKriptoPage(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	q := r.URL.Query().Get("q")
@@ -382,11 +354,6 @@ func (s *Server) handleFiksturPage(w http.ResponseWriter, r *http.Request) {
 	s.renderPublic(w, r, "fikstur", d, cacheControlPublic)
 }
 
-// parseFiksturRound istekteki "hafta" parametresini doğrular.
-//
-// Kural: yalnızca 1..meta.Rounds aralığında sayı kabul edilir; boş, sayı
-// olmayan, 0, negatif veya sezon dışı değerler meta.Round'a (güncel hafta)
-// düşer. Böylece "?hafta=abc" veya "?hafta=999" ile boş hafta açılmaz.
 func parseFiksturRound(q string, meta repo.FiksturMeta) int {
 	q = strings.TrimSpace(q)
 	if q == "" {
@@ -606,13 +573,6 @@ func (s *Server) handleAMP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// handleSearch genel site arama sayfası.
-//
-// TASARIM (9 Kasım 2026): sayfa `site_public.html` içindeki `{{define
-// "arama"}}` bloğundan geliyordu (site-header/site-footer). Üst çubuktaki
-// arama JS kapalıyken buraya düştüğü için, yeni tasarımda arama yapan
-// kullanıcı eski kabuğa geçiyordu. Artık `cd-*` kabuğu; sonuç verisi
-// (repo.Content) ve sıralama mantığı DEĞİŞMEDİ.
 func (s *Server) handleSearch(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	locale := langOf(r, s)
@@ -622,11 +582,6 @@ func (s *Server) handleSearch(w http.ResponseWriter, r *http.Request) {
 	if q != "" {
 		repo.LogSearchQuery(ctx, s.pool, site.ID, q)
 		items, _ = repo.SearchPublic(ctx, s.pool, site.ID, locale, q, 30)
-		// Arama motorunun adı KULLANICIYA GÖSTERİLMEZ: hangi veritabanı/
-		// indeks motorunun çalıştığı altyapı bilgisidir, ziyaretçiye faydası
-		// yok, saldırgana ise sürüm/CVE hedeflemesi için ipucu verir.
-		// Tantivy search-svc varsa ondan gelen sıralamayı tercih et
-		// (Türkçe tokenizasyon).
 		if s.search != nil {
 			if hits, err := s.search.Search(ctx, q, 30); err == nil && len(hits) > 0 {
 				if ordered, e := s.contentsBySearchIDs(ctx, site.ID, hits); e == nil && len(ordered) > 0 {

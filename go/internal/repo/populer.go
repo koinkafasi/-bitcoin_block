@@ -6,12 +6,6 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-// PopulerIcerikler "En Çok Okunan" listesi (CoinDesk §21).
-//
-// Kaynak: `hit_daily` (günlük kırılım) + `counters_hit` (toplam).
-// NEDEN günlük ağırlıklı: toplam sayı eski haberleri kalıcı olarak üste
-// taşır; haber sitesinde "en çok okunan" son 7 günü anlatmalı.
-// Günlük veri yoksa (yeni kurulum) toplama düşer — boş liste dönmez.
 func PopulerIcerikler(ctx context.Context, pool *pgxpool.Pool, siteID int64, locale string, adet int) ([]Content, error) {
 	if adet <= 0 {
 		adet = 6
@@ -46,10 +40,6 @@ func PopulerIcerikler(ctx context.Context, pool *pgxpool.Pool, siteID int64, loc
 	return out, rows.Err()
 }
 
-// BolumIcerikleri bir kategorinin (bölümün) yayındaki içeriklerini döndürür.
-//
-// `PopulerIcerikler` ile aynı sütun setini kullanır; bölüm sayfası ve ana
-// sayfa blokları aynı yolu paylaşsın diye ayrı bir sorgu.
 func BolumIcerikleri(ctx context.Context, pool *pgxpool.Pool, siteID int64, locale, slug string, adet int) ([]Content, error) {
 	if adet <= 0 {
 		adet = 6

@@ -1,8 +1,3 @@
-// Stripe ödeme/abonelik entegrasyonu (SDK'sız; REST + webhook imza doğrulama).
-//
-// Webhook imza şeması ve olay modeli, staticbackendhq/core (MIT) stripe.go
-// örneğindeki akıştan esinlenmiştir; kendi ayar/şifreleme kalıplarımıza göre
-// yeniden yazılmıştır.
 package platform
 
 import (

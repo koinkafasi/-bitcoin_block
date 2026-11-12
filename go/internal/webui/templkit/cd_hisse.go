@@ -2,14 +2,6 @@ package templkit
 
 import "strconv"
 
-// Hisse detay sayfası (/price/stock/{sembol}) — CoinDesk §10.6.
-//
-// CoinDesk hisse şablonu coin şablonundan FARKLI: iki kolon (392 + 976),
-// h1 yok (ad küçük), büyük fiyat 28/42, grafik 976×500, zaman sekmeleri
-// 1D·5D·1M·YTD·1Y·All, "Basic/Advanced" kip düğmeleri ve altında
-// performans satırı. Bu dosya yalnız VERİ taşır; biçimleme httpapi'de
-// (repo.SayiBicim / FiyatBicimP) yapılır — templkit repo'ya bağlanmaz.
-
 // CDHisseSekme zaman aralığı sekmesi.
 type CDHisseSekme struct {
 	Kod   string // ?aralik= değeri

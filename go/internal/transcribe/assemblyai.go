@@ -12,13 +12,6 @@ import (
 	"time"
 )
 
-// AssemblyAI adaptörü doğrudan REST uçlarıyla çalışır (SDK'nın params yapısı
-// API'nin gerisinde kaldığı için: `speech_model` yerine `speech_models`
-// listesi gerekiyor). Kendi HTTP katmanımız, API değiştiğinde tek dosyada
-// güncelleme yapmayı sağlar.
-//
-// Akış: POST /v2/upload → POST /v2/transcript → GET /v2/transcript/{id}
-// (poll). Callback sunucusu gerekmez.
 type AssemblyAI struct {
 	apiKey       string
 	baseURL      string
@@ -302,9 +295,6 @@ func convertTranscript(t assemblyTranscript, providerJobID, requestedLang, provi
 	if len(res.Segments) > 0 && len(t.Words) > 0 {
 		attachWords(res.Segments, toWordItems(t.Words))
 	}
-	// Konuşmacı ayrımı yoksa kelimeleri cümle/40 kelime gruplarına böl;
-	// böylece arayüzde yine zaman damgalı tıklanabilir satırlar olur.
-	// Gruplama kelimeleri zaten segmentin içine taşır.
 	if len(res.Segments) == 0 && len(t.Words) > 0 {
 		res.Segments = groupWords(t.Words, res.DurationMS)
 	}
@@ -343,12 +333,6 @@ func toWordItems(raw []assemblyWord) []wordItem {
 	return words
 }
 
-// attachWords her kelimeyi, orta noktası hangi segmentin aralığına düşüyorsa
-// o segmente yazar. Kelimeler ve segmentler zamana göre sıralı geldiği için
-// tek geçişte (iki işaretçi) ilerler.
-//
-// Segment aralıklarının dışında kalan kelimeler (sessizlik/gürültü payı)
-// hiçbir segmente yazılmaz — uydurma zaman damgası editörü yanıltır.
 func attachWords(segs []Segment, words []wordItem) {
 	wi := 0
 	for i := range segs {

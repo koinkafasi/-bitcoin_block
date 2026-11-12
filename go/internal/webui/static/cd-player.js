@@ -1,23 +1,4 @@
-/* cd-player.js — bitcosar'ın KENDİ video oynatıcısı.
- *
- * NEDEN: YouTube'un kendi kontrol çubuğu (controls=1) sitemizin tipografisi
- * ve ölçüleriyle uyuşmuyor, mobilde reklam/öneri katmanları çıkıyor ve
- * "CoinDesk gibi" profesyonel bir oynatıcı isteniyor. Video yüzeyi
- * YouTube embed (ToS gereği akış oradan gelir), TÜM kontroller bizim.
- *
- * NASIL: `controls=0&enablejsapi=1` ile kurulan iframe, IFrame API'nin
- * postMessage protokolüyle sürülür. Harici script YÜKLENMEZ → CSP
- * `script-src 'self'` aynen kalır, sayfaya üçüncü taraf JS girmez.
- *
- * Protokol:
- *   iframe → ebeveyn: {event:"onReady"|"onStateChange"|"infoDelivery", info:{…}}
- *   ebeveyn → iframe: {event:"command", func:"playVideo", args:[]}
- * Oynatma durumu 0 bitiş · 1 oynuyor · 2 duraklatıldı · 3 tampon · 5 başlatıldı.
- *
- * Özellikler: oynat/duraklat, ilerleme + tampon + sürükleme, ses + sessize
- * alma, oynatma hızı (0.5–2), tam ekran, klavye kısayolları, bitiş ekranı +
- * "sıradaki" videosuna otomatik geçiş, canlı yayın modu (ilerleme kapalı).
- */
+
 (function () {
   'use strict';
 
@@ -25,7 +6,7 @@
 
   function ikiHane(n) { return (n < 10 ? '0' : '') + n; }
 
-  /* Saniye → "1:02:03" / "12:34". */
+  
   function sureMetni(sn) {
     if (!isFinite(sn) || sn < 0) return '0:00';
     sn = Math.floor(sn);
@@ -39,7 +20,7 @@
       for (var i = 0; i < YT_KOKLER.length; i++) {
         if (o.hostname === YT_KOKLER[i] || o.hostname.endsWith('.' + YT_KOKLER[i])) return true;
       }
-    } catch (err) { /* geçersiz origin: yok say */ }
+    } catch (err) {  }
     return false;
   }
 
@@ -86,7 +67,7 @@
     this.hiz = 1;
     this._zamanlayici = null;
 
-    /* Canlı mod: ilerleme çubuğu kırmızı ve etkisiz (ilk mesajı beklemeden). */
+    
     if (this.canli) this.kok.classList.add('cd-vplayer--canli');
 
     this.bagla();
@@ -113,7 +94,7 @@
       self.menuDegistir(false);
     });
 
-    /* İlerleme çubuğu: tıklama + sürükleme + klavye. */
+    
     this.cizgi.addEventListener('pointerdown', function (e) {
       if (self.canli || !self.hazir) return;
       self.cizgi.setPointerCapture(e.pointerId);
@@ -126,7 +107,7 @@
     this.cizgi.addEventListener('pointerup', function (e) {
       if (!self.sarmaBasladi) return;
       self.sarmaBasladi = false;
-      try { self.cizgi.releasePointerCapture(e.pointerId); } catch (err) { /* yok say */ }
+      try { self.cizgi.releasePointerCapture(e.pointerId); } catch (err) {  }
       self.sarmaBitir(e);
     });
     this.cizgi.addEventListener('keydown', function (e) {
@@ -138,7 +119,7 @@
       else if (e.key === 'End') { self.sarma(self.sure - 0.5); e.preventDefault(); }
     });
 
-    /* Klavye: yalnız oynatıcı odaktayken (sayfa kısayollarını çalmamak için). */
+    
     this.kok.tabIndex = -1;
     this.kok.addEventListener('keydown', function (e) {
       if (e.target.matches('input,select,textarea')) return;
@@ -152,24 +133,10 @@
       else if (k === 'f' || k === 'F') { self.tamEkranDegistir(); e.preventDefault(); }
     });
 
-    /* ---- Kontrol çubuğu görünürlüğü ----
-     *
-     * DİNLEYİCİLER KÖKTE (this.kok), katmanda değil. Olaylar katmandan,
-     * kontrol çubuğundan ve tüm düğmelerden köke köpürür; yalnız iframe'in
-     * içindekiler ulaşmaz (o bölgeyi şeffaf katman yakalar).
-     *
-     * NEDEN DEĞİŞTİ (kullanıcı bildirimi, 8 Kasım 2026): "otomatik player
-     * kendini gizlerken ses ve hız araçları yeniden üstüne gelince görünür
-     * olup yönetilebilir değil". Eski sürümde dinleyici YALNIZ katmandaydı;
-     * fare alt çubuğun üzerine gelince olay çubukta (z-index 8) kalıyordu →
-     * çubuk bir daha açılmıyordu. Üstelik gizli çubuk `pointer-events`
-     * kapatmadığı için alt şeritteki tıklamaları yutuyordu: ses kaydırıcısı,
-     * hız ve tam ekran düğmeleri "ölü" görünüyordu. */
+    
     this.kok.addEventListener('pointermove', function () { self.kontrolGoster(); });
     this.kok.addEventListener('pointerdown', function () {
-      /* Çubuk gizliyken yapılan dokunuş/tıklama YALNIZ çubuğu getirir.
-         Aksi hâlde kullanıcı (görünmeyen) duraklat düğmesinin yerine
-         tıklayınca video duruyordu. */
+      
       if (self.kok.classList.contains('cd-vplayer--sakin')) {
         self._sadeceGoster = true;
         setTimeout(function () { self._sadeceGoster = false; }, 700);
@@ -180,14 +147,14 @@
       self._fareUzerinde = true;
       self.kontrolGoster();
     });
-    /* Klavyeyle çubuktaki bir düğmeye odaklanınca da çubuk açık kalsın. */
+    
     this.kok.addEventListener('focusin', function () { self.kontrolGoster(); });
     this.kok.addEventListener('pointerleave', function () {
       self._fareUzerinde = false;
       if (self.oynuyor) self.kok.classList.add('cd-vplayer--sakin');
     });
 
-    /* Yüzey tıklaması: oynat/duraklat — kontrol katmanına karışmadan. */
+    
     this.sahne.addEventListener('click', function (e) {
       if (e.target.closest('[data-cd-kontrol]')) return;
       if (e.target.closest('[data-cd-buyuk]')) return;
@@ -195,12 +162,11 @@
       if (e.target.closest('.cd-vplayer__kunye')) return;
       if (e.target.closest('.cd-vplayer__son')) return;
       if (!self._oynadi) {
-        /* Henüz oynamadı: tıklama "duraklat" sayılmaz (çift tıklamada video
-           başlar başlamaz duruyordu). */
+        
         self.baslat();
         return;
       }
-      /* Çubuğu yeni açtıysak bu tıklama oynat/duraklat sayılmaz. */
+      
       if (self._sadeceGoster) return;
       if (Date.now() - (self._baslamaZaman || 0) < 900) return;
       self.oynatDegistir();
@@ -215,9 +181,7 @@
 
     window.addEventListener('message', function (e) { self.mesaj(e); });
 
-    /* Sekme/uygulama geri geldiğinde durumu tazele: arka planda YouTube
-       duraklatabiliyor ve playerState mesajı gelmeyebiliyor; o zaman bekleme
-       katmanı ya da "oynuyor" durumu bayat kalıyordu. */
+    
     document.addEventListener('visibilitychange', function () {
       if (document.hidden || !self.hazir) return;
       self.komut('getPlayerState');
@@ -228,19 +192,7 @@
     });
   };
 
-  /* ---- iframe kurulumu ----
-   *
-   * `autoplay=1` + iframe'de `allow="autoplay"`: üst belgedeki tıklama
-   * iframe'e devredildiği için video SESLİ açılır (tek tık).
-   *
-   * `mute=1` DENENDİ ve VAZGEÇİLDİ (7 Kasım 2026): sessiz başlatıp sonra
-   * `unMute` göndermek Chrome'da oynatmayı DURDURUYOR — sesi açma çağrısı
-   * çapraz kaynak iframe'de kullanıcı hareketi sayılmıyor, tarayıcı
-   * "sesi olmayan oynatma, hareket olmadan sesliye çevrilemez" kuralıyla
-   * duraklatıyor. Belirti: video 0,05 sn oynayıp poster'a dönüyordu.
-   *
-   * `unMute` çağrısı yine de duruyor (sesiGeriAc): kullanıcı daha önce
-   * sessize aldıysa durumu korur; sesli açılışta etkisizdir. */
+  
   Oynatici.prototype.kaynak = function (sessiz) {
     var temel = 'https://www.youtube-nocookie.com/embed/';
     var ortak = 'autoplay=1&controls=0&enablejsapi=1&rel=0&modestbranding=1' +
@@ -253,20 +205,15 @@
     return temel + encodeURIComponent(this.videoId) + '?' + ortak;
   };
 
-  /* sesiGeriAc kullanıcının ses tercihini oynatıcıya uygular (bir kez).
-     Oynatma başladıktan sonra çağrılır; sesli açılışta yalnız düzeyi yazar. */
+  
   Oynatici.prototype.sesiGeriAc = function () {
     if (this._sesAcildi) return;
-    /* Yalnız ses düzeyini yaz. `unMute` BİLİNÇLİ OLARAK YOK: çapraz kaynak
-       iframe'de otomatik ses açma çağrısı kullanıcı hareketi sayılmadığı için
-       Chrome oynatmayı duraklatıyor (ölçüldü, 7 Kasım 2026). Sessiz başlatmada
-       ses "Sesi aç" çipiyle, GERÇEK dokunuşla geri gelir. */
+    
     this.komut('setVolume', [this.sessiz ? 0 : this.ses]);
     this._sesAcildi = true;
   };
 
-  /* cerceveYenile mevcut iframe'i kaldırır; bir sonraki cerceveKur() taze
-     bir oynatıcı yükler. */
+  
   Oynatici.prototype.cerceveYenile = function () {
     if (this._zamanlayici) { clearInterval(this._zamanlayici); this._zamanlayici = null; }
     this.cerceve.innerHTML = '';
@@ -295,21 +242,21 @@
 
     var self = this;
     f.addEventListener('load', function () { self.elSikisi(); });
-    /* Elde sıkışma yoksa da kurulumu dene (onReady gelmezse). */
+    
     this._zamanlayici = setInterval(function () { self.elSikisi(); }, 800);
     setTimeout(function () {
       if (!self.hazir && self.bekle) self.bekle.hidden = true;
     }, 12000);
   };
 
-  /* El sıkışma: YouTube JS API dinleyicisini kaydeder. */
+  
   Oynatici.prototype.elSikisi = function () {
     if (!this.iframe || !this.iframe.contentWindow) return;
     try {
       this.iframe.contentWindow.postMessage(JSON.stringify({
         event: 'listening', id: 'cd-player', channel: 'widget'
       }), '*');
-    } catch (err) { /* yok say */ }
+    } catch (err) {  }
   };
 
   Oynatici.prototype.komut = function (fn, args) {
@@ -318,10 +265,10 @@
       this.iframe.contentWindow.postMessage(JSON.stringify({
         event: 'command', func: fn, args: args || []
       }), '*');
-    } catch (err) { /* yok say */ }
+    } catch (err) {  }
   };
 
-  /* ---- mesajlar ---- */
+  
   Oynatici.prototype.mesaj = function (e) {
     if (!youtubeKaynagi(e)) return;
     var v;
@@ -331,9 +278,7 @@
     if (v.event === 'onReady' || v.event === 'initialDelivery') {
       this.hazir = true;
       if (this._zamanlayici) { clearInterval(this._zamanlayici); this._zamanlayici = null; }
-      /* Hazır olur olmaz kullanıcının ses düzeyini yaz. `unMute` BURADA
-         YOK: sesli açılışta gereksiz, sessiz başlatmada ise duraklamaya
-         yol açıyor (bkz. kaynak() notu). */
+      
       this.komut('setVolume', [this.sessiz ? 0 : this.ses]);
       this.komut('setPlaybackRate', [this.hiz]);
       if (v.info && typeof v.info.duration === 'number') this.bilgi(v.info);
@@ -353,30 +298,23 @@
     if (s === 1) {
       this.oynuyor = true;
       this.basladi = true;
-      /* Kapak BURADA kalkar (poster görünmesin). Sessiz açılışın ardından
-         sesi geri vermeyi de burada deneriz; tarayıcı reddederse çip kalır. */
+      
       this.oynamaBasladi();
       this.sesiGeriAc();
     }
     else if (s === 2 || s === 5 || s === -1) {
       this.oynuyor = false;
-      /* Duraklatıldı / dış nedenle durdu (sekme değişimi, mobil döndürme,
-         tam ekran geçişi): bekleme katmanı ve "oynuyor" durumu TEMİZLENİR.
-         Aksi hâlde karartma ekranda asılı kalıyor ve kapak gizli olduğu için
-         ortada YouTube poster'ı görünüyordu (ölçüldü, 8 Kasım 2026). */
+      
       this.kok.classList.remove('cd-vplayer--bekliyor');
       this.kok.classList.remove('cd-vplayer--oynuyor');
       if (this.bekle) this.bekle.hidden = true;
-      /* Duraklatıldı: YouTube kendi poster'ını gösterebilir. Onun yerine
-         BİZİM oynat düğmemiz merkezde dursun (aynı görünüm, tutarlı marka). */
+      
       if (this._oynadi && this.buyuk && !this.canli) {
-        /* Duraklatılmış kare görünsün; YouTube'un play poster'ı değil,
-           BİZİM oynat düğmemiz ortada dursun. */
+        
         this.buyuk.hidden = false;
         this.buyuk.setAttribute('aria-label', 'Oynat');
       }
-      /* Sessiz başlatıldıysa çip görünür kalmalı (ses hâlâ kapalı).
-         Kullanıcı sesi kendi kapattıysa çip çıkarılmaz. */
+      
       if (this.sessizBasladi && !this._kullaniciSesiKapatti) this.sesCipiGoster();
     }
     else if (s === 0) { this.oynuyor = false; this.bitis(); }
@@ -384,7 +322,7 @@
     this.dugmeDurumlari();
   };
 
-  /* infoDelivery: süre, an, tampon. */
+  
   Oynatici.prototype.bilgi = function (i) {
     if (typeof i.duration === 'number' && i.duration > 0) this.sure = i.duration;
     if (typeof i.currentTime === 'number') this.an = i.currentTime;
@@ -396,39 +334,24 @@
     this.ciz(i.videoLoadedFraction);
   };
 
-  /* ---- eylemler ---- */
+  
 
-  /* baslat: oynatıcıyı kurar ve oynatmayı başlatır.
-   *
-   * KATMANLI GÜVENCE (7 Kasım 2026 — "birden fazla tıklamadan oynamıyor,
-   * ortada play simgesi kalıyor" hatası):
-   *   1. iframe SESLİ autoplay ile kurulur. Sunucu artık
-   *      `Permissions-Policy: autoplay=(self https://www.youtube.com …)`
-   *      gönderdiği için bu gerçek tarayıcılarda da çalışır (kök neden buydu).
-   *   2. 1,2 sn içinde oynama başlamazsa iframe SESSİZ (`mute=1`) yeniden
-   *      kurulur — sessiz autoplay her tarayıcıda serbesttir, video kesin
-   *      başlar; ses "Sesi aç" çipinden geri gelir.
-   *   3. Yine başlamazsa kapağımız ve büyük oynat düğmemiz geri gelir;
-   *      kullanıcı asla YouTube'un çıplak poster'ıyla baş başa kalmaz
-   *      (kapak `--oynuyor` sınıfı gelene kadar KALKMAZ).
-   */
+  
   Oynatici.prototype.baslat = function () {
     var self = this;
 
-    /* İkinci tıklama: önceki denemede hiç oynamadıysa temiz sayfa. */
+    
     if (this.basladi && !this._oynadi) {
       this.cerceveYenile();
       this.sessizDenendi = false;
     }
 
-    /* Sesli deneme hakkı bittiyse (ya da kullanıcı sesi kapattıysa) sessiz kur. */
+    
     var sessiz = this.sessizDenendi === true || this.sessiz === true || this.ses === 0;
     this.cerceveKur(sessiz);
 
     if (this.bos) this.bos.hidden = true;
-    /* KAPAK KALKMAZ: yalnız bekleme göstergesi ve karartma katmanı gelir.
-       YouTube poster'ı araya girse bile üstte kaldığımız için kullanıcı
-       "ortada play simgesi" görmez (bildirilen hata). */
+    
     this.kok.classList.add('cd-vplayer--bekliyor', 'cd-vplayer--basladi');
     this._baslamaZaman = Date.now();
     if (this.bekle) this.bekle.hidden = false;
@@ -439,21 +362,16 @@
     this.dugmeDurumlari();
 
     this.komut('playVideo');
-    /* YouTube komutları ready öncesi yutulabilir: artan aralıklarla yinele. */
+    
     [150, 400, 800, 1400, 2200, 3200].forEach(function (ms) {
       setTimeout(function () {
         if (!self._oynadi) self.komut('playVideo');
       }, ms);
     });
 
-    /* SAYFA KAYDIRILMAZ (8 Kasım 2026 — kullanıcı bildirimi: "video
-       kaydırınca sürekli scroll yenileme"). Eski sürüm oynatıcı görüntü
-       alanının üstündeyse `scrollIntoView({block:'center', behavior:'smooth'})`
-       çağırıyordu; sticky başlık + iframe ile birleşince sayfa kendiliğinden
-       kayıyor, satır satır yeniden boyama görünüyordu. Kullanıcı oynat
-       düğmesine bastığında oynatıcı zaten ekranda. */
+    
 
-    /* 1.2 sn: hâlâ oynamadıysa SESSİZ moda geç (evrensel çözüm). */
+    
     setTimeout(function () {
       if (self._oynadi || self.sessizBasladi) return;
       self.sessizDenendi = true;
@@ -466,7 +384,7 @@
       self.sesCipiGoster();
     }, 1200);
 
-    /* 5 sn: hâlâ oynamadıysa kapağı ve düğmeyi geri getir. */
+    
     setTimeout(function () {
       if (self._oynadi) return;
       self.kapakGeriGetir();
@@ -475,8 +393,7 @@
     this.kontrolGoster();
   };
 
-  /* oynamaBasladi: video GERÇEKTEN oynuyor (playerState 1).
-   * Kapak ancak burada kalkar — poster/play simgesi görünmez. */
+  
   Oynatici.prototype.oynamaBasladi = function () {
     this._oynadi = true;
     this.kok.classList.remove('cd-vplayer--bekliyor', 'cd-vplayer--gecikti');
@@ -486,8 +403,7 @@
     if (this.bekle) this.bekle.hidden = true;
     if (this.bos) this.bos.hidden = true;
     if (this.buyuk) this.buyuk.setAttribute('aria-label', 'Duraklat');
-    /* Sesli açılışta çip gerekmez; sessiz başlatmada ses hâlâ kapalı
-       olduğu için çip GÖRÜNÜR olmalı. */
+    
     if (this.sessizBasladi && !this._kullaniciSesiKapatti && !this.sessiz && this.ses > 0) {
       this.sesCipiGoster();
     } else {
@@ -495,7 +411,7 @@
     }
   };
 
-  /* kapakGeriGetir: hiçbir şekilde oynamadıysa bizim düğmemiz geri gelir. */
+  
   Oynatici.prototype.kapakGeriGetir = function () {
     this.kok.classList.remove('cd-vplayer--bekliyor', 'cd-vplayer--oynuyor');
     this.kok.classList.add('cd-vplayer--gecikti');
@@ -510,8 +426,7 @@
     if (this.kontrol) this.kontrol.setAttribute('data-mesaj', metin);
   };
 
-  /* sesCipiGoster/Gizle: sessiz başlatıldığında "Sesi aç" düğmesi.
-   * Sessiz autoplay evrensel çözüm; ses tek dokunuşla geri gelir. */
+  
   Oynatici.prototype.sesCipiGoster = function () {
     if (this.sessiz || this.ses === 0) return;
     var cip = this.kok.querySelector('[data-cd-ses-cip]');
@@ -537,8 +452,7 @@
     if (cip) cip.hidden = true;
   };
 
-  /* sesiAc: GERÇEK kullanıcı dokunuşuyla sesi açar.
-   * Bu dokunuş tarayıcı için geçerli bir harekettir; ses açma izni verilir. */
+  
   Oynatici.prototype.sesiAc = function () {
     this._kullaniciSesiKapatti = false;
     this.sessiz = false;
@@ -558,8 +472,7 @@
     } else {
       this.komut('playVideo');
       this.oynuyor = true;
-      /* Duraklatılmış (ya da bitmiş) videoda kapak gizli kalmalı; ama
-         poster'a dönülmüşse kapağı biz gösterelim. */
+      
       this.kok.classList.add('cd-vplayer--oynuyor');
       if (this.kapak) this.kapak.hidden = true;
       if (this.buyuk) this.buyuk.hidden = true;
@@ -642,8 +555,7 @@
       return;
     }
     if (this.kok.requestFullscreen) {
-      /* Tarayıcı reddederse (gömülü çerçeve/izin politikası, iOS Safari)
-         görünümü yine tam ekrana al: buton her koşulda çalışmalı. */
+      
       var sonuc = this.kok.requestFullscreen();
       if (sonuc && sonuc.catch) {
         sonuc.catch(function () {
@@ -660,7 +572,7 @@
       }
       return;
     }
-    /* iOS Safari: öğe tam ekranı desteklemez → görünümü büyüt. */
+    
     this.kok.classList.toggle('cd-vplayer--sahte-tam');
     self.duyur('Tam ekran');
   };
@@ -672,13 +584,9 @@
     if (!this.oynuyor) return;
     this._sakinZaman = setTimeout(function () {
       if (!self.oynuyor) return;
-      /* HIZ MENÜSÜ AÇIKKEN GİZLENME: kullanıcı seçim yapıyor. Eskiden süre
-         dolduğunda menü açıksa gizleme atlanıyor ama bir daha
-         denenmiyordu; menü kapandıktan sonra çubuk sonsuza kadar açık
-         kalıyordu. Artık süre yeniden kuruluyor. */
+      
       if (self.menu && !self.menu.hidden) { self.kontrolGoster(); return; }
-      /* Fare hâlâ oynatıcının üzerindeyse gizleme (YouTube da böyle):
-         kullanıcı çubuğa uzanırken kaybolmasın. */
+      
       if (self._fareUzerinde) { self.kontrolGoster(); return; }
       self.kok.classList.add('cd-vplayer--sakin');
     }, 2500);
@@ -687,17 +595,14 @@
   Oynatici.prototype.bitis = function () {
     if (this.canli) return;
     this.dugmeDurumlari();
-    /* ÇİFT KAPI: (1) video hiç oynadı mı, (2) sona gerçekten yaklaştı mı.
-       Yalnız playerState==0'a bakmak yetmiyor: otomatik oynatma engellenince
-       YouTube başlangıçta 0 bildirebiliyor ve sayfa kendiliğinden "sıradaki"
-       videosuna atlıyordu (ölçüldü, 7 Kasım 2026). */
+    
     var sonaYakin = this.sure > 0 && this.an >= this.sure - 2;
     if (this._oynadi && sonaYakin && this.kok.classList.contains('cd-vplayer--basladi')) {
       this.sonEkrani();
     }
   };
 
-  /* Bitiş ekranı: karartma + "tekrar oynat" + sıradaki video (5 sn geri sayım). */
+  
   Oynatici.prototype.sonEkrani = function () {
     var self = this;
     var eski = this.kok.querySelector('.cd-vplayer__son');
@@ -736,7 +641,7 @@
       a.appendChild(ad);
       ic.appendChild(a);
 
-      /* Otomatik geçiş: 5 sn geri sayım, iptal edilebilir. */
+      
       var sayac = document.createElement('span');
       sayac.className = 'cd-vplayer__son-sayac';
       var kalan = 5;
@@ -759,7 +664,7 @@
     this.sahne.appendChild(kap);
   };
 
-  /* ---- görünüm güncellemesi ---- */
+  
   Oynatici.prototype.ciz = function (tampon, sarmaOran) {
     if (!this.cizgi) return;
     var oran = sarmaOran;
@@ -774,7 +679,7 @@
       this.toplamEl.textContent = sureMetni(this.sure);
     }
     if (this.rozet && !this.canli && this.sure > 0 && this.basladi) {
-      /* Oynarken köşedeki süre rozeti kalan süreyi gösterir. */
+      
       this.rozet.textContent = '-' + sureMetni(Math.max(0, this.sure - oran * this.sure));
     }
     this.cizgi.setAttribute('aria-valuenow', String(Math.round(oran * 100)));
@@ -811,7 +716,7 @@
     if (this.duyuru) this.duyuru.textContent = metin;
   };
 
-  /* ---- başlat ---- */
+  
   function kur() {
     var kokler = document.querySelectorAll('[data-cd-player]');
     for (var i = 0; i < kokler.length; i++) {

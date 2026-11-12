@@ -8,10 +8,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TestGetSettingsTextSarmaliCozer: settings tablosunda değerler jsonb olarak
-// tutulur; SetSetting geçerli JSON olmayan değerleri JSON string'e sarar.
-// Tek sorguyla bölüm okuyan çağıranların tırnaklı değer görmemesi gerekir
-// (youtube ayarları `"bitcosar"` yerine `bitcosar` okumalı).
 func TestGetSettingsTextSarmaliCozer(t *testing.T) {
 	db := &fakeDB{queryFn: func(string, []any) ([][]any, error) {
 		return [][]any{

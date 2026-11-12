@@ -13,7 +13,4 @@ var ErrDuplicate = errors.New("kayıt zaten var")
 // değiştirildi) — AI editör / sürüm kontrolü.
 var ErrConflict = errors.New("içerik sürümü değişti")
 
-// ErrMediaInUse medya bir içerikte (kapak/manşet/sosyal) kullanıldığı için
-// silinemediğinde döner (Faz 29). Eskiden DeleteMedia bu durumda hata
-// vermiyor; handler diskteki dosyayı silip DB kaydını bırakıyordu.
 var ErrMediaInUse = errors.New("medya kullanımda")

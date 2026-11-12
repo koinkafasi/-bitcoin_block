@@ -1,19 +1,5 @@
 package httpapi
 
-// Tema geçiş efekti (kullanıcı isteği): demo.codeandchill.store/halvo
-// sitesindeki koyu/açık geçişin BİREBİR aynısı, hem ön yüzde hem panelde.
-//
-// Kaynak ölçümü (2 Kasım 2026, Halvo paketi):
-//   document.startViewTransition(() => kök.dataset.theme = yeni)
-//     .ready.then(() => kök.animate(
-//       { clipPath: ["circle(0px at Xpx Ypx)", "circle(Rpx at Xpx Ypx)"] },
-//       { duration: 450, easing: "cubic-bezier(.65,0,.35,1)",
-//         pseudoElement: "::view-transition-new(root)" }))
-//   CSS: ::view-transition-old/new(root) { animation:none; mix-blend-mode:normal }
-//
-// app.js ve app.css hem panelde hem ön yüzde ORTAK yüklenir
-// (admin_head + public_head), bu yüzden tek uygulama iki tarafı kapsar.
-
 import (
 	"io/fs"
 	"strings"

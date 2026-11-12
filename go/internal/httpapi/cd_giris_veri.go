@@ -1,13 +1,5 @@
 package httpapi
 
-// Ana sayfa giriş hero'sunun görünüm verisi.
-//
-// Kaynak: repo.PiyasaGirisVeri (CoinGecko + alternative.me, gerçek veri).
-// Burada yalnız BİÇİMLENDİRME var — hesap repo katmanında.
-//
-// KURAL: sayı uydurulmaz. Kaynak boşsa alan boş kalır, şablon o parçayı
-// basmaz; tümü boşsa `Hazir=false` ile modül hiç çizilmez.
-
 import (
 	"context"
 	"fmt"
@@ -86,11 +78,6 @@ func (s *Server) cdGirisOlustur(ctx context.Context) templkit.CDGiris {
 	return g
 }
 
-// cdKisaDolar büyük tutarları kısa yazar: 78997270385 → "$79,0 Mr".
-//
-// NEDEN "Mr": Türkçe okur "milyar" der; "$79.0B" İngilizce kalıyordu.
-// Ondalık ayırıcı ise İngiliz biçiminde (site geneli: fiyat tablosu,
-// şerit ve grafikler aynı kuralı kullanıyor).
 func cdKisaDolar(f float64) string {
 	switch {
 	case f <= 0:
@@ -106,10 +93,6 @@ func cdKisaDolar(f float64) string {
 	}
 }
 
-// cdFNGEtiket endeks değerini Türkçe sınıfa çevirir.
-//
-// Eşikler alternative.me'nin kendi sınıflandırmasıyla aynı; kaynağın
-// İngilizce sınıfını ("Fear") basmak yerine Türkçesini yazıyoruz.
 func cdFNGEtiket(deger int) string {
 	switch {
 	case deger < 25:
@@ -135,10 +118,6 @@ func cdRSIEtiket(rsi int) string {
 	}
 }
 
-// cdYasMetni verinin yaşını insan diline çevirir ("3 dk önce").
-//
-// "CANLI" YAZMIYORUZ: veri 10 dakikalık önbellekten geliyor; "canlı"
-// demek okuyucuyu yanıltırdı.
 func cdYasMetni(unix int64) string {
 	if unix <= 0 {
 		return ""

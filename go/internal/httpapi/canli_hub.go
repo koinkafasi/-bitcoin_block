@@ -1,29 +1,5 @@
 package httpapi
 
-// Canlı piyasa merkezi (hub) — sunucudan İTME (SSE).
-//
-// NEDEN (kullanıcı isteği, 11 Kasım 2026): "tüm veriler değişim yaşanınca
-// ANLIK değişmesi ve doğru olması gerekli". Tarayıcı yoklaması (polling)
-// bunu karşılamıyor: 20 sn'lik aralıkta fiyat değişse bile ekran beklemede
-// kalıyor, ayrıca her ziyaretçi ayrı istek üretiyor.
-//
-// ÇÖZÜM: tek bir sunucu döngüsü Binance'i 5 saniyede bir tazeler; veri
-// DEĞİŞTİYSE bağlı tüm tarayıcılara aynı anda yazar (tek broadcast).
-// Tarayıcı başına ek maliyet yalnız açık bir HTTP akışı.
-//
-// TASARIM KARARLARI:
-//   - İki mesaj tipi var:
-//       `f` (fiyat)  → yalnız fiyat/değişim/şerit. ~500 bayt, her 5 sn.
-//       `t` (tam)    → sparkline, FNG, RSI, hacim, dominans, kur, piyasa.
-//                      ~4 KB, yalnız veri gerçekten değişince (30 sn'de bir
-//                      kontrol) — her 5 sn göndermek 8 kat gereksiz trafikti.
-//   - Boş/anlamsız veri GÖNDERİLMEZ: hazır değilse mesaj yok.
-//   - Upstream hatası (Binance 451/429/ağ) durumunda **son iyi veri**
-//     korunur ve istemciye yaş bilgisi (`cekildi`) gider; arayüz "CANLI"
-//     yerine yaşı yazar. Yanlış tazelik iddiası yok.
-//   - Hub, sayfa isteklerinden BAĞIMSIZ çalışır: kimse siteye girmese de
-//     önbellek sıcak kalır, ilk ziyaretçi bayat veri görmez.
-
 import (
 	"context"
 	"encoding/json"
@@ -74,10 +50,6 @@ func (h *canliHub) aboneOl() (chan []byte, func()) {
 	}
 }
 
-// yayin mesajı tüm abonelere yazar.
-//
-// Yavaş istemci BLOKLAMAZ: kanal doluysa mesaj düşer (o istemci zaten
-// bir sonraki mesajı alacak; tampon 4).
 func (h *canliHub) yayin(b []byte) {
 	h.mu.Lock()
 	h.sonMesaj = b
@@ -100,16 +72,13 @@ func (h *canliHub) aboneSayisi() int {
 
 // canliFiyatMesaj yalnız fiyat katmanı (küçük, sık).
 type canliFiyatMesaj struct {
-	Tip     string            `json:"t"` // "f"
-	Sa      int64             `json:"sa"`
-	Cekildi int64             `json:"cekildi"`
-	BTC     girisCanliFiyat   `json:"btc"`
-	ETH     girisCanliFiyat   `json:"eth"`
-	SOL     girisCanliFiyat   `json:"sol"`
-	Serit   []girisCanliSerit `json:"serit"`
-	// SeritBist: "Hisse Senetleri" sekmesinin kalemleri. Sekme değişince
-	// şerit BIST gösteriyor; o liste de canlı tazelensin (kaynak Yahoo,
-	// 2 dakikada bir güncelleniyor — kaynağın kendi hızı).
+	Tip       string                     `json:"t"` // "f"
+	Sa        int64                      `json:"sa"`
+	Cekildi   int64                      `json:"cekildi"`
+	BTC       girisCanliFiyat            `json:"btc"`
+	ETH       girisCanliFiyat            `json:"eth"`
+	SOL       girisCanliFiyat            `json:"sol"`
+	Serit     []girisCanliSerit          `json:"serit"`
 	SeritBist []girisCanliSerit          `json:"serit_bist"`
 	Coin      map[string]girisCanliFiyat `json:"coin"`
 }
@@ -131,18 +100,6 @@ type girisCanliPiyasa struct {
 	Birim   string  `json:"b"`
 }
 
-// fiyatMesaji yalnız DEĞİŞEN fiyatları üretir (delta).
-//
-// NEDEN DELTA: ilk sürüm her turda 25 coinin tamamını gönderiyordu
-// (ölçüldü: 40 sn'de 48 KB, istemci başına ~1,2 KB/s). Oysa tur başına
-// genelde 1-3 kalem değişiyor. Artık yalnız değişenler gider.
-//
-// Dönüş:
-//   - imza: değişiklik yoksa boş DEĞİL AMA `ok=false` döneriz; hiçbir şey
-//     değişmediyse mesaj yayınlanmaz.
-//   - gövde: {t:"f", btc/eth/sol, serit, serit_bist, coin} — yalnız
-//     değişen alt kümeler. İstemci haritadan bakıp bulduğunu yazar,
-//     bulamadığını atlar (kısmi güncelleme güvenli).
 func (s *Server) fiyatMesaji(ctx context.Context) (string, []byte, bool) {
 	g := s.cdGirisOlustur(ctx)
 	if !g.Hazir {
@@ -316,20 +273,10 @@ func (s *Server) tamMesaji(ctx context.Context) (string, []byte, bool) {
 	return string(imzaB), govdeB, true
 }
 
-// CanliPiyasaBaslat arka plan döngüsünü başlatır (dışa açık sürüm).
-//
-// cmd/site'tan çağrılır; ctx iptal edilince durur (temiz kapanış).
 func (s *Server) CanliPiyasaBaslat(ctx context.Context) {
 	s.startCanliPiyasa(ctx)
 }
 
-// startCanliPiyasa arka plan döngüsünü başlatır.
-//
-// İKİ TEMPO:
-//   - 5 sn: fiyat tazele + değiştiyse `f` yayınla (kripto fiyatı bu hızda
-//     değişir; Binance limiti 12 istek/dk'yı rahat kaldırır)
-//   - 30 sn: `t` (sparkline/göstergeler/kur) — bunlar dakikada bir bile
-//     değişmez; 5 sn'de göndermek ölçüsüz trafik olurdu.
 func (s *Server) startCanliPiyasa(ctx context.Context) {
 	go func() {
 		fiyatTicker := time.NewTicker(5 * time.Second)
@@ -424,10 +371,6 @@ func (s *Server) handleCanliPiyasaSSE(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// writeSSEVeri JSON gövdesini tek SSE olayı olarak yazar.
-//
-// Olay adı KULLANILMIYOR (`event:` satırı yok): tek akış, tek tip. İstemci
-// yalnız `onmessage` dinler — daha basit ve daha az kırılgan.
 func writeSSEVeri(w http.ResponseWriter, b []byte) error {
 	if _, err := w.Write([]byte("data: ")); err != nil {
 		return err

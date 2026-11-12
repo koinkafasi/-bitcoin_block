@@ -9,19 +9,6 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-// baglaEtiketler, kaynağın RSS <category> değerlerini `tags` tablosuna
-// yazar ve içeriğe bağlar.
-//
-// NEDEN kaynağın kendi etiketleri: bunlar UYDURMA değil, kaynağın gerçek
-// sınıflandırmasıdır (CoinDesk "Markets"/"Bitcoin", Decrypt "DeFi"…).
-// Etiket sayfaları (/tag/{slug}) ve makale altındaki etiket listesi buradan
-// beslenir; SEO'da konu kümesi oluşturur.
-//
-// Kurallar:
-//   - Etiket 2-40 karakter; daha kısa/uzun değerler atılır (feed'lerde
-//     bozuk/aşırı uzun değerler oluyor).
-//   - Aynı içerikte tekrar eden etiket bir kez bağlanır.
-//   - En çok 8 etiket: kart/başlık altında sonsuz etiket listesi olmasın.
 func baglaEtiketler(ctx context.Context, pool *pgxpool.Pool, contentID int64, adlar []string) error {
 	gorulen := map[string]bool{}
 	var temiz []string
@@ -92,11 +79,6 @@ func IcerikEtiketleri(ctx context.Context, pool DB, contentID int64) ([]Etiket, 
 	return out, rows.Err()
 }
 
-// EtiketlerCoklu birden çok içeriğin etiketlerini tek sorguda döndürür
-// (içerik kimliği → etiketler).
-//
-// NEDEN: RSS beslemesi 50 öğe basıyor; öğe başına ayrı sorgu 50 gidiş-dönüş
-// demekti. Bu sürüm tek `= ANY($1)` sorgusu kullanır.
 func EtiketlerCoklu(ctx context.Context, pool DB, contentIDs []int64) (map[int64][]Etiket, error) {
 	out := make(map[int64][]Etiket, len(contentIDs))
 	if len(contentIDs) == 0 {
@@ -122,11 +104,6 @@ func EtiketlerCoklu(ctx context.Context, pool DB, contentIDs []int64) (map[int64
 	return out, rows.Err()
 }
 
-// PopulerEtiketler içeriği olan etiketleri, içerik sayısına göre döndürür.
-//
-// NEDEN "içeriği olan": mega menüdeki etiket bağlantıları buradan beslenir.
-// İçeriği olmayan bir etikete menüde yer vermek kullanıcıyı 404'e götürür
-// (ölçüm: /tag/xrp 404 idi).
 func PopulerEtiketler(ctx context.Context, pool DB, adet int) ([]Etiket, error) {
 	if adet <= 0 {
 		adet = 5

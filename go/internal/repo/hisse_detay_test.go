@@ -6,9 +6,6 @@ import (
 	"testing"
 )
 
-// TestHisseAralikEsleme CoinDesk sekmelerinin (1D·5D·1M·YTD·1Y·All) Yahoo
-// parametrelerine doğru eşlendiğini kilitler. Yanlış interval/range uçtan
-// boş seri döndürür ve grafik sessizce kaybolurdu.
 func TestHisseAralikEsleme(t *testing.T) {
 	beklenen := map[string][2]string{
 		"1d":  {"5m", "1d"},

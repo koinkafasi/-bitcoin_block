@@ -14,11 +14,6 @@ import (
 	"theblock/site/internal/repo"
 )
 
-// Kategori düzeyinde varsayılan abonelik katmanı (migration 0086).
-//
-// Test kendi kategorisini oluşturur ve sonunda SİLER; mevcut kategorilere
-// dokunmaz. Kalıntı 0 doğrulanır.
-
 func TestCategoryTierWeightCRUD(t *testing.T) {
 	pool := intPool(t)
 	ctx := context.Background()

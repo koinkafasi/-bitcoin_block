@@ -68,10 +68,6 @@ const (
 	keyModel        = "model"
 )
 
-// SettingsStore ASR yapılandırmasını settings tablosunda tutar. .env
-// değerleri varsayılan olarak kullanılır; panelden kaydedilen değerler
-// önceliklidir. Böylece API anahtarı/sağlayıcı değişince yeniden başlatma
-// gerekmez.
 type SettingsStore struct {
 	pool     *pgxpool.Pool
 	defaults Config
@@ -165,9 +161,6 @@ func (d *Dynamic) Resolve(ctx context.Context) Config {
 	return d.store.Load(ctx)
 }
 
-// Transcribe güncel yapılandırmayla sağlayıcıyı seçip çalıştırır. Anahtar
-// yoksa ErrDisabled döner (iş açık hata ile başarısız olur, sessizce
-// beklemez).
 func (d *Dynamic) Transcribe(ctx context.Context, req Request, progress ProgressFunc) (Result, error) {
 	cfg := d.Resolve(ctx)
 	if cfg.Empty() {

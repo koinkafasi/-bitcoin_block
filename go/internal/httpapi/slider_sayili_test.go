@@ -13,19 +13,6 @@ import (
 	"theblock/site/internal/webui"
 )
 
-// Sayılı şerit slider stili — Habertürk spor/basketbol düzeni.
-//
-// Kullanıcı: "Slider Stillerine modüllerde bu sayılı alanlarda
-// https://www.haberturk.com/spor/basketbol burdaki tasarım modelini de
-// birebir ekleyebilir misin."
-//
-// Referanstan çözülen değerler (28 Ekim 2026):
-//   - Üst düzen 50/50: grid-cols-1 md:grid-cols-2 gap-5
-//   - Sol kare slider (aspect 1:1), sağ 2×2 kare ızgara
-//   - Başlık text-2xl / leading-6 / font-bold / line-clamp-2 / gradient
-//   - Şerit: h-8, bg-black/15, hücreler bg-white/20, iç zemin -skew-x-12,
-//     sağda 1px #1f1f1f çizgi, AKTİF hücrede zemin hsla(0,0%,100%,.3),
-//     son hücre "+"
 func TestSayiliStilPagerNumarayaZorlanir(t *testing.T) {
 	bs := parseHomeBlocks([]byte(`[
 		{"id":"a","type":"slider","opts":{"slider_style":"sayili","pager_type":"dots"}},

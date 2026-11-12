@@ -40,7 +40,7 @@ func (v SeoOneriView) DoluMu() bool {
 templ SeoOneriPanel(v SeoOneriView) {
 	<div id="seoOneri" class="seo-oneri" aria-live="polite">
 		if v.Baslik == "" && v.Aciklama == "" && v.Hata == "" {
-			<!-- Boş hedef: düğme buraya sonucu yazar. -->
+						// Boş hedef: düğme buraya sonucu yazar.
 		} else if v.Hata != "" {
 			<div class="seo-oneri__hata" role="alert">
 				<svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-alert-triangle"></use></svg>

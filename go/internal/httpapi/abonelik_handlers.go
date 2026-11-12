@@ -122,10 +122,6 @@ func (s *Server) handleAbonelikPage(w http.ResponseWriter, r *http.Request) {
 	s.renderPublic(w, r, "abonelik", d, cacheControlPublic)
 }
 
-// POST /abonelik/odeme — iyzico hosted checkout başlatır.
-// sozlesmeSurumu, onaylanan ön bilgilendirme ve mesafeli satış sözleşmesi
-// metinlerinin sürümüdür. Metinler güncellenirse burası da artırılmalı:
-// kayıt, kullanıcının HANGİ metni onayladığını göstermeli.
 const sozlesmeSurumu = "mesafeli-satis-sozlesmesi@v1"
 
 func (s *Server) handleAbonelikOdeme(w http.ResponseWriter, r *http.Request) {
@@ -145,15 +141,6 @@ func (s *Server) handleAbonelikOdeme(w http.ResponseWriter, r *http.Request) {
 		s.abonelikHata(w, r, "Seçilen paket bulunamadı.")
 		return
 	}
-	// Ön bilgilendirme ve mesafeli satış sözleşmesi onayı — SUNUCU tarafında
-	// zorunlu. Formdaki `required` yalnız tarayıcıda çalışır; istek doğrudan
-	// gönderilirse onaysız sözleşme kurulurdu.
-	//
-	// Mesafeli Sözleşmeler Yönetmeliği uyarınca sağlayıcı, sözleşme
-	// kurulmadan önce ön bilgilendirme yapmak zorundadır. Tüketici cayma
-	// hakkı konusunda gereği gibi bilgilendirilmezse 14 günlük süre işlemez
-	// ve cayma hakkı, sürenin bittiği tarihten bir yıl sonrasına kadar
-	// kullanılabilir — yani eksik bilgilendirme riski aylarca açık kalır.
 	if strings.TrimSpace(r.FormValue("sozlesme_onay")) != "1" {
 		s.abonelikHata(w, r, "Ödemeye geçmek için Ön Bilgilendirme Formu'nu ve "+
 			"Mesafeli Satış Sözleşmesi'ni onaylamanız gerekir.")
@@ -181,11 +168,6 @@ func (s *Server) handleAbonelikOdeme(w http.ResponseWriter, r *http.Request) {
 		s.abonelikHata(w, r, "Bu paket için fiyat tanımlı değil.")
 		return
 	}
-	// Kabul kaydı: hangi üyenin, hangi paket/döngü için, hangi sözleşme
-	// sürümünü, ne zaman onayladığı. İspat yükü sağlayıcıdadır; sözleşme
-	// metinleri değişebildiği için SÜRÜM de yazılır (sozlesmeSurumu).
-	// TCKN bilerek KAYDEDİLMEZ: iyzico'ya iletilen bir zorunluluk, bizim
-	// saklamamız gereken bir veri değil (veri minimizasyonu).
 	s.audit(r, "abonelik_sozlesme_onay", fmt.Sprintf(
 		"uye=%d paket=%s dongu=%s sozlesme=%s", u.ID, tier.Slug, cycle, sozlesmeSurumu))
 
@@ -331,9 +313,6 @@ func (s *Server) handleAbonelikGeriDonus(w http.ResponseWriter, r *http.Request)
 	http.Redirect(w, r, "/hesabim/abonelik?ok=odeme", http.StatusFound)
 }
 
-// paymentByToken iyzico callback token'ını ödeme kaydıyla eşler.
-// Token checkout başlatılırken kaydedilir; başka bir bekleyen kayda
-// eşleşme (ödeme çalma) mümkün değildir.
 func (s *Server) paymentByToken(ctx context.Context, token string) (repo.Payment, error) {
 	return repo.GetPaymentByToken(ctx, s.pool, token)
 }

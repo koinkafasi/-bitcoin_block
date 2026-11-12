@@ -11,20 +11,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// Sayfa Tasarımcısı yerleşimi ve teması (Faz 182).
-//
-// NEDEN: sayfa blok önizlemeleri için public.css yüklüyor. O dosya `.card`,
-// `.card-pad`, `.btn`, `.muted`, `.input`, `.table` ve `--accent` tanımlıyor;
-// admin sürümlerini eziyordu. Ölçülen sonuçlar:
-//
-//	.card-pad{display:flex;flex-direction:column}  -> her panel 171px
-//	  (olması gereken ~82px) ve başlıkla düğmeler alt alta
-//	.card{overflow:hidden}                          -> 1024px'te alanlar kırpılıyor
-//	:root{--accent:var(--hp-tema)}                  -> marka rengi #fa0000 yerine
-//	  #d10015; koyu temada marka yazısı 3.3 kontrast
-//
-// Ayrıca panelde 38 sabit renk (koyu temada okunmayan) token'a çevrildi.
-
 func tasarimciKaynak(t *testing.T) string {
 	t.Helper()
 	b, err := os.ReadFile(filepath.Join("templates", "site_builder.html"))

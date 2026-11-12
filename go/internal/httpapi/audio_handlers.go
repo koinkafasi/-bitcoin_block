@@ -386,9 +386,6 @@ func (s *Server) icerikAudioViews(contentID int64, audios []repo.ContentAudio) [
 	return out
 }
 
-// handleTranscriptSearch transkriptlerde tam metin araması yapar.
-// `audio_transcripts.search` (tsvector + GIN) şemada hazırdı; bu uç onu
-// kullanıma açar. Sonuç, ilgili içeriğin ses paneline bağlantı verir.
 func (s *Server) handleTranscriptSearch(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	q := strings.TrimSpace(r.URL.Query().Get("q"))
@@ -444,9 +441,6 @@ func (s *Server) asrMissingKeyMessage() string {
 	return "Transkripsiyon sağlayıcısı yapılandırılmadı. ASSEMBLYAI_API_KEY ekleyip sunucuyu yeniden başlatın."
 }
 
-// handleAudioSubtitle transkripti altyazı dosyası olarak indirir (srt|vtt).
-// Video haberlere altyazı eklemek ve erişilebilirlik için; altyazı metni
-// arama motorlarınca da indekslenir.
 func (s *Server) handleAudioSubtitle(w http.ResponseWriter, r *http.Request) {
 	id := parseID(r.PathValue("id"))
 	if _, ok := s.editableContent(w, r, id); !ok {
@@ -508,9 +502,6 @@ func transcribeSegments(segs []repo.AudioSegment) []transcribe.Segment {
 	return out
 }
 
-// subtitleFilename indirilecek dosya adını üretir. Content-Disposition
-// başlığı ASCII dışı karakterle bozulduğu için Türkçe harfler çevrilir ve
-// kalan güvensiz karakterler tireye indirilir.
 func subtitleFilename(mediaName, ext string) string {
 	base := strings.TrimSuffix(mediaName, filepath.Ext(mediaName))
 	var b strings.Builder

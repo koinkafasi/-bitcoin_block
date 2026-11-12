@@ -7,22 +7,6 @@ import (
 	"theblock/site/internal/repo"
 )
 
-// Çeviri kapısı (Faz 120).
-//
-// 24 dilli bir sitede aynı haberin makine çevirisiyle çoğaltılması, Google'ın
-// "scaled content abuse" tanımına en yakın davranıştır: değer katmadan
-// üretilmiş, başka yerde de bulunan içerik. Bu kapı, çeviri bir içeriğin
-// yayına alınması için o dilde **bir kaynak/atıf** bulunmasını şart koşar.
-//
-// Kural:
-//   - Kök içerik (translation_of yok) → geçer.
-//   - Varsayılan dildeki (tr) içerik → geçer.
-//   - Çeviri (translation_of var, locale != tr) → `source_url` veya en az bir
-//     içerik kaynağı (kaynak ekle) olmalı.
-//
-// Kaynak, "bu bilgi nereden geldi" sorusunu o dilde de yanıtlar; salt çeviri
-// metninden farklı olarak özgün bir katkı gösterir.
-
 // defaultLocale sitenin kök dili.
 const defaultLocale = "tr"
 
@@ -32,9 +16,6 @@ type translationGateResult struct {
 	Reason  string
 }
 
-// checkTranslationGate içeriğin yayına alınmasının çeviri açısından uygun
-// olup olmadığını söyler. Saf mantık repo okumasına bağlıdır; testte
-// sourceCount doğrudan verilebilir.
 func checkTranslationGate(c repo.Content, sourceCount int) translationGateResult {
 	if c.TranslationOf == nil {
 		return translationGateResult{Allowed: true}

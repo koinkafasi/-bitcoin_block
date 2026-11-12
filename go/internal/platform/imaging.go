@@ -102,12 +102,6 @@ func CropToRatio(data []byte, width int, ratio float64) ([]byte, image.Image, er
 	return out, dst, err
 }
 
-// CreateThumb küçük kare önizleme üretir.
-//
-// JPEG girdide iş image-svc'ye devredilir (kare kırpma = ratio 1.0).
-// Ölçüm (8 Kasım 2026): 480 px kare küçültme yerel yolda ~40 ms, serviste
-// ~18 ms. Panel ve medya uçları her yeni görselde bir kez üretir; liste
-// sayfaları çok sayıda yeni görselde aynı anda tetikleyebiliyor.
 func CreateThumb(data []byte, size int) ([]byte, error) {
 	if size > 0 {
 		if cfg, err := jpeg.DecodeConfig(bytes.NewReader(data)); err == nil && jpegMi(data) {
@@ -148,12 +142,6 @@ func CreateThumb(data []byte, size int) ([]byte, error) {
 	return encodeJPEG(img, 80)
 }
 
-// ResizeToWidth görselin en-boy oranını koruyarak hedef genişliğe ölçekler ve
-// JPEG olarak kodlar. Responsive srcset varyantları için kullanılır.
-//
-// Görsel bir mikroservis adresi tanımlıysa (SetImageSvcURL) ve girdi JPEG ise
-// iş image-svc'ye (Rust/libjpeg-turbo) devredilir; servis yoksa, hata verirse
-// veya girdi PNG/WebP ise aşağıdaki yerel yol kullanılır.
 func ResizeToWidth(data []byte, width int) ([]byte, error) {
 	if out, ok := resizeViaImageSvc(context.Background(), data, width); ok {
 		return out, nil

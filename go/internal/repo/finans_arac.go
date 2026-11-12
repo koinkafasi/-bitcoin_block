@@ -10,17 +10,6 @@ import (
 	"theblock/site/internal/cryptoicon"
 )
 
-// ---- Kur tablosu (Kur Çevirici modülü) ----
-//
-// Kur & Borsa bandı yalnız 11 makro gösterge taşır; çevirici ise 12+ para
-// birimini (USD, EUR, TRY, GBP, JPY, AUD, CAD, CHF, DKK, NOK, SEK, SAR …)
-// karşılıklı çevirmek ister. Bu yüzden ayrı bir "kurlar/ana" önbelleği
-// tutulur: 1 birim = X TRY.
-//
-// Kaynak truncgil v4 (Türkçe, satış fiyatı). TRY taban olduğu için değeri
-// 1'dir. JPY truncgil'de 1 birim olarak gelir (0,0031) — 100 birim DEĞİL;
-// yine de sağlamlık için 1'den büyük JPY değeri 100'e bölünür.
-
 // KurTablosu çevirici için para birimi kurları (1 birim = X TRY).
 type KurTablosu struct {
 	Kurlar  map[string]float64 `json:"kurlar"`
@@ -136,10 +125,6 @@ func (k truncgilKur) deger() (float64, bool) {
 	return 0, false
 }
 
-// fetchKurTablosuKaynak truncgil v4 günlük dosyasından para birimlerini okur.
-//
-// Dosyada Update_Date gibi skaler alanlar da var; bu yüzden önce ham map'e
-// çözülür ve yalnız nesne olan satırlar alınır.
 func fetchKurTablosuKaynak(ctx context.Context) (map[string]truncgilKur, error) {
 	raw, err := httpGetJSONUA("https://finans.truncgil.com/v4/today.json", 12*time.Second)
 	if err != nil {
@@ -219,10 +204,6 @@ func KurlarOf(ctx context.Context, pool DB) KurTablosu {
 
 // ---- Kripto para (Kripto Para modülü) ----
 
-// KriptoRow tek kripto para satırı.
-//
-// Alanlar Habertürk kripto tablosunun sütunlarını karşılar:
-// KRIPTO · 24s · 7g · FİYAT · 24s HACİM · PİYASA DEĞERİ.
 type KriptoRow struct {
 	Symbol    string  `json:"symbol"`     // BTC
 	Name      string  `json:"name"`       // Bitcoin
@@ -241,11 +222,6 @@ type KriptoData struct {
 	Updated time.Time   `json:"updated"`
 }
 
-// kriptoMarkets TRY cinsinden ilk 100 kripto para (CoinGecko).
-//
-// 100 kayıt seçildi: sayfa tüm listeyi aranabilir gösterir (Habertürk
-// tablosu da uzun bir liste basar), modül ise ilk N tanesini alır.
-// price_change_percentage=24h,7d ile hem 24s hem 7g değişimi gelir.
 const kriptoMarkets = "https://api.coingecko.com/api/v3/coins/markets?vs_currency=try&order=market_cap_desc&per_page=100&page=1&price_change_percentage=24h,7d"
 
 // kriptoSlug CoinGecko kimliğinden adres parçası üretir (kanonik adres).
@@ -257,9 +233,6 @@ func kriptoSlug(id, symbol string) string {
 	return id
 }
 
-// RefreshKripto kripto para listesini önbelleğe yazar.
-//
-// Hiç veri gelmezse önbellek korunur (uydurma fiyat gösterilmez).
 func RefreshKripto(ctx context.Context, pool DB) error {
 	raw, err := httpGetJSONUA(kriptoMarkets, 15*time.Second)
 	if err != nil {
@@ -284,13 +257,9 @@ func RefreshKripto(ctx context.Context, pool DB) error {
 			continue
 		}
 		rows = append(rows, KriptoRow{
-			Symbol: strings.ToUpper(c.Symbol),
-			Name:   c.Name,
-			Slug:   kriptoSlug(c.ID, c.Symbol),
-			// İkon yalnız kendi gömülü kütüphanemizden gelir. CoinGecko'nun
-			// `image` alanı bilerek kullanılmaz: dış CDN'e bağımlılık ve
-			// lisans belirsizliği istemiyoruz. İkon yoksa boş kalır ve
-			// şablon harf avatarına düşer.
+			Symbol:    strings.ToUpper(c.Symbol),
+			Name:      c.Name,
+			Slug:      kriptoSlug(c.ID, c.Symbol),
 			Image:     cryptoicon.URL(c.Symbol),
 			Value:     c.Price,
 			Delta:     c.Chg24,
@@ -312,11 +281,6 @@ func RefreshKripto(ctx context.Context, pool DB) error {
 // kriptoCacheKey kripto önbellek anahtarı.
 const kriptoCacheKey = "ana"
 
-// KriptoOf önbellekteki kripto listesini döndürür.
-//
-// Önbellek eski sürümden (CoinGecko `image` alanı dış URL) kalmış olabilir;
-// okurken ikon adresi her satırda yerel kütüphaneden yeniden üretilir.
-// Böylece eski kayıtlar da dış servise istek yapmaz.
 func KriptoOf(ctx context.Context, pool DB) KriptoData {
 	var kd KriptoData
 	if b, err := CacheGet(ctx, pool, "kripto", kriptoCacheKey); err == nil {

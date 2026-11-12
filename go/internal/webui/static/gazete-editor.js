@@ -1,13 +1,4 @@
-/* gazete-editor.js — Gazete sayfa düzenleyici (yalnız panel)
- *
- * Tuval, baskının kendi sınıflarını (.gazete-sayfa / .gb) gerçek sayfa
- * ölçüsünde kullanır ve transform ile küçültür; blok gövdeleri sunucudan
- * gelir. Böylece editörde görünen ile basılan aynı HTML+CSS'ten gelir.
- * Bkz. specs/13-gazete-sayfa-duzenleyici.md K1.
- *
- * Okuyucu (çevirerek okuma) ayrı dosyada: gazete.js. Genel site editörü
- * indirmez.
- */
+
 (function () {
   "use strict";
 
@@ -25,7 +16,7 @@
     boot = {};
   }
 
-  /* ===================== Durum ===================== */
+  
 
   var state = {
     issueId: boot.issueId || 0,
@@ -56,7 +47,7 @@
   var propsEl = document.getElementById("gz-props-form");
   var pagesEl = document.getElementById("gz-pages");
 
-  /* ===================== Yardımcılar ===================== */
+  
 
   function esc(s) {
     return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) {
@@ -73,7 +64,7 @@
   }
   function birincil() { return blokBul(state.secililer[0]); }
 
-  /* ---- mm → yüzde: ızgara şablonda mm cinsinden bildirilir ---- */
+  
   function mmSayi(s) { return parseFloat(String(s || "").replace("mm", "")) || 0; }
   var sayfaWmm = mmSayi(boot.sayfaW) || 210;
   var sayfaHmm = mmSayi(boot.sayfaH) || 297;
@@ -98,7 +89,7 @@
   var SUTUNLAR = sutunKenarlari();
   var YAKALAMA = 0.8; // yüzde; A4'te ~1.7mm
 
-  /* ===================== Geçmiş ===================== */
+  
 
   function anlik() {
     state.undo.push(JSON.stringify(state.sayfalar));
@@ -121,7 +112,7 @@
     hepsiniCiz();
   }
 
-  /* ===================== Blok fabrikası ===================== */
+  
 
   function uid(tip) { return tip + "-" + Math.random().toString(36).slice(2, 8); }
 
@@ -144,7 +135,7 @@
     return b;
   }
 
-  /* ===================== Tuval ===================== */
+  
 
   function sirali(bloklar) {
     return bloklar.slice().sort(function (a, b) {
@@ -185,11 +176,8 @@
     eksikHTMLGetir();
   }
 
-  /* ---- Sütun ızgarası ---- */
-  /* ---- Kesim / tasma payi / guvenli alan kilavuzlari (Faz 6) ----
-   * Bunlar yalniz EDITORDE gorunur. Dijital nusha tam kesim olcusunde
-   * basilir; tasma payi ve kesim isaretleri matbaa dosyasina aittir
-   * (SPEC K8), oraya Faz 7'de ekleniyor. */
+  
+  
   function kilavuzKatmani() {
     var k = document.createElement("div");
     k.className = "gz-baski-kilavuz";
@@ -218,7 +206,7 @@
     canvas.appendChild(g);
   }
 
-  /* ---- Ölçek: tuval gerçek mm ölçüsünde, ekrana sığsın diye küçültülür ---- */
+  
   function sigdirOlcegi() {
     var kap = olcekSarmal && olcekSarmal.parentElement;
     if (!kap || !canvas.offsetWidth) return 1;
@@ -237,7 +225,7 @@
   }
   window.addEventListener("resize", olcekle);
 
-  /* ===================== Taşma işareti ===================== */
+  
 
   // Ön uyarıdır, otorite değil: editör kullanıcının tarayıcısında, baskı
   // sunucudaki Chromium'da çalışır. Kesin cevap "Sığdır Denetimi"nde.
@@ -262,7 +250,7 @@
     });
   }
 
-  /* ===================== Sunucu gövdeleri ===================== */
+  
 
   function postForm(url, data) {
     var fd = new FormData();
@@ -307,7 +295,7 @@
     eksikHTMLGetir();
   }
 
-  /* ===================== Yakalama ve kılavuzlar ===================== */
+  
 
   // Hizalama hedefleri: sütun kenarları, sayfa kenarları ve diğer blokların
   // kenarları/merkezleri. Gazete sayfası sütun ürünüdür; keyfi adımla
@@ -353,7 +341,7 @@
     canvas.querySelectorAll(".gz-kilavuz").forEach(function (e) { e.remove(); });
   }
 
-  /* ===================== Sürükleme / boyutlandırma ===================== */
+  
 
   var surukle = null;
 
@@ -391,7 +379,7 @@
         return { b: x, x: x.x, y: x.y, w: x.w, h: x.h };
       })
     };
-    try { canvas.setPointerCapture(ev.pointerId); } catch (e) { /* yoksay */ }
+    try { canvas.setPointerCapture(ev.pointerId); } catch (e) {  }
     hepsiniCiz();
   });
 
@@ -461,7 +449,7 @@
   canvas.addEventListener("pointerup", surukleBitti);
   canvas.addEventListener("pointercancel", surukleBitti);
 
-  /* ===================== Katmanlar ===================== */
+  
 
   function katmanlariCiz() {
     layersEl.innerHTML = "";
@@ -550,7 +538,7 @@
     sirali(sayfa().bloklar).forEach(function (b, i) { b.z = i; });
   }
 
-  /* ===================== Özellikler ===================== */
+  
 
   var STIL_SECENEK = {
     zemin: ["yok", "lacivert", "turuncu", "koyu", "acik", "beyaz"],
@@ -642,7 +630,7 @@
   }
   function kaynakTip(b) { return (b.kaynak && b.kaynak.tip) || "son"; }
 
-  /* ===================== Sayfa şeridi ===================== */
+  
 
   function sayfalariCiz() {
     pagesEl.innerHTML = "";
@@ -692,9 +680,7 @@
     });
   }
 
-  /* ---- Sayfa yönetimi ----
-   * Sayfa numaraları her işlemden sonra 1..n olarak yeniden verilir:
-   * baskıdaki "Sayfa N" etiketi ve okuyucu sırası buna dayanıyor. */
+  
   function numaralariDuzelt() {
     state.sayfalar.forEach(function (p, i) { p.no = i + 1; });
   }
@@ -751,7 +737,7 @@
     sayfalariCiz();
   }
 
-  /* ===================== Blok işlemleri ===================== */
+  
 
   function blokSil(idler) {
     if (!idler.length) return;
@@ -805,7 +791,7 @@
     hepsiniCiz();
   }
 
-  /* ===================== Klavye ===================== */
+  
 
   document.addEventListener("keydown", function (ev) {
     // Hedef her zaman bir element olmayabilir (document'e gonderilen olay);
@@ -858,7 +844,7 @@
     olcekle();
   }
 
-  /* ===================== Araç çubuğu ===================== */
+  
 
   function bagla(id, fn) {
     var el = document.getElementById(id);
@@ -884,7 +870,7 @@
     });
   });
 
-  /* ---- Kaydet ---- */
+  
   var saveBtn = document.getElementById("gz-kaydet");
   if (saveBtn) {
     saveBtn.addEventListener("click", function () { kaydet(saveBtn); });
@@ -933,7 +919,7 @@
     ev.returnValue = "";
   });
 
-  /* ---- Bildirim (panel içi; alert yerine) ---- */
+  
   // bildirHTML: icinde baglanti olan bildirim. Metin sunucudan gelmez,
   // burada kuruluyor; kullanici verisi enjekte edilmiyor.
   function bildirHTML(html, tur) {
@@ -956,7 +942,7 @@
     bildir._t = setTimeout(function () { kap.setAttribute("hidden", ""); }, 8000);
   }
 
-  /* ---- Şablon ---- */
+  
   var sablonSel = document.getElementById("gz-sablonlar");
   if (sablonSel && boot.sablonlar) {
     boot.sablonlar.forEach(function (t) {
@@ -998,7 +984,7 @@
     }).then(function () { bildir("Şablon kaydedildi: " + ad, "info"); });
   });
 
-  /* ---- Doldur / doğrula / PDF / önizleme ---- */
+  
   bagla("gz-doldur", function () {
     if (!window.confirm("Sayfalar otomatik doldurulsun mu? Elle düzenlediğiniz sayfalar korunur.")) return;
     postForm("/admin/gazete/sayilar/" + state.issueId + "/doldur", {}).then(function () {
@@ -1053,9 +1039,7 @@
     });
   }
 
-  /* ---- Matbaa dosyasi (SPEC K8 / Faz 7) ----
-   * Dijital nushaya dokunmaz; ayri bir dosya uretir ve preflight raporunu
-   * gosterir. Rapor temiz degilse dosya matbaaya gonderilmemeli. */
+  
   var matbaaBtn = document.getElementById("gz-matbaa");
   if (matbaaBtn) {
     matbaaBtn.addEventListener("click", function () {

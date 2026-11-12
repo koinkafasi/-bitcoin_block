@@ -6,10 +6,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// koyuTemaMetin: "Görünüm & Marka"da seçilen tek metin rengi iki temaya da
-// uygulanıyordu. Kullanıcı siyah seçtiğinde koyu temada metin siyah kalıp
-// okunmuyordu (ölçüldü: kontrast 1.2). Koyu tema için ton beyaza doğru
-// açılmalı.
 func TestKoyuTemaMetin(t *testing.T) {
 	kart := [3]float64{39, 39, 42}
 	sayfa := [3]float64{19, 19, 22}

@@ -45,9 +45,6 @@ func SetUserStripeIDs(ctx context.Context, pool *pgxpool.Pool, userID int64, cus
 // SetUserMembershipByStripe üyelik durumunu Stripe sonucuna göre günceller.
 // premium: 'premium' veya ” (bitiş tarihi ile birlikte).
 func SetUserMembershipByStripe(ctx context.Context, pool *pgxpool.Pool, userID int64, plan string, until *time.Time) error {
-	// Abonelik modeliyle uyum: premium açılırken en yüksek ağırlıklı aktif
-	// katman atanır; içerik bazlı katman kilidi Stripe abonesini dışarıda
-	// bırakmaz. Üyelik kaldırılınca katman/süre alanları temizlenir.
 	var tierID *int64
 	if plan == "premium" {
 		var id int64

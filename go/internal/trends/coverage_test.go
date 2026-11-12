@@ -5,13 +5,6 @@ import (
 	"time"
 )
 
-// Bu testler B1 hatasını kalıcı olarak korur: kapsama analizi tek bir 72
-// saatlik pencereye bakıyordu. Site 72 saatte yayın yapmayınca eşleşme hiç
-// bulunamıyor, coverage_count tüm terimlerde 0 kalıyor ve skorlamada her
-// terime "içerik boşluğu bonusu" veriliyordu — editöre arşivde 7 içerik
-// varken "boşluk" gösteriliyordu. Düzeltme: arşiv sayısı (Total) ile taze
-// pencere sayısı (Recent) ayrı üretilir.
-
 func docs() []CoverageDoc {
 	now := time.Date(2026, 10, 28, 12, 0, 0, 0, time.UTC)
 	return []CoverageDoc{
@@ -47,9 +40,6 @@ func TestCoverageArsivVeTazeyiAyirir(t *testing.T) {
 	}
 }
 
-// Asıl regresyon: yalnız arşivde içerik varsa Total>0 (panel "kapsandı"
-// demeli) ama Recent=0 (skorlama boşluk bonusu verebilir). Eski kod bu iki
-// durumu ayırmadığı için panel yanlış bilgi veriyordu.
 func TestCoverageArsivVarTazeYokIseBoslukSayilmaz(t *testing.T) {
 	now := time.Date(2026, 10, 28, 12, 0, 0, 0, time.UTC)
 	only := []CoverageDoc{

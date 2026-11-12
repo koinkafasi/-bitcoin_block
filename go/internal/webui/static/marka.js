@@ -1,5 +1,4 @@
-/* marka.js — Marka Merkezi etkileşimleri: logo'dan renk çıkarma + canlı önizleme.
- * HTMX swap sonrası otomatik yeniden bağlanır. */
+
 (function () {
   'use strict';
 
@@ -42,7 +41,7 @@
             var pi = document.getElementById('primaryInput');
             if (pi) { pi.value = hex; pi.dispatchEvent(new Event('input')); }
           }
-        } catch (e) { /* canvas güvenlik hatası — sessiz */ }
+        } catch (e) {  }
         URL.revokeObjectURL(url);
       };
       img.src = url;

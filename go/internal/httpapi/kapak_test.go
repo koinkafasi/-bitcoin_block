@@ -7,10 +7,6 @@ import (
 	"theblock/site/internal/repo"
 )
 
-// cdKapakGorselTestSunucu mediaPath'i taklit eden sunucu üretir.
-//
-// NEDEN: gerçek çözüm DB'ye gidiyor (repo.GetMedia) ve birim testte havuz
-// yok. Öncelik KURALINI sınamak için mediaPath'i enjekte ediyoruz.
 func cdKapakGorselTestSunucu(harita map[int64]string) *Server {
 	s := &Server{}
 	s.mediaMu.Lock()
@@ -22,13 +18,6 @@ func cdKapakGorselTestSunucu(harita map[int64]string) *Server {
 	return s
 }
 
-// TestCdKapakGorselEditorKazanir — KAPAK ÖNCELİĞİ sözleşmesi.
-//
-// ÖLÇÜLEN HATA (kullanıcı bildirimi, 10 Kasım 2026): "yazıya medya
-// yöneticisi ile resim ekledim ... yeni tasarımda sitede eski resim imaj
-// yolu gösteriyor". Önce `image_url` (kaynak CDN) okunuyordu; editörün
-// yüklediği `cover_media_id` yok sayılıyordu. Aynı hata liste kartlarını
-// (cdStoryCevir) da vuruyordu.
 func TestCdKapakGorselEditorKazanir(t *testing.T) {
 	kapak := int64(7)
 	s := cdKapakGorselTestSunucu(map[int64]string{

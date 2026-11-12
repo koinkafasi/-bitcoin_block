@@ -1,35 +1,5 @@
 package platform
 
-// SVG kabulü ve GÜVENLİ TEMİZLEME.
-//
-// NEDEN: (kullanıcı isteği, 11 Kasım 2026) "admin panelden svg formatı
-// yükleyip sitede değişiklik yapmasını istiyorum" — vektör logo tek dosyada
-// her çözünürlükte net; PNG'nin 1x/2x/3x üçlemesinden iyi.
-//
-// AMA SVG bir GÖRSEL değil, XML BELGESİDİR: `<script>`, `onload=`,
-// `javascript:` bağlantıları, `<foreignObject>` ve DIŞ KAYNAK çeken
-// `<image href="https://…">` taşıyabilir. Doğrudan servis edilirse paneli
-// kullanan kişinin kendi tarayıcısında kod çalışabilir (depolanmış XSS)
-// ya da ziyaretçilerin IP'si üçüncü tarafa sızabilir.
-//
-// SAVUNMA İKİ KATMAN:
-//  1) YÜKLEMEDE beyaz liste temizliği (bu dosya): yalnız çizim öğeleri
-//     kalır. Bilinmeyen öğe İÇERİĞİYLE atılır; `on*` öznitelikleri,
-//     `javascript:`/`data:text/html`, belge dışı `href`, `style` içinde
-//     `url()`/`@import` reddedilir. DOCTYPE (XXE / billion laughs) atılır.
-//  2) SERVİS ANINDA sıkı CSP: `.svg` yanıtına `default-src 'none'`
-//     (public_handlers.go). Temizlik atlansa bile tarayıcı SVG belgesi
-//     içinde hiçbir script/kaynak çalıştırmaz.
-//
-// KURAL: temizleme BAŞARISIZ olursa dosya REDDEDİLİR. "Temizleyemedim ama
-// yükleyeyim" demek, kapatmaya çalıştığımız kapıyı açık bırakır.
-//
-// ESKİ SÜRÜM (değiştirildi): düzenli ifadelerle `<script>` silme. Üç açığı
-// vardı — (a) `<image href="https://evil/x.png">` hiç yakalanmıyordu,
-// (b) `style="fill:url(https://evil/x)"` geçiyordu, (c) `javascript:`
-// eşleşmesi silinince `href="alert(1)"` gibi bozuk ama yaşayan değer
-// kalıyordu. XML çözümleyici + beyaz liste bunları yapısal olarak kapatır.
-
 import (
 	"bytes"
 	"encoding/xml"
@@ -40,17 +10,8 @@ import (
 	"strings"
 )
 
-// maxSVGBytes yüklenebilecek en büyük SVG boyutu (2 MB).
-//
-// Logo/favicon için fazlasıyla yeterli; daha büyüğü ya hatalı dışa
-// aktarımdır ya da tarayıcıyı kilitlemeye çalışan bir belgedir.
 const maxSVGBytes = 2 << 20
 
-// izinliSVGOgeleri çizim için gereken öğeler.
-//
-// Bilinçli olarak YOK: script, foreignObject, iframe, image (dış kaynak
-// çekebilir → IP sızıntısı), use (harici referans çekebilir), animate*/
-// set (SMIL ile url() tetikleyebilir), handler, listener.
 var izinliSVGOgeleri = map[string]bool{
 	"svg": true, "g": true, "defs": true, "symbol": true,
 	"path": true, "rect": true, "circle": true, "ellipse": true,
@@ -68,19 +29,11 @@ var izinliSVGOgeleri = map[string]bool{
 // izinliSVGOnekleri kabul edilen ad alanı önekleri.
 var izinliSVGOnekleri = map[string]bool{"xlink": true, "xml": true, "svg": true}
 
-// SanitizeSVG yüklenen SVG'yi doğrular ve etkin içeriği temizler.
-//
-// İmza KORUNUYOR (background.go kullanıyor): temizlenmiş baytlar + hata.
-// Ölçü gerekiyorsa SanitizeSVGBoyut kullanılır.
 func SanitizeSVG(data []byte) ([]byte, error) {
 	temiz, _, _, err := SanitizeSVGBoyut(data)
 	return temiz, err
 }
 
-// SanitizeSVGBoyut temizler ve kök svg'nin ölçüsünü de döndürür.
-//
-// Genişlik/yükseklik 0 ise belgede ölçü yoktur (viewBox da yoksa) —
-// çağıran taraf o zaman ölçüsüz kaydeder, uydurma değer yazmaz.
 func SanitizeSVGBoyut(data []byte) (temiz []byte, genislik, yukseklik int, err error) {
 	if len(data) == 0 {
 		return nil, 0, 0, errors.New("svg: boş dosya")
@@ -168,9 +121,6 @@ func SanitizeSVGBoyut(data []byte) (temiz []byte, genislik, yukseklik int, err e
 			}
 
 		case xml.Comment, xml.Directive, xml.ProcInst:
-			// Yorumlar, <!DOCTYPE> ve <?xml-stylesheet?> ATILIR: DOCTYPE
-			// varlık tanımı (XXE / billion laughs) taşıyabilir;
-			// xml-stylesheet dış CSS yükler.
 			continue
 		}
 	}
@@ -208,11 +158,6 @@ func svgKokOge(data []byte) string {
 // svgOznitelikGecerli özniteliğin güvenli olup olmadığını söyler.
 func svgOznitelikGecerli(a xml.Attr) bool {
 	alt := strings.ToLower(a.Name.Local)
-	// `xmlns` / `xmlns:*` YAZILMAZ: xml.Encoder ad alanı bildirimini
-	// kendisi üretiyor; ikisini birlikte bırakmak
-	// `<svg xmlns="…" xmlns="…">` gibi TEKRARLI (geçersiz ama sessizce
-	// tolere edilen) çıktı veriyordu. Decoder bu bildirimleri zaten
-	// Name.Space'e çözdüğü için bilgi kaybı yok.
 	if alt == "xmlns" || strings.HasPrefix(alt, "xmlns:") {
 		return false
 	}
@@ -258,15 +203,6 @@ func svgCSSMetniTehlikeli(s string) bool {
 	return false
 }
 
-// svgOlcu width/height ya da viewBox'tan ölçü çıkarır.
-//
-// SIRA ÖNEMLİ (yaşanmış hata, 11 Kasım 2026): önce viewBox okunuyordu ve
-// viewBox birimleri PİKSEL SANILIYORDU. `width="251" height="66"
-// viewBox="0 0 1795 470"` taşıyan bir logoda medya kaydına 1795×470
-// yazıldı — 7 katı. Orandaki hata yok (ikisi de aynı oran), ama ölçü
-// "gerçek boyut" diye gösterildiği için yanıltıcıydı ve raster önizleme
-// üretilse yanlış boyutta olurdu. Artık ÖNCE gerçek width/height
-// (birimliyse px'e çevrilir), yoksa viewBox'a düşülür.
 func svgOlcu(attrs []xml.Attr) (int, int) {
 	var w, h, vbW, vbH string
 	for _, a := range attrs {

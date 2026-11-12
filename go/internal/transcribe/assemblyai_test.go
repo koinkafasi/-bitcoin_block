@@ -24,9 +24,6 @@ func TestFromConfigRequiresAPIKey(t *testing.T) {
 	assert.Equal(t, "assemblyai", p.Name())
 }
 
-// TestSpeechModelsMapping eski model adlarının API'nin beklediği
-// `speech_models` listesine çevrildiğini doğrular. API `speech_model`
-// parametresini kaldırdı; bu eşleme olmadan işler başarısız oluyordu.
 func TestSpeechModelsMapping(t *testing.T) {
 	cases := map[string][]string{
 		"":                  {"universal-3-5-pro", "universal-2"},
@@ -178,9 +175,6 @@ func TestAssemblyAITranscribeProviderError(t *testing.T) {
 	assert.Contains(t, err.Error(), "Ses anlaşılamadı")
 }
 
-// TestAssemblyAIAPIErrorSurfacesMessage API'nin {"error": ...} gövdesini
-// kullanıcıya taşıdığını doğrular (deprecated parametre hatası böyle
-// görünür oldu).
 func TestAssemblyAIAPIErrorSurfacesMessage(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")

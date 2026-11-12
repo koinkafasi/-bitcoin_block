@@ -166,7 +166,7 @@ func MedyaPanel(v MedyaView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<div class=\"media-arac\"><form method=\"get\" action=\"/admin/dosyalar\" class=\"media-arac__ust\" role=\"search\" hx-get=\"/admin/dosyalar\" hx-target=\"#medya-panel\" hx-swap=\"outerHTML\" hx-push-url=\"true\" hx-indicator=\"#medya-yukleniyor\"><!-- Kategori seçimi chip'lerle yapılıyor; arama formu kategoriyi\n\t\t\t\t     taşımazsa arama yapınca filtre kaybolurdu. --><input type=\"hidden\" name=\"kategori\" value=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<div class=\"media-arac\"><form method=\"get\" action=\"/admin/dosyalar\" class=\"media-arac__ust\" role=\"search\" hx-get=\"/admin/dosyalar\" hx-target=\"#medya-panel\" hx-swap=\"outerHTML\" hx-push-url=\"true\" hx-indicator=\"#medya-yukleniyor\"><input type=\"hidden\" name=\"kategori\" value=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

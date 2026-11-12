@@ -1,25 +1,4 @@
-/* gazete-baski.css — Gazete baskı tasarımı. TEK RENDER YOLU.
- *
- * Bu dosya iki yerden tüketilir (bkz. docs/SPEC-GAZETE-DUZENLEYICI.md K1):
- *   1) PDF üretimi — gazetePrintHTML dosyayı satır içi gömer, çünkü Chromium
- *      baskıyı file:// üzerinden açıyor ve /static/... çözümlenemiyor.
- *   2) Editör tuvali — /static/gazete-baski.css olarak HTTP ile yüklenir.
- * Böylece editörde görünen ile basılan aynı HTML+CSS'ten gelir.
- *
- * SAYFA ÖLÇÜSÜ VE TİPOGRAFİ BURADA SABİT DEĞİL (K2). Çağıran taraf şu
- * değişkenleri bildirir; aşağıdaki varsayılanlar A4 dikeydir:
- *   --gz-sayfa-w / --gz-sayfa-h : sayfa kutusu (mm)
- *   --gz-kenar                  : sayfa iç boşluğu (mm)
- *   --gz-tip-tab                : tipografi tabanı (gövde metni punto)
- *   --gz-tip-olcek              : şablonun tipografi çarpanı
- * @page kuralı Go tarafında yazılır: custom property'ler @page içinde
- * güvenilir çalışmıyor, sayfa kutusunun birebir doğru olması şart.
- *
- * Tüm punto değerleri --gz-tip'ten çarpanla türetilir; em kullanılmıyor çünkü
- * iç içe öğelerde em birikir ve baskıda sessizce yanlış boy üretir.
- * Çarpanlar A3 çıktısının bugünkü görünümünü korur: taban 9.5pt iken
- * 1.684 × 9.5 = 16pt gibi, eski sabit değerlere birebir denk gelir.
- */
+
 
 :root {
   --gz-sayfa-w: 210mm;
@@ -30,15 +9,11 @@
   --gz-tip: calc(var(--gz-tip-tab) * var(--gz-tip-olcek));
 }
 
-/* Bu dosya admin panelinde de yükleniyor; bu yüzden HİÇBİR kural `body` veya
- * `*` gibi genel seçici kullanmaz, yoksa panelin tamamı Georgia olur.
- * Baskıya özgü `body{margin:0}` sıfırlaması Go önsözünde yazılır. */
-
 .gazete-sayfa,
 .gazete-sayfa * { box-sizing: border-box; }
 
 .gazete-sayfa {
-  /* Aile sunucuda kurulu olanlardan secilip bildirilir; sessiz yedek yok. */
+  
   font-family: var(--gz-yazi, serif);
   color: #111;
   position: relative;
@@ -53,8 +28,6 @@
 }
 .gazete-sayfa:last-child { break-after: auto; page-break-after: auto; }
 
-/* Blok kabı. overflow:hidden baskıda kaçınılmaz — kâğıt uzamaz. Sessiz
- * kalmaması Faz 2'deki doğrulama geçidinin işi (SPEC K3). */
 .gb { position: absolute; overflow: hidden; }
 
 .gb-kunye-ust {
@@ -124,19 +97,12 @@
   height: 100%;
 }
 
-/* ================= Blok stil jetonlari (SPEC §5.2) =================
- * Degerler jeton, serbest renk degil: sunucu beyaz listeden gecirip yalniz
- * bu sabit sinif adlarini uretir. Boylece sablon verisi CSS'e sizamaz.
- * Referans peyzajindaki lacivert kunye bandi, turuncu kutu ve gorsel
- * uzerine metin bindirmesi bu jetonlarla kuruluyor. */
-
 .gb-z-lacivert { background: #16233f; }
 .gb-z-turuncu  { background: #e0632a; }
 .gb-z-koyu     { background: #23262b; }
 .gb-z-acik     { background: #f1ede6; }
 .gb-z-beyaz    { background: #fff; }
 
-/* Zemin koyu oldugunda ic baslik cizgisi de acilmali, yoksa kaybolur. */
 .gb-m-acik, .gb-m-acik h1, .gb-m-acik h3, .gb-m-acik p,
 .gb-m-acik .gb-baslik, .gb-m-acik .gb-liste strong { color: #fff; }
 .gb-m-acik .gb-kucuk, .gb-m-acik .gb-liste span { color: rgba(255,255,255,.72); }
@@ -148,8 +114,6 @@
 .gb-h-orta  { text-align: center; }
 .gb-h-sag   { text-align: right; }
 
-/* Ic metin sutunlari. Sarmalayiciya degil, ic govdeye uygulanir: sabit
- * yukseklikli kapsayicida multicol, sigmayan metni YANA akitir. */
 .gb-s-2 .gb-metin, .gb-s-2 .gb-liste { column-count: 2; }
 .gb-s-3 .gb-metin, .gb-s-3 .gb-liste { column-count: 3; }
 .gb-s-4 .gb-metin, .gb-s-4 .gb-liste { column-count: 4; }
@@ -157,7 +121,6 @@
 .gb-k-ince  { border: 0.4mm solid #111; }
 .gb-k-kalin { border: 1mm solid #111; }
 
-/* Bindirme: gorsel bloga metin yerlestirme (referans peyzaji, §3). */
 .gb-b-alt, .gb-b-ust, .gb-b-tam { position: absolute; }
 .gb-b-alt .gb-manset, .gb-b-ust .gb-manset, .gb-b-tam .gb-manset { height: 100%; }
 .gb-b-alt img, .gb-b-ust img, .gb-b-tam img {
@@ -169,21 +132,16 @@
 .gb-b-alt .gb-manset { display: flex; flex-direction: column; justify-content: flex-end; padding: 4mm; }
 .gb-b-ust .gb-manset { display: flex; flex-direction: column; justify-content: flex-start; padding: 4mm; }
 .gb-b-tam .gb-manset { display: flex; flex-direction: column; justify-content: center; padding: 6mm; }
-/* Metin okunur kalsin diye gorselin uzerine koyu perde. */
+
 .gb-b-alt .gb-manset::before, .gb-b-ust .gb-manset::before, .gb-b-tam .gb-manset::before {
   content: ""; position: absolute; inset: 0; z-index: 0;
   background: linear-gradient(to top, rgba(0,0,0,.78), rgba(0,0,0,.15));
 }
 
-/* Blok basina tipografi carpani: sunucu --gb-olcek'i bicimlendirerek yazar. */
 .gb { font-size: calc(var(--gz-tip) * var(--gb-olcek, 1)); }
 
-/* Baslik blogu kutuyu doldurup dikeyde ortalanir. Aksi halde lacivert
- * kunye bandi gibi yuksek bloklarda metin tepede kalip alti bos gorunur. */
 .gb-t-baslik { display: flex; flex-direction: column; justify-content: center; }
 
-/* Zeminli ya da cerceveli blokta baslik alti cizgisi gereksiz: kutu zaten
- * kendi sinirini ciziyor, cizgi kirli duruyor. */
 .gb-m-acik > .gb-baslik,
 .gb-k-ince > .gb-baslik,
 .gb-k-kalin > .gb-baslik,

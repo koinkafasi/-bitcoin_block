@@ -15,12 +15,6 @@ import (
 	"theblock/site/internal/scoring"
 )
 
-// Öncelik iki yerde hesaplanır: panelde Go (scoring.Hesapla), sıralamada
-// SQL (scoring.OncelikSQL). İkisi ayrışırsa editörün gördüğü puan ile
-// listenin sırası birbirini tutmaz. Bu test ayrışmayı yakalar.
-//
-// GEÇİCİ TABLO kullanır; gerçek contents tablosuna dokunmaz, bu yüzden
-// üretim veritabanına karşı da güvenle koşturulabilir.
 func TestSQLVeGoAyniOnceligiVerir(t *testing.T) {
 	url := os.Getenv("TEST_DATABASE_URL")
 	if url == "" {
@@ -84,9 +78,6 @@ func TestSQLVeGoAyniOnceligiVerir(t *testing.T) {
 		require.InDeltaf(t, float64(goTazelik), sqlTazelik, 1.0,
 			"tazelik ayrıştı: yaş %d saat — Go %d, SQL %.2f", d.yasSaat, goTazelik, sqlTazelik)
 
-		// Öncelik: Go tarafında eksenler zaten hesaplanmış kabul edilir,
-		// bu yüzden ağırlıklı toplamı doğrudan kuruyoruz — SQL de aynısını
-		// yapıyor olmalı.
 		toplam := scoring.AgirlikTrend + scoring.AgirlikTazelik +
 			scoring.AgirlikGuven + scoring.AgirlikTamlik
 		goOncelik := float64(scoring.AgirlikTrend*d.trend+

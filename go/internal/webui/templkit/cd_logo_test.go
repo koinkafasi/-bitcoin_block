@@ -1,17 +1,5 @@
 package templkit
 
-// Marka / logo testleri (11 Kasım 2026).
-//
-// NEDEN: kullanıcı "admin panelden logo değiştiremiyorum" dedi. Kök neden
-// şablonda logonun SABİT olmasıydı. Bu testler üç şeyi sabitliyor:
-//   1) LogoURL boşsa gömülü marka dosyaları basılır (geri uyumluluk)
-//   2) LogoURL doluysa O basılır, statik PNG basılmaz
-//   3) width/height GERÇEK ölçüden gelir, bilinmiyorsa 146×32'ye düşer (CLS)
-//
-// Ayrıca CSS'te bir özgüllük tuzağı vardı: `.cd img { height:auto }`
-// kuralı yüklenen logonun 32 px yüksekliğini eziyordu (ölçüldü). Onun
-// regresyon testi de burada.
-
 import (
 	"bytes"
 	"context"
@@ -79,10 +67,6 @@ func TestCdLogoSloganAnahtarSozcukYoksaBasilmaz(t *testing.T) {
 }
 
 func TestCdLogoCSSOzgulluk(t *testing.T) {
-	// `.cd img { max-width:100%; height:auto }` (0,1,1) kuralı, yüklenen
-	// logonun ölçüsünü veren kuralı (0,1,0) EZİYORDU → logo 32 px'e
-	// inmiyor, üst çubuktan taşıyordu (tarayıcıda ölçüldü: 251×66).
-	// Kural ata sınıfıyla yazılmalı (0,2,0).
 	b, err := webui.FS.ReadFile("static/cd.css")
 	require.NoError(t, err)
 	css := string(b)

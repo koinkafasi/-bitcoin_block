@@ -11,11 +11,6 @@ import (
 
 // Faz 4/5 koruyucu testleri — specs/13-gazete-sayfa-duzenleyici.md
 
-// TestGazeteZSirasiKorunur boyama sırasının z'ye göre olduğunu ve z
-// bildirilmemiş eski kayıtlarda dizi sırasının korunduğunu doğrular.
-//
-// Katman paneli ile tuvalin aynı sırayı göstermesi şart; ayrışırsa kullanıcı
-// panelde üstte gördüğü bloğu tuvalde altta bulur.
 func TestGazeteZSirasiKorunur(t *testing.T) {
 	// z bildirilmiş: küçükten büyüğe.
 	bloklar := []gazeteBlock{
@@ -68,9 +63,6 @@ func sira(b []gazeteBlock) string {
 	return strings.Join(ids, ",")
 }
 
-// TestGazeteKayitDogrula tek işlemli kaydın girdiyi sessizce kabul etmediğini
-// doğrular. Tekrar eden sayfa numarası, "gönderilmeyen sayfayı sil" kuralıyla
-// birleşince yanlış sayfanın silinmesine yol açabilir.
 func TestGazeteKayitDogrula(t *testing.T) {
 	ok := []gazeteKayitSayfa{
 		{No: 1, Ad: "Kapak", Bloklar: json.RawMessage(`[]`)},
@@ -135,11 +127,6 @@ func TestGazeteSurumDamgasi(t *testing.T) {
 	}
 }
 
-// TestGazeteEditorStiliSunucudan editörün blok görünümünü sunucudan aldığını
-// doğrular: stil sınıfı ve ölçek tek yerde hesaplanmalı.
-//
-// Ayrıştıklarında gerçekten ayrışmıştı: zemin renkleri baskıda vardı ama
-// tuvalde yoktu, çünkü editör sarmalayıcıya yalnız tip sınıfını yazıyordu.
 func TestGazeteEditorStiliSunucudan(t *testing.T) {
 	b := gazeteBlock{ID: "k", Tip: "baslik", W: 96, H: 8, Baslik: "THEBLOCK",
 		Stil: map[string]any{"zemin": "lacivert", "metinRenk": "acik", "olcek": 1.2}}

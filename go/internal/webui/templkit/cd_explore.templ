@@ -104,7 +104,7 @@ templ cdExplorePanel(p CDExplorePanel) {
 									if v.Image != "" {
 										<img src={ v.Image } srcset={ v.Srcset }
 											sizes="168px" data-yedek={ v.ImageYedek }
-											alt="" loading="lazy" decoding="async"
+											alt={ v.Baslik } loading="lazy" decoding="async"
 											referrerpolicy="no-referrer"/>
 									}
 									if v.Sure != "" {
@@ -124,7 +124,7 @@ templ cdExplorePanel(p CDExplorePanel) {
 								<span class="cd-explore__klip-gorsel">
 									if k.Image != "" {
 										<img src={ k.Image } data-yedek={ k.ImageYedek }
-											alt="" loading="lazy" decoding="async"
+											alt={ k.Baslik } loading="lazy" decoding="async"
 											referrerpolicy="no-referrer"/>
 									}
 									<span class="cd-explore__oynat" aria-hidden="true">
@@ -143,7 +143,7 @@ templ cdExplorePanel(p CDExplorePanel) {
 							<a class="cd-explore__haber" href={ s.Href }>
 								if s.Image != "" {
 									<span class="cd-explore__haber-gorsel">
-										<img src={ s.Image } alt="" loading="lazy" decoding="async"
+										<img src={ s.Image } alt={ s.Title } loading="lazy" decoding="async"
 											referrerpolicy="no-referrer"/>
 									</span>
 								}

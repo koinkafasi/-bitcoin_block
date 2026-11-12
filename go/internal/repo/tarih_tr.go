@@ -1,16 +1,5 @@
 package repo
 
-// Türkçe tarih biçimleme — TEK KAYNAK.
-//
-// NEDEN VAR: Go'nun `time.Format` layout'unda ay belirteci "Jan"/"January"dır.
-// `"2 Ocak 2006"` yazıldığında "Ocak" TANINMAZ ve **düz metin** olarak
-// basılır: hangi ayda yayınlanırsa yayınlansın tarih "6 Ocak 2026" çıkıyordu.
-// Ölçüldü (9 Kasım 2026): Kasım'da yayınlanan makale "6 Ocak 2026",
-// günlük özet başlığı da "… Ocak 2026 Günlük Özeti" gösteriyordu.
-//
-// ÇÖZÜM: ay adları elle eşlenir. Tarih üreten her yer bu yardımcıyı
-// kullanır; ikinci bir layout dizgisi yazılmaz.
-
 import (
 	"strconv"
 	"time"

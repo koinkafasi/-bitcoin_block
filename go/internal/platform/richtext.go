@@ -5,13 +5,6 @@ import (
 	"unicode"
 )
 
-// ---- Zengin metin (blok + içerik gövdesi) güvenli HTML üretimi (Faz 6) ----
-//
-// Kullanıcı içeriği (WYSIWYG metin bloğu) sitenin SSR çıktısına HTML olarak
-// basılır. XSS'ten korumak için HİÇBİR etiket/özellik ayrımı yapılmadan
-// doğrudan geçirilmez; yalnızca aşağıdaki güvenli alt küme korunur, geri kalan
-// her şey (skript, olay öznitelikleri, iframe vb.) çıkarılır.
-
 // richAllowTags izin verilen gömülü metin etiketleri (kendi kendini kapatmaz).
 var richAllowTags = map[string]bool{
 	"p": true, "br": true, "strong": true, "b": true, "em": true, "i": true,

@@ -2,20 +2,6 @@ package repo
 
 import "testing"
 
-// Atom (RFC 4287) ayrıştırma sözleşmesi.
-//
-// ÖLÇÜM (6 Kasım 2026): Atom beslemeleri SIFIR kullanılabilir öğe
-// veriyordu ve bu sessizdi — besleme 200 dönüyor, 15 `<entry>` geliyor,
-// bot hiçbirini almıyordu. İki sebep:
-//
-//  1. Atom'da bağlantı eleman METNİ değil `<link href="…">` ÖZNİTELİĞİ.
-//     `xml:"link"` boş dönüyor, bot `Link == ""` olanı atlıyor.
-//  2. Kapak görseli gövde HTML'inde aranıyordu; Atom yayıncıları
-//     `media:group/media:content@url` veriyor.
-//
-// Bu testler düzeltmeyi sabitler. Kırılırsa Atom beslemeleri yine sessizce
-// boşa düşer — en pahalı hata sınıfı.
-
 // YouTube beslemesinin GERÇEK yapısı (kısaltılmış, alanlar birebir).
 const atomYouTube = `<?xml version="1.0" encoding="UTF-8"?>
 <feed xmlns:yt="http://www.youtube.com/xml/schemas/2015"
@@ -84,10 +70,6 @@ func TestAtomRelYoksaBaglantiAlinir(t *testing.T) {
 	}
 }
 
-// Görsel media:group/thumbnail'dan okunmalı.
-//
-// media:content burada flash oynatıcı (geçerli görsel değil); seçim
-// gecerliGorselURL'den geçtiği için thumbnail kazanmalı.
 func TestAtomGorselMediaGroupdanOkunur(t *testing.T) {
 	items, err := parseRSS(atomYouTube)
 	if err != nil || len(items) != 1 {
@@ -99,10 +81,6 @@ func TestAtomGorselMediaGroupdanOkunur(t *testing.T) {
 	}
 }
 
-// `published`, `updated`'dan önce gelmeli.
-//
-// NEDEN: yeniden yayımlamada `updated` değişir ve eski içerik yeni gibi
-// sıralanır. Fikstürde published 05 Kasım, updated 06 Kasım.
 func TestAtomPublishedUpdatedOnunde(t *testing.T) {
 	items, _ := parseRSS(atomYouTube)
 	if len(items) != 1 {

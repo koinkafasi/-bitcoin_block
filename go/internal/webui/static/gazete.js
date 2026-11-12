@@ -1,9 +1,4 @@
-/* gazete.js — Gazete okuyucu (genel site)
- *
- * StPageFlip tabanli cevirerek okuma: /gazete/<tarih>
- * Duzenleyici ayri dosyada (gazete-editor.js, yalniz panel); genel sayfa
- * editor kodunu indirmez.
- */
+
 function GZ_IKON(ad) {
   return '<svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-' + ad + '"></use></svg>';
 }

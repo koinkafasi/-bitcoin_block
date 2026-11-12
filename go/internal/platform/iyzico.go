@@ -1,8 +1,3 @@
-// Package platform — iyzico hosted checkout (Türkiye ödemeleri).
-//
-// edirnegercek'teki IyzicoPaymentService'in Go karşılığı: kart bilgisi
-// sunucuya girmez, kullanıcı iyzico'nun ödeme sayfasına yönlendirilir.
-// API v2 imzası: base64(HMAC-SHA256(randomKey + uriPath + body, secretKey)).
 package platform
 
 import (

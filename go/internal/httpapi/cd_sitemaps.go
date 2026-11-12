@@ -9,22 +9,6 @@ import (
 	"theblock/site/internal/repo"
 )
 
-// Sitemap ailesi — CoinDesk yapısıyla birebir.
-//
-// KAYNAK (ölçüldü, 7 Kasım 2026):
-//
-//	/sitemap-index.xml      → <sitemapindex>: static-1, articles-1…16, crypto-1…12
-//	/sitemaps/static-1.xml  → sabit sayfalar (changefreq daily, priority 1)
-//	/sitemaps/articles-N.xml→ haberler (lastmod ISO-8601, changefreq yearly, priority 1)
-//	/sitemaps/crypto-N.xml  → fiyat sayfaları (changefreq hourly, priority 1)
-//	/arc/outboundfeeds/news-sitemap-index → <sitemapindex> haber sitemap'leri
-//	/arc/outboundfeeds/news-sitemap      → Google News urlset
-//
-// Bizde tek dosyalık `/sitemap.xml` (BİK resmî ilanları da taşıyor) korunuyor;
-// üstüne CoinDesk'in BÖLÜNMÜŞ yapısı eklendi. Neden bölünür: Google bir
-// sitemap dosyasında en çok 50.000 URL okur; arşiv büyüdükçe tek dosya
-// sessizce kırpılır.
-
 // sitemapSayfaBoyu bir bölünmüş sitemap dosyasındaki URL sayısı.
 const sitemapSayfaBoyu = 1000
 
@@ -120,10 +104,6 @@ func (s *Server) handleSitemapStatic(w http.ResponseWriter, r *http.Request) {
 	s.writeXML(w, sb.String())
 }
 
-// handleSitemapsDosya /sitemaps/{dosya} — bölünmüş sitemap dosyaları.
-//
-// Go mux joker'i segment ortasında kabul etmediği için (`articles-{n}.xml`
-// kayıt anında panik üretiyor) tek segment alınıp burada çözülüyor.
 func (s *Server) handleSitemapsDosya(w http.ResponseWriter, r *http.Request) {
 	dosya := strings.TrimSpace(r.PathValue("dosya"))
 	switch dosya {
@@ -173,9 +153,6 @@ func (s *Server) handleSitemapArticlesDilim(w http.ResponseWriter, r *http.Reque
 
 	var sb strings.Builder
 	sb.WriteString(sitemapBaslik)
-	// CoinDesk articles-N.xml: yalnız loc + lastmod + changefreq + priority.
-	// hreflang alternates BURADA basılmıyor (kaynak dosyada yok) ve sayfa
-	// düzeyindeki x-default/canonical zaten doğru adresi veriyor.
 	sb.WriteString(`<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">`)
 	for _, it := range items {
 		sb.WriteString("<url><loc>" + htmlEscape(abs+makaleURL(it)) + "</loc>")
@@ -188,15 +165,6 @@ func (s *Server) handleSitemapArticlesDilim(w http.ResponseWriter, r *http.Reque
 	s.writeXML(w, sb.String())
 }
 
-// handleSitemapStocks /sitemaps/stocks-1.xml — hisse detayları (saatlik).
-//
-// NEDEN AYRI DOSYA: hisse sayfaları 631 URL; `static-1.xml` "sabit hizmet
-// sayfaları" demek ve onu 90 KB'lik fiyat listesiyle şişirmek yanlış
-// olurdu. CoinDesk de aynı desende `crypto-N.xml` ile ayırıyor.
-//
-// YALNIZ FİYATI OLAN HİSSELER yazılır: detay ucu veri bulamayınca 404
-// döndüğü için fiyatsız sembolü dizine koymak arama motoruna kırık adres
-// bildirmek olur. Böylece sitemap'teki her URL test edilebilir bir sayfa.
 func (s *Server) handleSitemapStocks(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	abs := s.absBase(r)
@@ -228,12 +196,6 @@ func (s *Server) handleSitemapStocks(w http.ResponseWriter, r *http.Request) {
 	s.writeXML(w, sb.String())
 }
 
-// handleCDHisseDizin /price/stock — hisse bölümünün kökü.
-//
-// Ölü adres (404) yerine TEK kanonik sayfaya yönlendirilir: /price zaten
-// "Hisse Senetleri" giriş listesini ve "Tümü" bağlantısını basıyor. İki
-// ayrı dizin sayfası tutmak (biri kripto, biri hisse tablolu) arama
-// motorunda yinelenen içerik olurdu.
 func (s *Server) handleCDHisseDizin(w http.ResponseWriter, r *http.Request) {
 	hedef := "/price"
 	if r.URL.RawQuery != "" {
@@ -279,18 +241,6 @@ func (s *Server) handleNewsSitemapIndex(w http.ResponseWriter, r *http.Request) 
 // sitemapBaslik her XML dosyasının ilk satırı.
 const sitemapBaslik = `<?xml version="1.0" encoding="UTF-8"?>` + "\n"
 
-// newsSitemap Google News urlset — CoinDesk biçimi.
-//
-// KAYNAK (ölçüldü): her <url> şunları taşıyor:
-//
-//	<lastmod> tam ISO-8601
-//	<loc>
-//	<news:news><news:publication><news:name/><news:language/></…>
-//	            <news:publication_date/><news:title><![CDATA[…]]></news:title>
-//	<image:image><image:loc>
-//
-// Son 48 saat: Google News sitemap kuralı. `news:title` CDATA içinde
-// veriliyor — CoinDesk de öyle; başlıktaki & ve < kaçışı elle yapılmıyor.
 func (s *Server) newsSitemap(abs string, items []repo.Content) string {
 	var sb strings.Builder
 	sb.WriteString(sitemapBaslik)

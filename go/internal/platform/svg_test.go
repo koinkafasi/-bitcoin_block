@@ -1,15 +1,5 @@
 package platform
 
-// SVG temizleme testleri (11 Kasım 2026).
-//
-// NEDEN: kullanıcı admin panelden SVG logo yükleyebilmek istedi. SVG bir
-// XML belgesidir; beyaz liste temizliği YANLIŞ yazılırsa depolanmış XSS
-// kapısı açılır. Bu testler saldırı vektörlerini tek tek sabitler.
-//
-// Eski regex tabanlı sürümün üç açığı vardı; hepsi burada regresyon olarak
-// duruyor: dış `<image href>`, `style="fill:url(https://…)"`, ve
-// `javascript:` silinince kalan bozuk değer.
-
 import (
 	"strings"
 	"testing"

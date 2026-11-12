@@ -1,18 +1,11 @@
-/* Kur Çevirici (kcr-).
- *
- * Kurlar <option data-rate> olarak sunucudan gelir (1 birim = X TRY);
- * hesap istemcide yapılır, ağ isteği yok. Sonuç sunucuda da hesaplanmış
- * olarak basılır — JS kapalıysa/gecikirse kutu boş kalmaz.
- *
- * Türkçe sayı biçimi: 1.234,5678 (binlik nokta, ondalık virgül).
- */
+
 (function () {
   'use strict';
 
   var reduce = false;
   try {
     reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  } catch (e) { /* eski tarayıcı */ }
+  } catch (e) {  }
 
   function sayiOku(s) {
     s = String(s || '').trim();
@@ -38,7 +31,7 @@
     }
   }
 
-  /* Fiyat ölçeğine göre ondalık: çok küçük değerlerde 4-8 hane göster. */
+  
   function haneSec(v) {
     if (!isFinite(v) || v === 0) return 2;
     var a = Math.abs(v);

@@ -44,9 +44,6 @@ type Config struct {
 	// (MVRV, SOPR, borsa akışı) hiç basılmaz — uydurma veri üretilmez.
 	CryptoQuantKey string
 
-	// Veritabanı havuzu. Boş/0 ise pgx varsayılanı kullanılır
-	// (pgx varsayılanı: MaxConns = max(4, NumCPU)). Canlıda ani yükte
-	// bağlantı fırtınası olmaması için açıkça ayarlanabilir olmalı.
 	DBMaxConns        int
 	DBMinConns        int
 	DBMaxConnLifetime time.Duration
@@ -55,25 +52,10 @@ type Config struct {
 	// Kapanışta uçuştaki istekler için tanınan süre (SIGTERM → Shutdown).
 	ShutdownTimeout time.Duration
 
-	// PprofAddr boşsa profil uç noktası hiç açılmaz. Doluysa AYRI bir
-	// dinleyicide (`/debug/pprof/*`) yayınlanır — ana mux'a bağlanmaz.
-	//
-	// NEDEN AYRI DİNLEYİCİ: pprof çıktısı heap içeriği, goroutine yığınları
-	// ve dosya yolları taşır. Genel site mux'ına eklenseydi `demo.bitcosar.com`
-	// üzerinden herkese açık olurdu (Cloudflare tüneli 127.0.0.1:8090'a
-	// bağlı). Ayrı ve varsayılan olarak 127.0.0.1'e bağlı dinleyici, profili
-	// yalnız makineden erişilebilir tutar.
 	PprofAddr string
 
-	// GzipLevel metin yanıtlarının sıkıştırma seviyesi (1–9).
-	// Boş/0 ise paket varsayılanı (4) kullanılır. Ölçüm ve gerekçe:
-	// bkz. internal/httpapi/gzip.go (seviye 6 → 4: sıkıştırma CPU'su -%29,
-	// gövde +%6).
 	GzipLevel int
 
-	// SayfaOnbellekTTL herkese açık CD sayfalarının taze ömrü.
-	// Bayat pencere: TTL geçtikten sonra eski gövdenin sunulmaya devam
-	// ettiği süre (yenisi arka planda üretilir). Boşsa 10 sn / 30 sn.
 	SayfaOnbellekTTL   time.Duration
 	SayfaOnbellekBayat time.Duration
 }

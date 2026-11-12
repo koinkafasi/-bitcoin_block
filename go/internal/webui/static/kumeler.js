@@ -1,4 +1,4 @@
-/* kumeler.js — küme içerik ekleme düğmesi (küme paneli). */
+
 (function () {
   'use strict';
   function init() {

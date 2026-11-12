@@ -12,7 +12,7 @@ templ CDHisseSayfaView(v CDHisseSayfa) {
 	<html lang="tr">
 		<head>
 			@cdHead(CDHead{Title: v.Title, Desc: v.Desc, Canonical: v.Canonical,
-				OGType: "website", SiteName: v.Shell.SiteName, RSSFeed: "/rss.xml",
+				OGType: "website", SiteName: v.Shell.SiteName, FaviconURL: v.Shell.FaviconURL, RSSFeed: "/rss.xml",
 				JSONLD: v.JSONLD, Locale: v.Locale, PageCategory: v.PageCategory,
 				ContentCategory: v.ContentCategory, BaseURL: v.BaseURL})
 		</head>
@@ -21,7 +21,7 @@ templ CDHisseSayfaView(v CDHisseSayfa) {
 			@cdTicker(v.Shell)
 			<main class="cd-wrap cd-hisse-wrap">
 				<div class="cd-hisse">
-					<!-- SOL RAY 392 px: breadcrumb + ad + fiyat, Key Stats. -->
+										// SOL RAY 392 px: breadcrumb + ad + fiyat, Key Stats.
 					<aside class="cd-hisse__sol">
 						<nav class="cd-crumbs cd-hisse__crumbs" aria-label="Konum">
 							<a href="/">Ana sayfa</a>
@@ -55,10 +55,10 @@ templ CDHisseSayfaView(v CDHisseSayfa) {
 							}
 						</section>
 
-						<!-- ABOUT — CoinDesk §10.6: 326×407 section. Kaynak metin
-						     İngilizce (Yahoo Finance); çeviri hattı olmadığı için
-						     olduğu gibi basılır, kaynağı yazılır. Veri yoksa bölüm
-						     hiç basılmaz. -->
+												// ABOUT — CoinDesk §10.6: 326×407 section. Kaynak metin
+						// İngilizce (Yahoo Finance); çeviri hattı olmadığı için
+						// olduğu gibi basılır, kaynağı yazılır. Veri yoksa bölüm
+						// hiç basılmaz.
 						if v.Ozet != "" {
 							<section class="cd-hisse__about" aria-labelledby="cd-hisse-about">
 								<h2 class="cd-hisse__baslik" id="cd-hisse-about">{ v.Ad } Hakkında</h2>
@@ -68,7 +68,7 @@ templ CDHisseSayfaView(v CDHisseSayfa) {
 						}
 					</aside>
 
-					<!-- SAĞ KOLON 976 px: kip düğmeleri, zaman sekmeleri, grafik, performans. -->
+										// SAĞ KOLON 976 px: kip düğmeleri, zaman sekmeleri, grafik, performans.
 					<div class="cd-hisse__sag">
 						if v.GrafikVar {
 							<div class="cd-hisse__ustsatir">

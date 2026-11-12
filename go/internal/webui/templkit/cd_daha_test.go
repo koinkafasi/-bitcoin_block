@@ -11,18 +11,6 @@ import (
 	"theblock/site/internal/webui"
 )
 
-// "Daha fazla haber" PARÇA sözleşmesi (8 Kasım 2026).
-//
-// NEDEN: sayfalama eskiden TAM SAYFA GEÇİŞİYDİ (`/business?sayfa=2` →
-// sayfa baştan yükleniyor). CoinDesk'te (ölçüm) buton `<button>`; tıklayınca
-// 5 haber aynı sayfaya ekleniyor (21 → 26 kart), URL değişmiyor. Aynı
-// davranış: cd-daha.js `?parca=1` parçasını çeker, satırları sona ekler,
-// nav'ı yeniler. JS yoksa `<a href>` normal sayfa geçişi yapar (fallback).
-//
-// Bu testler parçanın DİZİSİZ (head/footer yok), satır + nav içerdiğini
-// ve sayfa şablonunun JS dosyasını yalnız NextHref varken yüklediğini
-// kilitler.
-
 // TestBolumParca: parça yalnız satır + nav basar, sayfa iskeleti YOK.
 func TestBolumParca(t *testing.T) {
 	s := CDStory{Title: "Başlık", Href: "/h/1", Image: "/kg/" + strings.Repeat("a", 32),
@@ -83,9 +71,6 @@ func TestDahaScripti(t *testing.T) {
 	assert.Contains(t, h, `/static/cd-daha.js?v=`, "script etiketi yok")
 	assert.Contains(t, h, `rel="next"`, "JS'siz fallback için bağlantı kalmalı")
 
-	// Son sayfa: script yüklenmez (boş ağırlık yok). DİKKAT: şablondaki
-	// HTML yorumunda ("cd-daha.js parçayı...") dosya adı geçiyor — o
-	// yorum koşulsuz basılır; kapı yalnız <script src> etiketinde.
 	v2 := ornekKategori()
 	h2 := kategoriCiz(t, v2)
 	assert.NotContains(t, h2, `/static/cd-daha.js`,

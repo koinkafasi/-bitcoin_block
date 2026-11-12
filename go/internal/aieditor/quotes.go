@@ -7,12 +7,6 @@ import (
 	"theblock/site/internal/quality"
 )
 
-// quoteWarnings alıntı kapısını çalıştırır ve editöre gösterilecek uyarıları
-// döndürür. Kaynak, ses taslağında gönderilen transkripttir (selected_text).
-//
-// Burada "engelleme" yapılmaz: sonuç yine gösterilir, ancak doğrulanamayan
-// alıntı açıkça işaretlenir ve Result.UnverifiedQuotes alanına yazılır.
-// Böylece editör uydurulmuş bir cümleyi fark etmeden yayına almaz.
 func quoteWarnings(r *Result, source string) []string {
 	if len(r.Quotes) == 0 {
 		return nil

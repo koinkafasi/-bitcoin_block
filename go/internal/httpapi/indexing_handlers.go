@@ -283,8 +283,5 @@ func (s *Server) autoIndex(ctx context.Context, siteID, contentID int64) {
 		return
 	}
 	url := strings.TrimRight(s.cfg.BaseURL, "/") + publicArticleURL(c.Locale, c.DisplaySlug(), c.ID)
-	// #nosec G118 -- Bilinçli: IndexNow ping'i yanıtı bekletmemeli; istek
-	// context'i yanıt bitince iptal edilir, gönderim kendi zaman aşımını
-	// kullanır.
 	go func() { s.submitIndexNow(context.Background(), siteID, []string{url}) }()
 }

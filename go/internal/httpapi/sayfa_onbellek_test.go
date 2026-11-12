@@ -218,11 +218,6 @@ func TestSayfaOnbellekCSPKorunur(t *testing.T) {
 	}
 }
 
-// TestSayfaOnbellekBlokluIPIsabetteDeReddedilir: sayfa önbelleği
-// `withIPBlock`'un DIŞINDA (gzip'in de dışında olması gerekiyor: saklanan
-// gövde zaten sıkıştırılmış). Bu yüzden bloklu bir IP önbellekteki sayfayı
-// 200 ile almamalı — kontrol isabet yolunda tekrar edilmezse bot tuzağının
-// (410 + otomatik blok) koruması delinirdi.
 func TestSayfaOnbellekBlokluIPIsabetteDeReddedilir(t *testing.T) {
 	govde := strings.Repeat("<p>haber</p>", 20)
 	var sayac int32

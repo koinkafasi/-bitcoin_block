@@ -6,19 +6,6 @@ import (
 	"testing"
 )
 
-// Etiket sayfası (/tag/{slug}) YAPI sözleşmesi.
-//
-// ÖLÇÜM (coindesk.com/tag/bitcoin, 8 Kasım 2026, 1440×1000, gerçek Chrome):
-//
-//	banner  : sol metin max 680 (h1 36/44 **w400** capitalize, spot 18/27),
-//	          sağ görsel 692×389
-//	<hr>    : tam genişlik
-//	12 kolon: sol 8 (metin 524 + görsel 327×185, başlık 16/24 **w400**,
-//	          saat 12/16, aralarda hr), sağ 4 ("Latest Crypto News" paneli)
-//
-// NİYE TEST: önceki sürüm etiket sayfasını BÖLÜM şablonuyla basıyordu —
-// banner yok, h1 w700, 6+3+3 ızgara. CoinDesk'te iki aile tamamen farklı.
-
 func etiketCiz(t *testing.T, v CDTagPage) string {
 	t.Helper()
 	var sb strings.Builder

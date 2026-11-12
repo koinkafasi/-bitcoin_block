@@ -20,19 +20,8 @@ import (
 	"theblock/site/internal/repo"
 )
 
-// ---- Google ile giriş (okuyucu) ----
-//
-// Akış deseni staticbackendhq/core oauth.go örneğinden esinlenmiştir;
-// goth bağımlılığı olmadan, yalnız Google için yeniden yazılmıştır.
-// Güvenlik: yalnız 'Üye' rolündeki hesaplar Google ile giriş yapabilir;
-// editoryal roller parola + 2FA'ya bağlı kalır.
-
 const googleStateCookie = "tb_gstate"
 
-// googleRedirectCookie, OAuth turu sırasında dönüş hedefini taşır. Değer
-// yalnız "hesabim"/"abonelik" anahtarlarından biri olabilir; çerez
-// imzasızdır ama readerRedirect bilinmeyen değeri "/" yapar (açık
-// yönlendirme yok).
 const googleRedirectCookie = "tb_gredir"
 
 // googleDonusAnahtari yalnız bilinen hedef anahtarlarını kabul eder.
@@ -235,9 +224,6 @@ func (s *Server) googleExchange(ctx context.Context, clientID, clientSecret, red
 	return googleEmailFromIDToken(tok.IDToken)
 }
 
-// googleEmailFromIDToken id_token JWT'sinden e-posta alanını okur.
-// İmza doğrulaması Google'ın token uç noktasının yanıtına dayanır
-// (kod değişimi yapılmadan id_token üretilemez).
 func googleEmailFromIDToken(idToken string) (string, error) {
 	parts := strings.Split(idToken, ".")
 	if len(parts) != 3 {

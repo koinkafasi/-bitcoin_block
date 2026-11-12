@@ -11,26 +11,6 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-// Gazete manşetleri — günün gazete ön sayfaları (Faz 197).
-//
-// KAYNAK: gazeteoku.com. Edirne Gerçek projesindeki "Gazete Manşetleri"
-// modülü de aynı kaynağı kullanıyor (app/Console/Commands/FetchNewspaperCovers.php).
-//
-// ÖLÇÜM (2 Kasım 2026, üretim sunucusundan):
-//
-//	GET https://www.gazeteoku.com/  →  HTTP 200 · 213 KB · 0.44 sn
-//	benzersiz kapak görseli         →  30 gazete
-//	büyük boy (900x1310) istek      →  HTTP 200 · 600 KB · image/jpeg
-//	küçük boy (300x437) istek       →  HTTP 200 ·  87 KB · image/jpeg
-//
-// CDN bir yeniden boyutlandırma vekilidir: yol üzerindeki iki sayı istenen
-// genişliği/yüksekliği belirler. Kaynak sayfa 230x336 gömüyor; biz şerit için
-// 300x437, tam boy (galeri/lightbox) için 900x1310 istiyoruz.
-//
-// NEDEN HTML AYRIŞTIRMA: sayfa sunucu tarafında basılıyor ve her kapak tek bir
-// sabit görsel desenine sahip. Yeni bir HTML ayrıştırıcı bağımlılığı
-// (golang.org/x/net/html) tüm bağımlılık ağacını büyütürdü.
-
 // gazeteMansetKaynakURL kaynak sayfa.
 const gazeteMansetKaynakURL = "https://www.gazeteoku.com/"
 
@@ -45,9 +25,6 @@ var (
 	gazeteBoyRe = regexp.MustCompile(`^(https://i\.gazeteoku\.com/\d+)/\d+/\d+/`)
 )
 
-// gazeteSiraListesi gazetelerin görünme sırasıdır (kaynak sayfadaki sırayla
-// aynı: ulusal basın yelpazesi soldan sağa). Listede olmayan bir gazete
-// kaynakta görünürse sona eklenir — modül asla gazete "kaybetmez".
 var gazeteSiraListesi = []string{
 	"hurriyet", "sabah", "nefes", "sozcu", "cumhuriyet", "milliyet", "posta",
 	"takvim", "turkiye-gazetesi", "yeni-safak", "karar", "turkgun", "fanatik",
@@ -102,12 +79,6 @@ func gazeteAdiOf(slug string) string {
 // GazeteKaynakURL kaynak sayfanın adresidir (test/panel için dışa açık).
 func GazeteKaynakURL() string { return gazeteMansetKaynakURL }
 
-// gazeteKapakCoz kaynak sayfadan kapakları çıkarır. Saf fonksiyon: ağ yok,
-// DB yok — bu yüzden gerçek sayfa kaydıyla test edilebilir.
-//
-// Aynı gazete sayfada birden çok kez görünebilir (öne çıkan + liste); ilk
-// kayıt tutulur. Tarih görselin yolundan okunur: gece 00:05'te kaynak hâlâ
-// dünün kapaklarını yayınlıyor olabilir; "bugün" yazmak yalan olurdu.
 func gazeteKapakCoz(ham []byte) []gazeteKapak {
 	s := string(ham)
 	eslesme := gazeteKapakRe.FindAllStringSubmatch(s, -1)
@@ -148,9 +119,6 @@ type gazeteKapak struct {
 // GazeteMansetCoz test/araç kullanımı için dışa açık sarmalayıcı.
 func GazeteMansetCoz(ham []byte) []gazeteKapak { return gazeteKapakCoz(ham) }
 
-// gazeteMansetTaze site için bugünün kapakları var mı ya da son deneme çok
-// yakın mı? Scheduler 30 dakikada bir çağırıyor; kaynak gün içinde
-// değişmediği için her turda ağa çıkmak gereksiz (günde 48 istek olurdu).
 func gazeteMansetTaze(ctx context.Context, pool DB, siteID int64) bool {
 	var sonTarih *string
 	var sonDeneme *time.Time
@@ -168,13 +136,6 @@ func gazeteMansetTaze(ctx context.Context, pool DB, siteID int64) bool {
 	return false
 }
 
-// RefreshGazeteMansetleri tüm siteler için günün gazete kapaklarını çeker.
-//
-// Kaynak erişilemezse HİÇBİR ŞEY silinmez: eldeki kapaklar (dünkü) kalır,
-// modül en yeni tarihi gösterir. Kaynak boş dönerse hata döner.
-//
-// Zamanlama: scheduler bu fonksiyonu 30 dakikada bir çağırır; taze kontrolü
-// ağa çıkmadan önce yapılır (bkz. gazeteMansetTaze).
 func RefreshGazeteMansetleri(ctx context.Context, pool *pgxpool.Pool) (int, error) {
 	return refreshGazeteMansetleri(ctx, pool, false)
 }

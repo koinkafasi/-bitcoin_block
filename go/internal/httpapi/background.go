@@ -13,24 +13,11 @@ import (
 	"theblock/site/internal/repo"
 )
 
-// ---- Site arka planı (Sayfa Tasarımcısı içinde yönetilir) ----
-//
-// Public sayfalarda gövde (body) arka plan görseli varsayılan olarak
-// statik "ana-bg.svg" desenidir (bkz. partials.html). Bu ayar doluysa
-// yöneticinin yüklediği görsel — SVG veya raster (jpg/png/webp/gif) —
-// onun yerine kullanılır.
-
 const (
 	bgSection = "arkaplan"
 	bgKey     = "ana"
 )
 
-// BackgroundConfig arka plan görseli ve yerleşim ayarları.
-//
-//	MediaID: yüklenen görselin medya kimliği (nil = varsayılan desen)
-//	Disabled: true ise arka plan görseli tamamen kapalıdır (desen ve özel
-//	          görsel gösterilmez; yalnızca tema renk zemini kalır)
-//	Size/Repeat/Position/Attach: CSS background-* değerleri (allowlist)
 type BackgroundConfig struct {
 	MediaID  *int64 `json:"mediaId"`
 	Disabled bool   `json:"disabled"`
@@ -50,9 +37,6 @@ func (s *Server) backgroundConfig(ctx context.Context) *BackgroundConfig {
 	return c
 }
 
-// normalize geçersiz/boş değerleri güvenli varsayılanlara çeker. Değerler
-// doğrudan CSS'e gömüldüğü için yalnızca allowlist'teki değerler geçer
-// (serbest metin CSS enjeksiyonuna yol açamaz).
 func (c *BackgroundConfig) normalize() {
 	c.Size = bgPick(c.Size, []string{"cover", "contain", "auto", "100% 100%"}, "cover")
 	c.Repeat = bgPick(c.Repeat, []string{"no-repeat", "repeat", "repeat-x", "repeat-y"}, "no-repeat")
@@ -70,14 +54,6 @@ func bgPick(v string, allowed []string, def string) string {
 	return def
 }
 
-// siteBgCSS public sayfalarda body arka planı için inline <style> içeriğini
-// üretir. Üç durum vardır:
-//   - kapalı (Disabled): görsel yok (background-image:none)
-//   - özel görsel (MediaID): yöneticinin yüklediği görsel
-//   - aksi halde boş döner; şablon varsayılan desene (ana-bg.svg) düşer.
-//
-// Dönüş tipi template.CSS'tir; html/template yalnızca bu türü <style>
-// (CSS bağlamı) içinde güvenli kabul eder.
 func (s *Server) siteBgCSS(ctx context.Context) template.CSS {
 	c := s.backgroundConfig(ctx)
 	if c.Disabled {
@@ -140,9 +116,6 @@ func isGIF(data []byte) bool {
 	return len(data) >= 6 && string(data[:4]) == "GIF8"
 }
 
-// saveBackgroundImage yüklenen arka plan görselini medyaya kaydeder.
-// Raster (jpg/png/webp/gif) ve SVG desteklenir; SVG etkin içerikten
-// arındırılır (platform.SanitizeSVG).
 func (s *Server) saveBackgroundImage(r *http.Request, data []byte, filename string) (int64, error) {
 	ext := strings.ToLower(filepath.Ext(filename))
 	var mime string
@@ -203,9 +176,6 @@ func (s *Server) saveBackgroundImage(r *http.Request, data []byte, filename stri
 	return mid, nil
 }
 
-// handleBackgroundSave POST /admin/arka-plan/kaydet — multipart form.
-// Görsel (isteğe bağlı), yerleşim ayarları ve "varsayılana dön" bayrağını
-// işler; tasarımcı sayfasına geri yönlendirir.
 func (s *Server) handleBackgroundSave(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	back := "/admin/tasarim?sayfa=" + builderPage(r)

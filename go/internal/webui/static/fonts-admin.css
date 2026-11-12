@@ -1,32 +1,4 @@
-/* Urbanist — YÖNETİM PANELİNİN fontu, kendi sunucumuzdan.
- *
- * NEDEN AYRI FONT: panel Pacely düzenine geçti ve o tasarımın tipografisi
- * Urbanist üzerine kurulu — dar, geometrik, sıkı harf aralıklı. Poppins ile
- * aynı ölçüler verildiğinde düzen doğru çıkıyor ama "his" tutmuyor, çünkü
- * Poppins daha geniş ve yuvarlak. Public site markası Poppins olarak
- * KALIYOR; değişen yalnız yönetim aracı. Bir yayın yüzü ile onu yöneten
- * aracın farklı görünmesi olağandır.
- *
- * NEDEN YERELDE: fontu fonts.gstatic.com'dan çağırmak, paneli açan herkesin
- * IP ve User-Agent bilgisini Google'a (ABD) gönderirdi. Poppins için bu
- * zaten kaldırılmıştı (fonts.css'teki KVKK gerekçesi); Urbanist'i dışarıdan
- * çağırmak o kazanımı geri alırdı.
- *
- * NEDEN İKİ DOSYA: Urbanist DEĞİŞKEN font olarak yayımlanıyor — alt küme
- * başına tek dosya 100–900 arası bütün ağırlıkları taşıyor. Poppins'te
- * ağırlık başına ayrı dosya var (10 dosya); burada 2 dosya yetiyor, toplam
- * 48 KB. `font-weight: 100 900` bildirimi tarayıcıya bunu söyler.
- *
- * ALT KÜMELER: yalnız latin ve latin-ext. Türkçe her ikisini de gerektirir:
- * "ı" (U+0131) latin içinde, "ğ ş İ" latin-ext içindedir. unicode-range
- * korunduğu için tarayıcı sayfada gerçekten geçen karakterlere göre indirir.
- *
- * LİSANS: Urbanist, SIL Open Font License 1.1 ile yayımlanmıştır (Corey Hu);
- * kendi sunucunuzdan dağıtmak lisansın izin verdiği kullanımdır. Lisans
- * metni fonts/URBANIST-LICENSE.txt dosyasındadır.
- *
- * font-display: swap — metin, font inmeden sistem yedeğiyle görünür.
- */
+
 
 @font-face {
 	font-family: 'Urbanist';

@@ -2,35 +2,6 @@ package templkit
 
 import "strings"
 
-// CoinDesk mega menüsü — veri modeli.
-//
-// Yapı `docs/COINDESK-SPEC.md` §3 ölçümünden çıkarıldı (başlık sırası,
-// gruplama, sütun düzeni). Ancak **her satırın bir karşılığı olmalı**:
-// ölçümdeki CoinDesk program adları (CoinDesk Daily, Public Keys…), kendi
-// endeksleri (CD20, XBX) ve ABD hisse sembolleri bizde YOK.
-//
-// KURAL (bu dosyanın sözleşmesi): menüye yalnız **var olan** sayfa yazılır.
-// Ölü bağlantı (404) kullanıcıya "site yarım" der; eksik menü satırı ise
-// yalnız "daha az" der. Ölçüm (5 Kasım 2026): menüdeki 49 hedefin 29'u
-// 404'tü — yapı tamam görünüyordu, site yarımdı.
-//
-// VERİYE BAĞLI SÜTUNLAR:
-//   · Etiketler (Bitcoin/Ethereum…) — yalnız içeriği olan etiketler
-//   · Fiyatlar — canlı ilk 5 coin (CoinGecko önbelleğinden)
-// Böylece veri geldikçe menü kendiliğinden dolar, boş sayfa bağlanmaz.
-
-// CDMenuItem bir açılır menü satırı.
-//
-// Kind alanı satırın rolünü taşır; şablon buna göre biçim verir:
-//
-//	""        normal bağlantı
-//	"baslik"  grup başlığı (tıklanmaz)
-//	"tumu"    "tümünü gör" satırı (ayraçtan sonra, vurgulu)
-//
-// Desc doluysa sütun "açıklamalı kart" tipine geçer (spec §7.2A Tip B:
-// 257×96 kart, 14/20 w500 başlık + 12/16 w400 açıklama). Boşsa düz
-// bağlantı listesi (Tip A) basılır. Tek alanla iki yerleşim: menüye yeni
-// bir "tip" sabiti eklemek yerine VERİ neyi gerektiriyorsa şablon ona uyar.
 type CDMenuItem struct {
 	Label string
 	Href  string
@@ -50,12 +21,6 @@ type CDMenuGroup struct {
 	Columns []CDMenuColumn
 }
 
-// cdMenuSabit menünün veriye bağlı OLMAYAN kısmı.
-//
-// Sıra CoinDesk ölçümüyle aynı: News · Video · Prices · Research · Sponsored.
-// "Events" ve "Data & Indices" ÇIKARILDI: kripto etkinliğimiz ve kendi
-// endeks metodolojimiz yok (uydurma endeks göstermek yanlış veri olurdu).
-// ABD hisse fiyatları da çıkarıldı: veri kaynağı bağlanmadı.
 var cdMenuSabit = []CDMenuGroup{
 	{
 		Label: "Haberler", Href: "/latest-crypto-news",
@@ -86,10 +51,6 @@ var cdMenuSabit = []CDMenuGroup{
 	},
 	{
 		Label: "Araştırma", Href: "/research",
-		// AÇIKLAMALI KART TİPİ (spec §7.2A Tip B). CoinDesk Research
-		// panelinde kart başlığı 14/20 w500 + tek satır açıklama 12/16
-		// w400. Bizde karşılığı olan gerçek sayfalar bunlar; açıklamalar
-		// sayfaların kendi meta açıklamalarından kısaltıldı.
 		Columns: []CDMenuColumn{
 			{Items: []CDMenuItem{
 				{Label: "Araştırma Merkezi", Href: "/research",
@@ -112,11 +73,6 @@ var cdMenuSabit = []CDMenuGroup{
 	},
 }
 
-// cdSutunKartMi sütunun açıklamalı kart tipiyle basılacağını söyler.
-//
-// Tek ölçüt: satırlardan birinde Desc dolu mu. Açıklamayı yutup düz liste
-// basmak, ölçülen bilgiyi çöpe atardı; tam tersi, açıklaması olmayan
-// satırı karta çevirmek ise 96 px'lik boş kartlar üretirdi.
 func cdSutunKartMi(sut CDMenuColumn) bool {
 	for _, it := range sut.Items {
 		if strings.TrimSpace(it.Desc) != "" {
@@ -126,18 +82,6 @@ func cdSutunKartMi(sut CDMenuColumn) bool {
 	return false
 }
 
-// cdMenuPanelSinifi panelin genişlik/hizalama sınıfını üretir.
-//
-// CoinDesk panel genişliğini MENÜ BAŞINA sabitliyor (spec §7.2A):
-// 589 · 728 · 750 · 836 · 960. Genişlik içeriğe göre seçilmiş; bizde
-// karşılığı olan üç kademe var:
-//
-//	589  tek sütunlu liste (Video · Prices · Sponsored)
-//	750  iki sütunlu liste (News — bölümler + canlı etiketler)
-//	836  üç sütunlu açıklamalı kart ızgarası (Research)
-//
-// Sponsored ayrıca SAĞA hizalı: son başlık olduğu için `left: 0` paneli
-// ekrandan taşırıyordu (spec §7.2A istisnası).
 func cdMenuPanelSinifi(g CDMenuGroup) string {
 	sinif := "cd-nav__grup--589"
 	switch {
@@ -162,13 +106,6 @@ func cdMenuKartVar(g CDMenuGroup) bool {
 	return false
 }
 
-// cdMobilAnaGruplar ve cdMobilMedyaGruplar mobil menüyü CoinDesk'in İKİ
-// bloğuna ayırır: ana bölümler, sonra medya (Video/Podcast).
-//
-// NEDEN: CoinDesk mobil menüsü (JS kapalı, ölçüldü 9 Kasım 2026) önce
-// News/Prices/Data/Research/Events/Sponsored bloğunu, bir ayraçtan sonra
-// Videos/Podcasts/Newsletters bloğunu basıyor. Masaüstü sırası DEĞİŞMEZ;
-// yalnız mobil görünüm bu iki bloğa ayrılır.
 func cdMobilAnaGruplar(s CDShell) []CDMenuGroup {
 	out := make([]CDMenuGroup, 0, len(cdMenuSabit))
 	for _, g := range cdMenuGroups(s) {
@@ -194,25 +131,11 @@ func cdMedyaGrubu(g CDMenuGroup) bool {
 	return g.Href == "/videos" || g.Href == "/podcasts"
 }
 
-// cdMenuGroups menüyü, kabuktaki veriyle birleştirir.
-//
-// `s.MenuTags` ve `s.MenuCoins` boşsa ilgili sütun **hiç basılmaz**:
-// içeriği olmayan etikete bağlantı vermek 404'e götürür.
-//
-// Aynı kural bölüm satırları için de geçerli: `s.MenuBolumler` doluysa
-// yalnız YAYINDA İÇERİĞİ OLAN bölümlerin satırı basılır. Ölçüm (6 Kasım
-// 2026): Focus · Videos · Podcasts · News Analysis · Press Releases
-// bölümlerinde 0 içerik vardı; menü beş ölü bağlantı veriyordu.
 func cdMenuGroups(s CDShell) []CDMenuGroup {
 	out := make([]CDMenuGroup, 0, len(cdMenuSabit)+1)
 	for _, g := range cdMenuSabit {
 		// Prices grubu: canlı coinler + hisse girişi.
 		if g.Href == "/price" {
-			// HİSSE SÜTUNU: 633 BIST hissesinin kendi detay sayfası var
-			// (CoinDesk şablonu). Menüde canlı fiyat basmıyoruz — şerit
-			// zaten onu yapıyor; burada amaç hisse sayfalarına GİRİŞ.
-			// Hedef her zaman dolu: /borsa/hisseler evren listesini
-			// (fiyat gelmese de "—" ile) basıyor.
 			hisse := []CDMenuItem{
 				{Label: "Hisse Senetleri", Kind: "baslik"},
 				{Label: "BIST hisse fiyatları", Href: "/borsa/hisseler"},
@@ -249,9 +172,6 @@ func cdMenuGroups(s CDShell) []CDMenuGroup {
 		g.Columns = cdBosBolumleriEle(s, g.Columns)
 		out = append(out, g)
 	}
-	// Tüm sütunları boşalan grup (ör. yayında videosu ve podcast'i yokken
-	// "Video") hiç basılmaz: açılır menüsü boş bir başlık tıklanınca boş
-	// sayfaya götürür.
 	dolu := out[:0]
 	for _, g := range out {
 		if len(g.Columns) > 0 || strings.TrimSpace(g.Href) == "" {
@@ -267,12 +187,6 @@ func cdMenuGroups(s CDShell) []CDMenuGroup {
 	return dolu
 }
 
-// cdBosBolumleriEle sütunlardan içeriği olmayan bölüm satırlarını eler.
-//
-// Ölçüt `cdBolumVar`: yalnız TEK PARÇALI yollar (/videos, /focus …) bölüm
-// sayılır. /latest-crypto-news ve /price gibi liste sayfaları ve /tag/x
-// etiketleri bu süzgecin dışında — onların doluluğu MenuTags/MenuCoins ile
-// ayrıca denetleniyor.
 func cdBosBolumleriEle(s CDShell, sutunlar []CDMenuColumn) []CDMenuColumn {
 	if len(s.MenuBolumler) == 0 {
 		return sutunlar
@@ -297,10 +211,6 @@ func cdBosBolumleriEle(s CDShell, sutunlar []CDMenuColumn) []CDMenuColumn {
 	return out
 }
 
-// cdBolumVar hedef bölümün yayında içeriği var mı.
-//
-// MenuBolumler boşsa (veri yüklenmemiş) her yol "var" sayılır: filtre
-// yalnız gerçek veriyle çalışır, yoksa menüyü kazara boşaltırdı.
 func cdBolumVar(s CDShell, href string) bool {
 	slug := cdBolumSlug(href)
 	if slug == "" {
@@ -331,13 +241,6 @@ func cdMenuID(label string) string { return "cd-mega-" + cdSlug(label) }
 // cdHasMenu başlığın açılır menüsü var mı.
 func cdHasMenu(g CDMenuGroup) bool { return len(g.Columns) > 0 }
 
-// cdMenuAktif, üst başlığın aktif olup olmadığını s.Nav'dan türetir.
-//
-// CDShell'de "geçerli yol" alanı yok; aktiflik, handler'ın s.Nav içinde
-// işaretlediği bağlantıdan okunur. Böylece mega menü, CDShell'e yeni alan
-// eklemeden ve handler'lara dokunmadan mevcut aria-current davranışını
-// korur. Karşılaştırma son ek üzerinden yapılır: s.Nav yolları dil ön eki
-// taşıyabilir ("/tr/markets"), menü tanımı taşımaz ("/markets").
 func cdMenuAktif(nav []CDNavLink, href string) bool {
 	if href == "" {
 		return false

@@ -8,16 +8,6 @@ import (
 	"theblock/site/internal/repo"
 )
 
-// Hazır gazete şablonları — specs/13-gazete-sayfa-duzenleyici.md Faz 3
-//
-// `gazete_templates` boştu: "var olan plana göre düzenleme" denen şeyin planı
-// yoktu. Burada peyzajlar tanımlanır; galeri bunları gösterir, sayı
-// oluşturulurken biri seçilir.
-//
-// `A4 — Klasik Manşet`, kullanıcının referans tasarımının (Newspaper #6003.svg)
-// anatomisini izler: künye şeridi → lacivert başlık bandı → kategori şeridi →
-// 2 kolon kahraman alan → 3 kolon orta şerit → 2 kolon alt blok → alt bilgi.
-
 // gzBlok şablon tanımlarını okunur kılan kısa kurucu.
 func gzBlok(id, tip string, x, y, w, h float64) gazeteBlock {
 	return gazeteBlock{ID: id, Tip: tip, X: x, Y: y, W: w, H: h}
@@ -267,9 +257,6 @@ func gazeteSablonVar(liste []repo.GazeteTemplate, ad string) bool {
 	return false
 }
 
-// gazeteVarsayilanSablonID sitenin varsayilan sablonunu dondurur.
-// Galeri bossa once hazir peyzajlari yukler: sayi her zaman bir plana
-// bagli olsun istiyoruz (SPEC Faz 3), "sablonsuz sayi" durumu kalmasin.
 func (s *Server) gazeteVarsayilanSablonID(ctx context.Context, siteID int64) *int64 {
 	sec := func(liste []repo.GazeteTemplate) *int64 {
 		for _, t := range liste {
@@ -317,11 +304,6 @@ func (s *Server) gazeteSablonAdaGore(ctx context.Context, siteID int64, ad strin
 	return nil
 }
 
-// gazeteEskiSayilariBagla sablonu olmayan sayilari verilen sablona baglar.
-//
-// Mevcut sayilar sablon kavrami yokken, eski A3 varsayilan duzeniyle
-// uretilmisti; bu yuzden onlari "A3 - Mevcut Duzen" sablonuna baglamak
-// gorunumlerini korur. Yalniz NULL olanlara dokunur.
 func (s *Server) gazeteEskiSayilariBagla(ctx context.Context, siteID, sablonID int64) (int64, error) {
 	tag, err := s.pool.Exec(ctx,
 		`UPDATE gazete_issues SET template_id=$1, updated_at=now()

@@ -39,9 +39,6 @@ func NewHub() *Hub {
 	return &Hub{subs: map[int64]map[chan Event]struct{}{}}
 }
 
-// Default, tek süreçli kurulumda HTTP sunucusu ve scheduler tarafından
-// paylaşılan yayın merkezidir. Çoklu instance'a geçilirse Postgres
-// LISTEN/NOTIFY veya Redis pub/sub ile değiştirilmelidir.
 var Default = NewHub()
 
 // EditorDefault, yönetim panelindeki editörler arasındaki kayıt/versiyon
@@ -75,9 +72,6 @@ func (h *Hub) Subscribe(contentID int64) (<-chan Event, func()) {
 	return ch, cancel
 }
 
-// Publish olayı abonelere bloklamadan dağıtır. Yavaş istemcinin kuyruğu
-// dolarsa olay düşürülür; istemci yeniden bağlandığında snapshot ile
-// güncel sürümü alır.
 func (h *Hub) Publish(ev Event) {
 	if ev.At == 0 {
 		ev.At = time.Now().Unix()

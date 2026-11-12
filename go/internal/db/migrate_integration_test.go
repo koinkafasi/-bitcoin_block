@@ -16,15 +16,6 @@ import (
 	"theblock/site/internal/db"
 )
 
-// Gerçek Postgres'e karşı migration yaşam döngüsü.
-//
-// Her test GEÇİCİ bir veritabanı oluşturur (tb_mig_<rastgele>), migration'ları
-// orada uygular ve sonunda veritabanını siler. Var olan hiçbir veriye
-// dokunulmaz; yarım kalan test bir sonraki koşuda zehir bırakmaz.
-//
-// Çalıştırma:
-//   TEST_DATABASE_URL=postgres://... go test -tags integration ./internal/db -v
-
 func geciciDB(t *testing.T) string {
 	t.Helper()
 	base := os.Getenv("TEST_DATABASE_URL")

@@ -8,15 +8,6 @@ import (
 	"testing"
 )
 
-// TestGazeteOlcumChromium ölçüm zincirini gerçek Chromium'da uçtan uca
-// doğrular: baskı HTML'i + ölçüm betiği → `--dump-dom` → rapor ayıklama.
-//
-// Chromium gerektirdiği ve birkaç saniye sürdüğü için normal koşuda atlanır:
-//
-//	GAZETE_CHROMIUM_TEST=1 go test ./internal/httpapi/ -run TestGazeteOlcumChromium -v
-//
-// Birim testler ayıklamayı sahte DOM ile doğruluyor; bu test betiğin
-// tarayıcıda gerçekten çalıştığını ve taşmayı doğru ölçtüğünü gösterir.
 func TestGazeteOlcumChromium(t *testing.T) {
 	if os.Getenv("GAZETE_CHROMIUM_TEST") == "" {
 		t.Skip("GAZETE_CHROMIUM_TEST ayarlı değil")

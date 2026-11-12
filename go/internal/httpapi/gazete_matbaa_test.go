@@ -10,11 +10,6 @@ import (
 
 // Faz 7 koruyucu testleri — specs/13-gazete-sayfa-duzenleyici.md K8
 
-// TestGazeteMatbaaGeometrisi matbaa sayfasının kutularını sabitler.
-//
-// Kesim işaretleri taşma payının DIŞINDA durmalı; aksi halde görselin
-// üzerine binerler ve kesimde işe yaramazlar. Bu yüzden sayfa kutusu
-// kesim ölçüsü + 2×(taşma payı + işaret alanı).
 func TestGazeteMatbaaGeometrisi(t *testing.T) {
 	g := gazeteMatbaaGeometrisi(210, 297, 3)
 
@@ -97,9 +92,6 @@ func TestGazetePDFXTanimi(t *testing.T) {
 	}
 }
 
-// TestGazetePSKacir PostScript dizgisine kaçırma yapıldığını doğrular.
-// Yol ve koşul adı dışarıdan gelir; kaçırılmazsa tanım bozulur ve
-// Ghostscript hatalı dosya üretir.
 func TestGazetePSKacir(t *testing.T) {
 	for giris, beklenen := range map[string]string{
 		`/tmp/a(b).icc`: `/tmp/a\(b\).icc`,

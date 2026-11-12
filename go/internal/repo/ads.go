@@ -210,9 +210,6 @@ func RecordAdClick(ctx context.Context, pool *pgxpool.Pool, siteID, adID int64) 
 	return err
 }
 
-// AdTarget reklamın DB'de kayıtlı hedef URL'ini döndürür (yoksa boş dize).
-// Tıklama yönlendirmesinde kullanıcı kontrollü parametre yerine bu güvenilir
-// değer tercih edilir (açık yönlendirme/open-redirect koruması).
 func AdTarget(ctx context.Context, pool *pgxpool.Pool, siteID, adID int64) (string, error) {
 	var target string
 	err := pool.QueryRow(ctx,

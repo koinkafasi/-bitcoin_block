@@ -10,18 +10,6 @@ import (
 	"unicode/utf8"
 )
 
-// IsHTMX isteğin HTMX tarafından mı gönderildiğini söyler.
-// HTMX her isteğe HX-Request: true başlığı ekler.
-//
-// BOOST HARİÇ. `hx-boost` ile yapılan gezinme de HX-Request gönderir ve
-// ayrıca HX-Boosted: true ekler. Boost bir SAYFA gezinmesidir; sunucudan
-// tam sayfa bekler (yb. hx-select=".admin-main"). Boost'u da "parça isteği"
-// saymak, panele `#medya-panel` gibi bir fragment döndürüyordu — o zaman
-// hedefte .admin-main bulunmuyor ve swap BOŞ kalıyordu (ölçüm: belge aynı
-// kalıyor ama içerik tamamen boşalıyordu).
-//
-// Bu ayrım kritik: parça istekleri (hx-get + hx-target) eskisi gibi parça
-// alır, boost'lu gezinme tam sayfa alır ve yalnız .admin-main'i çizer.
 func IsHTMX(r *http.Request) bool {
 	if strings.EqualFold(strings.TrimSpace(r.Header.Get("HX-Boosted")), "true") {
 		return false
@@ -52,9 +40,6 @@ func (s *Server) htmxRedirect(w http.ResponseWriter, r *http.Request, target str
 	return true
 }
 
-// writeHTMXTrigger, HX-Trigger başlığıyla tarayıcıya özel bir olay gönderir.
-// AI gibi JSON sonucu alan aksiyonlarda DOM'u değiştirmeden alanları
-// güncellemek için kullanılır (hx-swap="none").
 func (s *Server) writeHTMXTrigger(w http.ResponseWriter, event string, payload any) {
 	b, err := marshalJSONASCII(map[string]any{event: payload})
 	if err != nil {
@@ -66,12 +51,6 @@ func (s *Server) writeHTMXTrigger(w http.ResponseWriter, event string, payload a
 	w.WriteHeader(http.StatusOK)
 }
 
-// marshalJSONASCII, json.Marshal çıktısındaki ASCII dışı karakterleri
-// \uXXXX kaçışlarına çevirir. HX-Trigger bir HTTP başlığıdır; başlıklar
-// bayt düzeyinde ISO-8859-1 gibi ele alındığından ham UTF-8 taşımak
-// Türkçe karakterleri tarayıcıda bozar ("Türkçe" → "TÃ¼rkÃ§e"). Başlık
-// yalnızca ASCII taşırsa JSON kaçışları istemcide çözülünce metin
-// birebir geri gelir (Türkçe, emoji ve astral karakterler dahil).
 func marshalJSONASCII(v any) (string, error) {
 	b, err := json.Marshal(v)
 	if err != nil {
@@ -100,9 +79,6 @@ func marshalJSONASCII(v any) (string, error) {
 	return sb.String(), nil
 }
 
-// writeHTMXStatus küçük bir durum parçası basar (flash + içerik).
-// Tuval/canvas editörlerinde tam panel yerine yalnızca durum alanını
-// güncellemek için kullanılır (ör. Sayfa Tasarımcısı manuel Kaydet).
 func (s *Server) writeHTMXStatus(w http.ResponseWriter, text, kind string) {
 	w.Header().Set("Cache-Control", "no-store")
 	w.Header().Set("Vary", "HX-Request")
@@ -116,9 +92,6 @@ func (s *Server) writeHTMXStatus(w http.ResponseWriter, text, kind string) {
 	_, _ = fmt.Fprintf(w, tmpl, kind, text)
 }
 
-// withHTMXCurrentQuery, HTMX aksiyonlarından sonra listeyi kullanıcının
-// gördüğü filtrelerle yeniden kurabilmek için HX-Current-URL'in query
-// parametrelerini isteğe taşır.
 func withHTMXCurrentQuery(r *http.Request) *http.Request {
 	raw := strings.TrimSpace(r.Header.Get("HX-Current-URL"))
 	if raw == "" {

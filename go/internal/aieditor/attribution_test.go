@@ -9,9 +9,6 @@ import (
 	"theblock/site/internal/quality"
 )
 
-// TestAttributionToQuoteSources alıntı eşleştirmesinin Result.QuoteSources
-// alanına doğru aktarıldığını doğrular (yardımcı fonksiyon üzerinden; servis
-// DB gerektirdiği için ağır kısmı quality testleri kapsıyor).
 func TestAttributionMappingToQuoteSource(t *testing.T) {
 	segs := []quality.SourceSegment{
 		{StartMS: 0, EndMS: 4000, Speaker: "A", Text: "Yatırım planı 2027 yılında başlayacak."},

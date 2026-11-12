@@ -1,14 +1,4 @@
-/* Çerez onay bandı.
- *
- * Önceden bu stil `static/cerez.js` içinde bir `<style>` elementi olarak
- * enjekte ediliyordu. CSP `style-src`ten 'unsafe-inline' kaldırıldığında
- * (Faz 211) JS'in oluşturduğu `<style>` de engellenir — bant stilsiz kalırdı.
- * Statik dosyaya taşındı: tek ek istek, ama CSP'ye uygun ve tarayıcı
- * önbelleğine girer. Bant zaten yalnız JS çalışınca göründüğü için FOUC yok.
- *
- * Renkler public yüzeyin token ailesine (--hp-*) bağlı: önceden --surface/
- * --text/--line/--accent karışıyordu ve koyu tema yedeği beyaz bandın üstünde
- * çizgi oluyordu. Tek aile bu karışıklığı bitirir. */
+
 
 .cerez-bant {
   position: fixed;
@@ -35,7 +25,6 @@
 .cerez-bant-metin a { color: var(--hp-tema, #d10015); text-decoration: underline; }
 .cerez-bant-dugmeler { display: flex; gap: 10px; flex: 0 0 auto; }
 
-/* İki düğme aynı boyutta: reddetmek kabul etmek kadar kolay olmalı. */
 .cerez-btn {
   min-width: 120px;
   padding: 10px 18px;
@@ -49,8 +38,6 @@
 .cerez-btn-kabul { background: var(--hp-tema, #d10015); color: #fff; border-color: transparent; }
 .cerez-btn:focus-visible { outline: 2px solid var(--hp-tema, #d10015); outline-offset: 2px; }
 
-/* Dar ekranda bant viewport'un yarısını kaplıyordu: yükseklik sınırlanır,
-   uzun metin bandın içinde kayar, düğmeler hep görünür kalır. */
 @media (max-width: 600px) {
   .cerez-bant {
     flex-direction: column;

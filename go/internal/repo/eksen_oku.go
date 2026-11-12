@@ -18,15 +18,6 @@ type IcerikEksen struct {
 	Oncelik int
 }
 
-// IcerikEksenleri verilen içerikler için eksenleri okur.
-//
-// Neden ayrı sorgu: contentCols paylaşımlı bir SELECT listesidir ve onu
-// genişletmek scanContent ile birlikte tüm çağıranları etkilerdi. Liste
-// sayfası zaten 40 satır gösteriyor; tek ek sorgu bundan ucuz.
-//
-// Tazelik ve öncelik SIRALAMADAKİ ifadenin aynısıyla hesaplanır
-// (scoring.TazelikSQL / OncelikSQL). Elle kopyalansaydı editöre gösterilen
-// puan ile listenin sırası ayrışabilirdi.
 func IcerikEksenleri(ctx context.Context, pool *pgxpool.Pool, ids []int64) (map[int64]IcerikEksen, error) {
 	out := make(map[int64]IcerikEksen, len(ids))
 	if len(ids) == 0 {

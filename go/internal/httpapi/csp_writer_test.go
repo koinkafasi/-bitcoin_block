@@ -7,10 +7,6 @@ import (
 	"testing"
 )
 
-// TestCSPWriterDurumKodu CSP tamponlayıcısı handler'ın bildirdiği durum
-// kodunu KAYBETMEMELİ. Regresyon: ilk uygulamada WriteHeader yalnız tampona
-// yazılıyor, alttaki yazıcıya hiç geçmiyordu; sonuç: 204/302/404 yanıtları
-// 200 olarak dönüyordu.
 func TestCSPWriterDurumKodu(t *testing.T) {
 	cases := []struct {
 		ad      string
@@ -105,16 +101,6 @@ func TestCSPWriterHTMLHash(t *testing.T) {
 	}
 }
 
-// TestCSPWriterHTMLFlushSonrasiHash — REGRESYON (ölçüldü, 6 Kasım 2026).
-//
-// `templ` bileşeni bitirirken kendi tamponunu boşaltıp yazıcı
-// `http.Flusher` ise `Flush()` çağırıyor (`runtime.ReleaseBuffer`).
-// Eski `Flush`, HTML yanıtında bile "akışa geç" diyordu; `finish()` de
-// akışta CSP üretmediği için yanıt HASH'SİZ politika alıyordu ve
-// sayfadaki satır içi `<script>` sessizce engelleniyordu.
-//
-// Belirti görünmüyordu: sayfa 200 dönüyor, yalnız betik çalışmıyordu.
-// Bu test, HTML tamponunun Flush'tan sonra da korunduğunu doğrular.
 func TestCSPWriterHTMLFlushSonrasiHash(t *testing.T) {
 	rec := httptest.NewRecorder()
 	s := &Server{}
@@ -138,10 +124,6 @@ func TestCSPWriterHTMLFlushSonrasiHash(t *testing.T) {
 	}
 }
 
-// TestCSPWriterAkisFlush — SSE/HTML dışı akışlar eskisi gibi akmalı.
-//
-// HTML tamponu korunuyor diye bu yollar da tamponlanırsa zip/csv dışa
-// aktarma ve SSE bozulur (bellek şişer, veri geç gelir).
 func TestCSPWriterAkisFlush(t *testing.T) {
 	rec := httptest.NewRecorder()
 	ss := &Server{}
@@ -162,12 +144,6 @@ func TestCSPWriterAkisFlush(t *testing.T) {
 	}
 }
 
-// TestCSPYorumIcindekiEtiketSayilmaz — REGRESYON (ölçüldü, 6 Kasım 2026).
-//
-// HTML yorumu içinde "<script" kelimesi geçebilir (açıklama metni).
-// Tarayıcı bunu etiket saymaz; sunucu sayarsa hash YANLIŞ olur ve sayfadaki
-// satır içi betik sessizce engellenir. Ölçülen belirti: sunucu 478 baytı,
-// tarayıcı 400 baytı hash'ledi → "Executing inline script violates…".
 func TestCSPYorumIcindekiEtiketSayilmaz(t *testing.T) {
 	html := `<!-- bu yorumda <script> kelimesi geçiyor -->` +
 		`<html><script>var a=1;</script></html>`

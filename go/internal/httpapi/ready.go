@@ -8,19 +8,6 @@ import (
 	"time"
 )
 
-// ---- Hazırlık (readiness) sondası ----
-//
-// `/healthz` süreç AYAKTA mı sorusunu yanıtlar (canlılık). Yük dengeleyici
-// ve systemd için yeterli değildir: süreç ayakta olup veritabanı erişilemez
-// durumda olabilir. O hâlde trafik göndermek kullanıcıya 500 göstermek olur.
-//
-// `/readyz` trafiğe HAZIR mı sorusunu yanıtlar:
-//   - kapanış başladıysa 503 (uçuştaki istekler bitsin, yenisi gelmesin),
-//   - veritabanı ping'i başarısızsa 503,
-//   - aksi hâlde 200.
-//
-// Yanıt gövdesi JSON'dur; sır içermez (yalnız durum ve gecikme).
-
 const readyzPingTimeout = 2 * time.Second
 
 // readyzDurum süreç seviyesindeki hazırlık durumunu tutar.

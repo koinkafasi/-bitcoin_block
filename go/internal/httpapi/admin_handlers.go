@@ -96,9 +96,6 @@ func (s *Server) handleContentsList(w http.ResponseWriter, r *http.Request) {
 	s.renderIceriklerPage(w, r, d)
 }
 
-// buildContentsListData, içerik listesinin filtre/sayfalama verisini kurar.
-// Hem tam sayfa hem HTMX partial hem de aksiyon sonrası liste tazeleme
-// aynı kaynağı kullanır (tek doğruluk noktası).
 func (s *Server) buildContentsListData(r *http.Request) *tmplData {
 	ctx := r.Context()
 	d := s.baseView("tr", "/admin", "İçerikler")
@@ -149,9 +146,6 @@ func (s *Server) buildContentsListData(r *http.Request) *tmplData {
 	}
 
 	counts, _ := repo.CountByStatus(ctx, s.pool, s.curSiteID(r))
-	// Sekme adresleri: durum + mevcut filtreler (yalnızca dolu olanlar;
-	// QueryEscape'li). template.URL — yoksa html/template href'teki "&"i %26
-	// yapıp filtreyi bozardı (Faz 30).
 	baseQS := func(durum string, sayfa int, withQ bool) template.URL {
 		base := "/admin/icerikler?durum=" + durum
 		v := url.Values{}
@@ -202,10 +196,6 @@ func (s *Server) buildContentsListData(r *http.Request) *tmplData {
 	}{{"yayinda", "Yayında"}, {"taslak", "Taslak"}, {"planlanmis", "Planlanmış"}, {"arsiv", "Arşiv"}, {"cop", "Çöp"}} {
 		statuses = append(statuses, statusTab{Code: st.code, Label: st.label, Count: counts[st.code], Active: status == st.code, Href: qsf(st.code)})
 	}
-	// Faz 192 — kök bazlı: aynı makalenin dilleri TEK satır.
-	//
-	// Ölçüm: kök bazlı olmadan "Yayında" sekmesinin ilk 40 satırının 39'u EN
-	// çeviriydi; editör Türkçe içerikleri listede göremiyordu.
 	filtre := repo.ListFilter{
 		Status: status, Q: q, TypeKey: tip, CategoryID: kategori, LastDays: gun,
 		Baslangic: baslangic, Bitis: bitis, Audio: audioFilter, Sort: sirala,
@@ -220,10 +210,6 @@ func (s *Server) buildContentsListData(r *http.Request) *tmplData {
 	if toplamSayfa < 1 {
 		toplamSayfa = 1
 	}
-	// Faz 31: sayfa sınırın dışındaysa (ör. ?sayfa=99) son sayfaya kıvp → sorguyu
-	// TEKRAR çalıştır; yoksa boş sayfa dönerdi. dikkat: taşan sayfada ilk sorgu
-	// 0 satır döner (window toplamı görünmez, total=0) → gerçek toplam dar bir
-	// sondaj sorgusuyla (PerPage=1) alınır, yanlış "son sayfa=1"e kısılmasın.
 	if sayfa > toplamSayfa {
 		gercek := total
 		if gercek == 0 {
@@ -644,10 +630,6 @@ func (s *Server) buildContentForm(w http.ResponseWriter, r *http.Request, c *rep
 
 	// dil linkleri (çeviriler)
 	f.Langs = s.langLinks(ctx, c, isNew)
-	// Faz 190 — durum bilgili dil satırları + çeviri sayısı.
-	//
-	// Burada hazırlanır (view katmanında değil): içerik yükleme ve ctx burada
-	// elimizde; view katmanı istek nesnesi taşımıyor.
 	f.LangRows = s.langRows(ctx, *c, isNew)
 	for _, satir := range f.LangRows {
 		if !satir.Active && satir.ContentID > 0 {
@@ -809,11 +791,6 @@ func (s *Server) handleContentSave(w http.ResponseWriter, r *http.Request) {
 	if c.CommentStatus == "" {
 		c.CommentStatus = "acik"
 	}
-	// Faz 193c — SEO alanları yazma anında sınırlanır.
-	//
-	// ÖLÇÜM: yayındaki 233 içerikte seo_title 70 karakterden uzundu (en uzun
-	// 138) ve 206'sı başlığın birebir kopyasıydı. AI üretimi kırpıyordu ama
-	// panelden elle kaydetme hiç sınır uygulamıyordu.
 	c.SeoTitle = seoAlan(r.FormValue("seo_baslik"), platform.SeoBaslikSertMax)
 	c.SeoDesc = seoAlan(r.FormValue("seo_aciklama"), platform.SeoAciklamaSertMax)
 	c.SourceURL = optStr(r.FormValue("kaynak_url"))
@@ -836,9 +813,6 @@ func (s *Server) handleContentSave(w http.ResponseWriter, r *http.Request) {
 		}
 		categoryDefault = n
 	}
-	// Guncellemede form alani gelmese bile mevcut deger DB'den okunur; aksi
-	// halde bos bir Content ile calistigimiz icin gecersiz/eksik form degeri
-	// kademeyi istemeden sifirlar ve ucretli icerik ucretsize duserdi.
 	if !isNew {
 		n, err := repo.ContentMinWeight(r.Context(), s.pool, id)
 		if err != nil {
@@ -1019,11 +993,13 @@ func (s *Server) handleContentSave(w http.ResponseWriter, r *http.Request) {
 		_ = repo.SetContentStatus(ctx, s.pool, c.ID, "taslak")
 	}
 
+	s.invalidateContentCache()
+	s.cdShellCache.Clear()
+	if s.sayfaCache != nil {
+		s.sayfaCache.temizle()
+	}
+
 	s.audit(r, "icerik_kaydet", action+": "+c.Title+" (id="+itoa(int(c.ID))+")")
-	// Yayınlanan içerikleri search-svc indeksine gönder (Tantivy — Faz 34).
-	// c.Status geçişten sonra GÜNCELLENMEZDİ ("taslak" kalmıştı) → indexContent
-	// erken çıkıyor ve yayınlanan içerik Tantivy'ye hiç gitmiyordu. Şimdi gerçek
-	// durumu yansıtıyoruz (planlanmışsa değil — ancak anında yayında).
 	if action == "yayinla" && !(c.PublishAt != nil && c.PublishAt.After(time.Now())) {
 		c.Status = "yayinda"
 	}
@@ -1099,12 +1075,6 @@ func stripTags(s string) string {
 
 // ---- Hızlı işlemler (yayınla/arşivle/sil/rozet) ----
 
-// handleContentsBulk içerik listesinde toplu işlem (Faz 26):
-// yayınla · arşivle · kategori taşı · sil.
-//
-// Yayınlama, tekil yayınlamadaki AYNI yayın kapısına (YMYL uzman denetimi ve
-// AI alaka puanı eşiği) tabidir: kapıya takılan içerikler ATLANIR ve sonuç
-// mesajında kaç tane atlandığı yazılır — kural toplu işlemle sessizce aşılamaz.
 func (s *Server) handleContentsBulk(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	_ = r.ParseForm()
@@ -1200,11 +1170,6 @@ func (s *Server) handleContentsBulk(w http.ResponseWriter, r *http.Request) {
 			basarili++
 		}
 	case "planla":
-		// Toplu "yayına zamanla" (Faz 32): tekil planlamadaki AYNI yayın kapısı
-		// uygulanır (YMYL uzman denetimi + AI alaka puanı). Kapıya takılan
-		// atlanır — yoksa planla, tekil yayındaki editorial kontrolü baypas
-		// eden bir arka kapı olur (zamanlanmış içerik scheduler'da otomatik
-		// yayına girer).
 		pt := parseLocalTime(strings.TrimSpace(r.FormValue("yayin_tarihi")))
 		if pt == nil {
 			geri("error", "Geçerli bir yayın tarihi girin (ör. 2026-10-20 09:00).")
@@ -1284,11 +1249,6 @@ func (s *Server) handleContentsBulk(w http.ResponseWriter, r *http.Request) {
 	geri("ok", itoa(basarili)+" içerik "+eylem+".")
 }
 
-// handleContentAutosave düzenleyicinin otomatik taslak kaydı (Faz 27).
-//
-// Yalnız başlık/özet/gövde yazılır. Durum, version, audit, otomatik kapak,
-// AI puanı ve sosyal/index bildirimleri TETİKLENMEZ — normal kaydetme bunları
-// yapar; burada amaç yalnız metnin kaybolmaması.
 func (s *Server) handleContentAutosave(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	id := parseID(r.PathValue("id"))
@@ -1300,9 +1260,6 @@ func (s *Server) handleContentAutosave(w http.ResponseWriter, r *http.Request) {
 		s.writeJSON(w, http.StatusRequestEntityTooLarge, map[string]any{"ok": false, "hata": "içerik çok büyük"})
 		return
 	}
-	// NOT: ParseForm multipart gövdeleri ayrıştırmaz; ayrıca tarayıcının
-	// FormData POST'u multipart/form-data gönderir. ParseMultipartForm ikisini
-	// de içeriden çözer (Faz 27 — bu tuzak canlı testte yakalandı).
 	r.Body = http.MaxBytesReader(w, r.Body, 6<<20)
 	if err := r.ParseMultipartForm(4 << 20); err != nil {
 		s.writeJSON(w, http.StatusBadRequest, map[string]any{"ok": false, "hata": "form okunamadı"})
@@ -1387,13 +1344,6 @@ func (s *Server) handleQuickStatus(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		// Faz 193c - AI kaynak iskeleti kapisi.
-		//
-		// Kume->taslak yolu govdeye "Kaynaklar:" + kaynak basligi listesi
-		// yaziyordu (olcum: 38 blok). AI sonucu editor tarafindan
-		// UYGULANMADAN yayinlanirsa okuyucu haber yerine baslik listesi gorur.
-		// Kaynak artik govdeye yazilmiyor; bu kapi eski taslaklar ve elle
-		// yapistirilan iskeletler icin guvenlik agidir.
 		if repo.IskeletGovde(c.Detail) {
 			statusErr("Bu içerik yayına hazır değil: gövdesi AI kaynak iskeleti " +
 				"içeriyor. AI sonucunu uygulayın ya da gövdeyi gerçek " +
@@ -1497,17 +1447,6 @@ func (s *Server) handleToggleRozet(w http.ResponseWriter, r *http.Request) {
 
 // ---- Çeviri oluştur ----
 
-// handleCreateTranslation hedef dilde çeviri kaydı açar (Faz 190).
-//
-// İki kip vardır; ikisi de AYNI uçtan çalışır (şablon artık <a href> değil
-// hx-post düğmesi gönderiyor — rota POST olduğu için GET 404 veriyordu):
-//
-//	ai=1  → kaynak metni AI ile hedef dile çevirir; iş KUYRUĞA yazılır ve
-//	        panel durumu yoklar (senkron istek proxy zaman aşımına takılıyordu)
-//	diğer → çeviri yapmadan aynı metinle boş taslak açar (elle çeviri)
-//
-// Çeviri var ise her kipte var olan kayda yönlendirilir (mükerrer kayıt
-// açmaz).
 func (s *Server) handleCreateTranslation(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	id := parseID(r.PathValue("id"))
@@ -1536,12 +1475,6 @@ func (s *Server) handleCreateTranslation(w http.ResponseWriter, r *http.Request)
 		}
 	}
 
-	// AI kipi: çeviri kuyruğa yazılır, istek hemen döner.
-	//
-	// Neden senkron değil: AI çeviri 20–160 sn sürüyor; sunucunun
-	// WriteTimeout değeri 60 sn, Cloudflare'in proxy sınırı ~100 sn.
-	// Senkron denemede istek HTTP 000 / 524 ile düşüyordu (ölçüm: 28
-	// paragraflık haber 160 sn). Panel durumu 2 sn'de bir yoklar.
 	if r.FormValue("ai") == "1" {
 		s.ceviriSirayaAl(w, r, src, lang)
 		return
@@ -1570,11 +1503,6 @@ func (s *Server) handleCreateTranslation(w http.ResponseWriter, r *http.Request)
 	s.ceviriFlash(w, r, "/admin/icerikler/"+itoa(int(nid)), "info", lang+" taslağı oluşturuldu. Tercümeyi düzenleyip yayınlayın.")
 }
 
-// ceviriYonlendir HTMX ve normal istekte doğru yönlendirmeyi yapar.
-//
-// HTMX isteğinde 302 KULLANILMAZ: htmx isteği fetch ile yapıldığı için
-// tarayıcı 302'yi TAKİP eder ve dönen tam sayfayı hedef öğenin içine yazar
-// (düğmenin içinde iç içe sayfa). Bu yüzden HX-Redirect başlığı gerekir.
 func (s *Server) ceviriYonlendir(w http.ResponseWriter, r *http.Request, hedef string) {
 	if IsHTMX(r) {
 		w.Header().Set("HX-Redirect", hedef)
@@ -1584,21 +1512,11 @@ func (s *Server) ceviriYonlendir(w http.ResponseWriter, r *http.Request, hedef s
 	http.Redirect(w, r, hedef, http.StatusFound)
 }
 
-// ceviriFlash flash mesajı yazıp yönlendirir; HTMX'te HX-Redirect kullanır.
-//
-// Neden ayrı: `flashRedirect` her zaman 302 döner. htmx 302'yi takip edip
-// dönen sayfayı hedef öğeye yazar; "Boş taslak" düğmesine basıldığında tüm
-// editör sayfası düğmenin içine girerdi.
 func (s *Server) ceviriFlash(w http.ResponseWriter, r *http.Request, url, kind, text string) {
 	s.flash(w, r, kind, text)
 	s.ceviriYonlendir(w, r, url)
 }
 
-// ceviriSirayaAl AI çeviri isteğini kuyruğa yazar ve bekleme panelini basar.
-//
-// Sözleşme: bu fonksiyon AI ÇAĞIRMAZ. Uzun süren iş arka plan işçisinde
-// (ceviri.Run → istekDongusu → istekIsci). Böylece istek her zaman hızlı döner ve
-// proxy/sunucu zaman aşımına takılmaz.
 func (s *Server) ceviriSirayaAl(w http.ResponseWriter, r *http.Request, src repo.Content, lang string) {
 	ctx := r.Context()
 	kaynakURL := "/admin/icerikler/" + itoa(int(src.ID))
@@ -1619,12 +1537,6 @@ func (s *Server) ceviriSirayaAl(w http.ResponseWriter, r *http.Request, src repo
 		s.dilAdiTR(lang), kaynakURL+"/cevir/"+lang+"/durum", kaynakURL))
 }
 
-// handleTranslationStatus kuyruktaki çeviri isteğinin durumunu döndürür.
-//
-// Panel bu adresi 2 sn'de bir çağırır:
-//   - hazır   → HX-Redirect ile yeni çeviri editörü açılır
-//   - hata    → neden + kaynağa dönüş paneli
-//   - sürüyor → aynı bekleme düğümü (yoklama kendini yeniler)
 func (s *Server) handleTranslationStatus(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	id := parseID(r.PathValue("id"))
@@ -1704,10 +1616,6 @@ func (s *Server) ceviriVarMi(ctx context.Context, src repo.Content, lang string)
 	}
 	return ""
 }
-
-// NOT: hata metinleri artık ceviri paketinde (hataMetni / kayitHataMetni).
-// Kopyalamak yerine tek kaynak: panelden tetiklenen istek ile arka plan
-// işçisinin aynı hatayı farklı metinle göstermesi engellenir.
 
 // ---- AI eylemi ----
 
@@ -1841,9 +1749,6 @@ func userPrompt(kind, input string) string {
 	}
 }
 
-// normalizeAIString, sağlayıcıdan dönen metni alana yazılacak biçime getirir:
-// kod bloklarını (\`\`\`json ... \`\`\`) soyar, JSON listesinde ilk dolu
-// öğeyi seçer, tırnaklı JSON string'lerindeki \uXXXX kaçışlarını çözer.
 func normalizeAIString(s string) string {
 	s = stripCodeFence(strings.TrimSpace(s))
 	if s == "" {
@@ -2087,9 +1992,6 @@ func (s *Server) handleCatsUpdate(w http.ResponseWriter, r *http.Request) {
 	s.flashRedirect(w, r, "/admin/kategoriler", "info", msg)
 }
 
-// applyCategoryParent kategori formundaki "ust" (üst kategori) alanını
-// doğrular. Boş/geçersiz değer üst kategori yapar; kendini veya alt
-// kategorisi olan bir kategoriyi üst seçmeyi engeller.
 func (s *Server) applyCategoryParent(r *http.Request, c *repo.Category) {
 	c.ParentID = nil
 	raw := strings.TrimSpace(r.FormValue("ust"))
@@ -2174,9 +2076,6 @@ func applyCategoryGateFields(r *http.Request, c *repo.Category) {
 	if c.HomepageMinScore < 0 || c.HomepageMinScore > 100 {
 		c.HomepageMinScore = 0
 	}
-	// Kategori varsayılan abonelik katmanı: bu kategoride açılan yeni
-	// içeriklerin min_tier_weight değeri buradan gelir (0 = kural yok).
-	// Alan formda yoksa mevcut değer korunur (güncellemede sessiz sıfırlama yok).
 	if vals, ok := r.Form["kategori_katman"]; ok && len(vals) > 0 {
 		if n := int(parseID(vals[0])); n >= 0 && n <= 5 {
 			c.MinTierWeight = n
@@ -2625,9 +2524,6 @@ func (s *Server) storeUploadedMedia(ctx context.Context, r *http.Request, userID
 	var width, height int
 	var thumbPath *string
 	if kind == "image" && strings.HasSuffix(strings.ToLower(hdr.Filename), ".svg") {
-		// SVG: raster decode YOK (görsel değil, XML). Beyaz liste
-		// temizliğinden geçirilir; temizlik başarısızsa dosya REDDEDİLİR
-		// — "temizleyemedim ama saklayayım" depolanmış XSS kapısıdır.
 		temiz, w, h, err := platform.SanitizeSVGBoyut(data)
 		if err != nil {
 			return mediaUploadResult{}, errors.New("SVG reddedildi: " + err.Error())
@@ -2723,6 +2619,9 @@ func (s *Server) handleMediaMeta(w http.ResponseWriter, r *http.Request) {
 		s.renderMediaPanel(w, r, "info", "Medya bilgileri güncellendi.")
 		return
 	}
+	// Medya adi/alt metni/gorunurlugu degisti: sayfa onbellegi bayat.
+	s.medyaOnbellekDusur(id)
+
 	s.flashRedirect(w, r, "/admin/dosyalar", "info", "Medya bilgileri güncellendi.")
 }
 
@@ -2741,9 +2640,6 @@ func (s *Server) handleMediaDelete(w http.ResponseWriter, r *http.Request) {
 		mediaErr("Medya bulunamadı.")
 		return
 	}
-	// Faz 29 düzeltmesi: DeleteMedia artık kullanımda olunca ErrMediaInUse döner.
-	// Eskiden 0 satır etkilenir ama hata dönmediği için handler diskteki dosyayı
-	// silip DB kaydını bırakıyordu — içerikteki görsel kırılıyordu.
 	if err := repo.DeleteMedia(ctx, s.pool, id); err != nil {
 		if errors.Is(err, repo.ErrMediaInUse) {
 			mediaErr("Medya bir içerikte kullanılıyor — silinemedi.")
@@ -2758,6 +2654,8 @@ func (s *Server) handleMediaDelete(w http.ResponseWriter, r *http.Request) {
 		_ = platform.DeleteMedia(*media.ThumbPath)
 	}
 	platform.DeleteMediaVariants(id)
+	// Silinen medya hala basilan sayfalarda gorunmesin.
+	s.medyaOnbellekDusur(id)
 	s.audit(r, "medya_sil", media.Filename)
 	if IsHTMX(r) {
 		s.renderMediaPanel(w, r, "info", media.Filename+" silindi.")
@@ -2766,15 +2664,6 @@ func (s *Server) handleMediaDelete(w http.ResponseWriter, r *http.Request) {
 	s.flashRedirect(w, r, "/admin/dosyalar", "info", "Silindi.")
 }
 
-// handleMediaBulk medya yöneticisinde toplu işlem (Faz 29):
-// `islem` = `sil` | `yeniden-adlandir`.
-//
-//   - sil: kullanımdaki medya (kapak/manşet/sosyal) ATLANIR, sayısı bildirilir.
-//   - yeniden-adlandir: `yeni_ad` taban adı; seçili dosyalar sırayla
-//     `yeni_ad.<uzantı>`, `yeni_ad-1.<uzantı>`, ... olur (uzantı korunur;
-//     disk dosyası depolama yolunda olduğundan yalnız DB etiketi değişir).
-//
-// Üst sınır 300 dosya.
 func (s *Server) handleMediaBulk(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	_ = r.ParseForm()
@@ -2941,14 +2830,6 @@ func (s *Server) handleReportsAIExport(w http.ResponseWriter, r *http.Request) {
 	cw.Flush()
 }
 
-// applyTierLock icerik formundaki katman kilidini uygular.
-//
-// Kurallar (kategori duzeyinde toplu kural destekli):
-//   - formda min_tier_weight varsa o kullanilir (0 = acikca acik),
-//   - yoksa ve icerik YENI ise kategorinin varsayilani devralinir
-//     (categoryDefault; 0 = kategori kurali yok),
-//   - agirlik > 0 ise icerik aboneye ozel sayilir (is_exclusive zorunlu),
-//   - agirlik 0 ama is_exclusive isaretliyse en dusuk katman (1) uygulanir.
 func applyTierLock(r *http.Request, c *repo.Content, categoryDefault int) {
 	weight := 0
 	formdaAgirlik := false

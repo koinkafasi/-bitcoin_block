@@ -9,18 +9,6 @@ import (
 	"theblock/site/internal/webui/templkit"
 )
 
-// cdModuller ana sayfanın modüler yerleşimini düzen kaydından okur.
-//
-// KAYNAK: `page_layouts` (page_key = "home"), sayfa tasarımcısının zaten
-// yazdığı yer. Yeni tasarımın alanları `cd_*` tipleriyle aynı tabloda
-// duruyor; ayrı bir tablo/ayar eklemek iki kaynak yaratırdı.
-//
-// DAVRANIŞ:
-//   - düzen YOKSA ya da hiç `cd_*` bloğu yoksa → nil döner ve şablon
-//     VARSAYILAN sırayı basar (mevcut görünüm birebir korunur),
-//   - varsa → yalnız `cd_*` blokları, GÖRÜNÜRLÜK ve SIRA korunarak döner,
-//   - tanınmayan `cd_*` tipi sessizce atlanır (yazım kayması sayfayı
-//     kırmasın; `TestCDModulTipleriPaletle` paleti kilitliyor).
 func (s *Server) cdModuller(ctx context.Context, r *http.Request) []templkit.CDModul {
 	site := s.siteByDomain(ctx, r.Host)
 	raw, err := repo.GetLayout(ctx, s.pool, site.ID, "home")
@@ -30,11 +18,8 @@ func (s *Server) cdModuller(ctx context.Context, r *http.Request) []templkit.CDM
 	var bloklar []struct {
 		Type    string `json:"type"`
 		Visible *bool  `json:"visible"`
-		// Count üst düzeyde DEĞİL, `opts` içinde yazılıyor (tasarımcı
-		// biçimi). İkisi de okunur: ileride üst düzeye taşınırsa sessizce
-		// sıfıra düşmesin.
-		Count int `json:"count"`
-		Opts  struct {
+		Count   int    `json:"count"`
+		Opts    struct {
 			Count int `json:"count"`
 		} `json:"opts"`
 	}
@@ -46,9 +31,6 @@ func (s *Server) cdModuller(ctx context.Context, r *http.Request) []templkit.CDM
 		if !templkit.CDModulGecerli(b.Type) {
 			continue
 		}
-		// `visible` alanı yoksa (eski kayıt) GÖRÜNÜR kabul edilir: tasarımcı
-		// yeni blok eklerken alanı yazmayabilir; varsayılanın "gizli" olması
-		// kullanıcının eklediği modülün kaybolması demek olurdu.
 		goster := true
 		if b.Visible != nil {
 			goster = *b.Visible

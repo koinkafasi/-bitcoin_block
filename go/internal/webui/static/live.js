@@ -145,7 +145,7 @@
           return;
         }
         if (data.version && data.version > currentVersion) refresh();
-      } catch (_) { /* yok say */ }
+      } catch (_) {  }
     });
     es.addEventListener('content', function (e) {
       errorCount = 0;
@@ -156,7 +156,7 @@
           return;
         }
         if (!data.version || data.version > currentVersion) refresh();
-      } catch (_) { /* yok say */ }
+      } catch (_) {  }
     });
     es.onopen = function () {
       errorCount = 0;

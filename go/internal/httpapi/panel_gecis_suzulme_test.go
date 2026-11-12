@@ -1,23 +1,5 @@
 package httpapi
 
-// Panel içerik geçişi: sekme hapı yana kayarken ALTTAKİ İÇERİK de aynı
-// yönde süzülür (kullanıcı isteği, 3 Kasım 2026).
-//
-// Önce yalnız `pn-gir` vardı: içerik 3 px DİKEY kayıyordu. Hap yatay
-// akarken içerik yerinde belirdiği için hareket kopuk duruyordu.
-//
-// Ölçülen sonuç (canlı panel, Puppeteer):
-//   İçerikler → Kategoriler : translateX(+28px) → 0, 320 ms
-//   İçerikler → Etiketler   : +28px
-//   Etiketler → İçerikler   : −28px  (ters yön)
-//   yan menü İçerik → SEO   : +28px ; SEO → İçerik : −28px
-//   opaklık 0.45 → 1
-//
-// Ayrıca bulunan yapısal hata: `hx-swap="innerHTML"` + `hx-select=".admin-main"`
-// her gezinmede yanıttaki <main class="admin-main"> öğesini mevcut olanın
-// İÇİNE koyuyordu → ilk sekme geçişinden sonra iki <main>. OUTERHTML'e
-// geçildi; artık main sayısı hep 1.
-
 import (
 	"io/fs"
 	"strings"
@@ -50,9 +32,6 @@ func TestPanelIcerikSuzulme(t *testing.T) {
 	assert.Contains(t, js, "if (b[0] < a[0]) yon = -1;")
 	assert.Contains(t, js, "else if (b[0] === a[0] && b[1] < a[1]) yon = -1;")
 
-	// Yatay kayma + kademeli gecikme; opaklık 0'dan değil 0.45'ten.
-	// (Faz 202'de animasyon `suzul()` yardımcısına çıkarıldı; hem kabuk
-	// gezinmesi hem durum sekmeleri aynı yardımcıyı kullanıyor.)
 	assert.Contains(t, js, "function suzul(")
 	assert.Contains(t, js, "'translateX(' + (yonDeger * MESAFE) + 'px)'")
 	assert.Contains(t, js, "opacity: 0.45")

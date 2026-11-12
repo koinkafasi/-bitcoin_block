@@ -6,16 +6,6 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-// DoluBolumler yayında içeriği olan bölüm slug'larını döndürür.
-//
-// NEDEN: menü ve üst gezinme sabit tanımlı; ama kripto portalının bazı
-// bölümlerinde (Focus · Videos · Podcasts · News Analysis · Press Releases)
-// yayında tek içerik yok. Boş bölüme menü satırı basmak kullanıcıyı
-// "içerik yok" sayfasına götürüyordu. Menü bu haritayla süzülür:
-// veri geldikçe bölüm kendiliğinden görünür.
-//
-// Ölçüt YALNIZ `yayinda`: taslak sayısı menüyü doldurmaz — taslak
-// ziyaretçiye görünmüyor.
 func DoluBolumler(ctx context.Context, pool *pgxpool.Pool, siteID int64) (map[string]bool, error) {
 	if siteID <= 0 {
 		siteID = 1

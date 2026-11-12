@@ -15,12 +15,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// Komut paleti 2.0 (Faz 162).
-//
-// Palet önceden yalnız 38 sabit rota listesiydi; "Kadıköy depremi" yazan
-// kullanıcı içerik değil "İçerikler" sayfası görüyordu. Bu testler uç
-// noktanın sözleşmesini kilitler.
-
 // Kısa sorgu 200 + boş grup döner (hata değil): palet açılır açılmaz
 // boş sonuç göstermemesi için istemci de bunu bekler.
 func TestAdminAraKisaSorguBosDoner(t *testing.T) {
@@ -81,11 +75,12 @@ func TestPaletGrupluVeKlavyeli(t *testing.T) {
 		assert.Containsf(t, s, iz, "palet %q davranışını içermeli", iz)
 	}
 
-	// Sonuç metni innerHTML ile basılmamalı (XSS).
-	i := strings.Index(s, "komut paleti 2.0")
+	i := strings.Index(s, "var RECENT = 'tb_cmdk_recent'")
 	require.Greater(t, i, 0)
 	blok := s[i:]
-	blok = blok[:strings.Index(blok, "Modüler ana sayfa")]
+	j := strings.Index(blok, "document.querySelectorAll('.hero-slider')")
+	require.Greater(t, j, 0)
+	blok = blok[:j]
 	assert.NotContains(t, blok, ".innerHTML =", "arama terimi innerHTML ile basılmamalı")
 }
 
@@ -98,9 +93,6 @@ func TestPaletVurguDugumleKurulur(t *testing.T) {
 	assert.Contains(t, s, "document.createTextNode")
 }
 
-// Paletten çıkacak tek bir `rikza`/`<script>` kaçışı olmamalı: sunucu
-// yalnız veri döner, kaçış istemcide textContent ile yapılır. Bu test
-// sunucu cevabında alan adlarının sabit olduğunu doğrular.
 func TestAdminAramaAlanlariSabit(t *testing.T) {
 	r := regexp.MustCompile(`json:"(id|baslik|alt|href|rozet|tur|ad|ikon|oge)"`)
 	b, err := os.ReadFile(filepath.Join("..", "repo", "admin_search.go"))

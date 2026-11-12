@@ -57,7 +57,7 @@ templ CDKurumsalSayfaView(v CDKurumsalSayfa) {
 	<html lang="tr">
 		<head>
 			@cdHead(CDHead{Title: v.Title, Desc: v.Desc, Canonical: v.Canonical,
-				OGType: "website", SiteName: v.Shell.SiteName, RSSFeed: "/rss.xml",
+				OGType: "website", SiteName: v.Shell.SiteName, FaviconURL: v.Shell.FaviconURL, RSSFeed: "/rss.xml",
 				JSONLD: v.JSONLD, Locale: v.Locale, PageCategory: v.PageCategory,
 				ContentCategory: v.ContentCategory, BaseURL: v.BaseURL})
 		</head>
@@ -139,8 +139,8 @@ templ cdIletisimBlok(c CDIletisim, flashTip, flashMetin string) {
 		</div>
 		if c.FormAktif {
 			<form class="cd-doc__form" method="post" action="/iletisim">
-				<!-- Bot tuzağı: görünmez alan. Doldurulursa sunucu sessizce
-				     başarılı görünür (contact.go). -->
+								// Bot tuzağı: görünmez alan. Doldurulursa sunucu sessizce
+				// başarılı görünür (contact.go).
 				<div class="cd-doc__tuz" aria-hidden="true">
 					<label for="cd-web">Web</label>
 					<input id="cd-web" name="web" type="text" tabindex="-1" autocomplete="off"/>
@@ -165,8 +165,8 @@ templ cdIletisimBlok(c CDIletisim, flashTip, flashMetin string) {
 					<label for="cd-mesaj">Mesajınız</label>
 					<textarea id="cd-mesaj" name="mesaj" rows="6" required maxlength="4000"></textarea>
 				</div>
-				<!-- `onay` ZORUNLU: sunucu bu alan yoksa reddediyor
-				     ("aydınlatma metnini onaylamanız gerekir"). -->
+								// `onay` ZORUNLU: sunucu bu alan yoksa reddediyor
+				// ("aydınlatma metnini onaylamanız gerekir").
 				<label class="cd-doc__onay">
 					<input type="checkbox" name="onay" value="1" required/>
 					<span>Kişisel verilerimin mesajımın yanıtlanması amacıyla

@@ -1,15 +1,5 @@
 package httpapi
 
-// Tasarımcı (Faz 2) önizleme ucu.
-//
-// Blokların önizlemesi, public ana sayfanın KENDİ render yolundan üretilir:
-//   homeView()  → handleHome ile birebir aynı veri kurulumu
-//   buildBlocksFrom() → public render ile birebir aynı blok doldurma
-//   render_block → public şablonların ta kendisi
-//
-// Böylece tasarımcıdaki "gerçek modül" önizlemesi ile sitede görünen çıktı
-// arasında IKİ AYRI KOD YOLU yoktur; ayrı yol = ayrı görünüm riski demektir.
-
 import (
 	"bytes"
 	"encoding/json"
@@ -64,9 +54,6 @@ func (s *Server) handleBuilderPreview(w http.ResponseWriter, r *http.Request) {
 	for i := range blocks {
 		b := blocks[i]
 		var buf bytes.Buffer
-		// Blok adresi verilir: kategori modülü şablonları `$` üzerinden
-		// withCatBlock'a *homeBlock bekler. Değer verilirse şablon motoru
-		// adres alamaz ve "wrong type for value" hatası üretir.
 		if err := s.tmpl.ExecuteTemplate(&buf, "render_block", &blocks[i]); err != nil {
 			s.writeJSON(w, http.StatusInternalServerError, map[string]any{"ok": false, "error": "render: " + err.Error()})
 			return
@@ -94,9 +81,6 @@ func (s *Server) handleBuilderPreview(w http.ResponseWriter, r *http.Request) {
 	s.writeJSON(w, http.StatusOK, map[string]any{"ok": true, "items": items})
 }
 
-// previewCategoryView tasarımcı önizlemesi için kategori verisini kurar.
-// Sayfa anahtarı "kategori:<slug>" ise o kategori; genel "kategori" ise
-// yayındaki ilk içerikli kategori kullanılır. Bloklar istekten gelir.
 func (s *Server) previewCategoryView(r *http.Request, page string, d *tmplData) bool {
 	ctx := r.Context()
 	site := s.siteByDomain(ctx, r.Host)
@@ -148,11 +132,6 @@ func (s *Server) previewCategoryView(r *http.Request, page string, d *tmplData) 
 	return true
 }
 
-// sanitizePreviewHTML önizleme parçasındaki script/link etiketlerini çıkarır.
-// Bloklar (özellikle hikayeler) per-başlık <script> ve zuck <link> basar;
-// bunlar admin sayfasında tekrar tekrar çalışırsa çift başlatma ve stil
-// karışması yaratır. Görsel çıktı etkilenmez; interaktif modüller (hikayeler)
-// için tasarımcıda statik bir önizleme söz konusudur.
 func sanitizePreviewHTML(html string) string {
 	var out strings.Builder
 	for len(html) > 0 {
@@ -189,10 +168,6 @@ func sanitizePreviewHTML(html string) string {
 	return out.String()
 }
 
-// hasVisiblePreview önizleme parçasının gözle görülür bir içeriği olup
-// olmadığını söyler. Tümüyle betikle gelen modüller (hikayeler) etiket
-// temizliğinden sonra boş bir kabuk bırakır; bunlar için tasarımcıda boşluk
-// yerine açıklayıcı bir yer tutucu basılır.
 var tagRe = regexp.MustCompile(`<[^>]*>`)
 
 func hasVisiblePreview(html string) bool {

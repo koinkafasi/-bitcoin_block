@@ -6,9 +6,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// TestNormalizeAIString, sağlayıcıdan gelen ham metnin alana yazılmadan önce
-// kod bloğu sarmalından, JSON dizi/tırnak ve \uXXXX kaçışlarından arındığını
-// doğrular. Özellikle Türkçe karakterlerin kaçış çözümü bozulmadan geçmeli.
 func TestNormalizeAIString(t *testing.T) {
 	cases := []struct {
 		name string

@@ -11,9 +11,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// Faz 198: üye girişi/kaydı iki sütunlu "huddle" düzenine taşındı.
-// Karakterler tamamen dekoratiftir; formun kendi durumu (odak, şifre
-// görünürlüğü, hata) hem erişilebilir alanlarda hem data-mood'da durur.
 func TestUyeGirisHuddleKabugu(t *testing.T) {
 	tmpl := parseTestTemplates(t)
 	d := headerData()
@@ -90,9 +87,6 @@ func TestUyeKayitKapaliHalaKabukIcinde(t *testing.T) {
 	assert.NotContains(t, out, `action="/kayit"`)
 }
 
-// Faz 198: giriş sayfasının varlıkları gerçekten gömülü mü ve şablona
-// sürümlü `asset` çağrısıyla mı bağlanıyor? (Test şablonlarında `asset`
-// işlevi boş döndüğü için HTML yerine dosya ve şablon kaynağı denetlenir.)
 func TestUyeGirisVarliklariBagli(t *testing.T) {
 	for _, ad := range []string{"uye-giris.css", "uye-giris.js"} {
 		_, err := os.Stat(filepath.Join("..", "webui", "static", ad))

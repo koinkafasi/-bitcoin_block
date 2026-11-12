@@ -7,12 +7,6 @@ import (
 	"unicode"
 )
 
-// Bu dosya kural tabanlı imla/biçim denetimidir. Sözlük tabanlı bir yazım
-// denetleyicisi (hunspell/LanguageTool) sonradan eklenebilir; buradaki
-// kurallar bilinçli olarak YÜKSEK İSABETLİ seçildi: yanlış pozitif veren bir
-// uyarı editörün güvenini kaybettirir. Her kural gerçek bir yazım kılavuzu
-// kuralına veya net bir biçim hatasına dayanır.
-
 // ImlaBulgu tek bir imla/biçim bulgusudur.
 type ImlaBulgu struct {
 	Code    string `json:"code"`
@@ -21,9 +15,6 @@ type ImlaBulgu struct {
 	Count   int    `json:"count,omitempty"`
 }
 
-// birlesikYazim Türkçe'de ayrı yazılması gereken, sık bitişik yazılan
-// ifadelerdir. Yalnız kesin olanlar listelenir ("birçok" doğru yazımdır,
-// listede yoktur).
 var birlesikYazim = map[string]string{
 	"herşey":      "her şey",
 	"herşeyi":     "her şeyi",
@@ -74,9 +65,6 @@ func CheckImla(text, lang string) []ImlaBulgu {
 	return out
 }
 
-// checkMergedWords bitişik yazılmış ifadeleri bulur. Kelime sınırına saygı
-// duyar: "herşey" bulunur, "herşeyler" gibi türevler de yakalanır ama
-// "birşeylerin" yanlış eşleşme üretmez (o da listede ayrıca var).
 func checkMergedWords(body string) []ImlaBulgu {
 	lower := strings.ToLower(body)
 	counts := map[string]int{}
@@ -114,9 +102,6 @@ func checkMergedWords(body string) []ImlaBulgu {
 
 func rightFrom(wrong, right string) string { return right }
 
-// countWordOccurrences metinde kelime sınırlarıyla eşleşen sayıyı verir.
-// Türkçe ek alan ifadeler için ("herşeyi") tam kelime eşleşmesi yeterlidir;
-// gövde listesi ek çekimlerini ayrıca içerir.
 func countWordOccurrences(lower, needle string) int {
 	n := 0
 	idx := 0
@@ -194,9 +179,6 @@ func checkPunctuationSpacing(body string) []ImlaBulgu {
 		if unicode.IsDigit(nxt) {
 			continue
 		}
-		// Kısaltma: "vb.Sonraki" gibi birleşik kullanım da hatadır; bu yüzden
-		// büyük harf tek başına istisna sayılmaz. Yalnız noktadan önceki
-		// kelime kısa/kısaltmaysa (vb., Dr., T.C.) atlanır.
 		if unicode.IsUpper(nxt) && isAbbreviation(wordBefore(runes, i)) {
 			continue
 		}
@@ -250,10 +232,6 @@ func normalizeWord(w string) string {
 	})
 }
 
-// checkSentenceCase cümle başında küçük harf kullanımını bulur. Yalnız
-// nokta/soru/ünlem sonrası başlayan cümleler denetlenir; parantez içi ve
-// kısaltma sonrası (vb. gibi) yanlış pozitif üretmemek için iki harften uzun
-// ve büyük harfle başlamayan kelimeler sayılır.
 func checkSentenceCase(body string) []ImlaBulgu {
 	runes := []rune(body)
 	count := 0

@@ -23,7 +23,7 @@ templ CDSectionPageView(v CDSectionPage) {
 	<html lang="tr">
 		<head>
 			@cdHead(CDHead{Title: v.Title, Desc: v.Desc, Canonical: v.Canonical,
-				OGType: "website", Image: v.Lead.Image, SiteName: v.Shell.SiteName,
+				OGType: "website", Image: v.Lead.Image, SiteName: v.Shell.SiteName, FaviconURL: v.Shell.FaviconURL,
 				RSSFeed: "/rss.xml", NoIndex: v.Page > 1, JSONLD: v.JSONLD,
 				Locale: v.Locale, PageCategory: v.PageCategory, BaseURL: v.BaseURL,
 				ContentCategory: v.ContentCategory})
@@ -36,8 +36,8 @@ templ CDSectionPageView(v CDSectionPage) {
 					<h1>{ v.Section }</h1>
 				</header>
 
-				<!-- PİYASA NABZI (yalnız /markets): gerçek CryptoQuant verisi.
-				     Kaynak yoksa blok hiç basılmaz. -->
+								// PİYASA NABZI (yalnız /markets): gerçek CryptoQuant verisi.
+				// Kaynak yoksa blok hiç basılmaz.
 				@cdNabizModul(v.NabizFiyat, v.Nabiz,
 					"Kaynak: CryptoQuant · BTC · Binance akışları · günlük veri · 10 dakika önbellek")
 
@@ -63,11 +63,11 @@ templ CDSectionPageView(v CDSectionPage) {
 					}
 				</div>
 
-				<!-- Sayfalama: CoinDesk "More stories" DÜĞMESİ. JS varsa
-				     cd-daha.js parçayı aynı sayfaya ekler (sayfa geçişi
-				     yok); JS yoksa normal ?sayfa=N bağlantısı çalışır.
-				     Nav, satırlarla AYNI konteynerde: JS satırları
-				     nav'dan ÖNCE ekler (1032px ortalanmış alan korunur). -->
+								// Sayfalama: CoinDesk "More stories" DÜĞMESİ. JS varsa
+				// cd-daha.js parçayı aynı sayfaya ekler (sayfa geçişi
+				// yok); JS yoksa normal ?sayfa=N bağlantısı çalışır.
+				// Nav, satırlarla AYNI konteynerde: JS satırları
+				// nav'dan ÖNCE ekler (1032px ortalanmış alan korunur).
 				if len(v.Stories) > 0 || v.PrevHref != "" || v.NextHref != "" {
 					<div class="cd-kat-genis">
 						if v.MoreBaslik != "" && len(v.Stories) > 0 {
@@ -119,7 +119,7 @@ templ cdKatLead(s CDStory) {
 			</a>
 		}
 	</article>
-	<!-- Lead'in altındaki ayırıcı (CoinDesk: border-t mt-6 mb-2). -->
+		// Lead'in altındaki ayırıcı (CoinDesk: border-t mt-6 mb-2).
 	<hr class="cd-kat-lead__cizgi"/>
 }
 

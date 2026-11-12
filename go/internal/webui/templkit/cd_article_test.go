@@ -6,14 +6,6 @@ import (
 	"testing"
 )
 
-// Makale sayfası (/…/{yyyy}/{mm}/{dd}/{slug}) YAPI sözleşmesi.
-//
-// ÖLÇÜM (CoinDesk §10.2, gerçek Chrome 1440×1000):
-//
-//	kicker 16/32 → H1 36/44 w500 → deck 16/24 → "Yazan" + yazar →
-//	tarih bloğu (y=488) → ÇEVİRİ ETİKETİ (y=510, 160×25) →
-//	eylem pilleri (y=551) → kapak → Özet → gövde 22/30
-
 func makaleCiz(t *testing.T, v CDArticleView) string {
 	t.Helper()
 	var sb strings.Builder
@@ -25,22 +17,19 @@ func makaleCiz(t *testing.T, v CDArticleView) string {
 
 func ornekMakale() CDArticleView {
 	return CDArticleView{
-		Shell:        CDShell{SiteName: "bitcosar"},
-		Title:        "Örnek Başlık — bitcosar",
-		Desc:         "Örnek açıklama.",
-		Canonical:    "https://ornek.test/policy/2026/11/05/orijinal-haber-f6eb90",
-		Kicker:       "Politika",
-		SectionName:  "Politika",
-		SectionHref:  "/policy",
-		Headline:     "Örnek Başlık",
-		Spot:         "Örnek spot metni.",
-		Author:       "Yazar Adı",
-		PublishedAt:  "5 Kasım 2026 15:21 +03",
-		PublishedISO: "2026-11-05T12:21:00Z",
-		BodyHTML:     "<p>Gövde.</p>",
-		// Paylaşım bağlantıları: handler'da GERÇEK değerlerle dolduruluyor
-		// (bkz. cd_article.go). Örnekte boş bırakmak `href=""` üretiyordu;
-		// o kusur testin kendisindeydi, sayfada değil (canlıda 0 boş href).
+		Shell:         CDShell{SiteName: "bitcosar"},
+		Title:         "Örnek Başlık — bitcosar",
+		Desc:          "Örnek açıklama.",
+		Canonical:     "https://ornek.test/policy/2026/11/05/orijinal-haber-f6eb90",
+		Kicker:        "Politika",
+		SectionName:   "Politika",
+		SectionHref:   "/policy",
+		Headline:      "Örnek Başlık",
+		Spot:          "Örnek spot metni.",
+		Author:        "Yazar Adı",
+		PublishedAt:   "5 Kasım 2026 15:21 +03",
+		PublishedISO:  "2026-11-05T12:21:00Z",
+		BodyHTML:      "<p>Gövde.</p>",
 		ShareURL:      "https://ornek.test/policy/2026/11/05/orijinal-haber-f6eb90",
 		ShareX:        "https://twitter.com/intent/tweet?url=x",
 		ShareWhatsApp: "https://wa.me/?text=x",
@@ -50,11 +39,6 @@ func ornekMakale() CDArticleView {
 	}
 }
 
-// TestCDMakaleCeviriEtiketi — ÇEVİRİ ETİKETİ sözleşmesi (spec §10.2).
-//
-// NİYE TEST: etiket yanlış koşulda basılırsa orijinal haberler "çeviri"
-// gibi görünür (okuyucu yanıltılır); hiç basılmazsa çeviri sayfası
-// kaynağını saklar. İkisi de sessiz hatadır.
 func TestCDMakaleCeviriEtiketi(t *testing.T) {
 	v := ornekMakale()
 	v.Dil = CDMakaleDilEN()

@@ -1,10 +1,3 @@
-// Package cryptoicon, kripto para simgelerini dış servislere bağlı kalmadan
-// kendi altyapımızdan sunar.
-//
-// Simgeler spothq/cryptocurrency-icons deposundan sabit bir commit'ten
-// alınmıştır (CC0-1.0). Kaynak ve lisans bilgisi README.md ve LICENSE.md
-// dosyalarındadır. Yeni bir simge eklemek için icons/ altına küçük harfli
-// <sembol>.svg dosyası koymak yeterlidir; URL() otomatik bulur.
 package cryptoicon
 
 import (
@@ -18,9 +11,6 @@ import (
 var embedded embed.FS
 
 const (
-	// URLBase, ikonların genel URL tabanıdır. /media/crypto/ yolu
-	// handleMedia tarafından karşılanır; böylece ikonlar medya altyapısıyla
-	// aynı önbellek ve içerik türü davranışını kullanır.
 	URLBase = "/media/crypto/"
 	// ContentType, SVG ikonların MIME türüdür.
 	ContentType = "image/svg+xml"
@@ -29,9 +19,6 @@ const (
 	SourceVersion = "1a63530"
 )
 
-// aliases, CoinGecko sembolü ile ikon dosyası adı farklı olan bilinen
-// eşlemelerdir. Yalnız dosyası bulunan ve anlamı doğru olan eşlemeler
-// eklenmelidir: örneğin lun.svg "Lunyr"dir, Terra Luna değildir.
 var aliases = map[string]string{
 	"iota": "miota",
 	"pol":  "matic",

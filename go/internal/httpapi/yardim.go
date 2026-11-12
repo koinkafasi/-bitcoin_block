@@ -8,14 +8,6 @@ import (
 	"theblock/site/internal/webui/templkit"
 )
 
-// handleYardim GET /admin/yardim — panel içi yardım merkezi (Faz 165).
-//
-// NEDEN: bilgi `docs/` içinde kalıyordu; editör panelde aramıyor. Ayrıca
-// Faz 162'de komut paletine "/admin/yardim" eklendiği hâlde rota yoktu:
-// paletten açılan bağlantı 404 veriyordu.
-//
-// İçerik bilinçli olarak KODA yazılı (veritabanı değil): kısayollar ve
-// ekran ipuçları sürümle birlikte değişir, veri değildir.
 func (s *Server) handleYardim(w http.ResponseWriter, r *http.Request) {
 	d := s.baseView("tr", "/admin", "Yardım")
 	d.User = ptr(userFromContext(r.Context()))

@@ -12,57 +12,21 @@ import (
 	"theblock/site/internal/repo"
 )
 
-// BrandConfig marka/logo ayarları.
-//
-//	Mode: "text" (metin logo) | "image" (görsel logo)
-//	Text: metin logo (boşsa "theblock" varsayılanı)
-//	ImageID/FaviconID/OGImageID: medya id'leri (nil = yok)
-//	Tagline: header/footer altı slogan
 type BrandConfig struct {
-	Mode string `json:"mode"`
-	Text string `json:"text"`
-	// IconID SİMGE (soldaki yuvarlak işaret).
-	//
-	// NEDEN AYRI (kullanıcı isteği, 11 Kasım 2026): tek dosyalık logoda
-	// simge ile yazı aynı tuvalde olduğu için slogan yazının başladığı
-	// yere hizalanamıyordu (sunucu SVG içeriğini yorumlayamaz; girinti
-	// tahmini kırılgan). Parçalar ayrılınca slogan YAZININ ALTINDA aynı
-	// sütunda durur: hizalama yapısal olur, ölçü tahmini gerekmez.
+	Mode   string `json:"mode"`
+	Text   string `json:"text"`
 	IconID *int64 `json:"iconId"`
 	// IconYukseklik simgenin çizim yüksekliği (px). 0 → LogoYukseklik.
 	IconYukseklik int `json:"iconYukseklik,omitempty"`
 	// ImageID KOYU tema logosu (varsayılan).
-	ImageID *int64 `json:"imageId"`
-	// ImageAcikID AÇIK tema logosu. Boşsa ImageID iki temada da kullanılır.
-	//
-	// NEDEN AYRI ALAN (kullanıcı bildirimi, 11 Kasım 2026: "dark moda
-	// görünen logo light moda göstermiyor"): koyu tema için hazırlanmış
-	// (açık renkli) bir logo açık zeminde görünmüyordu. Şablonda ikinci
-	// görsel yuvası VARDI ama hiç doldurulmuyordu; CSS açık temada koyu
-	// görseli gizleyince geriye hiçbir şey kalmıyordu.
+	ImageID     *int64 `json:"imageId"`
 	ImageAcikID *int64 `json:"imageAcikId"`
 	FaviconID   *int64 `json:"faviconId"`
 	OGImageID   *int64 `json:"ogImageId"`
 	Tagline     string `json:"tagline"`
 
-	// LogoYukseklik üst çubukta logonun çizileceği yükseklik (px).
-	// 0 = varsayılan 32 (eski logonun ölçüsü). Üst sınır 120: daha
-	// büyüğü 73 px'lik üst çubuğu taşırır.
-	LogoYukseklik int `json:"logoYukseklik,omitempty"`
-	// SloganGirinti sloganın soldan girintisi (px). 0 = 0.
-	//
-	// NEDEN (kullanıcı isteği, 11 Kasım 2026: "yuvarlak simgenin altına
-	// ekledin, o simgenin kendi BİTCOŞAR yazısındaki B harfinin altına
-	// getir"): logo dosyasının içinde solda yuvarlak simge, sağda yazı
-	// var. Sloganı yazının başladığı yere oturtmak için yazının dosya
-	// içindeki yatay konumunu bilmek gerekir — sunucu SVG'nin içeriğini
-	// yorumlayamaz (yazı path olabilir, ölçek değişebilir). Bu yüzden
-	// girinti PANELDEN ayarlanıyor; önizleme canlı gösteriliyor.
-	SloganGirinti int `json:"sloganGirinti,omitempty"`
-	// LogoGenislikAzami logonun en fazla genişliği (px). 0 = 260.
-	// Yatay logolar için: yükseklik sabit kalır, genişlik bu sınıra
-	// kadar doğal oranında uzar; aşarsa `object-fit: contain` ile
-	// kırpılmadan küçülür.
+	LogoYukseklik     int `json:"logoYukseklik,omitempty"`
+	SloganGirinti     int `json:"sloganGirinti,omitempty"`
 	LogoGenislikAzami int `json:"logoGenislikAzami,omitempty"`
 }
 
@@ -108,10 +72,6 @@ func (s *Server) brandSiteIdentity(ctx context.Context) (string, string) {
 	return baslik, slogan
 }
 
-// saveBrandImage yüklenen görseli medyaya kaydeder ve medya id'sini döndürür.
-// Görsel çözülebilirse ölçüleri kaydedilir; çözülemese de (egzotik webp vb.)
-// dosya saklanır — logo kaybı sessizce yaşanmaz. Bilinen uzantı + okunabilir
-// içerik yeterlidir.
 func (s *Server) saveBrandImage(r *http.Request, field string) (int64, error) {
 	f, hdr, err := r.FormFile(field)
 	if err != nil {
@@ -312,17 +272,8 @@ func (s *Server) handleBrandSave(w http.ResponseWriter, r *http.Request) {
 		_ = repo.SetSetting(ctx, s.pool, "genel", "slogan", mustJSON(map[string]string{"tr": slogan}))
 	}
 	s.audit(r, "marka_guncelle", "brand")
-	// ÖNBELLEK: `invalidateContentCache` ayar (kvCache) ve kategori
-	// önbelleğini temizliyor; AYRICA kabuk (cdShellCache) temizlenmeli.
-	// Yoksa logo yüklendikten sonra ana sayfa 10 sn boyunca ESKİ logoyu
-	// gösteriyordu — kullanıcı "yükledim ama değişmedi" diyor (11 Kasım
-	// 2026'da tam olarak bu yaşandı). Kabuk önbelleği marka alanlarını
-	// taşıdığı için burada açıkça düşürülüyor.
 	s.invalidateContentCache()
 	s.cdShellCache.Clear()
-	// TAM SAYFA önbelleği de temizlenmeli: logo/marka HER sayfada
-	// görünüyor; sayfa önbelleği (10 sn) temizlenmezse kullanıcı
-	// kaydettikten sonra eski logoyu görmeye devam ediyordu.
 	if s.sayfaCache != nil {
 		s.sayfaCache.temizle()
 	}
@@ -346,11 +297,6 @@ func mustJSON(v any) []byte {
 	return b
 }
 
-// sinirlaInt form değerini güvenli tam sayıya çevirir.
-//
-// Boş/bozuk giriş `varsayilan` döner; aralık dışı KIRPILIR. Logo ölçüsü
-// gibi kullanıcı girdileri CSS'e gittiği için sınırsız bırakmak üst
-// çubuğu taşırır ya da logoyu görünmez yapar.
 func sinirlaInt(ham string, alt, ust, varsayilan int) int {
 	ham = strings.TrimSpace(ham)
 	if ham == "" {

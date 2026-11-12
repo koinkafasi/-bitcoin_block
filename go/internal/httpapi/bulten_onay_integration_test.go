@@ -1,11 +1,5 @@
 //go:build integration
 
-// Bülten çift onayının üretim kipinde gerçekten korumalı olduğunu doğrular.
-//
-// Neden ayrı bir sunucu kuruluyor: paketin ortak test sunucusu Debug=true ile
-// çalışıyor (integration_test.go, TestMain) ve o kipte onay bağlantısı
-// bilerek yanıta konur. Korunması gereken davranış üretim kipindedir, bu
-// yüzden burada Debug=false ile ikinci bir sunucu ayağa kaldırılır.
 package httpapi_test
 
 import (
@@ -25,13 +19,6 @@ import (
 	"theblock/site/internal/i18n"
 )
 
-// TestBultenOnayTokeniUretimdeSizmaz: SMTP yapılandırılmamışken bile onay
-// token'ı yanıta yazılmamalı.
-//
-// Sızarsa çift onay anlamsızlaşır: formu dolduran kişi başkasının e-posta
-// adresini girip dönen bağlantıyı kendisi açarak o adresi 'aktif' aboneye
-// çevirebilir. Gönderim listesi status='aktif' filtresi kullandığı için
-// (repo/subscribers.go) o adres bundan sonra onayı olmadan ticari ileti alır.
 func TestBultenOnayTokeniUretimdeSizmaz(t *testing.T) {
 	skipIfNoDB(t)
 

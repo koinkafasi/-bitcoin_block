@@ -97,21 +97,13 @@ func (c *Client) CompleteStrict(ctx context.Context, req Request) (Response, err
 }
 
 type completionReq struct {
-	Model          string          `json:"model"`
-	Messages       []apiMsg        `json:"messages"`
-	Stream         bool            `json:"stream"`
-	MaxTokens      int             `json:"max_tokens,omitempty"`
-	Temperature    float64         `json:"temperature,omitempty"`
-	ResponseFormat *responseFormat `json:"response_format,omitempty"`
-	// ReasoningEffort muhakeme tabanlı modellerde düşünme bütçesini kısar.
-	//
-	// ÖLÇÜM (6 Kasım 2026, evren/deepseek-v4.1-flash, OmniRoute): 4.000
-	// karakterlik bir istemde model `max_tokens` bütçesinin TAMAMINI
-	// muhakemeye harcayıp `finish_reason=length` ile BOŞ içerik döndürdü —
-	// otomatik yazım işleri "boş yanıt" hatasıyla düşüyordu. `low` ile aynı
-	// istem tam JSON üretti (108-162 sn). Sağlayıcı parametreyi desteklemezse
-	// boş bırakılır (env ile kapatılabilir).
-	ReasoningEffort string `json:"reasoning_effort,omitempty"`
+	Model           string          `json:"model"`
+	Messages        []apiMsg        `json:"messages"`
+	Stream          bool            `json:"stream"`
+	MaxTokens       int             `json:"max_tokens,omitempty"`
+	Temperature     float64         `json:"temperature,omitempty"`
+	ResponseFormat  *responseFormat `json:"response_format,omitempty"`
+	ReasoningEffort string          `json:"reasoning_effort,omitempty"`
 }
 
 type responseFormat struct {

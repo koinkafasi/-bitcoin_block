@@ -146,11 +146,6 @@ func (s *Server) handleNoticesPublic(w http.ResponseWriter, r *http.Request) {
 	s.renderPublic(w, r, "resmi-ilanlar", d, cacheControlPublic)
 }
 
-// noticeFilterFromQuery public liste sorgusunu NoticeFilter'a çevirir.
-//
-// Kural: kurum/şehir/arama verildiğinde ve tarih seçilmediğinde varsayılan
-// "tüm tarihler" olur. Aksi hâlde daraltma yalnız en son güne uygulanır ve
-// kullanıcı aradığını bulamaz ("Ankara" seçip boş liste görmek gibi).
 func noticeFilterFromQuery(q url.Values) repo.NoticeFilter {
 	f := repo.NoticeFilter{
 		Date:        strings.TrimSpace(q.Get("tarih")),
@@ -165,9 +160,6 @@ func noticeFilterFromQuery(q url.Values) repo.NoticeFilter {
 	return f
 }
 
-// noticeSlug ilan başlığından adres parçası üretir. Kimlik adresin sonunda
-// ayrıca taşındığı için slug yalnızca okunabilirlik ve SEO içindir; başlık
-// değişse bile eski adres çalışmaya devam eder.
 func noticeSlug(title string) string {
 	s := platform.Slugify(title)
 	// Slugify boş/anlamsız başlıkta "icerik" yer tutucusunu döndürür;
@@ -191,12 +183,6 @@ func publicNoticeURL(langBase string, n repo.OfficialNotice) string {
 	return langBase + "/resmi-ilanlar/" + noticeSlug(n.Title) + "-" + itoa64(n.ID)
 }
 
-// handleNoticeDetail tek bir resmî ilanın kalıcı sayfasıdır.
-//
-// Neden kalıcı adres: BİK tebliği içeriklere ait TAM URL adreslerinin site
-// haritasında bulunmasını istiyor. Ayrıca ilan metninin kendi adresinde
-// yayımlanması arşiv ve atıf açısından da doğru; liste sayfasındaki kart
-// kaybolduğunda ilan erişilemez olmamalı.
 func (s *Server) handleNoticeDetail(w http.ResponseWriter, r *http.Request, seg string) {
 	ctx := r.Context()
 	locale := langOf(r, s)

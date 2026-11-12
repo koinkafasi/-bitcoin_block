@@ -75,16 +75,8 @@ func (s *Server) consumeFlash(r *http.Request) *flashMsg {
 	return &flashMsg{Kind: parts[0], Text: parts[1]}
 }
 
-// secureCookie, çerezlere Secure bayrağının eklenip eklenmeyeceğini söyler.
-// Sitenin genel adresi HTTPS ise oturum/üyelik çerezleri yalnız HTTPS
-// üzerinden gönderilir; HTTP üzerinden çalışan yerel kurulumlar bozulmaz.
 func (s *Server) secureCookie() bool { return isHTTPS(s.cfg.BaseURL) }
 
-// ayniSiteYolu, Referer gibi dışarıdan gelebilen bir adresi yalnız kendi
-// host'umuzdaysa site-içi göreli yola indirger. Geçersiz/çapraz kaynak
-// adreslerde boş döner; çağıran kendi güvenli varsayılanına düşer.
-// (Açık yönlendirme: saldırgan bağlantısına tıklayan kullanıcı kendi
-// sitemizden saldırgan sitesine yönlendirilmemeli.)
 func (s *Server) ayniSiteYolu(r *http.Request, raw string) string {
 	raw = strings.TrimSpace(raw)
 	if raw == "" {

@@ -6,20 +6,7 @@ import (
 	"testing"
 )
 
-// Faz 194 — otomatik AI ile yazım.
-//
-// ÖLÇÜM (üretim): bot günde ~3.600 taslak ekliyor ve bunlar RSS özeti
-// olduğu gibi yazılıyor (yayındaki 982/986 içerik TEK paragraf). AI ile
-// yazım yolu vardı ama elle tetikleniyordu (`AI Merkezi → küme → taslak`).
-
 func TestYazimVarsayilanKapali(t *testing.T) {
-	// Bu hat AI maliyeti doğurur ve metni doğrudan taslağa yazar. Varsayılan
-	// AÇIK olursa kurulum yapan herkes farkında olmadan ücret öder.
-	//
-	// DİKKAT: yalnız `YazimAyarlar{}` sıfır değerini denetlemek yetmez —
-	// varsayılan `YazimAyarlariOku` içinde kurulur. İlk sürümde bu boşluk
-	// vardı ve mutasyon testi kaçırdı (varsayılan true yapılınca test yine
-	// geçiyordu). Kaynağı da doğruluyoruz: DB gerekmeden sözleşmeyi korur.
 	src := okuKaynak(t, "yazim_worker.go")
 	if !strings.Contains(src, "a := YazimAyarlar{Aktif: false, Dakika: YazimVarsayilanDakika}") {
 		t.Error("varsayılan KAPALI değil: ayar yazılmamışken hat kendiliğinden çalışır")
@@ -72,9 +59,6 @@ func TestYazimSonucuEsleme(t *testing.T) {
 	}
 }
 
-// TestYazimOzetiTasinir: AI özeti (ai_summary) içeriğe yazılan alanlara
-// taşınmalı. Makale sayfasındaki özet kutusu yalnız bu alan doluyken basılır
-// (spec §10.2.2); taşınmazsa kutu hiç görünmez.
 func TestYazimOzetiTasinir(t *testing.T) {
 	res := Result{Action: "news", Fields: map[string]string{
 		"title":      "Başlık",

@@ -18,23 +18,6 @@ import (
 	"theblock/site/internal/repo"
 )
 
-// Toplu AI ile yeniden yazım işçisi (Faz 204).
-//
-// ÖLÇÜM (üretim, 3 Kasım 2026): yayındaki 986 içeriğin 982'si tek paragraf,
-// 602'si 200 karakterin altında. Faz 194 hattı yalnız YENİ taslaklara
-// uygulanıyor; yayındaki metinlere hiç dokunulmadı.
-//
-// Bu işçi öneri ÜRETİR, yayına YAZMAZ:
-//
-//	bekleyen öneri → AI (dil = içeriğin dili) → kalite kapısı
-//	  → geçti:  `yeniden_yazim.status = hazir`  (panelde eski/yeni diff)
-//	  → geçmedi: `status = hata` + gerekçe      (içerik değişmez)
-//
-// Yazma yalnız editör onayında olur (`repo.YenidenYazimOnayla`, sürüm
-// korumalı). EN satırları da kendi İngilizce metninden yeniden yazılır:
-// çeviri yolunda güncelleme yolu yok, ayrıca İngilizce metnin kendi
-// akıcılığı korunmalı.
-
 const (
 	// yenidenMinParagraf: haber gövdesi en az bu kadar paragraf olmalı.
 	yenidenMinParagraf = 3
@@ -47,15 +30,7 @@ const (
 	// sayılır. O kaynaktan 3+ paragraf istemek dolgu cümle üretir.
 	yenidenKisaKaynak = 250
 	// yenidenKisaTaban: kısa kaynakta gövde alt sınırı (dolgu istemeden).
-	yenidenKisaTaban = 250
-	// yenidenKesinTaban: asla altına inilmeyecek gövde uzunluğu.
-	//
-	// Neden 180: ölçüm (pilot, 3 Kasım 2026) — kaynak 94-228 karakterlik tek
-	// cümlelik özet. "Yeni olgu yok + dolgu yok" kuralıyla model 180-250
-	// karakterlik 2-3 paragraf üretiyor. Bunun altı gerçekten "içerik yok";
-	// üstü ise bugünkü 1 paragraflık metinden yapısal olarak iyi. Uzunluk
-	// kararı (700 haber standardı) UYARI olarak editöre bırakılır — yayına
-	// yazma zaten onayla oluyor.
+	yenidenKisaTaban  = 250
 	yenidenKesinTaban = 180
 	// yenidenMaxParagraf: fazlası tek haber için bölünmemiş yığın olur.
 	yenidenMaxParagraf = 9
@@ -66,10 +41,6 @@ const (
 // sayiRe metindeki sayıları yakalar (uydurma sayı denetimi için).
 var sayiRe = regexp.MustCompile(`\d+(?:[.,]\d+)*`)
 
-// RunYenidenYazim öneri üretim döngüsünü başlatır.
-//
-// Ayar yok: öneri üretimi yalnız editörün "pilotu başlat" isteğiyle kuyruğa
-// girer. Döngü kuyruk boşken hiçbir AI çağrısı yapmaz.
 func RunYenidenYazim(ctx context.Context, pool *pgxpool.Pool, aiclient *ai.Client, logger *slog.Logger, every time.Duration) {
 	if every <= 0 {
 		every = 10 * time.Second
@@ -93,10 +64,6 @@ func RunYenidenYazim(ctx context.Context, pool *pgxpool.Pool, aiclient *ai.Clien
 	}
 }
 
-// YenidenBirTur bekleyen önerilerden bir partiyi işler ve işlenen sayısını
-// döndürür. Döngü (`RunYenidenYazim`) bunu kendi zamanlayıcısıyla çağırır;
-// komut satırı aracı (pilot ölçümü) doğrudan çağırıp kuyruk boşalana kadar
-// yineleyebilir.
 func YenidenBirTur(ctx context.Context, pool *pgxpool.Pool, aiclient *ai.Client, logger *slog.Logger) int {
 	return yenidenTur(ctx, pool, aiclient, logger)
 }
@@ -137,12 +104,6 @@ func yenidenIsle(ctx context.Context, pool *pgxpool.Pool, aiclient *ai.Client, l
 	eskiParagraflar := repo.GovdeParagraflari(is.Detail)
 	kaynakMetin := strings.Join(eskiParagraflar, "\n\n")
 
-	// Araştırmalı mod: gerçek web kaynakları toplanır.
-	//
-	// Neden zorunlu: yayındaki ince içeriğin kaynağı tek cümlelik RSS özeti.
-	// Model o cümleden 700 karakterlik haber üretemez — üretirse uydurur.
-	// Kaynak bulunamazsa öneri HATA olur; uydurulmuş bir "haber" yazmaktansa
-	// hiç yazmamak doğrudur.
 	var kaynaklar []repo.YenidenKaynak
 	if is.Mod == repo.YenidenModArastirmali {
 		toplanan, metin, err := yenidenArastir(ctx, arastirma, is)
@@ -171,9 +132,6 @@ func yenidenIsle(ctx context.Context, pool *pgxpool.Pool, aiclient *ai.Client, l
 
 	uyarilar, engel := yenidenKapisi(sonuc, kaynakMetin, is.SourceURL)
 	if engel != "" {
-		// Teşhis alanları: ham yanıt uzunluğu ve paragraf sayısı. Kapı
-		// reddettiğinde "model kısa yazdı" ile "ayrıştırma metni düşürdü"
-		// birbirinden ayrılabilsin.
 		logger.Info("yeniden yazım: kalite kapısı reddetti",
 			"öneri", is.ID, "içerik", is.ContentID, "engel", engel,
 			"ham_karakter", utf8.RuneCountInString(resp.Text),
@@ -214,12 +172,6 @@ func yenidenIsle(ctx context.Context, pool *pgxpool.Pool, aiclient *ai.Client, l
 		"sure_ms", time.Since(bas).Milliseconds())
 }
 
-// yenidenArastir öneri için gerçek web kaynakları toplar.
-//
-// Sorgular başlıktan türetilir: başlık zaten haberin öznesini taşıyor.
-// İkinci sorgu spot'u ekler (başlık kısaysa isabet artar). Sayfa metinleri
-// çekilir (`fetchPages=true`): modelin kanıtı özet değil, kaynağın kendisi
-// olmalı.
 func yenidenArastir(ctx context.Context, p research.Provider, is repo.YenidenYazimIs) ([]repo.YenidenKaynak, string, error) {
 	if p == nil || p.Name() == "disabled" {
 		return nil, "", fmt.Errorf("arama sağlayıcısı yapılandırılmadı (BRAVE_SEARCH_API_KEY)")
@@ -280,10 +232,6 @@ type yenidenYanit struct {
 	SeoAciklama string
 }
 
-// yenidenUret sağlayıcıdan yeniden yazılmış gövdeyi ister.
-//
-// `CompleteStrict`: mock yanıtı kabul edilmez — pilot ölçümü gerçek model
-// çıktısıyla yapılmalı, aksi hâlde "kalite" ölçümü anlamsız olur.
 func yenidenUret(ctx context.Context, aiclient *ai.Client, locale, baslik, spot, govde string) (yenidenYanit, ai.Response, error) {
 	// Kaynak listesi varsa istem "araştırmalı" olur: model yalnız aşağıdaki
 	// kaynak metinlerine dayanır ve uzunluk hedefi gerçekten yüksektir.
@@ -308,11 +256,6 @@ func yenidenUret(ctx context.Context, aiclient *ai.Client, locale, baslik, spot,
 	return y, resp, nil
 }
 
-// yenidenIstem dil başına istem üretir.
-//
-// Kural: YENİ OLGU YOK. Model yalnız var olan bilgiyi yeniden düzenler ve
-// genişletir (bağlam, geçiş, açıklama). Kaynak adı, "devamını oku" kalıntısı
-// ve HTML yasak.
 func yenidenIstem(locale, baslik, spot, govde string, arastirmali bool) (string, string) {
 	if locale == "en" {
 		sistem := `You are an English news editor at an English-language news site.
@@ -421,19 +364,10 @@ func metinDizisi(v any) []string {
 	return out
 }
 
-// yenidenKapisi AI çıktısının yapı/kalite denetimi.
-//
-// Dönüş: (uyarılar, engel). `engel` doluysa öneri yazılmaz (editöre
-// yalnız gerekçe görünür) — uyarı ise öneriyle birlikte gösterilir.
 func yenidenKapisi(y yenidenYanit, kaynakMetin, sourceURL string) ([]string, string) {
 	var uyarilar []string
 	govde := strings.Join(y.Paragraflar, "\n\n")
 
-	// Paragraf alt sınırı da KAYNAĞA göre ölçeklenir: 250 karakterin
-	// altındaki bir kaynaktan 4 paragraf çıkarmak dolgu cümle üretmek demek.
-	// Ölçüm (pilot, 3 Kasım 2026): EN metinlerde 4 paragraf zorlanınca
-	// "She emphasized how their dedication impacts the nation." gibi
-	// bilgi taşımayan cümleler çıktı.
 	kaynakK := utf8.RuneCountInString(strings.TrimSpace(kaynakMetin))
 	minParagraf := yenidenMinParagraf
 	if kaynakK < yenidenKisaKaynak {
@@ -445,16 +379,6 @@ func yenidenKapisi(y yenidenYanit, kaynakMetin, sourceURL string) ([]string, str
 		uyarilar = append(uyarilar, fmt.Sprintf("gövde %d paragraf; %d üzeri bölünmeli", n, yenidenMaxParagraf))
 	}
 
-	// Uzunluk eşiği KAYNAĞA göre ölçeklenir.
-	//
-	// SORUN (pilot ölçümü, 3 Kasım 2026): yayındaki ince içeriklerin kaynağı
-	// 94-226 karakterlik RSS özeti. Sabit 700 karakter eşiği 20/20 öneriyi
-	// reddetti — model 300-540 karakter yazdı ve 700'e çıkmak için olgu
-	// uydurmak gerekirdi. "Yeni olgu yok" kuralı ile sabit 700 çelişiyor.
-	//
-	// ÇÖZÜM: en az 300 karakter (kaynak 250'nin altındaysa 250) ve kaynağın
-	// 1,5 katı, tavan 700. Böylece metin gerçekten genişler ama dolgu ya da
-	// uydurmaya zorlanmaz; 700'ün altında kalan öneri UYARI olarak görünür.
 	k := utf8.RuneCountInString(strings.TrimSpace(govde))
 	hedef := yenidenTabanKarakter
 	if kaynakK < yenidenKisaKaynak {
@@ -501,9 +425,6 @@ func yenidenKapisi(y yenidenYanit, kaynakMetin, sourceURL string) ([]string, str
 		}
 	}
 
-	// Uydurma sayı denetimi: kaynakta olmayan bir sayı varsa ENGELLEME,
-	// uyarı ver. Yeniden yazımda sayıların yazıyla açıklanması meşru
-	// olabilir; editör diff'te görüp karar verir.
 	if yeni := bilinmeyenSayilar(govde, kaynakMetin); len(yeni) > 0 {
 		uyarilar = append(uyarilar, "kaynak metinde geçmeyen sayı(lar): "+strings.Join(yeni, ", "))
 	}

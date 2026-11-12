@@ -48,13 +48,6 @@ func TestGzipSkipsSSE(t *testing.T) {
 	assert.Contains(t, rec.Body.String(), "event: ping")
 }
 
-// TestGzipCompressesJavaScript: `.js` dosyaları Go 1.20'den beri
-// `text/javascript` olarak sunuluyor (WHATWG). Sıkıştırma listesi yalnız
-// `application/javascript` bildiği için panelin HİÇBİR JS dosyası
-// sıkıştırılmıyordu — editor.js 771 KB ham gidiyordu (gzip'li hâli 240 KB).
-//
-// Gerçek sunum yolu üzerinden ölçülüyor: http.FileServer + text/javascript,
-// yani üretimde olan şeyin aynısı.
 func TestGzipCompressesJavaScript(t *testing.T) {
 	// Go'nun .js için ne ürettiği sürüme göre değişebilir; ikisini de dene.
 	for _, ct := range []string{"text/javascript; charset=utf-8", "application/javascript"} {

@@ -9,9 +9,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// Fikstür CANLI yanıttan alınmıştır (5 Kasım 2026, 57 kayıttan ilk 3'ü).
-// Yalnız dev SVG `d="M…"` gövdeleri kırpıldı; ayrıştırıcının baktığı
-// işaretlerin hiçbirine dokunulmadı.
 const aeoFikstur = "testdata/aeo-nobet.html"
 
 func TestEczaneAEOCoz(t *testing.T) {

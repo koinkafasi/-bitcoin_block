@@ -36,9 +36,6 @@ func NewService(pool *pgxpool.Pool, provider Provider, ff *FFmpeg, logger *slog.
 	return &Service{pool: pool, provider: provider, ff: ff, logger: logger, workRoot: os.TempDir()}
 }
 
-// StartWorker stale işleri kurtarır ve arka plan döngülerini başlatır.
-// Sağlayıcı dinamikse (panelden yapılandırılabilir) anahtar olmasa da worker
-// çalışır; işler açık hata ile başarısız olur, sessizce beklemez.
 func StartWorker(ctx context.Context, pool *pgxpool.Pool, provider Provider, ff *FFmpeg, logger *slog.Logger, interval time.Duration) {
 	if provider == nil {
 		logger.Warn("transkripsiyon worker kapalı: ASR sağlayıcı tanımlı değil")

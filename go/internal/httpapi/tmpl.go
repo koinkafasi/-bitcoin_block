@@ -44,14 +44,11 @@ type tmplData struct {
 	SiteName   string
 	SiteSlogan string
 	// Sayfa bazlı SEO başlığı/açıklaması ve sosyal kart alanları.
-	MetaTitle string
-	MetaDesc  string
-	Robots    string
-	OGType    string
-	OGImage   string
-	// OGImageGenis: OG görseli gerçekten geniş formatlı mı (haber kapağı ya da
-	// panelden yüklenen marka görseli). Kurumsal ikon yedeğine düşüldüğünde
-	// false olur; twitter:card o zaman summary_large_image iddia etmez.
+	MetaTitle    string
+	MetaDesc     string
+	Robots       string
+	OGType       string
+	OGImage      string
 	OGImageGenis bool
 	// BreadcrumbJSONLD sayfa tipine göre kırıntı yolu yapısal verisi.
 	BreadcrumbJSONLD template.JS
@@ -91,24 +88,18 @@ type tmplData struct {
 	// AdsPublisher AdSense yayıncı kimliğidir (ca-pub-…). Panelden girilir;
 	// boşsa hiç basılmaz (bkz. adsPublisher).
 	AdsPublisher string
-	// Scripts sayfaya özel ek betikler (admin). Ağır paketler —
-	// editor.js, manset.js — yalnız ihtiyaç duyan sayfada yüklenir;
-	// bkz. adminassets.go.
-	Scripts    []string
-	PageLayout *pageLayoutView // sayfaya özel sütun şablonu
-	User       *auth.User
-	Flash      *flashMsg
-	AI         *aiEditorView
+	Scripts      []string
+	PageLayout   *pageLayoutView // sayfaya özel sütun şablonu
+	User         *auth.User
+	Flash        *flashMsg
+	AI           *aiEditorView
 
 	// Public üye oturumu (header simgesi + üyelik sayfaları).
 	MemberLoggedIn bool
 	MemberName     string
 	MemberInitial  string
 	MemberURL      string
-	// MemberStaff üye editoryal personel mi (yönetici/editör). Profil
-	// simgesi artık herkese /hesabim'e gider; personel için yönetim paneli
-	// kısayolu hesap sayfasında ve çekmecede gösterilir.
-	MemberStaff bool
+	MemberStaff    bool
 	// UyeMode/… üyelik form sayfaları (giriş, kayıt, şifre sıfırlama).
 	UyeMode       string
 	UyeRedirect   string
@@ -119,10 +110,8 @@ type tmplData struct {
 	UyeToken      string
 	UyeFormTS     string
 	GoogleEnabled bool
-	// UyeKayitAcik: kayıt kapalıysa giriş sayfasındaki "Hemen kayıt olun"
-	// bağlantısı çizilmez (tıklayan okuyucu boş bir "kayıtlar kapalı"
-	// sayfasına düşüyordu).
-	UyeKayitAcik bool
+	UyeKayitAcik  bool
+	UyeKurlar     map[string]uyeKur
 	// Hesap merkezi (/hesabim) verisi + header bildirim zili.
 	Hesap        *hesapData
 	MemberUnread int
@@ -210,14 +199,7 @@ type tmplData struct {
 	Hreflangs []langLink
 	// I18nJSON istemci tarafında (JS ile üretilen metinler için) kullanılan
 	// çeviri sözlüğüdür. Şablon <script> içine basar; app.js okur.
-	I18nJSON template.JS
-	// GoogleSourceURL, Google News'te siteyi "kaynak" ekleme bağlantısıdır:
-	// https://www.google.com/preferences/source?q=<site>  (Faz 20)
-	//
-	// template.URL ile işaretlenir; html/template normalde URL bağlamındaki
-	// değerleri kaçış uygular ve ":" ile "/" işaretleri %3A/%2F biçimine
-	// dönüşür. Buradaki adres sunucu yapılandırması/host bilgisinden türer
-	// (kullanıcı girdisi değildir), bu yüzden güvenli kabul edilir.
+	I18nJSON        template.JS
 	GoogleSourceURL template.URL
 	TOTPSecret      string
 	TOTPEnabled     bool
@@ -239,23 +221,19 @@ type tmplData struct {
 	// (Faz 142). True ise sabit gövde basılmaz; gövdeyi blok taşır.
 	HasBodyBlock bool
 	// CatRows kategori gövdesinin görsel satırları (bağımsız modüller).
-	CatRows        []catRow
-	EtkinlikPanel  *eventsData
-	Etkinlik       []repo.Event
-	AnketPanel     *pollsData
-	Anketler       []pollView
-	Bulten         *bultenData
-	GazetelerPanel *newspapersData
-	Gazete         *gazeteViewData
-	GazetePublic   *gazetePublicView
+	CatRows       []catRow
+	EtkinlikPanel *eventsData
+	Etkinlik      []repo.Event
+	AnketPanel    *pollsData
+	Anketler      []pollView
+	Bulten        *bultenData
+	Gazete        *gazeteViewData
+	GazetePublic  *gazetePublicView
 	// Admin görünüm/ marka kiti (Faz A).
-	Gorunum      *gorunumView
-	GorunumFonts []string
-	AdminCSS     template.CSS
-	AdminHNav    bool
-	// Tercihler kullanıcı arayüz tercihleri (Faz 173, A-3): JSON belgesi.
-	// admin_head içinde <meta> olarak gömülür; istemci localStorage
-	// önbelleğini bununla tohumlar.
+	Gorunum        *gorunumView
+	GorunumFonts   []string
+	AdminCSS       template.CSS
+	AdminHNav      bool
 	Tercihler      string
 	SlotHTML       template.HTML
 	PageHead       template.HTML
@@ -270,20 +248,17 @@ type tmplData struct {
 	Ilanlar        []repo.OfficialNotice
 	IlanTarih      string
 	IlanTarihler   []string
-	// Resmî ilan filtreleri ve tek ilan detayı.
-	// IlanTarih boşsa liste tüm tarihleri kapsıyordur; başlıkta tek bir gün
-	// göstermek yanıltıcı olacağı için şablon buna bakar.
-	IlanKurumlar []string
-	IlanSehirler []string
-	IlanFiltre   noticeFilterView
-	Ilan         *repo.OfficialNotice
-	Adsense      *adsenseData
-	Backlink     *backlinkData
-	Paylasim     *shareData
-	Indexleme    *indexingData
-	Push         *pushData
-	Sites        []repo.Site
-	CurSite      *repo.Site
+	IlanKurumlar   []string
+	IlanSehirler   []string
+	IlanFiltre     noticeFilterView
+	Ilan           *repo.OfficialNotice
+	Adsense        *adsenseData
+	Backlink       *backlinkData
+	Paylasim       *shareData
+	Indexleme      *indexingData
+	Push           *pushData
+	Sites          []repo.Site
+	CurSite        *repo.Site
 
 	Embed   bool         // ?embed=1: yönetim kabuğu (menü/üst bar) gizlenir, iframe içine gömülür
 	Ikonlar *ikonlarData // İkon kütüphanesi galerisi (/admin/ikonlar)
@@ -405,9 +380,6 @@ type articleData struct {
 	// CatBadges kategori id -> ad/slug. Önerilen video kartı ve komşu haber
 	// bandlarında kategori rozeti basmak için (Faz 16).
 	CatBadges map[int64]CatBadge
-	// ShareBtns kanal paylaşım düğmeleri (Faz 44). Href'ler Go'da QueryEscape'li
-	// kurgulanır ve template.URL olarak verilir — yoksa html/template href içinde
-	// urlq çıktısını yeniden %-kodlayıp (%253A) bağlantıyı bozardı.
 	ShareBtns []shareLink
 	ShareURL  string
 	// RelatedVideoSure önerilen videonun süresi (mm:ss); boş = bilinmiyor (Faz 17).
@@ -448,13 +420,9 @@ type CatBadge struct {
 }
 
 type categoryData struct {
-	Title string
-	Slug  string
-	Items []repo.Content
-	// H1 / CrumbTitle sayfa metni override'larından gelir (Faz 142).
-	// H1 başlık metnidir (ör. "Ekonomi Gündemi"); CrumbTitle kırıntı yolunda
-	// HER ZAMAN gerçek kategori adını taşır. AllText "Tümü" sekmesi,
-	// EmptyTitle/EmptyText boş kategori kutusunun metinleridir.
+	Title      string
+	Slug       string
+	Items      []repo.Content
 	H1         string
 	CrumbTitle string
 	AllText    string
@@ -476,18 +444,12 @@ type categoryData struct {
 	Tabs       []repo.Category
 	AllURL     string
 	// Intro üst kategori sayfasında H1 altında gösterilen kısa SEO metni.
-	Intro string
-	// Kategori gövdesi manşet düzeni (kategori_liste bloğu):
-	//   klasik = 1 büyük + 2 yan manşet
-	//   portre = 5 slaytlı dikey sol manşet + 2 yan manşet
-	HeroStyle string
-	HeroCount int
-	HeroWidth int
-	HeroRatio string
-	ListCols  int
-	// CatSlotClass bağımsız kategori modülünün satır yuvasıdır
-	// (cat-slot-left / cat-slot-center / cat-slot-right). RailStyle seçimli
-	// manşet kartlarının görünümüdür (overlay / yatay).
+	Intro        string
+	HeroStyle    string
+	HeroCount    int
+	HeroWidth    int
+	HeroRatio    string
+	ListCols     int
 	CatSlotClass string
 	RailStyle    string
 	// HideBadge kategori_liste kartlarındaki kategori etiketini görsel olarak
@@ -495,39 +457,25 @@ type categoryData struct {
 	HideBadge bool
 	// CardClass / CardCSS paylaşımlı kart stili (Bloomberg vb.) — kategori
 	// ızgarasındaki kartlara uygulanan sınıf ve renk değişkenleri.
-	CardClass string
-	CardCSS   template.CSS
-	// Kategori manşet slider'ı (portre/üçlü) görünümü: slider modülündeki
-	// başlık arkası tasarımı, sayı göstergesi çerçevesi ve gölge seçenekleri.
-	// HeroOverlayStyle başlık arkası katmanının CSS'idir (renk/geçiş,
-	// saydamlık, yükseklik, bulanıklık). HeroTitleStyle başlık yazı stili,
-	// HeroPagerStyle sayı göstergesinin boyut/rengi (CSS değişkenleri).
+	CardClass        string
+	CardCSS          template.CSS
 	HeroOverlayStyle template.CSS
 	HeroTitleStyle   template.CSS
 	HeroPagerStyle   template.CSS
 	HeroPagerShape   string
 	HeroPagerPos     string
 	HeroShadow       bool
-	// Akış vitrini (coinhit/enerji modeli): ilk 4 haber 4'lü kart ızgarası,
-	// kalanı 3 sütun × 4 kartlık "enerji" bloklarıyla akar. FlowBatches her
-	// blok için [sütun][kart] biçiminde hazır kartları taşır.
-	FlowBatches [][][]akisCard
-	FlowNext    int  // bir sonraki yüklemenin kategorideki mutlak sırası
-	FlowLimit   int  // akıştaki toplam haber sınırı (manşet + kartlar dahil)
-	FlowPer     int  // her yüklemede eklenecek haber sayısı
-	FlowAuto    bool // kaydırınca otomatik yükleme
-	FlowMore    bool // yüklenecek haber kaldı mı
+	FlowBatches      [][][]akisCard
+	FlowNext         int  // bir sonraki yüklemenin kategorideki mutlak sırası
+	FlowLimit        int  // akıştaki toplam haber sınırı (manşet + kartlar dahil)
+	FlowPer          int  // her yüklemede eklenecek haber sayısı
+	FlowAuto         bool // kaydırınca otomatik yükleme
+	FlowMore         bool // yüklenecek haber kaldı mı
 	// AkisHero akışın üstündeki manşet alanını (portre/üçlü/klasik) gösterir.
-	AkisHero bool
-	// FlowFontStyle tüm akış kartlarının (ilk 4 kart + enerji blokları) yazı
-	// ailesini tek CSS değişkeniyle ayarlar (--ak-font). Boşsa coinhit
-	// varsayılanı (serif) kullanılır.
+	AkisHero      bool
 	FlowFontStyle template.CSS
 }
 
-// akisCard akış vitrinindeki tek kart: içerik + enerji düzeni kart tipi.
-// tip5 = kare görsel + üstte taşan beyaz başlık kutusu, tip2 = solda görsel,
-// tip4 = sağda görsel, tip1 = yalnız metin (coinhit referansı).
 type akisCard struct {
 	C         repo.Content
 	Type      string
@@ -673,10 +621,7 @@ type statusTab struct {
 	Label  string
 	Count  int
 	Active bool
-	// Href durum + filtreli sekme adresi (Faz 30). handler'da QueryEscape'li
-	// kurgulanır; template.URL — yoksa html/template href'teki &'i %26 yapıp
-	// filtreleri sekme değişince kaybettirirdi.
-	Href template.URL
+	Href   template.URL
 }
 
 // contentRowView, liste satırı partial'ının ihtiyaç duyduğu içerik + türetilmiş
@@ -713,11 +658,8 @@ type contentsData struct {
 	SesFiltre string
 	// Triyaj (U1): liste sıralaması ve AI skor eşiği. Sıralama repo'da
 	// beyaz listeden geçer; burada ham tutulur (form durumu için).
-	Sirala  string
-	MinSkor string
-	// Eksenler listelenen içeriklerin yayın önceliği eksenleridir
-	// (spec 11 §5c). Ayrı sorgudan gelir; contentCols paylaşımlı olduğu
-	// için oraya sütun eklemek tüm çağıranları etkilerdi.
+	Sirala   string
+	MinSkor  string
 	Eksenler map[int64]repo.IcerikEksen
 	// Faz 48 — kaydedilmiş liste görünümleri (filtre ön ayarları).
 	Views        []ListView
@@ -935,9 +877,6 @@ func mediaMonthLabel(year, month int) string {
 	return trMediaMonths[month-1] + " " + itoa(year)
 }
 
-// gazeteTarih ISO tarihi ("2026-11-02") Türkçe uzun biçime çevirir
-// ("2 Kasım 2026"). Boş/geçersiz değer boş döner — modül tarih satırını
-// o zaman hiç basmaz.
 func gazeteTarih(iso string) string {
 	t, err := time.Parse("2006-01-02", strings.TrimSpace(iso))
 	if err != nil {
@@ -948,13 +887,6 @@ func gazeteTarih(iso string) string {
 
 func templateFuncs() template.FuncMap {
 	return template.FuncMap{
-		// yaziURL bir içeriğin KANONİK adresini üretir.
-		//
-		// NEDEN: eski şablonlar `/{slug}-{id}` bağlantısı basıyordu; o adres
-		// 301 ile kanonik adrese gidiyor. İç bağlantıların her biri bir
-		// yönlendirme sıçraması demek: tarama bütçesi boşa gider, kullanıcı
-		// bir tur fazla bekler. Yeni şablonlar zaten makaleURL kullanıyor;
-		// bu işlev eski şablonların da aynı adresi basmasını sağlar.
 		"yaziURL": makaleURL,
 		"formatTime": func(t *time.Time) string {
 			if t == nil {
@@ -962,9 +894,6 @@ func templateFuncs() template.FuncMap {
 			}
 			return t.Local().Format("02.01.2006 15:04")
 		},
-		// gazeteTarih "2026-11-02" → "2 Kasım 2026". Gazete manşetleri
-		// modülünde tarih Türkçe okunur biçimde gösterilir; ISO tarih
-		// okuyucuya yabancı kalıyordu.
 		"gazeteTarih": gazeteTarih,
 		"orStr": func(a, b any) string {
 			as := anyStr(a)
@@ -975,9 +904,6 @@ func templateFuncs() template.FuncMap {
 		},
 		"add": func(a, b int) int { return a + b },
 		"sub": func(a, b int) int { return a - b },
-		// quoteTime alıntı kaynağının saniyesini mm:ss biçiminde gösterir.
-		// 0 ms "0:00" olmalı: boş etiket kaynağın ilk saniyede olduğunu
-		// gizlerdi.
 		"quoteTime": func(ms int64) string {
 			if ms <= 0 {
 				return "0:00"
@@ -990,10 +916,7 @@ func templateFuncs() template.FuncMap {
 		// catHeroEnd manşet düzeninin tükettiği haber sayısını döndürür;
 		// akış vitrini manşetten sonra başlar.
 		"catHeroEnd": catHeroEnd,
-		// piyasaNum Kur & Borsa modülünde fiyatı Türkçe biçimde yazar
-		// (11.151,03). Şablonda printf ile yapılamaz: binlik ayırıcı ve
-		// ondalık virgül gerekir.
-		"piyasaNum": piyasaNum,
+		"piyasaNum":  piyasaNum,
 		// piyasaChg yüzde değişimi işaretli yazar (+0,05 / -0,15).
 		"piyasaChg": piyasaChg,
 		// hisseYon fiyat yönünü CSS sınıfına çevirir (up | down | flat).
@@ -1047,15 +970,9 @@ func templateFuncs() template.FuncMap {
 			}
 			return false
 		},
-		"eventWhen": eventWhen,
-		"agoTR":     agoTR,
-		// noticeSlug resmî ilanın kalıcı adres parçasını üretir. Şablon
-		// katmanı için burada tanımlı; NewServer'daki FuncMap de aynı
-		// işlevi kullanır.
+		"eventWhen":  eventWhen,
+		"agoTR":      agoTR,
 		"noticeSlug": noticeSlug,
-		// catBadge kategori id'sine karşılık gelen rozeti döndürür (Faz 16).
-		// İçerik alanı *int64 olduğu için şablon dizinleme yapamaz; bu
-		// işlev işaretçiyi çözer ve bilinmeyen kategori için boş değer verir.
 		"catBadge": func(m map[int64]CatBadge, id *int64) CatBadge {
 			if m == nil || id == nil {
 				return CatBadge{}
@@ -1087,18 +1004,12 @@ func templateFuncs() template.FuncMap {
 			out[1] = cats[sol:]
 			return out
 		},
-		// sureSec video süresini "3:42" biçiminde yazar; bilinmiyorsa boş döner
-		// (Faz 21). Kart şablonları `{{with sureSec .VideoSeconds}}` ile
-		// yalnız süresi bilinen videolarda rozet basar.
 		"sureSec": func(p *int) string {
 			if p == nil {
 				return ""
 			}
 			return platform.FormatDurationTR(*p)
 		},
-		// withView bloğun kendi liste görünümünü (varsa) tmplData kopyasına
-		// uygular — global kategori_view ayarını bu blok için geçersiz kılar
-		// (Faz 11). Kopya kullanılır; paylaşılan d'ye mutasyon yapılmaz.
 		"withView": func(d *tmplData, v string) *tmplData {
 			if d == nil || d.Category == nil || v == "" {
 				return d
@@ -1112,9 +1023,6 @@ func templateFuncs() template.FuncMap {
 			nd.Category = &c
 			return &nd
 		},
-		// withCatBlock kategori_liste bloğunun görünüm + manşet/gövde
-		// seçeneklerini kategori verisinin kopyasına uygular. Böylece aynı
-		// kategori sayfasında farklı listeler farklı düzenlerle basılabilir.
 		"withCatBlock": func(d *tmplData, b *homeBlock) *tmplData {
 			if d == nil || d.Category == nil || b == nil {
 				return d
@@ -1130,9 +1038,6 @@ func templateFuncs() template.FuncMap {
 			} else if validListView(b.ListView) {
 				c.View = b.ListView
 			} else if b.CatHeroStyle == "portre" || b.CatHeroStyle == "uclu" {
-				// Portre/üçlü manşet, klasik listenin varyantlarıdır. Blokta
-				// açıkça başka bir görünüm seçilmediyse genel kategori
-				// görünümü (ör. izgara) bu bloğu ezmesin.
 				c.View = "klasik"
 			}
 			c.HeroStyle = b.CatHeroStyle
@@ -1210,13 +1115,6 @@ var akisColumnTypes = [][]string{
 // akisBatchSize bir enerji bloğunun kart sayısı (3 sütun × 4 kart).
 const akisBatchSize = 12
 
-// catHeroEnd kategori manşet düzeninin (portre/üçlü/klasik) tükettiği haber
-// sayısını döndürür; akış vitrini bu kaydırdan sonra başlar. Manşet
-// gösterilemiyorsa (yetersiz içerik) 0 döner.
-//
-//	portre = 5 slayt + 2 yan manşet (heroCount+2)
-//	uclu   = 5 slayt + 3 sol + 2 sağ manşet (heroCount+5)
-//	klasik = 1 büyük + 2 yan manşet (3)
 func catHeroEnd(c *categoryData, n int) int {
 	if c == nil {
 		return 0
@@ -1242,10 +1140,6 @@ func catHeroEnd(c *categoryData, n int) int {
 	return 0
 }
 
-// applyAkisFlow kategori akış vitrini verisini hazırlar: ilk 4 haber ayrı
-// basılır, kalanı 12'lik enerji bloklarına bölünür ve yüklenecek sıradaki
-// haberin mutlak konumu hesaplanır. Manşet alanı açıksa manşet haberleri
-// akıştan önce tüketilir (üstte portre/üçlü manşet + 4'lü kart satırı).
 func applyAkisFlow(c *categoryData, b *homeBlock, langBase string) {
 	if c == nil {
 		return
@@ -1271,9 +1165,6 @@ func applyAkisFlow(c *categoryData, b *homeBlock, langBase string) {
 	if end > have {
 		end = have
 	}
-	// Manşet + ilk 4 kart akıştan önce basılır; akış bundan sonra başlar.
-	// Bağımsız kategori_akis modülünde başlangıç, modülün item_offset
-	// değerinden (AkisStart) gelir; 4'lü ızgara ayrı bir modüldür.
 	start := 0
 	grid := 4
 	if b.AkisStartSet {
@@ -1302,9 +1193,6 @@ func applyAkisFlow(c *categoryData, b *homeBlock, langBase string) {
 	c.FlowMore = c.FlowNext < limit && (c.FlowNext < base+have || c.HasNext)
 }
 
-// buildAkisBatches içerikleri 12'lik enerji bloklarına böler. Dönüş:
-// [blok][sütun][kart]. Boş kartlar (blok dolmadıysa) ID=0 ile gelir ve
-// şablonda atlanır.
 func buildAkisBatches(items []repo.Content, langBase string, hideBadge bool) [][][]akisCard {
 	if len(items) == 0 {
 		return nil
@@ -1407,12 +1295,6 @@ func (s *Server) baseView(lang, langBase, title string) *tmplData {
 	if loc != "" && loc != "tr" {
 		homeURL = "/" + loc + "/"
 	}
-	// Site adı ve sloganı yerelleştirilebilir (Faz 189).
-	//
-	// Slogan Türkçe sabitti: /en sayfasının <title>'ı "TheBlok Haber
-	// Portalı — Güncel Haber Portalı" olarak çıkıyordu (ölçüldü). Çeviri
-	// `translations` tablosunda `site.name` / `site.suffix` anahtarıyla
-	// tutulur; yoksa Türkçe değer korunur (geriye dönük uyumlu).
 	siteAdi := s.siteName
 	if loc != "tr" {
 		if v := bundle.T(loc, "site.name"); v != "site.name" && strings.TrimSpace(v) != "" {
@@ -1421,9 +1303,6 @@ func (s *Server) baseView(lang, langBase, title string) *tmplData {
 	}
 	slogan := siteAdi + " — " + s.localeText(loc, "site.suffix", "Güncel Haber Portalı")
 	metaTitle := slogan
-	// Karşılaştırma ORİJİNAL site adıyla yapılır: yerelleştirilmiş ad
-	// ("TheBlok") ile karşılaştırınca ana sayfada
-	// "theblock.com.tr — TheBlok" gibi çift ad çıkıyordu (ölçüldü).
 	if title != "" && title != s.siteName {
 		metaTitle = title + " — " + siteAdi
 	}
@@ -1451,9 +1330,6 @@ func (s *Server) baseView(lang, langBase, title string) *tmplData {
 	}
 }
 
-// noticeFilterView public ilan listesinde seçili filtreleri şablona taşır:
-// form alanlarının seçili kalması ve "filtreyi temizle" bağlantısının
-// görünmesi için.
 type noticeFilterView struct {
 	Tarih string
 	Kurum string

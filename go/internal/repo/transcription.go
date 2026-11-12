@@ -10,9 +10,6 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-// TranscriptionJob bir ses kaydının ASR işini temsil eder. Sonuç burada
-// tutulmaz; transkript ayrı tabloya yazılır ve editör onayına kadar içeriğe
-// hiçbir şey aktarılmaz.
 type TranscriptionJob struct {
 	ID               int64
 	SiteID           int64
@@ -38,21 +35,14 @@ type TranscriptionJob struct {
 
 // AudioSegment transkriptin zaman damgalı tek konuşma bölümüdür.
 type AudioSegment struct {
-	StartMS    int64   `json:"start_ms"`
-	EndMS      int64   `json:"end_ms"`
-	Speaker    string  `json:"speaker,omitempty"`
-	Text       string  `json:"text"`
-	Confidence float64 `json:"confidence,omitempty"`
-	// Words kelime kelime zaman damgaları. Segments JSONB'sinin içinde
-	// saklanır — ayrı kolon gerekmez, çünkü tam kolon listesi yalnız tek
-	// kayıt getiren iki sorguda kullanılır (arama kendi dar sorgusunu
-	// kullanır), yani kelimeler ancak gerçekten gerektiğinde yüklenir.
-	Words []AudioWord `json:"words,omitempty"`
+	StartMS    int64       `json:"start_ms"`
+	EndMS      int64       `json:"end_ms"`
+	Speaker    string      `json:"speaker,omitempty"`
+	Text       string      `json:"text"`
+	Confidence float64     `json:"confidence,omitempty"`
+	Words      []AudioWord `json:"words,omitempty"`
 }
 
-// AudioWord bir segmentin içindeki tek kelimenin zaman damgasıdır.
-// Konuşmacı alanı yoktur: kelime, içinde durduğu segmentin konuşmacısına
-// aittir.
 type AudioWord struct {
 	StartMS    int64   `json:"start_ms"`
 	EndMS      int64   `json:"end_ms"`
@@ -397,9 +387,6 @@ func GetAudioTranscript(ctx context.Context, pool *pgxpool.Pool, id int64) (Audi
 	return t, err
 }
 
-// ListAudioForContent içeriğin private ses kayıtlarını, son işini ve varsa
-// transkriptini döndürür. Aynı medya için birden fazla iş olsa da en son iş
-// gösterilir.
 func ListAudioForContent(ctx context.Context, pool *pgxpool.Pool, siteID, contentID int64) ([]ContentAudio, error) {
 	jobs, err := ListTranscriptionJobsForContent(ctx, pool, contentID, 100)
 	if err != nil {

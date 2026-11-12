@@ -6,13 +6,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// Kontrast (Faz 180, A-7).
-//
-// NEDEN: marka rengi kullanıcı seçimi (#fa0000). Üstüne beyaz yazı 4.15
-// veriyordu; AA küçük metin eşiği 4.5. Marka rengini koyulaştırmak yanlış
-// olurdu (başlık, bağlantı, grafik aynı tonu paylaşıyor). Bunun yerine
-// yalnızca "üstünde beyaz yazı taşıyan dolgu" için türetilmiş ton üretiliyor.
-
 func TestAccentFillEsigiGecer(t *testing.T) {
 	// Gerçek marka rengi ve birkaç uç durum.
 	for _, accent := range []string{
@@ -36,9 +29,6 @@ func TestAccentFillEsigiGecer(t *testing.T) {
 	}
 }
 
-// TestAccentFillMarkayaYakin: türetme, eşiği geçen EN AÇIK tonu seçmeli —
-// yani markaya mümkün olduğunca yakın. Gereğinden koyu üretmek görünümü
-// bozar.
 func TestAccentFillMarkayaYakin(t *testing.T) {
 	fill := accentFill("#fa0000")
 	// Ölçüldü: #ef0000 (4.5% koyu). Daha koyu üretilirse marka gözle kayar.

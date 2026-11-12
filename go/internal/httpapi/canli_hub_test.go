@@ -1,16 +1,5 @@
 package httpapi
 
-// Canlı piyasa merkezi (SSE) testleri — 11 Kasım 2026.
-//
-// NEDEN: "veriler değiştiği ANDA değişsin" isteğiyle eklenen itme hattı
-// sessizce bozulabilecek üç yer içeriyor:
-//   1) Hub abonelik ömrü: abone ayrılınca kanal KAPANMALI, yoksa sızıntı.
-//   2) Yavaş istemci: kanal dolduğunda yayın BLOKLAMAMALI (aksi hâlde tek
-//      bir yavaş tarayıcı tüm akışı durdurur).
-//   3) Yeni aboneye son mesaj hemen verilmeli (boş ekran olmasın).
-//
-// Ağ ve DB GEREKMEZ: hub saf bellek içi.
-
 import (
 	"net/http"
 	"testing"
@@ -96,9 +85,6 @@ func TestCanliHubCifteBirakPanikEtmez(t *testing.T) {
 }
 
 func TestCanliPiyasaRotasıÇakışmaz(t *testing.T) {
-	// Rota iki kez eklenirse mux PANİK atar (yaşanmış hata, 11 Kasım 2026:
-	// betik iki kez çalıştı, sunucu açılışta çöktü). Bu test aynı rotanın
-	// bir kez kaydedildiğinde sorun çıkarmadığını doğrular.
 	assert.NotPanics(t, func() {
 		s := &Server{mux: http.NewServeMux()}
 		s.mux.HandleFunc("GET /canli/piyasa", s.handleCanliPiyasaSSE)

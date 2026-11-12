@@ -336,9 +336,6 @@ func (s *Server) handleAIEditorHistory(w http.ResponseWriter, r *http.Request) {
 	s.renderPartial(w, r, "ai_editor_history", &tmplData{AI: view})
 }
 
-// handleAIEditorNewDraft onaylanan sonucu yeni taslak içerik olarak kaydeder.
-// Mevcut habere otomatik yazmaz; yalnızca kullanıcının açık "yeni taslak"
-// isteğiyle çağrılır.
 func (s *Server) handleAIEditorNewDraft(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	id := parseID(r.PathValue("id"))

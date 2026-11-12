@@ -42,140 +42,202 @@
     <div class="auth__art">
       <div class="huddle" data-huddle aria-hidden="true">
 
-        {{/* Kırmızı: uzun gazete. Belinden kırılır — bu yüzden baş ayrı bir
-             gruptur ve gövdenin içinde kalan bir noktadan döner. */}}
-        <div class="mate mate--red" data-mate="red">
-          <div class="mate__breath">
-            <svg viewBox="0 0 150 290" focusable="false">
-              <rect class="ink-red" x="0" y="120" width="150" height="170" rx="18"/>
-              <g class="red-head">
-                <rect class="ink-red" x="0" y="10" width="150" height="162" rx="18"/>
-                <rect class="ink-cream" x="18" y="26" width="114" height="9" rx="4.5"/>
-                <g class="face">
-                  <g class="face__eyes is-open">
-                    <g class="face__pupils">
-                      <rect class="face-ink" x="45" y="66" width="11" height="17" rx="5.5"/>
-                      <rect class="face-ink" x="94" y="66" width="11" height="17" rx="5.5"/>
-                    </g>
-                  </g>
-                  <g class="face__eyes is-shut">
-                    <path class="face-line" d="M41 77 Q50.5 68 60 77"/>
-                    <path class="face-line" d="M90 77 Q99.5 68 109 77"/>
-                  </g>
-                  <g class="face__eyes is-glad">
-                    <path class="face-line" d="M41 78 Q50.5 66 60 78"/>
-                    <path class="face-line" d="M90 78 Q99.5 66 109 78"/>
-                  </g>
-                  <g class="face__mouth is-calm"><rect class="face-ink" x="71" y="106" width="8" height="12" rx="4"/></g>
-                  <g class="face__mouth is-o"><ellipse class="face-ink" cx="75" cy="114" rx="7" ry="9"/></g>
-                  <g class="face__mouth is-dots">
-                    <circle class="face-ink" cx="64" cy="114" r="4"/>
-                    <circle class="face-ink" cx="75" cy="114" r="4"/>
-                    <circle class="face-ink" cx="86" cy="114" r="4"/>
-                  </g>
-                  <g class="face__mouth is-wave"><path class="face-line" d="M60 114 q7 -7 14 0 t14 0"/></g>
-                  <g class="face__mouth is-frown"><path class="face-line" d="M62 120 Q75 109 88 120"/></g>
-                  <g class="face__mouth is-grin"><path class="face-ink" d="M59 110 Q75 132 91 110 Z"/></g>
-                </g>
-              </g>
-            </svg>
-          </div>
-        </div>
+        {{/* Dört token kahramanı. Hepsi aynı iskelet: gövde (çizgisel
+             madalyon ya da elmas) · amblem · kahraman aksesuarı · yüz.
+             Yüz grupları dört karakterde de aynı adları taşır; ruh hâli
+             CSS'i (`[data-mood]`) bu yüzden tek yerde yazılı.
 
-        {{/* Mürekkep: dar, utangaçken dayanamayıp bakan karakter. Sırtı
-             dönünce yüzü yoktur; yalnız dikişi kalır. */}}
-        <div class="mate mate--ink" data-mate="ink">
+             Çizim tamamen bizim: marka logolarının vektörleri alınmadı,
+             semboller çizgi olarak yeniden kuruldu. */}}
+
+        {{/* ETHEREUM — uzun elmas, maskeli. Grubun utangacı: şifre
+             alanında gözünü kapatır ama dayanamayıp bir aralar. */}}
+        <div class="mate mate--eth" data-mate="eth">
+{{with index $.UyeKurlar "eth"}}<span class="kur kur--{{if .Yukari}}up{{else}}down{{end}}" data-kur><b>{{.Sym}}</b><span class="kur__fiyat" data-kur-fiyat>{{.Fiyat}}</span><i class="kur__degisim" data-kur-degisim>{{.Degisim}}</i><em class="kur__poz" data-kur-poz></em></span>{{end}}
           <div class="mate__breath">
-            <svg viewBox="0 0 100 215" focusable="false">
-              <rect class="ink-ink" width="100" height="215" rx="16"/>
-              <path class="ink-back" d="M50 20 V195" fill="none" stroke="rgba(255,255,255,.32)" stroke-width="3" stroke-linecap="round"/>
+            <svg viewBox="0 0 180 250" focusable="false">
+              <path class="coin-fill coin-fill--eth" d="M90 14 L152 114 L90 154 L28 114 Z"/>
+              <path class="coin-edge coin-edge--eth" d="M90 14 L152 114 L90 154 L28 114 Z"/>
+              <path class="coin-edge coin-edge--eth is-soft" d="M28 128 L90 238 L152 128 L90 172 Z"/>
+              <path class="coin-edge coin-edge--eth is-hair" d="M90 30 V146"/>
+              <path class="hero-mask hero-mask--eth" d="M50 86 L90 78 L130 86 L126 104 L90 98 L54 104 Z"/>
               <g class="face">
                 <g class="face__eyes is-open">
-                  <circle class="ink-white" cx="31" cy="55" r="13"/>
-                  <circle class="ink-white" cx="69" cy="55" r="13"/>
                   <g class="face__pupils">
-                    <circle class="face-ink" cx="31" cy="55" r="6"/>
-                    <circle class="face-ink" cx="69" cy="55" r="6"/>
+                    <circle class="face-ink" cx="72" cy="96" r="6.5"/>
+                    <circle class="face-ink" cx="108" cy="96" r="6.5"/>
                   </g>
                 </g>
                 <g class="face__eyes is-shut">
-                  <path class="face-line face-line--light" d="M18 53 Q31 63 44 53"/>
-                  <path class="face-line face-line--light" d="M56 53 Q69 63 82 53"/>
+                  <path class="face-line" d="M63 99 Q72 90 81 99"/>
+                  <path class="face-line" d="M99 99 Q108 90 117 99"/>
                 </g>
                 <g class="face__eyes is-peek">
-                  <path class="face-line face-line--light" d="M18 53 Q31 63 44 53"/>
-                  <ellipse class="ink-white" cx="69" cy="54" rx="13" ry="8"/>
-                  <circle class="face-ink" cx="73" cy="55" r="5"/>
+                  <path class="face-line" d="M63 99 Q72 90 81 99"/>
+                  <circle class="face-ink" cx="110" cy="96" r="6.5"/>
                 </g>
                 <g class="face__eyes is-glad">
-                  <path class="face-line face-line--light" d="M18 55 Q31 43 44 55"/>
-                  <path class="face-line face-line--light" d="M56 55 Q69 43 82 55"/>
+                  <path class="face-line" d="M63 101 Q72 88 81 101"/>
+                  <path class="face-line" d="M99 101 Q108 88 117 101"/>
                 </g>
-                <g class="face__mouth is-calm"><path class="face-line face-line--light" d="M40 100 H60"/></g>
-                <g class="face__mouth is-o"><ellipse class="ink-white" cx="50" cy="102" rx="7" ry="9"/></g>
-                <g class="face__mouth is-frown"><path class="face-line face-line--light" d="M38 108 Q50 96 62 108"/></g>
-                <g class="face__mouth is-grin"><path class="ink-white" d="M36 98 Q50 120 64 98 Z"/></g>
-              </g>
-            </svg>
-          </div>
-        </div>
-
-        {{/* Amber: profilden çizilmiş yuvarlak; yüz çevirmek tek scaleX. */}}
-        <div class="mate mate--amber" data-mate="amber">
-          <div class="mate__breath">
-            <svg viewBox="0 0 120 160" focusable="false">
-              <path class="ink-amber" d="M0 160 V72 A60 60 0 0 1 120 72 V160 Z"/>
-              <g class="amber-face">
-                <g class="face__eyes is-open">
-                  <g class="face__pupils"><circle class="face-ink" cx="84" cy="58" r="6"/></g>
-                </g>
-                <g class="face__eyes is-shut"><path class="face-line" d="M75 60 Q84 50 93 60"/></g>
-                <g class="face__eyes is-glad"><path class="face-line" d="M75 62 Q84 50 93 62"/></g>
-                <g class="face__mouth is-calm"><path class="face-line face-line--lip" d="M64 104 H102"/></g>
-                <g class="face__mouth is-o"><ellipse class="face-ink" cx="86" cy="102" rx="6" ry="8"/></g>
+                <g class="face__mouth is-calm"><path class="face-line" d="M80 124 H100"/></g>
+                <g class="face__mouth is-o"><ellipse class="face-ink" cx="90" cy="126" rx="6" ry="8"/></g>
                 <g class="face__mouth is-dots">
-                  <circle class="face-ink" cx="72" cy="104" r="3.5"/>
-                  <circle class="face-ink" cx="86" cy="104" r="3.5"/>
-                  <circle class="face-ink" cx="100" cy="104" r="3.5"/>
+                  <circle class="face-ink" cx="78" cy="126" r="3.4"/>
+                  <circle class="face-ink" cx="90" cy="126" r="3.4"/>
+                  <circle class="face-ink" cx="102" cy="126" r="3.4"/>
                 </g>
-                <g class="face__mouth is-wave"><path class="face-line face-line--lip" d="M58 104 q8 -7 16 0 t16 0 t16 0"/></g>
-                <g class="face__mouth is-frown"><path class="face-line face-line--lip" d="M64 110 q16 -12 32 -14"/></g>
-                <g class="face__mouth is-grin"><path class="face-line face-line--lip" d="M62 108 q20 -14 40 -20"/></g>
+                <g class="face__mouth is-wave"><path class="face-line" d="M76 126 q7 -6 14 0 t14 0"/></g>
+                <g class="face__mouth is-frown"><path class="face-line" d="M78 130 Q90 118 102 130"/></g>
+                <g class="face__mouth is-grin"><path class="face-line" d="M76 120 Q90 138 104 120"/></g>
               </g>
             </svg>
           </div>
         </div>
 
-        {{/* Mercan: öndeki geniş kemer; grubun arkasına saklandığı kişi. */}}
-        <div class="mate mate--coral" data-mate="coral">
+        {{/* SOLANA — hızlı olan. Yanında hız çizgileri var; fare
+             yaklaşınca onlar uzar. */}}
+        <div class="mate mate--sol" data-mate="sol">
+{{with index $.UyeKurlar "sol"}}<span class="kur kur--{{if .Yukari}}up{{else}}down{{end}}" data-kur><b>{{.Sym}}</b><span class="kur__fiyat" data-kur-fiyat>{{.Fiyat}}</span><i class="kur__degisim" data-kur-degisim>{{.Degisim}}</i><em class="kur__poz" data-kur-poz></em></span>{{end}}
           <div class="mate__breath">
-            <svg viewBox="0 0 280 140" focusable="false">
-              <path class="ink-coral" d="M0 140 A140 140 0 0 1 280 140 Z"/>
+            <svg viewBox="0 0 170 210" focusable="false">
+              <g class="speed" aria-hidden="true">
+                <path class="coin-edge coin-edge--sol is-hair" d="M2 92 H26"/>
+                <path class="coin-edge coin-edge--sol is-hair" d="M-6 116 H20"/>
+                <path class="coin-edge coin-edge--sol is-hair" d="M4 140 H24"/>
+              </g>
+              <rect class="coin-fill coin-fill--sol" x="18" y="20" width="134" height="172" rx="48"/>
+              <rect class="coin-edge coin-edge--sol" x="18" y="20" width="134" height="172" rx="48"/>
+              <g class="glyph glyph--sol">
+                <path class="coin-edge coin-edge--sol is-bar" d="M58 50 H106"/>
+                <path class="coin-edge coin-edge--sol is-bar" d="M64 64 H112"/>
+                <path class="coin-edge coin-edge--sol is-bar" d="M58 78 H106"/>
+              </g>
               <g class="face">
                 <g class="face__eyes is-open">
                   <g class="face__pupils">
-                    <circle class="face-ink" cx="106" cy="80" r="8"/>
-                    <circle class="face-ink" cx="174" cy="80" r="8"/>
+                    <circle class="face-ink" cx="66" cy="118" r="7"/>
+                    <circle class="face-ink" cx="104" cy="118" r="7"/>
                   </g>
                 </g>
                 <g class="face__eyes is-shut">
-                  <path class="face-line" d="M96 84 Q106 72 116 84"/>
-                  <path class="face-line" d="M164 84 Q174 72 184 84"/>
+                  <path class="face-line" d="M57 121 Q66 112 75 121"/>
+                  <path class="face-line" d="M95 121 Q104 112 113 121"/>
                 </g>
                 <g class="face__eyes is-glad">
-                  <path class="face-line" d="M96 86 Q106 72 116 86"/>
-                  <path class="face-line" d="M164 86 Q174 72 184 86"/>
+                  <path class="face-line" d="M57 123 Q66 110 75 123"/>
+                  <path class="face-line" d="M95 123 Q104 110 113 123"/>
                 </g>
-                <g class="face__mouth is-calm"><path class="face-ink" d="M118 98 Q140 118 162 98 Z"/></g>
-                <g class="face__mouth is-o"><ellipse class="face-ink" cx="140" cy="108" rx="8" ry="10"/></g>
+                <g class="face__mouth is-calm"><path class="face-line" d="M74 150 H96"/></g>
+                <g class="face__mouth is-o"><ellipse class="face-ink" cx="85" cy="152" rx="6.5" ry="8.5"/></g>
                 <g class="face__mouth is-dots">
-                  <circle class="face-ink" cx="118" cy="108" r="4.5"/>
-                  <circle class="face-ink" cx="140" cy="108" r="4.5"/>
-                  <circle class="face-ink" cx="162" cy="108" r="4.5"/>
+                  <circle class="face-ink" cx="72" cy="152" r="3.6"/>
+                  <circle class="face-ink" cx="85" cy="152" r="3.6"/>
+                  <circle class="face-ink" cx="98" cy="152" r="3.6"/>
                 </g>
-                <g class="face__mouth is-wave"><path class="face-line" d="M112 108 q8 -7 16 0 t16 0 t16 0"/></g>
-                <g class="face__mouth is-frown"><path class="face-line" d="M118 114 Q140 94 162 114"/></g>
-                <g class="face__mouth is-grin"><path class="face-ink" d="M108 92 Q140 132 172 92 Z"/></g>
+                <g class="face__mouth is-wave"><path class="face-line" d="M70 152 q7.5 -6 15 0 t15 0"/></g>
+                <g class="face__mouth is-frown"><path class="face-line" d="M72 156 Q85 143 98 156"/></g>
+                <g class="face__mouth is-grin"><path class="face-line" d="M70 145 Q85 165 100 145"/></g>
+              </g>
+            </svg>
+          </div>
+        </div>
+
+        {{/* BITCOIN — grubun kaptanı: en büyük madalyon, pelerinli.
+             Pelerin gövdenin ARKASINDA durur, bu yüzden ilk çizilir. */}}
+        <div class="mate mate--btc" data-mate="btc">
+{{with index $.UyeKurlar "btc"}}<span class="kur kur--{{if .Yukari}}up{{else}}down{{end}}" data-kur><b>{{.Sym}}</b><span class="kur__fiyat" data-kur-fiyat>{{.Fiyat}}</span><i class="kur__degisim" data-kur-degisim>{{.Degisim}}</i><em class="kur__poz" data-kur-poz></em></span>{{end}}
+          <div class="mate__breath">
+            <svg viewBox="0 0 230 230" focusable="false">
+              <g class="cape">
+                <path class="cape__wing" d="M66 104 C30 126 20 176 30 214 L72 188 Z"/>
+                <path class="cape__wing" d="M164 104 C200 126 210 176 200 214 L158 188 Z"/>
+              </g>
+              <circle class="coin-fill coin-fill--btc" cx="115" cy="118" r="88"/>
+              <circle class="coin-edge coin-edge--btc" cx="115" cy="118" r="88"/>
+              <circle class="coin-edge coin-edge--btc is-soft" cx="115" cy="118" r="74"/>
+              {{/* ₿: dikey gövde, iki kese ve dört çıkıntı — çizgi olarak. */}}
+              <g class="glyph glyph--btc">
+                <path class="coin-edge coin-edge--btc is-bar" d="M103 48 V98"/>
+                <path class="coin-edge coin-edge--btc is-bar" d="M112 42 V52"/>
+                <path class="coin-edge coin-edge--btc is-bar" d="M124 42 V52"/>
+                <path class="coin-edge coin-edge--btc is-bar" d="M112 94 V104"/>
+                <path class="coin-edge coin-edge--btc is-bar" d="M124 94 V104"/>
+                <path class="coin-edge coin-edge--btc is-bar" d="M103 52 H122 a11 11 0 0 1 0 22 H103"/>
+                <path class="coin-edge coin-edge--btc is-bar" d="M103 74 H127 a11 11 0 0 1 0 22 H103"/>
+              </g>
+              <g class="face">
+                <g class="face__eyes is-open">
+                  <g class="face__pupils">
+                    <circle class="face-ink" cx="92" cy="130" r="8.5"/>
+                    <circle class="face-ink" cx="138" cy="130" r="8.5"/>
+                  </g>
+                </g>
+                <g class="face__eyes is-shut">
+                  <path class="face-line" d="M81 134 Q92 123 103 134"/>
+                  <path class="face-line" d="M127 134 Q138 123 149 134"/>
+                </g>
+                <g class="face__eyes is-glad">
+                  <path class="face-line" d="M81 136 Q92 121 103 136"/>
+                  <path class="face-line" d="M127 136 Q138 121 149 136"/>
+                </g>
+                <g class="face__mouth is-calm"><path class="face-line" d="M102 166 H128"/></g>
+                <g class="face__mouth is-o"><ellipse class="face-ink" cx="115" cy="168" rx="8" ry="10"/></g>
+                <g class="face__mouth is-dots">
+                  <circle class="face-ink" cx="100" cy="168" r="4.2"/>
+                  <circle class="face-ink" cx="115" cy="168" r="4.2"/>
+                  <circle class="face-ink" cx="130" cy="168" r="4.2"/>
+                </g>
+                <g class="face__mouth is-wave"><path class="face-line" d="M97 168 q9 -7 18 0 t18 0"/></g>
+                <g class="face__mouth is-frown"><path class="face-line" d="M99 173 Q115 158 131 173"/></g>
+                <g class="face__mouth is-grin"><path class="face-line" d="M97 160 Q115 184 133 160"/></g>
+              </g>
+            </svg>
+          </div>
+        </div>
+
+        {{/* BNB — küçük elmas, iki yan kanat. Grubun en çevik olanı;
+             sağda durur ve şifre alanında arkasını döner. */}}
+        <div class="mate mate--bnb" data-mate="bnb">
+{{with index $.UyeKurlar "bnb"}}<span class="kur kur--{{if .Yukari}}up{{else}}down{{end}}" data-kur><b>{{.Sym}}</b><span class="kur__fiyat" data-kur-fiyat>{{.Fiyat}}</span><i class="kur__degisim" data-kur-degisim>{{.Degisim}}</i><em class="kur__poz" data-kur-poz></em></span>{{end}}
+          <div class="mate__breath">
+            <svg viewBox="0 0 180 200" focusable="false">
+              <g class="wings">
+                <path class="cape__wing" d="M26 92 C6 100 2 124 10 142 L34 122 Z"/>
+                <path class="cape__wing" d="M154 92 C174 100 178 124 170 142 L146 122 Z"/>
+              </g>
+              <path class="coin-fill coin-fill--bnb" d="M90 18 L158 90 L90 162 L22 90 Z"/>
+              <path class="coin-edge coin-edge--bnb" d="M90 18 L158 90 L90 162 L22 90 Z"/>
+              <g class="glyph glyph--bnb">
+                <path class="coin-edge coin-edge--bnb is-soft" d="M90 40 L104 54 L90 68 L76 54 Z"/>
+                <path class="coin-edge coin-edge--bnb is-soft" d="M44 90 L54 80 L64 90 L54 100 Z"/>
+                <path class="coin-edge coin-edge--bnb is-soft" d="M116 90 L126 80 L136 90 L126 100 Z"/>
+              </g>
+              <g class="face">
+                <g class="face__eyes is-open">
+                  <g class="face__pupils">
+                    <circle class="face-ink" cx="76" cy="94" r="6.5"/>
+                    <circle class="face-ink" cx="104" cy="94" r="6.5"/>
+                  </g>
+                </g>
+                <g class="face__eyes is-shut">
+                  <path class="face-line" d="M67 97 Q76 88 85 97"/>
+                  <path class="face-line" d="M95 97 Q104 88 113 97"/>
+                </g>
+                <g class="face__eyes is-glad">
+                  <path class="face-line" d="M67 99 Q76 86 85 99"/>
+                  <path class="face-line" d="M95 99 Q104 86 113 99"/>
+                </g>
+                <g class="face__mouth is-calm"><path class="face-line" d="M80 120 H100"/></g>
+                <g class="face__mouth is-o"><ellipse class="face-ink" cx="90" cy="122" rx="6" ry="8"/></g>
+                <g class="face__mouth is-dots">
+                  <circle class="face-ink" cx="78" cy="122" r="3.4"/>
+                  <circle class="face-ink" cx="90" cy="122" r="3.4"/>
+                  <circle class="face-ink" cx="102" cy="122" r="3.4"/>
+                </g>
+                <g class="face__mouth is-wave"><path class="face-line" d="M76 122 q7 -6 14 0 t14 0"/></g>
+                <g class="face__mouth is-frown"><path class="face-line" d="M78 126 Q90 114 102 126"/></g>
+                <g class="face__mouth is-grin"><path class="face-line" d="M76 116 Q90 134 104 116"/></g>
               </g>
             </svg>
           </div>

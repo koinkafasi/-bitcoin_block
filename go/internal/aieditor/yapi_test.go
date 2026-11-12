@@ -5,12 +5,6 @@ import (
 	"testing"
 )
 
-// Faz 193c — AI haber çıktısının yapı/SEO kapısı.
-//
-// ÖLÇÜM (üretim): yayındaki 986 içeriğin 982'si tek paragraf; 94 spot cümle
-// ortasında; 3.628 içerikte &nbsp;/&#039;; 206 SEO başlığı başlığın birebir
-// kopyası ve 60 karakterden uzun.
-
 func newsAction() Action { return Action{ID: "news"} }
 
 func goodResult() *Result {

@@ -8,10 +8,6 @@ import (
 	"time"
 )
 
-// TestMakaleYoluMu: yalnız tarih desenli makale yolları önbelleğe uygun.
-//
-// Kapsamı genişletmek riskli: buraya takılan her yol önbellekten sunulur.
-// Bu yüzden DESEN testi ayrı: kişisel/panel yolları eşleşmemeli.
 func TestMakaleYoluMu(t *testing.T) {
 	uygun := []string{
 		"/policy/2026/11/05/sec-custody-kurallari",
@@ -41,9 +37,6 @@ func TestMakaleYoluMu(t *testing.T) {
 		}
 	}
 
-	// Hariç tutulan kökler desene UYSA BİLE önbelleğe girmemeli. Desen
-	// kontrolü (makaleYoluMu) ile kapsam kontrolü (sayfaYoluOnbelleklenir)
-	// ayrı şeyler: `/api/2026/11/05/x` desene uyar, ama önbellek dışı kalır.
 	deseneUyanAmaHaric := []string{
 		"/api/2026/11/05/x",
 		"/admin/2026/11/05/x",

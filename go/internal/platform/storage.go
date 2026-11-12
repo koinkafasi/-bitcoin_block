@@ -22,11 +22,6 @@ var storageDir = func() string {
 // StorageDir medya depolama kök dizinini döndürür.
 func StorageDir() string { return storageDir }
 
-// SetStorageDir depolama kökünü değiştirir.
-//
-// Üretimde kullanılmaz: kök `STORAGE_DIR` ortam değişkeninden bir kez okunur.
-// Testler ve bakım araçları (cmd/teamlogos) geçici/özel bir dizinle
-// çalışabilsin diye açıktır.
 func SetStorageDir(dir string) {
 	if dir != "" {
 		storageDir = dir
@@ -125,9 +120,6 @@ func SaveMedia(data []byte, filename string) (string, error) {
 	}
 	name := randHex(8) + ext
 	p := filepath.Join(dir, name)
-	// #nosec G703 -- Yol bileşenleri kod tarafından üretilir: `dir` sabit
-	// depolama kökü + YYYYMM, `name` rastgele hex + filepath.Ext (ayırıcı
-	// içeremez). Kullanıcı dosya adı yola girmiyor.
 	if err := os.WriteFile(p, data, 0o644); err != nil {
 		return "", err
 	}

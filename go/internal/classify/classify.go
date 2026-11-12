@@ -1,20 +1,3 @@
-// Package classify bot hattına düşen içeriğin kategorisini tahmin eder.
-//
-// Neden gerekli: 39.211 taslağın 30.021'i (%77) "Gündem"de toplanıyordu.
-// Nedeni bir hata değil, tek sinyalin yokluğuydu — feed'in kendi kategorisi
-// atanıyor, o da agregatörlerde (MSN, Google News, "Son Dakika" akışları)
-// "Gündem" oluyordu. Sonuç: spor haberi de, borsa haberi de aynı kutuya
-// düşüyor, kategori sayfaları ve manset seçimi anlamsızlaşıyordu.
-//
-// Yöntem üç kademeli, en güvenilirden en zayıfa:
-//  1. Kaynağın kendi bölümü (RSS <category> — yayıncının kendi sınıflandırması)
-//  2. Feed'in panelde editör tarafından atanmış kategorisi (Gündem dışıysa:
-//     "GZT Spor" akışındaki içerik spordur, anahtar sözcük tartışması gereksiz)
-//  3. Başlık+spot anahtar sözcükleri (yerel, deterministik, açıklanabilir)
-//  4. Hiçbiri yoksa "gundem"
-//
-// Model tabanlı sınıflandırma ileride eklenebilir; bu paket anahtarsız çalışır
-// ve her kararın gerekçesi tablodan okunabilir.
 package classify
 
 import (
@@ -121,12 +104,6 @@ var keywordRules = []struct {
 	{"siyaset", []string{"cumhurbaşkanı", "meclis", "tbmm", "bakan", "parti", "seçim", "chp", "ak parti", "mhp", "hdp", "dem parti", "siyaset", "muhalefet"}},
 }
 
-// broadRules tek eşleşmeyle karar vermemesi gereken geniş kategorilerdir.
-//
-// Gerekçe somut: "Yeni spor salonu açıldı" cümlesinde tek başına "spor"
-// kelimesi var diye haberi Spor'a atmak yanlış (o haber Yaşam'dır). Geniş
-// kategorilerde en az iki bağımsız sinyal aranır; özgül kategoriler
-// (futbol, borsa, altın, faiz…) tek sinyalle karar verebilir.
 var broadRules = map[string]int{
 	"spor": 2, "ekonomi": 2, "yasam": 2, "dunya": 2,
 	"toplum": 2, "finans": 2, "mimari": 2, "sanat": 2, "edebiyat": 2, "e-spor": 2,
@@ -184,11 +161,6 @@ func fromKeywordsHit(text string) (slug, hit string) {
 	return best.slug, strings.Join(best.hits, ", ")
 }
 
-// normalize Türkçe'ye duyarlı küçük harfe indirir ve noktalama temizler.
-//
-// strings.ToLower tek başına yetmez: 'İ' → "i̇" (i + birleşik nokta) üretir ve
-// "İSTANBUL" ile "istanbul" eşleşmez. Bu yüzden büyük harfler önce Türkçe
-// kurallarına göre çevrilir.
 func normalize(s string) string {
 	var b strings.Builder
 	for _, r := range s {

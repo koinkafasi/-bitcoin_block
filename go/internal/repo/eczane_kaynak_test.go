@@ -9,12 +9,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// Faz 196 — nöbetçi eczane: gerçek kaynak.
-//
-// ÖLÇÜM (üretim): `servis/eczane_kaynak` boştu → 81 ilin hepsi demo
-// ("Merkez Eczanesi", "0 312 555 0023"). Sayfa rozetle uyarıyordu ama
-// okuyucuya var olmayan eczane gösteriliyordu.
-
 // Gerçek sayfadan alınmış kayıt parçası (yapı birebir korundu).
 const eczaneOrnekHTML = `<div class="rounded-2xl border">
 <span class="...">Nöbetçi Eczane</span>
@@ -61,11 +55,6 @@ func TestEczaneCozHTMLBosVeBozuk(t *testing.T) {
 	assert.Empty(t, eczaneCozHTML("ankara", []byte(eksik)))
 }
 
-// Eczane çift gösterimi — regresyon.
-//
-// ÖLÇÜM (üretim, 2 Kasım 2026): kartında telefon İKİ yerde olan kayıtlar
-// (künye satırı + "Ara" düğmesi) iki kez sayılıyordu. Ankara önbelleği
-// 88 satırdı; gerçekte 44 eczane var. Kullanıcı her eczaneyi iki kez görüyordu.
 func TestEczaneCozHTMLCiftKayitTekSatir(t *testing.T) {
 	// Aynı eczanenin iki tel bağlantısı (birebir kaynak yapısı: künye + Ara).
 	kart := func(ad, slug, tel string) string {
@@ -124,13 +113,6 @@ func TestEczaneKaynakSozlesmesi(t *testing.T) {
 		"günlük yenileme kontrolü yok: her 30 dakikada 81 istek atılır")
 	// Kaynak adı saklanır (sayfada gösterilebilir).
 	assert.Contains(t, src, `Kaynak: kaynak`)
-	// Kaynağa ULAŞILAMADIĞINDA uydurma liste basılmaz.
-	//
-	// Eski sözleşme `kaynak = "demo"` idi: demoEczaneler() var olmayan
-	// eczane adı, adresi ve telefonu ("Merkez Eczanesi", "0 312 555 0100")
-	// üretip sayfaya basıyordu; sayfa bunu küçük bir rozetle bildiriyordu.
-	// Gece nöbetçi eczane arayan okuyucu için bu zararlı: var olmayan
-	// numarayı arar, olmayan adrese gider. 5 Kasım 2026'da kaldırıldı.
 	assert.Contains(t, src, `kaynak = "ulasilamadi"`,
 		"ulaşılamayan kaynak ayrı işaretlenmeli (sayfa dürüst boş durum gösterir)")
 	// Kelimeye değil ÇAĞRIYA bakılır: yukarıdaki tarihsel yorum (ve bu
@@ -141,10 +123,6 @@ func TestEczaneKaynakSozlesmesi(t *testing.T) {
 		"uydurma eczane üreteci geri gelmiş — tanımı da kalmamalı")
 }
 
-// TestEczaneGercekSayfa — ağdan çekilmiş gerçek sayfayla doğrulama.
-//
-// Elle çalıştırma: curl -s https://eczaneler.org/ankara-nobetci-eczaneleri
-// -o /tmp/eorg-ankara.html  →  go test -run TestEczaneGercekSayfa
 func TestEczaneGercekSayfa(t *testing.T) {
 	raw, err := os.ReadFile("/tmp/eorg-ankara.html")
 	if err != nil || len(raw) < 10000 {
@@ -171,12 +149,6 @@ func okuPaketDosya(t *testing.T, ad string) string {
 	return string(b)
 }
 
-// TestEczaneVeriYokDurumu — kaynak açıldı ama liste yok.
-//
-// ÖLÇÜM (üretim): Konya sayfası HTTP 200 dönüyor ama gövdesinde
-// "Nöbetçi eczane bulunamadı" yazıyor. Bu durumda demo (uydurma) liste
-// göstermek okuyucuya var olmayan eczane gösterirdi. Artık ayrı "veri yok"
-// durumu var ve sayfa bunu dürüstçe yazıyor.
 func TestEczaneVeriYokDurumu(t *testing.T) {
 	src := okuPaketDosya(t, "services_fetch.go")
 

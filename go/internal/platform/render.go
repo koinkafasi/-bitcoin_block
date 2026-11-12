@@ -244,11 +244,6 @@ type ContentDesignInput struct {
 	CoverMedia *int64 // arka plan medyası (içerik kapağı) — nil ise tasarımın kendi medyası kalır
 }
 
-// ApplyContentDesign şablon JSON'unu içerik değerleriyle doldurur: rozet ve
-// rol işaretli metin katmanları (ana_baslik/alt_baslik/ust_baslik) içeriğin
-// başlık/özet/kategori değerini alır; cover medyası varsa arka plana yazılır.
-// Şablonda ilgili katman yoksa istek sessizce atlanır (içerikten bağımsız
-// senaryo: üst katmanı olmayan bir tasarım başlık almadan da üretilir).
 func ApplyContentDesign(designBytes []byte, in ContentDesignInput) ([]byte, error) {
 	base := NormalizeDesign(designBytes)
 	var m map[string]any

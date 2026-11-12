@@ -15,15 +15,6 @@ import (
 	"theblock/site/internal/repo"
 )
 
-// Faz 208 (devam 2): trend skorlama ve trend kaynağı çekme hattı.
-//
-// `scoreTrends` scheduler'ın en büyük tek fonksiyonu; canlı panelde
-// "gündem" sıralamasını ve eşik uyarılarını o belirliyor. `fetchTrendSource`
-// ise dış kaynağı çekip terimleri yazan yol.
-
-// loopbackIstemci testlerde httptest sunucusuna erişmek için kullanılır.
-// Üretimde trendHTTPClient SSRF korumalıdır (platform.SafeFetchClient);
-// burada yalnız testin kendi yerel sunucusuna konuşuluyor.
 func loopbackIstemci(t *testing.T) {
 	t.Helper()
 	eski := trendHTTPClient

@@ -65,38 +65,6 @@ func (s *Server) renderEtiketlerPageV2(w http.ResponseWriter, r *http.Request, d
 	s.renderTemplPage(w, r, d, templkit.EtiketlerPanel(etiketlerViewFrom(d.Tags, d.Flash)))
 }
 
-// ---- Gazeteler (basılı ön sayfalar) ----
-
-func gazetelerViewFrom(g *newspapersData, fl *flashMsg) templkit.GazetelerView {
-	kind, text := flashTo(fl)
-	v := templkit.GazetelerView{FlashKind: kind, FlashText: text}
-	if g == nil {
-		return v
-	}
-	v.Total = strconv.FormatInt(g.Total, 10)
-	v.Date = g.Date
-	v.HasDates = len(g.Dates) > 0
-	for _, d := range g.Dates {
-		v.Dates = append(v.Dates, templkit.IOpt{Value: d, Label: d, Selected: d == g.Date})
-	}
-	for _, it := range g.Items {
-		v.Items = append(v.Items, templkit.GazeteManset{
-			ID: strconv.FormatInt(it.ID, 10), Name: it.Name,
-			ImageURL: it.ImageURL, ThumbURL: it.ThumbURL,
-			PageDate: it.PageDate, Sort: strconv.Itoa(it.Sort),
-		})
-	}
-	return v
-}
-
-func (s *Server) renderGazetelerPanelV2(w http.ResponseWriter, r *http.Request, d *tmplData) {
-	s.renderTemplPanel(w, r, templkit.GazetelerPanel(gazetelerViewFrom(d.GazetelerPanel, d.Flash)))
-}
-
-func (s *Server) renderGazetelerPageV2(w http.ResponseWriter, r *http.Request, d *tmplData) {
-	s.renderTemplPage(w, r, d, templkit.GazetelerPanel(gazetelerViewFrom(d.GazetelerPanel, d.Flash)))
-}
-
 // ---- Çeviriler ----
 
 func cevirilerViewFrom(c *cevirilerData, fl *flashMsg) templkit.CevirilerView {

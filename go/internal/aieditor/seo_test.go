@@ -11,12 +11,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// SEO alanlarının otomatik doldurulması (Faz 188).
-//
-// Bu değerler <title> ve <meta content> içine gidiyor; uzunluk ve satır sonu
-// hataları doğrudan SERP'te görünüyor. Testler bu yüzden üretim kurallarını
-// (temizle, kırp, doğrula) ayrı ayrı kilitliyor.
-
 func TestSeoTemizleTekSatir(t *testing.T) {
 	// Model satır sonu ve tırnak döndürüyor; <title> içinde bunlar
 	// boşluk/kaçış olarak sızıyordu.
@@ -98,16 +92,7 @@ func TestSeoAnahtarlarSinirli(t *testing.T) {
 	assert.Equal(t, []string{"a", "b"}, seoAnahtarlar("a, b"))
 }
 
-// TestSeoYazDoluAlanKorunur: force=false iken dolu alan ezilmemeli.
-//
-// SQL'i doğrudan test etmek yerine kuralı belgeleyen sabitleri kontrol
-// ediyoruz; gerçek UPDATE entegrasyon testinde (DB gerekir) doğrulanır.
 func TestSeoYazForceDavranisi(t *testing.T) {
-	// force=false → yalnız boş alanlar dolar. Bu davranış SeoYaz'ın SQL
-	// CASE ifadesinde; burada imzanın varsayılanını kilitliyoruz.
-	// context.TODO(): nil context Go'da yasaktır (SA1012) — burada DB
-	// katmanına hiç ulaşılmıyor, hata doğrulamada dönüyor; yine de doğru
-	// tür kullanılır ki test yanlış bir alışkanlığı örneklemesin.
 	_, err := SeoYaz(context.TODO(), nil, 0, SeoOneri{Baslik: "a"}, false)
 	assert.Error(t, err, "geçersiz içerik hata vermeli")
 
@@ -144,11 +129,6 @@ func TestSeoAlanlariVar(t *testing.T) {
 	assert.Contains(t, seoYazSQL, "$3")
 }
 
-// TestSeoAlanAdiTemizle — canlıda yakalanan gerçek hata.
-//
-// Gövdesinde "Cumhuriyet" GEÇMEYEN bir spor haberinin meta açıklaması
-// "… Cumhuriyet.com.tr'da" diye bitiyordu: model, kaynak yayının adını
-// uydurdu. Bu yanlış atıf yayına girmemeli.
 func TestSeoAlanAdiTemizle(t *testing.T) {
 	kaynak := "Fenerbahçe Göztepe maçı canlı anlatım. Süper Lig 10. hafta."
 
@@ -196,12 +176,6 @@ func TestSeoCumlelere(t *testing.T) {
 	// Sonlandırıcısız kalan parça da cümle sayılır.
 	assert.Equal(t, []string{"Bir.", "İki"}, seoCumlelere("Bir. İki"))
 
-	// ALAN ADINDAKİ NOKTA CÜMLE BİTİRMEZ.
-	//
-	// Gerçek vaka: "Ayrıntılar Cumhuriyet.com.tr'da." cümlesi üçe
-	// bölünüyordu ("Ayrıntılar Cumhuriyet." / "com." / "tr'da."). Bu hem
-	// metni bozuyor hem alan adı korumasını etkisiz kılıyordu: parçalara
-	// ayrılmış alan adı desene uymuyor, uydurma atıf temizlenmiyordu.
 	assert.Equal(t,
 		[]string{"Ayrıntılar Cumhuriyet.com.tr'da.", "Maç başladı."},
 		seoCumlelere("Ayrıntılar Cumhuriyet.com.tr'da. Maç başladı."))
@@ -211,12 +185,6 @@ func TestSeoCumlelere(t *testing.T) {
 		seoCumlelere("Saat 10.30'da başladı."))
 }
 
-// TestSeoAlanAdiKorumasiUygulanir — korumanın GERÇEKTEN uygulandığını
-// doğrular.
-//
-// İlk turda temizleyici ayrı test ediliyordu ama SeoUret içindeki çağrı
-// silinse bile testler yeşil kalıyordu (mutasyonla yakalandı). Bu test
-// SeoUret'in kullandığı tam yolu çağırır.
 func TestSeoAlanAdiKorumasiUygulanir(t *testing.T) {
 	kaynak := "Fenerbahçe Göztepe maçı canlı anlatım. Süper Lig 10. hafta."
 
@@ -254,11 +222,6 @@ func mustReadAieditor(t *testing.T, yol string) string {
 	return string(b)
 }
 
-// TestSeoJSONKurtar — canlıda yakalanan kesik yanıt.
-//
-// Ölçüm: max_tokens 400/700 iken bazı yanıtlar token sınırında ortasından
-// kesiliyor ("unexpected end of JSON input"). Başlık ve açıklama kesik
-// metnin başında olduğu için kurtarılabilir.
 func TestSeoJSONKurtar(t *testing.T) {
 	// Klasik kesik yanıt: ikinci alanın ortasında bitiyor.
 	kesik := `{"seo_title":"Enflasyon Verileri Açıklandı", "meta_description":"Merkez Bankası`

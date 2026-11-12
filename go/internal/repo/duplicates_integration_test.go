@@ -12,9 +12,6 @@ import (
 	"theblock/site/internal/repo"
 )
 
-// TestRecentPublishedForCompare gerçek şema üzerinde karşılaştırma
-// kümesinin doğru kurulduğunu doğrular: yalnız yayındaki içerikler, kendisi
-// hariç, en yeni önce.
 func TestRecentPublishedForCompare(t *testing.T) {
 	pool := intPool(t)
 	ctx := context.Background()

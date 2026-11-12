@@ -14,9 +14,6 @@ import (
 	"theblock/site/internal/repo"
 )
 
-// RunTrends günlük kategori trendlerini hesaplar (spec 06 K-B / 01 §L3).
-// Son günlerin yayınlanan içerik etiketlerinden kategori×etiket frekansı çıkarır
-// ve `trends` tablosuna günlük satır yazar (upsert).
 func RunTrends(ctx context.Context, pool *pgxpool.Pool, logger *slog.Logger, every time.Duration) {
 	if every <= 0 {
 		every = 6 * time.Hour

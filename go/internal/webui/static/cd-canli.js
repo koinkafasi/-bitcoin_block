@@ -1,30 +1,4 @@
-/* cd-canli.js — CANLI piyasa verisi (sunucudan İTME, SSE).
- *
- * NEDEN (kullanıcı isteği, 11 Kasım 2026): "tüm veriler değişim yaşanınca
- * ANLIK değişmesi ve doğru olması gerekli".
- *
- * ÖNCEKİ SÜRÜM 20 sn'de bir yokluyordu: fiyat değişse bile ekran 20 sn'ye
- * kadar eski kalıyordu ve her ziyaretçi ayrı istek üretiyordu.
- *
- * ŞİMDİ: sunucu Binance'i 5 sn'de bir tazeler ve DEĞİŞTİĞİ ANDA yazar.
- * Tarayıcı `/canli/piyasa` akışını dinler (EventSource). Fiyat katmanı her
- * 5 sn, tam katman (grafik/göstergeler/kur) 30 sn'de bir gelir.
- *
- * GÜNCELLENEN YÜZEYLER (kanca yoksa sessizce atlanır):
- *   • üst şerit            [data-cg-sym="BTC"]
- *   • ana sayfa hero       .cd-giris
- *   • kur / piyasa modülü  [data-cg-piy="usd"]
- *   • fiyat tablosu        [data-cg-coin="BTC"]
- *   • coin sayfası         [data-cg-coin-fiyat]
- *
- * DOĞRULUK KURALLARI:
- *   • null/boş değer YAZILMAZ — uydurma veri yok.
- *   • Bağlantı koparsa "CANLI" yazısı yaşa döner ("12 DK ÖNCE"), yeşil
- *     nokta söner. Olmayan canlılık iddia edilmez.
- *   • EventSource yoksa / koparsa 20 sn yoklamaya düşer (yine de tazelenir).
- *   • Sekme gizliyken akış KAPATILIR (pil/trafik); görünür olunca yeniden
- *     açılır ve anında tazeleme istenir.
- */
+
 (function () {
   'use strict';
 
@@ -267,7 +241,7 @@
     };
     ES.onmessage = function (ev) {
       baglantiDurumu(true);
-      try { uygula(JSON.parse(ev.data)); } catch (e) { /* bozuk mesaj: yok say */ }
+      try { uygula(JSON.parse(ev.data)); } catch (e) {  }
     };
     ES.onerror = function () {
       // EventSource kendi yeniden bağlanır; yine de yedek yoklamayı aç ki

@@ -9,16 +9,6 @@ import (
 	"theblock/site/internal/webui"
 )
 
-// ---- İkon kütüphanesi (Faz 153) ----
-//
-// Sprite: static/vendor/tabler-icons.svg (Tabler, MIT) — panelde tam set,
-// public'te yalnız çekirdek (static/vendor/ikon-cekirdek.svg).
-//
-// Animasyonlu "yükleniyor" SVG'leri: static/vendor/spinner/*.svg
-// (SVG Spinners, MIT). Animasyon dosyanın içinde tanımlı; JS gerekmez.
-// <img> ile kullanılamaz çünkü rengi temadan alması gerekiyor — bu yüzden
-// satır içi basılıyor.
-
 var (
 	spinnerMu    sync.RWMutex
 	spinnerCache = map[string]template.HTML{}
@@ -28,11 +18,6 @@ var (
 	}
 )
 
-// ikonSpinnerSVG spinner dosyasını satır içi basar (bir kez okunur).
-//
-// Bilinmeyen ad -> boş. Sessizce boş dönmek yerine "yok" demek daha dürüst
-// olurdu ama şablonda gürültü çıkarır; bilinmeyen ad zaten testte yakalanıyor
-// (TestIkonSpinnerAdlari).
 func ikonSpinnerSVG(ad string) template.HTML {
 	ad = strings.TrimSpace(ad)
 	if ad == "" {
@@ -62,10 +47,6 @@ func ikonSpinnerSVG(ad string) template.HTML {
 // ikonSpinnerAdlari galeri ve testler için mevcut spinner listesi.
 func ikonSpinnerAdlari() []string { return spinnerIsim }
 
-// ikonAdlari sprite manifestinden ikon adlarını okur (galeri için).
-//
-// Manifest (static/vendor/ikonlar.txt) üretici tarafından yazılıyor;
-// sprite'ı ayrıştırmaya gerek yok ve liste sıralı geliyor.
 func ikonAdlari() []string {
 	b, err := webui.FS.ReadFile("static/vendor/ikonlar.txt")
 	if err != nil {

@@ -5,14 +5,6 @@ import (
 	"unicode"
 )
 
-// spotEsitBaslik spot'un başlığın tekrarı olup olmadığını söyler.
-//
-// NEDEN: bazı kaynakların `<description>` alanı `<title>` ile birebir aynı
-// (Fed, ECB basın bültenleri). Kartta başlık iki kez basılıyordu.
-//
-// Karşılaştırma NORMALİZE edilir: küçük/büyük harf, noktalama ve fazla
-// boşluk farkı "tekrar" sayılır. Sondaki "..."/"…" da yok sayılır
-// (feed'ler başlığı kesip spot olarak verebiliyor).
 func spotEsitBaslik(spot, baslik string) bool {
 	a := spotNormalize(spot)
 	b := spotNormalize(baslik)

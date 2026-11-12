@@ -8,31 +8,10 @@ import (
 	"theblock/site/internal/repo"
 )
 
-// Kullanıcı arayüz tercihleri (Faz 173, A-3).
-//
-// NEDEN: içerik formundaki katlanabilir grupların açık/kapalı durumu ve
-// daraltılmış yan menü yalnız localStorage'da tutuluyordu; aynı editör başka
-// bir cihazda her şeyi baştan açmak zorunda kalıyordu.
-//
-// Sözleşme:
-//   GET  — tercihleri sayfaya gömer (render sırasında meta etiketi).
-//   POST — tek anahtar yazar; gövde {"k":"...","v":...}.
-//
-// İstemci localStorage'ı anlık önbellek olarak korumaya devam eder; sunucu
-// cihazlar arası doğruluk kaynağıdır. Yazma son-yazan-kazanır.
-
-// tercihAnahtarGecerli istemciden gelen anahtarı sınırlar.
-//
-// NEDEN: anahtarlar istemci tarafında üretiliyor. Sınırsız bırakılsaydı
-// jsonb belgesi kontrolsüz büyüyebilir (tek kullanıcı için megabaytlar) ve
-// uzun anahtarlarla sorgu maliyeti artardı.
 func tercihAnahtarGecerli(k string) bool {
 	if k == "" || len(k) > 80 {
 		return false
 	}
-	// Yalnız harf (Türkçe dahil: "tb_form_grup:Künye"), rakam, iki nokta,
-	// alt çizgi, nokta, tire ve boşluk. ASCII sınırı KOYULMAZ: grup
-	// anahtarları ekrandaki Türkçe başlıktan türetiliyor.
 	for _, r := range k {
 		switch {
 		case unicode.IsLetter(r), unicode.IsDigit(r):
@@ -81,10 +60,6 @@ func (s *Server) handleTercihKaydet(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
-// tercihlerJSON sayfaya gömülecek tercih belgesini üretir.
-//
-// Hata durumunda boş nesne döner: tercih yüklenememesi sayfayı bozmamalı,
-// istemci localStorage'daki değerle devam eder.
 func (s *Server) tercihlerJSON(r *http.Request) string {
 	u := userFromContext(r.Context())
 	if u.ID <= 0 {

@@ -9,18 +9,6 @@ import (
 	"theblock/site/internal/webui/templkit"
 )
 
-// Mega menünün bağlandığı liste sayfaları.
-//
-// NEDEN: menüdeki her satırın gerçek bir karşılığı olmalı. Ölçüm (5 Kasım
-// 2026): menüdeki 49 hedefin 29'u 404'tü. Bu dosya o boşlukları **gerçek**
-// sayfalarla doldurur; içerik yoksa sayfa dürüst boş durum gösterir
-// (uydurma kart yok).
-//
-// /videos artık YouTube kanalından besleniyor — handler cd_video.go'da.
-// /podcasts          — tür "podcast"
-// /sponsored-content — tür "sponsorlu"
-// /newsletters       — bülten listesi + kayıt
-
 // handleCDPodcasts /podcasts
 func (s *Server) handleCDPodcasts(w http.ResponseWriter, r *http.Request) {
 	s.cdTurListesi(w, r, "podcast", templkit.CDListePage{

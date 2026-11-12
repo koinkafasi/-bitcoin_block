@@ -1,18 +1,3 @@
-// Package cryptoquant CryptoQuant API istemcisidir (zincir-üstü veri).
-//
-// NEDEN AYRI PAKET: fiyat/piyasa değeri CoinGecko'dan gelir (250+ varlık);
-// CryptoQuant ise yalnız zincir-üstü analitik sağlar ve yalnız birkaç varlık
-// için veri döndürür. İkisini karıştırmamak için bu paket kendi tiplerini
-// tanımlar; httpapi katmanı ikisini birleştirir.
-//
-// ÖLÇÜLEN SINIRLAR (8 Kasım 2026, gerçek anahtar):
-//   - price-ohlcv: yalnız btc, eth, xrp, trx (diğerleri 404)
-//   - market-indicator/mvrv ve /sopr: yalnız btc
-//   - exchange-flows/*: `exchange=` parametresi ZORUNLU; btc + eth çalışır
-//   - flow-indicator/exchange-whale-ratio: btc
-//
-// Anahtar yoksa istemci "kapalı" davranır: Var() false döner ve hiçbir istek
-// atılmaz. Sayfalar veri yoksa modülü hiç basmaz (uydurma değer yazılmaz).
 package cryptoquant
 
 import (
@@ -27,9 +12,6 @@ import (
 	"time"
 )
 
-// VarsayilanBase API kökü.
-//
-// DİKKAT: `GET /v1/` 404 döner — kök uç yok, doğrudan metrik yolları çağrılır.
 const VarsayilanBase = "https://api.cryptoquant.com/v1"
 
 // Istemci CryptoQuant HTTP istemcisi (eşzamanlı kullanıma uygundur).
@@ -140,10 +122,6 @@ type SOPR struct {
 	LTHSOPR float64 `json:"lth_sopr"`
 }
 
-// Akis borsa akış metriği. Metriğe göre alan dolar:
-//   - inflow / netflow → netflow_total ya da inflow_total
-//   - reserve          → reserve, reserve_usd
-//   - inflow           → inflow_total, inflow_top10, inflow_top10_ratio
 type Akis struct {
 	Date         string  `json:"date"`
 	NetflowTotal float64 `json:"netflow_total"`
@@ -212,10 +190,6 @@ func (c *Istemci) SOPR(ctx context.Context, limit int) ([]SOPR, error) {
 	return d, nil
 }
 
-// BorsaAkis borsa akış metriği. metrik: inflow | netflow | reserve.
-//
-// `exchange` ZORUNLU (API 400 döner). Varsayılan "binance": en likit borsa ve
-// CoinDesk'in akış grafiklerinde referans olarak kullandığı borsa.
 func (c *Istemci) BorsaAkis(ctx context.Context, coin, metrik, exchange string, limit int) ([]Akis, error) {
 	coin = strings.ToLower(strings.TrimSpace(coin))
 	switch metrik {

@@ -10,16 +10,6 @@ import (
 	"testing"
 )
 
-// TestGazeteMatbaaZinciri matbaa zincirini uçtan uca gerçek araçlarla sınar:
-// taşma paylı HTML → Chromium → Ghostscript (PDF/X + CMYK + kutular) →
-// preflight.
-//
-// Chromium ve Ghostscript gerektirdiği için normal koşuda atlanır:
-//
-//	GAZETE_MATBAA_TEST=1 go test ./internal/httpapi/ -run TestGazeteMatbaaZinciri -v
-//
-// Birim testler geometriyi ve PostScript tanımını doğruluyor; bu test
-// araçların gerçekten istediğimiz dosyayı ürettiğini gösterir.
 func TestGazeteMatbaaZinciri(t *testing.T) {
 	if os.Getenv("GAZETE_MATBAA_TEST") == "" {
 		t.Skip("GAZETE_MATBAA_TEST ayarlı değil")
@@ -125,9 +115,6 @@ body{margin:0}
 	if len(rap.GomulmeyenF) > 0 {
 		t.Errorf("gömülü olmayan font: %v", rap.GomulmeyenF)
 	}
-	// Dijital nüshadan büyük olmalı: taşma payı + işaret alanı eklendi.
-	// Beklenen: (210+22)mm × (297+22)mm. Chromium mm→pt çevriminde küçük
-	// bir yuvarlama yapıyor, bu yüzden tolerans veriliyor.
 	gotW, gotH := sayfaBoyuPt(t, rap.SayfaBoyu)
 	beklW := (trimW + 2*kenarMm) * mmPt
 	beklH := (trimH + 2*kenarMm) * mmPt

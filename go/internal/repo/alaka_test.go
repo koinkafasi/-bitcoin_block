@@ -6,14 +6,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// Kripto alaka kapısı.
-//
-// ÖLÇÜM 1 (5 Kasım 2026): ana sayfa manşeti "Federal Reserve Board issues
-// enforcement actions with former employee of Northstar Bank…" idi.
-//
-// ÖLÇÜM 2: ilk sürümde `exchange`/`token`/`custody` de terim listesindeydi;
-// SEC'in 25 bülteninin 25'i kapıyı geçti (filtre işlevsiz). Aşağıdaki
-// "kripto dışı" listesi GERÇEK SEC/Fed/ECB başlıklarıdır.
 func TestKriptoAlakali(t *testing.T) {
 	kripto := []string{
 		"SEC Issues “Innovation Exemption” to Facilitate the Trading of Tokenized NMS Stock",

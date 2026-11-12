@@ -80,10 +80,6 @@ func RenameTag(ctx context.Context, pool *pgxpool.Pool, id int64, name, slug str
 	return nil
 }
 
-// MergeTag kaynak (from) etiketini hedefe (to) birleştirir: içerik bağlarını
-// taşır ve kaynağı (bağlarıyla) siler. from==to ise no-op.
-// NOT: ON CONFLICT yalnız INSERT'te geçerlidir → bağ taşıma INSERT..SELECT
-// ile yapılır (UPDATE..ON CONFLICT yazım hatasıydı, Faz 41'de yakalandı).
 func MergeTag(ctx context.Context, pool *pgxpool.Pool, fromID, toID int64) (int64, error) {
 	if fromID == toID {
 		return 0, nil

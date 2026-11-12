@@ -1,14 +1,5 @@
 //go:build integration
 
-// Abonelik ödemesinde ön bilgilendirme / mesafeli satış sözleşmesi onayının
-// SUNUCU tarafında zorunlu olduğunu doğrular.
-//
-// Neden sunucu tarafı: formdaki `required` yalnız tarayıcıda çalışır. İstek
-// doğrudan gönderilirse (curl, bot, eski sekme) onay alınmadan sözleşme
-// kurulurdu. Mesafeli Sözleşmeler Yönetmeliği uyarınca sağlayıcı, sözleşme
-// kurulmadan önce ön bilgilendirme yapmak zorundadır; tüketici cayma hakkı
-// konusunda gereği gibi bilgilendirilmezse 14 günlük süre işlemez ve cayma
-// hakkı sürenin bittiği tarihten bir yıl sonrasına kadar kullanılabilir.
 package httpapi_test
 
 import (
@@ -34,12 +25,6 @@ func TestAbonelikOdemeSozlesmeOnayiOlmadanReddedilir(t *testing.T) {
 	skipIfNoDB(t)
 	ctx := t.Context()
 
-	// iyzico'yu test veritabanında etkinleştir: onay kapısı, ödeme altyapısı
-	// kontrolünden SONRA çalışıyor. Etkin değilse handler daha erken dönerdi
-	// ve test, onay kapısını hiç sınamamış olurdu.
-	//
-	// Anahtarlar sahte ve kasıtlı olarak geçersiz: testin NEGATİF yolu
-	// (onaysız istek) iyzico'ya hiç ulaşmaz, dolayısıyla dış ağa çıkılmaz.
 	for _, kv := range [][2]string{
 		{"api_key", `"test-api-key"`},
 		{"secret_key", `"test-secret-key"`},
@@ -109,16 +94,9 @@ func TestAbonelikOdemeSozlesmeOnayiOlmadanReddedilir(t *testing.T) {
 	}
 
 	govde := gonder(false)
-	// İddia hata MESAJINA özgü olmalı. "Mesafeli Satış Sözleşmesi" ifadesi
-	// aramak yetmez: abonelikHata tüm abonelik sayfasını yeniden basıyor ve
-	// o sayfadaki onay kutusunun etiketinde aynı ifade zaten geçiyor — kapı
-	// kaldırılsa bile test geçerdi (bu yanlış güven bir kez yaşandı).
 	assert.Contains(t, govde, "onaylamanız gerekir",
 		"onay kutusu işaretlenmeden ödeme reddedilmeli")
 
-	// Kapının gerçekten onay yokluğundan ötürü kapandığını doğrula: ödeme
-	// altyapısı kapalı olsaydı aynı istek "Ödeme altyapısı etkin değil"
-	// derdi ve test yanlış yere güvenirdi.
 	assert.NotContains(t, govde, "Ödeme altyapısı etkin değil",
 		"test iyzico'yu etkinleştirememiş; onay kapısı sınanmamış olur")
 

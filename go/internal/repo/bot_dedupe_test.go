@@ -6,13 +6,6 @@ import (
 	"theblock/site/internal/quality"
 )
 
-// Bu testler B2 hatasını kalıcı olarak korur: bot yalnızca url_hash ile
-// mükerrer denetimi yapıyordu. Aynı haberi MSN, Cumhuriyet ve Habertürk
-// farklı URL'lerle verdiği için aynı metin 122 kez taslağa düşebiliyordu
-// (ölçüm: 1.923 başlık grubunda 10.442 fazladan kayıt). Yakın-kopya
-// denetimi (quality.CheckDuplicates) projede zaten vardı ama bot hattına
-// bağlanmamıştı.
-
 func TestDuplicateOfCandidatesAyniHaberiYakalar(t *testing.T) {
 	cands := []quality.Candidate{{
 		Ref:   "1201",
@@ -64,18 +57,6 @@ func TestDuplicateOfCandidatesBosBaslikEngellemez(t *testing.T) {
 	}
 }
 
-// BİLİNEN BOŞLUK (silinmez — B2 ikinci aşaması).
-//
-// Küçük düzenleme (bot'un "kelime değiştirici" çıktısı) henüz yakalanmıyor:
-// quality.ShingleSize = 5 olduğu için, başlık VE spot birlikte yeniden
-// yazıldığında 5'li n-gram kümeleri örtüşmüyor ve benzerlik 0.60 eşiğinin
-// altında kalıyor. Mevcut hâl aynı/çok yakın metni yakalar (asıl sorun olan
-// 10.442 fazladan kaydın tamamı bu sınıftaydı), yeniden yazılmış tekrarı
-// yakalamaz.
-//
-// Çözüm adayları: kısa metinler için ShingleSize'ı 3'e indirmek (yanlış
-// pozitif riski ölçülmeli) veya başlık ve gövdeyi ayrı eşiklerle
-// karşılaştırmak. Karar verilip uygulanınca bu Skip kaldırılacak.
 func TestDuplicateOfCandidatesKucukDuzenlemeyiYakalar(t *testing.T) {
 	t.Skip("bilinen boşluk: yeniden yazılmış başlık+spot 5'li shingle ile yakalanmıyor")
 	cands := []quality.Candidate{{

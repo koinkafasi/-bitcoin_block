@@ -11,15 +11,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// Koyu tema metin/dolgu tonları (Faz 182).
-//
-// NEDEN: "Görünüm & Marka" panelinde seçilen metin rengi TEK bir değerdi ve
-// iki temaya da uygulanıyordu. Kullanıcı siyah seçtiğinde koyu temada metin
-// siyah kalıp okunmuyordu (ölçüldü: kontrast 1.2, 23 sayfada 17 bulgu).
-//
-// Ayrıca aynı renk hem GRAFİK (eşik 3.0) hem METİN (eşik 4.5) olarak
-// kullanılıyordu; koyu tema için metin tonları ayrıca türetildi.
-
 func cssOku(t *testing.T, ad string) string {
 	t.Helper()
 	b, err := os.ReadFile(filepath.Join("static", ad))

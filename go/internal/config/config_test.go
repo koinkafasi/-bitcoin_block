@@ -125,11 +125,6 @@ func TestPoolConfigMinMaxKirpilir(t *testing.T) {
 	}
 }
 
-// TestPoolConfigBozukDSNHataDoner
-//
-// KRİTİK: bozuk DSN'de nil yapı döndürülseydi `pgxpool.NewWithConfig`
-// PANIC ederdi ("config must be created by ParseConfig") ve süreç
-// anlaşılmaz bir yığın iziyle düşerdi. Ölçüldü; bu test o davranışı kilitler.
 func TestPoolConfigBozukDSNHataDoner(t *testing.T) {
 	c := Config{DatabaseURL: "bu-bir-url-degil %%%"}
 	pc, err := c.PoolConfig()

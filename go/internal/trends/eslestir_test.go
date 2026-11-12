@@ -6,9 +6,6 @@ import (
 	"time"
 )
 
-// Hazır eşleştirme, mevcut Covered/MatchRatio ile BİREBİR aynı sonucu
-// vermeli. Ayrışırsa taslak puanı ile kapsama analizi farklı şeyler söyler
-// ve editör hangisine güveneceğini bilemez.
 func TestHazirEslestirmeCoveredIleAyni(t *testing.T) {
 	terimler := []string{
 		"Galatasaray",

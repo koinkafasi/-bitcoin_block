@@ -73,12 +73,6 @@ func TestAtoiSafe(t *testing.T) {
 	}
 }
 
-// ---- badgeURL ----
-//
-// Not: bu kod yolu ESPN puan durumu devreye girdikten sonra çağrılmıyor
-// (legacy TheSportsDB lookuptable). Test, belgelenen GERÇEK davranışı
-// sabitler: yalnızca sondaki "/tiny" soneki temizlenir.
-
 func TestBadgeURL(t *testing.T) {
 	cases := []struct {
 		name string

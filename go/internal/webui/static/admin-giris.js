@@ -1,15 +1,4 @@
-/* theblock — Panel girişi: "Blok" nöbetçi kedi.
- *
- * Kaynak birebir: demo.codeandchill.store/mochi (app.js). Kedi iskeleti,
- * yay fiziği, göz kırpma, bakış takibi, modlar, konuşma balonu, kart
- * eğilmesi ve konfeti aynı algoritmayla çalışıyor.
- *
- * theblock'a uyarlanan tek şey GÖNDERİM: Mochi parolayı JS'te sabit
- * tutuyor; burada gerçek sunucuya POST ediliyor ve yanıtın SON ADRESİ
- * sonucu söylüyor. Böylece "yanlış şifre" ile "başarılı giriş"
- * animasyonları sayfa yenilenmeden oynuyor — doğrulama yine sunucuda.
- * JS çalışmazsa form normal POST olarak gönderilir (geri düşüş).
- */
+
 (function () {
   'use strict';
 
@@ -49,7 +38,7 @@
     happy: 'M129,129 q21,25 42,0'
   };
 
-  /* Kolun omuzdan hedefe nişanı: tek atan2 + uzama oranı. */
+  
   function aimArm(from, tx, ty, side) {
     var dx = tx - from.x, dy = ty - from.y;
     var len = Math.hypot(dx, dy);
@@ -69,7 +58,7 @@
   var FLINCH_L = { a: 22, s: 1 };
   var FLINCH_R = { a: -22, s: 1 };
 
-  /* Yay-sönüm yayı: alt adımlı Euler, kare hızından bağımsız. */
+  
   function Yay(v, k, d) {
     this.v = v; this.t = v; this.vel = 0; this.k = k || 150; this.d = d || 20;
   }
@@ -177,7 +166,7 @@
     if (m === 'peek') { sp.gazeX.set(4.6); sp.gazeY.set(3.8); sp.tilt.set(3); }
   }
 
-  /* Odaktaki alanın hizasına ince ışık çubuğu. */
+  
   function moveRail() {
     if (!rail) return;
     var t = document.activeElement === email ? email
@@ -188,8 +177,7 @@
     rail.style.transform = 'translate3d(0,' + (r.top - f.top + (r.height - 46) / 2).toFixed(1) + 'px,0)';
   }
 
-  /* Balonun kuyruğu kedinin kafasına değmeli; metin uzunluğu değişince
-   * yeniden ölçülür. */
+  
   function sizeTail() {
     var b = bubble.getBoundingClientRect(), c = cat.getBoundingClientRect();
     if (!b.height || !c.height) return;
@@ -212,9 +200,7 @@
   pw.addEventListener('keyup', checkCaps);
   pw.addEventListener('blur', function () { caps.textContent = ''; });
 
-  /* ---- Bakış takibi: imlecin yatay konumu ----
-   * Görünmez bir ayna span'a aynı fontla metni yazıp genişliğini ölçüyoruz;
-   * böylece kedi yazarken harf harf sağa kayıyor. */
+  
   var mirror = document.createElement('span');
   mirror.setAttribute('aria-hidden', 'true');
   mirror.style.cssText = 'position:absolute;left:-9999px;top:0;white-space:pre;visibility:hidden;';
@@ -241,7 +227,7 @@
     sp.tilt.set(2.2 + f * 5.2);
   }
 
-  /* ---- Göz kırpma ---- */
+  
   var blinkAt = 1.2, blinkPhase = 0, blinkQueued = 0;
   function blinkEnvelope(clock, dt) {
     if (RM.matches) return 1;
@@ -260,7 +246,7 @@
     return 1;
   }
 
-  /* ---- Konfeti ---- */
+  
   var STAR = 'M0,-9 L2.6,-2.6 L9,0 L2.6,2.6 L0,9 L-2.6,2.6 L-9,0 L-2.6,-2.6 Z';
   var HEART = 'M0,7 C-9.5,0 -7.4,-8.4 -2.7,-8.4 C-0.9,-8.4 0,-6.9 0,-6.9 C0,-6.9 0.9,-8.4 2.7,-8.4 C7.4,-8.4 9.5,0 0,7 Z';
 
@@ -294,7 +280,7 @@
   }
   function celebrate() { burst(14, 1, true); }
 
-  /* ---- Ana döngü ---- */
+  
   var last = performance.now() / 1000, clock = 0;
 
   function tick(now) {
@@ -311,7 +297,7 @@
       'translate(0,' + bodyY.toFixed(2) + ') translate(150,256) scale(' +
       (1 + squash).toFixed(4) + ',' + (1 - squash * 0.65).toFixed(4) + ') translate(-150,-256)');
 
-    /* Kafa sallama (yanlış şifre). Genlik zamanla sıfıra iner. */
+    
     var hsX = 0, hsY = 0;
     if (shakeHeadT > 0 && !RM.matches) {
       shakeHeadT = Math.max(0, shakeHeadT - dt);
@@ -370,7 +356,7 @@
     $('blushR').style.opacity = String(blush * 0.85);
     $('glow').setAttribute('opacity', sp.glow.step(dt).toFixed(3));
 
-    /* Kart sarsıntısı (yanlış şifre) + fare eğilmesi. */
+    
     var shakeX = 0;
     if (shakeT > 0) {
       shakeT = Math.max(0, shakeT - dt);
@@ -387,7 +373,7 @@
   }
   requestAnimationFrame(tick);
 
-  /* ---- 3B eğilme + ışık lekesi (yalnız hassas fare) ---- */
+  
   var FINE = matchMedia('(hover: hover) and (pointer: fine)');
   var petPanel = document.querySelector('.pet');
   card.addEventListener('pointermove', function (e) {
@@ -401,7 +387,7 @@
   });
   card.addEventListener('pointerleave', function () { sp.tiltX.set(0); sp.tiltY.set(0); });
 
-  /* ---- Kediye dokunma ---- */
+  
   var PATS = ['mrrp!', 'purrr…', 'yine mi?', 'hihi'];
   var pats = 0;
   petBtn.addEventListener('click', function () {
@@ -415,7 +401,7 @@
     burst(5, 0.6, false);
   });
 
-  /* ---- Alan etkileşimleri ---- */
+  
   email.addEventListener('focus', function () { if (!locked) { setMood('watch'); trackCaret(); } });
   email.addEventListener('input', function () { sp.earL.kick(-160); sp.earR.kick(160); trackCaret(); });
   email.addEventListener('keyup', trackCaret);
@@ -449,13 +435,7 @@
     statusEl.className = 'status is-on' + (tone ? ' is-' + tone : '');
   }
 
-  /* ---- Giriş ----
-   * Mochi parolayı istemcide karşılaştırıyor. Burada gerçek uç noktaya
-   * POST ediliyor; yanıtın SON ADRESİ sonucu söylüyor:
-   *   /admin/giris/2fa  → 2FA ekranına git
-   *   /admin/giris...   → başarısız (sunucunun flash metni okunur)
-   *   başka             → başarılı
-   * Böylece animasyonlar sayfa yenilenmeden oynuyor, doğrulama sunucuda. */
+  
   form.addEventListener('submit', function (e) {
     e.preventDefault();
     if (locked || busy) return;
@@ -519,8 +499,7 @@
     shakeHeadT = HEAD_SHAKE;
     setMood('sad');
     sp.headY.kick(-150);
-    /* Kullanıcı yazmaya devam ederse kedi 1.1 sn sonra gizlenme moduna
-     * dönsün (Mochi'nin aynı davranışı). */
+    
     setTimeout(function () {
       if (locked || mood !== 'sad' || busy) return;
       var yaziyor = pw.value || form.contains(document.activeElement);
@@ -538,7 +517,7 @@
     sp.bodyY.kick(-260);
     celebrate();
     pw.blur();
-    /* Kutlama görünsün diye kısa bekleme; sonra panele geç. */
+    
     setTimeout(function () {
       location.href = nextURL || '/admin';
     }, 1050);
@@ -549,8 +528,7 @@
   document.documentElement.dataset.mood = mood;
   document.documentElement.dataset.ready = '1';
 
-  /* Sunucudan mesajla dönüldüyse (JS'siz POST ya da doğrudan yönlendirme)
-   * aynı "üzgün" durumu sayfa açılışında oynat, mesajı balona taşı. */
+  
   if (srvFlash && srvFlash.textContent.trim()) {
     var metin = srvFlash.textContent.trim();
     var hata = !srvFlash.classList.contains('info') && !srvFlash.classList.contains('success');

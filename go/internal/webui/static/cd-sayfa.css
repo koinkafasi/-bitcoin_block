@@ -1,0 +1,115 @@
+
+
+.cd-filtre {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 4px 0 20px;
+}
+.cd-filtre__ayrac {
+  width: 1px;
+  height: 18px;
+  background: var(--cd-border);
+  margin: 0 4px;
+}
+.cd-cip {
+  display: inline-flex;
+  align-items: center;
+  height: 30px;
+  padding: 0 12px;
+  border: 1px solid var(--cd-border);
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--cd-fg);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.cd-cip:hover { background: var(--cd-surface-action); }
+.cd-cip.is-secili {
+  background: var(--cd-fg);
+  border-color: var(--cd-fg);
+  color: var(--cd-bg);
+}
+.cd-akis-liste { margin-bottom: 48px; }
+
+.cd-404 {
+  padding: 56px 0 72px;
+  max-width: 760px;
+}
+.cd-404__kod {
+  margin: 0;
+  font-family: var(--cd-serif);
+  font-size: 72px;
+  line-height: 1;
+  font-weight: 700;
+  color: var(--cd-muted);
+  letter-spacing: -0.02em;
+}
+.cd-404__baslik {
+  margin: 6px 0 10px;
+  font-family: var(--cd-serif);
+  font-size: 30px;
+  line-height: 38px;
+  font-weight: 700;
+  color: var(--cd-fg-strong);
+}
+.cd-404__metin {
+  margin: 0 0 22px;
+  font-size: 16px;
+  line-height: 26px;
+  color: var(--cd-muted-strong);
+}
+.cd-404__arama {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.cd-404__arama input {
+  flex: 1;
+  height: 42px;
+  padding: 0 14px;
+  border: 1px solid var(--cd-border);
+  border-radius: var(--cd-radius);
+  background: var(--cd-surface);
+  color: var(--cd-fg);
+  font: inherit;
+}
+/* `.cd a` (0,1,1) kuralı bu sınıftan (0,1,0) daha güçlü; bağlantı
+   düğmelerinde renk inherit'e düşüp yazı görünmez oluyordu. Bu yüzden
+   `a.` önekiyle özgüllük yükseltildi. */
+.cd-404__arama button,
+a.cd-404__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 42px;
+  padding: 0 18px;
+  border: 1px solid var(--cd-fg);
+  border-radius: var(--cd-radius);
+  background: var(--cd-fg);
+  color: var(--cd-bg);
+  font: inherit;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+}
+.cd-404__eylem { display: flex; gap: 8px; }
+a.cd-404__btn--sade {
+  background: transparent;
+  color: var(--cd-fg);
+  border-color: var(--cd-border);
+}
+.cd-404__oneri { margin-top: 44px; }
+.cd-404__oneri h2 {
+  margin: 0 0 14px;
+  font-family: var(--cd-serif);
+  font-size: 22px;
+  line-height: 28px;
+}
+@media (max-width: 767px) {
+  .cd-404 { padding: 32px 0 48px; }
+  .cd-404__kod { font-size: 56px; }
+  .cd-404__baslik { font-size: 24px; line-height: 32px; }
+}

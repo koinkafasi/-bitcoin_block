@@ -1,18 +1,3 @@
-// Package youtube, bir YouTube kanalının video/short/canlı yayın listesini
-// API anahtarı OLMADAN okur.
-//
-// NEDEN API DEĞİL: YouTube Data API anahtar gerektirir ve kanal başına kota
-// tüketir. Site yalnız KENDİ kanalını yansıtıyor; bunun için resmî RSS
-// beslemesi (`feeds/videos.xml?channel_id=…`, 15 son öğe) + kanalın
-// `/streams` ve `/live` sayfaları yeterli ve anahtarsız.
-//
-// TÜR AYRIMI: RSS bağlantısı `/shorts/<id>` ise short, `/watch?v=<id>` ise
-// normal videodur. Canlı yayınlar RSS'e düşmez; `/streams` sayfasından
-// (geçmiş yayınlar) ve `/live` sayfasından (şu an canlı mı) okunur.
-//
-// SSRF SINIRI: istekler SABİT hostlara gider (www.youtube.com,
-// www.youtube-nocookie.com, i.ytimg.com). Kanal kimliği ve handle'ı
-// doğrulanır; kullanıcı girdisi URL'e yol olarak eklenmez.
 package youtube
 
 import (
@@ -79,10 +64,6 @@ func (c *Client) http() *http.Client {
 	return &http.Client{Timeout: 20 * time.Second}
 }
 
-// Cek kanalın video, short ve canlı yayın listelerini okur.
-//
-// Kısmi hata bilinçli: RSS düşse bile /streams çalışıyorsa canlı yayın
-// modülü boş kalmaz. İki kaynak da düşerse hata döner.
 func (c *Client) Cek(ctx context.Context) (Sonuc, error) {
 	var s Sonuc
 	var errler []error
@@ -240,14 +221,6 @@ type YayinKaydi struct {
 	Baslik  string
 }
 
-// YayinlarOku /streams sayfasındaki yayınları (video kimliği + başlık) sırayla
-// döndürür. YouTube yeni→eski sıralar; sıra korunur.
-//
-// EŞLEŞTİRME: Kimlikler `contentId`, başlıklar `lockupMetadataViewModel`
-// içinde geçer ve sayfada her video birkaç kez tekrarlanır. Bu yüzden ikisi
-// ayrı ayrı toplanıp indeksle eşleştirilemez (ölçüldü: 30 kimlik / 30 başlık
-// ama kimlikler tekrarlı). ytInitialData JSON'u çözülüp her kilit nesnesinin
-// KENDİ başlığı alınır.
 func YayinlarOku(html string) []YayinKaydi {
 	var out []YayinKaydi
 	gorulen := map[string]bool{}
@@ -372,12 +345,6 @@ func metinYolu(v any, yol ...string) string {
 
 var kanonikKalibi = regexp.MustCompile(`<link rel="canonical" href="([^"]+)"`)
 
-// CanliVideoID kanalın /live sayfasından ŞU AN canlı olan videoyu çıkarır.
-//
-// KURAL: Kanal canlı değilken /live adresi kanal ana sayfasına döner ve
-// canonical kanal URL'idir (ölçüldü). Canlıyken canonical izleme adresidir ve
-// sayfada `"isLive":true` bulunur. İki koşul da aranır — yalnız canonical'a
-// bakmak, geçmiş bir yayının izleme sayfasını canlı sanmaya yol açabilir.
 func CanliVideoID(html string) string {
 	if !strings.Contains(html, `"isLive":true`) {
 		return ""
@@ -404,25 +371,6 @@ func CanliVideoID(html string) string {
 
 // ---- yardımcılar ----
 
-// GorselURL türe göre kapak görseli adresi üretir.
-//
-// ÖLÇÜLDÜ (11 Kasım 2026, gerçek video kimlikleriyle; boyutlar
-// Image.open ile okundu):
-//
-//	iPG7pIB-P1c (short)  hqdefault  480x360  18 KB   ← dikey kartta KÖTÜ
-//	                     oar2      1080x1920 205 KB   ← 9:16, doğrusu
-//	8oVvSLjkMv8 (video)  hqdefault  480x360  18 KB   ← büyük kartta bulanık
-//	                     maxres    1280x720 140 KB   ← doğrusu
-//
-// ESKİ HATA: short'lar da hqdefault (480x360 YATAY) ile kayıtlıydı. 9:16
-// dikey kartta bu görselin yalnız ~200x360'lık ortası kullanılıyor, kalan
-// alan büyütülüyordu → "shorts küçük resimleri çok kötü" (kullanıcı
-// bildirimi). oar2.jpg YouTube'un DİKEY kırpılmış 1080x1920 sürümü.
-//
-// `hqdefault` her videoda VAR; `maxresdefault` çok eski/düşük çözünürlüklü
-// yüklemelerde 404 dönebilir. Bu yüzden şablon `data-yedek` ile hqdefault'a
-// tek seferlik düşer (bkz. csp-delegated.js) — JS'siz durumda da görsel
-// görünür kalır, çünkü src zaten bir geçerli adres.
 func GorselURL(id, tur string) string {
 	if id == "" {
 		return ""
@@ -433,23 +381,6 @@ func GorselURL(id, tur string) string {
 	return "https://i.ytimg.com/vi/" + id + "/maxresdefault.jpg"
 }
 
-// GorselYedekZincir kapak için VİRGÜLLE ayrılmış yedek zinciri.
-//
-// NEDEN ZİNCİR (ölçüldü, 12 Kasım 2026 — gerçek kimliklerle, HTTP + boyut):
-//
-//	MctQ1WmwSaA  oar2 404 (1097 B) · maxres 200 (215 KB) · hq 200
-//	AsUek7xsy9M  oar2 404           · maxres 200 (120 KB) · hq 200
-//	KfLVTp9jlyU  oar2 200 (112 KB)  · maxres 200          · hq 200
-//
-// Yani `oar2` HER short'ta YOK. Tek kademeli yedek (oar2 → hqdefault)
-// oar2'si olmayan short'u 480x360'a düşürüyordu: dikey kartta (290x516)
-// 1.4x büyütme → "kapak çok bulanık". Doğru sıra:
-//
-//	short : oar2 (1080x1920, tam 9:16) → maxresdefault (1280x720) → hqdefault
-//	diğer : maxresdefault (1280x720) → sddefault (640x480) → hqdefault
-//
-// `maxresdefault` ölçülen 7/7 videoda vardı; `hqdefault` her videoda var,
-// bu yüzden zincirin SONU hqdefault (kart asla kırık kalmaz).
 func GorselYedekZincir(id, tur string) string {
 	// Boş kimlik: adres ÜRETİLMEZ. Aksi hâlde "…/vi//hqdefault.jpg" gibi
 	// bozuk bir adres basılıyordu (test yakaladı, 11 Kasım 2026).
@@ -463,14 +394,6 @@ func GorselYedekZincir(id, tur string) string {
 	return taban + "sddefault.jpg," + taban + "hqdefault.jpg"
 }
 
-// GorselSrcset 16:9 kapak için genişlik tanımlayıcılı aday listesi.
-//
-// NEDEN: yan kolondaki 142 px'lik satır görseli için 1280 px'lik dosyayı
-// (140 KB) indirmek israftı; büyük ızgara kartı için de 480 px bulanıktı.
-// Tarayıcı kendi seçer. YouTube varyantları 16:9'da AYNI kırpımdır, farklı
-// ölçekleri olduğu için srcset güvenli.
-//
-// Shorts için BOŞ döner: oar2'nin ölçekli sürümü yok, tek dosya var.
 func GorselSrcset(id, tur string) string {
 	if id == "" || tur == "short" {
 		return ""

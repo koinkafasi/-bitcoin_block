@@ -1,39 +1,5 @@
 package repo
 
-// Ana sayfa "giriş hero"su + canlı şerit için GERÇEK piyasa verisi.
-//
-// NEDEN AYRI DOSYA: `fiyat.go` fiyat bandını (25 coin) besliyor; buradaki
-// veri farklı uçlardan geliyor ve farklı TTL istiyor.
-//
-// KAYNAKLAR (hepsi ücretsiz, anahtarsız — 11 Kasım 2026'da canlı sınandı):
-//   - CoinGecko /global          → 24s hacim, BTC hakimiyeti
-//   - CoinGecko market_chart     → BTC 30 gün saatlik kapanış
-//   - alternative.me /fng        → Korku & Açgözlülük endeksi
-//   - CoinGecko coins/markets    → BTC/ETH/SOL fiyat + 24s değişim (repo.Fiyatlar)
-//
-// CANLI TASARIM (kullanıcı isteği, 11 Kasım 2026: "verileri canlı olarak
-// çalışır istiyorum"). Üç katman var:
-//
-//   1. FİYAT (asıl "canlı" olan): `repo.Fiyatlar`, 60 sn önbellekli.
-//      Tüm sayfalar ve tüm kullanıcılar AYNI önbelleği okur.
-//   2. GEÇMİŞ (grafik serisi): 10 dk önbellekli — saatlik kapanışlar
-//      dakikada bir değişmez.
-//   3. UÇ NOKTA (grafiğin sonu + RSI'ın bugünkü kapanışı) HER İSTEKTE
-//      güncel fiyattan yazılır. Yani çizginin ucu canlı fiyatla hareket
-//      eder; grafiğin gövdesi geçmişten gelir.
-//
-// RATE LIMIT (ölçüldü!): CoinGecko ücretsiz katmanı kısa sürede 429
-// döndürüyor (6 istek/30 sn → 429). Bu yüzden tarayıcı ASLA CoinGecko'ya
-// gitmez; kendi ucumuzu yoklar. Sunucu tarafında da:
-//   - fiyat: dakikada en fazla 1 istek (60 sn TTL)
-//   - grafik/global/fng: 10 dakikada en fazla 1 istek
-//   - TAZE VERİ BEKLETİLMEZ: önbellek eskidiyse ESKİ veri hemen döner,
-//     yenileme ARKA PLANDA tek uçuşla yapılır (stampede koruması).
-//     Böylece 100 eşzamanlı ziyaretçi 100 istek üretmez, 1 üretir.
-//
-// KURAL: Veri gelmezse alan BOŞ kalır ve şablon o parçayı basmaz.
-// Uydurma sayı yazmak yasak (kullanıcı isteği, tüm proje boyunca geçerli).
-
 import (
 	"context"
 	"encoding/json"
@@ -51,9 +17,6 @@ const (
 	// Ham seri TTL'i: saatlik kapanışlar için 10 dk fazlasıyla yeterli.
 	girisTTL = 10 * time.Minute
 
-	// 30 gün isteniyor → CoinGecko 2-90 gün aralığında SAATLİK nokta
-	// döndürüyor (721 nokta, ~74 KB). Hem 7 günlük çizgi hem 14 günlük
-	// günlük RSI tek istekte çıkıyor.
 	girisGlobalURL = "https://api.coingecko.com/api/v3/global"
 	girisGrafikURL = "https://api.coingecko.com/api/v3/coins/bitcoin/market_chart" +
 		"?vs_currency=usd&days=30"
@@ -65,9 +28,6 @@ const (
 	girisGunlukNokta = 24
 )
 
-// PiyasaGiris ana sayfa hero'sunun DERLENMİŞ verisidir.
-//
-// Sıfır değer "veri yok" demektir; şablon bunu görüp modülü basmaz.
 type PiyasaGiris struct {
 	BTCFiyat   float64 `json:"btc_fiyat"`
 	BTC24      float64 `json:"btc_24"`
@@ -110,11 +70,6 @@ var (
 	girisYenileniyor bool
 )
 
-// PiyasaGirisVeri hero verisini döndürür.
-//
-// Önbellek taze ise oradan; eskidiyse ESKİ veri hemen döner, yenileme
-// arka planda yapılır (kimse beklemez, upstream tek istek görür).
-// Hiç veri yoksa (ilk açılış) istek bekler — hero boş çıkmasın.
 func PiyasaGirisVeri(ctx context.Context, pool DB) PiyasaGiris {
 	ham := girisHamOku(ctx, pool)
 	fiyatlar, fiyatCekildi := FiyatlarZamanli(ctx, pool)
@@ -218,10 +173,6 @@ func girisArkaPlandaYenile(pool DB, mevcut girisHam) {
 	}()
 }
 
-// girisHamCek üç uçtan veriyi PARALEL çeker ve önbelleğe yazar.
-//
-// `taban` eski veridir: bir uç hata verirse o alan eski değerinde kalır
-// (bugün 429 yiyip hacim alanının boşalması olmasın).
 func girisHamCek(ctx context.Context, pool DB, taban girisHam) (girisHam, bool) {
 	type globalSonuc struct{ v girisGlobal }
 	type kapanisSonuc struct{ v []float64 }
@@ -319,11 +270,6 @@ func girisGlobalCek(ctx context.Context) (girisGlobal, error) {
 	return out, nil
 }
 
-// girisBTCSeri BTC'nin saatlik kapanışlarını (USD) döndürür.
-//
-// KAYNAK SIRASI (11 Kasım 2026): CoinGecko grafiği 429 yiyebiliyor
-// (ölçüldü). O yüzden sıra: CoinGecko → Binance klines. İkisi de aynı
-// ŞEKLİ (eskiden yeniye saatlik kapanış) üretir; çizgi boş kalmaz.
 func girisBTCSeri(ctx context.Context) ([]float64, error) {
 	seri, err := girisBTCSeriCoinGecko(ctx)
 	if err == nil && len(seri) > 0 {
@@ -418,10 +364,6 @@ func cdJSONCek(ctx context.Context, url string) ([]byte, error) {
 	return io.ReadAll(io.LimitReader(resp.Body, 8<<20))
 }
 
-// girisGunlukKapanis saatlik seriyi GÜNLÜK kapanışlara indirger.
-//
-// Her gün bloğunun SON değeri alınır (kapanış mantığı). Seri eskiden
-// yeniye döndürülür. `nokta` gün başına saat sayısı (24).
 func girisGunlukKapanis(seri []float64, nokta int) []float64 {
 	if nokta <= 0 || len(seri) < nokta*2 {
 		return nil
@@ -440,10 +382,6 @@ func girisGunlukKapanis(seri []float64, nokta int) []float64 {
 	return out
 }
 
-// cdSparkline değerleri SVG çizgi+dolgu yoluna çevirir.
-//
-// viewBox w×h, kenarlarda pad kadar boşluk. Tek değer/eşit seri düz
-// çizgi verir (sıfıra bölme yok). Değer yoksa "".
 func cdSparkline(deger []float64, w, h, pad float64) (yol, alan string) {
 	if len(deger) < 2 {
 		return "", ""

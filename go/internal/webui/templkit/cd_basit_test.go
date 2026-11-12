@@ -6,16 +6,6 @@ import (
 	"testing"
 )
 
-// CDBasitSayfaView — yeni kabuk iskeleti sözleşmesi.
-//
-// NEDEN: /hava-durumu, /namaz-vakitleri, /imsakiye, /astroloji, /fikstur,
-// /resmi-ilanlar, /yazarlar theblock kabuğunu kullanıyordu (site_header /
-// site_footer). Bu iskelet onların yeni kabukta basılmasını sağlıyor.
-//
-// EN KRİTİK NOKTASI: gövde KAÇIŞLANMAMALI. `SafeHTML` (= template.HTML)
-// templ tarafından otomatik kaçışlanıyordu; tablo HTML'i sayfada DÜZ METİN
-// olarak görünüyordu (ölçüldü, 9 Kasım 2026). Bu test onu kilitler.
-
 func basitCiz(t *testing.T, v CDBasitSayfa) string {
 	t.Helper()
 	if v.Shell.SiteName == "" {

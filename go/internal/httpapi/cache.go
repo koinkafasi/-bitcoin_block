@@ -83,16 +83,6 @@ func (s *Server) invalidateContentCache() {
 	s.siteCfgMu.Unlock()
 }
 
-// cachedYtAyar YouTube ayarlarını kısa süre önbellekten döndürür.
-//
-// Ana sayfada üç ayrı video modülü (video / klipler / canlı) aynı ayarları
-// soruyordu; her çağrı settings tablosuna 10 ayrı sorgu ile gidiyordu.
-// Ölçüm (8 Kasım 2026, log_statement=all, tek ana sayfa isteği): 54 sorgunun
-// 30'u yalnız bu üç çağrıdan geliyordu.
-//
-// AyarlariOku artık bölümü tek sorguda okuyor; bu önbellek kalan üç katı da
-// kaldırır. Panelde kaydetme anında invalidateContentCache çağrıldığı için
-// değişiklik en geç bir sonraki istekte görünür.
 func (s *Server) cachedYtAyar(ctx context.Context) youtube.Ayar {
 	s.siteCfgMu.Lock()
 	if e := s.ytAyarCache; e.set && time.Since(e.at) < contentCacheTTL {

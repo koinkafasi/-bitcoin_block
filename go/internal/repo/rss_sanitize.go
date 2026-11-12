@@ -5,27 +5,14 @@ import (
 	"strings"
 )
 
-// rssXMLItem RSS 2.0 ve RDF (RSS 1.0) öğelerinin ortak alanları.
-//
-// `xml:"encoded"` eşleşmesi ad alanını yok sayar, bu yüzden content:encoded
-// alanını da yakalar; `xml:"date"` RDF'teki dc:date alanını yakalar.
 type rssXMLItem struct {
-	Title      string   `xml:"title"`
-	Link       string   `xml:"link"`
-	Desc       string   `xml:"description"`
-	Content    string   `xml:"encoded"`
-	PubDate    string   `xml:"pubDate"`
-	DCDate     string   `xml:"date"`
-	Categories []string `xml:"category"`
-	// Görsel alanları. Feed'ler görseli üç ayrı yerde taşıyor:
-	//   · media:content / media:thumbnail (Media RSS — CoinDesk, Decrypt)
-	//   · enclosure (RSS 2.0 standardı)
-	//   · <img src> description/gövde HTML'i içinde (eski feed'ler)
-	//
-	// `xml:"content"` eşleşmeleri ad alanını yok sayar; bu yüzden
-	// media:content ile content:encoded çakışmaması için etiket adı tam
-	// yazılır (encoding/xml ad alanını eşleştirmede atlar, iki farklı
-	// alanın aynı etikete bağlanması sıralamaya göre sonuncuyu kazanır).
+	Title      string         `xml:"title"`
+	Link       string         `xml:"link"`
+	Desc       string         `xml:"description"`
+	Content    string         `xml:"encoded"`
+	PubDate    string         `xml:"pubDate"`
+	DCDate     string         `xml:"date"`
+	Categories []string       `xml:"category"`
 	Medias     []rssMedia     `xml:"content"`
 	Thumbnails []rssMedia     `xml:"thumbnail"`
 	Enclosures []rssEnclosure `xml:"enclosure"`
@@ -44,18 +31,6 @@ type rssEnclosure struct {
 	Type string `xml:"type,attr"`
 }
 
-// sanitizeXML gövdeyi encoding/xml'in katlanabildiği hale getirir.
-//
-// Neden: Türkçe haber feed'leri sık sık XML'de tanımsız HTML varlıkları
-// kullanıyor ("&nbsp;", "&l…" gibi noktalı virgülsüz yazımlar) ve çıplak "&"
-// karakteri bırakıyor. XML yalnızca beş varlığı tanır (amp, lt, gt, quot,
-// apos); diğerleri ayrıştırmayı tamamen durduruyordu — ölçümde 815 hata.
-//
-// Kurallar:
-//   - CDATA bölümlerine dokunulmaz (orada "&" zaten serbesttir).
-//   - Tanınan HTML varlıkları gerçek karaktere çevrilir; çevrilen karakter
-//     XML'de özel anlam taşıyorsa (& <) yeniden kaçırılır.
-//   - Tanınmayan veya noktalı virgülsüz "&" → "&amp;".
 func sanitizeXML(s string) string {
 	var b strings.Builder
 	b.Grow(len(s) + len(s)/64)

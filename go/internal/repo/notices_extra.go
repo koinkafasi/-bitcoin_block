@@ -8,17 +8,6 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-// Resmî ilanlar — detay sayfası, filtreleme ve site haritası desteği.
-//
-// Neden ayrı dosya: notices.go yönetim panelinin ihtiyaç duyduğu temel
-// işlemleri (ekle/sil/listele) tutuyor. Buradakiler public tarafın kalıcı
-// ilan adresleri ve BİK tebliğinin site haritası beklentisi için eklendi.
-
-// NoticeFilter public ilan listesinin daralmasını tarif eder.
-//
-// Date boşsa en son ilan günü kullanılır (eski davranış korunur). Tüm
-// tarihlerde arama yapmak için Date = NoticeAllDates verilir; kurum veya
-// şehir filtresi tek güne hapsolursa kullanıcı aradığını bulamaz.
 type NoticeFilter struct {
 	Date        string
 	Institution string
@@ -53,10 +42,6 @@ func scanNotices(rows interface {
 	return out, rows.Err()
 }
 
-// FilterNotices public liste için ilanları süzer ve kullanılan tarihi döndürür.
-//
-// Dönen ikinci değer, listenin hangi güne ait olduğudur; tüm tarihlerde arama
-// yapıldıysa boştur (başlıkta tek bir tarih göstermek yanıltıcı olurdu).
 func FilterNotices(ctx context.Context, pool *pgxpool.Pool, siteID int64, f NoticeFilter) ([]OfficialNotice, string, error) {
 	limit := f.Limit
 	if limit <= 0 || limit > 500 {
@@ -140,11 +125,6 @@ func NoticeFacets(ctx context.Context, pool *pgxpool.Pool, siteID int64) (kuruml
 	return kurumlar, sehirler, rows.Err()
 }
 
-// NoticesForSitemap site haritasına girecek ilanları döndürür.
-//
-// BİK tebliği, içeriklere ait tam URL adreslerinin ve son güncelleme
-// zamanlarının XML site haritasında bulunmasını istiyor; resmî ilanlar da
-// yayımlanan içeriktir.
 func NoticesForSitemap(ctx context.Context, pool *pgxpool.Pool, siteID int64, limit int) ([]OfficialNotice, error) {
 	if limit <= 0 || limit > 5000 {
 		limit = 2000

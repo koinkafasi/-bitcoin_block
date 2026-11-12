@@ -6,15 +6,6 @@ import (
 	"theblock/site/internal/scoring"
 )
 
-// Alaka puanı tazeleme (Faz 169).
-//
-// Bilinen borç: puan yalnız içerik oluşturulurken yazılıyordu; düzenlemeden
-// sonra bayat kalıyordu. UpdateContent artık tazeleAIScore çağırıyor.
-//
-// Bu testler VERİTABANI GEREKTİRMEZ: puanın sinyallere doğru tepki verdiğini
-// (kaynak fonksiyon üzerinden) ve UpdateContent'in tazelemeyi çağırdığını
-// kaynak düzeyinde kilitler. Veritabanı entegrasyonu e2e kapsamında.
-
 // Sinyaller değişince puan değişmeli: kısa başlık + spotsuz içerik, tam
 // içerikten düşük puan almalı.
 func TestAlakaPuaniSinyallereDuyarli(t *testing.T) {

@@ -10,16 +10,6 @@ import (
 	"time"
 )
 
-// Bu dosya isteğe bağlı sözlük tabanlı yazım denetimidir.
-//
-// Kural tabanlı denetim (imla.go) her ortamda çalışır ama sözlük gerektiren
-// hataları (ör. "yanlış yazılmış sözcük") yakalayamaz. Sistemde hunspell ve
-// ilgili sözlük varsa bu katman devreye girer; yoksa sessizce atlanır.
-//
-// Tasarım: hunspell'e metin stdin'den verilir, `-l` (liste) çıktısı hatalı
-// sözcükleri döndürür. Dış çağrı 2 saniye ile sınırlanır; yavaş/eksik kurulum
-// editörü bekletmez.
-
 // HunspellBulgu sözlükte bulunamayan tek sözcüktür.
 type HunspellBulgu struct {
 	Word  string `json:"word"`

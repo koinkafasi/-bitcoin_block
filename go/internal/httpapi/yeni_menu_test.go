@@ -10,12 +10,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// Genel "Yeni" menüsü ve yorum araması (Faz 168).
-//
-// Önce her ekranın kendi "Yeni …" düğmesi vardı; başka bir şey oluşturmak
-// için önce o ekranı bulmak gerekiyordu. Yorumlarda ise yalnız DURUM
-// süzgeci vardı.
-
 func adminTop(t *testing.T) string {
 	t.Helper()
 	b, err := os.ReadFile(filepath.Join("..", "..", "..", "go", "internal", "webui", "templates", "partials.html"))

@@ -38,9 +38,6 @@ func TestBikArticleAuthorKaynakSirasi(t *testing.T) {
 		assert.Equal(t, "HABER MERKEZI", bikArticleAuthor(repo.Content{SourceName: strPtrBik("   ")}, nil))
 	})
 
-	// KRİTİK: değer, sayfada görünen kaynak bilgisiyle AYNI olmak zorunda.
-	// Büyük harfe çevirmek iki değeri ayrıştırır; ayrıca Türkçe'de i→İ
-	// dönüşümü ayrı bir tuzaktır. Hiçbir harf dönüşümü yapılmamalı.
 	t.Run("harf biçimi korunur", func(t *testing.T) {
 		y := &repo.PersonRef{Name: "İlknur Çetin"}
 		assert.Equal(t, "İlknur Çetin", bikArticleAuthor(repo.Content{}, y))
@@ -64,9 +61,6 @@ func TestBuildBikMetaAlanlari(t *testing.T) {
 	assert.Equal(t, "Ekonomi", m.Section)
 	assert.Equal(t, "AA", m.Author)
 
-	// Tarihler UTC ("Z") olmalı: yerel offset "+03:00" olsaydı html/template
-	// öznitelik içinde "+" karakterini &#43; olarak kaçırırdı ve ham dize
-	// eşleştiren bir kontrol tarihi okuyamazdı.
 	assert.Equal(t, "2026-10-20T09:30:00Z", m.Published)
 	assert.Equal(t, "2026-10-21T12:00:00Z", m.Modified)
 	assert.NotContains(t, m.Published, "+")
@@ -93,9 +87,6 @@ func TestBuildBikMetaBosAlanlar(t *testing.T) {
 	assert.Equal(t, "HABER MERKEZI", m.Author, "kaynak her zaman yazılmalı")
 }
 
-// Künye: on zorunlu alanın tamamı, Kurum kontrolünün aradığı kimliklerle
-// basılmalı. Değer boş olsa bile div BASILIR — eksik kimlik doğrudan
-// başarısızlık demek.
 func TestBikKunyeHTMLTumKimlikleriBasar(t *testing.T) {
 	alanlar := bikKunyeAlanlari()
 	require.Len(t, alanlar, 10, "tebliğ on zorunlu alan sayıyor")

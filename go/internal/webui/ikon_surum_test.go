@@ -14,24 +14,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// Ikon sprite sürümü (Faz 181).
-//
-// NEDEN: sprite URL'si hiç değişmiyordu. Sunucu sürümsüz istekleri
-// "max-age=300, must-revalidate" ile sunuyordu, ama Cloudflare'de 23 Ekim'den
-// kalma bir kopya **immutable** başlığıyla duruyordu. Ölçüm:
-//
-//	alan adı : 11.412 bayt, 41 sembol, age=693705 (8 gün), cf-cache-status=HIT
-//	sunucu   : 246.211 bayt, 641 sembol
-//
-// Eksik sembol HATA VERMEZ: tarayıcı `<use>` hedefini bulamaz ve sessizce
-// boş kutu basar. Kullanıcı "ikonlar kayboldu" der, günlükte iz olmaz.
-//
-// Çözüm: URL'e içerik özeti (`?v=<sha1/8>`). İçerik değişince URL değişir,
-// önbellek kendiliğinden tazelenir ve immutable önbellek doğru olur.
-//
-// Bu test sürümün unutulmasını engeller: sprite güncellenip
-// `deploy/scripts/ikon-surum.sh` çalıştırılmazsa kırmızı olur.
-
 // ikonSurumu sprite içeriğinin kısa özeti.
 func ikonSurumu(t *testing.T) string {
 	t.Helper()

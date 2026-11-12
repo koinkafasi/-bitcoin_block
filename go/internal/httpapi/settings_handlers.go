@@ -29,20 +29,14 @@ type settingsData struct {
 	AIProvider    string
 	AIModel       string
 	AIBaseURL     string
-	// AIKey KALDIRILDI: sağlayıcı anahtarı hiçbir şablonda gösterilmiyordu ama
-	// ayar verisi her panel sayfası yüklemesinde anahtarı belleğe taşıyordu.
-	// Anahtar artık yalnız ortam değişkeninden (OMNIROUTE_API_KEY) okunur.
-	AIEnabled bool
-	Types     []repo.ContentType
-	IzinKeys  []string
-	IzinMap   map[string][]string
-	Logs      []repo.LogRow
-	// Kunye BİK tebliği md. 8/1-d künye alanları. Deger yalnızca settings
-	// "kunye" bölümünde SAKLANAN değerdir; kaydet boş bırakılırsa iletişim
-	// ayarlarından gelen yedek devreye girer (bkz. bikKunyeDoldur).
-	Kunye      []bikKunyeAlan
-	KunyeEksik []string
-	KunyeYedek map[string]string
+	AIEnabled     bool
+	Types         []repo.ContentType
+	IzinKeys      []string
+	IzinMap       map[string][]string
+	Logs          []repo.LogRow
+	Kunye         []bikKunyeAlan
+	KunyeEksik    []string
+	KunyeYedek    map[string]string
 }
 
 // handleSettingsGet ayarları yükler ve sekmeyi gösterir.
@@ -86,11 +80,6 @@ func (s *Server) buildSettingsData(r *http.Request) *tmplData {
 	_ = json.Unmarshal(moduller["izinler"], &sc.IzinMap)
 	if meta := obj(bag["meta"]); meta != nil {
 		sc.GVerification, _ = meta["g_verification"].(string)
-		// Google "arama kodu" = GA4 ölçüm kimliği. TEK kanonik kaynak
-		// trend/ga4_olcum'dur (GA4 paneli de aynı anahtarı yazar); eski
-		// baglantilar.meta.g_code yalnız geriye dönük yedek olarak okunur.
-		// Neden: aynı değer iki yerde tutulunca biri güncellenip diğeri
-		// unutuluyor ve iki panel farklı şey gösteriyordu.
 		sc.GCode = s.ga4Measurement(ctx)
 		if sc.GCode == "" {
 			eskiKod, _ := meta["g_code"].(string)
@@ -111,10 +100,6 @@ func (s *Server) buildSettingsData(r *http.Request) *tmplData {
 	}
 	sc.IzinKeys = []string{"Okunma", "Paylaşım", "Yorumlar", "Sonsuz Scroll", "Editör", "Gözden Kaçmasın", "İlginizi Çekebilir", "Trend", "Son Eklenenler"}
 
-	// Künye: formda SAKLANAN değer gösterilir, iletişim yedeği ayrı
-	// gösterilir ki editör neyin nereden geldiğini bilsin. Eksik listesi
-	// ise gerçek çıktıya göre (yedekler dahil) hesaplanır — panelde
-	// "eksik" uyarısı ile canlıdaki künye aynı şeyi söylemeli.
 	kunyeSet, _ := repo.GetSettings(ctx, s.pool, "kunye")
 	for _, a := range bikKunyeAlanlari() {
 		a.Value = strings.TrimSpace(bikSettingStr(kunyeSet, a.Key))
@@ -170,9 +155,6 @@ func (s *Server) handleSettingsSave(w http.ResponseWriter, r *http.Request) {
 		_ = repo.SetSetting(ctx, s.pool, section, key, b)
 	}
 
-	// genel
-	// Başlık/slogan Marka Merkezi'nden yönetilir; alanlar yalnız formda
-	// varsa yazılır (Marka sayfasına taşındı — yoksa silinmez).
 	if r.Form.Has("site_baslik") {
 		set("genel", "site_baslik", map[string]string{"tr": r.FormValue("site_baslik")})
 	}
@@ -181,9 +163,6 @@ func (s *Server) handleSettingsSave(w http.ResponseWriter, r *http.Request) {
 	}
 	set("genel", "dil", r.FormValue("dil"))
 	set("genel", "bakim_modu", map[string]any{"aktif": r.FormValue("bakim") != "", "mesaj": r.FormValue("bakim_mesaji")})
-	// gorsel — tema renk/fontları (themeConfig üzerinden uygulanır).
-	// NOT: site_font/baslik_font anahtarları artık yazılmıyor; ölü anahtarlardı
-	// (tema fontları theme_font/theme_heading_font üzerinden çalışır).
 	if r.FormValue("theme_reset") != "" {
 		set("gorsel", "theme", ThemeConfig{})
 	} else {
@@ -222,12 +201,6 @@ func (s *Server) handleSettingsSave(w http.ResponseWriter, r *http.Request) {
 	// moduller
 	set("moduller", "anasayfa_sirasi", parseJSONList(r.FormValue("modul_sirasi")))
 	set("moduller", "izinler", parseIzinler(r))
-	// baglantilar
-	//
-	// g_code artık kanonik anahtara yazılır (trend/ga4_olcum): Sistem
-	// sayfasındaki alan "Google Arama Kodu (G-TAG)" diyordu ama değer
-	// hiçbir yerde basılmıyordu — kaydedilip unutulan ölü ayardı.
-	// Doğrulama: biçimi tutmayan değer (örn. "abc") ayarı bozmaz.
 	if r.Form.Has("g_code") {
 		if kod := validGA4Measurement(r.FormValue("g_code")); kod != "" {
 			_ = repo.SetTrendSetting(ctx, s.pool, "ga4_olcum", kod)
@@ -242,21 +215,12 @@ func (s *Server) handleSettingsSave(w http.ResponseWriter, r *http.Request) {
 	set("yapay_zeka", "default_provider", r.FormValue("ai_provider"))
 	set("yapay_zeka", "model", r.FormValue("ai_model"))
 
-	// kunye — BİK tebliği md. 8/1-d. Alan yalnızca formda VARSA yazılır:
-	// başka bir sekme kaydedilirken bu bölümün sessizce silinmesini
-	// engeller (Marka alanlarındaki aynı desen).
 	s.saveKunyeSettings(r, set)
 
 	s.audit(r, "ayar_kaydet", "Ayarlar güncellendi")
 	s.settingsResult(w, r, "info", "Ayarlar kaydedildi.")
 }
 
-// saveKunyeSettings künye alanlarını kaydeder.
-//
-// Boş bırakılan alan settings'ten SİLİNMEZ, boş dize olarak yazılır: böylece
-// iletişim ayarlarından gelen yedek yeniden devreye girer ve editör "buraya
-// özel değer girmek istemiyorum" kararını verebilir. Kayıt yalnızca ilgili
-// form alanı gönderildiğinde yapılır.
 func (s *Server) saveKunyeSettings(r *http.Request, set func(section, key string, v any)) {
 	for _, a := range bikKunyeAlanlari() {
 		ad := "kunye_" + a.Key

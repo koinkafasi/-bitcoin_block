@@ -5,34 +5,6 @@ import (
 	"strings"
 )
 
-// Kaynak görsellerinin yuvaya göre ölçeklenmesi — srcset/sizes üretimi.
-//
-// NEDEN (canlı ölçüm, 5 Kasım 2026): /kg/{hash} ucu görseli önbellekliyor
-// ama boyutlandırmıyordu. Ana sayfadaki beş görsel 1,39 MB ölçüldü (en
-// büyüğü 708 KB PNG) ve hepsi en fazla 808px'lik yuvalara giriyordu.
-// httpapi'ye /kg/{hash}/{genislik} eklendi; burası şablonların doğru
-// genişliği istemesini sağlıyor.
-//
-// YUVA GENİŞLİKLERİ UYDURULMADI — cd.css'ten hesaplandı (6 Kasım 2026,
-// üçüncü ölçüm turu: kapsayıcı 1512, yan boşluk 24 → içerik 1464):
-//
-//	.cd-hero   minmax(0,1fr) 290px, sütun aralığı 80
-//	           → lead 1464-80-290 = 1094 · yan 290
-//	.cd-blok__ic 724'lük hücrede 334 + 334, gap 16 → görselli kart 334
-//	.cd-most   1fr 1fr,    gap 24           →      (1464-24)/2   = 720
-//	.cd-article max-width: 680px            →                     680
-//	.cd-grid--3 gap 24                      →      (1464-48)/3   = 472
-//	bölüm sayfası (.cd-wrap--bolum, 1384)   →      (1384-48)/3   = 445
-//	.cd-opinion__avatar                     →                      48 (sabit)
-//
-// Kırılma noktaları: 1284 (hero tek kolon — CoinDesk 1284 kullanıyor,
-// 1280 değil), 1024 (blok tek kolon), 768 (ızgara tek kolon, yan boşluk 16).
-
-// CDYuva kartın hangi yuvada durduğunu söyler.
-//
-// Neden bir yuva tipi, `lead bool` değil: ölçüm gösterdi ki aynı sayfadaki
-// "lead" kartlar FARKLI genişliklerde (hero 1094, bölüm hücresi 334). Boolean
-// ile doğru sizes üretilemiyor.
 type CDYuva uint8
 
 const (
@@ -42,9 +14,6 @@ const (
 	YuvaHeroLead
 	// YuvaHeroYan hero'nun yan sütunu (290px) — dar ray kartı.
 	YuvaHeroYan
-	// YuvaBlokLead bölüm hücresinin görselli kartı — iç ızgaranın sol
-	// kolonu (334px). 5. turda ölçüldü: CoinDesk bölüm bloğu 724'lük
-	// hücrenin içinde 334 + 334 ızgara kullanıyor.
 	YuvaBlokLead
 	// YuvaEnCokOkunan "En Çok Okunan" iki sütunu (720px).
 	YuvaEnCokOkunan
@@ -61,9 +30,6 @@ const (
 	// YuvaAkis hero orta kolonundaki 8'li haber akışının küçük görseli
 	// (152×86; 16/9). Ölçüldü 6 Kasım 2026.
 	YuvaAkis
-	// ---- Kategori/etiket sayfası (8 Kasım 2026, CoinDesk ölçümü) ----
-	// YuvaKatLeadYatay öne çıkan YATAY kartın görseli (686×386).
-	// Eski YuvaKatLead 689'luk dikey kart içindi; yeni yapıda lead yatay.
 	YuvaKatLeadYatay
 	// YuvaKatAlt alt sıradaki 4'lü ızgaranın kartı (239×135).
 	YuvaKatAlt
@@ -73,10 +39,6 @@ const (
 	YuvaTagBanner
 )
 
-// Mobil/tablet genişlik İFADELERİ (calc() sarmalayıcısı olmadan).
-//
-//	≤767px  : tek sütun, .cd-wrap yan boşluğu 16px → 100vw - 32px
-//	≤1024px : hero ve blok tek sütun, yan boşluk 24px → 100vw - 48px
 const (
 	ifadeMobil = "100vw - 32px"
 	ifadeTam   = "100vw - 48px"
@@ -87,12 +49,6 @@ const (
 	ifadeKatTablet = "(100vw - 64px) / 2"
 )
 
-// yuvaBilgi her yuvanın sizes'ı, srcset basamakları ve srcset'siz
-// tarayıcılar için varsayılan genişliği.
-//
-// Basamak seçimi kuralı: en geniş basamak, yuvanın **etkin yoğunluk**
-// ihtiyacını karşılamalı. Çarpanlı sizes kullanıldığı için bu ihtiyaç
-// yuva × 1,3 (aşağıdaki cdSizes açıklamasına bakın), yuva × 2 değil.
 var yuvaBilgi = map[CDYuva]struct {
 	Sizes      string
 	Basamaklar []int
@@ -129,19 +85,11 @@ var yuvaBilgi = map[CDYuva]struct {
 		Basamaklar: []int{480, 768, 960, 1200},
 		Varsayilan: 768,
 	},
-	// 48px sabit. Kapalı listenin en küçüğü 320: DPR 3'te bile fazlasıyla
-	// yeter. Bilinçli küçük bir fazlalık — iki görsel sistemi (mediaSrcset
-	// ve /kg/) aynı genişlik kümesinde kalsın diye liste bölünmedi.
 	YuvaAvatar: {
 		Sizes:      "48px",
 		Basamaklar: []int{320},
 		Varsayilan: 320,
 	},
-	// ---- Kategori/bölüm sayfası (spec §10.3) ----
-	// Kapsayıcı 1432, içerik 1384, 12 kolon gap 16.
-	// Basamaklar çarpanlı sizes'a göre: etkin ihtiyaç yuva × 1,3.
-	//   lead 689 × 1,3 ≈ 896 → 960 karşılıyor
-	//   kart 327 × 1,3 ≈ 425 → 480 karşılıyor
 	YuvaKatLead: {
 		Sizes:      cdSizes(ifadeMobil, ifadeTam, 689),
 		Basamaklar: []int{480, 768, 960},
@@ -158,9 +106,6 @@ var yuvaBilgi = map[CDYuva]struct {
 		Basamaklar: []int{320, 480},
 		Varsayilan: 320,
 	},
-	// Kategori/etiket yuvaları. Basamaklar çarpanlı sizes'a göre:
-	//   686 × 1,3 ≈ 892 → 960 · 239 × 1,3 ≈ 311 → 480
-	//   327 × 1,3 ≈ 425 → 480 · 692 × 1,3 ≈ 900 → 960
 	YuvaKatLeadYatay: {
 		Sizes:      cdSizes(ifadeMobil, ifadeTam, 686),
 		Basamaklar: []int{480, 768, 960},
@@ -183,30 +128,6 @@ var yuvaBilgi = map[CDYuva]struct {
 	},
 }
 
-// cdSizes CoinDesk'in "çarpanlı" sizes tekniğini üretir (spec §9).
-//
-// NEDEN (bu, spec'in bizim için en değerli bulgusu): tarayıcı `w`
-// tanımlayıcısında "yoğunluk = aday_piksel / sizes_değeri" hesaplar ve
-// DPR'ye eşit olanı hedefler. Yani sizes'ı küçük beyan edersek, DPR 2'de
-// seçilen aday = sizes × 2 olur. CoinDesk 2dppx dalında sizes'ı 0.65 ile
-// çarpıyor → aday = yuva × 0.65 × 2 = yuva × 1,3; 3dppx'te 0.433 ile
-// çarpıyor → yuva × 0.433 × 3 = yuva × 1,3. İkisi de **1,3×**'te buluşuyor.
-//
-// Etki: retina ekranda 2×/3× yerine 1,3× indiriliyor. Gözle fark yok,
-// bayt ~%35 azalıyor ve srcset basamağı bir-iki kademe küçüğe iniyor.
-//
-// Biçim (spec §9'daki ölçülen dizenin aynısı):
-//
-//	(mobil, 3dppx) → calc(<mobil> * 0.583)   // 3 × 0,583 ≈ 1,75×
-//	(mobil, 2dppx) → calc(<mobil> * 0.875)   // 2 × 0,875 = 1,75×
-//	(mobil)        → calc(<mobil>)
-//	… tablet katmanı …
-//	(3dppx)        → calc(<px> * 0.433)
-//	(2dppx)        → calc(<px> * 0.65)
-//	               → <px>
-//
-// Mobilde 1,75× (masaüstünde 1,3×) — CoinDesk de böyle yapıyor: küçük
-// ekranda piksel yoğunluğu daha çok önemli, ağ maliyeti daha az.
 func cdSizes(mobil, tablet string, masaustu int) string {
 	c := make([]string, 0, 9)
 	if mobil != "" {
@@ -229,11 +150,6 @@ func cdSizes(mobil, tablet string, masaustu int) string {
 	return strings.Join(c, ", ")
 }
 
-// cdKgOlcekli adres ölçeklenebilir bir kaynak görseli mi.
-//
-// YALNIZ /kg/<hash> biçimine dokunulur. Dış adresler, /media/... yolları ve
-// boş değer olduğu gibi bırakılır: ölçekleme ucu yalnız kaynak görselleri
-// tanır, başkasına genişlik eklemek 404 üretir.
 func cdKgOlcekli(url string) bool {
 	if !strings.HasPrefix(url, "/kg/") {
 		return false
@@ -285,15 +201,6 @@ func cdKgSrcset(url string, yuva CDYuva) string {
 // cdKgSizes yuvanın sizes değeri.
 func cdKgSizes(yuva CDYuva) string { return yuvaBilgi[yuva].Sizes }
 
-// cdLCPOnYukle hero manşetinin görselini <link rel=preload> için hazırlar.
-//
-// NEDEN: ana sayfada LCP öğesi manşet görseli. DOM'da sol rayın (5 satır)
-// ve orta kolon metninin ARDINDAN geliyor; tarayıcı preload scanner'ı
-// görsele gelene kadar 9 alt-katlama görseli isteğe giriyor (ölçüldü:
-// 713 ms'de dokuz istek birden). Preload, görseli CSS'ten önce başlatıyor.
-//
-// srcset/sizes <img> ile BİREBİR aynı üretiliyor — farklı olsa tarayıcı
-// iki ayrı aday sayıp görseli iki kez indirir.
 func cdLCPOnYukle(s CDStory) *CDPreload {
 	if s.Image == "" {
 		return nil

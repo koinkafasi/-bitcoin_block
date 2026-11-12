@@ -8,19 +8,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// Mega menü sözleşmesi: MENÜYE YALNIZ VAR OLAN SAYFA YAZILIR.
-//
-// ÖLÇÜM (5 Kasım 2026): menüde 49 hedef vardı, 29'u 404 dönüyordu. Yapı
-// "tamam" görünüyordu, site yarımdı. Aşağıdaki testler bu sınıfı kapatır:
-//   - ölü bağlantı listesi boş olmalı
-//   - "News News" gibi çift son ek olmamalı
-//   - veriye bağlı sütun boşken basılmamalı
-
-// oluHedefler: menüde OLMAMASI gereken, karşılığı üretilmemiş yollar.
-//
-// Bu liste bir kara liste DEĞİL, sözleşme: kaynak kodda bu dizeler
-// görünürse menü yine ölü bağlantı veriyor demektir. Yeni bir ölü hedef
-// eklenirse buraya yazılır ve test kırmızıya döner.
 var oluHedefler = []string{
 	"/video/coindesk-daily", "/video/spotlight", "/video/shorts",
 	"/newsletters/coindesk-headlines", "/newsletters/crypto-daybook-americas",
@@ -51,10 +38,6 @@ func TestCDMenuOluHedefYok(t *testing.T) {
 	}
 }
 
-// TestCDMenuSabitHedeflerVar: sabit menüdeki her hedefin bir handler'ı var.
-//
-// Sunucu rotaları bu pakette değil; bu test yalnız yol biçimini doğrular
-// (başında "/" olmalı, boş olmamalı). Varlık kontrolü canlı smoke ile.
 func TestCDMenuSabitHedeflerVar(t *testing.T) {
 	for _, g := range cdMenuSabit {
 		assert.True(t, strings.HasPrefix(g.Href, "/"), "grup hedefi yol olmalı: %q", g.Href)
@@ -71,9 +54,6 @@ func TestCDMenuSabitHedeflerVar(t *testing.T) {
 	}
 }
 
-// TestCDMenuVeriYoksaSutunBasilmaz: etiket/coin verisi yoksa o sütun
-// hiç oluşmamalı. Boş sütun başlığı ("Crypto News") altında satır
-// olmaması kullanıcıya kırık görünür.
 func TestCDMenuVeriYoksaSutunBasilmaz(t *testing.T) {
 	bos := CDShell{}
 	gruplar := cdMenuGroups(bos)
@@ -82,9 +62,6 @@ func TestCDMenuVeriYoksaSutunBasilmaz(t *testing.T) {
 			assert.Len(t, g.Columns, 1, "etiket verisi yokken News tek sütun olmalı")
 		}
 		if g.Href == "/price" {
-			// İKİ SÜTUN: kripto (başlık + tümü) ve hisse (başlık +
-			// BIST hedefi + tümü). Hisse sütunu VERİYE bağlı değil:
-			// /borsa/hisseler her zaman dolu (evren listesi).
 			require.Len(t, g.Columns, 2)
 			var etiketler []string
 			for _, it := range g.Columns[0].Items {
@@ -108,9 +85,6 @@ func TestCDMenuVeriVarsaEklenir(t *testing.T) {
 		},
 	}
 	gruplar := cdMenuGroups(dolu)
-	// Href ile eşleşiyoruz: etiketler Türkçeleştirildi (News → Haberler,
-	// Prices → Fiyatlar) ama ADRESLER kanonik ve sabit. Etikete bağlı test
-	// her çeviride kırılırdı.
 	var news, prices *CDMenuGroup
 	for i := range gruplar {
 		switch gruplar[i].Href {
@@ -150,12 +124,6 @@ func TestCDMenuIDBenzersiz(t *testing.T) {
 	}
 }
 
-// TestCDMenuBosBolumlerElenir: yayında içeriği OLMAYAN bölümün menü satırı
-// basılmaz.
-//
-// ÖLÇÜM (6 Kasım 2026): Focus · Videos · Podcasts · News Analysis · Press
-// Releases bölümlerinde 0 yayında içerik vardı; menü beş ölü bağlantı
-// veriyordu ve tıklayan "içerik yok" sayfasına düşüyordu.
 func TestCDMenuBosBolumlerElenir(t *testing.T) {
 	s := CDShell{MenuBolumler: map[string]bool{
 		"markets": true, "policy": true, "tech": true, "business": true,
@@ -230,11 +198,6 @@ func TestCDBolumSlug(t *testing.T) {
 	}
 }
 
-// TestCDMenuHisseSutunu: Fiyatlar panelinde hisse girişi olmalı.
-//
-// NEDEN: 633 BIST hissesinin kendi detay sayfası var. Menü, o sayfalara
-// giden en görünür giriş; sütun sessizce düşerse hisseler yine "yalnız
-// doğrudan adresle" durumuna döner.
 func TestCDMenuHisseSutunu(t *testing.T) {
 	for _, kabuk := range []CDShell{
 		{}, // fiyat servisi yok

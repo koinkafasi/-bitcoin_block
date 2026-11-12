@@ -8,15 +8,6 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-// Birleşik gelen kutusu (Faz 167).
-//
-// NEDEN: iletişim mesajları, içerik geri bildirimi ve yorumlar üç ayrı
-// ekranda duruyordu; "bugün ne geldi?" sorusunun cevabı üç yere bakmayı
-// gerektiriyordu. Pacely'nin /messages ekranı tek listede topluyor.
-//
-// Bu görünüm SALT OKUMADIR ve yıkıcı eylem içermez: her öğe kendi ekranına
-// yönlendirir. İşlem yapmak isteyen kullanıcı kaynağın kendi sayfasına
-// gider; böylece yetki ve iş kuralları tek yerde kalır.
 type GelenOge struct {
 	Tur    string // "iletisim" | "bildirim" | "yorum"
 	TurAd  string
@@ -30,11 +21,6 @@ type GelenOge struct {
 	Zaman  time.Time
 }
 
-// GelenKutusu üç kaynağı tek listede birleştirir.
-//
-// `limit` toplam üst sınırdır, kaynak başına değil: kullanıcı "son 50 olay"
-// görür, "her kaynaktan 50" değil. Kaynak başına limit/2+1 çekilip birleşim
-// kesiliyor; böylece tek bir kaynak listeyi doldurup diğerlerini ezmiyor.
 func GelenKutusu(ctx context.Context, pool *pgxpool.Pool, siteID int64, limit int) ([]GelenOge, error) {
 	if limit <= 0 {
 		limit = 40

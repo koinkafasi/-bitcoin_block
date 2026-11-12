@@ -2,12 +2,6 @@ package templkit
 
 import "strings"
 
-// CoinDesk ana sayfa — veri tipleri.
-//
-// Modül sırası docs/COINDESK-SPEC.md §6'dan BİREBİR alınmıştır; sıra
-// değiştirilmez. Boş modül basılmaz (boş kutu tasarımı bozuk gösterir),
-// ama sıra korunur.
-
 // CDStory kart/liste öğesi.
 type CDStory struct {
 	Title     string
@@ -43,11 +37,6 @@ type CDPriceRow struct {
 	Href   string
 }
 
-// CDDusunce "Düşünce Liderliği" modülü (sol ray).
-//
-// CoinDesk'te sponsorlu içerik: görsel + başlık + "Sponsored by …".
-// Kaynak gerçek CoinDesk sponsorlu içeriği; kendi sponsorlu arşivimiz
-// dolduğunda aynı bileşen oradan beslenecek.
 type CDDusunce struct {
 	Baslik  string
 	Sponsor string
@@ -55,10 +44,6 @@ type CDDusunce struct {
 	Href    string
 }
 
-// CDVideo "Bugünün Videoları" modülü (sağ ray).
-//
-// Oynatıcı yerine kapak + başlık: video altyapısı gelene kadar kart
-// kaynağa gider (kullanıcı isteği: geçici olarak CoinDesk video linki).
 type CDVideo struct {
 	Etiket string
 	Baslik string
@@ -113,16 +98,6 @@ type CDHomeView struct {
 	Desc      string
 	Canonical string
 
-	// §6 sırası:
-	//  4 today's videos · 5 latest news · 6 thought leadership
-	//  8 manşet bloğu · 9 press releases · 10 research
-	//  12 clips · 13 reklam · 14 prices · 15 stocks · 16 exchange benchmark
-	//  17 videos · 18 indices · 19 podcasts · 20 opinion · 21 most read
-	//  22 bölüm blokları
-	//
-	// §3 promo bandı ve §7 bülten formu ana sayfada YOK: CoinDesk TR ana
-	// sayfasında ne promo şeridi ne de form var (6 Kasım 2026 ölçümü).
-	// Bülten bileşeni /bulten sayfasında duruyor.
 	Lead CDStory
 	// §7A sol ray: "Son Haberler" + Düşünce Liderliği + tek görselli manşet.
 	RailLeft  []CDStory
@@ -157,15 +132,17 @@ type CDHomeView struct {
 	// Piyasa Nabzı (yalnız /markets): gerçek zincir-üstü veri.
 	NabizFiyat *CDGrafikKart
 	Nabiz      []CDGrafikKart
+	// Analiz akışı: Piyasa Nabzı'nın üstünde akan üç kolon.
+	// Boşsa modül hiç basılmaz.
+	Analiz []CDAnalizKart
+	// AnalizSayi rozetteki gerçek sayı (son 7 günün analiz adedi).
+	AnalizSayi int
 	// Explore "Explore more from CoinDesk" yatay şeridi (bölüm
 	// panelleriyle). Boşsa modül basılmaz.
 	Explore CDExplore
 	// Giris: ana sayfanın GİRİŞ HERO'su (11 Kasım 2026) — şerit ile
 	// üç kolon manşet arasında durur. Veri yoksa (Hazir=false) basılmaz.
-	Giris CDGiris
-	// Moduller: sayfa tasarımcısından gelen modül sırası (9 Kasım 2026).
-	// BOŞSA `cd_home.templ` varsayılan sabit sırayı uygular — düzen
-	// yazılmamış sitelerde görünüm birebir aynı kalır.
+	Giris    CDGiris
 	Moduller []CDModul
 }
 
@@ -215,18 +192,15 @@ type CDArticleView struct {
 	JSONLD string
 	// BreadcrumbJSONLD ikinci yapısal veri bloğu (BreadcrumbList).
 	BreadcrumbJSONLD string
+	// ContentID tepki çubuğunun hedefi (yayınsa dolu). Metin olarak
+	// tutuluyor: şablon sayı biçimlemez ve boşsa blok hiç basılmaz.
+	ContentID string
+	// FAQJSONLD gövdedeki gerçek "Sık sorulan sorular" bölümünden
+	// çıkarılmış FAQPage bloğu. Bölüm yoksa boştur ve hiç basılmaz.
+	FAQJSONLD string
 	// Hreflang gerçek çeviriler (dil → mutlak URL).
-	Hreflang map[string]string
-	// Dil makale iskeletinin dil metinleri (Yazan / Yayınlandı / …).
-	//
-	// NEDEN: bu sözcükler şablonda SABİT Türkçeydi; çeviri sayfalarında
-	// (`/en/…`) İngilizce gövdenin ortasında "Yazan", "Yayınlandı" ve
-	// Türkçe ay adları görünüyordu (ölçüldü, 9 Kasım 2026). Sıfır değer
-	// Türkçeye düşer (eski davranış korunur).
-	Dil CDMakaleDil
-	// CeviriEtiketi çeviri sayfasında basılan etiket
-	// ("AI tarafından çevrildi"). BOŞSA hiç basılmaz — asıl dildeki
-	// içerikte etiket yoktur (uydurma "çeviri" damgası vurulmaz).
+	Hreflang      map[string]string
+	Dil           CDMakaleDil
 	CeviriEtiketi string
 	// CeviriHref etiketin bağlandığı ORİJİNAL makale adresi.
 	CeviriHref string
@@ -245,10 +219,6 @@ type CDArticleView struct {
 	ShareLinkedIn string
 }
 
-// CDMakaleDil makale sayfasının dil metinleri.
-//
-// YALNIZ İSKELET metinleri: içerik metni çevrilmiyor, sayfa süslemesi
-// (etiketler) sayfa diline uyuyor. Sıfır değer Türkçeye düşer.
 type CDMakaleDil struct {
 	Yazan       string
 	Yayinlandi  string
@@ -347,4 +317,12 @@ func cdBasinIleri(i, n int) int {
 		return 0
 	}
 	return (i + 1) % n
+}
+
+type CDAnalizKart struct {
+	Baslik   string
+	Spot     string
+	Kategori string
+	Href     string
+	Tarih    string
 }

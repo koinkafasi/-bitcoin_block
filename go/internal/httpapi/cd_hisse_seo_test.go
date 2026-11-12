@@ -7,12 +7,6 @@ import (
 	"testing"
 )
 
-// /price/stock kökü: 404 DEĞİL, 301 ile tek kanonik sayfaya (/price).
-//
-// NEDEN: hisse bölümünün kök adresi doğal olarak denenir (menü, dış
-// bağlantı, elle yazım). 404 vermek "burada bir şey yok" demekti; oysa
-// /price hisse giriş listesini basıyor. İki ayrı dizin sayfası tutmak
-// yinelenen içerik olurdu.
 func TestCDHisseDizinYonlendirme(t *testing.T) {
 	s := &Server{}
 
@@ -33,10 +27,6 @@ func TestCDHisseDizinYonlendirme(t *testing.T) {
 	}
 }
 
-// cdFiyatSayi: fiyat metnini yapısal veriye uygun SAYIya çevirir.
-//
-// Biçim tek kaynaktan geliyor (repo.FiyatBicimP): binlik virgül, ondalık
-// nokta, para simgesi önde. Bu test o sözleşmeyi kilitler.
 func TestCdFiyatSayi(t *testing.T) {
 	for giris, beklenen := range map[string]float64{
 		"$610.15":   610.15,
@@ -62,10 +52,6 @@ func TestCdFiyatSayi(t *testing.T) {
 	}
 }
 
-// cdHisseJSONLD yalnız GERÇEK alanları yazar; URL/fiyat/sembol doğru.
-//
-// JSON anahtarları alfabetik yazılıyor (Go map sıralaması): beklenen
-// dizeler o sıraya göre kuruldu.
 func TestCdHisseJSONLD(t *testing.T) {
 	s := string(cdHisseJSONLD("bitcosar", "https://ornek.test/price/stock/meta",
 		"Meta Platforms, Inc.", "META", "NasdaqGS", "USD", "$610.15", "+0.84%"))

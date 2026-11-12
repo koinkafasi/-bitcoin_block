@@ -1,5 +1,4 @@
-/* menu.js — Menü Yapısı paneli: sürükle-bırak sıralama, kategori/özel link
- * ekleme, ana/alt geçişi, JSON kaydetme. HTMX swap sonrası yeniden bağlanır. */
+
 (function () {
   'use strict';
 

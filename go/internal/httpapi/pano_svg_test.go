@@ -9,10 +9,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// Pano grafikleri sunucuda üretildiği için test edilebilir. Bu testler
-// koordinat matematiğinin sessiz bozulmalarını yakalar: düz çizgi, ters
-// eksen, sıfıra bölme ve dilim yüzdesi toplamı.
-
 func TestPanoNoktaEkseniDogru(t *testing.T) {
 	// En büyük değer kutunun TEPESİNE, en küçük değer TABANA gelmeli.
 	// (SVG'de y aşağı büyür; ters çevirmeyi unutmak klasik hata.)
@@ -68,9 +64,6 @@ func TestPanoDilimlerBos(t *testing.T) {
 }
 
 func TestPanoHalkaTumArgumanlarYerinde(t *testing.T) {
-	// Regresyon: biçim dizesinde bir %d fazla olunca argümanlar kayıyor ve
-	// transform="rotate(-90 95.0 %!f(string=T))" gibi bozuk SVG çıkıyordu.
-	// Tarayıcı bunu sessizce yutuyor, dilimler yanlış yere düşüyordu.
 	h := string(panoHalka([]PanoDilim{
 		{Name: "Teknoloji", Count: 92, Pct: 46},
 		{Name: "Gündem", Count: 31, Pct: 16},
