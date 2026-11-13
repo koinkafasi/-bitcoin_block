@@ -12,6 +12,11 @@ import (
 const (
 	// Haber gövdesi alt sınırları. Google'ın "thin content" eşiği değil,
 	// editoryal ölçüt: 3 paragraf altındaki metin haber değil, duyurudur.
+	//
+	// Bu üç sabit TÜRDEN BAĞIMSIZ taban kalıyor: her içerik en az bunu
+	// geçmeli. Türe özgü kelime hedefi ayrı çalışır (bkz. uzunluk.go,
+	// uzunlukUyarilari) — paragraf sayısı iki kez denetlenmesin diye
+	// hedefin paragraf bandı yalnız prompt'a gider.
 	haberMinParagraf = 3
 	haberMinKarakter = 700
 	haberMaxParagraf = 12

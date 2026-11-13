@@ -159,6 +159,7 @@ func (s *Service) buildArticleContext(ctx context.Context, c repo.Content) artic
 	for _, src := range srcs {
 		sourceURLs = append(sourceURLs, src.URL)
 	}
+	hedef := UzunlukHedefiIcin(c.TypeKey, deref(c.CategorySlug))
 	return articleContext{
 		ContentID:  c.ID,
 		Version:    c.Version,
@@ -168,6 +169,7 @@ func (s *Service) buildArticleContext(ctx context.Context, c repo.Content) artic
 		Tags:       tags,
 		Language:   c.Locale,
 		SourceURLs: sourceURLs,
+		Uzunluk:    &hedef,
 	}
 }
 
@@ -335,6 +337,13 @@ func (s *Service) ProcessJob(ctx context.Context, jobID int64) (Result, error) {
 	// Yapı ve SEO kapısı: paragraf sayısı, uzunluk, HTML varlığı, kaynak adı
 	// sızıntısı, tekrar eden cümle, başlık/spot/SEO bantları.
 	result.Warnings = append(result.Warnings, yapiUyarilari(&result, act, kaynakMetin)...)
+	// Konu bazlı kelime hedefi. Taban denetiminden ayrı: 700 karakterlik
+	// eski eşik 156 kelimelik metni "yeterli" buluyordu.
+	if freshCtx.Uzunluk != nil && uzunlukHedefiUygulanir(act.ID) {
+		govde := alanDegeri(&result, "body")
+		result.Warnings = append(result.Warnings,
+			uzunlukUyarilari(govde, *freshCtx.Uzunluk, altBaslikVar(&result))...)
+	}
 	if truncatedSelection {
 		result.Warnings = append(result.Warnings, "Transkript uzun olduğu için ilk 60.000 karakter kullanıldı; tamamı için kaydı bölerek yeniden deneyin.")
 	}
@@ -408,6 +417,11 @@ type articleContext struct {
 	SourceURLs []string       `json:"source_urls,omitempty"`
 	Angle      string         `json:"angle,omitempty"`
 	Extra      map[string]any `json:"extra,omitempty"`
+	// Uzunluk içeriğin tür/kategorisine göre gövde hedefi. Bağlam
+	// JSON'unda da görünür (izlenebilirlik), ama modele asıl olarak
+	// userPrompt'taki ayrı blokla verilir — ölçümde model JSON içine
+	// gömülü sayıyı yok sayıyordu.
+	Uzunluk *UzunlukHedefi `json:"uzunluk_hedefi,omitempty"`
 }
 
 func userPrompt(act Action, ctx articleContext, selection, body, instruction, angle string, sources []Source) string {
@@ -445,6 +459,11 @@ func userPrompt(act Action, ctx articleContext, selection, body, instruction, an
 	}
 	if angle != "" {
 		b.WriteString("\nİSTENEN AÇI: " + angle + "\n")
+	}
+	// Uzunluk hedefi EDİTÖR TALİMATINDAN ÖNCE basılıyor: editör "daha
+	// kısa yaz" derse onun sözü geçerli olsun.
+	if ctx.Uzunluk != nil && uzunlukHedefiUygulanir(act.ID) {
+		b.WriteString("\n" + ctx.Uzunluk.PromptSatiri())
 	}
 	if instruction != "" {
 		b.WriteString("\nEDİTÖR TALİMATI (en fazla bu talimatı uygula):\n" + instruction + "\n")
@@ -566,6 +585,9 @@ func audioDraftPrompt(ctx articleContext, transcript, body, instruction string) 
 		b.WriteString("\nMEVCUT HABER TASLAĞI (varsa; üslup ve bağlam için):\n<<<\n")
 		b.WriteString(truncate(body, 3000))
 		b.WriteString("\n>>>\n")
+	}
+	if ctx.Uzunluk != nil {
+		b.WriteString("\n" + ctx.Uzunluk.PromptSatiri())
 	}
 	if strings.TrimSpace(instruction) != "" {
 		b.WriteString("\nEDİTÖR TALİMATI (yalnızca bunu uygula):\n" + instruction + "\n")

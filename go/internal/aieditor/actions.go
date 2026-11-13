@@ -4,7 +4,12 @@ import "strings"
 
 // PromptVersion tüm eylem promptlarının sürümüdür. Prompt metni değiştiğinde
 // artırılır ve ai_jobs/ai_usage_logs içinde saklanır.
-const PromptVersion = "ai-editor-v2"
+//
+// v3: konu bazlı uzunluk hedefi. v2'de "3 ile 8 arasında paragraf" sabit
+// bandı vardı ve model alt sınıra yapışıyordu; ölçümde haber medyanı 156
+// kelimeye düşmüştü (AI öncesi aynı sitede 486). Sürüm artırıldı ki
+// ai_usage_logs üzerinden öncesi/sonrası karşılaştırılabilsin.
+const PromptVersion = "ai-editor-v3"
 
 // Action AI editörünün tek bir eylemini tanımlar. Prompt'lar kodun farklı
 // yerlerine dağılmaz; bu kayıt defterinde tek yerde ve sürümle tutulur.
@@ -28,7 +33,8 @@ var Actions = []Action{
 		Description: "Seçili metinden düzenlenebilir haber taslağı oluşturur.",
 		Instruction: `Seçili metni başlangıç noktası alarak Türkçe haber taslağı yaz.
 Kurallar:
-- paragraphs: 3 ile 8 arasında paragraf. Her paragraf 2-4 cümle, tek konu.
+- paragraphs: paragraf ve kelime sayısı için istemdeki HEDEF UZUNLUK
+  bloğuna uy. Her paragraf 2-4 cümle, tek konu.
   İlk paragraf 5N1K (ne, kim, nerede, ne zaman, neden) ile başlasın.
 - Kaynakta olmayan olgu, kişi, tarih, rakam veya alıntı EKLEME. Kaynakta
   olmayan bir sayı yazmak zorunda kalırsan o cümleyi hiç yazma.
@@ -41,8 +47,10 @@ Kurallar:
 - seo_title: 30-60 karakter; haber başlığını birebir kopyalama.
 - meta_description: 110-155 karakter; ne oldu ve neden önemli.
 - keywords: 3-6 kısa terim.
+- subheadings: yalnız HEDEF UZUNLUK bloğu alt başlık istiyorsa doldur;
+  istemiyorsa boş bırak. Kısa haberi alt başlıkla bölmek gereksizdir.
 Şu JSON şemasını döndür:
-{"title":"","spot":"","ai_summary":"","paragraphs":[""],"seo_title":"","meta_description":"","keywords":[""],"claims_to_verify":[""]}`,
+{"title":"","spot":"","ai_summary":"","paragraphs":[""],"subheadings":[""],"seo_title":"","meta_description":"","keywords":[""],"claims_to_verify":[""]}`,
 	},
 	{
 		ID: "research_news", Label: "Araştırarak Haber Yap", Group: "Araştırma", Icon: "🔎", Research: true,
