@@ -272,7 +272,11 @@ func (s *Server) handlePublicSegment(w http.ResponseWriter, r *http.Request) {
 		}
 		staticFS, err := fs.Sub(webui.FS, "static")
 		if err == nil {
-			http.StripPrefix("/static/", http.FileServer(http.FS(staticFS))).ServeHTTP(w, r)
+			// CSS yorumları dışarıya çıkmasın (bkz. statikcss.go).
+			if s.statikk == nil {
+				s.statikk = newCSSSunucu(staticFS)
+			}
+			http.StripPrefix("/static/", s.statikk).ServeHTTP(w, r)
 			return
 		}
 		http.NotFound(w, r)

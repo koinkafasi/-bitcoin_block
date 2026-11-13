@@ -302,9 +302,21 @@ func parseIntOr(v string) int {
 func (s *Server) handleAdClick(w http.ResponseWriter, r *http.Request) {
 	id := parseID(r.PathValue("id"))
 	site := s.siteByDomain(r.Context(), r.Host)
+
+	// TIKLAMA SAHTEKÂRLIĞI KORUMASI (bkz. reklam_koruma.go).
+	// Şüpheli istekte SAYIM YAPILMAZ ama kullanıcı yine hedefe gider —
+	// meşru bir ziyaretçiyi engellemek daha büyük zarar olurdu.
 	if id > 0 {
-		_ = repo.RecordAdClick(r.Context(), s.pool, site.ID, id)
+		karar := s.reklamKoruma.reklamTiklamaDegerlendir(r, clientIP(r), id)
+		if karar.Say {
+			_ = repo.RecordAdClick(r.Context(), s.pool, site.ID, id)
+		} else {
+			s.logger.Warn("reklam tıklaması sayılmadı",
+				"ad", id, "ip", clientIP(r), "neden", karar.Neden,
+				"ua", kisalt(r.UserAgent(), 80))
+		}
 	}
+
 	dest := ""
 	if id > 0 {
 		if u, err := repo.AdTarget(r.Context(), s.pool, site.ID, id); err == nil {
@@ -317,6 +329,10 @@ func (s *Server) handleAdClick(w http.ResponseWriter, r *http.Request) {
 	if dest == "" {
 		dest = "/"
 	}
+	// Tıklama sayacına "bu bir reklam tıklaması" bilgisi ekleme yok;
+	// yönlendirme her durumda bizim güvenli hedefimize gider.
+	w.Header().Set("Cache-Control", "no-store")
+	w.Header().Set("Referrer-Policy", "no-referrer")
 	http.Redirect(w, r, dest, http.StatusFound)
 }
 
@@ -351,7 +367,9 @@ func (s *Server) handleAdView(w http.ResponseWriter, r *http.Request) {
 	site := s.siteByDomain(ctx, r.Host)
 	_ = r.ParseForm()
 	id := parseID(r.FormValue("id"))
-	if id > 0 {
+	// Gösterim sayacı da korunur: aynı IP'den dakikada onlarca piksel
+	// isteği gösterim sayısını şişirip "geçersiz trafik" üretirdi.
+	if id > 0 && s.reklamKoruma.reklamGosterimIzinli(r, clientIP(r)) {
 		_ = repo.RecordAdView(ctx, s.pool, site.ID, id, 1)
 	}
 	w.Header().Set("Content-Type", "image/gif")

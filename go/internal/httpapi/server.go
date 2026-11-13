@@ -6,6 +6,7 @@ import (
 	"context"
 	"encoding/json"
 	"html/template"
+	"io/fs"
 	"log/slog"
 	"net/http"
 	neturl "net/url"
@@ -60,6 +61,9 @@ type Server struct {
 
 	adMu    sync.Mutex
 	adCache map[int64]adCacheEntry
+	// reklamKoruma tıklama/gösterim sahtekârlığı sayaçları
+	// (bkz. reklam_koruma.go).
+	reklamKoruma *reklamKoruma
 
 	redirMu    sync.Mutex
 	redirCache map[int64]redirCacheEntry
@@ -93,6 +97,8 @@ type Server struct {
 	// 6 kez çekiyordu; bkz. yt_liste.go).
 	ytListeCache *ttlcache[[]repo.YoutubeKayit]
 
+	// statikk /static/ altını sunar; CSS dosyaları YORUMSUZ (bkz. statikcss.go).
+	statikk *cssSunucu
 	// cspHashes gövde → CSP başlığı önbelleği (bkz. csp_hashcache.go).
 	cspHashes *cspHashCache
 
@@ -136,6 +142,7 @@ func NewServerApp(cfg config.Config, logger *slog.Logger, pool *pgxpool.Pool, bu
 		mediaAltCache: map[int64]string{},
 		adCache:       map[int64]adCacheEntry{},
 		redirCache:    map[int64]redirCacheEntry{},
+		reklamKoruma:  newReklamKoruma(),
 		blockCache:    map[string]bool{},
 		siteCache:     map[string]siteEntry{},
 		assetVer:      strconv.FormatInt(time.Now().Unix(), 36),
@@ -165,6 +172,11 @@ func NewServerApp(cfg config.Config, logger *slog.Logger, pool *pgxpool.Pool, bu
 	funcs["urlAbs"] = urlAbs
 	funcs["catIcon"] = catIcon
 	s.tmpl = template.Must(template.New("_").Funcs(funcs).ParseFS(webui.FS, "templates/*.html"))
+
+	// Statik sunucu: CSS yorumları DIŞARIYA ÇIKMAZ (kaynakta kalır).
+	if statikFS, err := fs.Sub(webui.FS, "static"); err == nil {
+		s.statikk = newCSSSunucu(statikFS)
+	}
 
 	s.routes()
 

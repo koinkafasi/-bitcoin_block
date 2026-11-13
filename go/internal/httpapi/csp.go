@@ -304,6 +304,21 @@ func buildCSP(scriptHashes, styleHashes []string, collabURL, reportURL string) s
 	scriptSrc += " https://www.googletagmanager.com https://cdn.ampproject.org"
 	scriptSrc += " https://static.cloudflareinsights.com"
 
+	// REKLAM AĞLARI (13 Kasım 2026): bu alan adları eksik olduğu için
+	// `/static/cd-entegrasyon.js` tarafından eklenen betikler tarayıcıda
+	// CSP ile BLOKLANIYORDU ve reklamlar hiç yüklenmiyordu (canlı konsol
+	// ölçümü: coinzillatag.com/lib/display.js, /lib/sticky.js ve
+	// appsha1.cointraffic.io/js "violates CSP directive" hatası).
+	// Kapsam DAR tutuldu: yalnız bu üç ağ + AdSense'in zorunlu uçları.
+	//   · Coinzilla : coinzillatag.com (display + sticky)
+	//   · Cointraffic: appsha1.cointraffic.io
+	//   · AdSense    : pagead2/adservice/tpc/googletagservices,
+	//                  googleads.g.doubleclick.net, securepubads
+	scriptSrc += " https://coinzillatag.com https://appsha1.cointraffic.io" +
+		" https://pagead2.googlesyndication.com https://adservice.google.com" +
+		" https://tpc.googlesyndication.com https://www.googletagservices.com" +
+		" https://securepubads.g.doubleclick.net https://fundingchoicesmessages.google.com"
+
 	styleSrc := "style-src 'self'"
 	for _, h := range styleHashes {
 		styleSrc += " " + h
@@ -313,7 +328,12 @@ func buildCSP(scriptHashes, styleHashes []string, collabURL, reportURL string) s
 	}
 	styleSrc += " https://fonts.googleapis.com"
 
-	connectSrc := "connect-src 'self' https://www.google-analytics.com https://region1.google-analytics.com https://cloudflareinsights.com"
+	connectSrc := "connect-src 'self' https://www.google-analytics.com https://region1.google-analytics.com https://cloudflareinsights.com" +
+		// Reklam ağlarının XHR/beacon uçları (ölçüm, kapatma, kalite).
+		" https://coinzillatag.com https://appsha1.cointraffic.io" +
+		" https://pagead2.googlesyndication.com https://googleads.g.doubleclick.net" +
+		" https://ep1.adtrafficquality.google https://ep2.adtrafficquality.google" +
+		" https://securepubads.g.doubleclick.net"
 	if o := websocketOrigin(collabURL); o != "" {
 		connectSrc += " " + o
 	}
@@ -326,7 +346,10 @@ func buildCSP(scriptHashes, styleHashes []string, collabURL, reportURL string) s
 		"font-src 'self' https://fonts.gstatic.com; " +
 		connectSrc + "; " +
 		"frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com " +
-		"https://www.google.com https://www.googletagmanager.com https://cdn.ampproject.org https://search.google.com; " +
+		"https://www.google.com https://www.googletagmanager.com https://cdn.ampproject.org https://search.google.com " +
+		// Reklam iframe'leri (AdSense + Coinzilla)
+		"https://googleads.g.doubleclick.net https://tpc.googlesyndication.com " +
+		"https://securepubads.g.doubleclick.net https://coinzillatag.com; " +
 		"frame-ancestors 'self'; " +
 		"base-uri 'self'; " +
 		"form-action 'self'; " +
