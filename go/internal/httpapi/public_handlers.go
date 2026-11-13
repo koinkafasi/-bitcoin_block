@@ -331,6 +331,13 @@ func (s *Server) handlePublicSegment(w http.ResponseWriter, r *http.Request) {
 	}
 	if i >= len(segs) {
 		r.SetPathValue("lang", lang)
+		// `/en/`, `/tr/` — dil önekli kök. Önceden eski tema basılıyordu
+		// (ölçüm 13 Kasım 2026: /en/ 30 KB, / 141 KB). Dil seçildiğinde
+		// kullanıcı CD temasında kalmalı.
+		if i == 1 {
+			s.handleCDHome(w, r)
+			return
+		}
 		s.handleHome(w, r)
 		return
 	}
@@ -339,6 +346,13 @@ func (s *Server) handlePublicSegment(w http.ResponseWriter, r *http.Request) {
 	r.SetPathValue("lang", lang)
 
 	if s.makaleYolu(w, r, segs[i:], lang) {
+		return
+	}
+
+	// Dil önekli CD yolları (`/en/markets`, `/en/price/bitcoin` …).
+	// Ölçüm 13 Kasım 2026: bunlar 404 dönüyordu — dil altyapısı vardı,
+	// rotası yoktu (bkz. dil_cd.go cdDilYolu).
+	if i == 1 && s.cdDilYolu(w, r, segs[i:]) {
 		return
 	}
 
