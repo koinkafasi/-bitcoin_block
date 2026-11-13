@@ -243,13 +243,18 @@ templ CDArticle(v CDArticleView) {
 										// Kaynak atfı: toplayıcı sitede ZORUNLU ve görünür
 					if v.SourceName != "" {
 						<div class="cd-source">
-							<strong>Kaynak:</strong>
+							<strong>{ v.Dil.Kaynak }:</strong>
 							if v.SourceURL != "" {
-								<a href={ v.SourceURL } rel="nofollow noopener" target="_blank">{ v.SourceName }</a>
+								// nofollow YOK. Google nofollow'u "güvenmediğin
+								// veya sponsorlu bağlantı" için tanımlıyor;
+								// editoryal kaynak atfı ikisi de değil.
+								// Satırın kendisi "kaynak budur" diyorken
+								// bağlantıya nofollow koymak onu yalanlıyordu.
+								<a href={ v.SourceURL } rel="noopener" target="_blank">{ v.SourceName }</a>
 							} else {
 								<span>{ v.SourceName }</span>
 							}
-							<span> — bu içerik özet ve atıf ile sunulur; tam metin kaynağındadır.</span>
+							<span> — { v.Dil.KaynakNot }</span>
 						</div>
 					}
 

@@ -248,6 +248,12 @@ type CDMakaleDil struct {
 	Ceviri string
 	// CeviriIpucu etiketin aria-label'i (ekran okuyucu için tam cümle).
 	CeviriIpucu string
+	// Kaynak / KaynakNot makale altındaki atıf satırı. İngilizce
+	// sayfalarda da Türkçe basılıyordu ("Kaynak: ... tam metin
+	// kaynağındadır"); okuyucu için kırık, arama motoru için karışık
+	// dil sinyali.
+	Kaynak    string
+	KaynakNot string
 }
 
 // CDMakaleDilTR Türkçe varsayılan iskelet metinleri.
@@ -258,6 +264,8 @@ func CDMakaleDilTR() CDMakaleDil {
 		Guncellendi: "Güncellendi",
 		Ceviri:      "AI tarafından çevrildi",
 		CeviriIpucu: "Bu sayfa yapay zekâ ile Türkçeye çevrildi; orijinalini görüntüle",
+		Kaynak:      "Kaynak",
+		KaynakNot:   "bu içerik özet ve atıf ile sunulur; tam metin kaynağındadır.",
 	}
 }
 
@@ -269,6 +277,8 @@ func CDMakaleDilEN() CDMakaleDil {
 		Guncellendi: "Updated",
 		Ceviri:      "Translated by AI",
 		CeviriIpucu: "This page was translated into English by AI; view the original",
+		Kaynak:      "Source",
+		KaynakNot:   "this article is a summary with attribution; the full text is at the source.",
 	}
 }
 

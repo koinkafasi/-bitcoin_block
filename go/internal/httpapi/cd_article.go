@@ -305,6 +305,7 @@ func (s *Server) cdMakaleGoster(w http.ResponseWriter, r *http.Request, c repo.C
 		Kilitli:   v.Kilitli,
 		GorselAlt: v.ImageCredit,
 		Gorsel:    s.mutlakGorsel(s.kanonikKok(r), v.Image),
+		Logo:      s.mutlakGorsel(s.kanonikKok(r), v.Shell.LogoURL),
 	}))
 	v.BreadcrumbJSONLD = string(makaleBreadcrumbJSONLD(v))
 	// SSS bölümü olan rehberlerde FAQPage. Metin gövdeden çıkarılır;

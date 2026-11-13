@@ -56,6 +56,21 @@ type makaleLDGirdi struct {
 	// tam metinle kullanıcının gördüğü kesik metin arasındaki fark
 	// "cloaking" sayılabiliyor.
 	Kilitli bool
+	// Logo yayıncı logosunun MUTLAK adresi. Google'ın NewsArticle
+	// doğrulayıcısı `publisher.logo` alanını ImageObject bekliyor; boş
+	// dize geçersiz ve zengin sonuç testinde hata veriyor.
+	Logo string
+}
+
+// ldDilKodu yapısal veri için dil kodu. Boş locale eski kayıtlarda
+// görülüyor ve o içerikler Türkçe (bkz. cdAyniDil). Bölgesel varyant
+// (tr-TR) schema.org'da geçerli olduğu için olduğu gibi bırakılıyor.
+func ldDilKodu(locale string) string {
+	l := strings.TrimSpace(locale)
+	if l == "" {
+		return "tr"
+	}
+	return strings.ToLower(l)
 }
 
 func makaleJSONLD(g makaleLDGirdi) template.HTML {
@@ -65,9 +80,23 @@ func makaleJSONLD(g makaleLDGirdi) template.HTML {
 		yazar["url"] = strings.TrimRight(v.BaseURL, "/") + "/yazar/" + g.YazarSlug
 	}
 
+	yayinci := map[string]any{
+		"@type": "NewsMediaOrganization",
+		"name":  v.Shell.SiteName,
+		"url":   strings.TrimRight(v.BaseURL, "/"),
+	}
+	// Logo yoksa alan HİÇ yazılmıyor: boş dize, alanı atlamaktan daha
+	// kötü — doğrulayıcı onu geçersiz değer sayıyor.
+	if g.Logo != "" {
+		yayinci["logo"] = map[string]any{"@type": "ImageObject", "url": g.Logo}
+	}
+
 	makale := map[string]any{
-		"@type":      "NewsArticle",
-		"inLanguage": "tr",
+		"@type": "NewsArticle",
+		// Dil sayfadan okunuyor. Sabit "tr" iken İngilizce çeviriler
+		// <html lang="en"> ile basılıp yapısal veride "tr" diyordu:
+		// aynı sayfa Google'a iki farklı dil sinyali veriyordu.
+		"inLanguage": ldDilKodu(v.Locale),
 		"url":        v.Canonical,
 		"headline":   v.Headline,
 		"abstract":   v.Desc,
@@ -77,12 +106,26 @@ func makaleJSONLD(g makaleLDGirdi) template.HTML {
 		"mainEntityOfPage":    v.Canonical,
 		"articleSection":      v.SectionName,
 		"author":              []any{yazar},
-		"publisher": map[string]any{
-			"@type": "NewsMediaOrganization",
-			"name":  v.Shell.SiteName,
-			"logo":  "",
-			"url":   strings.TrimRight(v.BaseURL, "/"),
-		},
+		"publisher":           yayinci,
+	}
+
+	// KAYNAK ATFI (E-E-A-T). Kripto YMYL'ye yakın bir alan; Google
+	// burada "bilgi nereden geliyor" sorusunu ayrıca tartıyor. Kaynak
+	// adresi zaten elimizde ve sayfada görünür basılıyordu, yapısal
+	// veriye hiç girmiyordu.
+	//
+	// İki alan birden yazılıyor, çünkü farklı şeyler söylüyorlar:
+	//   isBasedOn → bu yazı O çalışmadan TÜRETİLDİ (yeniden yazım)
+	//   citation  → bu yazı O çalışmaya ATIFTA BULUNUYOR
+	// Toplayıcıda ikisi de doğru ve Google ikisini de okuyor.
+	if kaynakURL := strings.TrimSpace(v.SourceURL); kaynakURL != "" {
+		atif := map[string]any{"@type": "CreativeWork", "url": kaynakURL}
+		if ad := strings.TrimSpace(v.SourceName); ad != "" {
+			atif["name"] = ad
+			atif["publisher"] = map[string]any{"@type": "Organization", "name": ad}
+		}
+		makale["isBasedOn"] = kaynakURL
+		makale["citation"] = []any{atif}
 	}
 	if g.ID != "" {
 		makale["identifier"] = g.ID
@@ -107,7 +150,9 @@ func makaleJSONLD(g makaleLDGirdi) template.HTML {
 		makale["keywords"] = g.Keywords
 	}
 
-	makale["@context"] = "http://schema.org"
+	// https: sitedeki diğer tüm bloklar zaten https kullanıyordu, yalnız
+	// makale bloğu http kalmıştı.
+	makale["@context"] = "https://schema.org"
 	return jsonldScript(makale)
 }
 
