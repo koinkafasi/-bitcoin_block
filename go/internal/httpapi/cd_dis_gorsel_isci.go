@@ -117,6 +117,13 @@ func (s *Server) disGorselGovdeAdaylari(ctx context.Context, limit int) ([]disGo
 		       LATERAL jsonb_path_query(c.detail, 'strict $.**') n
 		 WHERE n->>'type' = 'image'
 		   AND n->'attrs'->>'src' LIKE 'http%'
+		   -- DENENİP OLMAYANI ATLA. Bu şart olmadan kuyruk tıkanıyor:
+		   -- sıralama id DESC olduğu için en yeni içerik hep başa
+		   -- geliyor ve ölü adresler her turda yeniden denenip tur
+		   -- limitini doldurarak geri kalan binlerce görsele SIRA
+		   -- BIRAKMIYOR. 13 Kasım 2026'da üretimde görüldü: 49 ölü
+		   -- Ghost adresi, 2012 görsellik kuyruğu tümüyle durdurdu.
+		   AND NOT COALESCE((n->'attrs'->>'indirilemedi')::boolean, false)
 		 ORDER BY c.id DESC, n->'attrs'->>'src'
 		 LIMIT $1`, limit)
 	if err != nil {
@@ -171,23 +178,85 @@ func (s *Server) disGorselBagla(ctx context.Context, a disGorselAdayi, mediaID i
 	return s.disGorselGovdeBagla(ctx, a, mediaID)
 }
 
-// disGorselBasarisiz ölü KAPAK adresini işaretler.
+// disGorselBasarisiz ölü adresi işaretler ki bir daha denenmesin.
 //
-// `image_url_yedek` burada "denendi, olmadı" bayrağı: aday sorgusu bu
-// alanı dolu olanları atlıyor, yani ölü adres her turda yeniden
-// denenmiyor. Gövde görsellerinde böyle bir alan yok; onlarda tekrar
-// deneme zararsız çünkü başarısızlık düğümü değiştirmiyor ve tur
-// limiti küçük.
+// KUYRUĞU TIKAMAMAK İÇİN ŞART. İlk sürümde yalnız kapaklar
+// işaretleniyordu ve gövde için "tekrar deneme zararsız" diye
+// düşünmüştüm. Değilmiş: sıralama id DESC olduğu için en yeni içerik
+// hep başa geliyor, ölü adresler her turda tur limitini dolduruyor ve
+// geri kalan görsellere SIRA GELMİYOR. 13 Kasım 2026'da üretimde
+// görüldü — 49 ölü Ghost adresi 2012 görsellik kuyruğu durdurdu.
+//
+// Kapakta işaret `image_url_yedek` alanı, gövdede düğüm özniteliği
+// (`indirilemedi: true`). İkisi de aday sorgusunda süzülüyor.
 func (s *Server) disGorselBasarisiz(ctx context.Context, a disGorselAdayi) {
-	if !a.Kapak {
+	if a.Kapak {
+		if _, err := s.pool.Exec(ctx, `
+			UPDATE contents SET image_url_yedek = $2
+			 WHERE id = $1 AND COALESCE(image_url_yedek,'') = ''`,
+			a.ContentID, a.Adres); err != nil {
+			s.logger.Warn("dış görsel: başarısız işaretlenemedi", "içerik", a.ContentID, "error", err)
+		}
 		return
 	}
-	if _, err := s.pool.Exec(ctx, `
-		UPDATE contents SET image_url_yedek = $2
-		 WHERE id = $1 AND COALESCE(image_url_yedek,'') = ''`,
-		a.ContentID, a.Adres); err != nil {
-		s.logger.Warn("dış görsel: başarısız işaretlenemedi", "içerik", a.ContentID, "error", err)
+
+	var ham []byte
+	if err := s.pool.QueryRow(ctx,
+		`SELECT detail FROM contents WHERE id=$1`, a.ContentID).Scan(&ham); err != nil {
+		return
 	}
+	yeni, degisti := tipTapGorselIsaretle(ham, a.Adres)
+	if !degisti {
+		return
+	}
+	if _, err := s.pool.Exec(ctx,
+		`UPDATE contents SET detail=$2::jsonb WHERE id=$1`, a.ContentID, yeni); err != nil {
+		s.logger.Warn("dış görsel: gövde işareti yazılamadı", "içerik", a.ContentID, "error", err)
+	}
+}
+
+// tipTapGorselIsaretle eşleşen görsel düğümüne "indirilemedi" bayrağı
+// koyar.
+//
+// `updated_at` BİLEREK DOKUNULMUYOR: bu bir içerik değişikliği değil,
+// işçinin kendi defteri. Güncelleme zamanını kaydırmak içeriği
+// listelerde öne taşır ve "bu yazı güncellendi" yanılgısı üretir.
+func tipTapGorselIsaretle(ham []byte, adres string) ([]byte, bool) {
+	var belge any
+	if json.Unmarshal(ham, &belge) != nil {
+		return ham, false
+	}
+	degisti := false
+	var gez func(n any)
+	gez = func(n any) {
+		switch v := n.(type) {
+		case map[string]any:
+			if v["type"] == "image" {
+				if attrs, ok := v["attrs"].(map[string]any); ok {
+					if s, _ := attrs["src"].(string); s == adres {
+						attrs["indirilemedi"] = true
+						degisti = true
+					}
+				}
+			}
+			for _, alt := range v {
+				gez(alt)
+			}
+		case []any:
+			for _, alt := range v {
+				gez(alt)
+			}
+		}
+	}
+	gez(belge)
+	if !degisti {
+		return ham, false
+	}
+	out, err := json.Marshal(belge)
+	if err != nil {
+		return ham, false
+	}
+	return out, true
 }
 
 // disGorselGovdeBagla gövdedeki image düğümünün src'sini mediaId ile

@@ -80,6 +80,54 @@ func TestTipTapGorselDegistirEslesmezse(t *testing.T) {
 	}
 }
 
+// İNDİRİLEMEYEN GÖVDE GÖRSELİ İŞARETLENMELİ, yoksa kuyruk tıkanır:
+// sıralama id DESC olduğu için ölü adresler her turda tur limitini
+// doldurup geri kalan görsellere sıra bırakmaz. Üretimde görüldü
+// (13 Kasım 2026): 49 ölü Ghost adresi 2012 görsellik kuyruğu
+// tümüyle durdurdu.
+func TestTipTapGorselIsaretle(t *testing.T) {
+	belge := `{"type":"doc","content":[
+		{"type":"image","attrs":{"src":"https://olu.com/a.png","alt":"Grafik"}},
+		{"type":"image","attrs":{"src":"https://canli.com/b.png"}}
+	]}`
+	yeni, degisti := tipTapGorselIsaretle([]byte(belge), "https://olu.com/a.png")
+	if !degisti {
+		t.Fatal("ölü görsel işaretlenmedi")
+	}
+	var d map[string]any
+	if err := json.Unmarshal(yeni, &d); err != nil {
+		t.Fatalf("çıktı geçerli JSON değil: %v", err)
+	}
+	icerik := d["content"].([]any)
+
+	olu := icerik[0].(map[string]any)["attrs"].(map[string]any)
+	if olu["indirilemedi"] != true {
+		t.Errorf("işaret konmamış: %v", olu)
+	}
+	// SRC KORUNMALI: işaret "indirme olmadı" demek, "görsel yok" demek
+	// değil. Adres silinirse okuyucu hiçbir şey görmez ve kaynağı da
+	// izlenemez olur.
+	if olu["src"] != "https://olu.com/a.png" {
+		t.Errorf("src silinmiş: %v", olu["src"])
+	}
+	if olu["alt"] != "Grafik" {
+		t.Errorf("alt metni kaybolmuş: %v", olu["alt"])
+	}
+
+	canli := icerik[1].(map[string]any)["attrs"].(map[string]any)
+	if _, varMi := canli["indirilemedi"]; varMi {
+		t.Error("eşleşmeyen görsel işaretlenmiş")
+	}
+}
+
+func TestTipTapGorselIsaretleEslesmezse(t *testing.T) {
+	belge := []byte(`{"type":"doc","content":[{"type":"image","attrs":{"src":"https://a.com/1.png"}}]}`)
+	yeni, degisti := tipTapGorselIsaretle(belge, "https://b.com/2.png")
+	if degisti || string(yeni) != string(belge) {
+		t.Error("eşleşme yokken belge değiştirilmiş")
+	}
+}
+
 // Bozuk JSON patlatmamalı: gövde her zaman geçerli olmayabilir.
 func TestTipTapGorselDegistirBozukJSON(t *testing.T) {
 	ham := []byte(`{"type":"doc",`)
