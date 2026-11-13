@@ -11,6 +11,42 @@ import (
 	"theblock/site/internal/webui/templkit"
 )
 
+// cdIlgiliHaberLimiti makale altındaki "İlgili Haberler" kart sayısı.
+//
+// 3 DEĞİL 6 (13 Kasım 2026): üç kademeli alaka motoru (SimilarTo →
+// RelatedContents → PublishedBySlug) zaten 6 aday getiriyordu ve yarısı
+// atılıyordu.
+//
+// NEDEN ÖNEMLİ: ölçümde yayındaki 3836 içeriğin yalnız 190'ında (%5)
+// gövde içi iç bağlantı var; canlı makale sayfasında içerikten içeriğe
+// giden bağlantı 2 taneydi, gerisi menü ve altbilgi. İç bağlantı site
+// içi otoritenin tek taşıyıcısı ve 2130 tek-içerikli etiket sayfasının
+// ölü kalmasının da sebebi. 3 yerine 6 ile içerik başına ek 3 bağlantı,
+// toplamda ~11.500 yeni iç bağlantı demek.
+//
+// Düzen: cd-grid--3 ile iki satır olur (haber sitelerinde olağan).
+const cdIlgiliHaberLimiti = 6
+
+// cdAyniDil iki yerel kodun aynı dili gösterip göstermediğini söyler.
+//
+// Boş locale "tr" sayılır: eski kayıtlarda alan boş kalabiliyor ve bu
+// içerikler Türkçe. Boşu "farklı dil" saymak onları ilgili listesinden
+// tümüyle düşürürdü.
+func cdAyniDil(a, b string) bool {
+	norm := func(s string) string {
+		s = strings.ToLower(strings.TrimSpace(s))
+		if s == "" {
+			return "tr"
+		}
+		// "tr-TR" ve "tr" aynı dil.
+		if i := strings.IndexAny(s, "-_"); i > 0 {
+			s = s[:i]
+		}
+		return s
+	}
+	return norm(a) == norm(b)
+}
+
 func (s *Server) handleCDArticle(w http.ResponseWriter, r *http.Request, lang, slug string, id int64) {
 	ctx := r.Context()
 	c, err := repo.ContentBySlugAndID(ctx, s.pool, slug, id)
@@ -135,18 +171,62 @@ func (s *Server) cdMakaleGoster(w http.ResponseWriter, r *http.Request, c repo.C
 	}
 
 	// İlgili haberler: alaka motoru → ilişki → kategori (kademeli düşüş).
-	related, err := repo.SimilarTo(ctx, s.pool, c.ID, c.SiteID, c.Locale, 6)
-	if err != nil || len(related) == 0 {
-		related, _ = repo.RelatedContents(ctx, s.pool, c.SiteID, c.ID, 6)
+	//
+	// KADEME KARARI DİL SÜZGECİNDEN SONRA VERİLİR.
+	//
+	// Eskiden zincir "len(related) == 0" ile ilerliyordu ve orta halka
+	// (RelatedContents) locale parametresi ALMADIĞI için Türkçe makaleye
+	// İngilizce haber döndürebiliyordu. Liste "dolu" sayıldığından
+	// locale'li son kademe (PublishedBySlug) hiç çalışmıyordu; sonuçta
+	// ya yanlış dilde bağlantı basılıyor ya da bölüm boş kalıyordu
+	// (yerelde ölçüldü: 6 bağlantının 6'sı /en/).
+	//
+	// Artık her kademenin çıktısı süzülüp sayılıyor; hedef dolmadıkça
+	// sıradaki kademe denenir.
+	related := make([]repo.Content, 0, cdIlgiliHaberLimiti)
+	ekle := func(aday []repo.Content) {
+		for _, rc := range aday {
+			if len(related) >= cdIlgiliHaberLimiti {
+				return
+			}
+			if !cdAyniDil(rc.Locale, c.Locale) {
+				continue
+			}
+			if rc.ID == c.ID {
+				continue
+			}
+			var zaten bool
+			for _, v := range related {
+				if v.ID == rc.ID {
+					zaten = true
+					break
+				}
+			}
+			if !zaten {
+				related = append(related, rc)
+			}
+		}
 	}
-	if len(related) == 0 {
-		related, _ = repo.PublishedBySlug(ctx, s.pool, c.SiteID, catSlugPtr(c.CategorySlug), c.Locale, 6)
+
+	// Kademelerden daha geniş aday istenir (2 katı): süzgeç sonrası
+	// hedefin altına düşmemek için.
+	const adayCarpani = 2
+	if aday, err := repo.SimilarTo(ctx, s.pool, c.ID, c.SiteID, c.Locale, cdIlgiliHaberLimiti*adayCarpani); err == nil {
+		ekle(aday)
 	}
+	if len(related) < cdIlgiliHaberLimiti {
+		if aday, err := repo.RelatedContents(ctx, s.pool, c.SiteID, c.ID, cdIlgiliHaberLimiti*adayCarpani); err == nil {
+			ekle(aday)
+		}
+	}
+	if len(related) < cdIlgiliHaberLimiti {
+		if aday, err := repo.PublishedBySlug(ctx, s.pool, c.SiteID, catSlugPtr(c.CategorySlug), c.Locale, cdIlgiliHaberLimiti*adayCarpani); err == nil {
+			ekle(aday)
+		}
+	}
+	// Süzme ve tekilleştirme yukarıdaki ekle() içinde yapıldı.
 	simdi := time.Now()
 	for _, rc := range related {
-		if len(v.Related) >= 3 {
-			break
-		}
 		v.Related = append(v.Related, s.cdStoryCevir(rc, simdi))
 	}
 
