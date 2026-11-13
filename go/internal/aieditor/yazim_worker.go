@@ -263,6 +263,28 @@ func yazimSonucu(res Result) (repo.YazimSonucu, bool) {
 	if len(paragraflar) == 0 {
 		return repo.YazimSonucu{}, false
 	}
+	// DÖNGÜ KAPISI — buradan geçmeyen metin içeriğe YAZILMAZ.
+	//
+	// Üretimde görüldü (içerik 10764, 13 Kasım 2026): model 4 paragraf
+	// üretip bunları 12 KEZ tekrarlamış; 48 blok, 3.000 kelime, hepsi
+	// aynı dört cümle. Aynı arıza 12 Kasım'da da olmuş (içerik 10169),
+	// yani uzunluk hedefinden ÖNCE de vardı — hedef yalnız baskıyı
+	// artırıyor.
+	//
+	// yapi.go zaten tekrarı yakalıyordu ama UYARI olarak: uyarı yazmayı
+	// engellemiyor ve bozuk metin taslağa giriyordu. Burası deterministik
+	// bir kapı.
+	temiz, yinelenen := paragraflariTekille(paragraflar)
+	if len(temiz) == 0 {
+		return repo.YazimSonucu{}, false
+	}
+	// Yarısından fazlası tekrarsa model döngüye girmiştir; kalanı
+	// kurtarmak yerine sonucu REDDEDİYORUZ — iş kuyrukta yeniden
+	// denenir. Yarım kurtarılmış metin, editöre "bu iyi" sinyali verir.
+	if yinelenen*2 >= len(paragraflar) {
+		return repo.YazimSonucu{}, false
+	}
+	paragraflar = temiz
 	y := repo.YazimSonucu{
 		Title:    title,
 		Spot:     spot,
@@ -286,6 +308,34 @@ func bodyParagraflari(body string) []string {
 		}
 	}
 	return out
+}
+
+// paragraflariTekille birebir tekrar eden paragrafları atar ve kaç
+// tanesinin atıldığını döndürür.
+//
+// Karşılaştırma normalize edilmiş metin üzerinden: model aynı cümleyi
+// farklı boşluk veya büyük/küçük harfle yineleyebiliyor ve ham
+// karşılaştırma bunu kaçırır. Noktalama KORUNUYOR — iki farklı cümle
+// yalnız noktalamayla ayrışabilir.
+func paragraflariTekille(in []string) (out []string, yinelenen int) {
+	gorulen := make(map[string]bool, len(in))
+	out = make([]string, 0, len(in))
+	for _, p := range in {
+		anahtar := strings.ToLower(strings.Join(strings.Fields(p), " "))
+		// Çok kısa satırlar (ara başlık, tek kelime) meşru olarak
+		// tekrarlanabilir; yalnız gövde uzunluğundakileri eliyoruz.
+		if len([]rune(anahtar)) < 40 {
+			out = append(out, p)
+			continue
+		}
+		if gorulen[anahtar] {
+			yinelenen++
+			continue
+		}
+		gorulen[anahtar] = true
+		out = append(out, p)
+	}
+	return out, yinelenen
 }
 
 // YazimGeceCarpani kota penceresinde dakika hedefinin çarpanıdır.
