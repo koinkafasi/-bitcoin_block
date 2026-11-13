@@ -53,10 +53,7 @@ templ SinemalarPanel(v SinemalarView) {
 					</select>
 				</form>
 			}
-			// "Genel sayfa" düğmesi KALDIRILDI: /sinemalar herkese açık
-			// rotadan çıkarıldı (theblock yerel haber özelliği, kripto
-			// sitesinde konu otoritesini sulandırıyordu). Düğme 404'e
-			// götürürdü. Yönetim tarafı çalışmaya devam ediyor.
+			<a class="btn small" href="/sinemalar" target="_blank">Genel sayfa</a>
 		</div>
 		<h2 style="font-size:1.05rem;margin-top:20px">Filmler ({ v.Week })</h2>
 		<div class="gap">
@@ -175,8 +172,7 @@ templ IlanlarPanel(v IlanlarView) {
 					</select>
 				</form>
 			}
-			// "Genel sayfa" düğmesi KALDIRILDI: /resmi-ilanlar herkese
-			// açık rotadan çıkarıldı (bkz. yukarıdaki sinemalar notu).
+			<a class="btn small" href="/resmi-ilanlar" target="_blank">Genel sayfa</a>
 		</div>
 		<h2 style="font-size:1.05rem;margin-top:20px">İlanlar ({ v.Date })</h2>
 		<table class="table">
