@@ -49,7 +49,7 @@ func CDModulCiz(v CDHomeView, m CDModul) templ.Component {
 				}
 			} else if m.Tip == "cd_nabiz" {
 				templ_7745c5c3_Err = cdNabizModul(v.NabizFiyat, v.Nabiz,
-					"Kaynak: CryptoQuant · BTC · Binance akışları · günlük veri · 10 dakika önbellek").Render(ctx, templ_7745c5c3_Buffer)
+					cdT(v.Locale, "Kaynak: CryptoQuant · BTC · Binance akışları · günlük veri · 10 dakika önbellek"), v.Locale).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -59,7 +59,7 @@ func CDModulCiz(v CDHomeView, m CDModul) templ.Component {
 					return templ_7745c5c3_Err
 				}
 			} else if m.Tip == "cd_ikili" {
-				templ_7745c5c3_Err = cdIkili(v.Opinion, v.MostRead).Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = cdIkili(v.Opinion, v.MostRead, v.Locale).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -120,7 +120,7 @@ func cdHeroModul(v CDHomeView) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			if v.Dusunce != nil {
-				templ_7745c5c3_Err = cdDusunceModul(*v.Dusunce).Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = cdDusunceModul(*v.Dusunce, v.Locale).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -143,7 +143,7 @@ func cdHeroModul(v CDHomeView) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = cdBasinSlider(v.Basin).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = cdBasinSlider(v.Basin, v.Locale).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -151,15 +151,15 @@ func cdHeroModul(v CDHomeView) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = cdVideoModul(v.Videolar).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = cdVideoModul(v.Videolar, v.Locale).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = cdArastirmaModul(v.Arastirma).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = cdArastirmaModul(v.Arastirma, v.Locale).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = cdKlipler(v.Klipler).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = cdKlipler(v.Klipler, v.Locale).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

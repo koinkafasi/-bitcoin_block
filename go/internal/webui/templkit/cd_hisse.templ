@@ -9,7 +9,7 @@ package templkit
 
 templ CDHisseSayfaView(v CDHisseSayfa) {
 	<!doctype html>
-	<html lang="tr">
+	<html lang={ cdDilKodu(v.Shell.Locale) }>
 		<head>
 			@cdHead(CDHead{Title: v.Title, Desc: v.Desc, Canonical: v.Canonical,
 				OGType: "website", SiteName: v.Shell.SiteName, FaviconURL: v.Shell.FaviconURL, RSSFeed: "/rss.xml",
@@ -89,7 +89,7 @@ templ CDHisseSayfaView(v CDHisseSayfa) {
 									</p>
 								}
 							</div>
-							<nav class="cd-hisse__sekmeler" aria-label="Zaman aralığı">
+							<nav class="cd-hisse__sekmeler" aria-label={ cdT(v.Locale, "Zaman aralığı") }>
 								for _, s := range v.Sekmeler {
 									if s.Aktif {
 										<span class="cd-hisse__sekme cd-hisse__sekme--aktif" aria-current="true">{ s.Ad }</span>
@@ -147,7 +147,7 @@ templ CDHisseSayfaView(v CDHisseSayfa) {
 								<p class="cd-grafik-kaynak">{ v.Kaynak }</p>
 							}
 						} else {
-							<p class="cd-hisse__bos">Bu hisse için grafik verisi şu an alınamıyor; birkaç dakika sonra yeniden deneyin.</p>
+							<p class="cd-hisse__bos">{ cdT(v.Locale, "Bu hisse için grafik verisi şu an alınamıyor; birkaç dakika sonra yeniden deneyin.") }</p>
 						}
 					</div>
 				</div>

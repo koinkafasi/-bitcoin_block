@@ -45,7 +45,7 @@ type CDBorsaPage struct {
 
 templ CDBorsaPageView(v CDBorsaPage) {
 	<!doctype html>
-	<html lang="tr">
+	<html lang={ cdDilKodu(v.Shell.Locale) }>
 		<head>
 			@cdHead(CDHead{Title: v.Title, Desc: v.Desc, Canonical: v.Canonical,
 				OGType: "website", SiteName: v.Shell.SiteName, FaviconURL: v.Shell.FaviconURL, RSSFeed: "/rss.xml",
@@ -58,7 +58,7 @@ templ CDBorsaPageView(v CDBorsaPage) {
 			<main class="cd-wrap cd-doc cd-doc--genis">
 				<header class="cd-section-title">
 					<h1>Piyasa &amp; Borsa</h1>
-					<p class="cd-card__spot">BIST endeksi ve hisseleri ile önde gelen kripto paralar.</p>
+					<p class="cd-card__spot">{ cdT(v.Locale, "BIST endeksi ve hisseleri ile önde gelen kripto paralar.") }</p>
 				</header>
 
 				if v.Guncel != "" {
@@ -66,15 +66,15 @@ templ CDBorsaPageView(v CDBorsaPage) {
 				}
 
 				if len(v.Satir) == 0 {
-					<p class="cd-arama-bos">Veri yok — planlı yenileme bekleniyor.</p>
+					<p class="cd-arama-bos">{ cdT(v.Locale, "Veri yok — planlı yenileme bekleniyor.") }</p>
 				} else {
 					<table class="cd-table cd-borsa-tablo">
 						<thead>
 							<tr>
-								<th scope="col">Varlık</th>
-								<th scope="col">Tür</th>
+								<th scope="col">{ cdT(v.Locale, "Varlık") }</th>
+								<th scope="col">{ cdT(v.Locale, "Tür") }</th>
 								<th scope="col" class="num">Fiyat</th>
-								<th scope="col" class="num">Günlük</th>
+								<th scope="col" class="num">{ cdT(v.Locale, "Günlük") }</th>
 							</tr>
 						</thead>
 						<tbody>
@@ -109,8 +109,7 @@ templ CDBorsaPageView(v CDBorsaPage) {
 				}
 
 				<p class="cd-hisse-dipnot">
-					Kaynaklar: BIST (Yahoo Finance) · kripto (CoinGecko) — TRY.
-					Bilgilendirme amaçlıdır, yatırım tavsiyesi değildir.
+					{ cdT(v.Locale, "Kaynaklar: BIST (Yahoo Finance) · kripto (CoinGecko) — TRY. Bilgilendirme amaçlıdır, yatırım tavsiyesi değildir.") }
 				</p>
 			</main>
 			@cdFooter(v.Shell)

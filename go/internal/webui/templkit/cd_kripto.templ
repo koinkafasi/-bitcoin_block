@@ -46,7 +46,7 @@ type CDKriptoPage struct {
 
 templ CDKriptoPageView(v CDKriptoPage) {
 	<!doctype html>
-	<html lang="tr">
+	<html lang={ cdDilKodu(v.Shell.Locale) }>
 		<head>
 			@cdHead(CDHead{Title: v.Title, Desc: v.Desc, Canonical: v.Canonical,
 				OGType: "website", SiteName: v.Shell.SiteName, FaviconURL: v.Shell.FaviconURL, RSSFeed: "/rss.xml",
@@ -59,7 +59,7 @@ templ CDKriptoPageView(v CDKriptoPage) {
 			<main class="cd-wrap cd-doc cd-doc--genis">
 				<header class="cd-section-title">
 					<h1>Kripto Para</h1>
-					<p class="cd-card__spot">Bitcoin, Ethereum ve diğer kripto paraların TL fiyatı, 24 saat ve 7 günlük değişimi.</p>
+					<p class="cd-card__spot">{ cdT(v.Locale, "Bitcoin, Ethereum ve diğer kripto paraların TL fiyatı, 24 saat ve 7 günlük değişimi.") }</p>
 				</header>
 
 				<form class="cd-hisse-ara" method="get" action="/borsa/kripto" role="search">
@@ -107,12 +107,12 @@ templ CDKriptoPageView(v CDKriptoPage) {
 					<table class={ "cd-table cd-borsa-tablo", cdKriptoYogunluk(v.Stil) }>
 						<thead>
 							<tr>
-								<th scope="col">Varlık</th>
+								<th scope="col">{ cdT(v.Locale, "Varlık") }</th>
 								<th scope="col" class="num">Fiyat</th>
 								<th scope="col" class="num">24s</th>
 								<th scope="col" class="num">7g</th>
 								<th scope="col" class="num">Hacim</th>
-								<th scope="col" class="num">Piyasa değeri</th>
+								<th scope="col" class="num">{ cdT(v.Locale, "Piyasa değeri") }</th>
 							</tr>
 						</thead>
 						<tbody>
@@ -152,8 +152,7 @@ templ CDKriptoPageView(v CDKriptoPage) {
 				}
 
 				<p class="cd-hisse-dipnot">
-					Kaynak: CoinGecko — TRY.
-					Bilgilendirme amaçlıdır, yatırım tavsiyesi değildir.
+					{ cdT(v.Locale, "Kaynak: CoinGecko — TRY. Bilgilendirme amaçlıdır, yatırım tavsiyesi değildir.") }
 				</p>
 			</main>
 			@cdFooter(v.Shell)

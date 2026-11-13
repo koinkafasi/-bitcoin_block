@@ -99,11 +99,11 @@ templ CDArticle(v CDArticleView) {
 							{ cdOkumaMetni(v.ReadMinutes) }
 						</span>
 						<details class="cd-paylas">
-							<summary class="cd-pill cd-pill--duz">Paylaş</summary>
+							<summary class="cd-pill cd-pill--duz">{ cdT(v.Locale, "Paylaş") }</summary>
 							<div class="cd-paylas__liste">
-								<a href={ templ.SafeURL(v.ShareX) } rel="nofollow noopener" target="_blank">X'te paylaş</a>
-								<a href={ templ.SafeURL(v.ShareWhatsApp) } rel="nofollow noopener" target="_blank">WhatsApp'ta paylaş</a>
-								<a href={ templ.SafeURL(v.ShareLinkedIn) } rel="nofollow noopener" target="_blank">LinkedIn'de paylaş</a>
+								<a href={ templ.SafeURL(v.ShareX) } rel="nofollow noopener" target="_blank">{ cdT(v.Locale, "X'te paylaş") }</a>
+								<a href={ templ.SafeURL(v.ShareWhatsApp) } rel="nofollow noopener" target="_blank">{ cdT(v.Locale, "WhatsApp'ta paylaş") }</a>
+								<a href={ templ.SafeURL(v.ShareLinkedIn) } rel="nofollow noopener" target="_blank">{ cdT(v.Locale, "LinkedIn'de paylaş") }</a>
 							</div>
 						</details>
 												// "Preferred on Google" — CoinDesk makale sayfasındaki
@@ -181,10 +181,10 @@ templ CDArticle(v CDArticleView) {
 											<path d="M14.6995 3.69629L14.6057 3.70215C12.8348 3.80889 11.4173 5.22624 11.3108 6.99707L11.3049 7.09082H11.1038L11.0979 6.99707C10.9912 5.22626 9.57349 3.80896 7.80298 3.70215L7.70923 3.69629V3.49512L7.80298 3.48926C9.57373 3.38216 10.9911 1.96507 11.0979 0.194336L11.1038 0.100586H11.3049L11.3108 0.194336C11.4176 1.96511 12.8349 3.38224 14.6057 3.48926L14.6995 3.49512V3.69629Z" fill="currentColor" stroke="currentColor" stroke-width="0.2"></path>
 											<path d="M0 14.8005V13.4706H7.80945V14.8005H0ZM0 11.4758V10.146H12.2235V11.4758H0ZM0 8.15116V6.82129H7.80945V8.15116H0Z" fill="currentColor"></path>
 										</svg>
-										<span>Özet</span>
+										<span>{ cdT(v.Locale, "Özet") }</span>
 									</span>
 									<span class="cd-ozet__degistir">
-										<span class="cd-ozet__ac">Göster</span>
+										<span class="cd-ozet__ac">{ cdT(v.Locale, "Göster") }</span>
 										<span class="cd-ozet__kapat">Gizle</span>
 										<svg class="cd-ozet__ok" width="16" height="16" viewBox="0 0 24 24"
 											fill="currentColor" aria-hidden="true" focusable="false">
@@ -199,7 +199,7 @@ templ CDArticle(v CDArticleView) {
 								<div class="cd-ozet__sheet-bas">
 									<span class="cd-ozet__tutamac" aria-hidden="true"></span>
 									<button type="button" class="cd-ozet__sheet-kapat"
-										data-ozet-kapat aria-label="Özeti kapat">Kapat</button>
+										data-ozet-kapat aria-label={ cdT(v.Locale, "Özeti kapat") }>{ cdT(v.Locale, "Kapat") }</button>
 								</div>
 								<ul>
 									for _, m := range v.SummaryMaddeler {
@@ -224,8 +224,8 @@ templ CDArticle(v CDArticleView) {
 					// kesilen metinle arasında kopukluk olmasın.
 					if v.Kilitli {
 						<aside class="cd-kilit" aria-labelledby="cd-kilit-bas">
-							<span class="cd-kilit__rozet">Abonelere özel</span>
-							<h2 class="cd-kilit__baslik" id="cd-kilit-bas">Yazının devamı abonelere açık</h2>
+							<span class="cd-kilit__rozet">{ cdT(v.Locale, "Abonelere özel") }</span>
+							<h2 class="cd-kilit__baslik" id="cd-kilit-bas">{ cdT(v.Locale, "Yazının devamı abonelere açık") }</h2>
 							if v.KilitKatman != "" {
 								<p class="cd-kilit__metin">
 									Bu içeriği okumak için <strong>{ v.KilitKatman }</strong> ve üzeri bir aboneliğiniz olması gerekiyor.
@@ -234,8 +234,8 @@ templ CDArticle(v CDArticleView) {
 								<p class="cd-kilit__metin">Bu içeriği okumak için aboneliğiniz olması gerekiyor.</p>
 							}
 							<div class="cd-kilit__eylem">
-								<a class="cd-kilit__btn cd-kilit__btn--birincil" href="/abonelik">Abonelik seçeneklerine bak</a>
-								<a class="cd-kilit__btn" href="/giris?redirect=abonelik">Zaten aboneyim, giriş yap</a>
+								<a class="cd-kilit__btn cd-kilit__btn--birincil" href="/abonelik">{ cdT(v.Locale, "Abonelik seçeneklerine bak") }</a>
+								<a class="cd-kilit__btn" href="/giris?redirect=abonelik">{ cdT(v.Locale, "Zaten aboneyim, giriş yap") }</a>
 							</div>
 						</aside>
 					}
@@ -264,17 +264,17 @@ templ CDArticle(v CDArticleView) {
 					// düşük sürtünmeli adım.
 					if v.ContentID != "" {
 						<div class="cd-tepki" data-tepki={ v.ContentID } hidden>
-							<span class="cd-tepki__soru">Bu haber işine yaradı mı?</span>
+							<span class="cd-tepki__soru">{ cdT(v.Locale, "Bu haber işine yaradı mı?") }</span>
 							<span class="cd-tepki__dugmeler">
 								<button type="button" class="cd-tepki__dugme" data-yon="fazla" aria-pressed="false">
-									Evet, işime yaradı
+									{ cdT(v.Locale, "Evet, işime yaradı") }
 								</button>
 								<button type="button" class="cd-tepki__dugme" data-yon="az" aria-pressed="false">
-									Pek değil
+									{ cdT(v.Locale, "Pek değil") }
 								</button>
 							</span>
 							<span class="cd-tepki__tesekkur" data-tepki-tesekkur hidden>
-								Teşekkürler — bu geri bildirim önerilerimizi düzeltiyor.
+								{ cdT(v.Locale, "Teşekkürler — bu geri bildirim önerilerimizi düzeltiyor.") }
 							</span>
 						</div>
 					}
@@ -293,20 +293,18 @@ templ CDArticle(v CDArticleView) {
 					<div class="cd-yazar">
 						<strong>{ v.Author }</strong>
 						<p>
-							Bu içerik, kaynağında yayımlanan haberin özetidir; tam metin
-							kaynağa aittir ve yukarıda bağlantısı verilmiştir. Düzeltme
-							talepleri için <a href="/iletisim">iletişim</a>.
+							{ cdT(v.Locale, "Bu içerik, kaynağında yayımlanan haberin özetidir; tam metin kaynağa aittir ve yukarıda bağlantısı verilmiştir. Düzeltme talepleri için") } <a href="/iletisim">{ cdT(v.Locale, "iletişim") }</a>.
 						</p>
 					</div>
 				</article>
 
 				// Yorumlar ilgili haberlerden ÖNCE: okuyucu yazıyı bitirince
 				// önce tartışmayı görsün, sonra başka yazıya geçsin.
-				@cdYorumBolumu(v.Yorum)
+				@cdYorumBolumu(v.Yorum, v.Locale)
 
 				if len(v.Related) > 0 {
 					<section class="cd-mod">
-						@cdSectionHead("İlgili Haberler", v.SectionHref)
+						@cdSectionHead(cdT(v.Locale, "İlgili Haberler"), v.SectionHref, v.Locale)
 						<div class="cd-grid cd-grid--3">
 							for _, s := range v.Related {
 								@cdCard(s, false, YuvaKart)

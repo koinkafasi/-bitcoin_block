@@ -29,7 +29,7 @@ type CDCoinPage struct {
 
 templ CDCoinPageView(v CDCoinPage) {
 	<!doctype html>
-	<html lang="tr">
+	<html lang={ cdDilKodu(v.Shell.Locale) }>
 		<head>
 			@cdHead(CDHead{Title: v.Title, Desc: v.Desc, Canonical: v.Canonical,
 				OGType: "website", SiteName: v.Shell.SiteName, FaviconURL: v.Shell.FaviconURL, RSSFeed: "/rss.xml",
@@ -64,26 +64,25 @@ templ CDCoinPageView(v CDCoinPage) {
 				// Veri yoksa modül hiç basılmaz — uydurma çizgi yok.
 				if v.Grafik != nil {
 					<section class="cd-mod">
-						@cdSectionHead("Fiyat grafiği", "")
+						@cdSectionHead(cdT(v.Locale, "Fiyat grafiği"), "", v.Locale)
 						@cdGrafikKartPanel(*v.Grafik)
 					</section>
 				}
 				if len(v.Zincir) > 0 {
 					<section class="cd-mod">
-						@cdSectionHead("Zincir üstü metrikler", "")
+						@cdSectionHead(cdT(v.Locale, "Zincir üstü metrikler"), "", v.Locale)
 						<div class="cd-grafik-izgara">
 							for _, k := range v.Zincir {
 								@cdGrafikKartPanel(k)
 							}
 						</div>
-						<p class="cd-grafik-kaynak">Kaynak: CryptoQuant · borsa akışları Binance ·
-							günlük veri · 10 dakika önbellek</p>
+						<p class="cd-grafik-kaynak">{ cdT(v.Locale, "Kaynak: CryptoQuant · borsa akışları Binance · günlük veri · 10 dakika önbellek") }</p>
 					</section>
 				}
 
 				<section class="cd-mod">
-					@cdSectionHead("Diğer varlıklar", "/price")
-					@cdPriceTable("", v.Others)
+					@cdSectionHead(cdT(v.Locale, "Diğer varlıklar"), "/price", v.Locale)
+					@cdPriceTable("", v.Others, v.Locale)
 				</section>
 			</main>
 			@cdFooter(v.Shell)

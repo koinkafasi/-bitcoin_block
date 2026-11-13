@@ -140,6 +140,12 @@ func cdFooterSutunlari(s CDShell) [][]cdFooterBolum {
 	const sutunSayisi = 4
 	out := make([][]cdFooterBolum, sutunSayisi)
 	for i, b := range cdFooterColumns {
+		// ÇEVİRİ: sütun başlığı ve bağlantı metinleri arayüz kabuğudur,
+		// çevrilir (bkz. cd_sozluk.go). Bağlantı ADRESLERİ dokunulmaz.
+		for j := range b.Links {
+			b.Links[j][0] = cdT(s.Locale, b.Links[j][0])
+		}
+		b.Title = cdT(s.Locale, b.Title)
 		out[i%sutunSayisi] = append(out[i%sutunSayisi], b)
 	}
 	return out

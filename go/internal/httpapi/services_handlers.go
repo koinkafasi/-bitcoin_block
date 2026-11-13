@@ -196,11 +196,11 @@ func (s *Server) handleBorsaPage(w http.ResponseWriter, r *http.Request) {
 
 	v := templkit.CDBorsaPage{
 		Shell:           s.cdShellCtx(ctx, r, "fiyatlar"),
-		Title:           "Piyasa & Borsa — BIST ve kripto fiyatları",
+		Title:           templkit.CDT(s.cdYerel(r), "Piyasa & Borsa") + " — " + templkit.CDT(s.cdYerel(r), "BIST ve kripto fiyatları"),
 		Desc:            "BIST 100, önde gelen hisseler ve kripto paraların günlük fiyat ve değişim özeti.",
 		Canonical:       strings.TrimRight(s.cfg.BaseURL, "/") + "/borsa",
 		BaseURL:         strings.TrimRight(s.cfg.BaseURL, "/"),
-		Locale:          "tr",
+		Locale:          s.cdYerel(r),
 		Satir:           rows,
 		Guncel:          guncel,
 		Demo:            borsa.Demo,
@@ -244,7 +244,7 @@ func (s *Server) handleHisselerPage(w http.ResponseWriter, r *http.Request) {
 
 	v := templkit.CDHisselerPage{
 		Shell:     s.cdShellCtx(ctx, r, "fiyatlar"),
-		Title:     "Tüm Hisseler — BIST hisse fiyatları ve arama",
+		Title:     templkit.CDT(s.cdYerel(r), "Tüm Hisseler") + " — " + templkit.CDT(s.cdYerel(r), "BIST hisse fiyatları ve arama"),
 		Desc:      metaDesc("BIST'te işlem gören hisselerin kod, ad, fiyat ve günlük değişimi; hisse arama ve A-Z dizini.", "Tüm hisseler, canlı fiyatlar ve hisse arama — "+s.siteName, s.siteName),
 		Canonical: strings.TrimRight(s.cfg.BaseURL, "/") + "/borsa/hisseler",
 		Satir:     rows,
@@ -258,7 +258,7 @@ func (s *Server) handleHisselerPage(w http.ResponseWriter, r *http.Request) {
 		// CoinDesk SEO sınıflandırması: fiyat dizini = katalog sayfası.
 		PageCategory:    "market_data_landing_page",
 		ContentCategory: "markets",
-		Locale:          "tr",
+		Locale:          s.cdYerel(r),
 		BaseURL:         strings.TrimRight(s.cfg.BaseURL, "/"),
 	}
 
@@ -298,11 +298,11 @@ func (s *Server) handleKriptoPage(w http.ResponseWriter, r *http.Request) {
 
 	v := templkit.CDKriptoPage{
 		Shell:           s.cdShellCtx(ctx, r, "fiyatlar"),
-		Title:           "Kripto Para — canlı fiyatlar, 24s/7g değişim ve hacim",
+		Title:           templkit.CDT(s.cdYerel(r), "Kripto Para") + " — " + templkit.CDT(s.cdYerel(r), "canlı fiyatlar, 24s/7g değişim ve hacim"),
 		Desc:            metaDesc("Bitcoin, Ethereum ve diğer kripto paraların TL fiyatı, 24 saat ve 7 günlük değişimi, hacim ve piyasa değeri; kripto para arama.", "Kripto para fiyatları ve arama — "+s.siteName, s.siteName),
 		Canonical:       strings.TrimRight(s.cfg.BaseURL, "/") + "/borsa/kripto",
 		BaseURL:         strings.TrimRight(s.cfg.BaseURL, "/"),
-		Locale:          "tr",
+		Locale:          s.cdYerel(r),
 		Satir:           rows,
 		Guncel:          ks.Guncel,
 		Toplam:          ks.Toplam,
@@ -416,6 +416,7 @@ func (s *Server) handleAMP(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleSearch(w http.ResponseWriter, r *http.Request) {
+	dil := s.cdYerel(r)
 	ctx := r.Context()
 	locale := langOf(r, s)
 	q := strings.TrimSpace(r.URL.Query().Get("q"))
@@ -436,7 +437,7 @@ func (s *Server) handleSearch(w http.ResponseWriter, r *http.Request) {
 	simdi := time.Now()
 	sonuc := make([]templkit.CDStory, 0, len(items))
 	for _, c := range items {
-		sonuc = append(sonuc, s.cdStoryCevir(c, simdi))
+		sonuc = append(sonuc, s.cdStoryCevir(c, simdi, dil))
 	}
 	title := "Arama"
 	if q != "" {
@@ -448,7 +449,7 @@ func (s *Server) handleSearch(w http.ResponseWriter, r *http.Request) {
 		Desc:      "bitcosar üzerinde haber, analiz ve piyasa verisi araması.",
 		Canonical: strings.TrimRight(s.cfg.BaseURL, "/") + "/arama",
 		BaseURL:   strings.TrimRight(s.cfg.BaseURL, "/"),
-		Locale:    "tr",
+		Locale:    s.cdYerel(r),
 		Sorgu:     q,
 		Sonuclar:  sonuc,
 		// Arama sonuçları ince/tekrarlı içerik: dizine girmemeli.

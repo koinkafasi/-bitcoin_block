@@ -31,7 +31,7 @@ func (s *Server) cdSayfaKabuk(r *http.Request, aktif, title, desc, baslik, acikl
 		Baslik:          baslik,
 		Aciklama:        aciklama,
 		BaseURL:         strings.TrimRight(s.cfg.BaseURL, "/"),
-		Locale:          "tr",
+		Locale:          s.cdYerel(r),
 		PageCategory:    "service_page",
 		ContentCategory: aktif,
 	}

@@ -7,7 +7,7 @@ package templkit
 //
 // SIFIR YORUMDA sayı yazılmaz; doğrudan davet basılır.
 
-templ cdYorumBolumu(v CDYorumBolumu) {
+templ cdYorumBolumu(v CDYorumBolumu, dil string) {
 	if v.Acik {
 		<section class="cd-yorum" id="yorumlar" aria-labelledby="cd-yorum-bas">
 			<div class="cd-yorum__bas">
@@ -27,12 +27,12 @@ templ cdYorumBolumu(v CDYorumBolumu) {
 					</label>
 					<textarea class="cd-yorum__alan" id="cd-yorum-metin" name="metin" rows="3"
 						required maxlength="2000"
-						placeholder="Bu yazı hakkında ne düşünüyorsun?"></textarea>
+						placeholder={ cdT(dil, "Bu yazı hakkında ne düşünüyorsun?") }></textarea>
 					<!-- Bot tuzağı: insan doldurmaz, bot doldurur. -->
 					<input class="cd-yorum__tuzak" type="text" name="web" tabindex="-1" autocomplete="off" aria-hidden="true"/>
 					<div class="cd-yorum__eylem">
-						<span class="cd-yorum__not">Yorumlar yayımlanmadan önce okunur.</span>
-						<button class="cd-yorum__gonder" type="submit">Gönder</button>
+						<span class="cd-yorum__not">{ cdT(dil, "Yorumlar yayımlanmadan önce okunur.") }</span>
+						<button class="cd-yorum__gonder" type="submit">{ cdT(dil, "Gönder") }</button>
 					</div>
 				</form>
 			} else {
@@ -45,8 +45,8 @@ templ cdYorumBolumu(v CDYorumBolumu) {
 						}
 					</p>
 					<div class="cd-yorum__davet-eylem">
-						<a class="cd-yorum__btn cd-yorum__btn--birincil" href="/giris?redirect=yorum">Giriş yap</a>
-						<a class="cd-yorum__btn" href="/kayit">Üye ol</a>
+						<a class="cd-yorum__btn cd-yorum__btn--birincil" href="/giris?redirect=yorum">{ cdT(dil, "Giriş yap") }</a>
+						<a class="cd-yorum__btn" href="/kayit">{ cdT(dil, "Üye ol") }</a>
 					</div>
 				</div>
 			}
@@ -55,12 +55,12 @@ templ cdYorumBolumu(v CDYorumBolumu) {
 				<ol class="cd-yorum__liste">
 					for _, y := range v.Yorumlar {
 						<li class="cd-yorum__oge">
-							@cdYorumKarti(y, v.UyeGirisli)
+							@cdYorumKarti(y, v.UyeGirisli, dil)
 							if len(y.Yanitlar) > 0 {
 								<ol class="cd-yorum__yanitlar">
 									for _, c := range y.Yanitlar {
 										<li class="cd-yorum__oge cd-yorum__oge--yanit">
-											@cdYorumKarti(c, v.UyeGirisli)
+											@cdYorumKarti(c, v.UyeGirisli, dil)
 										</li>
 									}
 								</ol>
@@ -73,7 +73,7 @@ templ cdYorumBolumu(v CDYorumBolumu) {
 	}
 }
 
-templ cdYorumKarti(y CDYorum, uyeGirisli bool) {
+templ cdYorumKarti(y CDYorum, uyeGirisli bool, dil string) {
 	<article class="cd-yorum__kart">
 		<div class="cd-yorum__kimlik">
 			<span class="cd-yorum__harf" aria-hidden="true">{ y.BasHarf }</span>
@@ -83,7 +83,7 @@ templ cdYorumKarti(y CDYorum, uyeGirisli bool) {
 		<p class="cd-yorum__metin">{ y.Metin }</p>
 		if uyeGirisli {
 			<form class="cd-yorum__begeni" method="post" action={ "/yorum/" + y.ID + "/begen" }>
-				<button class="cd-yorum__begeni-btn" type="submit" aria-label="Bu yoruma katılıyorum">
+				<button class="cd-yorum__begeni-btn" type="submit" aria-label={ cdT(dil, "Bu yoruma katılıyorum") }>
 					Katılıyorum
 					if y.Begeni > 0 {
 						<span class="cd-yorum__sayi">{ cdSayi(y.Begeni) }</span>

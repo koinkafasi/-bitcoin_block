@@ -32,7 +32,7 @@ type CDListePage struct {
 
 templ CDListePageView(v CDListePage) {
 	<!doctype html>
-	<html lang="tr">
+	<html lang={ cdDilKodu(v.Shell.Locale) }>
 		<head>
 			@cdHead(CDHead{Title: v.Title, Desc: v.Desc, Canonical: v.Canonical,
 				OGType: "website", SiteName: v.Shell.SiteName, FaviconURL: v.Shell.FaviconURL, RSSFeed: "/rss.xml",
@@ -83,7 +83,7 @@ type CDNewsletterPage struct {
 
 templ CDNewsletterPageView(v CDNewsletterPage) {
 	<!doctype html>
-	<html lang="tr">
+	<html lang={ cdDilKodu(v.Shell.Locale) }>
 		<head>
 			@cdHead(CDHead{Title: v.Title, Desc: v.Desc, Canonical: v.Canonical,
 				OGType: "website", SiteName: v.Shell.SiteName, FaviconURL: v.Shell.FaviconURL, RSSFeed: "/rss.xml",
@@ -95,14 +95,14 @@ templ CDNewsletterPageView(v CDNewsletterPage) {
 			@cdTicker(v.Shell)
 			<main class="cd-wrap">
 				<header class="cd-section-title">
-					<h1>Bültenler</h1>
-					<p class="cd-card__spot">Günün kripto haberleri ve piyasa özeti, her sabah e-postanızda.</p>
+					<h1>{ cdT(v.Locale, "Bültenler") }</h1>
+					<p class="cd-card__spot">{ cdT(v.Locale, "Günün kripto haberleri ve piyasa özeti, her sabah e-postanızda.") }</p>
 				</header>
-				@cdNewsletter()
+				@cdNewsletter(v.Locale)
 				<section class="cd-mod">
-					@cdSectionHead("Bülten arşivi", "/ping")
+					@cdSectionHead(cdT(v.Locale, "Bülten arşivi"), "/ping", v.Locale)
 					<p class="cd-card__spot">
-						Gönderilen bültenlerin arşivi <a href="/ping">günlük özet arşivinde</a>.
+						{ cdT(v.Locale, "Gönderilen bültenlerin arşivi") } <a href="/ping">{ cdT(v.Locale, "günlük özet arşivinde") }</a>.
 					</p>
 				</section>
 			</main>

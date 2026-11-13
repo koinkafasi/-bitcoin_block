@@ -65,7 +65,7 @@ type CDYazarPage struct {
 
 templ CDYazarlarPageView(v CDYazarlarPage) {
 	<!doctype html>
-	<html lang="tr">
+	<html lang={ cdDilKodu(v.Shell.Locale) }>
 		<head>
 			@cdHead(CDHead{Title: v.Title, Desc: v.Desc, Canonical: v.Canonical,
 				OGType: "website", SiteName: v.Shell.SiteName, FaviconURL: v.Shell.FaviconURL,
@@ -80,11 +80,11 @@ templ CDYazarlarPageView(v CDYazarlarPage) {
 				<div class="cd-yzl">
 					<header class="cd-yzl-bas">
 						<p class="cd-yzl-etiket">Ekip</p>
-						<h1 class="cd-yzl-h1">Yazarlar ve Editörler</h1>
-						<p class="cd-yzl-aciklama">Haberleri kaleme alan yazarlar, muhabirler ve editörler.</p>
+						<h1 class="cd-yzl-h1">{ cdT(v.Locale, "Yazarlar ve Editörler") }</h1>
+						<p class="cd-yzl-aciklama">{ cdT(v.Locale, "Haberleri kaleme alan yazarlar, muhabirler ve editörler.") }</p>
 					</header>
 					if len(v.Kisiler) == 0 {
-						<p class="cd-yzp-bos">Yazar listesi şu an alınamıyor.</p>
+						<p class="cd-yzp-bos">{ cdT(v.Locale, "Yazar listesi şu an alınamıyor.") }</p>
 					} else {
 						<div class="cd-yzl-izgara">
 							for _, k := range v.Kisiler {
@@ -115,7 +115,7 @@ templ CDYazarlarPageView(v CDYazarlarPage) {
 
 templ CDYazarPageView(v CDYazarPage) {
 	<!doctype html>
-	<html lang="tr">
+	<html lang={ cdDilKodu(v.Shell.Locale) }>
 		<head>
 			@cdHead(CDHead{Title: v.Title, Desc: v.Desc, Canonical: v.Canonical,
 				OGType: "profile", Image: v.Image, ImageAlt: v.Ad,
@@ -152,7 +152,7 @@ templ CDYazarPageView(v CDYazarPage) {
 						</div>
 					</header>
 					<section class="cd-yzp-akis" aria-labelledby="cd-yzp-akis-baslik">
-						<h2 class="cd-yzp-akis-baslik" id="cd-yzp-akis-baslik">Son yazılar</h2>
+						<h2 class="cd-yzp-akis-baslik" id="cd-yzp-akis-baslik">{ cdT(v.Locale, "Son yazılar") }</h2>
 						if len(v.Yazilar) == 0 {
 							<p class="cd-yzp-bos">{ v.BosMetin }</p>
 						} else {
@@ -163,10 +163,10 @@ templ CDYazarPageView(v CDYazarPage) {
 						if v.OncekiURL != "" || v.SonrakiURL != "" {
 							<nav class="cd-yzp-sayfalama" aria-label="Sayfalar">
 								if v.OncekiURL != "" {
-									<a class="cd-yzp-sayfa-dugme" href={ templ.SafeURL(v.OncekiURL) } rel="prev">Önceki</a>
+									<a class="cd-yzp-sayfa-dugme" href={ templ.SafeURL(v.OncekiURL) } rel="prev">{ cdT(v.Locale, "Önceki") }</a>
 								}
 								if v.SonrakiURL != "" {
-									<a class="cd-yzp-sayfa-dugme" href={ templ.SafeURL(v.SonrakiURL) } rel="next">Sonraki</a>
+									<a class="cd-yzp-sayfa-dugme" href={ templ.SafeURL(v.SonrakiURL) } rel="next">{ cdT(v.Locale, "Sonraki") }</a>
 								}
 							</nav>
 						}

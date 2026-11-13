@@ -1274,12 +1274,6 @@ func (s *Server) handleRobots(w http.ResponseWriter, r *http.Request) {
 	_, _ = w.Write([]byte(sb.String()))
 }
 
-func (s *Server) handleAdsTxt(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-	w.Header().Set("Cache-Control", cacheControlPublic)
-	w.Write([]byte("# theblock ads.txt — reklam ağları eklenecek\n"))
-}
-
 // ---- medya dosyası servisi ----
 
 func (s *Server) handleMedia(w http.ResponseWriter, r *http.Request) {
@@ -1765,6 +1759,7 @@ func (s *Server) sayfaDuzeniVar(ctx context.Context, pageKey string) bool {
 }
 
 func (s *Server) cdArsivSayfasi(w http.ResponseWriter, r *http.Request, locale string, siteID int64) {
+	dil := s.cdYerel(r)
 	ctx := r.Context()
 	items, _ := repo.RecentPublished(ctx, s.pool, siteID, locale, 100)
 
@@ -1772,7 +1767,7 @@ func (s *Server) cdArsivSayfasi(w http.ResponseWriter, r *http.Request, locale s
 	kartlar := make([]templkit.CDStory, 0, len(items))
 	var ldItems []cdLDItem
 	for i, c := range items {
-		kartlar = append(kartlar, s.cdStoryCevir(c, simdi))
+		kartlar = append(kartlar, s.cdStoryCevir(c, simdi, dil))
 		if i < 11 {
 			it := cdLDItem{Headline: c.Title, URL: s.absBase(r) + makaleURL(c), Author: c.AuthorName}
 			if c.PublishedAt != nil {

@@ -245,7 +245,7 @@ func (s *Server) handleCDPrice(w http.ResponseWriter, r *http.Request) {
 	ld.WriteString(string(siteAdiJSONLD(s.siteName, kanonik)))
 	ld.WriteString(string(breadcrumbScript([]crumb{
 		{Name: s.siteName, URL: base + "/"},
-		{Name: "Fiyatlar", URL: kanonik},
+		{Name: templkit.CDT(s.cdYerel(r), "Fiyatlar"), URL: kanonik},
 	})))
 	ld.WriteString(string(cdFiyatListesiJSONLD("Cryptocurrency Market Cap Rankings", ldItems)))
 
@@ -254,7 +254,7 @@ func (s *Server) handleCDPrice(w http.ResponseWriter, r *http.Request) {
 
 	v := templkit.CDPricePage{
 		Shell:           s.cdShellCtx(r.Context(), r, "price"),
-		Title:           "Kripto Fiyatları — " + s.siteName,
+		Title:           templkit.CDT(s.cdYerel(r), "Kripto Fiyatları") + " — " + s.siteName,
 		Desc:            "Bitcoin, Ethereum ve önde gelen kripto paraların canlı fiyatları, 24 saatlik değişimleri ve piyasa sıralaması.",
 		Canonical:       kanonik,
 		Rows:            rows,
@@ -265,7 +265,7 @@ func (s *Server) handleCDPrice(w http.ResponseWriter, r *http.Request) {
 		JSONLD:          ld.String(),
 		PageCategory:    "price_page",
 		ContentCategory: "price",
-		Locale:          "tr",
+		Locale:          s.cdYerel(r),
 		BaseURL:         base,
 	}
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")

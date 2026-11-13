@@ -54,7 +54,7 @@ type CDIletisim struct {
 
 templ CDKurumsalSayfaView(v CDKurumsalSayfa) {
 	<!doctype html>
-	<html lang="tr">
+	<html lang={ cdDilKodu(v.Shell.Locale) }>
 		<head>
 			@cdHead(CDHead{Title: v.Title, Desc: v.Desc, Canonical: v.Canonical,
 				OGType: "website", SiteName: v.Shell.SiteName, FaviconURL: v.Shell.FaviconURL, RSSFeed: "/rss.xml",
@@ -79,7 +79,7 @@ templ CDKurumsalSayfaView(v CDKurumsalSayfa) {
 				</div>
 
 				if v.Iletisim != nil {
-					@cdIletisimBlok(*v.Iletisim, v.FlashTip, v.FlashMetin)
+					@cdIletisimBlok(*v.Iletisim, v.FlashTip, v.FlashMetin, v.Locale)
 				}
 			</main>
 			@cdFooter(v.Shell)
@@ -88,7 +88,7 @@ templ CDKurumsalSayfaView(v CDKurumsalSayfa) {
 }
 
 // cdIletisimBlok iletişim kanalları + form.
-templ cdIletisimBlok(c CDIletisim, flashTip, flashMetin string) {
+templ cdIletisimBlok(c CDIletisim, flashTip, flashMetin, dil string) {
 	<section class="cd-doc__iletisim" id="iletisim-form">
 		if flashMetin != "" {
 			<p class={ "cd-doc__flash", "cd-doc__flash--" + flashTip }>{ flashMetin }</p>
@@ -96,25 +96,25 @@ templ cdIletisimBlok(c CDIletisim, flashTip, flashMetin string) {
 		<div class="cd-doc__kanallar">
 			if c.Genel != "" {
 				<a class="cd-doc__kanal" href={ "mailto:" + c.Genel }>
-					<span class="cd-doc__kanal-ad">Genel iletişim</span>
+					<span class="cd-doc__kanal-ad">{ cdT(dil, "Genel iletişim") }</span>
 					<strong>{ c.Genel }</strong>
 				</a>
 			}
 			if c.Haber != "" {
 				<a class="cd-doc__kanal" href={ "mailto:" + c.Haber }>
-					<span class="cd-doc__kanal-ad">Haber ihbarı</span>
+					<span class="cd-doc__kanal-ad">{ cdT(dil, "Haber ihbarı") }</span>
 					<strong>{ c.Haber }</strong>
 				</a>
 			}
 			if c.Reklam != "" {
 				<a class="cd-doc__kanal" href={ "mailto:" + c.Reklam }>
-					<span class="cd-doc__kanal-ad">Reklam &amp; iş birliği</span>
+					<span class="cd-doc__kanal-ad">{ cdT(dil, "Reklam & iş birliği") }</span>
 					<strong>{ c.Reklam }</strong>
 				</a>
 			}
 			if c.Duzeltme != "" {
 				<a class="cd-doc__kanal" href={ "mailto:" + c.Duzeltme }>
-					<span class="cd-doc__kanal-ad">Düzeltme talebi</span>
+					<span class="cd-doc__kanal-ad">{ cdT(dil, "Düzeltme talebi") }</span>
 					<strong>{ c.Duzeltme }</strong>
 				</a>
 			}
@@ -132,7 +132,7 @@ templ cdIletisimBlok(c CDIletisim, flashTip, flashMetin string) {
 			}
 			if c.Calisma != "" {
 				<div class="cd-doc__kanal">
-					<span class="cd-doc__kanal-ad">Çalışma saatleri</span>
+					<span class="cd-doc__kanal-ad">{ cdT(dil, "Çalışma saatleri") }</span>
 					<strong>{ c.Calisma }</strong>
 				</div>
 			}
@@ -146,7 +146,7 @@ templ cdIletisimBlok(c CDIletisim, flashTip, flashMetin string) {
 					<input id="cd-web" name="web" type="text" tabindex="-1" autocomplete="off"/>
 				</div>
 				<div class="cd-doc__alan">
-					<label for="cd-ad">Adınız</label>
+					<label for="cd-ad">{ cdT(dil, "Adınız") }</label>
 					<input id="cd-ad" name="ad" type="text" required maxlength="120"/>
 				</div>
 				<div class="cd-doc__alan">
@@ -169,10 +169,9 @@ templ cdIletisimBlok(c CDIletisim, flashTip, flashMetin string) {
 				// ("aydınlatma metnini onaylamanız gerekir").
 				<label class="cd-doc__onay">
 					<input type="checkbox" name="onay" value="1" required/>
-					<span>Kişisel verilerimin mesajımın yanıtlanması amacıyla
-						işlenmesine ilişkin aydınlatma metnini okudum.</span>
+					<span>{ cdT(dil, "Kişisel verilerimin mesajımın yanıtlanması amacıyla işlenmesine ilişkin aydınlatma metnini okudum.") }</span>
 				</label>
-				<button class="cd-btn cd-btn--kayit cd-doc__gonder" type="submit">Gönder</button>
+				<button class="cd-btn cd-btn--kayit cd-doc__gonder" type="submit">{ cdT(dil, "Gönder") }</button>
 			</form>
 		}
 	</section>

@@ -73,7 +73,7 @@ func TestCdStoryCevirKapakKullanir(t *testing.T) {
 		Title:        "Başlık",
 		CoverMediaID: &kapak,
 		ImageURL:     "https://cdn.example.com/eski.jpg",
-	}, time.Now())
+	}, time.Now(), "tr")
 
 	if st.Image != "/media/202611/kapak.webp" {
 		t.Errorf("kart eski görseli kullanıyor: %q", st.Image)

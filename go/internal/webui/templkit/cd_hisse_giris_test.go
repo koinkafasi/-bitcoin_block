@@ -9,7 +9,7 @@ import (
 func hisseGirisCiz(t *testing.T, rows []CDPriceRow, tumHref string) string {
 	t.Helper()
 	var sb strings.Builder
-	if err := cdHisseGiris(rows, tumHref).Render(context.Background(), &sb); err != nil {
+	if err := cdHisseGiris(rows, tumHref, "tr").Render(context.Background(), &sb); err != nil {
 		t.Fatalf("cdHisseGiris çizilemedi: %v", err)
 	}
 	return sb.String()

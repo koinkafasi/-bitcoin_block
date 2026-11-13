@@ -31,6 +31,13 @@ var cdSectionMeta = map[string]struct{ Ad, Aciklama string }{
 	"learn":              {"Kripto 101", "Kripto para ve blokzincir temelleri, rehberler ve açıklayıcılar."},
 }
 
+// cdBolumler CD temasındaki bölüm kökleridir. Rota kaydı (server.go) bu
+// listeyi iki kez kullanır: öneksiz (`/markets`) ve dil önekli
+// (`/en/markets`). Tek kaynak — yeni bölüm eklenince ikisi birlikte açılır.
+var cdBolumler = []string{"markets", "business", "tech", "policy", "opinion",
+	"news-analysis", "latest-crypto-news", "focus", "research",
+	"press-release", "learn"}
+
 // cdBolumHandler tek bir bölümün handler'ını üretir.
 func (s *Server) cdBolumHandler(slug string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -55,6 +62,7 @@ func (s *Server) cdBolumMeta(ctx context.Context, slug string) (ad, aciklama str
 
 // handleCDSection bölüm sayfası.
 func (s *Server) handleCDSection(w http.ResponseWriter, r *http.Request, slug string) {
+	dil := s.cdYerel(r)
 	ad, aciklama, ok := s.cdBolumMeta(r.Context(), slug)
 	if !ok {
 		s.handleNotFound(w, r)
@@ -77,13 +85,13 @@ func (s *Server) handleCDSection(w http.ResponseWriter, r *http.Request, slug st
 
 	// Liste önbellekten (10 sn). Hata durumunda boş liste + 0 toplam döner;
 	// sayfa iskeleti yine basılır (eskiden de öyleydi).
-	items, toplam := s.cdListeIcerikleri(r.Context(), slug, sayfa)
+	items, toplam := s.cdListeIcerikleri(r.Context(), s.cdYerel(r), slug, sayfa)
 
 	simdi := time.Now()
 	var kartlar []templkit.CDStory
 	var ldItems []cdLDItem
 	for i, c := range items {
-		kartlar = append(kartlar, s.cdStoryCevir(c, simdi))
+		kartlar = append(kartlar, s.cdStoryCevir(c, simdi, dil))
 		if i < 11 {
 			// CoinDesk CollectionPage ItemList: 11 en yeni haber.
 			it := cdLDItem{Headline: c.Title, URL: s.absBase(r) + makaleURL(c), Author: c.AuthorName}
@@ -106,7 +114,7 @@ func (s *Server) handleCDSection(w http.ResponseWriter, r *http.Request, slug st
 		}
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
 		w.Header().Set("Cache-Control", cacheControlPublic)
-		if err := templkit.CDBolumParca(kartlar, prev, next).Render(r.Context(), w); err != nil {
+		if err := templkit.CDBolumParca(kartlar, prev, next, s.cdYerel(r)).Render(r.Context(), w); err != nil {
 			s.logger.Error("cd bölüm parça render", "error", err)
 		}
 		return
@@ -114,17 +122,17 @@ func (s *Server) handleCDSection(w http.ResponseWriter, r *http.Request, slug st
 
 	v := templkit.CDSectionPage{
 		Shell:     s.cdShellCtx(r.Context(), r, slug),
-		Title:     meta.Ad + " — " + s.siteName,
+		Title:     templkit.CDT(s.cdYerel(r), meta.Ad) + " — " + s.siteName,
 		Desc:      meta.Aciklama,
 		Canonical: kanonik,
-		Section:   meta.Ad,
+		Section:   templkit.CDT(s.cdYerel(r), meta.Ad),
 		Href:      "/" + slug,
 		Page:      sayfa,
 		// CoinDesk bölüm sayfası: CollectionPage + mainEntity.ItemList.
-		JSONLD:          string(cdCollectionJSONLD(s.siteName, strings.TrimRight(s.cfg.BaseURL, "/"), meta.Ad, kanonik, ldItems)),
+		JSONLD:          string(cdCollectionJSONLD(s.siteName, strings.TrimRight(s.cfg.BaseURL, "/"), templkit.CDT(s.cdYerel(r), meta.Ad), kanonik, ldItems)),
 		PageCategory:    "section_landing_page",
 		ContentCategory: slug,
-		Locale:          "tr",
+		Locale:          s.cdYerel(r),
 		BaseURL:         strings.TrimRight(s.cfg.BaseURL, "/"),
 	}
 	// Piyasa Nabzı yalnız /markets ilk sayfasında: gerçek CryptoQuant verisi.
@@ -151,7 +159,7 @@ func (s *Server) handleCDSection(w http.ResponseWriter, r *http.Request, slug st
 			kalan = nil
 		}
 		v.Stories = kalan
-		v.MoreBaslik = meta.Ad + " bölümünden daha fazlası"
+		v.MoreBaslik = templkit.CDT(s.cdYerel(r), meta.Ad) + " " + templkit.CDT(s.cdYerel(r), "bölümünden daha fazlası")
 	}
 	if sayfa > 1 {
 		v.PrevHref = "/" + slug + sayfaURL(sayfa-1)
@@ -215,16 +223,28 @@ func cdShellOturum(sh *templkit.CDShell, u auth.User) {
 
 // cdShellCtx istek bağlamıyla çalışan sürüm (iptal edilebilir).
 func (s *Server) cdShellCtx(ctx context.Context, r *http.Request, aktif string) templkit.CDShell {
-	nav := []templkit.CDNavLink{
-		{Label: "Son Haberler", Href: "/latest-crypto-news"},
-		{Label: "Piyasalar", Href: "/markets"},
-		{Label: "Finans", Href: "/business"},
-		{Label: "Teknoloji", Href: "/tech"},
-		{Label: "Politika", Href: "/policy"},
-		{Label: "Görüş", Href: "/opinion"},
-		{Label: "Kripto 101", Href: "/learn"},
-		{Label: "Fiyatlar", Href: "/price"},
-		{Label: "Video", Href: "/videos"},
+	// DİL: sabit "tr" DEĞİL (bkz. dil_cd.go). Yol öneki (`/en/...`) neyse o;
+	// önek yoksa site varsayılanı. Dil listesi YAYINDA İÇERİĞİ OLAN
+	// dillerden gelir — tema artık altyapıyı okuyor.
+	yerel := s.cdYerel(r)
+
+	navMetin := []struct{ tr, href string }{
+		{"Son Haberler", "/latest-crypto-news"},
+		{"Piyasalar", "/markets"},
+		{"Finans", "/business"},
+		{"Teknoloji", "/tech"},
+		{"Politika", "/policy"},
+		{"Görüş", "/opinion"},
+		{"Kripto 101", "/learn"},
+		{"Fiyatlar", "/price"},
+		{"Video", "/videos"},
+	}
+	nav := make([]templkit.CDNavLink, 0, len(navMetin))
+	for _, n := range navMetin {
+		nav = append(nav, templkit.CDNavLink{
+			Label: templkit.CDT(yerel, n.tr),
+			Href:  n.href,
+		})
 	}
 	for i := range nav {
 		if strings.HasSuffix(nav[i].Href, "/"+aktif) {
@@ -234,11 +254,11 @@ func (s *Server) cdShellCtx(ctx context.Context, r *http.Request, aktif string) 
 	sh := templkit.CDShell{
 		SiteName:   s.siteName,
 		SearchHref: "/arama",
-		Locale:     "tr",
+		Locale:     yerel,
 		Nav:        nav,
 		LoginHref:  "/giris",
 		SignupHref: "/kayit",
-		Diller:     []templkit.CDDil{{Kod: "tr", Ad: "Türkçe", Aktif: true}},
+		Diller:     s.cdDiller(r, yerel),
 	}
 
 	if r != nil {
@@ -359,7 +379,10 @@ func etiketMenuAdi(ad string) string {
 }
 
 // cdStoryCevir içeriği CoinDesk kart verisine çevirir (ortak yol).
-func (s *Server) cdStoryCevir(c repo.Content, simdi time.Time) templkit.CDStory {
+//
+// dil: göreli zaman etiketi ("3 saat önce" / "3 hours ago") arayüz metnidir,
+// içerikle birlikte çevrilir.
+func (s *Server) cdStoryCevir(c repo.Content, simdi time.Time, dil string) templkit.CDStory {
 	st := templkit.CDStory{
 		Title: c.Title,
 		Spot:  c.Spot,
@@ -369,7 +392,7 @@ func (s *Server) cdStoryCevir(c repo.Content, simdi time.Time) templkit.CDStory 
 		Gri: c.ImageGrayscale,
 	}
 	if c.PublishedAt != nil {
-		st.Time = trGoreliZaman(*c.PublishedAt, simdi)
+		st.Time = goreliZaman(*c.PublishedAt, simdi, dil)
 	}
 	if c.SourceName != nil {
 		st.Source = *c.SourceName

@@ -164,11 +164,11 @@ func (s *Server) handleEventsPublic(w http.ResponseWriter, r *http.Request) {
 	}
 	v := templkit.CDEtkinliklerPage{
 		Shell:           s.cdShellCtx(ctx, r, ""),
-		Title:           "Etkinlikler — " + s.siteName,
+		Title:           templkit.CDT(locale, "Etkinlikler") + " — " + s.siteName,
 		Desc:            "Kripto ve finans dünyasından yaklaşan etkinlikler, konferanslar ve takvim.",
 		Canonical:       strings.TrimRight(s.cfg.BaseURL, "/") + "/etkinlikler",
 		BaseURL:         strings.TrimRight(s.cfg.BaseURL, "/"),
-		Locale:          "tr",
+		Locale:          s.cdYerel(r),
 		Etkinlikler:     rows,
 		PageCategory:    "static_page",
 		ContentCategory: "events",

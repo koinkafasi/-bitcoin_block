@@ -12,7 +12,12 @@ import (
 )
 
 // cdGirisOlustur hero görünümünü gerçek veriden kurar.
-func (s *Server) cdGirisOlustur(ctx context.Context) templkit.CDGiris {
+//
+// DİL (13 Kasım 2026): hero metinleri SABİT Türkçeydi; `/en/` ana sayfası
+// İngilizce arayüzle Türkçe manşet ("Türkiye'nin En Güvenilir Dijital
+// Varlık Bilgi Platformu") basıyordu. Metinler sözlükten geçiyor
+// (bkz. templkit/cd_sozluk.go); veri (fiyat, hacim) dilden bağımsız.
+func (s *Server) cdGirisOlustur(ctx context.Context, dil string) templkit.CDGiris {
 	var g templkit.CDGiris
 	v := repo.PiyasaGirisVeri(ctx, s.pool)
 	if !v.Hazir {
@@ -20,22 +25,23 @@ func (s *Server) cdGirisOlustur(ctx context.Context) templkit.CDGiris {
 	}
 
 	g.Hazir = true
-	g.Eyebrow = "Kripto dünyasından en güncel bilgiler"
+	T := func(tr string) string { return templkit.CDT(dil, tr) }
+	g.Eyebrow = T("Kripto dünyasından en güncel bilgiler")
 	// Başlık üç parça: vurgu kısmı altın gradyanla basılıyor (kaynak
 	// tasarımdaki <em> ile aynı işlev).
-	g.BaslikOnce = "Türkiye'nin En Güvenilir "
-	g.BaslikVurgu = "Dijital Varlık Bilgi"
-	g.BaslikSonra = " Platformu"
-	g.Aciklama = "Bitcoin, Ethereum, altcoinler ve blockchain dünyasından anlık haberler, " +
-		"derinlemesine analizler ve güvenilir veriler."
+	g.BaslikOnce = T("Türkiye'nin En Güvenilir ")
+	g.BaslikVurgu = T("Dijital Varlık Bilgi")
+	g.BaslikSonra = T(" Platformu")
+	g.Aciklama = T("Bitcoin, Ethereum, altcoinler ve blockchain dünyasından anlık haberler, " +
+		"derinlemesine analizler ve güvenilir veriler.")
 	// CTA'lar GERÇEK sayfalara gider (kaynak tasarımda #ch-latest gibi
 	// boş çapalara gidiyordu).
-	g.Cta1Ad, g.Cta1Href = "Son Haberleri Keşfet", "/latest-crypto-news"
-	g.Cta2Ad, g.Cta2Href = "Piyasaları İncele", "/price"
+	g.Cta1Ad, g.Cta1Href = T("Son Haberleri Keşfet"), "/latest-crypto-news"
+	g.Cta2Ad, g.Cta2Href = T("Piyasaları İncele"), "/price"
 	g.Maddeler = []templkit.CDGirisMadde{
-		{No: "01", Metin: "Anlık Piyasa Verisi"},
-		{No: "02", Metin: "Derinlemesine Analiz"},
-		{No: "03", Metin: "Doğrulanmış Kaynak"},
+		{No: "01", Metin: T("Anlık Piyasa Verisi")},
+		{No: "02", Metin: T("Derinlemesine Analiz")},
+		{No: "03", Metin: T("Doğrulanmış Kaynak")},
 	}
 	g.Guncelleme = cdYasMetni(v.Cekildi)
 	g.Cekildi = v.Cekildi

@@ -30,14 +30,14 @@ func (s *Server) cdVideoSekmeler(aktif string) []templkit.CDVideoSekme {
 func ytHref(k repo.YoutubeKayit) string { return "/video/" + k.VideoID }
 
 // ytZaman göreli zaman metni (yayın tarihi yoksa boş).
-func ytZaman(k repo.YoutubeKayit) string {
+func ytZaman(k repo.YoutubeKayit, dil string) string {
 	if k.YayinAt == nil {
 		return ""
 	}
-	return trGoreliZaman(*k.YayinAt, time.Now())
+	return goreliZaman(*k.YayinAt, time.Now(), dil)
 }
 
-func ytKutu(k repo.YoutubeKayit) templkit.CDVideoKutu {
+func ytKutu(k repo.YoutubeKayit, dil string) templkit.CDVideoKutu {
 	img := k.Gorsel
 	if k.VideoID != "" {
 		if u := youtube.GorselURL(k.VideoID, k.Tur); u != "" {
@@ -51,7 +51,7 @@ func ytKutu(k repo.YoutubeKayit) templkit.CDVideoKutu {
 		Srcset:     youtube.GorselSrcset(k.VideoID, k.Tur),
 		ImageYedek: youtube.GorselYedekZincir(k.VideoID, k.Tur),
 		Sure:       youtube.Sure(k.SureSn),
-		Zaman:      ytZaman(k),
+		Zaman:      ytZaman(k, dil),
 		Href:       ytHref(k),
 		Dikey:      k.Tur == "short",
 		Canli:      k.Canli,
@@ -59,16 +59,16 @@ func ytKutu(k repo.YoutubeKayit) templkit.CDVideoKutu {
 }
 
 // ytKutular toplu çeviri.
-func ytKutular(kayitlar []repo.YoutubeKayit) []templkit.CDVideoKutu {
+func ytKutular(kayitlar []repo.YoutubeKayit, dil string) []templkit.CDVideoKutu {
 	out := make([]templkit.CDVideoKutu, 0, len(kayitlar))
 	for _, k := range kayitlar {
-		out = append(out, ytKutu(k))
+		out = append(out, ytKutu(k, dil))
 	}
 	return out
 }
 
 // ytSatir "Sıradaki" satırı (ytKutu ile aynı görsel kuralları).
-func ytSatir(k repo.YoutubeKayit) templkit.CDVideoSatir {
+func ytSatir(k repo.YoutubeKayit, dil string) templkit.CDVideoSatir {
 	img := k.Gorsel
 	if k.VideoID != "" {
 		if u := youtube.GorselURL(k.VideoID, k.Tur); u != "" {
@@ -82,20 +82,20 @@ func ytSatir(k repo.YoutubeKayit) templkit.CDVideoSatir {
 		Srcset:     youtube.GorselSrcset(k.VideoID, k.Tur),
 		ImageYedek: youtube.GorselYedekZincir(k.VideoID, k.Tur),
 		Sure:       youtube.Sure(k.SureSn),
-		Zaman:      ytZaman(k),
+		Zaman:      ytZaman(k, dil),
 		Href:       ytHref(k),
 		Canli:      k.Canli,
 		Dikey:      k.Tur == "short",
 	}
 }
 
-func ytSatirlar(kayitlar []repo.YoutubeKayit, haric string, adet int) []templkit.CDVideoSatir {
+func ytSatirlar(kayitlar []repo.YoutubeKayit, haric string, adet int, dil string) []templkit.CDVideoSatir {
 	out := make([]templkit.CDVideoSatir, 0, adet)
 	for _, k := range kayitlar {
 		if k.VideoID == haric {
 			continue
 		}
-		out = append(out, ytSatir(k))
+		out = append(out, ytSatir(k, dil))
 		if len(out) >= adet {
 			break
 		}
@@ -104,13 +104,13 @@ func ytSatirlar(kayitlar []repo.YoutubeKayit, haric string, adet int) []templkit
 }
 
 // ytGridHeroHariç ızgara kartları (kahraman hariç, en fazla adet).
-func ytGridHeroHariç(kayitlar []repo.YoutubeKayit, haric string, adet int) []templkit.CDVideoKutu {
+func ytGridHeroHariç(kayitlar []repo.YoutubeKayit, haric string, adet int, dil string) []templkit.CDVideoKutu {
 	out := make([]templkit.CDVideoKutu, 0, adet)
 	for _, k := range kayitlar {
 		if k.VideoID == haric {
 			continue
 		}
-		out = append(out, ytKutu(k))
+		out = append(out, ytKutu(k, dil))
 		if len(out) >= adet {
 			break
 		}
@@ -128,7 +128,7 @@ func ytSonraki(h *templkit.CDVideoHero, satirlar []templkit.CDVideoSatir) {
 }
 
 // ytHero kahraman bloğu üretir.
-func ytHero(k repo.YoutubeKayit, etiket string) templkit.CDVideoHero {
+func ytHero(k repo.YoutubeKayit, etiket, dil string) templkit.CDVideoHero {
 	spot := strings.TrimSpace(k.Aciklama)
 	if len([]rune(spot)) > 180 {
 		spot = string([]rune(spot)[:180]) + "…"
@@ -143,7 +143,7 @@ func ytHero(k repo.YoutubeKayit, etiket string) templkit.CDVideoHero {
 		Baslik:  k.Baslik,
 		Spot:    spot,
 		Image:   gorsel,
-		Zaman:   ytZaman(k),
+		Zaman:   ytZaman(k, dil),
 		Sure:    youtube.Sure(k.SureSn),
 		Etiket:  etiket,
 		Href:    ytHref(k),
@@ -159,6 +159,7 @@ func (s *Server) ytAyar(r *http.Request) youtube.Ayar {
 
 // handleCDVideos /videos
 func (s *Server) handleCDVideos(w http.ResponseWriter, r *http.Request) {
+	dil := s.cdYerel(r)
 	ctx := r.Context()
 	ayar := s.ytAyar(r)
 
@@ -182,7 +183,7 @@ func (s *Server) handleCDVideos(w http.ResponseWriter, r *http.Request) {
 	var hero templkit.CDVideoHero
 	heroID := ""
 	if len(videolar) > 0 {
-		hero = ytHero(videolar[heroIdx], "Son Videolar")
+		hero = ytHero(videolar[heroIdx], templkit.CDT(dil, "Son Videolar"), dil)
 		heroID = videolar[heroIdx].VideoID
 	}
 
@@ -190,21 +191,21 @@ func (s *Server) handleCDVideos(w http.ResponseWriter, r *http.Request) {
 	havuz = append(havuz, videolar...)
 	havuz = append(havuz, yayinlar...)
 	havuz = append(havuz, shorts...)
-	siradaki := ytSatirlar(havuz, heroID, 12)
+	siradaki := ytSatirlar(havuz, heroID, 12, dil)
 	ytSonraki(&hero, siradaki)
 
 	v := templkit.CDVideoPage{
 		Shell:     s.cdShellCtx(ctx, r, "videos"),
-		Title:     "Videolar — " + s.siteName,
+		Title:     templkit.CDT(s.cdYerel(r), "Videolar") + " — " + s.siteName,
 		Desc:      "Kripto piyasaları, borsa ve yatırım üzerine videolar; canlı yayınlar ve kısa klipler.",
 		Canonical: s.cfg.BaseURL + "/videos",
 		Baslik:    "Videolar",
 		Sekmeler:  s.cdVideoSekmeler("video"),
 		Hero:      hero,
 		Siradaki:  siradaki,
-		Videolar:  ytGridHeroHariç(videolar, heroID, 12),
-		Shorts:    ytKutular(shorts),
-		Yayinlar:  ytKutular(yayinlar),
+		Videolar:  ytGridHeroHariç(videolar, heroID, 12, dil),
+		Shorts:    ytKutular(shorts, dil),
+		Yayinlar:  ytKutular(yayinlar, dil),
 		BosMetin:  "Henüz video çekilmedi. YouTube kanalına yeni video düştüğünde bu sayfa otomatik dolar.",
 		JSONLD:    string(siteAdiJSONLD(s.siteName, s.cfg.BaseURL+"/videos")),
 	}
@@ -213,6 +214,7 @@ func (s *Server) handleCDVideos(w http.ResponseWriter, r *http.Request) {
 
 // handleCDShorts /videos/shorts
 func (s *Server) handleCDShorts(w http.ResponseWriter, r *http.Request) {
+	dil := s.cdYerel(r)
 	ctx := r.Context()
 	ayar := s.ytAyar(r)
 
@@ -230,7 +232,7 @@ func (s *Server) handleCDShorts(w http.ResponseWriter, r *http.Request) {
 	var hero templkit.CDVideoHero
 	heroID := ""
 	if len(shorts) > 0 {
-		hero = ytHero(shorts[0], "Shorts")
+		hero = ytHero(shorts[0], templkit.CDT(dil, "Shorts"), dil)
 		heroID = shorts[0].VideoID
 	}
 
@@ -238,20 +240,20 @@ func (s *Server) handleCDShorts(w http.ResponseWriter, r *http.Request) {
 	havuz := make([]repo.YoutubeKayit, 0, len(shorts)+len(videolar))
 	havuz = append(havuz, shorts...)
 	havuz = append(havuz, videolar...)
-	siradaki := ytSatirlar(havuz, heroID, 12)
+	siradaki := ytSatirlar(havuz, heroID, 12, dil)
 	ytSonraki(&hero, siradaki)
 
 	v := templkit.CDVideoPage{
 		Shell:     s.cdShellCtx(ctx, r, "videos"),
-		Title:     "Shorts — " + s.siteName,
+		Title:     templkit.CDT(s.cdYerel(r), "Shorts") + " — " + s.siteName,
 		Desc:      "Kısa videolar: piyasa hareketleri, günün öne çıkan gelişmeleri ve yatırım notları.",
 		Canonical: s.cfg.BaseURL + "/videos/shorts",
 		Baslik:    "Shorts",
 		Sekmeler:  s.cdVideoSekmeler("short"),
 		Hero:      hero,
 		Siradaki:  siradaki,
-		Videolar:  ytKutular(videolar),
-		Shorts:    ytGridHeroHariç(shorts, heroID, 12),
+		Videolar:  ytKutular(videolar, dil),
+		Shorts:    ytGridHeroHariç(shorts, heroID, 12, dil),
 		BosMetin:  "Henüz kısa video yayınlanmadı. Kanal yeni bir short yüklediğinde burada görünür.",
 		Dikey:     true,
 		JSONLD:    string(siteAdiJSONLD(s.siteName, s.cfg.BaseURL+"/videos/shorts")),
@@ -260,6 +262,7 @@ func (s *Server) handleCDShorts(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleCDCanli(w http.ResponseWriter, r *http.Request) {
+	dil := s.cdYerel(r)
 	ctx := r.Context()
 	ayar := s.ytAyar(r)
 
@@ -272,7 +275,7 @@ func (s *Server) handleCDCanli(w http.ResponseWriter, r *http.Request) {
 	for _, k := range yayinlar {
 		if k.Canli {
 			canliVar = true
-			hero = ytHero(k, "Canlı Yayın")
+			hero = ytHero(k, templkit.CDT(dil, "Canlı Yayın"), dil)
 			heroID = k.VideoID
 			break
 		}
@@ -315,14 +318,14 @@ func (s *Server) handleCDCanli(w http.ResponseWriter, r *http.Request) {
 
 	v := templkit.CDVideoPage{
 		Shell:           s.cdShellCtx(ctx, r, "videos"),
-		Title:           "Canlı Yayın — " + s.siteName,
+		Title:           templkit.CDT(s.cdYerel(r), "Canlı Yayın") + " — " + s.siteName,
 		Desc:            "Bitcoin, borsa ve piyasa değerlendirmeleri; canlı yayın kayıtları ve güncel yayın akışı.",
 		Canonical:       s.cfg.BaseURL + "/canli-yayin",
 		Baslik:          "Canlı Yayın",
 		Sekmeler:        s.cdVideoSekmeler("canli"),
 		Hero:            hero,
-		Siradaki:        ytSatirlar(yayinlar, heroID, 12),
-		Yayinlar:        ytGridHeroHariç(yayinlar, heroID, 12),
+		Siradaki:        ytSatirlar(yayinlar, heroID, 12, dil),
+		Yayinlar:        ytGridHeroHariç(yayinlar, heroID, 12, dil),
 		KanalID:         kanalID,
 		CanliYayinAktif: canliVar,
 		BosMetin:        "Kanalda henüz canlı yayın kaydı yok.",
@@ -333,6 +336,7 @@ func (s *Server) handleCDCanli(w http.ResponseWriter, r *http.Request) {
 
 // handleCDVideoWatch /video/{id}
 func (s *Server) handleCDVideoWatch(w http.ResponseWriter, r *http.Request) {
+	dil := s.cdYerel(r)
 	ctx := r.Context()
 	id := strings.TrimSpace(r.PathValue("id"))
 	if id == "" || len(id) != 11 {
@@ -348,8 +352,8 @@ func (s *Server) handleCDVideoWatch(w http.ResponseWriter, r *http.Request) {
 
 	// "Sıradaki" ve alt ızgara aynı türden gelir.
 	ayni, _ := repo.YoutubeListele(ctx, s.pool, k.Tur, 24)
-	hero := ytHero(*k, videoTurEtiket(k.Tur))
-	siradaki := ytSatirlar(ayni, k.VideoID, 12)
+	hero := ytHero(*k, templkit.CDT(dil, videoTurEtiket(k.Tur)), dil)
+	siradaki := ytSatirlar(ayni, k.VideoID, 12, dil)
 	ytSonraki(&hero, siradaki)
 
 	var videolar, shorts []repo.YoutubeKayit
@@ -372,8 +376,8 @@ func (s *Server) handleCDVideoWatch(w http.ResponseWriter, r *http.Request) {
 		Video:     hero,
 		Aciklama:  aciklama,
 		Siradaki:  siradaki,
-		Videolar:  ytGridHeroHariç(videolar, k.VideoID, 8),
-		Shorts:    ytGridHeroHariç(shorts, k.VideoID, 8),
+		Videolar:  ytGridHeroHariç(videolar, k.VideoID, 8, dil),
+		Shorts:    ytGridHeroHariç(shorts, k.VideoID, 8, dil),
 		Dikey:     k.Tur == "short",
 		JSONLD:    string(videoJSONLD(s.siteName, hero, canonical, k.YayinAt)),
 	}
@@ -466,6 +470,7 @@ func (s *Server) cdYoutubeKlipler(r *http.Request, adet int) []templkit.CDKlip {
 }
 
 func (s *Server) cdYoutubeCanli(r *http.Request) templkit.CDCanli {
+	dil := s.cdYerel(r)
 	ayar := s.ytAyar(r)
 	if !ayar.CanliGoster {
 		return templkit.CDCanli{}
@@ -497,7 +502,7 @@ func (s *Server) cdYoutubeCanli(r *http.Request) templkit.CDCanli {
 		return templkit.CDCanli{}
 	}
 
-	zaman := ytZaman(*secim)
+	zaman := ytZaman(*secim, dil)
 	if secim.Canli {
 		zaman = "Şu an canlı yayında"
 	} else if zaman != "" {

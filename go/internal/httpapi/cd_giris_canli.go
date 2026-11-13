@@ -56,7 +56,7 @@ type girisCanliSerit struct {
 // handleCDGirisCanli hero + şerit verisini JSON döndürür.
 func (s *Server) handleCDGirisCanli(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	g := s.cdGirisOlustur(ctx)
+	g := s.cdGirisOlustur(ctx, "tr")
 
 	y := girisCanliYanit{
 		Sa:       time.Now().Unix(),

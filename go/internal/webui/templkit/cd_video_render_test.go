@@ -13,7 +13,7 @@ func TestCDVPlayerKontrolleri(t *testing.T) {
 		SonrakiID: "MctQ1WmwSaA", SonrakiBaslik: "Sıradaki örnek",
 	}
 	var b strings.Builder
-	if err := cdVPlayer(v, false).Render(context.Background(), &b); err != nil {
+	if err := cdVPlayer(v, false, "tr").Render(context.Background(), &b); err != nil {
 		t.Fatalf("oynatıcı çizilemedi: %v", err)
 	}
 	out := b.String()
@@ -49,7 +49,7 @@ func TestCDVPlayerKontrolleri(t *testing.T) {
 func TestCDVPlayerDikey(t *testing.T) {
 	v := CDVideoHero{VideoID: "KfLVTp9jlyU", Baslik: "Short"}
 	var b strings.Builder
-	if err := cdVPlayer(v, true).Render(context.Background(), &b); err != nil {
+	if err := cdVPlayer(v, true, "tr").Render(context.Background(), &b); err != nil {
 		t.Fatalf("dikey oynatıcı çizilemedi: %v", err)
 	}
 	if !strings.Contains(b.String(), "cd-vplayer--dikey") {

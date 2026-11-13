@@ -11,15 +11,16 @@ import (
 
 // cdExploreDoldur ana sayfa şeridini kurar.
 func (s *Server) cdExploreDoldur(r *http.Request, sections []templkit.CDSection) templkit.CDExplore {
-	e := templkit.CDExplore{Baslik: s.siteName + "'dan daha fazlası"}
+	dil := s.cdYerel(r)
+	e := templkit.CDExplore{Baslik: templkit.CDT(dil, "daha fazlası")}
 
 	// 1) Fiyatlar — canlı şeritten 10 satır.
 	if fiyatlar := s.cdFiyatSatirlari(r, 10); len(fiyatlar) > 0 {
 		e.Paneller = append(e.Paneller, templkit.CDExplorePanel{
 			Tur:       "fiyat",
-			Baslik:    "Fiyatlar",
+			Baslik:    templkit.CDT(dil, "Fiyatlar"),
 			Href:      "/price",
-			Aciklama:  "3000+ kripto varlığın canlı fiyatı, piyasa değeri ve 24 saatlik değişimi.",
+			Aciklama:  templkit.CDT(dil, "3000+ kripto varlığın canlı fiyatı, piyasa değeri ve 24 saatlik değişimi."),
 			Fiyatlar:  fiyatlar,
 			AltMetin:  "Daha fazla veri mi gerekiyor?",
 			AltHref:   "/price",
@@ -51,9 +52,9 @@ func (s *Server) cdExploreDoldur(r *http.Request, sections []templkit.CDSection)
 	for _, sec := range sections {
 		var haberler []templkit.CDStory
 		slug := strings.TrimPrefix(sec.Href, "/")
-		if kayitlar, _ := s.cdListeIcerikleri(r.Context(), slug, 1); len(kayitlar) > 0 {
+		if kayitlar, _ := s.cdListeIcerikleri(r.Context(), s.cdYerel(r), slug, 1); len(kayitlar) > 0 {
 			for _, c := range kayitlar {
-				haberler = append(haberler, s.cdStoryCevir(c, simdi))
+				haberler = append(haberler, s.cdStoryCevir(c, simdi, dil))
 				if len(haberler) == 5 {
 					break
 				}
@@ -72,11 +73,11 @@ func (s *Server) cdExploreDoldur(r *http.Request, sections []templkit.CDSection)
 			Tur:       "haber",
 			Baslik:    sec.Title,
 			Href:      sec.Href,
-			Aciklama:  "Son haberler ve analizler.",
+			Aciklama:  templkit.CDT(dil, "Son haberler ve analizler."),
 			Haberler:  haberler,
-			AltMetin:  "Tümü",
+			AltMetin:  templkit.CDT(dil, "Tümü"),
 			AltHref:   sec.Href,
-			AltBaglam: sec.Title + " haberleri",
+			AltBaglam: sec.Title + " " + templkit.CDT(dil, "haberleri"),
 		})
 	}
 

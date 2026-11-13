@@ -27,7 +27,7 @@ type CDPricePage struct {
 
 templ CDPricePageView(v CDPricePage) {
 	<!doctype html>
-	<html lang="tr">
+	<html lang={ cdDilKodu(v.Shell.Locale) }>
 		<head>
 			@cdHead(CDHead{Title: v.Title, Desc: v.Desc, Canonical: v.Canonical,
 				OGType: "website", SiteName: v.Shell.SiteName, FaviconURL: v.Shell.FaviconURL, RSSFeed: "/rss.xml",
@@ -41,18 +41,18 @@ templ CDPricePageView(v CDPricePage) {
 				// Reklam yuvası (ölçüldü 13 Kasım 2026: bu sayfada 0'dı).
 				@cdReklam(728, 90)
 				<header class="cd-section-title">
-					<h1>Kripto Fiyatları</h1>
+					<h1>{ cdT(v.Locale, "Kripto Fiyatları") }</h1>
 					<p class="cd-card__spot">{ v.Desc }</p>
 				</header>
 				@cdNabizModul(v.NabizFiyat, v.Nabiz,
-					"Kaynak: CryptoQuant · BTC · Binance akışları · günlük veri · 10 dakika önbellek")
+					cdT(v.Locale, "Kaynak: CryptoQuant · BTC · Binance akışları · günlük veri · 10 dakika önbellek"), v.Locale)
 				<section class="cd-mod">
-					@cdPriceTable("Piyasa değerine göre", v.Rows)
+					@cdPriceTable(cdT(v.Locale, "Piyasa değerine göre"), v.Rows, v.Locale)
 				</section>
 				if len(v.Rows) == 0 {
-					<p class="cd-card__spot">Fiyat verisi şu an alınamıyor; birkaç dakika sonra yeniden deneyin.</p>
+					<p class="cd-card__spot">{ cdT(v.Locale, "Fiyat verisi şu an alınamıyor; birkaç dakika sonra yeniden deneyin.") }</p>
 				}
-				@cdHisseGiris(v.Hisseler, v.HisselerHref)
+				@cdHisseGiris(v.Hisseler, v.HisselerHref, v.Locale)
 			</main>
 			@cdFooter(v.Shell)
 		</body>
@@ -66,16 +66,16 @@ templ CDPricePageView(v CDPricePage) {
 // Liste `.cd-table` sınıfını yeniden kullanır → yeni CSS yok.
 // Fiyatı olmayan hisse satırı HİÇ basılmaz (boş değer gösterme yerine
 // satırı atla; bağlantısı da kırık olmaz).
-templ cdHisseGiris(rows []CDPriceRow, tumHref string) {
+templ cdHisseGiris(rows []CDPriceRow, tumHref string, dil string) {
 	if len(rows) > 0 {
 		<section class="cd-mod">
-			@cdSectionHead("Hisse Senetleri", tumHref)
+			@cdSectionHead(cdT(dil, "Hisse Senetleri"), tumHref, dil)
 			<table class="cd-table">
 				<thead>
 					<tr>
-						<th>Hisse</th>
-						<th class="num">Fiyat</th>
-						<th class="num">24s</th>
+						<th>{ cdT(dil, "Hisse") }</th>
+						<th class="num">{ cdT(dil, "Fiyat") }</th>
+						<th class="num">{ cdT(dil, "24s") }</th>
 					</tr>
 				</thead>
 				<tbody>

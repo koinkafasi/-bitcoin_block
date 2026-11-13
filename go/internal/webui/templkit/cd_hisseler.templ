@@ -1,6 +1,6 @@
 package templkit
 
-// "Tüm Hisseler" dizin sayfası (/borsa/hisseler) — bitcosar (CoinDesk)
+// "{ cdT(v.Locale, "Tüm Hisseler") }" dizin sayfası (/borsa/hisseler) — bitcosar (CoinDesk)
 // tasarımıyla.
 //
 // ÖNCEKİ DURUM (kullanıcı bildirimi, 9 Kasım 2026): sayfa `site_public.html`
@@ -53,7 +53,7 @@ type CDHisselerPage struct {
 
 templ CDHisselerPageView(v CDHisselerPage) {
 	<!doctype html>
-	<html lang="tr">
+	<html lang={ cdDilKodu(v.Shell.Locale) }>
 		<head>
 			@cdHead(CDHead{Title: v.Title, Desc: v.Desc, Canonical: v.Canonical,
 				OGType: "website", SiteName: v.Shell.SiteName, FaviconURL: v.Shell.FaviconURL, RSSFeed: "/rss.xml",
@@ -65,9 +65,9 @@ templ CDHisselerPageView(v CDHisselerPage) {
 			@cdTicker(v.Shell)
 			<main class="cd-wrap">
 				<header class="cd-section-title">
-					<h1>Tüm Hisseler</h1>
+					<h1>{ cdT(v.Locale, "Tüm Hisseler") }</h1>
 					<p class="cd-card__spot">
-						BIST'te işlem gören hisselerin kod, ad, fiyat ve günlük değişimi.
+						{ cdT(v.Locale, "BIST'te işlem gören hisselerin kod, ad, fiyat ve günlük değişimi.") }
 					</p>
 				</header>
 
@@ -80,7 +80,7 @@ templ CDHisselerPageView(v CDHisselerPage) {
 							<path d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"></path>
 						</svg>
 						<input class="cd-hisse-ara__girdi" type="search" name="q" value={ v.Q }
-							placeholder="Hisse ara (THYAO veya Türk Hava Yolları)"
+							placeholder={ cdT(v.Locale, "Hisse ara (THYAO veya Türk Hava Yolları)") }
 							aria-label="Hisse ara" autocomplete="off" data-hsp-q/>
 						if v.Harf != "" {
 							<input type="hidden" name="harf" value={ v.Harf }/>
@@ -93,9 +93,9 @@ templ CDHisselerPageView(v CDHisselerPage) {
 
 					<nav class="cd-hisse-alfa" aria-label="Alfabetik hisse dizini">
 						if v.Harf == "" {
-							<span class="cd-hisse-alfa__harf cd-hisse-alfa__harf--on" aria-current="page">TÜMÜ</span>
+							<span class="cd-hisse-alfa__harf cd-hisse-alfa__harf--on" aria-current="page">{ cdT(v.Locale, "TÜMÜ") }</span>
 						} else {
-							<a class="cd-hisse-alfa__harf" href={ cdHisseHarfHref("", v.Q) }>TÜMÜ</a>
+							<a class="cd-hisse-alfa__harf" href={ cdHisseHarfHref("", v.Q) }>{ cdT(v.Locale, "TÜMÜ") }</a>
 						}
 						for _, h := range v.Harfler {
 							if h == v.Harf {
@@ -119,7 +119,7 @@ templ CDHisselerPageView(v CDHisselerPage) {
 					<table class="cd-table cd-hisse-tablo">
 						<thead>
 							<tr>
-								<th scope="col">Hisse adı</th>
+								<th scope="col">{ cdT(v.Locale, "Hisse adı") }</th>
 								<th scope="col" class="num">Fiyat</th>
 								<th scope="col" class="num">Fark</th>
 							</tr>
@@ -155,7 +155,7 @@ templ CDHisselerPageView(v CDHisselerPage) {
 						</tbody>
 					</table>
 					<p class="cd-hisse-bos" data-hsp-empty hidden>
-						Bu aramaya uygun hisse yok. Kodu (THYAO) veya şirket adını deneyin.
+						{ cdT(v.Locale, "Bu aramaya uygun hisse yok. Kodu (THYAO) veya şirket adını deneyin.") }
 					</p>
 
 					<p class="cd-hisse-dipnot">

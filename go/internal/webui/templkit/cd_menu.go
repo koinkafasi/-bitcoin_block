@@ -184,6 +184,20 @@ func cdMenuGroups(s CDShell) []CDMenuGroup {
 			dolu = append(dolu, g)
 		}
 	}
+	// ÇEVİRİ — tek noktadan: mega menü ve mobil menü aynı veriyi kullanır,
+	// ikisi de buradan geçer (bkz. cd_sozluk.go). Adresler dokunulmaz.
+	// Etiketler içerik/kategori adı DEĞİL arayüz metnidir; dinamik etiket
+	// sütunu (popüler etiketler) sözlükte yoksa Türkçe kalır — doğru.
+	for i := range dolu {
+		dolu[i].Label = cdT(s.Locale, dolu[i].Label)
+		for j := range dolu[i].Columns {
+			for k := range dolu[i].Columns[j].Items {
+				it := &dolu[i].Columns[j].Items[k]
+				it.Label = cdT(s.Locale, it.Label)
+				it.Desc = cdT(s.Locale, it.Desc)
+			}
+		}
+	}
 	return dolu
 }
 

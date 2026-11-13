@@ -87,6 +87,7 @@ func (s *Server) handleCDArticleOnizleme(w http.ResponseWriter, r *http.Request)
 
 // cdMakaleGoster makale sayfasını basar.
 func (s *Server) cdMakaleGoster(w http.ResponseWriter, r *http.Request, c repo.Content, onizleme bool) {
+	dil := s.cdYerel(r)
 	ctx := r.Context()
 	if !onizleme {
 		s.okunmaKaydet(ctx, c.ID)
@@ -239,7 +240,7 @@ func (s *Server) cdMakaleGoster(w http.ResponseWriter, r *http.Request, c repo.C
 	// Süzme ve tekilleştirme yukarıdaki ekle() içinde yapıldı.
 	simdi := time.Now()
 	for _, rc := range related {
-		v.Related = append(v.Related, s.cdStoryCevir(rc, simdi))
+		v.Related = append(v.Related, s.cdStoryCevir(rc, simdi, dil))
 	}
 
 	// Önceki/sonraki: kripto portalında "sıradaki haber" okuma süresini

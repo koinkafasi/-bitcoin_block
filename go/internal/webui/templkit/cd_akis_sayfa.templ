@@ -42,7 +42,7 @@ type CDCip struct {
 
 templ CDAkisPageView(v CDAkisPage) {
 	<!doctype html>
-	<html lang="tr">
+	<html lang={ cdDilKodu(v.Shell.Locale) }>
 		<head>
 			@cdHead(CDHead{Title: v.Title, Desc: v.Desc, Canonical: v.Canonical,
 				OGType: "website", SiteName: v.Shell.SiteName, FaviconURL: v.Shell.FaviconURL,
@@ -60,7 +60,7 @@ templ CDAkisPageView(v CDAkisPage) {
 						<p class="cd-card__spot">{ v.Aciklama }</p>
 					}
 				</header>
-				<nav class="cd-filtre" aria-label="Akış filtreleri">
+				<nav class="cd-filtre" aria-label={ cdT(v.Locale, "Akış filtreleri") }>
 					for _, c := range v.Kategoriler {
 						if c.Secili {
 							<span class="cd-cip is-secili" aria-current="page">{ c.Ad }</span>
@@ -122,7 +122,7 @@ type CD404Page struct {
 
 templ CD404PageView(v CD404Page) {
 	<!doctype html>
-	<html lang="tr">
+	<html lang={ cdDilKodu(v.Shell.Locale) }>
 		<head>
 			@cdHead(CDHead{Title: v.Title, Desc: v.Desc, Canonical: v.Canonical,
 				OGType: "website", SiteName: v.Shell.SiteName, FaviconURL: v.Shell.FaviconURL,
@@ -135,10 +135,9 @@ templ CD404PageView(v CD404Page) {
 			@cdTicker(v.Shell)
 			<main class="cd-wrap cd-404">
 				<p class="cd-404__kod" aria-hidden="true">404</p>
-				<h1 class="cd-404__baslik">Aradığınız sayfa bulunamadı</h1>
+				<h1 class="cd-404__baslik">{ cdT(v.Locale, "Aradığınız sayfa bulunamadı") }</h1>
 				<p class="cd-404__metin">
-					Bağlantı taşınmış, silinmiş ya da hiç var olmamış olabilir.
-					Aşağıdan arama yapabilir veya ana sayfaya dönebilirsiniz.
+					{ cdT(v.Locale, "Bağlantı taşınmış, silinmiş ya da hiç var olmamış olabilir. Aşağıdan arama yapabilir veya ana sayfaya dönebilirsiniz.") }
 				</p>
 				<form class="cd-404__arama" method="get" action="/arama" role="search">
 					<input type="search" name="q" placeholder="Haber, coin veya konu ara…"

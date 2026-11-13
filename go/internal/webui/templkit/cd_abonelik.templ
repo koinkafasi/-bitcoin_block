@@ -61,7 +61,7 @@ type CDAbonelikSoru struct {
 
 templ CDAbonelikSayfaView(v CDAbonelikSayfa) {
 	<!doctype html>
-	<html lang="tr">
+	<html lang={ cdDilKodu(v.Shell.Locale) }>
 		<head>
 			@cdHead(CDHead{Title: v.Title, Desc: v.Desc, Canonical: v.Canonical,
 				OGType: "website", SiteName: v.Shell.SiteName, FaviconURL: v.Shell.FaviconURL,

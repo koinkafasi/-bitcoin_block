@@ -20,7 +20,7 @@ package templkit
 
 templ CDSectionPageView(v CDSectionPage) {
 	<!doctype html>
-	<html lang="tr">
+	<html lang={ cdDilKodu(v.Shell.Locale) }>
 		<head>
 			@cdHead(CDHead{Title: v.Title, Desc: v.Desc, Canonical: v.Canonical,
 				OGType: "website", Image: v.Lead.Image, SiteName: v.Shell.SiteName, FaviconURL: v.Shell.FaviconURL,
@@ -44,7 +44,7 @@ templ CDSectionPageView(v CDSectionPage) {
 								// PİYASA NABZI (yalnız /markets): gerçek CryptoQuant verisi.
 				// Kaynak yoksa blok hiç basılmaz.
 				@cdNabizModul(v.NabizFiyat, v.Nabiz,
-					"Kaynak: CryptoQuant · BTC · Binance akışları · günlük veri · 10 dakika önbellek")
+					cdT(v.Locale, "Kaynak: CryptoQuant · BTC · Binance akışları · günlük veri · 10 dakika önbellek"), v.Locale)
 
 				<div class="cd-kat-izgara">
 					<div class="cd-kat-sol">
@@ -60,7 +60,7 @@ templ CDSectionPageView(v CDSectionPage) {
 						}
 					</div>
 					if len(v.Ray) > 0 {
-						<aside class="cd-kat-ray" aria-label="Öne çıkanlar">
+						<aside class="cd-kat-ray" aria-label={ cdT(v.Locale, "Öne çıkanlar") }>
 							for _, s := range v.Ray {
 								@cdKatRayKalem(s)
 							}
@@ -87,7 +87,7 @@ templ CDSectionPageView(v CDSectionPage) {
 						if v.PrevHref != "" || v.NextHref != "" {
 							<nav class="cd-daha" aria-label="Sayfalama">
 								if v.PrevHref != "" {
-									<a class="cd-daha__geri" href={ v.PrevHref } rel="prev">← Önceki</a>
+									<a class="cd-daha__geri" href={ v.PrevHref } rel="prev">{ cdT(v.Locale, "← Önceki") }</a>
 								}
 								if v.NextHref != "" {
 									<a class="cd-daha__btn" href={ v.NextHref } rel="next">Daha fazla haber</a>
@@ -96,7 +96,7 @@ templ CDSectionPageView(v CDSectionPage) {
 						}
 					</div>
 				} else if v.Lead.Href == "" {
-					<p class="cd-card__spot">Bu bölümde henüz haber yok.</p>
+					<p class="cd-card__spot">{ cdT(v.Locale, "Bu bölümde henüz haber yok.") }</p>
 				}
 
 				if v.NextHref != "" {
@@ -250,7 +250,7 @@ templ cdGorselImg(url string, yuva CDYuva, oncelikli bool) {
 // Her satırdan ÖNCE ayırıcı basılır (tam sayfada i>0 kuralı var): parça
 // mevcut listenin sonuna eklendiğinde ilk yeni satırın da üstünde çizgi
 // olmalı. Nav parçanın içinde: JS yeni href'lerle yeniler.
-templ CDBolumParca(stories []CDStory, prevHref, nextHref string) {
+templ CDBolumParca(stories []CDStory, prevHref, nextHref, dil string) {
 	for _, s := range stories {
 		<hr class="cd-kat-satir__cizgi"/>
 		@cdKatSatir(s)
@@ -258,7 +258,7 @@ templ CDBolumParca(stories []CDStory, prevHref, nextHref string) {
 	if prevHref != "" || nextHref != "" {
 		<nav class="cd-daha" aria-label="Sayfalama">
 			if prevHref != "" {
-				<a class="cd-daha__geri" href={ prevHref } rel="prev">← Önceki</a>
+				<a class="cd-daha__geri" href={ prevHref } rel="prev">{ cdT(dil, "← Önceki") }</a>
 			}
 			if nextHref != "" {
 				<a class="cd-daha__btn" href={ nextHref } rel="next">Daha fazla haber</a>

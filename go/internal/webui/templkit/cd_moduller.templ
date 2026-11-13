@@ -16,11 +16,11 @@ templ CDModulCiz(v CDHomeView, m CDModul) {
 			@cdAnalizModul(v.Analiz, v.AnalizSayi)
 		} else if m.Tip == "cd_nabiz" {
 			@cdNabizModul(v.NabizFiyat, v.Nabiz,
-				"Kaynak: CryptoQuant · BTC · Binance akışları · günlük veri · 10 dakika önbellek")
+				cdT(v.Locale, "Kaynak: CryptoQuant · BTC · Binance akışları · günlük veri · 10 dakika önbellek"), v.Locale)
 		} else if m.Tip == "cd_explore" {
 			@cdExplore(v.Explore)
 		} else if m.Tip == "cd_ikili" {
-			@cdIkili(v.Opinion, v.MostRead)
+			@cdIkili(v.Opinion, v.MostRead, v.Locale)
 		} else if m.Tip == "cd_bloklar" {
 			@cdBloklar(v.Sections)
 		}
@@ -45,7 +45,7 @@ templ cdHeroModul(v CDHomeView) {
 					@cdCanliModul(v.Canli)
 					@cdHeroSolRay(v.RailLeft)
 					if v.Dusunce != nil {
-						@cdDusunceModul(*v.Dusunce)
+						@cdDusunceModul(*v.Dusunce, v.Locale)
 					}
 					if v.TekGorsel.Href != "" {
 						@cdTekGorsel(v.TekGorsel)
@@ -54,12 +54,12 @@ templ cdHeroModul(v CDHomeView) {
 				<div class="cd-hero__orta">
 					@cdHeroLead(v.Lead)
 					@cdAkis(v.Akis)
-					@cdBasinSlider(v.Basin)
+					@cdBasinSlider(v.Basin, v.Locale)
 				</div>
 				<aside class="cd-hero__sag">
-					@cdVideoModul(v.Videolar)
-					@cdArastirmaModul(v.Arastirma)
-					@cdKlipler(v.Klipler)
+					@cdVideoModul(v.Videolar, v.Locale)
+					@cdArastirmaModul(v.Arastirma, v.Locale)
+					@cdKlipler(v.Klipler, v.Locale)
 				</aside>
 			</div>
 		</section>

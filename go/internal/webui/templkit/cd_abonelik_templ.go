@@ -88,7 +88,20 @@ func CDAbonelikSayfaView(v CDAbonelikSayfa) templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<!doctype html><html lang=\"tr\"><head>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<!doctype html><html lang=\"")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var2 string
+		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.ResolveAttributeValue(cdDilKodu(v.Shell.Locale))
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_abonelik.templ`, Line: 64, Col: 39}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var2)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "\"><head>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -102,7 +115,7 @@ func CDAbonelikSayfaView(v CDAbonelikSayfa) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</head><body class=\"cd\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "</head><body class=\"cd\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -114,54 +127,54 @@ func CDAbonelikSayfaView(v CDAbonelikSayfa) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "<main class=\"cd-wrap\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<main class=\"cd-wrap\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		if v.OdemeAdimi {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<section class=\"cd-abn-odeme\"><h1>Ödeme</h1>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<section class=\"cd-abn-odeme\"><h1>Ödeme</h1>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			if v.Bilgi != "" {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<p class=\"cd-card__spot\">")
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				var templ_7745c5c3_Var2 string
-				templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(v.Bilgi)
-				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_abonelik.templ`, Line: 82, Col: 41}
-				}
-				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "</p>")
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-			}
-			if v.Hata != "" {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "<div class=\"cd-abn-uyari\" role=\"alert\">")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "<p class=\"cd-card__spot\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var3 string
-				templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(v.Hata)
+				templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(v.Bilgi)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_abonelik.templ`, Line: 85, Col: 54}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_abonelik.templ`, Line: 82, Col: 41}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "</div>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "</p>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "<div class=\"cd-abn-odeme__yuva\" id=\"iyzico-checkout\">")
+			if v.Hata != "" {
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "<div class=\"cd-abn-uyari\" role=\"alert\">")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var4 string
+				templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(v.Hata)
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_abonelik.templ`, Line: 85, Col: 54}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "</div>")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "<div class=\"cd-abn-odeme__yuva\" id=\"iyzico-checkout\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -169,329 +182,329 @@ func CDAbonelikSayfaView(v CDAbonelikSayfa) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "</div><p class=\"cd-abn-dipnot\">Ödeme tamamlandığında aboneliğiniz otomatik etkinleşir. Sayfa kapanırsa <a href=\"/hesabim/abonelik\">aboneliğim</a> sayfasından kontrol edebilirsiniz.</p></section>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "</div><p class=\"cd-abn-dipnot\">Ödeme tamamlandığında aboneliğiniz otomatik etkinleşir. Sayfa kapanırsa <a href=\"/hesabim/abonelik\">aboneliğim</a> sayfasından kontrol edebilirsiniz.</p></section>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		} else {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "<header class=\"cd-abn-bas\"><div><h1>Abonelik Paketleri</h1><p class=\"cd-card__spot\">Katmanınıza göre ayrıcalıklı haberlere, analizlere ve reklamsız okuma deneyimine erişin.</p></div><div class=\"cd-abn-donem\" role=\"group\" aria-label=\"Fatura dönemi\"><button type=\"button\" class=\"cd-abn-donem__btn is-secili\" data-cycle=\"monthly\">Aylık</button> <button type=\"button\" class=\"cd-abn-donem__btn\" data-cycle=\"annual\">Yıllık <span class=\"cd-abn-hediye\">2 ay hediye</span></button></div></header>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "<header class=\"cd-abn-bas\"><div><h1>Abonelik Paketleri</h1><p class=\"cd-card__spot\">Katmanınıza göre ayrıcalıklı haberlere, analizlere ve reklamsız okuma deneyimine erişin.</p></div><div class=\"cd-abn-donem\" role=\"group\" aria-label=\"Fatura dönemi\"><button type=\"button\" class=\"cd-abn-donem__btn is-secili\" data-cycle=\"monthly\">Aylık</button> <button type=\"button\" class=\"cd-abn-donem__btn\" data-cycle=\"annual\">Yıllık <span class=\"cd-abn-hediye\">2 ay hediye</span></button></div></header>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			if v.Hata != "" {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "<div class=\"cd-abn-uyari\" role=\"alert\">")
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				var templ_7745c5c3_Var4 string
-				templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(v.Hata)
-				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_abonelik.templ`, Line: 116, Col: 53}
-				}
-				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "</div>")
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, " ")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			if v.Bilgi != "" {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "<div class=\"cd-abn-bilgi\">")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "<div class=\"cd-abn-uyari\" role=\"alert\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var5 string
-				templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(v.Bilgi)
+				templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(v.Hata)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_abonelik.templ`, Line: 119, Col: 41}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_abonelik.templ`, Line: 116, Col: 53}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "</div>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "</div>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, " ")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, " ")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			if v.Bilgi != "" {
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "<div class=\"cd-abn-bilgi\">")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var6 string
+				templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(v.Bilgi)
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_abonelik.templ`, Line: 119, Col: 41}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, "</div>")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, " ")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			if len(v.Planlar) == 0 {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "<div class=\"cd-bos\"><p>Henüz tanımlı abonelik paketi yok.</p></div>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, "<div class=\"cd-bos\"><p>Henüz tanımlı abonelik paketi yok.</p></div>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 			} else {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, "<div class=\"cd-abn-izgara\">")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 20, "<div class=\"cd-abn-izgara\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				for _, p := range v.Planlar {
-					var templ_7745c5c3_Var6 = []any{"cd-abn-kart", templ.KV("is-mevcut", p.Mevcut)}
-					templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var6...)
+					var templ_7745c5c3_Var7 = []any{"cd-abn-kart", templ.KV("is-mevcut", p.Mevcut)}
+					templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var7...)
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 20, "<article class=\"")
-					if templ_7745c5c3_Err != nil {
-						return templ_7745c5c3_Err
-					}
-					var templ_7745c5c3_Var7 string
-					templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.ResolveAttributeValue(templ.CSSClasses(templ_7745c5c3_Var6).String())
-					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_abonelik.templ`, Line: 1, Col: 0}
-					}
-					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var7)
-					if templ_7745c5c3_Err != nil {
-						return templ_7745c5c3_Err
-					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 21, "\" style=\"")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 21, "<article class=\"")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
 					var templ_7745c5c3_Var8 string
-					templ_7745c5c3_Var8, templ_7745c5c3_Err = templruntime.SanitizeStyleAttributeValues("--abn-renk:" + p.Renk)
+					templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.ResolveAttributeValue(templ.CSSClasses(templ_7745c5c3_Var7).String())
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_abonelik.templ`, Line: 129, Col: 104}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_abonelik.templ`, Line: 1, Col: 0}
 					}
-					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
-					if templ_7745c5c3_Err != nil {
-						return templ_7745c5c3_Err
-					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 22, "\">")
+					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var8)
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					if p.Mevcut {
-						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 23, "<span class=\"cd-abn-rozet\">Mevcut planınız</span>")
-						if templ_7745c5c3_Err != nil {
-							return templ_7745c5c3_Err
-						}
-					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 24, "<h2 class=\"cd-abn-kart__ad\">")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 22, "\" style=\"")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
 					var templ_7745c5c3_Var9 string
-					templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(p.Ad)
+					templ_7745c5c3_Var9, templ_7745c5c3_Err = templruntime.SanitizeStyleAttributeValues("--abn-renk:" + p.Renk)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_abonelik.templ`, Line: 133, Col: 43}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_abonelik.templ`, Line: 129, Col: 104}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 25, "</h2><p class=\"cd-abn-kart__aciklama\">")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 23, "\">")
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					if p.Mevcut {
+						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 24, "<span class=\"cd-abn-rozet\">Mevcut planınız</span>")
+						if templ_7745c5c3_Err != nil {
+							return templ_7745c5c3_Err
+						}
+					}
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 25, "<h2 class=\"cd-abn-kart__ad\">")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
 					var templ_7745c5c3_Var10 string
-					templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(p.Aciklama)
+					templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(p.Ad)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_abonelik.templ`, Line: 134, Col: 54}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_abonelik.templ`, Line: 133, Col: 43}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 26, "</p><div class=\"cd-abn-fiyat\"><span class=\"cd-abn-fiyat__aylik\" data-monthly>")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 26, "</h2><p class=\"cd-abn-kart__aciklama\">")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
 					var templ_7745c5c3_Var11 string
-					templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(p.Aylik)
+					templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(p.Aciklama)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_abonelik.templ`, Line: 137, Col: 20}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_abonelik.templ`, Line: 134, Col: 54}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 27, "<small>/ay</small></span> <span class=\"cd-abn-fiyat__yillik\" data-annual hidden>")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 27, "</p><div class=\"cd-abn-fiyat\"><span class=\"cd-abn-fiyat__aylik\" data-monthly>")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
 					var templ_7745c5c3_Var12 string
-					templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(p.Yillik)
+					templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(p.Aylik)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_abonelik.templ`, Line: 140, Col: 21}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_abonelik.templ`, Line: 137, Col: 20}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 28, "<small>/yıl</small></span></div>")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 28, "<small>/ay</small></span> <span class=\"cd-abn-fiyat__yillik\" data-annual hidden>")
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					var templ_7745c5c3_Var13 string
+					templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(p.Yillik)
+					if templ_7745c5c3_Err != nil {
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_abonelik.templ`, Line: 140, Col: 21}
+					}
+					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 29, "<small>/yıl</small></span></div>")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
 					if p.YillikEtiket != "" {
-						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 29, "<span class=\"cd-abn-fiyat__not\" data-annual hidden>")
+						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 30, "<span class=\"cd-abn-fiyat__not\" data-annual hidden>")
 						if templ_7745c5c3_Err != nil {
 							return templ_7745c5c3_Err
 						}
-						var templ_7745c5c3_Var13 string
-						templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(p.YillikEtiket)
+						var templ_7745c5c3_Var14 string
+						templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(p.YillikEtiket)
 						if templ_7745c5c3_Err != nil {
 							return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_abonelik.templ`, Line: 144, Col: 77}
 						}
-						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
+						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
 						if templ_7745c5c3_Err != nil {
 							return templ_7745c5c3_Err
 						}
-						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 30, "</span> ")
+						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 31, "</span> ")
 						if templ_7745c5c3_Err != nil {
 							return templ_7745c5c3_Err
 						}
 					}
 					if len(p.Perks) > 0 {
-						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 31, "<ul class=\"cd-abn-perks\">")
+						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 32, "<ul class=\"cd-abn-perks\">")
 						if templ_7745c5c3_Err != nil {
 							return templ_7745c5c3_Err
 						}
 						for _, k := range p.Perks {
-							templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 32, "<li>")
+							templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 33, "<li>")
 							if templ_7745c5c3_Err != nil {
 								return templ_7745c5c3_Err
 							}
-							var templ_7745c5c3_Var14 string
-							templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(k)
+							var templ_7745c5c3_Var15 string
+							templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(k)
 							if templ_7745c5c3_Err != nil {
 								return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_abonelik.templ`, Line: 149, Col: 19}
 							}
-							_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
+							_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
 							if templ_7745c5c3_Err != nil {
 								return templ_7745c5c3_Err
 							}
-							templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 33, "</li>")
+							templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 34, "</li>")
 							if templ_7745c5c3_Err != nil {
 								return templ_7745c5c3_Err
 							}
 						}
-						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 34, "</ul>")
+						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 35, "</ul>")
 						if templ_7745c5c3_Err != nil {
 							return templ_7745c5c3_Err
 						}
 					}
 					if v.GirisYapildi {
-						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 35, "<button class=\"cd-btn cd-abn-cta\" type=\"button\" data-tier=\"")
-						if templ_7745c5c3_Err != nil {
-							return templ_7745c5c3_Err
-						}
-						var templ_7745c5c3_Var15 string
-						templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.ResolveAttributeValue(p.Slug)
-						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_abonelik.templ`, Line: 155, Col: 29}
-						}
-						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var15)
-						if templ_7745c5c3_Err != nil {
-							return templ_7745c5c3_Err
-						}
-						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 36, "\" data-tier-name=\"")
+						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 36, "<button class=\"cd-btn cd-abn-cta\" type=\"button\" data-tier=\"")
 						if templ_7745c5c3_Err != nil {
 							return templ_7745c5c3_Err
 						}
 						var templ_7745c5c3_Var16 string
-						templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.ResolveAttributeValue(p.Ad)
+						templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.ResolveAttributeValue(p.Slug)
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_abonelik.templ`, Line: 155, Col: 53}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_abonelik.templ`, Line: 155, Col: 29}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var16)
 						if templ_7745c5c3_Err != nil {
 							return templ_7745c5c3_Err
 						}
-						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 37, "\" data-monthly=\"")
+						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 37, "\" data-tier-name=\"")
 						if templ_7745c5c3_Err != nil {
 							return templ_7745c5c3_Err
 						}
 						var templ_7745c5c3_Var17 string
-						templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.ResolveAttributeValue(p.Aylik)
+						templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.ResolveAttributeValue(p.Ad)
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_abonelik.templ`, Line: 156, Col: 33}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_abonelik.templ`, Line: 155, Col: 53}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var17)
 						if templ_7745c5c3_Err != nil {
 							return templ_7745c5c3_Err
 						}
-						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 38, "\" data-annual=\"")
+						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 38, "\" data-monthly=\"")
 						if templ_7745c5c3_Err != nil {
 							return templ_7745c5c3_Err
 						}
 						var templ_7745c5c3_Var18 string
-						templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.ResolveAttributeValue(p.Yillik)
+						templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.ResolveAttributeValue(p.Aylik)
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_abonelik.templ`, Line: 156, Col: 58}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_abonelik.templ`, Line: 156, Col: 33}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var18)
 						if templ_7745c5c3_Err != nil {
 							return templ_7745c5c3_Err
 						}
-						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 39, "\"")
+						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 39, "\" data-annual=\"")
+						if templ_7745c5c3_Err != nil {
+							return templ_7745c5c3_Err
+						}
+						var templ_7745c5c3_Var19 string
+						templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.ResolveAttributeValue(p.Yillik)
+						if templ_7745c5c3_Err != nil {
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_abonelik.templ`, Line: 156, Col: 58}
+						}
+						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var19)
+						if templ_7745c5c3_Err != nil {
+							return templ_7745c5c3_Err
+						}
+						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 40, "\"")
 						if templ_7745c5c3_Err != nil {
 							return templ_7745c5c3_Err
 						}
 						if p.Mevcut {
-							templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 40, " disabled")
+							templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 41, " disabled")
 							if templ_7745c5c3_Err != nil {
 								return templ_7745c5c3_Err
 							}
 						}
-						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 41, ">")
+						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 42, ">")
 						if templ_7745c5c3_Err != nil {
 							return templ_7745c5c3_Err
 						}
 						if p.Mevcut {
-							templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 42, "Aktif plan")
+							templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 43, "Aktif plan")
 							if templ_7745c5c3_Err != nil {
 								return templ_7745c5c3_Err
 							}
 						} else {
-							templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 43, "Bu paketi seç")
+							templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 44, "Bu paketi seç")
 							if templ_7745c5c3_Err != nil {
 								return templ_7745c5c3_Err
 							}
 						}
-						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 44, "</button>")
+						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 45, "</button>")
 						if templ_7745c5c3_Err != nil {
 							return templ_7745c5c3_Err
 						}
 					} else {
-						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 45, "<a class=\"cd-btn cd-abn-cta\" href=\"")
+						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 46, "<a class=\"cd-btn cd-abn-cta\" href=\"")
 						if templ_7745c5c3_Err != nil {
 							return templ_7745c5c3_Err
 						}
-						var templ_7745c5c3_Var19 templ.SafeURL
-						templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL(v.GirisHref))
+						var templ_7745c5c3_Var20 templ.SafeURL
+						templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL(v.GirisHref))
 						if templ_7745c5c3_Err != nil {
 							return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_abonelik.templ`, Line: 165, Col: 72}
 						}
-						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var19))
+						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var20))
 						if templ_7745c5c3_Err != nil {
 							return templ_7745c5c3_Err
 						}
-						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 46, "\">Giriş yapıp abone ol</a>")
+						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 47, "\">Giriş yapıp abone ol</a>")
 						if templ_7745c5c3_Err != nil {
 							return templ_7745c5c3_Err
 						}
 					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 47, "</article>")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 48, "</article>")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 48, "</div>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 49, "</div>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 49, " ")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 50, " ")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -500,13 +513,13 @@ func CDAbonelikSayfaView(v CDAbonelikSayfa) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			if v.GirisYapildi {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 50, "<form id=\"abonForm\" method=\"post\" action=\"/abonelik/odeme\" class=\"cd-abn-modal\" hidden aria-modal=\"true\" role=\"dialog\" aria-labelledby=\"abonFormTitle\"><div class=\"cd-abn-modal__kart\"><div class=\"cd-abn-modal__bas\"><h2 id=\"abonFormTitle\">Ödeme bilgileri</h2><button type=\"button\" class=\"cd-abn-modal__kapat\" data-abon-close aria-label=\"Kapat\">×</button></div><p class=\"cd-abn-ozet\" id=\"abonSummary\"></p><input type=\"hidden\" name=\"tier\" id=\"abonTier\"> <input type=\"hidden\" name=\"cycle\" id=\"abonCycle\" value=\"monthly\"> <label class=\"cd-abn-alan\">TCKN (iyzico zorunlu tutar) <input name=\"tckn\" inputmode=\"numeric\" pattern=\"[0-9]{11}\" maxlength=\"11\" required></label> <label class=\"cd-abn-alan\">Şehir <input name=\"city\" value=\"İstanbul\" required></label> <label class=\"cd-abn-alan\">Adres <input name=\"address\" placeholder=\"Fatura adresi\" required></label> <label class=\"cd-abn-alan\">İndirim kodu (varsa) <input name=\"kupon\" placeholder=\"örn. YAZ2026\" autocapitalize=\"characters\"></label><p class=\"cd-abn-dipnot\">Devam ettiğinizde iyzico ödeme sayfasına yönlendirilirsiniz. Kart bilgisi bu sitede toplanmaz.</p><label class=\"cd-abn-onay\"><input type=\"checkbox\" name=\"sozlesme_onay\" value=\"1\" required> <span><a href=\"/on-bilgilendirme-formu\" target=\"_blank\" rel=\"noopener\">Ön Bilgilendirme Formu</a>'nu ve <a href=\"/mesafeli-satis-sozlesmesi\" target=\"_blank\" rel=\"noopener\">Mesafeli Satış Sözleşmesi</a>'ni okudum, onaylıyorum.</span></label><p class=\"cd-abn-dipnot\">Kişisel verilerinizin nasıl işlendiğini <a href=\"/kvkk\" target=\"_blank\" rel=\"noopener\">KVKK Aydınlatma Metni</a> ile <a href=\"/gizlilik-politikasi\" target=\"_blank\" rel=\"noopener\">Gizlilik Politikası</a>'nda bulabilirsiniz.</p><button class=\"cd-btn cd-abn-cta\" type=\"submit\">Ödemeye geç</button></div></form>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 51, "<form id=\"abonForm\" method=\"post\" action=\"/abonelik/odeme\" class=\"cd-abn-modal\" hidden aria-modal=\"true\" role=\"dialog\" aria-labelledby=\"abonFormTitle\"><div class=\"cd-abn-modal__kart\"><div class=\"cd-abn-modal__bas\"><h2 id=\"abonFormTitle\">Ödeme bilgileri</h2><button type=\"button\" class=\"cd-abn-modal__kapat\" data-abon-close aria-label=\"Kapat\">×</button></div><p class=\"cd-abn-ozet\" id=\"abonSummary\"></p><input type=\"hidden\" name=\"tier\" id=\"abonTier\"> <input type=\"hidden\" name=\"cycle\" id=\"abonCycle\" value=\"monthly\"> <label class=\"cd-abn-alan\">TCKN (iyzico zorunlu tutar) <input name=\"tckn\" inputmode=\"numeric\" pattern=\"[0-9]{11}\" maxlength=\"11\" required></label> <label class=\"cd-abn-alan\">Şehir <input name=\"city\" value=\"İstanbul\" required></label> <label class=\"cd-abn-alan\">Adres <input name=\"address\" placeholder=\"Fatura adresi\" required></label> <label class=\"cd-abn-alan\">İndirim kodu (varsa) <input name=\"kupon\" placeholder=\"örn. YAZ2026\" autocapitalize=\"characters\"></label><p class=\"cd-abn-dipnot\">Devam ettiğinizde iyzico ödeme sayfasına yönlendirilirsiniz. Kart bilgisi bu sitede toplanmaz.</p><label class=\"cd-abn-onay\"><input type=\"checkbox\" name=\"sozlesme_onay\" value=\"1\" required> <span><a href=\"/on-bilgilendirme-formu\" target=\"_blank\" rel=\"noopener\">Ön Bilgilendirme Formu</a>'nu ve <a href=\"/mesafeli-satis-sozlesmesi\" target=\"_blank\" rel=\"noopener\">Mesafeli Satış Sözleşmesi</a>'ni okudum, onaylıyorum.</span></label><p class=\"cd-abn-dipnot\">Kişisel verilerinizin nasıl işlendiğini <a href=\"/kvkk\" target=\"_blank\" rel=\"noopener\">KVKK Aydınlatma Metni</a> ile <a href=\"/gizlilik-politikasi\" target=\"_blank\" rel=\"noopener\">Gizlilik Politikası</a>'nda bulabilirsiniz.</p><button class=\"cd-btn cd-abn-cta\" type=\"submit\">Ödemeye geç</button></div></form>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 51, "</main>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 52, "</main>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -514,7 +527,7 @@ func CDAbonelikSayfaView(v CDAbonelikSayfa) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 52, "</body></html>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 53, "</body></html>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -540,12 +553,12 @@ func cdAbonelikSSS(v CDAbonelikSayfa) templ.Component {
 			}()
 		}
 		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var20 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var20 == nil {
-			templ_7745c5c3_Var20 = templ.NopComponent
+		templ_7745c5c3_Var21 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var21 == nil {
+			templ_7745c5c3_Var21 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 53, "<section class=\"cd-abn-sss\"><h2>Sık sorulan sorular</h2><details><summary>Kart bilgilerim sitede saklanıyor mu?</summary><p>Hayır. Ödeme iyzico'nun güvenli ödeme sayfasında alınır; kart bilgisi sitemize girmez.</p></details> <details><summary>Aboneliğim ne zaman başlar?</summary><p>Ödeme onaylandığı anda katmanınız etkinleşir ve hesabınızdan görüntülenebilir.</p></details> <details><summary>Yıllık planda avantaj var mı?</summary><p>Yıllık ödemede 2 ay hediye: 12 ay yerine 10 aylık fiyat ödersiniz.</p></details> <details><summary>Aboneliğimi iptal edebilir miyim?</summary><p>Dönem sonuna kadar erişiminiz devam eder; iptal talebi için hesabınızdan destek ile iletişime geçebilirsiniz.</p></details> <details><summary>Cayma hakkım var mı?</summary><p>Mesafeli satış mevzuatı gereği kural olarak 14 gün içinde cayma hakkınızı kullanabilirsiniz. Dijital içerik ve elektronik ortamda anında ifa edilen hizmetlerde mevzuattaki istisnalar geçerli olabilir; hangi hâlde ne olduğu <a href=\"/mesafeli-satis-sozlesmesi\">Mesafeli Satış Sözleşmesi</a> ve <a href=\"/on-bilgilendirme-formu\">Ön Bilgilendirme Formu</a>'nda yazılıdır. İptal ve iade talepleri de bu belgelere göre değerlendirilir.</p></details> <details><summary>Faturamı alabilir miyim?</summary><p>Ödeme sonrası e-arşiv fatura talep edebilirsiniz; fatura düzenlenmesi için hesabınızdaki e-posta ve TCKN kullanılır.</p></details></section>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 54, "<section class=\"cd-abn-sss\"><h2>Sık sorulan sorular</h2><details><summary>Kart bilgilerim sitede saklanıyor mu?</summary><p>Hayır. Ödeme iyzico'nun güvenli ödeme sayfasında alınır; kart bilgisi sitemize girmez.</p></details> <details><summary>Aboneliğim ne zaman başlar?</summary><p>Ödeme onaylandığı anda katmanınız etkinleşir ve hesabınızdan görüntülenebilir.</p></details> <details><summary>Yıllık planda avantaj var mı?</summary><p>Yıllık ödemede 2 ay hediye: 12 ay yerine 10 aylık fiyat ödersiniz.</p></details> <details><summary>Aboneliğimi iptal edebilir miyim?</summary><p>Dönem sonuna kadar erişiminiz devam eder; iptal talebi için hesabınızdan destek ile iletişime geçebilirsiniz.</p></details> <details><summary>Cayma hakkım var mı?</summary><p>Mesafeli satış mevzuatı gereği kural olarak 14 gün içinde cayma hakkınızı kullanabilirsiniz. Dijital içerik ve elektronik ortamda anında ifa edilen hizmetlerde mevzuattaki istisnalar geçerli olabilir; hangi hâlde ne olduğu <a href=\"/mesafeli-satis-sozlesmesi\">Mesafeli Satış Sözleşmesi</a> ve <a href=\"/on-bilgilendirme-formu\">Ön Bilgilendirme Formu</a>'nda yazılıdır. İptal ve iade talepleri de bu belgelere göre değerlendirilir.</p></details> <details><summary>Faturamı alabilir miyim?</summary><p>Ödeme sonrası e-arşiv fatura talep edebilirsiniz; fatura düzenlenmesi için hesabınızdaki e-posta ve TCKN kullanılır.</p></details></section>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

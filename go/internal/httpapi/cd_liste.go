@@ -12,29 +12,30 @@ import (
 // handleCDPodcasts /podcasts
 func (s *Server) handleCDPodcasts(w http.ResponseWriter, r *http.Request) {
 	s.cdTurListesi(w, r, "podcast", templkit.CDListePage{
-		Baslik:   "Podcast",
-		Aciklama: "Kripto ve blockchain üzerine sohbetler, analizler ve röportajlar.",
-		BosMetin: "Henüz podcast bölümü yayınlanmadı. Bölümler eklendikçe burada listelenir.",
+		Baslik:   templkit.CDT(s.cdYerel(r), "Podcast"),
+		Aciklama: templkit.CDT(s.cdYerel(r), "Kripto ve blockchain üzerine sohbetler, analizler ve röportajlar."),
+		BosMetin: templkit.CDT(s.cdYerel(r), "Henüz podcast bölümü yayınlanmadı. Bölümler eklendikçe burada listelenir."),
 	})
 }
 
 // handleCDSponsored /sponsored-content
 func (s *Server) handleCDSponsored(w http.ResponseWriter, r *http.Request) {
 	s.cdTurListesi(w, r, "sponsorlu", templkit.CDListePage{
-		Baslik:   "Sponsorlu İçerik",
-		Aciklama: "İş ortaklarımızın hazırladığı içerikler. Sponsorlu içerikler açıkça etiketlenir.",
-		BosMetin: "Şu an yayında sponsorlu içerik yok.",
+		Baslik:   templkit.CDT(s.cdYerel(r), "Sponsorlu İçerik"),
+		Aciklama: templkit.CDT(s.cdYerel(r), "İş ortaklarımızın hazırladığı içerikler. Sponsorlu içerikler açıkça etiketlenir."),
+		BosMetin: templkit.CDT(s.cdYerel(r), "Şu an yayında sponsorlu içerik yok."),
 	})
 }
 
 // cdTurListesi ortak uç: tür filtresiyle içerik listeler.
 func (s *Server) cdTurListesi(w http.ResponseWriter, r *http.Request, tur string, v templkit.CDListePage) {
+	dil := s.cdYerel(r)
 	ctx := r.Context()
 	items, _, err := repo.ListContents(ctx, s.pool, repo.ListFilter{
 		Status:  "yayinda",
 		TypeKey: tur,
 		SiteID:  1,
-		Locale:  "tr",
+		Locale:  s.cdYerel(r),
 		Page:    1,
 		PerPage: 30,
 	})
@@ -44,7 +45,7 @@ func (s *Server) cdTurListesi(w http.ResponseWriter, r *http.Request, tur string
 	simdi := time.Now()
 	var ldItems []cdLDItem
 	for i, c := range items {
-		v.Stories = append(v.Stories, s.cdStoryCevir(c, simdi))
+		v.Stories = append(v.Stories, s.cdStoryCevir(c, simdi, dil))
 		if i < 11 {
 			it := cdLDItem{Headline: c.Title, URL: s.absBase(r) + makaleURL(c), Author: c.AuthorName}
 			if c.PublishedAt != nil {
@@ -86,12 +87,12 @@ func (s *Server) handleCDNewsletters(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	v := templkit.CDNewsletterPage{
 		Shell:           s.cdShellCtx(ctx, r, "newsletters"),
-		Title:           "Bültenler — " + s.siteName,
+		Title:           templkit.CDT(s.cdYerel(r), "Bültenler") + " — " + s.siteName,
 		Desc:            "Günün kripto haberleri ve piyasa özeti e-postanızda. Ücretsiz abone olun.",
 		Canonical:       s.cfg.BaseURL + "/newsletters",
 		PageCategory:    "section_landing_page",
 		ContentCategory: "newsletters",
-		Locale:          "tr",
+		Locale:          s.cdYerel(r),
 		BaseURL:         strings.TrimRight(s.cfg.BaseURL, "/"),
 	}
 	v.JSONLD = string(siteAdiJSONLD(s.siteName, v.Canonical))

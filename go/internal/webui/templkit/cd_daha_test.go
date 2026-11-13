@@ -16,7 +16,7 @@ func TestBolumParca(t *testing.T) {
 	s := CDStory{Title: "Başlık", Href: "/h/1", Image: "/kg/" + strings.Repeat("a", 32),
 		Time: "1 saat önce", Spot: "Spot"}
 	var sb strings.Builder
-	require.NoError(t, CDBolumParca([]CDStory{s, s}, "/business", "/business?s=2").
+	require.NoError(t, CDBolumParca([]CDStory{s, s}, "/business", "/business?s=2", "tr").
 		Render(context.Background(), &sb))
 	h := sb.String()
 
@@ -40,7 +40,7 @@ func TestBolumParca(t *testing.T) {
 // TestBolumParcaSonSayfa: next yokken buton basılmaz (yalnız prev).
 func TestBolumParcaSonSayfa(t *testing.T) {
 	var sb strings.Builder
-	require.NoError(t, CDBolumParca(nil, "/business?s=2", "").Render(context.Background(), &sb))
+	require.NoError(t, CDBolumParca(nil, "/business?s=2", "", "tr").Render(context.Background(), &sb))
 	h := sb.String()
 	assert.NotContains(t, h, "cd-daha__btn", "son sayfada buton olmamalı")
 	assert.Contains(t, h, "cd-daha__geri", "prev kalmalı (geri dönüş)")
@@ -51,7 +51,7 @@ func TestTagParca(t *testing.T) {
 	s := CDStory{Title: "Başlık", Href: "/h/1", Image: "/kg/" + strings.Repeat("b", 32),
 		Time: "2 saat önce"}
 	var sb strings.Builder
-	require.NoError(t, CDTagParca([]CDStory{s}, "", "/tag/x?s=2").Render(context.Background(), &sb))
+	require.NoError(t, CDTagParca([]CDStory{s}, "", "/tag/x?s=2", "tr").Render(context.Background(), &sb))
 	h := sb.String()
 
 	assert.NotContains(t, h, "<!doctype")

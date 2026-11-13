@@ -103,7 +103,7 @@ templ cdLogoMark(sh CDShell) {
 // altta) ve değişim gizli — sade görünüm. `html.cd-kaydi` (csp-delegated.js
 // scroll eşiğinde ekler) ile öğe TEK SATIRA geçer ve değişim görünür.
 templ cdTicker(s CDShell) {
-	<div class="cd-ticker" role="region" aria-label="Piyasa şeridi">
+	<div class="cd-ticker" role="region" aria-label={ cdT(s.Locale, "Piyasa şeridi") }>
 		<div class="cd-wrap">
 			<div class="cd-ticker__inner">
 				// SOL KÜME SABİT (12 Kasım 2026, kullanıcı isteği):
@@ -114,11 +114,11 @@ templ cdTicker(s CDShell) {
 				<div class="cd-ticker__sol">
 					<div class="cd-ticker__tabs" role="tablist">
 						if s.TickerTab == "stocks" {
-							<a class="cd-ticker__tab" role="tab" aria-selected="false" href="?serit=markets">Kripto</a>
-							<a class="cd-ticker__tab" role="tab" aria-selected="true" href="?serit=stocks">Hisse Senetleri</a>
+							<a class="cd-ticker__tab" role="tab" aria-selected="false" href="?serit=markets">{ cdT(s.Locale, "Kripto") }</a>
+							<a class="cd-ticker__tab" role="tab" aria-selected="true" href="?serit=stocks">{ cdT(s.Locale, "Hisse Senetleri") }</a>
 						} else {
-							<a class="cd-ticker__tab" role="tab" aria-selected="true" href="?serit=markets">Kripto</a>
-							<a class="cd-ticker__tab" role="tab" aria-selected="false" href="?serit=stocks">Hisse Senetleri</a>
+							<a class="cd-ticker__tab" role="tab" aria-selected="true" href="?serit=markets">{ cdT(s.Locale, "Kripto") }</a>
+							<a class="cd-ticker__tab" role="tab" aria-selected="false" href="?serit=stocks">{ cdT(s.Locale, "Hisse Senetleri") }</a>
 						}
 					</div>
 				</div>
@@ -198,7 +198,7 @@ templ cdTopbar(s CDShell) {
 				<div class="cd-topbar__sol">
 					@cdMobilNav(s)
 					<a class="cd-mobil-arama" href={ s.SearchHref } data-arama-ac
-						aria-label="Aramayı aç" aria-expanded="false" aria-controls="cd-arama">
+						aria-label={ cdT(s.Locale, "Aramayı aç") } aria-expanded="false" aria-controls="cd-arama">
 						<svg class="cd-mobil-arama__ikon" viewBox="0 0 24 24" width="24" height="24"
 							fill="none" stroke="currentColor" stroke-width="1.5"
 							stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"
@@ -219,14 +219,14 @@ templ cdTopbar(s CDShell) {
 					// gider (ilerlemeli geliştirme); JS varsa csp-delegated.js
 					// varsayılanı iptal edip paneli açar.
 					<a class="cd-arama-ac" href={ s.SearchHref } data-arama-ac
-						aria-label="Aramayı aç" aria-expanded="false" aria-controls="cd-arama">
+						aria-label={ cdT(s.Locale, "Aramayı aç") } aria-expanded="false" aria-controls="cd-arama">
 						<svg class="cd-arama-ac__ikon" viewBox="0 0 24 24" width="16" height="16"
 							fill="none" stroke="currentColor" stroke-width="1.5"
 							stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"
 							focusable="false">
 							<path d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"/>
 						</svg>
-						<span class="cd-arama-ac__metin">Ara</span>
+						<span class="cd-arama-ac__metin">{ cdT(s.Locale, "Ara") }</span>
 						<span class="cd-arama-ac__ipucu" aria-hidden="true">/</span>
 					</a>
 										// Tema anahtarı. Varsayılan GİZLİ (`display:none`); init
@@ -235,7 +235,7 @@ templ cdTopbar(s CDShell) {
 					// Simge SVG: projede templ dosyalarında emoji YASAK
 					// (emoji_test.go, TestTumTemplDosyalariEmojisiz).
 					<button class="cd-tema" type="button" data-tema
-						aria-label="Karanlık moda geç" aria-pressed="false">
+						aria-label={ cdT(s.Locale, "Karanlık moda geç") } aria-pressed="false">
 												// İKİ İKON DA DOM'DA: açık temada AY, koyu temada GÜNEŞ.
 						// Görünürlüğü tema sınıfı belirliyor (CSS) — JS ile ikon
 						// değiştirmek FOUC ve eksik-durum riski taşıyordu.
@@ -264,14 +264,29 @@ templ cdTopbar(s CDShell) {
 					if len(s.Diller) > 1 {
 												// Dil seçici: satır içi olay YOK (CSP 'unsafe-inline'
 						// kapatıldı). data-git ile csp-delegated.js yönlendirir.
+						//
+						// 13 Kasım 2026 — TASARIM KORUNARAK GELİŞTİRME:
+						// seçenekler artık YALNIZ yayında içeriği olan dillerden
+						// gelir (bkz. dil_cd.go); yeni dilde ilk haber çıkınca
+						// kendiliğinden belirir. Görsel olarak tek değişiklik:
+						// kutunun soluna küre ikonu — tek dilli etiketle
+						// (aşağıdaki else dalı) aynı görsel dil, hizalama ve
+						// 40 px yükseklik korunuyor.
 						<label class="cd-lang">
-							<span class="cd-visually-hidden">Dil</span>
-							<select class="cd-lang__sec" data-git aria-label="Dil">
+							<span class="cd-visually-hidden">{ cdT(s.Locale, "Dil") }</span>
+							<svg class="cd-lang__ikon" viewBox="0 0 24 24" fill="none"
+								stroke="currentColor" stroke-width="1.6" aria-hidden="true"
+								focusable="false">
+								<circle cx="12" cy="12" r="9"></circle>
+								<path d="M3 12h18"></path>
+								<path d="M12 3c2.5 2.6 3.9 5.7 3.9 9s-1.4 6.4-3.9 9c-2.5-2.6-3.9-5.7-3.9-9S9.5 5.6 12 3z"></path>
+							</svg>
+							<select class="cd-lang__sec" data-git aria-label={ cdT(s.Locale, "Dil") }>
 								for _, d := range s.Diller {
 									if d.Aktif {
-										<option value={ d.Href } selected>{ d.Kod }</option>
+										<option value={ d.Href } title={ d.Ad } selected>{ d.Kod }</option>
 									} else {
-										<option value={ d.Href }>{ d.Kod }</option>
+										<option value={ d.Href } title={ d.Ad }>{ d.Kod }</option>
 									}
 								}
 							</select>
@@ -310,10 +325,10 @@ templ cdTopbar(s CDShell) {
 						@cdHesapMenu(s)
 					} else {
 						if s.LoginHref != "" {
-							<a class="cd-btn cd-btn--ghost" href={ s.LoginHref }>Oturum Aç</a>
+							<a class="cd-btn cd-btn--ghost" href={ s.LoginHref }>{ cdT(s.Locale, "Oturum Aç") }</a>
 						}
 						if s.SignupHref != "" {
-							<a class="cd-btn cd-btn--kayit" href={ s.SignupHref }>Kaydol</a>
+							<a class="cd-btn cd-btn--kayit" href={ s.SignupHref }>{ cdT(s.Locale, "Kaydol") }</a>
 						}
 					}
 				</div>
@@ -321,7 +336,7 @@ templ cdTopbar(s CDShell) {
 				// 0 16 dolgu, 16/24 w400, radius 4. Oturum açıkken
 				// aynı yerde avatar bağlantısı durur.
 				if s.LoggedIn {
-					<a class="cd-mobil-hesap" href={ s.UserHref } aria-label="Hesabım">
+					<a class="cd-mobil-hesap" href={ s.UserHref } aria-label={ cdT(s.Locale, "Hesabım") }>
 						<span class="cd-hesap-ac__avatar" aria-hidden="true">{ s.UserInitial }</span>
 					</a>
 				} else {
@@ -338,13 +353,13 @@ templ cdTopbar(s CDShell) {
 						// JS YOK: details mobil menüyle aynı desen;
 						// dışarı tıklama/Escape betikten gelir.
 						<details class="cd-hesap-ac cd-mobil-giris-menu" data-giris-menu>
-							<summary class="cd-mobil-giris" aria-label="Oturum aç veya kaydol">
+							<summary class="cd-mobil-giris" aria-label={ cdT(s.Locale, "Oturum aç veya kaydol") }>
 								<svg class="ti" aria-hidden="true"><use href="/static/vendor/tabler-icons.svg?v=b89545a6#ti-user"></use></svg>
 							</summary>
 							<div class="cd-hesap-ac__panel cd-mobil-giris__panel">
-								<a class="cd-hesap-ac__satir" href={ s.LoginHref }>Oturum Aç</a>
+								<a class="cd-hesap-ac__satir" href={ s.LoginHref }>{ cdT(s.Locale, "Oturum Aç") }</a>
 								if s.SignupHref != "" {
-									<a class="cd-hesap-ac__satir" href={ s.SignupHref }>Kaydol</a>
+									<a class="cd-hesap-ac__satir" href={ s.SignupHref }>{ cdT(s.Locale, "Kaydol") }</a>
 								}
 							</div>
 						</details>
@@ -381,16 +396,16 @@ templ cdHesapMenu(s CDShell) {
 		</summary>
 		<div class="cd-hesap-ac__panel">
 			<p class="cd-hesap-ac__ad">{ s.UserName }</p>
-			<a class="cd-hesap-ac__satir" href={ s.UserHref }>Hesabım</a>
-			<a class="cd-hesap-ac__satir" href={ s.UserHref + "/kaydedilenler" }>Kaydedilenler</a>
+			<a class="cd-hesap-ac__satir" href={ s.UserHref }>{ cdT(s.Locale, "Hesabım") }</a>
+			<a class="cd-hesap-ac__satir" href={ s.UserHref + "/kaydedilenler" }>{ cdT(s.Locale, "Kaydedilenler") }</a>
 			<a class="cd-hesap-ac__satir" href={ s.UserHref + "/bildirimler" }>
-				Bildirimler
+				{ cdT(s.Locale, "Bildirimler") }
 				if s.UserUnread > 0 {
 					<span class="cd-hesap-ac__sayi">{ cdBildirimSayi(s.UserUnread) }</span>
 				}
 			</a>
 			<form class="cd-hesap-ac__cikis" method="post" action="/cikis">
-				<button class="cd-hesap-ac__satir" type="submit">Çıkış</button>
+				<button class="cd-hesap-ac__satir" type="submit">{ cdT(s.Locale, "Çıkış") }</button>
 			</form>
 		</div>
 	</details>
@@ -427,7 +442,7 @@ templ cdAramaPanel(s CDShell) {
 						placeholder="Haber, fiyat veya kategori ara" autocomplete="off"
 						aria-label="Arama metni"/>
 					<button class="cd-arama__kapat" type="button" data-arama-kapat
-						aria-label="Aramayı kapat">
+						aria-label={ cdT(s.Locale, "Aramayı kapat") }>
 						<svg viewBox="0 0 24 24" width="24" height="24" fill="none"
 							stroke="currentColor" stroke-width="2" stroke-linecap="round"
 							stroke-linejoin="round" aria-hidden="true" focusable="false">
@@ -435,22 +450,22 @@ templ cdAramaPanel(s CDShell) {
 						</svg>
 					</button>
 				</div>
-				<div class="cd-arama__cipler" role="group" aria-label="Arama türü">
+				<div class="cd-arama__cipler" role="group" aria-label={ cdT(s.Locale, "Arama türü") }>
 					<button class="cd-arama__cip cd-arama__cip--aktif" type="button"
-						data-arama-cip="hepsi" aria-pressed="true">Tümü</button>
+						data-arama-cip="hepsi" aria-pressed="true">{ cdT(s.Locale, "Tümü") }</button>
 					if len(s.Ticker) > 0 {
 						<button class="cd-arama__cip" type="button"
-							data-arama-cip="piyasalar" aria-pressed="false">Piyasalar</button>
+							data-arama-cip="piyasalar" aria-pressed="false">{ cdT(s.Locale, "Piyasalar") }</button>
 					}
 					if len(s.Nav) > 0 {
 						<button class="cd-arama__cip" type="button"
-							data-arama-cip="bolumler" aria-pressed="false">Bölümler</button>
+							data-arama-cip="bolumler" aria-pressed="false">{ cdT(s.Locale, "Bölümler") }</button>
 					}
 				</div>
 				<div class="cd-arama__govde">
 					if len(s.Ticker) > 0 {
 						<div class="cd-arama__grup" data-arama-grup="piyasalar">
-							<h2 class="cd-arama__baslik">Piyasalar</h2>
+							<h2 class="cd-arama__baslik">{ cdT(s.Locale, "Piyasalar") }</h2>
 							for _, it := range s.Ticker {
 								<a class="cd-arama__satir" href={ "/price/" + it.Slug }>
 									<span class="cd-arama__simge">{ it.Sym }</span>
@@ -466,7 +481,7 @@ templ cdAramaPanel(s CDShell) {
 					}
 					if len(s.Nav) > 0 {
 						<div class="cd-arama__grup" data-arama-grup="bolumler">
-							<h2 class="cd-arama__baslik">Bölümler</h2>
+							<h2 class="cd-arama__baslik">{ cdT(s.Locale, "Bölümler") }</h2>
 							for _, l := range s.Nav {
 								<a class="cd-arama__bolum" href={ l.Href }>{ l.Label }</a>
 							}
@@ -515,11 +530,11 @@ templ cdFooter(s CDShell) {
 			// CoinDesk /tr alt bilgisi; 10/16 link, 16-24 px ikon, gap 16).
 			<div class="cd-footer__yasal">
 				<div class="cd-footer__yasal-sol">
-					<a href="/gizlilik-politikasi">Gizlilik</a>
-					<a href="/kullanim-kosullari">Kullanım Koşulları</a>
-					<a href="/cerez-politikasi">Çerez Politikası</a>
-					<a href="/reklam-politikasi">Reklam Politikası</a>
-					<a href="/iletisim">İletişim</a>
+					<a href="/gizlilik-politikasi">{ cdT(s.Locale, "Gizlilik") }</a>
+					<a href="/kullanim-kosullari">{ cdT(s.Locale, "Kullanım Koşulları") }</a>
+					<a href="/cerez-politikasi">{ cdT(s.Locale, "Çerez Politikası") }</a>
+					<a href="/reklam-politikasi">{ cdT(s.Locale, "Reklam Politikası") }</a>
+					<a href="/iletisim">{ cdT(s.Locale, "İletişim") }</a>
 					<a href="/rss.xml">RSS</a>
 				</div>
 				<div class="cd-footer__sosyal">
@@ -586,8 +601,8 @@ templ cdFooter(s CDShell) {
 			// alt bilgiyi kaydırıp CLS üretirdi.
 			<div class="cd-footer__alt">
 				<div class="cd-footer__alt-metin">
-					<span>© 2026 bitcosar — Tüm hakları saklıdır.</span>
-					<span>Kaynaklar atıf ile gösterilir; tam metin yayınlanmaz.</span>
+					<span>{ cdT(s.Locale, "© 2026 bitcosar — Tüm hakları saklıdır.") }</span>
+					<span>{ cdT(s.Locale, "Kaynaklar atıf ile gösterilir; tam metin yayınlanmaz.") }</span>
 				</div>
 				<a class="cd-footer__dmca" href="https://www.dmca.com/Protection/Status.aspx?ID=b0acac30-a84c-4adf-8cc3-cde102419088" title="DMCA.com Protection Status" target="_blank" rel="noopener nofollow">
 					<img src="https://images.dmca.com/Badges/dmca_protected_sml_120n.png?ID=b0acac30-a84c-4adf-8cc3-cde102419088" alt="DMCA.com Protection Status" width="121" height="24" loading="lazy" decoding="async"/>
@@ -606,9 +621,9 @@ templ cdFooter(s CDShell) {
 			// `aria-hidden` + `tabindex="-1"`: ekran okuyucu ve klavye
 			// kullanıcısı da denk gelmez (erişilebilirlik ihlali olmasın).
 			<div class="cd-tuzak" aria-hidden="true">
-				<a href="/arsiv/dizin" rel="nofollow" tabindex="-1">Arşiv dizini</a>
-				<a href="/gizli-dizin" rel="nofollow" tabindex="-1">Tüm arşiv</a>
-				<a href="/tum-haberler-dizin" rel="nofollow" tabindex="-1">Tüm haberler dizini</a>
+				<a href="/arsiv/dizin" rel="nofollow" tabindex="-1">{ cdT(s.Locale, "Arşiv dizini") }</a>
+				<a href="/gizli-dizin" rel="nofollow" tabindex="-1">{ cdT(s.Locale, "Tüm arşiv") }</a>
+				<a href="/tum-haberler-dizin" rel="nofollow" tabindex="-1">{ cdT(s.Locale, "Tüm haberler dizini") }</a>
 			</div>
 		</div>
 	</footer>
@@ -634,13 +649,13 @@ templ cdBasSimge() {
 }
 
 // cdSectionHead bölüm başlığı + "tümü" bağlantısı.
-templ cdSectionHead(title, href string) {
+templ cdSectionHead(title, href, dil string) {
 	<div class="cd-section-head">
 		<h2>
 						<span class="cd-vurgu">{ title }</span>
 		</h2>
 		if href != "" {
-			<a href={ href }>Tümü →</a>
+			<a href={ href }>{ cdT(dil, "Tümü →") }</a>
 		}
 	</div>
 }

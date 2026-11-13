@@ -226,20 +226,20 @@ func (s *Server) handleCDHisse(w http.ResponseWriter, r *http.Request) {
 		repo.FiyatBicimP(d.Fiyat, d.Para), repo.DegisimBicim(d.Degisim))))
 	ld.WriteString(string(breadcrumbScript([]crumb{
 		{Name: s.siteName, URL: base + "/"},
-		{Name: "Fiyatlar", URL: base + "/price"},
+		{Name: templkit.CDT(s.cdYerel(r), "Fiyatlar"), URL: base + "/price"},
 		{Name: d.Ad, URL: kanonik},
 	})))
 
 	v := templkit.CDHisseSayfa{
 		Shell:           s.cdShellCtx(r.Context(), r, "price"),
-		Title:           d.Ad + " (" + d.Sembol + ") Hisse Fiyatı ve Grafiği — " + s.siteName,
+		Title:           d.Ad + " (" + d.Sembol + ") " + templkit.CDT(s.cdYerel(r), "Hisse Fiyatı ve Grafiği") + " — " + s.siteName,
 		Desc:            d.Ad + " (" + d.Sembol + ") güncel hisse fiyatı, " + ar.Ad + " grafiği, gün aralığı, 52 hafta aralığı ve hacim.",
 		Canonical:       kanonik,
 		JSONLD:          ld.String(),
 		BaseURL:         base,
 		PageCategory:    "price_page",
 		ContentCategory: "price",
-		Locale:          "tr",
+		Locale:          s.cdYerel(r),
 
 		Ad:      d.Ad,
 		Sembol:  d.Sembol,

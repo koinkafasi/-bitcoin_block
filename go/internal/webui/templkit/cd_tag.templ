@@ -49,7 +49,7 @@ type CDTagPage struct {
 
 templ CDTagPageView(v CDTagPage) {
 	<!doctype html>
-	<html lang="tr">
+	<html lang={ cdDilKodu(v.Shell.Locale) }>
 		<head>
 			@cdHead(CDHead{Title: v.Title, Desc: v.Desc, Canonical: v.Canonical,
 				OGType: "website", Image: v.BannerImage, SiteName: v.Shell.SiteName, FaviconURL: v.Shell.FaviconURL,
@@ -83,7 +83,7 @@ templ CDTagPageView(v CDTagPage) {
 				<div class="cd-tag-izgara">
 					<div class="cd-tag-liste">
 						if len(v.Stories) == 0 {
-							<p class="cd-card__spot">Bu etikette henüz haber yok.</p>
+							<p class="cd-card__spot">{ cdT(v.Locale, "Bu etikette henüz haber yok.") }</p>
 						}
 						for i, s := range v.Stories {
 							if i > 0 {
@@ -94,7 +94,7 @@ templ CDTagPageView(v CDTagPage) {
 						if v.PrevHref != "" || v.NextHref != "" {
 							<nav class="cd-daha" aria-label="Sayfalama">
 								if v.PrevHref != "" {
-									<a class="cd-daha__geri" href={ v.PrevHref } rel="prev">← Önceki</a>
+									<a class="cd-daha__geri" href={ v.PrevHref } rel="prev">{ cdT(v.Locale, "← Önceki") }</a>
 								}
 								if v.NextHref != "" {
 									<a class="cd-daha__btn" href={ v.NextHref } rel="next">Daha fazla haber</a>
@@ -119,11 +119,11 @@ templ CDTagPageView(v CDTagPage) {
 									}
 								</div>
 								<div class="cd-tag-latest__daha">
-									<a href="/latest-crypto-news">Tümünü gör →</a>
+									<a href="/latest-crypto-news">{ cdT(v.Locale, "Tümünü gör →") }</a>
 								</div>
 							</section>
 						}
-						@cdNewsletter()
+						@cdNewsletter(v.Locale)
 					</aside>
 				</div>
 				if v.NextHref != "" {
@@ -137,7 +137,7 @@ templ CDTagPageView(v CDTagPage) {
 
 // CDTagParca etiket sayfasının "daha fazla haber" PARÇASI — bkz.
 // CDBolumParca. Satır stili etikete ait (cdTagSatir, 16/24 w400).
-templ CDTagParca(stories []CDStory, prevHref, nextHref string) {
+templ CDTagParca(stories []CDStory, prevHref, nextHref, dil string) {
 	for _, s := range stories {
 		<hr class="cd-tag-satir__cizgi"/>
 		@cdTagSatir(s)
@@ -145,7 +145,7 @@ templ CDTagParca(stories []CDStory, prevHref, nextHref string) {
 	if prevHref != "" || nextHref != "" {
 		<nav class="cd-daha" aria-label="Sayfalama">
 			if prevHref != "" {
-				<a class="cd-daha__geri" href={ prevHref } rel="prev">← Önceki</a>
+				<a class="cd-daha__geri" href={ prevHref } rel="prev">{ cdT(dil, "← Önceki") }</a>
 			}
 			if nextHref != "" {
 				<a class="cd-daha__btn" href={ nextHref } rel="next">Daha fazla haber</a>

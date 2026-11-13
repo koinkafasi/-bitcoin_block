@@ -17,7 +17,8 @@ func (s *Server) handleCDHome(w http.ResponseWriter, r *http.Request) {
 	}
 	ctx := r.Context()
 
-	items := s.cdHomeIcerikleri(ctx)
+	dil := s.cdYerel(r)
+	items := s.cdHomeIcerikleri(ctx, dil)
 	simdi := time.Now()
 	cevir := func(c repo.Content) templkit.CDStory {
 		st := templkit.CDStory{
@@ -29,7 +30,7 @@ func (s *Server) handleCDHome(w http.ResponseWriter, r *http.Request) {
 			Gri: c.ImageGrayscale,
 		}
 		if c.PublishedAt != nil {
-			st.Time = trGoreliZaman(*c.PublishedAt, simdi)
+			st.Time = goreliZaman(*c.PublishedAt, simdi, dil)
 		}
 		if c.SourceName != nil {
 			st.Source = *c.SourceName
@@ -135,7 +136,7 @@ func (s *Server) handleCDHome(w http.ResponseWriter, r *http.Request) {
 				break
 			}
 		}
-		sec := templkit.CDSection{Title: b.Ad, Href: "/" + b.Slug}
+		sec := templkit.CDSection{Title: templkit.CDT(dil, b.Ad), Href: "/" + b.Slug}
 		if len(grup) > 0 {
 			sec.Lead = grup[0]
 			sec.Rows = grup[1:]
@@ -145,8 +146,8 @@ func (s *Server) handleCDHome(w http.ResponseWriter, r *http.Request) {
 
 	d := templkit.CDHomeView{
 		Shell:     s.cdShellCtx(r.Context(), r, ""),
-		Title:     s.siteName + " — Kripto Haberleri ve Piyasa Verisi",
-		Desc:      "Bitcoin, Ethereum ve kripto piyasalarından son haberler, analizler ve canlı fiyatlar.",
+		Title:     s.siteName + " — " + templkit.CDT(dil, "Kripto Haberleri ve Piyasa Verisi"),
+		Desc:      templkit.CDT(dil, "Bitcoin, Ethereum ve kripto piyasalarından son haberler, analizler ve canlı fiyatlar."),
 		Canonical: s.kanonikKok(r) + r.URL.Path,
 		Lead:      lead,
 		RailLeft:  railSol,
@@ -169,11 +170,11 @@ func (s *Server) handleCDHome(w http.ResponseWriter, r *http.Request) {
 		// `cd_*` blokları. Liste boşsa şablon varsayılan sırayı uygular.
 		Moduller: s.cdModuller(r.Context(), r),
 		// Giriş hero'su: gerçek piyasa verisi (CoinGecko + alternative.me).
-		Giris: s.cdGirisOlustur(ctx),
+		Giris: s.cdGirisOlustur(ctx, s.cdYerel(r)),
 		// CoinDesk ana sayfa sınıflandırması.
 		PageCategory:    "homepage",
 		ContentCategory: "homepage",
-		Locale:          "tr",
+		Locale:          s.cdYerel(r),
 		BaseURL:         s.kanonikKok(r),
 	}
 	// Fiyat şeridi cdShellCtx içinde doldurulur (tüm sayfalar için tek yer).
@@ -196,6 +197,7 @@ type cdBolum struct{ Ad, Slug string }
 
 // cdPopuler §21 "En Çok Okunan" listesi (son 7 gün ağırlıklı).
 func (s *Server) cdPopuler(r *http.Request, adet int) []templkit.CDStory {
+	dil := s.cdYerel(r)
 	items, err := repo.PopulerIcerikler(r.Context(), s.pool, 1, "tr", adet)
 	if err != nil || len(items) == 0 {
 		return nil
@@ -203,7 +205,7 @@ func (s *Server) cdPopuler(r *http.Request, adet int) []templkit.CDStory {
 	simdi := time.Now()
 	var out []templkit.CDStory
 	for _, c := range items {
-		out = append(out, s.cdStoryCevir(c, simdi))
+		out = append(out, s.cdStoryCevir(c, simdi, dil))
 	}
 	return out
 }
@@ -229,16 +231,26 @@ func (s *Server) cdUzmanlar(r *http.Request, adet int) []templkit.CDUzman {
 // trGoreliZaman "3 saat önce" biçiminde insan okur zaman üretir
 // (CoinDesk'in "17 minutes ago" deseninin Türkçesi).
 func trGoreliZaman(t, simdi time.Time) string {
+	return goreliZaman(t, simdi, "tr")
+}
+
+// goreliZaman göreli zamanı verilen dilde yazar.
+//
+// DİL (13 Kasım 2026): `/en/` sayfaları "7 gün önce" basıyordu — zaman
+// etiketi arayüz metnidir, çevrilmeli (içerik başlığı değil).
+func goreliZaman(t, simdi time.Time, dil string) string {
 	dk := int(simdi.Sub(t).Minutes())
 	switch {
 	case dk < 1:
-		return "az önce"
+		return templkit.CDT(dil, "az önce")
 	case dk < 60:
-		return strconv.Itoa(dk) + " dakika önce"
+		// Sayı + çevrilmiş BİRİM ayrı ayrı: "7 dakika önce" tek parça
+		// anahtar olsaydı her sayı için sözlük satırı gerekirdi.
+		return strconv.Itoa(dk) + templkit.CDT(dil, " dakika önce")
 	case dk < 60*24:
-		return strconv.Itoa(dk/60) + " saat önce"
+		return strconv.Itoa(dk/60) + templkit.CDT(dil, " saat önce")
 	case dk < 60*24*30:
-		return strconv.Itoa(dk/(60*24)) + " gün önce"
+		return strconv.Itoa(dk/(60*24)) + templkit.CDT(dil, " gün önce")
 	default:
 		return repo.TarihTRUzun(t)
 	}

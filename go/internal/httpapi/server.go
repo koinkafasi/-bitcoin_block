@@ -90,6 +90,9 @@ type Server struct {
 	cdShellCache *ttlcache[cdShellData]
 	cdHomeCache  *ttlcache[[]repo.Content]
 	cdListeCache *ttlcache[cdListeSonuc]
+	// dilIcerikCache: hangi dillerde YAYINDA içerik var (dil seçicisi bunu
+	// okur; bkz. dil_cd.go). 24 dil için her istekte DB'ye gitmemek için.
+	dilIcerikCache *ttlcache[map[string]bool]
 	// kategoriCache slug → kategori kimliği (ana sayfa aynı 4 slug'ı her
 	// render'da çeviriyordu).
 	kategoriCache *ttlcache[int64]
@@ -147,13 +150,16 @@ func NewServerApp(cfg config.Config, logger *slog.Logger, pool *pgxpool.Pool, bu
 		siteCache:     map[string]siteEntry{},
 		assetVer:      strconv.FormatInt(time.Now().Unix(), 36),
 
-		cdShellCache:  newTTLCache[cdShellData](cdCacheTTL),
-		cdHomeCache:   newTTLCache[[]repo.Content](cdCacheTTL),
-		cdListeCache:  newTTLCache[cdListeSonuc](cdCacheTTL),
-		kategoriCache: newTTLCache[int64](cdCacheTTL),
-		ytListeCache:  newTTLCache[[]repo.YoutubeKayit](ytListeTTL),
-		cspHashes:     newCSPHashCache(),
-		sayfaCache:    newSayfaOnbellek(),
+		cdShellCache: newTTLCache[cdShellData](cdCacheTTL),
+		cdHomeCache:  newTTLCache[[]repo.Content](cdCacheTTL),
+		cdListeCache: newTTLCache[cdListeSonuc](cdCacheTTL),
+		// Dil listesi içerik varlığına bağlı; 60 sn tazelik yeter. Yeni bir
+		// dilde ilk haber yayınlandığında seçici en geç bir dakikada açılır.
+		dilIcerikCache: newTTLCache[map[string]bool](dilIcerikTTL),
+		kategoriCache:  newTTLCache[int64](cdCacheTTL),
+		ytListeCache:   newTTLCache[[]repo.YoutubeKayit](ytListeTTL),
+		cspHashes:      newCSPHashCache(),
+		sayfaCache:     newSayfaOnbellek(),
 	}
 	s.siteName = s.initialSiteName()
 	templkit.VarlikSurum = s.assetVer
@@ -310,11 +316,15 @@ func (s *Server) routes() {
 	s.mux.HandleFunc("GET /kg/{hash}/{genislik}", s.handleKaynakGorselOlcekli)
 	// Varsayılan Open Graph kartı: görseli olmayan sayfaların og:image'ı.
 	s.mux.HandleFunc("GET /og-varsayilan.png", s.handleVarsayilanOG)
-	for _, b := range []string{"markets", "business", "tech", "policy", "opinion",
-		"news-analysis", "latest-crypto-news", "focus", "research",
-		"press-release", "learn"} {
+	for _, b := range cdBolumler {
 		s.mux.HandleFunc("GET /"+b, s.cdBolumHandler(b))
 	}
+	// DİL ÖNEKLİ CD YOLLARI (`/en/markets`, `/en/price`, `/en/tag/x` …)
+	// BURADA KAYDEDİLMEZ — `handlePublicSegment` içinde dağıtılır (bkz.
+	// cdDilYolu, dil_cd.go). Sebep: Go mux `/{lang}/markets` ile
+	// `/price/{coin}` desenlerini ÇAKIŞAN sayıp panikliyor
+	// ("both match /price/markets"). Tek joker (`/{lang}/{rest...}`)
+	// korunup dağıtım handler'da yapılıyor.
 	s.mux.HandleFunc("GET /robots.txt", s.handleRobots)
 	// Takım logoları kendi altyapımızdan servis edilir (bkz. teamlogo_handlers.go).
 	s.mux.HandleFunc("GET /takim-logo/{key}", s.handleTeamLogo)

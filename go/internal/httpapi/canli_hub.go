@@ -101,7 +101,7 @@ type girisCanliPiyasa struct {
 }
 
 func (s *Server) fiyatMesaji(ctx context.Context) (string, []byte, bool) {
-	g := s.cdGirisOlustur(ctx)
+	g := s.cdGirisOlustur(ctx, "tr")
 	if !g.Hazir {
 		return "", nil, false
 	}
@@ -185,7 +185,7 @@ func (s *Server) fiyatMesaji(ctx context.Context) (string, []byte, bool) {
 
 // tamMesaji hero + kur + piyasa katmanını üretir (imza + gövde).
 func (s *Server) tamMesaji(ctx context.Context) (string, []byte, bool) {
-	g := s.cdGirisOlustur(ctx)
+	g := s.cdGirisOlustur(ctx, "tr")
 	if !g.Hazir {
 		return "", nil, false
 	}

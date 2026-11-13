@@ -31,7 +31,7 @@ package templkit
 // her durumda videonun kaynağına götürür — YouTube'un atıf kuralı.
 
 // cdVPlayerSahte video yüzeyini kurar: kapak, büyük oynat, kontrol çubuğu.
-templ cdVPlayer(v CDVideoHero, dikey bool) {
+templ cdVPlayer(v CDVideoHero, dikey bool, dil string) {
 	<div class={ cdVPlayerSinif(dikey) } data-cd-player
 		data-video={ v.VideoID } data-baslik={ v.Baslik }
 		data-sonraki={ v.SonrakiID } data-sonraki-baslik={ v.SonrakiBaslik }
@@ -74,9 +74,9 @@ templ cdVPlayer(v CDVideoHero, dikey bool) {
 					aria-hidden="true" focusable="false">
 					<path d="M23 12s0-3.9-.5-5.8c-.3-1-1.1-1.8-2.1-2.1C18.5 3.6 12 3.6 12 3.6s-6.5 0-8.4.5c-1 .3-1.8 1.1-2.1 2.1C1 8.1 1 12 1 12s0 3.9.5 5.8c.3 1 1.1 1.8 2.1 2.1 1.9.5 8.4.5 8.4.5s6.5 0 8.4-.5c1-.3 1.8-1.1 2.1-2.1.5-1.9.5-5.8.5-5.8zM9.8 15.6V8.4l6.2 3.6-6.2 3.6z"></path>
 				</svg>
-				<span class="cd-visually-hidden">Videoyu YouTube'da aç</span>
+				<span class="cd-visually-hidden">{ cdT(dil, "Videoyu YouTube'da aç") }</span>
 			</a>
-			@cdVPlayerKontrol(v.Canli, false)
+			@cdVPlayerKontrol(v.Canli, false, dil)
 		</div>
 	</div>
 }
@@ -87,7 +87,7 @@ templ cdVPlayer(v CDVideoHero, dikey bool) {
 // bölgede (`aria-live=off` bilinçli — her saniye okutmak ekran okuyucuyu
 // boğar). Düğmelerin adları JS'te duruma göre güncellenir
 // ("Oynat" ↔ "Duraklat").
-templ cdVPlayerKontrol(canli bool, yayin bool) {
+templ cdVPlayerKontrol(canli bool, yayin bool, dil string) {
 	<div class="cd-vplayer__kontrol" data-cd-kontrol>
 		<div class="cd-vplayer__cizgi" data-cd-cizgi role="slider" tabindex="0"
 			aria-label="Video ilerlemesi" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
@@ -122,7 +122,7 @@ templ cdVPlayerKontrol(canli bool, yayin bool) {
 			</button>
 			<div class="cd-vplayer__ses-kap">
 				<input class="cd-vplayer__ses-aralik" type="range" data-cd-ses-aralik
-					min="0" max="100" value="100" step="1" aria-label="Ses düzeyi"/>
+					min="0" max="100" value="100" step="1" aria-label={ cdT(dil, "Ses düzeyi") }/>
 			</div>
 			<span class="cd-vplayer__sure" data-cd-sure>
 				<span data-cd-gecen>0:00</span>
@@ -143,7 +143,7 @@ templ cdVPlayerKontrol(canli bool, yayin bool) {
 			<div class="cd-vplayer__hiz-kap">
 				<button class="cd-vplayer__dugme cd-vplayer__dugme--metin" type="button"
 					data-cd-hiz aria-haspopup="true" aria-expanded="false"
-					aria-label="Oynatma hızı">1x</button>
+					aria-label={ cdT(dil, "Oynatma hızı") }>1x</button>
 				<div class="cd-vplayer__menu" data-cd-menu hidden>
 					for _, h := range []string{"0.5", "0.75", "1", "1.25", "1.5", "2"} {
 						<button class="cd-vplayer__menu-oge" type="button"
@@ -173,7 +173,7 @@ templ cdVPlayerKontrol(canli bool, yayin bool) {
 // yayın) doğru akış açılır; video kimliğini saklamak bir sonraki yayında
 // bayat bir kayda götürürdü. Kontroller yine bizim: canlıda ilerleme çubuğu
 // kapalı, süre yerine CANLI yazar.
-templ cdVPlayerCanli(kanalID, baslik string, canli bool) {
+templ cdVPlayerCanli(kanalID, baslik string, canli bool, dil string) {
 	<div class={ "cd-vplayer" + cdCanliSinif(canli) } data-cd-player data-canli="1" data-kanal={ kanalID }
 		data-veri-canli={ cdBool(canli) } data-video="" data-baslik={ baslik }
 		data-sonraki="" data-sonraki-baslik="">
@@ -182,8 +182,7 @@ templ cdVPlayerCanli(kanalID, baslik string, canli bool) {
 			<div class="cd-vplayer__katman" data-cd-katman aria-hidden="true"></div>
 			<div class="cd-vplayer__bos" data-cd-bos>
 				<p class="cd-vplayer__bos-yazi">
-					Canlı yayın oynatıcısı hazırlanıyor… Yayın yoksa YouTube
-					çerçevesi bilgi verir.
+					{ cdT(dil, "Canlı yayın oynatıcısı hazırlanıyor… Yayın yoksa YouTube çerçevesi bilgi verir.") }
 				</p>
 			</div>
 			<button class="cd-vplayer__buyuk" type="button" data-cd-buyuk
@@ -199,7 +198,7 @@ templ cdVPlayerCanli(kanalID, baslik string, canli bool) {
 					<span class="cd-vplayer__nokta" aria-hidden="true"></span>CANLI
 				</span>
 			}
-			@cdVPlayerKontrol(canli, true)
+			@cdVPlayerKontrol(canli, true, dil)
 		</div>
 	</div>
 }
@@ -288,9 +287,9 @@ templ cdVBaslik(metin string) {
 }
 
 // cdVSekmeler video üst gezinmesi (Videolar · Shorts · Canlı Yayın).
-templ cdVSekmeler(sekmeler []CDVideoSekme) {
+templ cdVSekmeler(sekmeler []CDVideoSekme, dil string) {
 	if len(sekmeler) > 0 {
-		<nav class="cd-vsekmeler" aria-label="Video bölümleri">
+		<nav class="cd-vsekmeler" aria-label={ cdT(dil, "Video bölümleri") }>
 			for _, s := range sekmeler {
 				if s.Aktif {
 					<a class="cd-vsekme cd-vsekme--aktif" href={ s.Href } aria-current="page">{ s.Label }</a>
@@ -314,7 +313,7 @@ templ cdVIzgara(kutular []CDVideoKutu, dikey bool) {
 // CDVideoPageView /videos · /videos/shorts · /canli-yayin.
 templ CDVideoPageView(v CDVideoPage) {
 	<!doctype html>
-	<html lang="tr">
+	<html lang={ cdDilKodu(v.Shell.Locale) }>
 		<head>
 			@cdHead(CDHead{Title: v.Title, Desc: v.Desc, Canonical: v.Canonical,
 				OGType: "website", Image: v.Hero.Image, SiteName: v.Shell.SiteName, FaviconURL: v.Shell.FaviconURL,
@@ -329,9 +328,9 @@ templ CDVideoPageView(v CDVideoPage) {
 						<div class="cd-vband__sol">
 							<p class="cd-vband__etiket">{ v.Baslik }</p>
 							if v.KanalID != "" {
-								@cdVPlayerCanli(v.KanalID, v.Hero.Baslik, v.CanliYayinAktif)
+								@cdVPlayerCanli(v.KanalID, v.Hero.Baslik, v.CanliYayinAktif, v.Shell.Locale)
 							} else if v.Hero.VideoID != "" {
-								@cdVPlayer(v.Hero, v.Dikey)
+								@cdVPlayer(v.Hero, v.Dikey, v.Shell.Locale)
 							}
 							if v.Hero.Baslik != "" {
 								<h1 class="cd-vband__baslik">{ v.Hero.Baslik }</h1>
@@ -349,9 +348,9 @@ templ CDVideoPageView(v CDVideoPage) {
 							// yumuşak akış. Yapı: cd-vkaydir.js + .cd-vband__liste
 							// CSS'i. Liste odaklanabilir (klavye ile de kayar).
 							<aside class="cd-vband__sag">
-								<p class="cd-vband__etiket">Sıradaki</p>
+								<p class="cd-vband__etiket">{ cdT(v.Shell.Locale, "Sıradaki") }</p>
 								<div class="cd-vband__liste" tabindex="0"
-									aria-label="Sıradaki videolar (tekerlekle kaydırılır)">
+									aria-label={ cdT(v.Shell.Locale, "Sıradaki videolar (tekerlekle kaydırılır)") }>
 									for _, s := range v.Siradaki {
 										@cdVSatir(s)
 									}
@@ -365,22 +364,22 @@ templ CDVideoPageView(v CDVideoPage) {
 					// Koyu bantın ALTINDA, sekmelerin üstünde: bant zaten
 					// video oynatıcıyla dolu, oraya sıkıştırmak düzeni bozardı.
 					@cdReklam(728, 90)
-					@cdVSekmeler(v.Sekmeler)
+					@cdVSekmeler(v.Sekmeler, v.Shell.Locale)
 					if len(v.Videolar) > 0 {
 						<section class="cd-vbolum">
-							@cdVBaslik("Son Videolar")
+							@cdVBaslik(cdT(v.Shell.Locale, "Son Videolar"))
 							@cdVIzgara(v.Videolar, false)
 						</section>
 					}
 					if len(v.Shorts) > 0 {
 						<section class="cd-vbolum">
-							@cdVBaslik("Shorts")
+							@cdVBaslik(cdT(v.Shell.Locale, "Shorts"))
 							@cdVIzgara(v.Shorts, true)
 						</section>
 					}
 					if len(v.Yayinlar) > 0 {
 						<section class="cd-vbolum">
-							@cdVBaslik("Canlı Yayınlar")
+							@cdVBaslik(cdT(v.Shell.Locale, "Canlı Yayınlar"))
 							@cdVIzgara(v.Yayinlar, false)
 						</section>
 					}
@@ -399,7 +398,7 @@ templ CDVideoPageView(v CDVideoPage) {
 // CDVideoWatchView tek video sayfası.
 templ CDVideoWatchView(v CDVideoWatch) {
 	<!doctype html>
-	<html lang="tr">
+	<html lang={ cdDilKodu(v.Shell.Locale) }>
 		<head>
 			@cdHead(CDHead{Title: v.Title, Desc: v.Desc, Canonical: v.Canonical,
 				OGType: "video.other", Image: v.Video.Image, SiteName: v.Shell.SiteName, FaviconURL: v.Shell.FaviconURL,
@@ -413,7 +412,7 @@ templ CDVideoWatchView(v CDVideoWatch) {
 					<div class="cd-wrap cd-vband__ic">
 						<div class="cd-vband__sol">
 							<p class="cd-vband__etiket">{ v.Video.Etiket }</p>
-							@cdVPlayer(v.Video, v.Dikey)
+							@cdVPlayer(v.Video, v.Dikey, v.Shell.Locale)
 							<h1 class="cd-vband__baslik">{ v.Video.Baslik }</h1>
 							if v.Video.Zaman != "" {
 								<p class="cd-vband__meta">{ v.Video.Zaman }</p>
@@ -425,9 +424,9 @@ templ CDVideoWatchView(v CDVideoWatch) {
 							// yumuşak akış. Yapı: cd-vkaydir.js + .cd-vband__liste
 							// CSS'i. Liste odaklanabilir (klavye ile de kayar).
 							<aside class="cd-vband__sag">
-								<p class="cd-vband__etiket">Sıradaki</p>
+								<p class="cd-vband__etiket">{ cdT(v.Shell.Locale, "Sıradaki") }</p>
 								<div class="cd-vband__liste" tabindex="0"
-									aria-label="Sıradaki videolar (tekerlekle kaydırılır)">
+									aria-label={ cdT(v.Shell.Locale, "Sıradaki videolar (tekerlekle kaydırılır)") }>
 									for _, s := range v.Siradaki {
 										@cdVSatir(s)
 									}
@@ -437,22 +436,22 @@ templ CDVideoWatchView(v CDVideoWatch) {
 					</div>
 				</section>
 				<div class="cd-wrap cd-vgovde">
-					@cdVSekmeler(v.Sekmeler)
+					@cdVSekmeler(v.Sekmeler, v.Shell.Locale)
 					if v.Aciklama != "" {
 						<section class="cd-vbolum">
-							@cdVBaslik("Açıklama")
+							@cdVBaslik(cdT(v.Shell.Locale, "Açıklama"))
 							<p class="cd-vaciklama">{ v.Aciklama }</p>
 						</section>
 					}
 					if len(v.Videolar) > 0 {
 						<section class="cd-vbolum">
-							@cdVBaslik("Son Videolar")
+							@cdVBaslik(cdT(v.Shell.Locale, "Son Videolar"))
 							@cdVIzgara(v.Videolar, false)
 						</section>
 					}
 					if len(v.Shorts) > 0 {
 						<section class="cd-vbolum">
-							@cdVBaslik("Shorts")
+							@cdVBaslik(cdT(v.Shell.Locale, "Shorts"))
 							@cdVIzgara(v.Shorts, true)
 						</section>
 					}

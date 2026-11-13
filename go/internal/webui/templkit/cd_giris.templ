@@ -8,7 +8,7 @@ package templkit
 //
 // JS YOK: sparkline ve yaylar SUNUCUDA üretiliyor (CSP script-src 'self'
 // ve harici bağımlılık yasağı). Ghost bu değerleri JS ile yazıyordu.
-templ cdGirisHero(g CDGiris) {
+templ cdGirisHero(g CDGiris, dil string) {
 	if g.Hazir {
 		<section class="cd-giris" aria-labelledby="cd-giris-baslik">
 			<div class="cd-wrap cd-giris__in">
@@ -57,7 +57,7 @@ templ cdGirisHero(g CDGiris) {
 							<span class="cd-giris__coin" style="background:#F7931A" aria-hidden="true">₿</span>
 							<span class="cd-giris__parite">BTC / USDT<small>Bitcoin · Spot</small></span>
 							if g.Guncelleme != "" {
-								<span class="cd-giris__taze" title="Verinin sunucudaki yaşı">
+								<span class="cd-giris__taze" title={ cdT(dil, "Verinin sunucudaki yaşı") }>
 									<span class="cd-giris__taze-nokta" aria-hidden="true"></span>
 									<span data-cg="yas">{ g.Guncelleme }</span>
 								</span>
@@ -75,7 +75,7 @@ templ cdGirisHero(g CDGiris) {
 						</div>
 						if g.BTCYol != "" {
 							<svg class="cd-giris__grafik" width="100%" height="120" viewBox="0 0 320 120"
-								preserveAspectRatio="none" role="img" aria-label="Bitcoin son 7 gün fiyat grafiği">
+								preserveAspectRatio="none" role="img" aria-label={ cdT(dil, "Bitcoin son 7 gün fiyat grafiği") }>
 								<defs>
 									<linearGradient id="cdGirisAlan" x1="0" y1="0" x2="0" y2="1">
 										<stop offset="0%" stop-color="rgba(252,195,52,0.35)"></stop>
@@ -92,10 +92,10 @@ templ cdGirisHero(g CDGiris) {
 						}
 						<div class="cd-giris__panel-istat">
 							if g.Hacim != "" {
-								<span><small>24S HACİM</small><b data-cg="hacim">{ g.Hacim }</b></span>
+								<span><small>{ cdT(dil, "24S HACİM") }</small><b data-cg="hacim">{ g.Hacim }</b></span>
 							}
 							if g.Dominans != "" {
-								<span><small>BTC DOMİNANS</small><b data-cg="dominans">{ g.Dominans }</b></span>
+								<span><small>{ cdT(dil, "BTC DOMİNANS") }</small><b data-cg="dominans">{ g.Dominans }</b></span>
 							}
 							if g.Endeks != "" {
 								<span><small>ENDEKS</small>
@@ -145,7 +145,7 @@ templ cdGirisHero(g CDGiris) {
 					<div class="cd-giris__gostergeler">
 						if g.FNGVar {
 							<div class="cd-giris__gosterge">
-								<div class="cd-giris__gosterge-ad">Korku &amp; Açgözlülük Endeksi</div>
+								<div class="cd-giris__gosterge-ad">{ cdT(dil, "Korku & Açgözlülük Endeksi") }</div>
 								<div class="cd-giris__gosterge-kap">
 									<svg width="170" height="96" viewBox="0 0 200 110" role="img"
 										aria-label={ "Korku ve açgözlülük endeksi: " + g.FNGEtiket }>
@@ -176,17 +176,17 @@ templ cdGirisHero(g CDGiris) {
 								</div>
 								<div class="cd-giris__gosterge-alt">
 									if g.FNGDun > 0 {
-										<span>Dün: <b data-cg="fng-dun">{ g.FNGDun }</b></span>
+										<span>{ cdT(dil, "Dün:") } <b data-cg="fng-dun">{ g.FNGDun }</b></span>
 									}
 									if g.FNGHafta > 0 {
-										<span>Geçen Hafta: <b data-cg="fng-hafta">{ g.FNGHafta }</b></span>
+										<span>{ cdT(dil, "Geçen Hafta:") } <b data-cg="fng-hafta">{ g.FNGHafta }</b></span>
 									}
 								</div>
 							</div>
 						}
 						if g.RSIVar {
 							<div class="cd-giris__gosterge">
-								<div class="cd-giris__gosterge-ad">Bitcoin RSI (14 gün)</div>
+								<div class="cd-giris__gosterge-ad">{ cdT(dil, "Bitcoin RSI (14 gün)") }</div>
 								<div class="cd-giris__gosterge-kap">
 									<svg width="170" height="96" viewBox="0 0 200 110" role="img"
 										aria-label={ "Bitcoin 14 günlük RSI: " + g.RSIEtiket }>
@@ -212,8 +212,8 @@ templ cdGirisHero(g CDGiris) {
 									</div>
 								</div>
 								<div class="cd-giris__gosterge-alt">
-									<span>Aşırı Satım: &lt;30</span>
-									<span>Aşırı Alım: &gt;70</span>
+									<span>{ cdT(dil, "Aşırı Satım: <30") }</span>
+									<span>{ cdT(dil, "Aşırı Alım: >70") }</span>
 								</div>
 							</div>
 						}

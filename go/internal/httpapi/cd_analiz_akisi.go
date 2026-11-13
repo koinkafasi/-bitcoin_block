@@ -12,7 +12,8 @@ import (
 func (s *Server) cdAnalizAkisi(r *http.Request, adet int) ([]templkit.CDAnalizKart, int) {
 	ctx := r.Context()
 	sid := s.curSiteID(r)
-	rows, err := repo.AnalizAkisi(ctx, s.pool, sid, "tr", adet)
+	dil := s.cdYerel(r)
+	rows, err := repo.AnalizAkisi(ctx, s.pool, sid, dil, adet)
 	if err != nil || len(rows) < 6 {
 		return nil, 0
 	}
@@ -26,11 +27,11 @@ func (s *Server) cdAnalizAkisi(r *http.Request, adet int) ([]templkit.CDAnalizKa
 		kart := templkit.CDAnalizKart{
 			Baslik:   strings.TrimSpace(k.Baslik),
 			Spot:     spot,
-			Kategori: strings.TrimSpace(k.Kategori),
+			Kategori: templkit.CDT(dil, strings.TrimSpace(k.Kategori)),
 			Href:     k.Href,
 		}
 		if !k.Tarih.IsZero() {
-			kart.Tarih = trGoreliZaman(k.Tarih, simdi)
+			kart.Tarih = goreliZaman(k.Tarih, simdi, dil)
 		}
 		out = append(out, kart)
 	}

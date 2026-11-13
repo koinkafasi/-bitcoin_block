@@ -16,7 +16,7 @@ package templkit
 
 // cdMegaNav üst gezinme + açılır menüler.
 templ cdMegaNav(s CDShell) {
-	<nav class="cd-nav cd-nav--mega" aria-label="Ana menü">
+	<nav class="cd-nav cd-nav--mega" aria-label={ cdT(s.Locale, "Ana menü") }>
 		for _, g := range cdMenuGroups(s) {
 			if cdHasMenu(g) {
 				<div class={ "cd-nav__grup", cdMenuPanelSinifi(g) }>

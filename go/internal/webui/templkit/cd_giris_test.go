@@ -17,7 +17,7 @@ import (
 func cdGirisRender(t *testing.T, g CDGiris) string {
 	t.Helper()
 	var b bytes.Buffer
-	require.NoError(t, cdGirisHero(g).Render(context.Background(), &b))
+	require.NoError(t, cdGirisHero(g, "tr").Render(context.Background(), &b))
 	return b.String()
 }
 

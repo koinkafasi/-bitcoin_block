@@ -42,12 +42,21 @@ func (s *Server) cdShellVeri(ctx context.Context) cdShellData {
 	return v
 }
 
-func (s *Server) cdHomeIcerikleri(ctx context.Context) []repo.Content {
-	v, ok := s.cdHomeCache.Load(ctx, "home:tr", func(ctx context.Context) ([]repo.Content, bool) {
+// cdHomeIcerikleri ana sayfa içeriklerini önbellekten getirir.
+//
+// DİL (13 Kasım 2026): `Locale: "tr"` SABİTTİ — `/en/` ana sayfası İngilizce
+// arayüzle TÜRKÇE haber basıyordu (ölçüm: /en/ 149 KB, içerikler tr).
+// Önbellek anahtarı da "home:tr" sabitti; dile göre anahtarlanmazsa
+// İngilizce istek Türkçe listeyi önbellekten alırdı.
+func (s *Server) cdHomeIcerikleri(ctx context.Context, dil string) []repo.Content {
+	if dil == "" {
+		dil = "tr"
+	}
+	v, ok := s.cdHomeCache.Load(ctx, "home:"+dil, func(ctx context.Context) ([]repo.Content, bool) {
 		items, _, err := repo.ListContents(ctx, s.pool, repo.ListFilter{
 			Status:         "yayinda",
 			SiteID:         1,
-			Locale:         "tr",
+			Locale:         dil,
 			Page:           1,
 			PerPage:        60,
 			ExcludeGallery: true,
@@ -56,7 +65,7 @@ func (s *Server) cdHomeIcerikleri(ctx context.Context) []repo.Content {
 		if err != nil {
 			// Hata ÖNBELLEĞE YAZILMAZ: geçici DB hatası 10 sn boyunca boş
 			// sayfa olarak donmasın, sonraki istek yeniden dener.
-			s.logger.Warn("cd ana sayfa: içerik listesi", "error", err)
+			s.logger.Warn("cd ana sayfa: içerik listesi", "dil", dil, "error", err)
 			return nil, false
 		}
 		return items, true
@@ -74,14 +83,19 @@ type cdListeSonuc struct {
 }
 
 // cdListeIcerikleri bölüm/liste sayfası içeriğini önbellekten getirir.
-// Anahtar: bölüm + sayfa numarası (farklı sayfalar birbirini ezmez).
-func (s *Server) cdListeIcerikleri(ctx context.Context, slug string, sayfa int) ([]repo.Content, int) {
-	key := slug + ":" + itoa(sayfa)
+// Anahtar: DİL + bölüm + sayfa numarası (farklı diller ve sayfalar
+// birbirini ezmez — dile göre anahtarlanmazsa /en/markets Türkçe listeyi
+// önbellekten alırdı).
+func (s *Server) cdListeIcerikleri(ctx context.Context, dil, slug string, sayfa int) ([]repo.Content, int) {
+	if dil == "" {
+		dil = "tr"
+	}
+	key := dil + ":" + slug + ":" + itoa(sayfa)
 	v, ok := s.cdListeCache.Load(ctx, key, func(ctx context.Context) (cdListeSonuc, bool) {
 		f := repo.ListFilter{
 			Status:         "yayinda",
 			SiteID:         1,
-			Locale:         "tr",
+			Locale:         dil,
 			Page:           sayfa,
 			PerPage:        24,
 			ExcludeGallery: true,

@@ -32,7 +32,7 @@ type CDAramaSayfa struct {
 
 templ CDAramaSayfaView(v CDAramaSayfa) {
 	<!doctype html>
-	<html lang="tr">
+	<html lang={ cdDilKodu(v.Shell.Locale) }>
 		<head>
 			@cdHead(CDHead{Title: v.Title, Desc: v.Desc, Canonical: v.Canonical,
 				OGType: "website", SiteName: v.Shell.SiteName, FaviconURL: v.Shell.FaviconURL, RSSFeed: "/rss.xml",
@@ -65,7 +65,7 @@ templ CDAramaSayfaView(v CDAramaSayfa) {
 				</form>
 
 				if v.Sorgu == "" {
-					<p class="cd-arama-bos">Arama yapmak için bir sözcük yazın.</p>
+					<p class="cd-arama-bos">{ cdT(v.Locale, "Arama yapmak için bir sözcük yazın.") }</p>
 				} else if len(v.Sonuclar) == 0 {
 					<p class="cd-arama-bos">“{ v.Sorgu }” için sonuç bulunamadı.</p>
 				} else {

@@ -14,6 +14,7 @@ import (
 
 // handleCDAkis /akis sayfasını yeni kabukla basar.
 func (s *Server) handleCDAkis(w http.ResponseWriter, r *http.Request) {
+	dil := s.cdYerel(r)
 	ctx := r.Context()
 	site := s.siteByDomain(ctx, r.Host)
 	catID, slug, name, other, _, day, rng := s.resolveFeedQuery(r)
@@ -50,7 +51,7 @@ func (s *Server) handleCDAkis(w http.ResponseWriter, r *http.Request) {
 		BosMetin: "Bu filtrede henüz içerik yok.",
 	}
 	for _, c := range items {
-		v.Stories = append(v.Stories, s.cdStoryCevir(c, simdi))
+		v.Stories = append(v.Stories, s.cdStoryCevir(c, simdi, dil))
 	}
 
 	// Filtre sorgusu (sayfalama bağlantılarında korunur).
@@ -128,7 +129,7 @@ func (s *Server) handleCDAkis(w http.ResponseWriter, r *http.Request) {
 	v.Canonical = kanonik
 	v.PageCategory = "section_landing_page"
 	v.ContentCategory = "akis"
-	v.Locale = "tr"
+	v.Locale = s.cdYerel(r)
 	v.BaseURL = s.kanonikKok(r)
 
 	// Yapısal veri: listenin ilk 12 öğesi.
@@ -150,20 +151,21 @@ func (s *Server) handleCDAkis(w http.ResponseWriter, r *http.Request) {
 
 // handleCD404 bulunamayan sayfa: yeni kabuk + gerçek son haberler.
 func (s *Server) handleCD404(w http.ResponseWriter, r *http.Request) {
+	dil := s.cdYerel(r)
 	ctx := r.Context()
 	site := s.siteByDomain(ctx, r.Host)
 	v := templkit.CD404Page{
 		Shell:     s.cdShellCtx(ctx, r, ""),
-		Title:     "Sayfa bulunamadı — " + s.siteName,
+		Title:     templkit.CDT(dil, "Sayfa bulunamadı") + " — " + s.siteName,
 		Desc:      "Aradığınız sayfa bulunamadı. Ana sayfaya dönün veya sitede arama yapın.",
 		Canonical: s.kanonikKok(r) + r.URL.Path,
-		Locale:    "tr",
+		Locale:    s.cdYerel(r),
 		BaseURL:   s.kanonikKok(r),
 	}
 	if items, err := repo.PopulerIcerikler(ctx, s.pool, site.ID, "tr", 6); err == nil {
 		simdi := time.Now()
 		for _, c := range items {
-			v.Oneriler = append(v.Oneriler, s.cdStoryCevir(c, simdi))
+			v.Oneriler = append(v.Oneriler, s.cdStoryCevir(c, simdi, dil))
 		}
 	}
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")

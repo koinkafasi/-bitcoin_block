@@ -2981,6 +2981,10 @@ html.cd-ozet-kilit body { overflow: hidden; }
   display: inline-flex;
   align-items: center;
   height: 40px;
+  /* 13 Kasım 2026: dil seçicisi küre ikonu + kod kutusu oldu (tek dilli
+     etiketle aynı görsel dil). İkonla kutu arasındaki 6 px buradan;
+     yükseklik/padding DEĞİŞMEDİ — üst çubuk hizası bozulmasın. */
+  gap: 6px;
   padding: 0 16px;
   border-radius: var(--cd-radius);
   transition: background-color 120ms ease;

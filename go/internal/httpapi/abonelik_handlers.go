@@ -460,7 +460,7 @@ func (s *Server) cdAbonelikRender(w http.ResponseWriter, r *http.Request, d *tmp
 		Bilgi:           ab.Info,
 		OdemeAdimi:      odeme,
 		CheckoutHTML:    string(ab.CheckoutHTML),
-		Locale:          "tr",
+		Locale:          s.cdYerel(r),
 		BaseURL:         s.kanonikKok(r),
 		PageCategory:    "section_landing_page",
 		ContentCategory: "abonelik",

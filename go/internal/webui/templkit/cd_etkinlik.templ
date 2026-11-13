@@ -38,7 +38,7 @@ type CDEtkinliklerPage struct {
 
 templ CDEtkinliklerPageView(v CDEtkinliklerPage) {
 	<!doctype html>
-	<html lang="tr">
+	<html lang={ cdDilKodu(v.Shell.Locale) }>
 		<head>
 			@cdHead(CDHead{Title: v.Title, Desc: v.Desc, Canonical: v.Canonical,
 				OGType: "website", SiteName: v.Shell.SiteName, FaviconURL: v.Shell.FaviconURL, RSSFeed: "/rss.xml",
@@ -56,11 +56,11 @@ templ CDEtkinliklerPageView(v CDEtkinliklerPage) {
 				</nav>
 				<header class="cd-section-title">
 					<h1>Etkinlikler</h1>
-					<p class="cd-card__spot">Yaklaşan etkinlikler ve takvim.</p>
+					<p class="cd-card__spot">{ cdT(v.Locale, "Yaklaşan etkinlikler ve takvim.") }</p>
 				</header>
 
 				if len(v.Etkinlikler) == 0 {
-					<p class="cd-etkinlik-bos">Yaklaşan etkinlik yok.</p>
+					<p class="cd-etkinlik-bos">{ cdT(v.Locale, "Yaklaşan etkinlik yok.") }</p>
 				} else {
 					<div class="cd-etkinlik-liste">
 						for _, e := range v.Etkinlikler {

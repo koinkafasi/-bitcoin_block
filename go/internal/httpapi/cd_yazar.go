@@ -47,8 +47,8 @@ func cdYazarSosyalHref(key, deger string) string {
 // Kategori CoinDesk yazar sayfasında BÜYÜK HARF DEĞİL ("Finance"), bu
 // yüzden cdStoryCevir'in `i18n.BuyukHarf` çıktısı burada ham kategori
 // adıyla değiştirilir (ölçüm 12 Kasım 2026).
-func (s *Server) cdYazarStory(c repo.Content, simdi time.Time) templkit.CDStory {
-	st := s.cdStoryCevir(c, simdi)
+func (s *Server) cdYazarStory(c repo.Content, simdi time.Time, dil string) templkit.CDStory {
+	st := s.cdStoryCevir(c, simdi, dil)
 	if c.CategoryName != nil {
 		st.Kicker = strings.TrimSpace(*c.CategoryName)
 	}
@@ -57,6 +57,7 @@ func (s *Server) cdYazarStory(c repo.Content, simdi time.Time) templkit.CDStory 
 
 // cdYazarProfilSayfasi /yazar/{slug} — CoinDesk yazar profili düzeni.
 func (s *Server) cdYazarProfilSayfasi(w http.ResponseWriter, r *http.Request, p repo.Person) {
+	dil := s.cdYerel(r)
 	ctx := r.Context()
 	page := 1
 	if n, e := strconv.Atoi(r.URL.Query().Get("sayfa")); e == nil && n > 0 {
@@ -75,7 +76,7 @@ func (s *Server) cdYazarProfilSayfasi(w http.ResponseWriter, r *http.Request, p 
 		BosMetin:        "Bu yazarın henüz yayımlanmış yazısı yok.",
 		PageCategory:    "author_page",
 		ContentCategory: "author",
-		Locale:          "tr",
+		Locale:          s.cdYerel(r),
 		BaseURL:         s.kanonikKok(r),
 	}
 	if p.AvatarMediaID != nil {
@@ -93,7 +94,7 @@ func (s *Server) cdYazarProfilSayfasi(w http.ResponseWriter, r *http.Request, p 
 
 	simdi := time.Now()
 	for _, c := range items {
-		v.Yazilar = append(v.Yazilar, s.cdYazarStory(c, simdi))
+		v.Yazilar = append(v.Yazilar, s.cdYazarStory(c, simdi, dil))
 	}
 
 	kanonik := s.kanonikKok(r) + "/yazar/" + url.PathEscape(p.Slug)
@@ -141,12 +142,12 @@ func (s *Server) cdYazarlarSayfasi(w http.ResponseWriter, r *http.Request) {
 	kanonik := s.kanonikKok(r) + "/yazarlar"
 	v := templkit.CDYazarlarPage{
 		Shell:           s.cdShellCtx(ctx, r, "yazarlar"),
-		Title:           "Yazarlar ve Editörler — " + s.siteName,
+		Title:           templkit.CDT(s.cdYerel(r), "Yazarlar ve Editörler") + " — " + s.siteName,
 		Desc:            "Haberleri kaleme alan yazarlar, muhabirler ve editörler.",
 		Canonical:       kanonik,
 		PageCategory:    "author_index_page",
 		ContentCategory: "author",
-		Locale:          "tr",
+		Locale:          s.cdYerel(r),
 		BaseURL:         s.kanonikKok(r),
 	}
 	for _, p := range people {

@@ -64,10 +64,10 @@ templ cdHeroSolRay(items []CDStory) {
 // Ölçüldü (coindesk.com, 6 Kasım 2026): sol kolonda 290×306;
 // başlık 14/21 w500 + 16 px ok, görsel 290×163, başlık 20/26 w500,
 // sponsor satırı 12/18 w400 yeşil.
-templ cdDusunceModul(d CDDusunce) {
+templ cdDusunceModul(d CDDusunce, dil string) {
 	<section class="cd-ray cd-ray--cizgili cd-dusunce">
 		<a class="cd-ray__bas" href="/sponsored-content">
-						<span class="cd-vurgu">Düşünce Liderliği</span>
+						<span class="cd-vurgu">{ cdT(dil, "Düşünce Liderliği") }</span>
 			@cdRayOk()
 		</a>
 		<article class="cd-dusunce__kart">
@@ -173,20 +173,20 @@ templ cdAkis(items []CDStory) {
 // CoinDesk: modül etiketi 14/21 w500, slayt başlığı 20/26 w500,
 // "SPONSORED BY …" 12/18 yeşil büyük harf, altta ‹ • • • › gezinme.
 // Radyo düğmeleri klavyeyle de çalışır (ok tuşları); JS gerekmez.
-templ cdBasinSlider(items []CDBasin) {
+templ cdBasinSlider(items []CDBasin, dil string) {
 	if len(items) > 0 {
 		<section class="cd-basin">
-			<p class="cd-basin__etiket">Basın Bültenleri</p>
+			<p class="cd-basin__etiket">{ cdT(dil, "Basın Bültenleri") }</p>
 			<div class="cd-basin__kutu">
 				for i := range items {
 					if i == 0 {
 						<input class="cd-basin__durum" type="radio" name="cd-basin"
 							id={ "cd-basin-" + cdSiraya(i) } checked
-							aria-label={ "Basın bülteni " + cdSiraya(i) }/>
+							aria-label={ cdT(dil, "Basın bülteni") + " " + cdSiraya(i) }/>
 					} else {
 						<input class="cd-basin__durum" type="radio" name="cd-basin"
 							id={ "cd-basin-" + cdSiraya(i) }
-							aria-label={ "Basın bülteni " + cdSiraya(i) }/>
+							aria-label={ cdT(dil, "Basın bülteni") + " " + cdSiraya(i) }/>
 					}
 				}
 				<div class="cd-basin__slaytlar">
@@ -207,7 +207,7 @@ templ cdBasinSlider(items []CDBasin) {
 								viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false">
 								<path d="M15.41 16.59L10.83 12l4.58-4.59L14 6l-6 6 6 6 1.41-1.41z"></path>
 							</svg>
-							<span class="cd-visually-hidden">Önceki bülten</span>
+							<span class="cd-visually-hidden">{ cdT(dil, "Önceki bülten") }</span>
 						</label>
 					}
 					<div class="cd-basin__noktalar">
@@ -225,7 +225,7 @@ templ cdBasinSlider(items []CDBasin) {
 								viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false">
 								<path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"></path>
 							</svg>
-							<span class="cd-visually-hidden">Sonraki bülten</span>
+							<span class="cd-visually-hidden">{ cdT(dil, "Sonraki bülten") }</span>
 						</label>
 					}
 				</div>
@@ -239,10 +239,10 @@ templ cdBasinSlider(items []CDBasin) {
 //
 // CoinDesk'te oynatıcı var; bizde video altyapısı yok. Kart kaynağa
 // gider (geçici CoinDesk linki), kaynak etiketi görünür kalır.
-templ cdVideoModul(items []CDVideo) {
+templ cdVideoModul(items []CDVideo, dil string) {
 	if len(items) > 0 {
 		<section class="cd-ray cd-video">
-			<h2 class="cd-ray__duz"><span class="cd-vurgu">Bugünün Videoları</span></h2>
+			<h2 class="cd-ray__duz"><span class="cd-vurgu">{ cdT(dil, "Bugünün Videoları") }</span></h2>
 						// Radyo düğmeleri TEK VİDEODA DA basılır: slayt görünürlüğü
 			// yalnız `#cd-video-N:checked` kuralından geliyor. Kural
 			// `len(items) > 1` iken basıldığında, tek video girdisinde
@@ -252,11 +252,11 @@ templ cdVideoModul(items []CDVideo) {
 				if i == 0 {
 					<input class="cd-basin__durum" type="radio" name="cd-video"
 						id={ "cd-video-" + cdSiraya(i) } checked
-						aria-label={ "Video " + cdSiraya(i) }/>
+						aria-label={ cdT(dil, "Video") + " " + cdSiraya(i) }/>
 				} else {
 					<input class="cd-basin__durum" type="radio" name="cd-video"
 						id={ "cd-video-" + cdSiraya(i) }
-						aria-label={ "Video " + cdSiraya(i) }/>
+						aria-label={ cdT(dil, "Video") + " " + cdSiraya(i) }/>
 				}
 			}
 			<div class="cd-video__kutu">
@@ -304,7 +304,7 @@ templ cdVideoModul(items []CDVideo) {
 									viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false">
 									<path d="M15.41 16.59L10.83 12l4.58-4.59L14 6l-6 6 6 6 1.41-1.41z"></path>
 								</svg>
-								<span class="cd-visually-hidden">Önceki video</span>
+								<span class="cd-visually-hidden">{ cdT(dil, "Önceki video") }</span>
 							</label>
 						}
 						for i := range items {
@@ -319,7 +319,7 @@ templ cdVideoModul(items []CDVideo) {
 						}
 					</div>
 				}
-				<a class="cd-btn cd-btn--ghost" href="/videos">Daha Fazlasını Keşfet</a>
+				<a class="cd-btn cd-btn--ghost" href="/videos">{ cdT(dil, "Daha Fazlasını Keşfet") }</a>
 			</div>
 		</section>
 	}
@@ -335,20 +335,20 @@ templ cdVideoModul(items []CDVideo) {
 // sağda (`justify-content: space-between`). Bu yüzden modül SLAYTILI:
 // tek kartla oklar işlevsiz kalırdı ve Bugünün Videoları'nın navigasyonuyla
 // hizası tutmazdı (kullanıcı bildirdi).
-templ cdArastirmaModul(items []CDArastirma) {
+templ cdArastirmaModul(items []CDArastirma, dil string) {
 	if len(items) > 0 {
 		<section class="cd-ray cd-ray--cizgili cd-arastirma">
-			<h2 class="cd-ray__duz"><span class="cd-vurgu">Öne Çıkan Araştırma</span></h2>
+			<h2 class="cd-ray__duz"><span class="cd-vurgu">{ cdT(dil, "Öne Çıkan Araştırma") }</span></h2>
 						// Tek kartta da radyo basılır — gerekçe cdVideoModul'de.
 			for i := range items {
 				if i == 0 {
 					<input class="cd-basin__durum" type="radio" name="cd-arastirma"
 						id={ "cd-arastirma-" + cdSiraya(i) } checked
-						aria-label={ "Araştırma " + cdSiraya(i) }/>
+						aria-label={ cdT(dil, "Araştırma") + " " + cdSiraya(i) }/>
 				} else {
 					<input class="cd-basin__durum" type="radio" name="cd-arastirma"
 						id={ "cd-arastirma-" + cdSiraya(i) }
-						aria-label={ "Araştırma " + cdSiraya(i) }/>
+						aria-label={ cdT(dil, "Araştırma") + " " + cdSiraya(i) }/>
 				}
 			}
 			<div class="cd-arastirma__slaytlar">
@@ -394,7 +394,7 @@ templ cdArastirmaModul(items []CDArastirma) {
 									viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false">
 									<path d="M15.41 16.59L10.83 12l4.58-4.59L14 6l-6 6 6 6 1.41-1.41z"></path>
 								</svg>
-								<span class="cd-visually-hidden">Önceki araştırma</span>
+								<span class="cd-visually-hidden">{ cdT(dil, "Önceki araştırma") }</span>
 							</label>
 						}
 						for i := range items {
@@ -404,12 +404,12 @@ templ cdArastirmaModul(items []CDArastirma) {
 									viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false">
 									<path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"></path>
 								</svg>
-								<span class="cd-visually-hidden">Sonraki araştırma</span>
+								<span class="cd-visually-hidden">{ cdT(dil, "Sonraki araştırma") }</span>
 							</label>
 						}
 					</div>
 				}
-				<a class="cd-btn cd-btn--ghost" href="/research">Daha Fazlasını Keşfet</a>
+				<a class="cd-btn cd-btn--ghost" href="/research">{ cdT(dil, "Daha Fazlasını Keşfet") }</a>
 			</div>
 		</section>
 	}
@@ -429,11 +429,11 @@ templ cdArastirmaModul(items []CDArastirma) {
 // ÖNCEKİ HATA: 3 klip ALT ALTA basılıyordu (modül 1621 px). CoinDesk tek
 // kart gösteriyor; gezinme dikey oklarla. Slider yine JS'siz: radyo +
 // label deseni (video/araştırma modülleriyle aynı).
-templ cdKlipler(items []CDKlip) {
+templ cdKlipler(items []CDKlip, dil string) {
 	if len(items) > 0 {
 		<section class="cd-ray cd-ray--cizgili cd-klipler">
 			<a class="cd-ray__bas" href="/videos">
-								<span class="cd-vurgu">Bugünün Klipleri</span>
+								<span class="cd-vurgu">{ cdT(dil, "Bugünün Klipleri") }</span>
 				@cdRayOk()
 			</a>
 						// Radyolar her durumda basılır: slayt görünürlüğü yalnız
@@ -442,11 +442,11 @@ templ cdKlipler(items []CDKlip) {
 				if i == 0 {
 					<input class="cd-basin__durum" type="radio" name="cd-klip"
 						id={ "cd-klip-" + cdSiraya(i) } checked
-						aria-label={ "Klip " + cdSiraya(i) }/>
+						aria-label={ cdT(dil, "Klip") + " " + cdSiraya(i) }/>
 				} else {
 					<input class="cd-basin__durum" type="radio" name="cd-klip"
 						id={ "cd-klip-" + cdSiraya(i) }
-						aria-label={ "Klip " + cdSiraya(i) }/>
+						aria-label={ cdT(dil, "Klip") + " " + cdSiraya(i) }/>
 				}
 			}
 			<div class="cd-klip__kutu">
@@ -483,7 +483,7 @@ templ cdKlipler(items []CDKlip) {
 									viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false">
 									<path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6 1.41 1.41z"></path>
 								</svg>
-								<span class="cd-visually-hidden">Önceki klip</span>
+								<span class="cd-visually-hidden">{ cdT(dil, "Önceki klip") }</span>
 							</label>
 						}
 						for i := range items {
@@ -493,7 +493,7 @@ templ cdKlipler(items []CDKlip) {
 									viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false">
 									<path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"></path>
 								</svg>
-								<span class="cd-visually-hidden">Sonraki klip</span>
+								<span class="cd-visually-hidden">{ cdT(dil, "Sonraki klip") }</span>
 							</label>
 						}
 					</div>
@@ -674,18 +674,18 @@ templ cdBlokHucre(sec CDSection) {
 // boşluk). Panellerin kendi 1 px çizgisine ek olarak `.cd-mod` sarmalayıcısı
 // TAM GENİŞLİKTE (1464) üçüncü bir çizgi basıyordu; Görüş'ün üstünde tek
 // parça uzun bir çizgi görünüyordu.
-templ cdIkili(yorum []CDUzman, enCok []CDStory) {
+templ cdIkili(yorum []CDUzman, enCok []CDStory, dil string) {
 	if len(yorum) > 0 || len(enCok) > 0 {
 		<section class="cd-mod cd-mod--cizgisiz">
 			<div class="cd-ikili">
 				if len(yorum) > 0 {
 					<div class="cd-ikili__sol">
-						@cdOpinion(yorum)
+						@cdOpinion(yorum, dil)
 					</div>
 				}
 				if len(enCok) > 0 {
 					<div class="cd-ikili__sag">
-						@cdMostRead(enCok)
+						@cdMostRead(enCok, dil)
 					</div>
 				}
 			</div>
@@ -700,10 +700,10 @@ templ cdIkili(yorum []CDUzman, enCok []CDStory) {
 // SPOTSUZ — yalnız başlık 20/26 w500 + saat 14/21, kart içi aralık 8 px.
 // Önceki sürüm küçük kartlarda da görsel + spot basıyordu; modül 1191 px
 // çıkıyordu, CoinDesk'te 561 px.
-templ cdMostRead(items []CDStory) {
+templ cdMostRead(items []CDStory, dil string) {
 	if len(items) > 0 {
 		<section class="cd-panel">
-			<h2><span class="cd-vurgu">En Çok Okunan</span></h2>
+			<h2><span class="cd-vurgu">{ cdT(dil, "En Çok Okunan") }</span></h2>
 			<div class="cd-most">
 				<div class="cd-most__kart">
 					@cdCard(items[0], false, YuvaEnCokOkunan)
@@ -729,10 +729,10 @@ templ cdMostRead(items []CDStory) {
 //
 // CoinDesk'te satırda yalnız ad + başlık görünür; unvan profil
 // sayfasında kalır. Avatar yoksa satır basılmaz (repo katmanı süzer).
-templ cdOpinion(items []CDUzman) {
+templ cdOpinion(items []CDUzman, dil string) {
 	if len(items) > 0 {
 		<section class="cd-panel">
-			<h2><span class="cd-vurgu">Görüş</span></h2>
+			<h2><span class="cd-vurgu">{ cdT(dil, "Görüş") }</span></h2>
 			<div class="cd-opinion">
 				for i, u := range items {
 					if i == 0 {
@@ -770,7 +770,7 @@ templ cdUzmanAvatar(u CDUzman) {
 
 templ CDHome(v CDHomeView) {
 	<!doctype html>
-	<html lang="tr">
+	<html lang={ cdDilKodu(v.Shell.Locale) }>
 		<head>
 			@cdHead(CDHead{Title: v.Title, Desc: v.Desc, Canonical: v.Canonical,
 				OGType: "website", Image: v.Lead.Image, Hreflang: v.Hreflang,
@@ -790,7 +790,7 @@ templ CDHome(v CDHomeView) {
 			// arasında. Yerleşim ghost.bitcosar.com `.ch-hero`'dan
 			// ölçülerek alındı; veri gerçek (CoinGecko + alternative.me).
 			// Veri yoksa modül hiç basılmaz.
-			@cdGirisHero(v.Giris)
+			@cdGirisHero(v.Giris, v.Locale)
 			<main class="cd-wrap cd-main">
 				// REKLAM YUVASI (üst liderboard). ÖLÇÜM (13 Kasım 2026):
 				// canlıda ana sayfa, /markets, /price, /videos, /tag/* ve
@@ -821,7 +821,7 @@ templ CDHome(v CDHomeView) {
 
 										// PİYASA NABZI: gerçek CryptoQuant verisi. Boşsa basılmaz.
 					@cdNabizModul(v.NabizFiyat, v.Nabiz,
-						"Kaynak: CryptoQuant · BTC · Binance akışları · günlük veri · 10 dakika önbellek")
+						cdT(v.Locale, "Kaynak: CryptoQuant · BTC · Binance akışları · günlük veri · 10 dakika önbellek"), v.Locale)
 
 										// "Explore more" — yatay kaydırma şeridi. Paneller gerçek
 					// veriyle doluyor: Fiyatlar · Videolar · Klipler ve her
@@ -829,7 +829,7 @@ templ CDHome(v CDHomeView) {
 					@cdExplore(v.Explore)
 
 										// §20+§21 Görüş (25%) + En Çok Okunan (75%) yan yana
-					@cdIkili(v.Opinion, v.MostRead)
+					@cdIkili(v.Opinion, v.MostRead, v.Locale)
 
 										// §22 bölüm blokları — tek 2×2 ızgara
 					@cdBloklar(v.Sections)
@@ -845,15 +845,15 @@ templ CDHome(v CDHomeView) {
 // CoinDesk düzeni: bölüm başlığı + tek satır açıklama + e-posta alanı +
 // kayıt düğmesi + küçük koşul metni. Form, mevcut POST /bulten ucuna
 // gönderilir (çift onay akışı hazır); JS gerekmez — çalışan HTML formu.
-templ cdNewsletter() {
+templ cdNewsletter(dil string) {
 	<section class="cd-mod">
 		<div class="cd-news">
 			<div>
-				<h2><span class="cd-vurgu">Günlük bülten</span></h2>
-				<p class="cd-card__spot">Günün en önemli kripto haberleri, her sabah e-postanızda. Ücretsiz.</p>
+				<h2><span class="cd-vurgu">{ cdT(dil, "Günlük bülten") }</span></h2>
+				<p class="cd-card__spot">{ cdT(dil, "Günün en önemli kripto haberleri, her sabah e-postanızda. Ücretsiz.") }</p>
 			</div>
 			<form class="cd-news__form" method="post" action="/bulten">
-				<label class="cd-visually-hidden" for="cd-news-email">E-posta adresiniz</label>
+				<label class="cd-visually-hidden" for="cd-news-email">{ cdT(dil, "E-posta adresiniz") }</label>
 				<input class="cd-news__input" id="cd-news-email" type="email" name="email"
 					required placeholder="ornek@eposta.com" autocomplete="email"/>
 				<button class="cd-btn" type="submit">Abone ol</button>
@@ -867,20 +867,20 @@ templ cdNewsletter() {
 }
 
 // cdPriceTable §14/§15: sıra, sembol, fiyat, değişim.
-templ cdPriceTable(baslik string, rows []CDPriceRow) {
+templ cdPriceTable(baslik string, rows []CDPriceRow, dil string) {
 	if len(rows) > 0 {
 	<section class="cd-mod">
 				// Başlık boşsa `cdSectionHead` HİÇ çağrılmaz: coin sayfası kendi
 		// başlığını basıyor; boş başlıkla ikinci bir "Tümü →" satırı
 		// çıkıyordu (ölçüldü, 8 Kasım 2026).
 		if baslik != "" {
-			@cdSectionHead(baslik, "/price")
+			@cdSectionHead(baslik, "/price", dil)
 		}
 		<table class="cd-table">
 			<thead>
 				<tr>
 					<th>#</th>
-					<th>Varlık</th>
+					<th>{ cdT(dil, "Varlık") }</th>
 					<th class="num">Fiyat</th>
 					<th class="num">24s</th>
 				</tr>

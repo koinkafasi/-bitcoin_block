@@ -77,10 +77,10 @@ templ cdGrafikKartPanel(g CDGrafikKart) {
 
 // cdNabizModul "Piyasa Nabzı" bloğu — ana sayfa, /markets ve /price aynı
 // bileşeni kullanır. Veri yoksa HİÇ basılmaz.
-templ cdNabizModul(fiyat *CDGrafikKart, kartlar []CDGrafikKart, kaynak string) {
+templ cdNabizModul(fiyat *CDGrafikKart, kartlar []CDGrafikKart, kaynak string, dil string) {
 	if fiyat != nil || len(kartlar) > 0 {
 		<section class="cd-mod cd-nabiz">
-			@cdSectionHead("Piyasa Nabzı", "")
+			@cdSectionHead(cdT(dil, "Piyasa Nabzı"), "", dil)
 			<div class="cd-nabiz__govde">
 				if fiyat != nil {
 					<div class="cd-nabiz__buyuk">

@@ -12,6 +12,7 @@ import (
 
 // handleCDTag /tag/{slug}.
 func (s *Server) handleCDTag(w http.ResponseWriter, r *http.Request) {
+	dil := s.cdYerel(r)
 	slug := strings.TrimSpace(r.PathValue("slug"))
 	if slug == "" {
 		s.handleNotFound(w, r)
@@ -41,7 +42,7 @@ func (s *Server) handleCDTag(w http.ResponseWriter, r *http.Request) {
 	var kartlar []templkit.CDStory
 	var ldItems []cdLDItem
 	for i, c := range items {
-		kartlar = append(kartlar, s.cdStoryCevir(c, simdi))
+		kartlar = append(kartlar, s.cdStoryCevir(c, simdi, dil))
 		if i < 11 {
 			it := cdLDItem{Headline: c.Title, URL: s.absBase(r) + makaleURL(c), Author: c.AuthorName}
 			if c.PublishedAt != nil {
@@ -55,7 +56,7 @@ func (s *Server) handleCDTag(w http.ResponseWriter, r *http.Request) {
 	aciklama := ad + " etiketli son kripto haberleri ve analizler."
 	v := templkit.CDTagPage{
 		Shell:     s.cdShellCtx(ctx, r, ""),
-		Title:     ad + " Haberleri — " + s.siteName,
+		Title:     ad + " " + templkit.CDT(s.cdYerel(r), "Haberleri") + " — " + s.siteName,
 		Desc:      aciklama,
 		Canonical: kanonik,
 		// CoinDesk deseni: "<Etiket> News" → "Bitcoin Haberleri".
@@ -67,7 +68,7 @@ func (s *Server) handleCDTag(w http.ResponseWriter, r *http.Request) {
 		JSONLD:          string(cdCollectionJSONLD(s.siteName, strings.TrimRight(s.cfg.BaseURL, "/"), ad, kanonik, ldItems)),
 		PageCategory:    "tag_page",
 		ContentCategory: "tag",
-		Locale:          "tr",
+		Locale:          s.cdYerel(r),
 		BaseURL:         strings.TrimRight(s.cfg.BaseURL, "/"),
 	}
 	// BANNER: CoinDesk'te sağda 692×389 görsel var. Kaynağımız etiketin en
@@ -85,13 +86,13 @@ func (s *Server) handleCDTag(w http.ResponseWriter, r *http.Request) {
 	if son, _, err := repo.ListContents(ctx, s.pool, repo.ListFilter{
 		Status:         "yayinda",
 		SiteID:         1,
-		Locale:         "tr",
+		Locale:         s.cdYerel(r),
 		Page:           1,
 		PerPage:        6,
 		ExcludeGallery: true,
 	}); err == nil {
 		for _, c := range son {
-			v.Latest = append(v.Latest, s.cdStoryCevir(c, simdi))
+			v.Latest = append(v.Latest, s.cdStoryCevir(c, simdi, dil))
 		}
 	}
 	if toplam > sayfa*24 {
@@ -104,7 +105,7 @@ func (s *Server) handleCDTag(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Query().Get("parca") == "1" {
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
 		w.Header().Set("Cache-Control", cacheControlPublic)
-		if err := templkit.CDTagParca(kartlar, v.PrevHref, v.NextHref).Render(ctx, w); err != nil {
+		if err := templkit.CDTagParca(kartlar, v.PrevHref, v.NextHref, v.Locale).Render(ctx, w); err != nil {
 			s.logger.Error("etiket parça render", "error", err)
 		}
 		return
@@ -179,8 +180,8 @@ func (s *Server) handleCDCoin(w http.ResponseWriter, r *http.Request) {
 
 	v := templkit.CDCoinPage{
 		Shell:           s.cdShellCtx(r.Context(), r, "price"),
-		Title:           bulunan.Name + " (" + sym + ") Fiyatı — " + s.siteName,
-		Desc:            bulunan.Name + " canlı fiyatı, 24 saatlik değişimi ve piyasa sıralaması.",
+		Title:           bulunan.Name + " (" + sym + ") " + templkit.CDT(s.cdYerel(r), "Fiyatı") + " — " + s.siteName,
+		Desc:            templkit.CDT(s.cdYerel(r), "Canlı fiyat, 24 saatlik değişim ve piyasa sıralaması.") + " — " + bulunan.Name,
 		Canonical:       kanonik,
 		Sym:             sym,
 		Name:            bulunan.Name,
@@ -194,7 +195,7 @@ func (s *Server) handleCDCoin(w http.ResponseWriter, r *http.Request) {
 		JSONLD:          ld.String(),
 		PageCategory:    "price_page",
 		ContentCategory: "price",
-		Locale:          "tr",
+		Locale:          s.cdYerel(r),
 		BaseURL:         base,
 	}
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
