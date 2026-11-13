@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 
 	"theblock/site/internal/platform"
@@ -38,6 +39,49 @@ const (
 // ErrDisGorselYok indirilecek geçerli bir görsel bulunamadı.
 var ErrDisGorselYok = errors.New("dış görsel indirilemedi")
 
+// sistemKullanici otomatik toplanan medyanın sahibi.
+//
+// NEDEN GEREKLİ: media_files.user_id NOT NULL ve yabancı anahtarla
+// users'a bağlı. Arka plan işçilerinde oturum açmış kullanıcı yok ve
+// alan sıfır bırakılınca her kayıt şu hatayla düşüyordu:
+//
+//	insert or update on table "media_files" violates foreign key
+//	constraint "media_files_user_id_fkey" (SQLSTATE 23503)
+//
+// 13 Kasım 2026'da ölçüldü: hem kaynak görsel aktarıcısı hem dış
+// görsel indirici bu yüzden TEK BİR kayıt bile açamamıştı
+// (media_files'ta source='internet' satır sayısı: 0).
+//
+// Sonuç bir kez bulunup saklanıyor: her görselde sorgu atmanın anlamı
+// yok ve kullanıcı listesi işçinin ömründe değişmiyor.
+var (
+	sistemKullaniciMu sync.Mutex
+	sistemKullaniciID int64
+)
+
+// sistemKullanicisi toplayıcı hesabın kimliğini verir.
+//
+// Önce `toplayici@` ile başlayan hesap aranıyor (rolü Editör ve
+// otomatik toplama için açılmış); bulunamazsa en düşük kimlikli
+// kullanıcıya düşülüyor — medya sahipsiz kalmasın.
+func (s *Server) sistemKullanicisi(ctx context.Context) (int64, error) {
+	sistemKullaniciMu.Lock()
+	defer sistemKullaniciMu.Unlock()
+	if sistemKullaniciID > 0 {
+		return sistemKullaniciID, nil
+	}
+	var id int64
+	err := s.pool.QueryRow(ctx, `
+		SELECT id FROM users
+		 ORDER BY (COALESCE(email,'') LIKE 'toplayici@%') DESC, id ASC
+		 LIMIT 1`).Scan(&id)
+	if err != nil {
+		return 0, err
+	}
+	sistemKullaniciID = id
+	return id, nil
+}
+
 // disGorselIndir adresteki görseli medya kütüphanesine alır ve medya
 // kimliğini döndürür.
 //
@@ -48,6 +92,11 @@ func (s *Server) disGorselIndir(ctx context.Context, adres, baslik, alt string, 
 	hedef, err := validateBookmarkURL(strings.TrimSpace(adres))
 	if err != nil {
 		return 0, fmt.Errorf("%w: %w", ErrDisGorselYok, err)
+	}
+	if userID <= 0 {
+		if userID, err = s.sistemKullanicisi(ctx); err != nil {
+			return 0, fmt.Errorf("%w: sahip kullanıcı yok: %w", ErrDisGorselYok, err)
+		}
 	}
 	ictx, iptal := context.WithTimeout(ctx, disGorselZamanAsimi)
 	defer iptal()

@@ -138,8 +138,20 @@ func (s *Server) birGorselAktar(ctx context.Context, g repo.AktarilacakGorsel) b
 	// ("shutterstock_12345.jpg") hiçbir arama sorgusuna karşılık gelmez.
 	alt, baslik := s.gorselAltMetni(ctx, g.Hash)
 
+	// SAHİP KULLANICI ZORUNLU: media_files.user_id NOT NULL ve users'a
+	// yabancı anahtarla bağlı. Alan boş bırakıldığı için bu işçi
+	// gönderildiğinden beri TEK BİR kayıt açamamıştı; her tur şu
+	// hatayı basıyordu (13 Kasım 2026'da günlükte görüldü):
+	//   violates foreign key constraint "media_files_user_id_fkey"
+	sahip, err := s.sistemKullanicisi(ctx)
+	if err != nil {
+		s.logger.Warn("görsel aktarım: sahip kullanıcı bulunamadı", "error", err)
+		return false
+	}
+
 	m := &repo.Media{
 		SiteID:    1,
+		UserID:    sahip,
 		Kind:      "image",
 		Filename:  ad,
 		Path:      yol,

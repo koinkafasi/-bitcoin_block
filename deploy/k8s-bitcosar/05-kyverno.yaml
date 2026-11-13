@@ -86,6 +86,26 @@ metadata:
 spec:
   # Eski karşılığı: validationFailureAction: Enforce
   validationActions: [Deny]
+  # AUTOGEN KAPALI — GitOps ile çakışıyordu.
+  #
+  # Kyverno varsayılan olarak pod kuralını Deployment/StatefulSet gibi
+  # denetleyicilere de üretiyor. Bu, `mutateDigest`in DEPLOYMENT'ın
+  # imaj alanını da digest'e çevirmesine yol açıyordu. Sonuç:
+  #   - Argo CD depodaki etiketle kümedeki digest'i sürekli farklı
+  #     görüyor,
+  #   - farkı susturmak için imaj alanı ignoreDifferences'a konunca
+  #     MEŞRU etiket güncellemeleri de görünmez oluyor.
+  #
+  # 13 Kasım 2026'da ölçüldü: CI etiketi depoya yazıyor, Argo CD
+  # "Synced/Healthy" diyor ama pod 81 DAKİKADIR eski imajda kalıyordu.
+  # Sessiz arızanın en kötü türü.
+  #
+  # Autogen kapalıyken kural yalnız POD'a uygulanıyor: pod yine
+  # imzasız kalkamıyor ve yine digest'e sabitleniyor — zorlama
+  # zayıflamıyor, yalnız hata Deployment yerine Pod'da görünüyor.
+  autogen:
+    podControllers:
+      controllers: [none]
   matchConstraints:
     resourceRules:
       - apiGroups: [""]

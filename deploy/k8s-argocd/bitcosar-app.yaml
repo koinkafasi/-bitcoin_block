@@ -64,16 +64,22 @@ spec:
   # GÜRÜLTÜ BASTIRMA — bunlar olmadan uygulama sürekli "OutOfSync"
   # görünür ve gerçek sapma fark edilmez.
   ignoreDifferences:
-    # Kyverno `mutateDigest: true` ile imaj etiketini digest'e çeviriyor
-    # (05-kyverno.yaml). Yani kümede ÇALIŞAN imaj depodakinden FARKLI
-    # yazılır ve bu İSTENEN davranıştır: çalışan imaj tam olarak
-    # imzalanan baytlardır. Argo CD bunu sapma saymamalı.
-    - group: apps
-      kind: Deployment
-      namespace: bitcosar-site
-      jqPathExpressions:
-        - ".spec.template.spec.containers[].image"
-        - ".spec.template.spec.initContainers[].image"
+    # İMAJ ALANI BURADA *DEĞİL* — bilerek.
+    #
+    # Önce buraya konmuştu: Kyverno `mutateDigest` imaj etiketini
+    # digest'e çeviriyor ve Argo CD bunu sürekli sapma sayıyordu. Ama
+    # alanı susturmak MEŞRU etiket güncellemelerini de susturdu:
+    # 13 Kasım 2026'da CI etiketi depoya yazdı, Argo CD
+    # "Synced/Healthy" dedi ve pod 81 DAKİKADIR eski imajda kaldı.
+    # Sessiz arızanın en kötü türü — her şey yeşil, hiçbir şey sevk
+    # edilmiyor.
+    #
+    # Gerçek sebep Kyverno'nun AUTOGEN'iydi: pod kuralını
+    # Deployment'a da üretip Deployment'ın imajını da mutasyona
+    # uğratıyordu. Autogen kapatıldı (05-kyverno.yaml); Deployment
+    # artık düz etiket taşıyor, mutasyon yalnız Pod'da oluyor ve
+    # Argo CD karşılaştırmayı temiz yapabiliyor.
+    #
     # HPA yoksa da replica sayısına dokunma: ölçekleme kararı
     # manifest'te değil, işletmede verilebiliyor.
     - group: apps
