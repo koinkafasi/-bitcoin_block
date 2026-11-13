@@ -361,6 +361,10 @@ templ CDVideoPageView(v CDVideoPage) {
 					</div>
 				</section>
 				<div class="cd-wrap cd-vgovde">
+					// REKLAM YUVASI (ölçüldü 13 Kasım 2026: /videos'ta 0'dı).
+					// Koyu bantın ALTINDA, sekmelerin üstünde: bant zaten
+					// video oynatıcıyla dolu, oraya sıkıştırmak düzeni bozardı.
+					@cdReklam(728, 90)
 					@cdVSekmeler(v.Sekmeler)
 					if len(v.Videolar) > 0 {
 						<section class="cd-vbolum">

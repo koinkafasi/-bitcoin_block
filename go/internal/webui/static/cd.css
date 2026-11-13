@@ -5921,6 +5921,15 @@ html.dark {
   border: 0;
 }
 
+/* BOŞ YUVA GİZLENİR (bkz. cd-entegrasyon.js — 5 sn sonra boşsa
+   data-reklam-bos=1). Reklam engelleyici kullanan ziyaretçide yuva
+   sonsuza kadar boş gri kutu olarak kalıyordu; her sayfada 90 px'lik
+   boş bir blok görsel hata gibi duruyor. `!important` YOK: ağ iframe
+   basarsa kural zaten uygulanmaz (işaret yalnız boşken konur). */
+.cd-reklam[data-reklam-bos="1"] {
+  display: none;
+}
+
 @media (max-width: 767px) {
   .cd-reklam {
     max-width: 100%;

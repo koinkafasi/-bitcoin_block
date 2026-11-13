@@ -87,6 +87,24 @@
       close: true
     }]);
     betik('https://coinzillatag.com/lib/sticky.js');
+
+    // BOŞ YUVAYI KAPAT — ölçülmüş bir görsel hata:
+    // Reklam engelleyici kullanan ziyaretçide display.js hiç yüklenmez ve
+    // yuva sonsuza kadar boş gri kutu olarak kalır (90 px, her sayfada).
+    // Ayrıca Coinzilla'nın o bölge için dolgusu olmayabilir.
+    // 5 sn sonra yuva hâlâ doldurulmadıysa gizle: kalıcı boş kutu, geç
+    // gelen 90 px'lik yer değişiminden daha kötü. Yer AYNI karede
+    // kapatıldığı için CLS etkisi tek seferlik ve küçük.
+    setTimeout(function () {
+      var yuvalar2 = document.querySelectorAll('.cd-reklam[data-zone]');
+      for (var j = 0; j < yuvalar2.length; j++) {
+        var y2 = yuvalar2[j];
+        if (y2.getAttribute('data-reklam-yuklendi') === '1') continue;
+        // Coinzilla iframe ya da img basmışsa dolu say.
+        if (y2.querySelector('iframe, img, ins, div > *')) continue;
+        y2.setAttribute('data-reklam-bos', '1');
+      }
+    }, 5000);
   }
 
   // --- Cointraffic --------------------------------------------------------

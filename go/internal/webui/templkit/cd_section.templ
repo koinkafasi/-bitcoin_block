@@ -32,6 +32,11 @@ templ CDSectionPageView(v CDSectionPage) {
 			@cdTopbar(v.Shell)
 			@cdTicker(v.Shell)
 			<main class="cd-wrap cd-wrap--bolum cd-main">
+				// REKLAM YUVASI (üst liderboard). Bölüm sayfalarında yuva
+				// YOKTU (ölçüldü 13 Kasım 2026: cd-reklam sayısı 0); başlığın
+				// altında, listenin üstünde duruyor ki ilk ekranda görünsün
+				// ve kart ızgarasının hizasını bozmasın.
+				@cdReklam(728, 90)
 				<header class="cd-section-title">
 					<h1>{ v.Section }</h1>
 				</header>

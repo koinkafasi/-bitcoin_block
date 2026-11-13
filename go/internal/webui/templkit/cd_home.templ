@@ -792,6 +792,14 @@ templ CDHome(v CDHomeView) {
 			// Veri yoksa modül hiç basılmaz.
 			@cdGirisHero(v.Giris)
 			<main class="cd-wrap cd-main">
+				// REKLAM YUVASI (üst liderboard). ÖLÇÜM (13 Kasım 2026):
+				// canlıda ana sayfa, /markets, /price, /videos, /tag/* ve
+				// /borsa/* sayfalarında `class="cd-reklam"` sayısı 0'dı —
+				// yuva yalnız makale şablonunda vardı. Yani CSP düzeltilse
+				// bile bu sayfalarda reklamın yerleşeceği kutu yoktu.
+				// Ana sayfa trafiğin en yüksek olduğu yer; liderboard
+				// hero'nun ÜSTÜNDE, modül sırasını bozmadan duruyor.
+				@cdReklam(728, 90)
 								// MODÜLER YERLEŞİM (9 Kasım 2026): sayfa tasarımcısı yeni
 				// tasarımın alanlarını ayrı bloklar olarak yönetir. Düzen
 				// yazılmamışsa (v.Moduller boş) aşağıdaki VARSAYILAN SIRA
