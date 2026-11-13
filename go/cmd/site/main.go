@@ -147,6 +147,15 @@ func main() {
 	// üret" denemiyor. Aktarılanlar source='internet' işareti taşır
 	// (şemada tanımlı); üretilenler 'ai' olacak.
 	app.GorselMedyaAktariciBaslat(workerCtx)
+	// İçeriklerdeki DIŞ adresli görselleri medyaya indirir. Yukarıdaki
+	// işçi diskte DURAN kaynak görselleri kütüphaneye alıyor; bu işçi
+	// henüz başkasının sunucusunda olanları çekiyor.
+	//
+	// NEDEN: 13 Kasım 2026'da Ghost'tan aktarılan 50 yazının 47 gövde
+	// görseli ghost.bitcosar.com'a bakıyordu ve o site kapatılıyor.
+	// Görsel başkasının sunucusunda durdukça yazı o sunucuyla birlikte
+	// sakatlanır.
+	app.DisGorselAktariciBaslat(workerCtx)
 	// YouTube video arşivi: kanal RSS'i + /streams + /live periyodik çekilir
 	// (aralık panelden: settings/youtube.dakika). /videos, /videos/shorts,
 	// /canli-yayin ve ana sayfa modülleri bu tablodan beslenir.
