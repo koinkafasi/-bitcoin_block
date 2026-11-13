@@ -139,6 +139,14 @@ func main() {
 	// görsellerinde yaşandı (cdn.bitcosar.com artık 403). Bu işçi
 	// arşivi küçük gruplar hâlinde kendi diskimize alır.
 	app.GorselOnIndiriciBaslat(workerCtx)
+	// Faz 215 — kaynak görsellerini MEDYA KÜTÜPHANESİNE al.
+	// Ölçüm (13 Kasım 2026): source_images 712 indirilmiş görsel tutuyor
+	// (152 MB) ama media_files yalnız 39 kayıt (brand 30, upload 9).
+	// Görseller diskimizde ama kütüphanemizde değil: alt metni yazılamıyor,
+	// panelden düzenlenemiyor, AI görsel üretici gelince "bunları yeniden
+	// üret" denemiyor. Aktarılanlar source='internet' işareti taşır
+	// (şemada tanımlı); üretilenler 'ai' olacak.
+	app.GorselMedyaAktariciBaslat(workerCtx)
 	// YouTube video arşivi: kanal RSS'i + /streams + /live periyodik çekilir
 	// (aralık panelden: settings/youtube.dakika). /videos, /videos/shorts,
 	// /canli-yayin ve ana sayfa modülleri bu tablodan beslenir.
