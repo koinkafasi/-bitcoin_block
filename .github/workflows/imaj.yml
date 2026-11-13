@@ -130,14 +130,28 @@ jobs:
         run: |
           set -euo pipefail
           HEDEF="$REGISTRY/koinkafasi/theblock-${{ matrix.ad }}"
+          # ETİKET BİÇİMİ `sha-` ÖNEKLİ OLMAK ZORUNDA.
+          #
+          # Sevk tarafının tamamı bu konvansiyonu kullanıyor:
+          #   bitcosar-sevk.sh:64  ETIKET="sha-$(git rev-parse --short HEAD)"
+          #   k8s-sevk.sh, action-sha-guncelle.sh, BITCOSAR-GECIS.md
+          # Bu adım ise çıplak SHA basıyordu; yukarıdaki dosya başlığı bile
+          # "k8s-sevk.sh etiket kullanıyor (sha-abc1234)" diyor, yani yorum
+          # ile kod birbirini yalanlıyordu.
+          #
+          # 13 Kasım 2026'da üretimde patladı: GHCR 403 düzelip hat ilk kez
+          # imaj basınca sevk `sha-fbf6801: not found` ile ImagePullBackOff
+          # verdi. Daha önce görünmemesinin sebebi, sevklerin yerel
+          # derlemeden `sha-` önekiyle yapılıyor olmasıydı.
+          ETIKET="sha-${GITHUB_SHA::7}"
           # İki etiket: kaydırılamaz commit etiketi + insan-okur `main`.
-          docker tag "yerel/${{ matrix.ad }}:tarama" "$HEDEF:${GITHUB_SHA::7}"
+          docker tag "yerel/${{ matrix.ad }}:tarama" "$HEDEF:$ETIKET"
           docker tag "yerel/${{ matrix.ad }}:tarama" "$HEDEF:main"
-          docker push --quiet "$HEDEF:${GITHUB_SHA::7}"
+          docker push --quiet "$HEDEF:$ETIKET"
           docker push --quiet "$HEDEF:main"
-          DIGEST=$(docker inspect --format '{{index .RepoDigests 0}}' "$HEDEF:${GITHUB_SHA::7}" | cut -d@ -f2)
+          DIGEST=$(docker inspect --format '{{index .RepoDigests 0}}' "$HEDEF:$ETIKET" | cut -d@ -f2)
           echo "digest=$DIGEST" >> "$GITHUB_OUTPUT"
-          echo "etiket=${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+          echo "etiket=$ETIKET" >> "$GITHUB_OUTPUT"
           echo "hedef=$HEDEF" >> "$GITHUB_OUTPUT"
 
       - uses: sigstore/cosign-installer@398d4b0eeef1380460a10c8013a76f728fb906ac # v3.9.1
