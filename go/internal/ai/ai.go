@@ -80,7 +80,9 @@ func aiHTTPTimeout() time.Duration {
 			return time.Duration(n) * time.Second
 		}
 	}
-	return 120 * time.Second
+	// OLCUM (14 Kasim 2026): BASARILI islerin p90'i 194.7 sn, en uzunu
+	// 239.1 sn. 120 sn tek denemede saglikli yanitlari kesiyordu.
+	return 180 * time.Second
 }
 
 func (c *Client) Enabled() bool {

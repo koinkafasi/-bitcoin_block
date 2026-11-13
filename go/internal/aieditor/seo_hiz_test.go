@@ -82,13 +82,17 @@ func TestSeoMaxTokenYeterli(t *testing.T) {
 	assert.Contains(t, src, "MaxTokens:   700")
 }
 
-// TestAIZamanAsimiYeterli: sağlayıcı 80 sn'ye kadar yanıt veriyor; 60 sn
-// sabit sınır sağlıklı yanıtları kesiyordu.
+// TestAIZamanAsimiYeterli: sınır İKİ KEZ yükseltildi, iki kez de ölçümle.
+// 60 sn → 120 sn (sağlayıcı 80 sn'ye kadar yanıt veriyordu), 120 sn → 180 sn
+// (14 Kasım 2026 ölçümü: BAŞARILI işlerin p90'ı 194.7 sn, en uzunu 239.1 sn;
+// 120 sn sağlıklı yanıtları kesiyordu).
 func TestAIZamanAsimiYeterli(t *testing.T) {
 	src := mustReadAieditor(t, "../ai/ai.go")
 	assert.Contains(t, src, "aiHTTPTimeout()")
 	assert.Contains(t, src, "AI_HTTP_TIMEOUT_SEC")
-	assert.Contains(t, src, "return 120 * time.Second")
+	assert.Contains(t, src, "return 180 * time.Second")
+	assert.NotContains(t, src, "return 120 * time.Second",
+		"120 sn p90'ın (194.7 sn) altında")
 	assert.NotContains(t, src, "Timeout: 60 * time.Second",
 		"60 sn sağlıklı yanıtları kesiyordu")
 }

@@ -295,9 +295,16 @@ func (s *Service) ProcessJob(ctx context.Context, jobID int64) (Result, error) {
 	resp, err := s.ai.CompleteStrict(ctx, ai.Request{
 		Messages: messages, JSONMode: true, MaxTokens: maxTokens, Temperature: 0.25,
 	})
-	if err != nil {
-		// Bazı OpenAI-uyumlu uçlar response_format'ı desteklemez; bir kez de
-		// JSON modu olmadan dene. Prompt yine yalnızca JSON ister.
+	// YEDEK DENEME YALNIZ BİÇİM REDDİNDE: bazı OpenAI-uyumlu uçlar
+	// response_format'ı desteklemez, yedek tam bunun için var. Ama eskiden
+	// HER hatada deneniyordu ve zaman aşımında bu yalnızca zarar veriyordu.
+	// Ölçüm (14 Kasım 2026): başarısız işlerin medyanı 240.0 sn, 136'nın
+	// 128'i tam orada = 2 × 120 sn. Yani sağlayıcı yanıt vermeyince 120
+	// saniye bekleniyor, sonra AYNI yavaş sağlayıcıya aynı şey tekrar
+	// soruluyor. Zaman aşımı JSON modundan kaynaklanmadığı için ikinci
+	// denemenin kazandırdığı bir şey yok; maliyeti ise işçi yuvasının 4
+	// dakika tutulması ve sağlayıcıya giden ikinci bir çağrı.
+	if err != nil && !ai.ZamanAsimiHatasi(err) {
 		resp, err = s.ai.CompleteStrict(ctx, ai.Request{
 			Messages: messages, MaxTokens: maxTokens, Temperature: 0.25,
 		})
