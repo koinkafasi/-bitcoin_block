@@ -211,10 +211,16 @@ jobs:
       - name: cosign verify (4 imaj)
         run: |
           set -euo pipefail
+          # Etiket biçimi `imaj` işindeki basma adımıyla AYNI olmalı.
+          # 13 Kasım 2026'da burası atlandı: basma `sha-` önekine geçti,
+          # doğrulama çıplak SHA aramaya devam etti ve iş
+          # "MANIFEST_UNKNOWN: manifest unknown" ile düştü. İmajlar
+          # basılmıştı, bulunamayan yalnızca etiketti.
+          ETIKET="sha-${GITHUB_SHA::7}"
           for ad in site image-svc search-svc collab; do
             echo "--- $ad"
             cosign verify \
               --certificate-identity-regexp "^https://github.com/${{ github.repository }}/.github/workflows/imaj.yml@refs/heads/main$" \
               --certificate-oidc-issuer "https://token.actions.githubusercontent.com" \
-              "${{ env.REGISTRY }}/koinkafasi/theblock-$ad:${GITHUB_SHA::7}"
+              "${{ env.REGISTRY }}/koinkafasi/theblock-$ad:$ETIKET"
           done
