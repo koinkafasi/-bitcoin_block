@@ -400,8 +400,19 @@ func SeoBosTaslaklar(ctx context.Context, pool *pgxpool.Pool, limit int) ([]repo
 		WHERE status = 'taslak'
 		  AND COALESCE(NULLIF(TRIM(seo_title),''),'') = ''
 		  AND COALESCE(NULLIF(TRIM(seo_description),''),'') = ''
-		  AND COALESCE(source_url,'') <> ''
 		  AND COALESCE(title,'') <> ''
+		  -- GÖVDE ŞARTI, KAYNAK ŞARTI DEĞİL.
+		  --
+		  -- Eskiden burada bir source_url şartı vardı. Amaç yarım
+		  -- bırakılmış editör taslaklarını atlamaktı ama ölçüt yanlış
+		  -- seçilmişti: KENDİ ürettiğimiz içeriğin kaynak adresi yok ve
+		  -- SEO alanı hiç üretilmiyordu. 13 Kasım 2026'da Ghost'tan
+		  -- aktarılan 50 yazının 50'si tam bu yüzden kuyruğa girmedi.
+		  --
+		  -- Doğru ölçüt gövdenin dolu olması: yazılmış her taslak SEO
+		  -- alanını hak ediyor, boş taslak zaten üretecek bir şey vermez.
+		  AND jsonb_typeof(detail) IS NOT NULL
+		  AND length(detail::text) > 80
 		ORDER BY created_at ASC
 		LIMIT $1`, limit)
 	if err != nil {

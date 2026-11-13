@@ -81,6 +81,7 @@ const varsayilanKategori = "news-analysis"
 func main() {
 	dosya := flag.String("dosya", "", "aday JSON dosyası (zorunlu)")
 	kuru := flag.Bool("kuru", false, "yalnız ölç ve raporla; veritabanına YAZMA")
+	sqlCikti := flag.String("sql", "", "SQL dosyası üret (doğrudan bağlanma)")
 	maks := flag.Int("maks", 0, "en fazla bu kadar yazı (0 = hepsi)")
 	siteID := flag.Int64("site", 1, "site kimliği")
 	yazarID := flag.Int64("yazar", 0, "yazar kimliği (0 = ilk yönetici)")
@@ -126,6 +127,22 @@ func main() {
 			"\nDURDURULDU: %d yazıda metin kaybı var. Önce dönüşümü düzeltin.\n",
 			rapor.kayipli)
 		os.Exit(1)
+	}
+
+	// SQL kipi: veritabanına TCP ile bağlanmak yerine dosya üret.
+	//
+	// NEDEN GEREKLİ: veritabanı kümenin içinde ve bu makinede WSL ile
+	// Windows ayrı ağ yığınları — `kubectl port-forward` Windows
+	// tarafında dinliyor, WSL'den görünmüyor. `kubectl exec ... psql`
+	// yolu ise çalışıyor. Üretilen dosya o yoldan uygulanır.
+	if *sqlCikti != "" {
+		if err := sqlYaz(*sqlCikti, adaylar); err != nil {
+			fmt.Fprintln(os.Stderr, "SQL yazılamadı:", err)
+			os.Exit(1)
+		}
+		fmt.Println("\nSQL dosyası:", *sqlCikti)
+		fmt.Println("uygula: kubectl -n bitcosar-site exec -i <pg-pod> -- sh -c '...psql -f -' < " + *sqlCikti)
+		return
 	}
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
@@ -216,6 +233,107 @@ func main() {
 			fmt.Println("yönlendirme haritası:", yol)
 		}
 	}
+}
+
+// ghostKok Ghost'un gövdeye gömdüğü yer tutucunun karşılığı.
+const ghostKok = "https://ghost.bitcosar.com"
+
+// ghostAdresCoz `__GHOST_URL__` yer tutucusunu mutlak adrese çevirir.
+//
+// Ghost gövde içi bağlantı ve görselleri `__GHOST_URL__/content/...`
+// olarak saklıyor; sunum anında kendi kök adresiyle değiştiriyor. Dışa
+// aktarma ham hâli taşıdığı için çevrilmezse adres BOZUK kalır —
+// ölçüldü: 47 gövde görselinin 47'si bu yer tutucuyla geldi.
+//
+// NOT: bu adresler Ghost kapandığında ölecek. Çözmek onları şimdilik
+// çalışır kılar; kalıcı çözüm medya kütüphanesine indirmek.
+func ghostAdresCoz(s string) string {
+	return strings.ReplaceAll(s, "__GHOST_URL__", ghostKok)
+}
+
+// ---- SQL üretimi ----
+
+// sqlEtiket dolar-tırnak etiketi seçer.
+//
+// NEDEN DOLAR TIRNAK: gövdeler keyfi tırnak, ters eğik çizgi ve TipTap
+// JSON'u içeriyor. Tek tırnak kaçışı bu metinlerde kolayca bozulur;
+// dolar tırnak içinde HİÇBİR kaçış yoktur. Tek koşul: etiketin metinde
+// geçmemesi — bu yüzden geçmediği DOĞRULANIYOR, varsayılmıyor.
+func sqlEtiket(parcalar []string) (string, error) {
+	for _, aday := range []string{"gh", "ghx", "ghz", "gq7", "zz9", "q4k"} {
+		et := "$" + aday + "$"
+		var carpisma bool
+		for _, p := range parcalar {
+			if strings.Contains(p, et) {
+				carpisma = true
+				break
+			}
+		}
+		if !carpisma {
+			return et, nil
+		}
+	}
+	return "", fmt.Errorf("güvenli dolar-tırnak etiketi bulunamadı")
+}
+
+func sqlYaz(yol string, adaylar []aday) error {
+	// Etiket çarpışma denetimi için TÜM metinleri topla.
+	var hepsi []string
+	type satir struct {
+		a      aday
+		detail string
+		kat    string
+	}
+	var satirlar []satir
+	for _, a := range adaylar {
+		d, err := platform.HTMLToTipTap(ghostAdresCoz(a.HTML))
+		if err != nil {
+			return fmt.Errorf("%s: %w", a.Slug, err)
+		}
+		s := satir{a: a, detail: string(d), kat: kategoriSec(a.Tags)}
+		satirlar = append(satirlar, s)
+		hepsi = append(hepsi, a.Title, ozet(a), s.detail, slugSec(a.Slug), a.FeatureImage)
+	}
+	et, err := sqlEtiket(hepsi)
+	if err != nil {
+		return err
+	}
+
+	var b strings.Builder
+	b.WriteString("-- ghost-aktar üretimi — ghost.bitcosar.com'dan seçilmiş yazılar\n")
+	b.WriteString("-- Taslak olarak yazılır; hiçbir şey yayına alınmaz.\n")
+	b.WriteString("BEGIN;\n\n")
+
+	for _, s := range satirlar {
+		q := func(v string) string { return et + v + et }
+		b.WriteString("INSERT INTO contents\n")
+		b.WriteString("  (type_key, status, title, spot, detail, slug, category_id,\n")
+		b.WriteString("   author_id, site_id, locale, image_url, created_at, updated_at)\n")
+		b.WriteString("SELECT 'makale', 'taslak',\n")
+		b.WriteString("  " + q(s.a.Title) + ",\n")
+		b.WriteString("  " + q(ozet(s.a)) + ",\n")
+		b.WriteString("  " + q(s.detail) + "::jsonb,\n")
+		// Slug çarpışması: tek yedek son ek. İkinci çarpışmada SQL
+		// gürültüsüzce DEĞİL, hatayla durur — sessiz kayıp olmasın.
+		sl := slugSec(s.a.Slug)
+		b.WriteString("  CASE WHEN EXISTS (SELECT 1 FROM contents WHERE slug = " + q(sl) + ")\n")
+		b.WriteString("       THEN " + q(sl+"-gh") + " ELSE " + q(sl) + " END,\n")
+		b.WriteString("  (SELECT id FROM categories WHERE slug = " + q(s.kat) + " LIMIT 1),\n")
+		b.WriteString("  (SELECT id FROM users ORDER BY id LIMIT 1),\n")
+		b.WriteString("  1, 'tr',\n")
+		b.WriteString("  " + q(s.a.FeatureImage) + ",\n")
+		b.WriteString("  now(), now()\n")
+		// Aynı yazı iki kez aktarılmasın: başlık zaten varsa atla.
+		b.WriteString("WHERE NOT EXISTS (SELECT 1 FROM contents WHERE title = " + q(s.a.Title) + ");\n\n")
+	}
+
+	b.WriteString("COMMIT;\n")
+	b.WriteString("\\echo\n")
+	b.WriteString("\\echo === aktarilan (taslak, makale) ===\n")
+	b.WriteString("SELECT count(*) FROM contents WHERE type_key='makale' AND status='taslak';\n")
+
+	// #nosec G703 -- çıktı yolu operatörün verdiği `-sql` bayrağı.
+	return os.WriteFile(filepath.Clean(yol), []byte(b.String()), 0o600)
 }
 
 // ---- dönüşüm ölçümü ----
