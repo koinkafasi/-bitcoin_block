@@ -331,6 +331,13 @@ func (s *Server) handlePublicSegment(w http.ResponseWriter, r *http.Request) {
 	}
 	if i >= len(segs) {
 		r.SetPathValue("lang", lang)
+		// `/en/`, `/tr/` — dil önekli kök. Önceden eski tema basılıyordu
+		// (ölçüm 13 Kasım 2026: /en/ 30 KB, / 141 KB). Dil seçildiğinde
+		// kullanıcı CD temasında kalmalı.
+		if i == 1 {
+			s.handleCDHome(w, r)
+			return
+		}
 		s.handleHome(w, r)
 		return
 	}
@@ -342,6 +349,12 @@ func (s *Server) handlePublicSegment(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Dil önekli CD yolları (`/en/markets`, `/en/price/bitcoin` …).
+	// Ölçüm 13 Kasım 2026: bunlar 404 dönüyordu — dil altyapısı vardı,
+	// rotası yoktu (bkz. dil_cd.go cdDilYolu).
+	if i == 1 && s.cdDilYolu(w, r, segs[i:]) {
+		return
+	}
 	switch {
 	case seg == "kategori" && i+1 < len(segs):
 		r.SetPathValue("slug", segs[i+1])
@@ -360,16 +373,21 @@ func (s *Server) handlePublicSegment(w http.ResponseWriter, r *http.Request) {
 		s.handleEventsPublic(w, r)
 	case seg == "anketler":
 		s.handlePollsPublic(w, r)
-	case seg == "sinemalar":
-		s.handleFilmsPublic(w, r)
-	case seg == "resmi-ilanlar" && i+1 < len(segs):
-		s.handleNoticeDetail(w, r, segs[i+1])
-	case seg == "resmi-ilanlar":
-		s.handleNoticesPublic(w, r)
+	// KALDIRILDI: /sinemalar, /resmi-ilanlar, /nobetci-eczaneler.
+	//
+	// Bunlar theblock YEREL HABER sitesinin özellikleriydi ve aynı kod
+	// tabanı bitcosar'ı da sunduğu için kripto sitesinde de açık
+	// kalmışlardı. Üçü de 200 dönüyor VE sitemap'e yazılıyordu
+	// (13 Kasım 2026'da ölçüldü), yani Google'a gönderiliyorlardı.
+	//
+	// Zararı somut: kripto sitesinde "nöbetçi eczaneler" konu
+	// otoritesini sulandırıyor ve tarama bütçesi harcıyor. Google
+	// sitenin ne hakkında olduğunu çözerken karışık sinyal alıyor.
+	//
+	// Yönetim paneli ve veri katmanı DURUYOR: theblock geri dönerse
+	// yeniden açılabilir. Kaldırılan yalnız herkese açık yüzey.
 	case seg == "akis":
 		s.handleAkisPage(w, r)
-	case seg == "nobetci-eczaneler":
-		s.handleEczanePage(w, r)
 	case seg == "arama":
 		s.handleSearch(w, r)
 	case seg == "yazarlar":
@@ -1149,7 +1167,10 @@ func (s *Server) handleSitemap(w http.ResponseWriter, r *http.Request) {
 	}
 	sb.WriteString(`<xhtml:link rel="alternate" hreflang="x-default" href="` + abs + `/"/></url>`)
 	// statik hizmet sayfaları
-	for _, p := range []string{"/bulten", "/ping", "/yazarlar", "/arsiv", "/borsa", "/etkinlikler", "/anketler", "/sinemalar", "/resmi-ilanlar", "/akis", "/nobetci-eczaneler", "/rss-listesi"} {
+	// /sinemalar, /resmi-ilanlar ve /nobetci-eczaneler BİLEREK YOK:
+	// theblock yerel haber özellikleriydi, kripto sitesinde konu
+	// otoritesini sulandırıyor ve tarama bütçesi harcıyorlardı.
+	for _, p := range []string{"/bulten", "/ping", "/yazarlar", "/arsiv", "/borsa", "/etkinlikler", "/anketler", "/akis", "/rss-listesi"} {
 		sb.WriteString("<url><loc>" + abs + p + "</loc></url>")
 	}
 	cs, _ := repo.ListCategories(ctx, s.pool, site.ID)
@@ -1266,12 +1287,6 @@ func (s *Server) handleRobots(w http.ResponseWriter, r *http.Request) {
 	sb.WriteString("Sitemap: " + abs + "/sitemap-news.xml\n")
 	sb.WriteString("Sitemap: " + abs + "/sitemap.xml\n")
 	_, _ = w.Write([]byte(sb.String()))
-}
-
-func (s *Server) handleAdsTxt(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-	w.Header().Set("Cache-Control", cacheControlPublic)
-	w.Write([]byte("# theblock ads.txt — reklam ağları eklenecek\n"))
 }
 
 // ---- medya dosyası servisi ----
