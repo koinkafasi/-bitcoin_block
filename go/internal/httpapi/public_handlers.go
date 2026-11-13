@@ -331,6 +331,10 @@ func (s *Server) handlePublicSegment(w http.ResponseWriter, r *http.Request) {
 	}
 	if i >= len(segs) {
 		r.SetPathValue("lang", lang)
+		// İçeriği olmayan dil kökü (`/de/`) da varsayılana döner (301).
+		if i == 1 && s.cdDilDususu(w, r, lang) {
+			return
+		}
 		// `/en/`, `/tr/` — dil önekli kök. Önceden eski tema basılıyordu
 		// (ölçüm 13 Kasım 2026: /en/ 30 KB, / 141 KB). Dil seçildiğinde
 		// kullanıcı CD temasında kalmalı.
@@ -344,6 +348,12 @@ func (s *Server) handlePublicSegment(w http.ResponseWriter, r *http.Request) {
 
 	seg := segs[i]
 	r.SetPathValue("lang", lang)
+
+	// İçeriği olmayan dil öneki (`/de/...`) varsayılana yönlendirilir:
+	// aksi hâlde sayfa 200 dönüp `lang="de"` derken Türkçe arayüz basıyordu.
+	if i == 1 && s.cdDilDususu(w, r, lang) {
+		return
+	}
 
 	if s.makaleYolu(w, r, segs[i:], lang) {
 		return

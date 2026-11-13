@@ -264,3 +264,42 @@ func (s *Server) cdDilYolu(w http.ResponseWriter, r *http.Request, segs []string
 	}
 	return false
 }
+
+// cdDilDususu, içeriği OLMAYAN bir dil önekini varsayılan dile yönlendirir.
+//
+// ÖLÇÜLEN SORUN (13 Kasım 2026, canlı): `/de/markets` 200 dönüyordu ama
+// arayüz Türkçe ve `<html lang="de">` — yani sayfa Almanca olduğunu
+// söylüyordu. Google için yanlış dil sinyali, kullanıcı için anlamsız
+// adres. Seçicide zaten görünmüyor (içeriği olan diller listelenir), bu
+// yüzden buraya yalnız elle/ dış bağlantıyla gelen düşer.
+//
+// Davranış: aynı sayfanın öneksiz adresine 301. İçerik kaybı yok, dil
+// iddiası ortadan kalkıyor, tek kanonik adres kalıyor.
+// Varsayılan dil (tr) ve içeriği olan diller dokunulmaz.
+func (s *Server) cdDilDususu(w http.ResponseWriter, r *http.Request, lang string) bool {
+	if r == nil || lang == "" {
+		return false
+	}
+	varsayilan := "tr"
+	if s.i18n != nil {
+		varsayilan = s.i18n.Default()
+	}
+	if lang == varsayilan {
+		return false
+	}
+	if dolu := s.cdIcerikDilleri(r); dolu[lang] {
+		return false
+	}
+	// Öneki soy: /de/markets -> /markets ; /de/ -> /
+	hedef := "/"
+	if s.i18n != nil {
+		if _, rest := s.i18n.StripLocale(r.URL.Path); rest != "" {
+			hedef = rest
+		}
+	}
+	if r.URL.RawQuery != "" {
+		hedef += "?" + r.URL.RawQuery
+	}
+	http.Redirect(w, r, hedef, http.StatusMovedPermanently)
+	return true
+}
