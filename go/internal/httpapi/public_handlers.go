@@ -360,16 +360,20 @@ func (s *Server) handlePublicSegment(w http.ResponseWriter, r *http.Request) {
 		s.handleEventsPublic(w, r)
 	case seg == "anketler":
 		s.handlePollsPublic(w, r)
-	case seg == "sinemalar":
-		s.handleFilmsPublic(w, r)
-	case seg == "resmi-ilanlar" && i+1 < len(segs):
-		s.handleNoticeDetail(w, r, segs[i+1])
-	case seg == "resmi-ilanlar":
-		s.handleNoticesPublic(w, r)
+	// KALDIRILDI: /sinemalar, /resmi-ilanlar, /nobetci-eczaneler.
+	// theblock YEREL HABER ozellikleriydi; ayni kod tabani bitcosar'i
+	// da sundugu icin kripto sitesinde de acik kalmislardi. Ucu de 200
+	// donuyor VE sitemap'e yaziliyordu (13 Kasim 2026 olcumu).
+	//
+	// Zarari somut: kripto sitesinde "nobetci eczaneler" konu
+	// otoritesini suluyor ve tarama butcesi harciyor.
+	//
+	// Yonetim paneli ve veri katmani DURUYOR: theblock geri donerse
+	// yeniden acilabilir. Kaldirilan yalniz herkese acik yuzey.
 	case seg == "akis":
 		s.handleAkisPage(w, r)
-	case seg == "nobetci-eczaneler":
-		s.handleEczanePage(w, r)
+	case seg == "sozluk":
+		s.handleSozlukPage(w, r)
 	case seg == "arama":
 		s.handleSearch(w, r)
 	case seg == "yazarlar":
@@ -1149,7 +1153,7 @@ func (s *Server) handleSitemap(w http.ResponseWriter, r *http.Request) {
 	}
 	sb.WriteString(`<xhtml:link rel="alternate" hreflang="x-default" href="` + abs + `/"/></url>`)
 	// statik hizmet sayfaları
-	for _, p := range []string{"/bulten", "/ping", "/yazarlar", "/arsiv", "/borsa", "/etkinlikler", "/anketler", "/sinemalar", "/resmi-ilanlar", "/akis", "/nobetci-eczaneler", "/rss-listesi"} {
+	for _, p := range []string{"/bulten", "/ping", "/yazarlar", "/arsiv", "/borsa", "/etkinlikler", "/anketler", "/akis", "/rss-listesi", "/sozluk"} {
 		sb.WriteString("<url><loc>" + abs + p + "</loc></url>")
 	}
 	cs, _ := repo.ListCategories(ctx, s.pool, site.ID)
