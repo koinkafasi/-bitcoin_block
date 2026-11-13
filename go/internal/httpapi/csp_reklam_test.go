@@ -32,6 +32,9 @@ func TestCSPReklamAglariIzinli(t *testing.T) {
 		},
 		"frame-src": {
 			"request-global.czilladx.com", // reklam iframe'i
+			// Cointraffic izleyicisi kendi iframe'ini basiyor; eksikse canli
+			// konsolda "violates frame-src" hatasi cikiyordu (olculdu).
+			"apps.adsgravity.io",
 			"googleads.g.doubleclick.net",
 			"securepubads.g.doubleclick.net",
 		},

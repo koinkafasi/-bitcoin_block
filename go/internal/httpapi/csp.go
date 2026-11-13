@@ -358,7 +358,12 @@ func buildCSP(scriptHashes, styleHashes []string, collabURL, reportURL string) s
 		// Reklam iframe'leri (AdSense + Coinzilla)
 		"https://googleads.g.doubleclick.net https://tpc.googlesyndication.com " +
 		"https://securepubads.g.doubleclick.net https://coinzillatag.com " +
-		"https://request-global.czilladx.com; " +
+		// Cointraffic izleyicisi KENDI iframe'ini de basiyor (olcum 13 Kasim
+		// 2026, canli konsol): "Framing https://apps.adsgravity.io/ violates
+		// frame-src". Alan adi connect-src'de vardi, frame-src'de yoktu —
+		// reklami engellemiyordu ama her sayfa yuklemesinde ihlal raporu
+		// uretiyor ve olcum verisi kaybediyordu.
+		"https://request-global.czilladx.com https://apps.adsgravity.io; " +
 		"frame-ancestors 'self'; " +
 		"base-uri 'self'; " +
 		"form-action 'self'; " +
