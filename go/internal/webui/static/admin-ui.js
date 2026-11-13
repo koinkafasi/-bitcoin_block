@@ -493,9 +493,13 @@
       { id: 'gelir', label: 'Gelir',
         match: [/^\/admin\/reklamlar(\/|$)/, /^\/admin\/adsense(\/|$)/, /^\/admin\/raporlar(\/|$)/],
         items: [['Reklamlar', '/admin/reklamlar'], ['AdSense / GA', '/admin/adsense'], ['Raporlar', '/admin/raporlar']] },
+      // "Üretim Hattı" İLK SIRADA: hattın çalışıp çalışmadığı bu
+      // çalışma alanındaki diğer her şeyin ön koşulu. Yan menüye 12.
+      // madde eklemek yerine buraya kondu — menü bilerek 11 çalışma
+      // alanıyla sınırlı (docs/ADMIN-IA.md Faz A).
       { id: 'otomasyon', label: 'Otomasyon & AI',
-        match: [/^\/admin\/bot(\/|$)/, /^\/admin\/ai-kaynak(\/|$)/, /^\/admin\/servisler(\/|$)/, /^\/admin\/kumeler(\/|$)/, /^\/admin\/mahrecler(\/|$)/],
-        items: [['Bot / Haber Akışı', '/admin/bot'], ['AI Kaynak', '/admin/ai-kaynak'], ['Servisler', '/admin/servisler'], ['Konu Kümeleri', '/admin/kumeler'], ['Mahreçler', '/admin/mahrecler']] },
+        match: [/^\/admin\/uretim-hatti(\/|$)/, /^\/admin\/bot(\/|$)/, /^\/admin\/ai-kaynak(\/|$)/, /^\/admin\/servisler(\/|$)/, /^\/admin\/kumeler(\/|$)/, /^\/admin\/mahrecler(\/|$)/],
+        items: [['Üretim Hattı', '/admin/uretim-hatti'], ['Bot / Haber Akışı', '/admin/bot'], ['AI Kaynak', '/admin/ai-kaynak'], ['Servisler', '/admin/servisler'], ['Konu Kümeleri', '/admin/kumeler'], ['Mahreçler', '/admin/mahrecler']] },
       { id: 'sistem', label: 'Sistem',
         match: [/^\/admin\/ayarlar(\/|$)/, /^\/admin\/siteler(\/|$)/, /^\/admin\/bilesenler(\/|$)/, /^\/admin\/iletisim(\/|$)/],
         items: [['Ayarlar', '/admin/ayarlar'], ['İletişim & Form', '/admin/iletisim'], ['Siteler', '/admin/siteler'], ['Bileşenler', '/admin/bilesenler']] },
