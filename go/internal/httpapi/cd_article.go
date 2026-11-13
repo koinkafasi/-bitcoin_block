@@ -131,6 +131,18 @@ func (s *Server) cdMakaleGoster(w http.ResponseWriter, r *http.Request, c repo.C
 		v.Author = s.siteName
 	}
 	v.Dil = templkit.CDMakaleDilIcin(c.Locale)
+	// İÇERİK DİLİ BURADA, EN ERKEN NOKTADA kuruluyor.
+	//
+	// Eskiden v.Locale yalnız satır ~360'ta atanıyordu; makaleJSONLD ise
+	// satır ~300'de çağrılıyor. Yapısal veri boş locale görüp "tr"ye
+	// düşüyordu: üretimde ölçüldü, İngilizce sayfa <html lang="en"> ile
+	// basılıp inLanguage="tr" diyordu. Dili kullanan her şey bu satırın
+	// ALTINDA olmalı.
+	icerikDil := strings.TrimSpace(c.Locale)
+	if icerikDil == "" {
+		icerikDil = "tr"
+	}
+	v.Locale = icerikDil
 	if c.PublishedAt != nil {
 		v.PublishedAt = makaleTarih(*c.PublishedAt, c.Locale)
 		v.PublishedISO = c.PublishedAt.UTC().Format(time.RFC3339)
@@ -334,10 +346,6 @@ func (s *Server) cdMakaleGoster(w http.ResponseWriter, r *http.Request, c repo.C
 	// `t.Locale == "tr"` kontrolüne takılıp hiç basılmıyordu. Sonuç:
 	// karşılıklı olmayan hreflang (Google bunu bütünüyle yok sayar) ve
 	// İngilizce sayfada <html lang="tr">. 12 Kasım 2026'da ölçüldü.
-	icerikDil := strings.TrimSpace(c.Locale)
-	if icerikDil == "" {
-		icerikDil = "tr"
-	}
 	diller := map[string]string{icerikDil: v.Canonical}
 	if trs, err := repo.TranslationsOf(ctx, s.pool, c.TranslationRootID()); err == nil {
 		for _, t := range trs {
@@ -356,7 +364,7 @@ func (s *Server) cdMakaleGoster(w http.ResponseWriter, r *http.Request, c repo.C
 	}
 	v.PageCategory = "article_page"
 	v.ContentCategory = bolumSlug
-	v.Locale = icerikDil
+	// v.Locale yukarıda, JSON-LD üretiminden ÖNCE kuruldu.
 	v.ImageAlt = s.mediaAlt(ctx, c.CoverMediaID)
 	if v.ImageAlt == "" {
 		v.ImageAlt = s.mediaAlt(ctx, c.MansetMediaID)
