@@ -1577,6 +1577,20 @@ func cdAd(etiket string) templ.Component {
 //
 // `min-height` ÖLÇÜLEN yükseklik: reklam gelene kadar yer ayrılır, geldiğinde
 // sayfa sıçramaz (Core Web Vitals: CLS).
+//
+// `C-` ÖNEKİ + `coinzilla` SINIFI ZORUNLU (ölçüldü 13 Kasım 2026 — reklamın
+// görünmemesinin asıl sebebi buydu). Coinzilla kütüphanesi (display.js)
+// yuvayı şöyle buluyor:
+//
+//	var placeholder = document.getElementsByClassName("coinzilla");
+//	...
+//	if(placeholder[i].dataset.zone !== "C-" + args.zone) continue;
+//
+// Yani elemanda `coinzilla` SINIFI ve `data-zone="C-<zone>"` olmalı. İkisi
+// de eksikti: ağ isteği 200 dönüyor, reklam verisi geliyor, ama kütüphane
+// yuvayı bulamadığı için iframe hiç eklenmiyordu (sessiz başarısızlık).
+// Panel değeri `C-` önekiyle yapıştırılabildiği için doğrulama onu kırpıyor
+// (validReklamZone); önek BURADA, basım anında ekleniyor.
 func cdReklam(genislik, yukseklik int) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -1599,14 +1613,14 @@ func cdReklam(genislik, yukseklik int) templ.Component {
 		}
 		ctx = templ.ClearChildren(ctx)
 		if e := CDEntegrasyonOku(); e != nil && e.ReklamAktif && e.ReklamZone != "" {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 138, "<div class=\"cd-reklam\" data-zone=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 138, "<div class=\"cd-reklam coinzilla\" data-zone=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var75 string
-			templ_7745c5c3_Var75, templ_7745c5c3_Err = templ.ResolveAttributeValue(e.ReklamZone)
+			templ_7745c5c3_Var75, templ_7745c5c3_Err = templ.ResolveAttributeValue("C-" + e.ReklamZone)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_shell.templ`, Line: 642, Col: 49}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_shell.templ`, Line: 654, Col: 66}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var75)
 			if templ_7745c5c3_Err != nil {
@@ -1619,7 +1633,7 @@ func cdReklam(genislik, yukseklik int) templ.Component {
 			var templ_7745c5c3_Var76 string
 			templ_7745c5c3_Var76, templ_7745c5c3_Err = templ.ResolveAttributeValue(itoaT(genislik))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_shell.templ`, Line: 643, Col: 34}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_shell.templ`, Line: 655, Col: 34}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var76)
 			if templ_7745c5c3_Err != nil {
@@ -1632,7 +1646,7 @@ func cdReklam(genislik, yukseklik int) templ.Component {
 			var templ_7745c5c3_Var77 string
 			templ_7745c5c3_Var77, templ_7745c5c3_Err = templ.ResolveAttributeValue(itoaT(yukseklik))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_shell.templ`, Line: 643, Col: 70}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_shell.templ`, Line: 655, Col: 70}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var77)
 			if templ_7745c5c3_Err != nil {
@@ -1645,7 +1659,7 @@ func cdReklam(genislik, yukseklik int) templ.Component {
 			var templ_7745c5c3_Var78 string
 			templ_7745c5c3_Var78, templ_7745c5c3_Err = templruntime.SanitizeStyleAttributeValues("--cd-reklam-h: " + itoaT(yukseklik) + "px")
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_shell.templ`, Line: 644, Col: 54}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_shell.templ`, Line: 656, Col: 54}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var78))
 			if templ_7745c5c3_Err != nil {

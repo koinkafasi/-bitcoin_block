@@ -62,21 +62,22 @@
     betik('https://coinzillatag.com/lib/display.js');
 
     // Reklam yuvaları: .cd-reklam[data-zone] — yuva yoksa istek de yok.
+    //
+    // `C-` ÖNEKİ: kütüphane yuvayı `dataset.zone === "C-" + args.zone` ile
+    // arıyor, yani DOM'daki değer `C-` önekli olmalı; `push`'a verilen zone
+    // ise ÖNEKSİZ olmalı (get.php?z= parametresine ham değer gidiyor).
+    // Öneki burada kırpıyoruz (13 Kasım 2026: önek yokken yuva hiç
+    // bulunamıyordu, reklam görünmüyordu).
     var yuvalar = document.querySelectorAll('.cd-reklam[data-zone]');
     for (var i = 0; i < yuvalar.length; i++) {
       var y = yuvalar[i];
+      var hamZone = (y.getAttribute('data-zone') || '').replace(/^C-/, '');
       var genislik = parseInt(y.getAttribute('data-genislik') || '728', 10);
       var yukseklik = parseInt(y.getAttribute('data-yukseklik') || '90', 10);
       window.coinzilla_display.push({
-        zone: y.getAttribute('data-zone'),
+        zone: hamZone,
         width: genislik,
-        height: yukseklik,
-        // Coinzilla kendi seçicisiyle doldurur; yuvaya sınıf veriyoruz.
-        callback: (function (hedef) {
-          return function () {
-            hedef.setAttribute('data-reklam-yuklendi', '1');
-          };
-        })(y)
+        height: yukseklik
       });
     }
 
@@ -100,8 +101,11 @@
       for (var j = 0; j < yuvalar2.length; j++) {
         var y2 = yuvalar2[j];
         if (y2.getAttribute('data-reklam-yuklendi') === '1') continue;
-        // Coinzilla iframe ya da img basmışsa dolu say.
-        if (y2.querySelector('iframe, img, ins, div > *')) continue;
+        // Kütüphane dolduğunda `data-rendered="true"` işaretini koyar
+        // (kaynak: display.js — `placeholder[i].setAttribute("data-rendered","true")`).
+        if (y2.getAttribute('data-rendered') === 'true') continue;
+        // Ek güvence: iframe/img/ins basılmışsa dolu say.
+        if (y2.querySelector('iframe, img, ins')) continue;
         y2.setAttribute('data-reklam-bos', '1');
       }
     }, 5000);

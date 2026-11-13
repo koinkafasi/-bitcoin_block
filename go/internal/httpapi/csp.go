@@ -310,8 +310,13 @@ func buildCSP(scriptHashes, styleHashes []string, collabURL, reportURL string) s
 	// ölçümü: coinzillatag.com/lib/display.js, /lib/sticky.js ve
 	// appsha1.cointraffic.io/js "violates CSP directive" hatası).
 	// Kapsam DAR tutuldu: yalnız bu üç ağ + AdSense'in zorunlu uçları.
-	//   · Coinzilla : coinzillatag.com (display + sticky)
-	//   · Cointraffic: appsha1.cointraffic.io
+	//   · Coinzilla : coinzillatag.com (betikler) +
+	//                  request-global.czilladx.com (ASIL REKLAM İÇERİĞİ —
+	//                  ölçüldü 13 Kasım 2026: betikler yüklendiği hâlde
+	//                  reklam gelmiyordu çünkü asıl istek bu alan adına
+	//                  gidiyor ve connect-src'de yoktu)
+	//   · Cointraffic: appsha1.cointraffic.io (betik) +
+	//                  apps.adsgravity.io (izleyici/ölçüm uç noktası)
 	//   · AdSense    : pagead2/adservice/tpc/googletagservices,
 	//                  googleads.g.doubleclick.net, securepubads
 	scriptSrc += " https://coinzillatag.com https://appsha1.cointraffic.io" +
@@ -330,7 +335,10 @@ func buildCSP(scriptHashes, styleHashes []string, collabURL, reportURL string) s
 
 	connectSrc := "connect-src 'self' https://www.google-analytics.com https://region1.google-analytics.com https://cloudflareinsights.com" +
 		// Reklam ağlarının XHR/beacon uçları (ölçüm, kapatma, kalite).
-		" https://coinzillatag.com https://appsha1.cointraffic.io" +
+		// request-global.czilladx.com REKLAMIN KENDİSİNİ serve eder —
+		// eksik olduğu için reklam hiç gelmiyordu (canlı konsol, 13 Kasım).
+		" https://coinzillatag.com https://request-global.czilladx.com" +
+		" https://appsha1.cointraffic.io https://apps.adsgravity.io" +
 		" https://pagead2.googlesyndication.com https://googleads.g.doubleclick.net" +
 		" https://ep1.adtrafficquality.google https://ep2.adtrafficquality.google" +
 		" https://securepubads.g.doubleclick.net"
@@ -349,7 +357,8 @@ func buildCSP(scriptHashes, styleHashes []string, collabURL, reportURL string) s
 		"https://www.google.com https://www.googletagmanager.com https://cdn.ampproject.org https://search.google.com " +
 		// Reklam iframe'leri (AdSense + Coinzilla)
 		"https://googleads.g.doubleclick.net https://tpc.googlesyndication.com " +
-		"https://securepubads.g.doubleclick.net https://coinzillatag.com; " +
+		"https://securepubads.g.doubleclick.net https://coinzillatag.com " +
+		"https://request-global.czilladx.com; " +
 		"frame-ancestors 'self'; " +
 		"base-uri 'self'; " +
 		"form-action 'self'; " +

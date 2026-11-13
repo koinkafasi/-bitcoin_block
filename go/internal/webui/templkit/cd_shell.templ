@@ -637,9 +637,21 @@ templ cdAd(etiket string) {
 //
 // `min-height` ÖLÇÜLEN yükseklik: reklam gelene kadar yer ayrılır, geldiğinde
 // sayfa sıçramaz (Core Web Vitals: CLS).
+//
+// `C-` ÖNEKİ + `coinzilla` SINIFI ZORUNLU (ölçüldü 13 Kasım 2026 — reklamın
+// görünmemesinin asıl sebebi buydu). Coinzilla kütüphanesi (display.js)
+// yuvayı şöyle buluyor:
+//     var placeholder = document.getElementsByClassName("coinzilla");
+//     ...
+//     if(placeholder[i].dataset.zone !== "C-" + args.zone) continue;
+// Yani elemanda `coinzilla` SINIFI ve `data-zone="C-<zone>"` olmalı. İkisi
+// de eksikti: ağ isteği 200 dönüyor, reklam verisi geliyor, ama kütüphane
+// yuvayı bulamadığı için iframe hiç eklenmiyordu (sessiz başarısızlık).
+// Panel değeri `C-` önekiyle yapıştırılabildiği için doğrulama onu kırpıyor
+// (validReklamZone); önek BURADA, basım anında ekleniyor.
 templ cdReklam(genislik, yukseklik int) {
 	if e := CDEntegrasyonOku(); e != nil && e.ReklamAktif && e.ReklamZone != "" {
-		<div class="cd-reklam" data-zone={ e.ReklamZone }
+		<div class="cd-reklam coinzilla" data-zone={ "C-" + e.ReklamZone }
 			data-genislik={ itoaT(genislik) } data-yukseklik={ itoaT(yukseklik) }
 			style={ "--cd-reklam-h: " + itoaT(yukseklik) + "px" }
 			role="complementary" aria-label="Reklam">
