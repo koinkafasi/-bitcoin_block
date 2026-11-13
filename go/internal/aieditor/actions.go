@@ -6,10 +6,16 @@ import "strings"
 // artırılır ve ai_jobs/ai_usage_logs içinde saklanır.
 //
 // v3: konu bazlı uzunluk hedefi. v2'de "3 ile 8 arasında paragraf" sabit
-// bandı vardı ve model alt sınıra yapışıyordu; ölçümde haber medyanı 156
-// kelimeye düşmüştü (AI öncesi aynı sitede 486). Sürüm artırıldı ki
-// ai_usage_logs üzerinden öncesi/sonrası karşılaştırılabilsin.
-const PromptVersion = "ai-editor-v3"
+// bandı vardı ve model alt sınıra yapışıyordu.
+//
+// v4: bantlar AŞAĞI çekildi. v3'ün dayandığı ölçüm iki kat yüksekti
+// (jsonpath lax modu her metin düğümünü iki kez sayıyordu, bkz.
+// uzunluk.go); gerçek haber medyanı 486 değil 243, AI çıktısı 156
+// değil 78. Haber hedefi 450-700 iken 78'den 6-9 kat sıçrama
+// demekti ve üretimde içerik 10764 tam bu baskı altında 4 paragrafı
+// 12 kez tekrarladı. Yeni hedef 350-550.
+// Sürüm artırıldı ki ai_usage_logs üzerinden karşılaştırılabilsin.
+const PromptVersion = "ai-editor-v4"
 
 // Action AI editörünün tek bir eylemini tanımlar. Prompt'lar kodun farklı
 // yerlerine dağılmaz; bu kayıt defterinde tek yerde ve sürümle tutulur.

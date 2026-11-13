@@ -13,20 +13,36 @@ import (
 // "3 ile 8 arasında paragraf, her paragraf 2-4 cümle" diyordu ve model
 // her seferinde alt sınıra yapışıyordu (3 × 2 × ~20 = ~120 kelime).
 //
-// Bantlar uydurma değil, SİTENİN KENDİ tarihsel medyanlarından
-// türetildi (AI öncesi, yayında, özgün içerik):
+// ÖLÇÜM DÜZELTMESİ (13 Kasım 2026, aynı gün): ilk bantlar İKİ KAT
+// YÜKSEK sayılara dayanıyordu. Kullanılan sorgu
+// `jsonb_path_query_array(detail, '$.**.text')` idi; jsonpath LAX
+// modda diziyi otomatik açtığı için her metin düğümü İKİ KEZ
+// dönüyordu. `strict $.**.text` ile doğrulandı: Ghost'tan aktarılan
+// bir yazıda lax 5478, strict 2739 — strict değer kaynağın kendi
+// kelime sayısına birebir eşit.
 //
-//	haber          2592 içerik, medyan 486
-//	analiz          470 içerik, medyan 502
-//	basin-bulteni    23 içerik, medyan 640
-//	arastirma        74 içerik, medyan 756
-//	makale           54 içerik, medyan 856
-//	sponsorlu        11 içerik, medyan 1282
+// SİTENİN KENDİ MEDYANLARI (AI öncesi, yayında, özgün — DOĞRU sayım):
 //
-// HABER İÇİN 1500 KELİME HEDEFİ YANLIŞ OLURDU. Google'ın haber için
-// uzunluk ödülü yok; "yararlı içerik" değerlendirmesi dolgu metni
+//	haber          2592 içerik, medyan 243   (yanlış ölçümde 486)
+//	analiz          470 içerik, medyan 251
+//	basin-bulteni    23 içerik, medyan 320
+//	arastirma        74 içerik, medyan 378
+//	makale           54 içerik, medyan 428
+//	sponsorlu        11 içerik, medyan 641
+//	kategori learn   59 içerik, medyan 440
+//
+// AI sonrası haber medyanı: 78 kelime (yanlış ölçümde 156).
+//
+// BANTLAR NEDEN KENDİ MEDYANIMIZA EŞİT DEĞİL: hedef kendi geçmişimizi
+// tekrarlamak değil, arama sonuçlarında öne çıkmak. 243 kelime sektör
+// ölçüsünde de kısa. Ama 78'den 450-700'e atlamak 6-9 KAT demekti ve
+// kaynak RSS parçası bunu taşımıyor: üretimde içerik 10764 tam bu
+// baskı altında 4 paragrafı 12 kez tekrarladı. Bantlar bu yüzden
+// indirildi — ulaşılabilir ve kaynağın taşıyabileceği kadar.
+//
+// HABER İÇİN 1500 KELİME HEDEFİ YİNE YANLIŞ OLURDU. Google'ın haber
+// için uzunluk ödülü yok; "yararlı içerik" değerlendirmesi dolguyu
 // cezalandırıyor. 1500+ rehber ve sütun (pillar) sayfalarının bandı.
-// Haberde doğru hedef kendi ölçümüz: 450-700.
 const (
 	// UzunlukSapmaPayi doğrulayıcının uyarı vermeden önce tanıdığı pay.
 	// Hedef bir bant, çit değil: 700 kelime hedefinde 690 kelimelik
@@ -35,9 +51,13 @@ const (
 
 	// AltBaslikEsigi bu kelime sayısının üzerinde alt başlık beklenir.
 	// Ölçüm: son 30 günün 359 içeriğinden YALNIZ 4'ünde alt başlık var.
-	// 156 kelimede alt başlık gereksiz, ama 800+ kelimede metin duvarı
+	// 78 kelimede alt başlık gereksiz, ama 650+ kelimede metin duvarı
 	// hem okunmuyor hem öne çıkan snippet'e aday olmuyor.
-	AltBaslikEsigi = 800
+	//
+	// Eşik 800'den 650'ye indi: bantlar aşağı çekilince analiz ailesi
+	// (650-1000) eşiğin altında kalıyor ve başlıksız kalıyordu —
+	// oysa alt başlığa en çok o uzunluk ihtiyaç duyuyor.
+	AltBaslikEsigi = 650
 )
 
 // UzunlukHedefi bir içerik türünün gövde hedefidir.
@@ -75,12 +95,12 @@ func (h UzunlukHedefi) UstSinir() int {
 //
 // uzunlukBantlari tür anahtarına göre hedefler.
 var uzunlukBantlari = map[string]UzunlukHedefi{
-	"haber":         {Ad: "haber", MinKelime: 450, MaxKelime: 700, MinParagraf: 7, MaxParagraf: 16},
-	"analiz":        {Ad: "analiz", MinKelime: 800, MaxKelime: 1200, MinParagraf: 12, MaxParagraf: 24},
-	"arastirma":     {Ad: "araştırma", MinKelime: 1200, MaxKelime: 1800, MinParagraf: 17, MaxParagraf: 34},
-	"makale":        {Ad: "makale", MinKelime: 1200, MaxKelime: 2000, MinParagraf: 17, MaxParagraf: 36},
-	"basin-bulteni": {Ad: "basın bülteni", MinKelime: 350, MaxKelime: 600, MinParagraf: 5, MaxParagraf: 14},
-	"sponsorlu":     {Ad: "sponsorlu içerik", MinKelime: 800, MaxKelime: 1500, MinParagraf: 13, MaxParagraf: 28},
+	"haber":         {Ad: "haber", MinKelime: 350, MaxKelime: 550, MinParagraf: 6, MaxParagraf: 14},
+	"analiz":        {Ad: "analiz", MinKelime: 650, MaxKelime: 1000, MinParagraf: 10, MaxParagraf: 24},
+	"arastirma":     {Ad: "araştırma", MinKelime: 900, MaxKelime: 1400, MinParagraf: 13, MaxParagraf: 32},
+	"makale":        {Ad: "makale", MinKelime: 900, MaxKelime: 1500, MinParagraf: 13, MaxParagraf: 34},
+	"basin-bulteni": {Ad: "basın bülteni", MinKelime: 300, MaxKelime: 500, MinParagraf: 5, MaxParagraf: 12},
+	"sponsorlu":     {Ad: "sponsorlu içerik", MinKelime: 700, MaxKelime: 1200, MinParagraf: 11, MaxParagraf: 26},
 }
 
 // kategoriBantlari KATEGORİ bazlı geçersiz kılma.
@@ -90,33 +110,35 @@ var uzunlukBantlari = map[string]UzunlukHedefi{
 // "Kripto 101" kategorisine düşmüşse bu bir rehberdir; type_key bunu
 // söylemez, kategori söyler. Bu yüzden kategori tür anahtarını EZER.
 var kategoriBantlari = map[string]UzunlukHedefi{
-	// Rehber ve ansiklopedi: 1500+ bandının gerçek yeri. Ölçümde
-	// "Kripto 101" içeriklerinin medyanı 1440 kelime ve bunlar elle
-	// yazılmış, doğru uzunluktaki tek grup.
-	"learn":      {Ad: "rehber", MinKelime: 1500, MaxKelime: 2500, MinParagraf: 22, MaxParagraf: 45},
-	"kriptopedi": {Ad: "ansiklopedi maddesi", MinKelime: 1200, MaxKelime: 2200, MinParagraf: 19, MaxParagraf: 40},
-	"inceleme":   {Ad: "inceleme", MinKelime: 1200, MaxKelime: 2000, MinParagraf: 17, MaxParagraf: 36},
+	// Rehber ve ansiklopedi: uzun bandın gerçek yeri. Kategori ölçümü
+	// (DOĞRU sayım): learn medyanı 440 kelime / 59 içerik — sitenin en
+	// uzun yazı grubu. Hedef bunun üstünde: rehber sayfası tek
+	// oturumda soruyu kapatmalı.
+	"learn":      {Ad: "rehber", MinKelime: 1200, MaxKelime: 2000, MinParagraf: 18, MaxParagraf: 40},
+	"kriptopedi": {Ad: "ansiklopedi maddesi", MinKelime: 1000, MaxKelime: 1800, MinParagraf: 16, MaxParagraf: 34},
+	"inceleme":   {Ad: "inceleme", MinKelime: 900, MaxKelime: 1500, MinParagraf: 13, MaxParagraf: 34},
 
 	// Analiz ailesi.
-	"analiz":        {Ad: "analiz", MinKelime: 800, MaxKelime: 1200, MinParagraf: 12, MaxParagraf: 24},
-	"news-analysis": {Ad: "haber analizi", MinKelime: 800, MaxKelime: 1200, MinParagraf: 12, MaxParagraf: 24},
-	"fiyat-tahmini": {Ad: "fiyat analizi", MinKelime: 800, MaxKelime: 1400, MinParagraf: 12, MaxParagraf: 28},
+	"analiz":        {Ad: "analiz", MinKelime: 650, MaxKelime: 1000, MinParagraf: 10, MaxParagraf: 24},
+	"news-analysis": {Ad: "haber analizi", MinKelime: 650, MaxKelime: 1000, MinParagraf: 10, MaxParagraf: 24},
+	"fiyat-tahmini": {Ad: "fiyat analizi", MinKelime: 650, MaxKelime: 1100, MinParagraf: 10, MaxParagraf: 26},
 
 	// Araştırma ailesi.
-	"arastirma": {Ad: "araştırma", MinKelime: 1200, MaxKelime: 1800, MinParagraf: 17, MaxParagraf: 34},
-	"research":  {Ad: "araştırma", MinKelime: 1200, MaxKelime: 1800, MinParagraf: 17, MaxParagraf: 34},
+	"arastirma": {Ad: "araştırma", MinKelime: 900, MaxKelime: 1400, MinParagraf: 13, MaxParagraf: 32},
+	"research":  {Ad: "araştırma", MinKelime: 900, MaxKelime: 1400, MinParagraf: 13, MaxParagraf: 32},
 
-	// Görüş yazısı haberden uzun, analizden kısa. Ölçümde son 30 günün
-	// "opinion" içeriklerinin medyanı 462 — tek doğru uzunlukta çıkan
-	// AI grubu, çünkü köşe yazısı doğal olarak uzuyor.
-	"opinion": {Ad: "görüş yazısı", MinKelime: 600, MaxKelime: 1000, MinParagraf: 9, MaxParagraf: 20},
+	// Görüş yazısı haberden uzun, analizden kısa. Kategori medyanı 231
+	// (14 içerik); köşe yazısı doğal olarak uzadığı için hedef üstte.
+	"opinion": {Ad: "görüş yazısı", MinKelime: 500, MaxKelime: 850, MinParagraf: 8, MaxParagraf: 20},
 
-	// Bülten aileleri.
-	"basin-bulteni": {Ad: "basın bülteni", MinKelime: 350, MaxKelime: 600, MinParagraf: 5, MaxParagraf: 14},
-	"press-release": {Ad: "basın bülteni", MinKelime: 350, MaxKelime: 600, MinParagraf: 5, MaxParagraf: 14},
+	// Bülten aileleri. Kategori medyanı 320 — hedef ona yakın tutuldu:
+	// bülten kaynağı zaten kısa, uzatmak dolgu demek.
+	"basin-bulteni": {Ad: "basın bülteni", MinKelime: 300, MaxKelime: 500, MinParagraf: 5, MaxParagraf: 12},
+	"press-release": {Ad: "basın bülteni", MinKelime: 300, MaxKelime: 500, MinParagraf: 5, MaxParagraf: 12},
 
-	"sponsorlu":         {Ad: "sponsorlu içerik", MinKelime: 800, MaxKelime: 1500, MinParagraf: 13, MaxParagraf: 28},
-	"sponsored-content": {Ad: "sponsorlu içerik", MinKelime: 800, MaxKelime: 1500, MinParagraf: 13, MaxParagraf: 28},
+	// Kategori medyanı 641 — sitenin en uzun grubu, hedef hafif üstte.
+	"sponsorlu":         {Ad: "sponsorlu içerik", MinKelime: 700, MaxKelime: 1200, MinParagraf: 11, MaxParagraf: 26},
+	"sponsored-content": {Ad: "sponsorlu içerik", MinKelime: 700, MaxKelime: 1200, MinParagraf: 11, MaxParagraf: 26},
 }
 
 // uzunlukVarsayilan tanınmayan tür/kategori için haber bandı.

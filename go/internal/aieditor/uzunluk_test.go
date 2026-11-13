@@ -18,16 +18,16 @@ func TestUzunlukHedefiKategoriTuruEzer(t *testing.T) {
 		istekAd     string
 		altBaslikMi bool
 	}{
-		{"haber/politika → haber bandı", "haber", "policy", 450, "haber", false},
-		{"haber/learn → REHBER bandı", "haber", "learn", 1500, "rehber", true},
-		{"haber/kriptopedi → ansiklopedi", "haber", "kriptopedi", 1200, "ansiklopedi maddesi", true},
-		{"haber/analiz → analiz", "haber", "analiz", 800, "analiz", true},
-		{"haber/opinion → görüş", "haber", "opinion", 600, "görüş yazısı", false},
-		{"analiz/bilinmeyen → tür bandı", "analiz", "madencilik", 800, "analiz", true},
-		{"arastirma/yok → tür bandı", "arastirma", "", 1200, "araştırma", true},
-		{"basin-bulteni/press-release", "basin-bulteni", "press-release", 350, "basın bülteni", false},
-		{"ikisi de bilinmiyor → haber", "", "", 450, "haber", false},
-		{"büyük harf ve boşluk", " HABER ", " LEARN ", 1500, "rehber", true},
+		{"haber/politika → haber bandı", "haber", "policy", 350, "haber", false},
+		{"haber/learn → REHBER bandı", "haber", "learn", 1200, "rehber", true},
+		{"haber/kriptopedi → ansiklopedi", "haber", "kriptopedi", 1000, "ansiklopedi maddesi", true},
+		{"haber/analiz → analiz", "haber", "analiz", 650, "analiz", true},
+		{"haber/opinion → görüş", "haber", "opinion", 500, "görüş yazısı", false},
+		{"analiz/bilinmeyen → tür bandı", "analiz", "madencilik", 650, "analiz", true},
+		{"arastirma/yok → tür bandı", "arastirma", "", 900, "araştırma", true},
+		{"basin-bulteni/press-release", "basin-bulteni", "press-release", 300, "basın bülteni", false},
+		{"ikisi de bilinmiyor → haber", "", "", 350, "haber", false},
+		{"büyük harf ve boşluk", " HABER ", " LEARN ", 1200, "rehber", true},
 	}
 	for _, tt := range testler {
 		t.Run(tt.ad, func(t *testing.T) {
@@ -78,21 +78,21 @@ func TestUzunlukBantlariTutarli(t *testing.T) {
 	}
 }
 
-// 13 Kasım 2026 ölçümündeki gerçek durum: hat 156 kelime üretiyordu ve
+// 13 Kasım 2026 ölçümündeki gerçek durum: hat 78 kelime üretiyordu ve
 // eski eşik (700 karakter ≈ 100 kelime) bunu "yeterli" buluyordu, yani
 // hiç tetiklenmiyordu.
 func TestUzunlukUyarisiOlculenKisaMetniYakalar(t *testing.T) {
-	govde := strings.TrimSpace(strings.Repeat("kelime ", 156))
+	govde := strings.TrimSpace(strings.Repeat("kelime ", 78))
 	hedef := UzunlukHedefiIcin("haber", "policy")
 
 	u := uzunlukUyarilari(govde, hedef, false)
 	if len(u) == 0 {
-		t.Fatal("156 kelimelik haber uyarı üretmedi")
+		t.Fatal("78 kelimelik haber uyarı üretmedi")
 	}
-	if !strings.Contains(u[0], "156 kelime") {
+	if !strings.Contains(u[0], "78 kelime") {
 		t.Errorf("uyarı ölçülen sayıyı vermiyor: %q", u[0])
 	}
-	if !strings.Contains(u[0], "450-700") {
+	if !strings.Contains(u[0], "350-550") {
 		t.Errorf("uyarı hedefi vermiyor: %q", u[0])
 	}
 }
@@ -100,12 +100,12 @@ func TestUzunlukUyarisiOlculenKisaMetniYakalar(t *testing.T) {
 // Hedef bir bant, çit değil: sınıra yakın metin için uyarı gürültüdür.
 func TestUzunlukUyarisiSapmaPayi(t *testing.T) {
 	hedef := UzunlukHedefiIcin("haber", "")
-	// 450 * 0.85 = 382; 400 kelime payın içinde.
-	if u := uzunlukUyarilari(strings.Repeat("x ", 400), hedef, false); len(u) != 0 {
+	// 350 * 0.85 = 297; 320 kelime payın içinde.
+	if u := uzunlukUyarilari(strings.Repeat("x ", 320), hedef, false); len(u) != 0 {
 		t.Errorf("payın içindeki metin uyarı üretti: %v", u)
 	}
-	// 700 * 1.15 = 805; 750 kelime payın içinde.
-	if u := uzunlukUyarilari(strings.Repeat("x ", 750), hedef, false); len(u) != 0 {
+	// 550 * 1.15 = 632; 600 kelime payın içinde.
+	if u := uzunlukUyarilari(strings.Repeat("x ", 600), hedef, false); len(u) != 0 {
 		t.Errorf("üst payın içindeki metin uyarı üretti: %v", u)
 	}
 	// 1200 kelime haberde dolgu şüphesi.
@@ -170,7 +170,7 @@ func TestUzunlukBosGovdeSessiz(t *testing.T) {
 // JSON'una gömülü sayıyı yok sayıp alt sınıra yapışıyordu.
 func TestUzunlukPromptSatiri(t *testing.T) {
 	p := UzunlukHedefiIcin("haber", "learn").PromptSatiri()
-	for _, s := range []string{"HEDEF UZUNLUK", "rehber", "1500-2500 KELİME", "ALT BAŞLIK zorunlu", "DOLGU"} {
+	for _, s := range []string{"HEDEF UZUNLUK", "rehber", "1200-2000 KELİME", "ALT BAŞLIK zorunlu", "DOLGU"} {
 		if !strings.Contains(p, s) {
 			t.Errorf("prompt satırında %q yok:\n%s", s, p)
 		}
@@ -219,7 +219,7 @@ func TestUserPromptUzunlukHedefiniIcerir(t *testing.T) {
 	if iHedef > iTalimat {
 		t.Error("hedef bloğu editör talimatından SONRA basılmış")
 	}
-	if !strings.Contains(p, "1500-2500 KELİME") {
+	if !strings.Contains(p, "1200-2000 KELİME") {
 		t.Error("rehber bandı isteme girmemiş")
 	}
 }
