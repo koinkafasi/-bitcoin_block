@@ -4,12 +4,14 @@
 # erişilebilmesi için IMAGE_SVC_BIND / SEARCH_BIND = 0.0.0.0 veriliyor.
 # Varsayılan hâlâ 127.0.0.1, yani systemd altındaki yerel kurulum değişmedi.
 #
-# ÖNEMLİ — imaj etiketi: `${IMAJ_ETIKETI}` bir YER TUTUCUDUR, k8s onu
-# çözmez. Bu dosya `kubectl apply -f` ile DOĞRUDAN uygulanmaz; sevk
-# betiği yer tutucuyu doldurur:
+# İMAJ ETİKETİ: aşağıdaki değer bir TABANDIR, gerçek etiket
+# `kustomization.yaml` içindeki `images.newTag` alanından gelir ve orası
+# tek doğruluk kaynağıdır. Eskiden burada `${IMAJ_ETIKETI}` yer tutucusu
+# vardı ve dosya tek başına geçersizdi; Argo CD şablon okuyamadığı için
+# kaldırıldı.
 #
-#     bash deploy/scripts/k8s-sevk.sh            # HEAD commit'inin etiketi
-#     bash deploy/scripts/k8s-sevk.sh sha-abc1234
+#     kubectl apply -k deploy/k8s-bitcosar/     # Argo CD'nin yaptığı
+#     bash deploy/scripts/bitcosar-sevk.sh sha-abc1234   # elle sevk
 #
 # Neden `:latest` değil: `:latest` ile kümede hangi commit'in koştuğu
 # bilinemez, geri dönüş yapılamaz ve imaj taramasının anlamı kalmaz —
@@ -42,7 +44,7 @@ spec:
         seccompProfile: { type: RuntimeDefault }
       containers:
         - name: image-svc
-          image: ghcr.io/koinkafasi/theblock-image-svc:${IMAJ_ETIKETI}
+          image: ghcr.io/koinkafasi/theblock-image-svc:sha-fbf6801
           securityContext:
             allowPrivilegeEscalation: false
             # Salt-okunur kök; yazılabilir tek yol /tmp (emptyDir).
@@ -103,7 +105,7 @@ spec:
         seccompProfile: { type: RuntimeDefault }
       containers:
         - name: search-svc
-          image: ghcr.io/koinkafasi/theblock-search-svc:${IMAJ_ETIKETI}
+          image: ghcr.io/koinkafasi/theblock-search-svc:sha-fbf6801
           securityContext:
             allowPrivilegeEscalation: false
             # Salt-okunur kök. Tantivy indeksi /data/search-index (PVC),
@@ -163,7 +165,7 @@ spec:
         seccompProfile: { type: RuntimeDefault }
       containers:
         - name: collab
-          image: ghcr.io/koinkafasi/theblock-collab:${IMAJ_ETIKETI}
+          image: ghcr.io/koinkafasi/theblock-collab:sha-fbf6801
           securityContext:
             allowPrivilegeEscalation: false
             # Salt-okunur kök; Node'un yazdığı tek yol /tmp (emptyDir).

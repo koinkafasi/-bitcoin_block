@@ -224,3 +224,83 @@ jobs:
               --certificate-oidc-issuer "https://token.actions.githubusercontent.com" \
               "${{ env.REGISTRY }}/koinkafasi/theblock-$ad:$ETIKET"
           done
+
+  # GitOps halkasını kapatan iş: imaj basıldı VE imzası doğrulandı, artık
+  # kümenin hangi etiketi çalıştıracağı depoya yazılır. Argo CD bu
+  # commit'i görüp kümeyi eşitler.
+  #
+  # NEDEN `dogrula`YA BAĞLI: doğrulanmamış bir imajın etiketi depoya
+  # girerse Argo CD onu canlıya sürer ve Kyverno pod'u reddeder —
+  # yani site sessizce sevk edilemez hâle gelir. Sıra: bas → doğrula →
+  # YAZ.
+  etiket-yaz:
+    name: Etiketi depoya yaz (GitOps)
+    needs: [imaj, dogrula]
+    runs-on: ubuntu-latest
+    permissions:
+      # Tek yazma yetkisi burada ve yalnız içerik için.
+      contents: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.2.2
+        with:
+          ref: main
+          # Kimlik diske YAZILMASIN (zizmor `artipacked`). Varsayılan
+          # davranışta jeton .git/config'e gömülür ve işin SONRAKİ tüm
+          # adımları onu kullanabilir. Jetonu yalnız push adımına, yalnız
+          # o anda veriyoruz.
+          persist-credentials: false
+
+      - name: kustomization.yaml içindeki etiketi güncelle
+        id: yaz
+        run: |
+          set -euo pipefail
+          ETIKET="sha-${GITHUB_SHA::7}"
+          DOSYA="deploy/k8s-bitcosar/kustomization.yaml"
+
+          # Yalnız `newTag:` satırları değişir; başka hiçbir şeye
+          # dokunulmaz.
+          sed -i -E "s|^( *newTag: ).*|\1$ETIKET|" "$DOSYA"
+
+          if git diff --quiet -- "$DOSYA"; then
+            echo "degisti=hayir" >> "$GITHUB_OUTPUT"
+            echo "etiket zaten $ETIKET — commit yok"
+            exit 0
+          fi
+
+          # Kaç satır değişti: beklenen 4 (dört imaj).
+          echo "--- değişiklik ---"
+          git diff --stat -- "$DOSYA"
+          echo "degisti=evet" >> "$GITHUB_OUTPUT"
+          echo "etiket=$ETIKET" >> "$GITHUB_OUTPUT"
+
+      - name: Commit ve push
+        if: steps.yaz.outputs.degisti == 'evet'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          # Jeton yalnız burada, yalnız bu adımın ömrü boyunca.
+          # Runner günlüklerinde maskelenir.
+          git remote set-url origin \
+            "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          git add deploy/k8s-bitcosar/kustomization.yaml
+          # [skip ci]: bu commit yeni bir imaj hattı TETİKLEMEMELİ,
+          # yoksa her sevk kendini tetikleyen sonsuz döngüye girer.
+          git commit -m "sevk: imaj etiketi ${{ steps.yaz.outputs.etiket }} [skip ci]"
+
+          # YARIŞ KORUMASI: bu depoya birden çok kişi/ajan yazıyor.
+          # Araya giren bir commit push'u reddeder; rebase edip yeniden
+          # deneriz. Değiştirdiğimiz tek satır olduğu için rebase
+          # çakışma üretmez.
+          for deneme in 1 2 3; do
+            if git push origin main; then
+              echo "push tamam (deneme $deneme)"
+              exit 0
+            fi
+            echo "push reddedildi, rebase ediliyor (deneme $deneme)"
+            git pull --rebase origin main
+          done
+          echo "push 3 denemede başarısız" >&2
+          exit 1

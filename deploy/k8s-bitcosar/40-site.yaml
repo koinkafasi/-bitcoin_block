@@ -6,12 +6,14 @@
 #     trend, AI kuyruğu); iki kopya aynı işi iki kez yapar.
 # Ölçekleme istenirse işçiler ayrı bir Deployment'a alınmalı.
 #
-# ÖNEMLİ — imaj etiketi: `${IMAJ_ETIKETI}` bir YER TUTUCUDUR, k8s onu
-# çözmez. Bu dosya `kubectl apply -f` ile DOĞRUDAN uygulanmaz; sevk
-# betiği yer tutucuyu doldurur:
+# İMAJ ETİKETİ: aşağıdaki değer bir TABANDIR, gerçek etiket
+# `kustomization.yaml` içindeki `images.newTag` alanından gelir ve orası
+# tek doğruluk kaynağıdır. Eskiden burada `${IMAJ_ETIKETI}` yer tutucusu
+# vardı ve dosya tek başına geçersizdi; Argo CD şablon okuyamadığı için
+# kaldırıldı.
 #
-#     bash deploy/scripts/k8s-sevk.sh            # HEAD commit'inin etiketi
-#     bash deploy/scripts/k8s-sevk.sh sha-abc1234
+#     kubectl apply -k deploy/k8s-bitcosar/     # Argo CD'nin yaptığı
+#     bash deploy/scripts/bitcosar-sevk.sh sha-abc1234   # elle sevk
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -41,7 +43,7 @@ spec:
       # Şema göçü uygulamadan önce koşar; migrate binary'si aynı imajda.
       initContainers:
         - name: migrate
-          image: ghcr.io/koinkafasi/theblock-site:${IMAJ_ETIKETI}
+          image: ghcr.io/koinkafasi/theblock-site:sha-fbf6801
           command: ["/app/migrate"]
           securityContext:
             allowPrivilegeEscalation: false
@@ -61,7 +63,7 @@ spec:
             limits: { cpu: "1",  memory: 256Mi, ephemeral-storage: 1Gi }
       containers:
         - name: site
-          image: ghcr.io/koinkafasi/theblock-site:${IMAJ_ETIKETI}
+          image: ghcr.io/koinkafasi/theblock-site:sha-fbf6801
           securityContext:
             allowPrivilegeEscalation: false
             # Salt-okunur kök: imajın dosyaları çalışma anında değiştirilemez.

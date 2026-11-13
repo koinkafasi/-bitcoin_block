@@ -1,0 +1,50 @@
+# Kustomize giriş noktası — Argo CD BURAYI okur.
+#
+# NEDEN VAR: manifest'lerdeki imaj etiketi eskiden `${IMAJ_ETIKETI}`
+# yer tutucusuydu ve sevk anında `envsubst` ile basılıyordu. Argo CD
+# böyle bir şablonu okuyamaz; depoda duran YAML'ın TEK BAŞINA geçerli
+# olması gerekir. Bu yüzden etiket artık buradan, tek noktadan yönetiliyor.
+#
+# ETİKETİ KİM GÜNCELLER: `imaj.yml` iş akışı, imajı GHCR'a bastıktan
+# sonra aşağıdaki `newTag` alanlarını güncelleyip commit atar. Argo CD
+# bu commit'i görüp kümeyi eşitler. Yani "hangi imaj çalışıyor"
+# sorusunun cevabı git geçmişinde durur.
+#
+# ELLE SEVK HÂLÂ ÇALIŞIR: `bitcosar-sevk.sh <etiket>` bu dosyayı geçici
+# bir kopyada `kustomize edit set image` ile ezer; depodaki değer
+# değişmez. Acil geri dönüş yolu kapanmasın diye böyle.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: bitcosar-site
+
+# SIRA ÖNEMLİ: namespace önce, politika ve RBAC sonra, iş yükleri en son.
+# kustomize kendi sıralamasını uygular ama dosya sırası okunabilirlik
+# için korunuyor.
+resources:
+  - 00-namespace.yaml
+  - 05-kyverno.yaml
+  - 06-networkpolicy.yaml
+  - 07-rbac.yaml
+  - 10-pvc.yaml
+  - 20-postgres.yaml
+  - 21-redis.yaml
+  - 30-mikroservisler.yaml
+  - 40-site.yaml
+  - 50-ingress.yaml
+  - 60-yedek.yaml
+
+# İMAJ ETİKETLERİ — tek doğruluk kaynağı.
+#
+# `sha-` öneki ZORUNLU: Kyverno `:latest`i yasaklıyor (05-kyverno.yaml)
+# ve sevk tarafının tamamı bu konvansiyonda. 13 Kasım 2026'da imaj.yml
+# çıplak SHA basıyordu ve sevk `not found` ile düştü.
+images:
+  - name: ghcr.io/koinkafasi/theblock-site
+    newTag: sha-d313732
+  - name: ghcr.io/koinkafasi/theblock-image-svc
+    newTag: sha-d313732
+  - name: ghcr.io/koinkafasi/theblock-search-svc
+    newTag: sha-d313732
+  - name: ghcr.io/koinkafasi/theblock-collab
+    newTag: sha-d313732

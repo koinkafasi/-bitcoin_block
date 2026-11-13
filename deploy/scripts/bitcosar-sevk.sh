@@ -73,12 +73,53 @@ echo "==> imaj etiketi: $IMAJ_ETIKETI   namespace: $NS   ingress: $INGRESS"
 
 URETIM=$(mktemp -d)
 trap 'rm -rf "$URETIM"' EXIT
-for f in "$K8S"/*.yaml; do
-  envsubst '${IMAJ_ETIKETI}' < "$f" > "$URETIM/$(basename "$f")"
+
+# ETİKET ARTIK KUSTOMIZE İLE EZİLİYOR, envsubst ile DEĞİL.
+#
+# Manifest'lerde eskiden `${IMAJ_ETIKETI}` yer tutucusu vardı ve burada
+# envsubst ile dolduruluyordu. Argo CD şablon okuyamadığı için yer
+# tutucu kaldırıldı; etiket `kustomization.yaml` içindeki `newTag`
+# alanlarından geliyor (tek doğruluk kaynağı).
+#
+# BU BETİK ACİL GERİ DÖNÜŞ YOLUDUR ve çalışır kalmalı: geçici bir
+# kopyada `newTag` satırlarını istenen etikete çevirip uyguluyoruz.
+# DEPODAKİ dosya değişmez — yani elle yapılan acil sevk, Argo CD'nin
+# gördüğü hedefi sessizce kaydırmaz. (Argo CD selfHeal açıksa kümeyi
+# depodaki etikete geri çeker; acil sevk kalıcı olacaksa etiket depoya
+# da yazılmalı.)
+cp "$K8S"/*.yaml "$URETIM"/
+
+# Dosya dosya uygulama akışı korunuyor (Kyverno koşulu, sıra, rollout
+# beklemesi aşağıda dosya adlarına dayanıyor); bu yüzden kustomize'ı
+# çözmek yerine imaj satırlarını doğrudan eziyoruz. Sonuç aynı:
+# theblock-* imajları istenen etikete gider.
+EZILEN=0
+for f in "$URETIM"/*.yaml; do
+  [ "$(basename "$f")" = "kustomization.yaml" ] && continue
+  N=$(grep -cE '^[[:space:]]*image: ghcr\.io/koinkafasi/theblock-' "$f" || true)
+  [ "$N" -eq 0 ] && continue
+  sed -i -E "s|^([[:space:]]*image: ghcr\.io/koinkafasi/theblock-[a-z-]+):.*|\1:$ETIKET|" "$f"
+  EZILEN=$((EZILEN + N))
 done
-if grep -rn '\${IMAJ_ETIKETI}' "$URETIM"/*.yaml; then
-  echo "HATA: doldurulmamış yer tutucu kaldı." >&2; exit 1
+
+if [ "$EZILEN" -eq 0 ]; then
+  echo "HATA: hiçbir imaj satırı bulunamadı — manifest yapısı değişmiş." >&2
+  exit 1
 fi
+echo "==> $EZILEN imaj satırı $ETIKET olarak ezildi"
+
+# Ezilmemiş kalıntı var mı: yanlış etiketle sevk sessizce geçmesin.
+KALINTI=$(grep -rhE '^[[:space:]]*image: ghcr\.io/koinkafasi/theblock-' "$URETIM"/*.yaml \
+          | grep -v ":$ETIKET\$" || true)
+if [ -n "$KALINTI" ]; then
+  echo "HATA: bazı imaj satırları ezilmedi:" >&2
+  printf '%s\n' "$KALINTI" >&2
+  exit 1
+fi
+
+# kustomization.yaml'ı uygulama listesinden çıkar: bu betik dosyaları
+# tek tek `kubectl apply -f` ile basıyor, kustomization bir kaynak değil.
+rm -f "$URETIM/kustomization.yaml"
 if [ "$URET_ONLY" = 1 ]; then
   KAYIT="${URET_DIZIN:-$KOK/.k8s-uretim-bitcosar}"
   mkdir -p "$KAYIT"; cp "$URETIM"/*.yaml "$KAYIT"/

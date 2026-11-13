@@ -1,140 +1,218 @@
-# Kyverno — küme kapısı (admission control).
+# KYVERNO'NUN GHCR SECRET'INI OKUMA YETKİSİ.
 #
-# NEDEN GEREKLİ: `imaj.yml` imajı imzalıyor ve SBOM'u bağlıyor. Ama küme
-# bunu BİLMEZ — biri `kubectl apply` ile imzasız bir imaj sürerse pod
-# kalkar. Kyverno, imza doğrulamasını KÜMEYE taşır: imzasız/digest'siz
-# imaj reddedilir. Yani "imzaladık" iddiası ancak burada anlam kazanır.
+# İmza doğrulaması imajın manifest'ini GHCR'dan okumayı gerektiriyor ve
+# paketler private. Kyverno kimliği POLİTİKANIN namespace'inden alır;
+# secret burada zaten var ama Kyverno onu okuyamıyordu:
 #
-# KURULUM (bir kez):
-#   helm repo add kyverno https://kyverno.github.io/kyverno/
-#   helm repo update
-#   helm install kyverno kyverno/kyverno -n kyverno --create-namespace \
-#     --set replicas=1 --version 3.4.4
+#   secrets "ghcr" is forbidden: User
+#   "system:serviceaccount:kyverno:kyverno-admission-controller"
+#   cannot get resource "secrets" ... in the namespace "bitcosar-site"
 #
-# SONRA: kubectl apply -f deploy/k8s/05-kyverno.yaml
-#
-# POLİTİKA MODU: `Enforce`. Önce `Audit` ile bir hafta izlemek isteyen
-# `validationFailureAction` alanını `Audit` yapsın — ama bu depo tek kişilik
-# ve imaj hattı ZATEN imzalıyor, bu yüzden doğrudan Enforce.
+# Yetki BİLEREK DAR: yalnız `ghcr` adlı secret, yalnız `get`. Kyverno'ya
+# namespace'in tüm secret'larını (bitcosar-env, pg-tls) okutmanın gereği
+# yok.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: kyverno-ghcr-okuma
+  namespace: bitcosar-site
+rules:
+  - apiGroups: [""]
+    resources: ["secrets"]
+    resourceNames: ["ghcr"]
+    verbs: ["get"]
 ---
-apiVersion: kyverno.io/v1
-kind: ClusterPolicy
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: kyverno-ghcr-okuma
+  namespace: bitcosar-site
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: kyverno-ghcr-okuma
+subjects:
+  # admission: pod kabul anında doğrular (asıl kapı).
+  - kind: ServiceAccount
+    name: kyverno-admission-controller
+    namespace: kyverno
+  # reports/background: arka planda mevcut pod'ları yeniden değerlendirir;
+  # yetkisiz kalırsa raporlar "hata" dolar ve gerçek ihlal görünmez olur.
+  - kind: ServiceAccount
+    name: kyverno-reports-controller
+    namespace: kyverno
+  - kind: ServiceAccount
+    name: kyverno-background-controller
+    namespace: kyverno
+---
+# GÜVENLİK POLİTİKALARI — admission kapısı.
+#
+# CI'daki imza ve tarama kapıları, imaj kümeye BAŞKA bir yoldan girerse
+# kalkar. Kyverno, imza doğrulamasını KÜMEYE taşır: imzasız/digest'siz
+# imaj pod olarak ayağa kalkamaz.
+#
+# ───────────────────────────────────────────────────────────────────
+# API GÖÇÜ (13 Kasım 2026): kyverno.io/v1 ClusterPolicy -> policies.kyverno.io/v1
+#
+# Bu dosya eskiden `kyverno.io/v1 ClusterPolicy` kullanıyordu. Kyverno
+# v1.20 o tipin ÇALIŞTIRILMASINI tümden kaldırdı; API yalnız okuma ve
+# silme için duruyor. Uygulamaya çalışınca webhook reddediyor:
+#
+#   "Kyverno v1.20 removed execution of legacy kyverno.io policy types
+#    and no longer accepts create or update requests for them"
+#
+# Bu dosya o yüzden CEL tabanlı yeni tiplere taşındı. Tipler v1.20'de
+# Stable ve kümede doğrulandı (`kubectl api-resources`).
+#
+# NOT — bu politikalar BUGÜNE KADAR HİÇ ÇALIŞMADI: Kyverno kümeye hiç
+# kurulmamıştı. `bitcosar-sevk.sh:102` CRD yokluğunu sessizce geçip
+# "Kyverno kurulu değil — imza zorunluluğu AKTİF DEĞİL" basıyordu.
+# 13 Kasım 2026'da Kyverno v1.20 kuruldu ve kapı ilk kez devreye girdi.
+#
+# KAPSAM: üçü de `bitcosar-site` namespace'ine bağlı (Namespaced* tipler).
+# Pod'lara uygulanır — Deployment/StatefulSet/CronJob'ların ürettiği
+# pod'lar admission'dan geçtiği için kapsam tamdır.
+# ───────────────────────────────────────────────────────────────────
+apiVersion: policies.kyverno.io/v1
+kind: NamespacedImageValidatingPolicy
 metadata:
   name: bitcosar-imza-zorunlu
+  namespace: bitcosar-site
   annotations:
     policies.kyverno.io/title: İmzalı imaj zorunlu
     policies.kyverno.io/description: >-
-      bitcosar-* imajları cosign keyless imzalı olmalı. İmzasız imaj pod
+      theblock-* imajları cosign keyless imzalı olmalı. İmzasız imaj pod
       olarak kalkamaz; imza GitHub Actions OIDC kimliğiyle doğrulanır.
 spec:
-  validationFailureAction: Enforce
-  background: true
-  rules:
-    - name: cosign-imza-dogrula
-      match:
-        any:
-          - resources:
-              kinds: [Pod]
-              namespaces: [bitcosar-site]
-      verifyImages:
-        - imageReferences:
-            - "ghcr.io/koinkafasi/theblock-*"
-          # SBOM attestation'ı da bu anahtarla imzalandı; `mutateDigest`
-          # etiketi digest'e çevirir, yani kümede ÇALIŞAN imaj tam olarak
-          # imzalanan baytlardır.
-          mutateDigest: true
-          verifyDigest: true
-          required: true
-          attestors:
-            - entries:
-                - keyless:
-                    # İmzanın hangi iş akışından geldiği: yalnız `main`
-                    # dalındaki `imaj.yml`. Başka bir workflow imzalarsa
-                    # (ör. bir PR) küme kabul etmez.
-                    subject: "https://github.com/koinkafasi/-bitcoin_block/.github/workflows/imaj.yml@refs/heads/main"
-                    issuer: "https://token.actions.githubusercontent.com"
-                    rekor:
-                      url: https://rekor.sigstore.dev
+  # Eski karşılığı: validationFailureAction: Enforce
+  validationActions: [Deny]
+  matchConstraints:
+    resourceRules:
+      - apiGroups: [""]
+        apiVersions: ["v1"]
+        operations: ["CREATE", "UPDATE"]
+        resources: ["pods"]
+  matchImageReferences:
+    - glob: "ghcr.io/koinkafasi/theblock-*"
+  # KAYIT DEFTERİ KİMLİĞİ — ZORUNLU, çünkü paketler PRIVATE.
+  #
+  # Kyverno imzayı doğrulamak için imajın manifest'ini GHCR'dan okumak
+  # zorunda. Kimlik olmadan şu hatayı veriyor ve pod'u REDDEDİYOR:
+  #
+  #   failed to resolve digest for ghcr.io/koinkafasi/theblock-site:...
+  #   UNAUTHORIZED: authentication required
+  #
+  # 13 Kasım 2026'da ölçüldü: kimlik verilmeden Enforce açılınca
+  # bitcosar-site'ta HİÇBİR yeni pod ayağa kalkamıyor (çalışanlar
+  # etkilenmiyor, ama bir pod çökerse geri gelmiyor).
+  #
+  # Secret POLİTİKANIN namespace'inde aranır (bitcosar-site), Kyverno'nun
+  # kendi namespace'inde değil. Orada zaten var (pod'lar da onunla
+  # çekiyor), ama Kyverno'nun OKUMA YETKİSİ yok — bu yüzden aşağıda dar
+  # kapsamlı bir Role tanımlı.
+  credentials:
+    secrets:
+      - ghcr
+  attestors:
+    - name: cosign
+      cosign:
+        keyless:
+          identities:
+            # İmzanın hangi iş akışından geldiği: yalnız `main` dalındaki
+            # `imaj.yml`. Başka bir workflow imzalarsa (ör. bir PR) küme
+            # kabul etmez.
+            - subject: "https://github.com/koinkafasi/-bitcoin_block/.github/workflows/imaj.yml@refs/heads/main"
+              issuer: "https://token.actions.githubusercontent.com"
+        # Eski `rekor.url` alanının yeni adı.
+        ctlog:
+          url: "https://rekor.sigstore.dev"
+  validationConfigurations:
+    # `mutateDigest` etiketi digest'e çevirir, yani kümede ÇALIŞAN imaj
+    # tam olarak imzalanan baytlardır.
+    mutateDigest: true
+    verifyDigest: true
+    required: true
+  validations:
+    - expression: >-
+        images.containers.map(image, verifyImageSignatures(image, [attestors.cosign])).all(e, e > 0)
+      message: "İmaj imzası doğrulanamadı (cosign keyless, imaj.yml@main)."
 ---
 # Etiket zorunlu: `:latest` yasak. Kimin koştuğu bilinmeyen imaj, geri
 # dönülemeyen ve taranamayan imajdır (bkz. deploy/scripts/k8s-sevk.sh
 # başındaki uzun not — bu tam olarak bir kez yaşandı).
-apiVersion: kyverno.io/v1
-kind: ClusterPolicy
+apiVersion: policies.kyverno.io/v1
+kind: NamespacedValidatingPolicy
 metadata:
   name: bitcosar-latest-yasak
+  namespace: bitcosar-site
   annotations:
     policies.kyverno.io/title: ":latest yasak"
     policies.kyverno.io/description: >-
       bitcosar imajları sürüm etiketi ya da digest ile gelmeli. `latest`
       geri dönüşü ve imaj taramasını anlamsız kılar.
 spec:
-  validationFailureAction: Enforce
-  background: true
-  rules:
-    - name: latest-kullanma
-      match:
-        any:
-          - resources:
-              kinds: [Pod]
-              namespaces: [bitcosar-site]
-      validate:
-        message: "':latest' etiketi yasak — sürüm etiketi (sha-abc1234) veya digest kullanın."
-        pattern:
-          spec:
-            containers:
-              - image: "!*:latest"
-            # initContainers da aynı kurala tabi (migrate initContainer'ı
-            # da imaj çeker; atlanırsa kapı delinir).
-            initContainers:
-              - image: "!*:latest"
+  validationActions: [Deny]
+  matchConstraints:
+    resourceRules:
+      - apiGroups: [""]
+        apiVersions: ["v1"]
+        operations: ["CREATE", "UPDATE"]
+        resources: ["pods"]
+  validations:
+    # initContainers da aynı kurala tabi (migrate initContainer'ı da imaj
+    # çeker; atlanırsa kapı delinir). `has()` koruması şart: alan yoksa
+    # CEL ifadesi hata verir ve politika pod'u yanlışlıkla reddeder.
+    - expression: >-
+        object.spec.containers.all(c, !c.image.endsWith(':latest')) &&
+        (!has(object.spec.initContainers) ||
+         object.spec.initContainers.all(c, !c.image.endsWith(':latest')))
+      message: "':latest' etiketi yasak — sürüm etiketi (sha-abc1234) veya digest kullanın."
 ---
 # Ayrıcalık yükseltme ve root yasak — manifest yanlışlıkla gelirse küme
 # reddeder. Mevcut manifest'ler bunu zaten sağlıyor; politika, gelecekte
 # eklenecek bir pod'un sessizce gevşetmesini engeller.
-apiVersion: kyverno.io/v1
-kind: ClusterPolicy
+apiVersion: policies.kyverno.io/v1
+kind: NamespacedValidatingPolicy
 metadata:
   name: bitcosar-pod-sertlestirme
+  namespace: bitcosar-site
   annotations:
     policies.kyverno.io/title: Pod sertleştirme tabanı
     policies.kyverno.io/description: >-
-      root yasak, ayrıcalık yükseltme yasak, tüm yetenekler düşürülmeli,
-      salt-okunur kök dosya sistemi. PSS `restricted` seviyesinin
+      root yasak, ayrıcalık yükseltme yasak. PSS `restricted` seviyesinin
       zorunlu kısmı.
 spec:
-  validationFailureAction: Enforce
-  background: true
-  rules:
-    - name: root-yasak
-      match:
-        any:
-          - resources:
-              kinds: [Pod]
-              namespaces: [bitcosar-site]
-      validate:
-        message: "Pod root olarak çalışamaz (runAsNonRoot: true veya runAsUser > 0)."
-        anyPattern:
-          - spec:
-              securityContext:
-                runAsNonRoot: true
-          - spec:
-              securityContext:
-                runAsUser: ">0"
-          - spec:
-              containers:
-                - securityContext:
-                    runAsNonRoot: true
-    - name: ayricalik-yukseltme-yasak
-      match:
-        any:
-          - resources:
-              kinds: [Pod]
-              namespaces: [bitcosar-site]
-      validate:
-        message: "allowPrivilegeEscalation: false zorunlu."
-        pattern:
-          spec:
-            containers:
-              - securityContext:
-                  allowPrivilegeEscalation: false
+  validationActions: [Deny]
+  matchConstraints:
+    resourceRules:
+      - apiGroups: [""]
+        apiVersions: ["v1"]
+        operations: ["CREATE", "UPDATE"]
+        resources: ["pods"]
+  validations:
+    # Üç kabul edilir biçim (eski `anyPattern` karşılığı): pod düzeyinde
+    # runAsNonRoot, pod düzeyinde runAsUser>0, ya da TÜM konteynerlerde
+    # container düzeyinde runAsNonRoot.
+    - expression: >-
+        (has(object.spec.securityContext) &&
+         has(object.spec.securityContext.runAsNonRoot) &&
+         object.spec.securityContext.runAsNonRoot == true) ||
+        (has(object.spec.securityContext) &&
+         has(object.spec.securityContext.runAsUser) &&
+         object.spec.securityContext.runAsUser > 0) ||
+        object.spec.containers.all(c,
+          has(c.securityContext) &&
+          has(c.securityContext.runAsNonRoot) &&
+          c.securityContext.runAsNonRoot == true)
+      message: "Pod root olarak çalışamaz (runAsNonRoot: true veya runAsUser > 0)."
+    - expression: >-
+        object.spec.containers.all(c,
+          has(c.securityContext) &&
+          has(c.securityContext.allowPrivilegeEscalation) &&
+          c.securityContext.allowPrivilegeEscalation == false) &&
+        (!has(object.spec.initContainers) ||
+         object.spec.initContainers.all(c,
+           has(c.securityContext) &&
+           has(c.securityContext.allowPrivilegeEscalation) &&
+           c.securityContext.allowPrivilegeEscalation == false))
+      message: "allowPrivilegeEscalation: false zorunlu."

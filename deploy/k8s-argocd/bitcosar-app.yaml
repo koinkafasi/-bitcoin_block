@@ -1,0 +1,82 @@
+# ARGO CD UYGULAMASI — bitcosar-site'ın GitOps tanımı.
+#
+# NE DEĞİŞTİ: eskiden sevk elle yapılıyordu
+# (`bash deploy/scripts/bitcosar-sevk.sh sha-XXXX`). Artık `main`'e
+# giren commit kümeye kendiliğinden iniyor; "kümede ne çalışıyor"
+# sorusunun cevabı git geçmişinde duruyor.
+#
+# NEDEN GEREKLİ OLDU: 13 Kasım 2026'da CI'nin bastığı etiket
+# (`fbf6801`) ile sevk betiğinin aradığı etiket (`sha-fbf6801`)
+# uyuşmadı ve sevk ImagePullBackOff ile düştü. İki ayrı yerde elle
+# tutulan "hangi imaj" bilgisi kaçınılmaz olarak ayrışıyor. Tek kaynak:
+# kustomization.yaml.
+#
+# Bu dosya Argo CD'nin KENDİSİ tarafından yönetilmiyor (bootstrap);
+# elle uygulanır:
+#   kubectl apply -f deploy/k8s-argocd/bitcosar-app.yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: bitcosar-site
+  namespace: argocd
+  finalizers:
+    # Uygulama silinirse kümedeki kaynaklar da temizlensin; yoksa
+    # yetim kaynaklar kalır ve kimse onları yönetmez.
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+
+  source:
+    repoURL: https://github.com/koinkafasi/-bitcoin_block.git
+    targetRevision: main
+    path: deploy/k8s-bitcosar
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: bitcosar-site
+
+  syncPolicy:
+    automated:
+      # Depodan silinen kaynak kümeden de silinir. Tam GitOps: depo
+      # neyse küme o. Yanlışlıkla silinen bir dosya canlıdan kaynak
+      # siler — bilinçli bir seçim.
+      prune: true
+      # Elle yapılan `kubectl edit` geri alınır. Bunun olmaması
+      # "kümede ne çalışıyor" sorusunu yine belirsizleştirirdi.
+      selfHeal: true
+    syncOptions:
+      # Namespace'i Argo CD oluşturmaz: 00-namespace.yaml zaten
+      # kaynaklar arasında ve PSS etiketlerini o taşıyor.
+      - CreateNamespace=false
+      # Sunucu tarafı uygulama: büyük CRD'lerde `kubectl apply`ın
+      # 262144 baytlık annotation sınırına takılmayı önler (Argo CD
+      # kurulumunda tam olarak bu yaşandı).
+      - ServerSideApply=true
+      # Yalnız gerçekten değişen kaynaklar güncellenir.
+      - ApplyOutOfSyncOnly=true
+    retry:
+      limit: 3
+      backoff:
+        duration: 20s
+        factor: 2
+        maxDuration: 3m
+
+  # GÜRÜLTÜ BASTIRMA — bunlar olmadan uygulama sürekli "OutOfSync"
+  # görünür ve gerçek sapma fark edilmez.
+  ignoreDifferences:
+    # Kyverno `mutateDigest: true` ile imaj etiketini digest'e çeviriyor
+    # (05-kyverno.yaml). Yani kümede ÇALIŞAN imaj depodakinden FARKLI
+    # yazılır ve bu İSTENEN davranıştır: çalışan imaj tam olarak
+    # imzalanan baytlardır. Argo CD bunu sapma saymamalı.
+    - group: apps
+      kind: Deployment
+      namespace: bitcosar-site
+      jqPathExpressions:
+        - ".spec.template.spec.containers[].image"
+        - ".spec.template.spec.initContainers[].image"
+    # HPA yoksa da replica sayısına dokunma: ölçekleme kararı
+    # manifest'te değil, işletmede verilebiliyor.
+    - group: apps
+      kind: Deployment
+      jsonPointers:
+        - /spec/replicas
