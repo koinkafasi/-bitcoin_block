@@ -2192,13 +2192,32 @@ html.cd-ozet-kilit body { overflow: hidden; }
   color: var(--cd-fg);
 }
 .cd-footer__sosyal a:hover { color: var(--cd-muted); }
+
+/* DMCA rozeti — ayırma çizgisinden sonraki bant, sağ alt köşe (13 Kasım 2026).
+   Sol sütunda telif/feragat satırları var, sağ sütun boştu. Rozet `end` ile
+   alt satırın tabanına hizalanıyor; `line-height: 0` olmadan <a> satır kutusu
+   görselin altına 3-4 px boşluk ekleyip hizayı kaydırıyor. */
+.cd-footer__dmca {
+  justify-self: end;
+  align-self: end;
+  display: inline-flex;
+  line-height: 0;
+}
+.cd-footer__dmca img { display: block; width: 121px; height: 24px; }
+.cd-footer__dmca:hover { opacity: 0.85; }
 .cd-footer__alt {
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 16px 24px;
   font-size: 12px;
   line-height: 21px;
   color: var(--cd-muted);
+}
+.cd-footer__alt-metin {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
 }
 
 .cd-mod {
@@ -2514,8 +2533,11 @@ html.cd-ozet-kilit body { overflow: hidden; }
   
   .cd-blok__ic { grid-template-columns: minmax(0, 1fr); }
   .cd-footer__cols { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .cd-list__time { width: 74px; }
+
+  /* Dar ekranda rozet metnin altına iniyor, sağ kenara yaslı kalıyor. */
+  .cd-footer__alt { grid-template-columns: minmax(0, 1fr); }
   
+  .cd-list__time { width: 74px; }
   .cd-ticker { position: static; }
   html { scroll-padding-top: calc(var(--cd-header-h) + 8px); }
 

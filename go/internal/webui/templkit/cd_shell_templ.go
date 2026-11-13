@@ -1412,7 +1412,7 @@ func cdFooter(s CDShell) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 129, "</div><hr><div class=\"cd-footer__yasal\"><div class=\"cd-footer__yasal-sol\"><a href=\"/gizlilik-politikasi\">Gizlilik</a> <a href=\"/kullanim-kosullari\">Kullanım Koşulları</a> <a href=\"/cerez-politikasi\">Çerez Politikası</a> <a href=\"/reklam-politikasi\">Reklam Politikası</a> <a href=\"/iletisim\">İletişim</a> <a href=\"/rss.xml\">RSS</a></div><div class=\"cd-footer__sosyal\"><a href=\"https://x.com/bitcosar\" rel=\"noopener nofollow\" aria-label=\"X\"><svg viewBox=\"0 0 24 24\" width=\"16\" height=\"16\" fill=\"currentColor\" aria-hidden=\"true\" focusable=\"false\"><path d=\"M18.9 2H22l-7.1 8.1L23 22h-6.6l-5.2-6.8L5.2 22H2l7.6-8.7L1.6 2h6.8l4.7 6.2L18.9 2zm-1.1 18h1.8L6.3 3.8H4.4L17.8 20z\"></path></svg></a> <a href=\"https://facebook.com/bitcosar\" rel=\"noopener nofollow\" aria-label=\"Facebook\"><svg viewBox=\"0 0 24 24\" width=\"24\" height=\"24\" fill=\"currentColor\" aria-hidden=\"true\" focusable=\"false\"><path d=\"M13.5 22v-8h2.7l.4-3.1h-3.1V8.9c0-.9.3-1.5 1.6-1.5h1.7V4.6c-.3 0-1.3-.1-2.5-.1-2.5 0-4.2 1.5-4.2 4.3v2.1H7.4V14h2.7v8h3.4z\"></path></svg></a> <a href=\"https://linkedin.com/company/bitcosar\" rel=\"noopener nofollow\" aria-label=\"LinkedIn\"><svg viewBox=\"0 0 24 24\" width=\"24\" height=\"24\" fill=\"currentColor\" aria-hidden=\"true\" focusable=\"false\"><path d=\"M6.9 8.6v11.5H3.2V8.6h3.7zM5 3.2a2.1 2.1 0 110 4.3 2.1 2.1 0 010-4.3zM20.8 20.1h-3.7v-6.2c0-1.5-.5-2.5-1.8-2.5-1 0-1.6.7-1.9 1.4-.1.2-.1.6-.1.9v6.4H9.6s.1-10.4 0-11.5h3.7v1.6c.5-.8 1.4-1.9 3.4-1.9 2.5 0 4.1 1.6 4.1 5.1v6.7z\"></path></svg></a> <a href=\"/rss.xml\" aria-label=\"RSS\"><svg viewBox=\"0 0 24 24\" width=\"22\" height=\"22\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" aria-hidden=\"true\" focusable=\"false\"><circle cx=\"5\" cy=\"19\" r=\"1.6\" fill=\"currentColor\" stroke=\"none\"></circle> <path d=\"M4 11a9 9 0 019 9M4 5a15 15 0 0115 15\"></path></svg></a> <a href=\"https://instagram.com/bitcosar\" rel=\"noopener nofollow\" aria-label=\"Instagram\"><svg viewBox=\"0 0 24 24\" width=\"22\" height=\"22\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" aria-hidden=\"true\" focusable=\"false\"><rect x=\"3\" y=\"3\" width=\"18\" height=\"18\" rx=\"5\"></rect> <circle cx=\"12\" cy=\"12\" r=\"4\"></circle> <circle cx=\"17.2\" cy=\"6.8\" r=\"1.1\" fill=\"currentColor\" stroke=\"none\"></circle></svg></a> <a href=\"https://youtube.com/@bitcosar\" rel=\"noopener nofollow\" aria-label=\"YouTube\"><svg viewBox=\"0 0 24 24\" width=\"24\" height=\"24\" fill=\"currentColor\" aria-hidden=\"true\" focusable=\"false\"><path d=\"M21.6 7.2a2.5 2.5 0 00-1.8-1.8C18.2 5 12 5 12 5s-6.2 0-7.8.4a2.5 2.5 0 00-1.8 1.8A26 26 0 002 12a26 26 0 00.4 4.8 2.5 2.5 0 001.8 1.8C5.8 19 12 19 12 19s6.2 0 7.8-.4a2.5 2.5 0 001.8-1.8A26 26 0 0022 12a26 26 0 00-.4-4.8zM10 15.2V8.8l5.5 3.2L10 15.2z\"></path></svg></a> <a href=\"https://t.me/bitcosar\" rel=\"noopener nofollow\" aria-label=\"Telegram\"><svg viewBox=\"0 0 24 24\" width=\"24\" height=\"24\" fill=\"currentColor\" aria-hidden=\"true\" focusable=\"false\"><path d=\"M21.9 4.3L18.8 19c-.2 1-.9 1.3-1.8.8l-4.9-3.6-2.4 2.3c-.3.3-.5.5-1 .5l.4-5 9.1-8.2c.4-.4-.1-.6-.6-.2L6.4 12.4 1.5 10.9c-1.1-.3-1.1-1.1.2-1.6l19-7.3c.9-.3 1.7.2 1.2 2.3z\"></path></svg></a></div></div><hr><div class=\"cd-footer__alt\"><span>© 2026 bitcosar — Tüm hakları saklıdır.</span> <span>Kaynaklar atıf ile gösterilir; tam metin yayınlanmaz.</span></div><div class=\"cd-tuzak\" aria-hidden=\"true\"><a href=\"/arsiv/dizin\" rel=\"nofollow\" tabindex=\"-1\">Arşiv dizini</a> <a href=\"/gizli-dizin\" rel=\"nofollow\" tabindex=\"-1\">Tüm arşiv</a> <a href=\"/tum-haberler-dizin\" rel=\"nofollow\" tabindex=\"-1\">Tüm haberler dizini</a></div></div></footer>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 129, "</div><hr><div class=\"cd-footer__yasal\"><div class=\"cd-footer__yasal-sol\"><a href=\"/gizlilik-politikasi\">Gizlilik</a> <a href=\"/kullanim-kosullari\">Kullanım Koşulları</a> <a href=\"/cerez-politikasi\">Çerez Politikası</a> <a href=\"/reklam-politikasi\">Reklam Politikası</a> <a href=\"/iletisim\">İletişim</a> <a href=\"/rss.xml\">RSS</a></div><div class=\"cd-footer__sosyal\"><a href=\"https://x.com/bitcosar\" rel=\"noopener nofollow\" aria-label=\"X\"><svg viewBox=\"0 0 24 24\" width=\"16\" height=\"16\" fill=\"currentColor\" aria-hidden=\"true\" focusable=\"false\"><path d=\"M18.9 2H22l-7.1 8.1L23 22h-6.6l-5.2-6.8L5.2 22H2l7.6-8.7L1.6 2h6.8l4.7 6.2L18.9 2zm-1.1 18h1.8L6.3 3.8H4.4L17.8 20z\"></path></svg></a> <a href=\"https://facebook.com/bitcosar\" rel=\"noopener nofollow\" aria-label=\"Facebook\"><svg viewBox=\"0 0 24 24\" width=\"24\" height=\"24\" fill=\"currentColor\" aria-hidden=\"true\" focusable=\"false\"><path d=\"M13.5 22v-8h2.7l.4-3.1h-3.1V8.9c0-.9.3-1.5 1.6-1.5h1.7V4.6c-.3 0-1.3-.1-2.5-.1-2.5 0-4.2 1.5-4.2 4.3v2.1H7.4V14h2.7v8h3.4z\"></path></svg></a> <a href=\"https://linkedin.com/company/bitcosar\" rel=\"noopener nofollow\" aria-label=\"LinkedIn\"><svg viewBox=\"0 0 24 24\" width=\"24\" height=\"24\" fill=\"currentColor\" aria-hidden=\"true\" focusable=\"false\"><path d=\"M6.9 8.6v11.5H3.2V8.6h3.7zM5 3.2a2.1 2.1 0 110 4.3 2.1 2.1 0 010-4.3zM20.8 20.1h-3.7v-6.2c0-1.5-.5-2.5-1.8-2.5-1 0-1.6.7-1.9 1.4-.1.2-.1.6-.1.9v6.4H9.6s.1-10.4 0-11.5h3.7v1.6c.5-.8 1.4-1.9 3.4-1.9 2.5 0 4.1 1.6 4.1 5.1v6.7z\"></path></svg></a> <a href=\"/rss.xml\" aria-label=\"RSS\"><svg viewBox=\"0 0 24 24\" width=\"22\" height=\"22\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" aria-hidden=\"true\" focusable=\"false\"><circle cx=\"5\" cy=\"19\" r=\"1.6\" fill=\"currentColor\" stroke=\"none\"></circle> <path d=\"M4 11a9 9 0 019 9M4 5a15 15 0 0115 15\"></path></svg></a> <a href=\"https://instagram.com/bitcosar\" rel=\"noopener nofollow\" aria-label=\"Instagram\"><svg viewBox=\"0 0 24 24\" width=\"22\" height=\"22\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" aria-hidden=\"true\" focusable=\"false\"><rect x=\"3\" y=\"3\" width=\"18\" height=\"18\" rx=\"5\"></rect> <circle cx=\"12\" cy=\"12\" r=\"4\"></circle> <circle cx=\"17.2\" cy=\"6.8\" r=\"1.1\" fill=\"currentColor\" stroke=\"none\"></circle></svg></a> <a href=\"https://youtube.com/@bitcosar\" rel=\"noopener nofollow\" aria-label=\"YouTube\"><svg viewBox=\"0 0 24 24\" width=\"24\" height=\"24\" fill=\"currentColor\" aria-hidden=\"true\" focusable=\"false\"><path d=\"M21.6 7.2a2.5 2.5 0 00-1.8-1.8C18.2 5 12 5 12 5s-6.2 0-7.8.4a2.5 2.5 0 00-1.8 1.8A26 26 0 002 12a26 26 0 00.4 4.8 2.5 2.5 0 001.8 1.8C5.8 19 12 19 12 19s6.2 0 7.8-.4a2.5 2.5 0 001.8-1.8A26 26 0 0022 12a26 26 0 00-.4-4.8zM10 15.2V8.8l5.5 3.2L10 15.2z\"></path></svg></a> <a href=\"https://t.me/bitcosar\" rel=\"noopener nofollow\" aria-label=\"Telegram\"><svg viewBox=\"0 0 24 24\" width=\"24\" height=\"24\" fill=\"currentColor\" aria-hidden=\"true\" focusable=\"false\"><path d=\"M21.9 4.3L18.8 19c-.2 1-.9 1.3-1.8.8l-4.9-3.6-2.4 2.3c-.3.3-.5.5-1 .5l.4-5 9.1-8.2c.4-.4-.1-.6-.6-.2L6.4 12.4 1.5 10.9c-1.1-.3-1.1-1.1.2-1.6l19-7.3c.9-.3 1.7.2 1.2 2.3z\"></path></svg></a></div></div><hr><div class=\"cd-footer__alt\"><div class=\"cd-footer__alt-metin\"><span>© 2026 bitcosar — Tüm hakları saklıdır.</span> <span>Kaynaklar atıf ile gösterilir; tam metin yayınlanmaz.</span></div><a class=\"cd-footer__dmca\" href=\"https://www.dmca.com/Protection/Status.aspx?ID=b0acac30-a84c-4adf-8cc3-cde102419088\" title=\"DMCA.com Protection Status\" target=\"_blank\" rel=\"noopener nofollow\"><img src=\"https://images.dmca.com/Badges/dmca_protected_sml_120n.png?ID=b0acac30-a84c-4adf-8cc3-cde102419088\" alt=\"DMCA.com Protection Status\" width=\"121\" height=\"24\" loading=\"lazy\" decoding=\"async\"></a></div><div class=\"cd-tuzak\" aria-hidden=\"true\"><a href=\"/arsiv/dizin\" rel=\"nofollow\" tabindex=\"-1\">Arşiv dizini</a> <a href=\"/gizli-dizin\" rel=\"nofollow\" tabindex=\"-1\">Tüm arşiv</a> <a href=\"/tum-haberler-dizin\" rel=\"nofollow\" tabindex=\"-1\">Tüm haberler dizini</a></div></div></footer>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -1489,7 +1489,7 @@ func cdSectionHead(title, href string) templ.Component {
 		var templ_7745c5c3_Var70 string
 		templ_7745c5c3_Var70, templ_7745c5c3_Err = templ.JoinStringErrs(title)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_shell.templ`, Line: 617, Col: 36}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_shell.templ`, Line: 640, Col: 36}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var70))
 		if templ_7745c5c3_Err != nil {
@@ -1507,7 +1507,7 @@ func cdSectionHead(title, href string) templ.Component {
 			var templ_7745c5c3_Var71 templ.SafeURL
 			templ_7745c5c3_Var71, templ_7745c5c3_Err = templ.JoinURLErrs(href)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_shell.templ`, Line: 620, Col: 17}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_shell.templ`, Line: 643, Col: 17}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var71))
 			if templ_7745c5c3_Err != nil {
@@ -1555,7 +1555,7 @@ func cdAd(etiket string) templ.Component {
 		var templ_7745c5c3_Var73 string
 		templ_7745c5c3_Var73, templ_7745c5c3_Err = templ.JoinStringErrs(etiket)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_shell.templ`, Line: 628, Col: 10}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_shell.templ`, Line: 651, Col: 10}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var73))
 		if templ_7745c5c3_Err != nil {
@@ -1620,7 +1620,7 @@ func cdReklam(genislik, yukseklik int) templ.Component {
 			var templ_7745c5c3_Var75 string
 			templ_7745c5c3_Var75, templ_7745c5c3_Err = templ.ResolveAttributeValue("C-" + e.ReklamZone)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_shell.templ`, Line: 654, Col: 66}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_shell.templ`, Line: 677, Col: 66}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var75)
 			if templ_7745c5c3_Err != nil {
@@ -1633,7 +1633,7 @@ func cdReklam(genislik, yukseklik int) templ.Component {
 			var templ_7745c5c3_Var76 string
 			templ_7745c5c3_Var76, templ_7745c5c3_Err = templ.ResolveAttributeValue(itoaT(genislik))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_shell.templ`, Line: 655, Col: 34}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_shell.templ`, Line: 678, Col: 34}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var76)
 			if templ_7745c5c3_Err != nil {
@@ -1646,7 +1646,7 @@ func cdReklam(genislik, yukseklik int) templ.Component {
 			var templ_7745c5c3_Var77 string
 			templ_7745c5c3_Var77, templ_7745c5c3_Err = templ.ResolveAttributeValue(itoaT(yukseklik))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_shell.templ`, Line: 655, Col: 70}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_shell.templ`, Line: 678, Col: 70}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var77)
 			if templ_7745c5c3_Err != nil {
@@ -1659,7 +1659,7 @@ func cdReklam(genislik, yukseklik int) templ.Component {
 			var templ_7745c5c3_Var78 string
 			templ_7745c5c3_Var78, templ_7745c5c3_Err = templruntime.SanitizeStyleAttributeValues("--cd-reklam-h: " + itoaT(yukseklik) + "px")
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_shell.templ`, Line: 656, Col: 54}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/cd_shell.templ`, Line: 679, Col: 54}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var78))
 			if templ_7745c5c3_Err != nil {
