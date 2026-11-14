@@ -43,6 +43,7 @@ type RiskSatir struct {
 	IstekSayisi int64
 	IlkGorulme  time.Time
 	SonGorulme  time.Time
+	UserAgent   string
 }
 
 // RiskKaydet satırı ekler/günceller.
@@ -64,11 +65,11 @@ func RiskKaydet(ctx context.Context, pool *pgxpool.Pool, r RiskSatir) error {
 			(anahtar, visitor_id, ip, ip_ag, asn, asn_ad, asn_ulke, asn_tur,
 			 ulke, puan, sinif, vpn, proxy, hosting, tor, bot, sinyaller,
 			 webrtc_ip, ip_degisim, ulke_degisim, istek_sayisi,
-			 ilk_gorulme, son_gorulme)
+			 ilk_gorulme, son_gorulme, user_agent)
 		VALUES ($1, NULLIF($2,'')::uuid, NULLIF($3,'')::inet, NULLIF($4,''),
 		        NULLIF($5,0), NULLIF($6,''), NULLIF($7,''), $8,
 		        NULLIF($9,''), $10, $11, $12, $13, $14, $15, $16, $17::jsonb,
-		        NULLIF($18,'')::inet, 0, 0, $19, now(), now())
+		        NULLIF($18,'')::inet, 0, 0, $19, now(), now(), NULLIF($20,''))
 		ON CONFLICT (anahtar) DO UPDATE SET
 			visitor_id   = COALESCE(EXCLUDED.visitor_id, v.visitor_id),
 			-- IP/ülke DEĞİŞİMİ: VPN düğüm değiştiren ziyaretçinin en güçlü
@@ -98,10 +99,12 @@ func RiskKaydet(ctx context.Context, pool *pgxpool.Pool, r RiskSatir) error {
 			sinyaller    = EXCLUDED.sinyaller,
 			webrtc_ip    = COALESCE(EXCLUDED.webrtc_ip, v.webrtc_ip),
 			istek_sayisi = v.istek_sayisi + EXCLUDED.istek_sayisi,
+			-- UA son görülen: "şu an neyle geliyor" sorusunun cevabı.
+			user_agent   = COALESCE(EXCLUDED.user_agent, v.user_agent),
 			son_gorulme  = now()`,
 		r.Anahtar, r.VisitorID, r.IP, r.IPAgg, r.ASN, r.ASNAd, r.ASNUlke, r.ASNTur,
 		r.Ulke, r.Puan, r.Sinif, r.VPN, r.Proxy, r.Hosting, r.Tor, r.Bot, r.Sinyaller,
-		r.WebRTCIP, r.IstekSayisi)
+		r.WebRTCIP, r.IstekSayisi, r.UserAgent)
 	return err
 }
 
@@ -244,8 +247,15 @@ func RiskOzet(ctx context.Context, pool *pgxpool.Pool, gun int) (RiskOzeti, erro
 		       -- Ölçüldü (14 Kasım 2026): Hetzner botu panelde sağlayıcısız
 		       -- ("—") görünüyordu, oysa 5.9.0.0/16 → AS24940 hosting
 		       -- önbellekte hazırdı. Panel artık ip_asn'den okur.
-		       CASE WHEN v.asn_tur <> 'bilinmiyor' THEN v.asn_tur
-		            ELSE COALESCE(a.tur, 'bilinmiyor') END,
+		       -- BOŞ DİZE 'bilinmiyor' DEĞİLDİR ama aynı işi görür: RiskKaydet
+		       -- asn_tur'u NULLIF'siz yazıyor, ağ bilgisi gelmediğinde sütunda
+		       -- '' kalıyordu. Eski koşul (asn_tur <> 'bilinmiyor') boş dizeyi
+		       -- "bilinen sınıf" sayıp önbellekten gelen doğru türü EZİYORDU
+		       -- (entegrasyon testi yakaladı: tür "" döndü, oysa ip_asn'de
+		       -- 'hosting' hazırdı).
+		       CASE WHEN COALESCE(v.asn_tur,'') NOT IN ('', 'bilinmiyor')
+		            THEN v.asn_tur
+		            ELSE COALESCE(NULLIF(a.tur,''), 'bilinmiyor') END,
 		       COALESCE(v.ulke,''), v.puan,
 		       COALESCE(v.sinif,'temiz'), v.vpn, v.proxy, v.hosting, v.tor, v.bot,
 		       v.sinyaller::text, COALESCE(host(v.webrtc_ip),''),

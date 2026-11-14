@@ -58,6 +58,8 @@ type GuvenlikSinyalSatir struct {
 }
 
 type GuvenlikRiskSatir struct {
+	// Anahtar: profil sayfasına bağlantı için (tb_vid ya da "ip:...").
+	Anahtar     string
 	Sinif       string // temiz|supheli|yuksek|bot|arama
 	SinifAd     string
 	Puan        int
@@ -70,6 +72,9 @@ type GuvenlikRiskSatir struct {
 	Sinyaller   []string
 	IstekSayisi int64
 	SonGorulme  string
+	// Niyet: olay kaydından çıkarılan tek satırlık yorum ("" = kayıt yok).
+	Niyet       string
+	NiyetSeviye string // bilgi|dikkat|tehdit
 }
 
 // TrafikGuvenligiPanel paneli çizer.
@@ -189,8 +194,10 @@ templ TrafikGuvenligiPanel(v TrafikGuvenligiView) {
 		<div class="card card-pad" style="margin-top:16px">
 			<h2 class="tg-h2">Riskli ziyaretçiler</h2>
 			<p class="tg-not">
-				IP'ler maskeli. "Sızan IP", tarayıcının WebRTC ile açığa verdirdiği ve
-				sunucunun gördüğünden farklı adrestir — VPN'in arkasını gösterir.
+				IP'ler maskeli; bir IP'ye tıklamak o ziyaretçinin profilini açar
+				(orada tam IP, son 200 istek ve niyet çıkarımı var). "Sızan IP",
+				tarayıcının WebRTC ile açığa verdirdiği ve sunucunun gördüğünden
+				farklı adrestir — VPN'in arkasını gösterir.
 			</p>
 			if len(v.Satirlar) == 0 {
 				<p class="muted">Kayıt yok.</p>
@@ -201,6 +208,7 @@ templ TrafikGuvenligiPanel(v TrafikGuvenligiView) {
 							<tr>
 								<th>Sınıf</th>
 								<th>Puan</th>
+								<th>Ne yapmaya çalışıyor</th>
 								<th>Sağlayıcı</th>
 								<th>Ülke</th>
 								<th>IP</th>
@@ -223,6 +231,13 @@ templ TrafikGuvenligiPanel(v TrafikGuvenligiView) {
 										</div>
 									</td>
 									<td>
+										if s.Niyet == "" {
+											<span class="muted">—</span>
+										} else {
+											<span class={"tg-niyet tg-niyet--" + s.NiyetSeviye}>{ s.Niyet }</span>
+										}
+									</td>
+									<td>
 										if s.Saglayici == "" {
 											<span class="muted">—</span>
 										} else {
@@ -241,7 +256,11 @@ templ TrafikGuvenligiPanel(v TrafikGuvenligiView) {
 											{ s.Ulke }
 										}
 									</td>
-									<td><code class="tg-kod">{ s.IP }</code></td>
+									<td>
+										<a class="tg-baglanti" href={ templ.SafeURL("/admin/trafik-guvenligi/ziyaretci/" + s.Anahtar) } title="Ziyaretçi profilini aç">
+											<code class="tg-kod">{ s.IP }</code>
+										</a>
+									</td>
 									<td>
 										if s.WebRTCIP == "" {
 											<span class="muted">—</span>

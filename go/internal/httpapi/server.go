@@ -734,6 +734,7 @@ func (s *Server) routes() {
 		{"GET", "/admin/raporlar", s.handleReports},
 		{"GET", "/admin/ziyaretciler", s.handleZiyaretciler},
 		{"GET", "/admin/trafik-guvenligi", s.handleTrafikGuvenligi},
+		{"GET", "/admin/trafik-guvenligi/ziyaretci/{anahtar}", s.handleTrafikZiyaretci},
 		{"POST", "/admin/trafik-guvenligi", s.handleTrafikGuvenligiKaydet},
 		{"GET", "/admin/raporlar/ai-export", s.handleReportsAIExport},
 		{"GET", "/admin/yorumlar", s.handleCommentsGet},

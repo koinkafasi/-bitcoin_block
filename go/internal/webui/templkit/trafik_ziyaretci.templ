@@ -1,0 +1,352 @@
+// Ziyaretçi profili — /admin/trafik-guvenligi/ziyaretci/{anahtar}.
+//
+// NEDEN AYRI SAYFA: panel listesi tek satırda "sınıf + puan" veriyor; bu
+// iki değer bir YARGI. Niyet ise istek dizisinden çıkar ve diziyi
+// göstermeden yargıyı açıklamak, operatörü kendi aracına güvensiz
+// bırakır. Bu sayfa kanıtı (son 200 istek, yol dağılımı, aynı IP'den
+// gelen diğer kimlikler) yargının yanına koyar.
+//
+// SINIF ÖNEKİ: `tz-*` (trafik ziyaretçi). Pano `.pn-*`, liste `.tg-*`
+// sınıflarını kullanır; ayrı önek çakışmayı önler.
+package templkit
+
+// TrafikZiyaretciView profilin tüm verisi.
+type TrafikZiyaretciView struct {
+	Anahtar string
+	// Var: visitor_risk'te satır var mı. Olaylar varken risk satırı
+	// olmayabilir (risk 10 dakikada bir yazılıyor, olay her istekte).
+	Var bool
+
+	IP        string // maskesiz — yalnız bu sayfada
+	MaskeliIP string
+	IPAgg     string
+	Ulke      string
+	UlkeKod   string
+
+	ASN       int
+	Saglayici string
+	ASNAd     string
+	Tur       string
+	TurAd     string
+
+	Sinif       string
+	SinifAd     string
+	Puan        int
+	IstekSayisi int64
+	IPDegisim   int
+	UlkeDegisim int
+	IlkGorulme  string
+	SonGorulme  string
+
+	UV        string // kısa UA özeti
+	UserAgent string // tam dize
+	WebRTCIP  string
+	Temiz     bool
+	VPN       bool
+	Proxy     bool
+	Hosting   bool
+	Tor       bool
+	Bot       bool
+
+	Sinyaller []string
+
+	// Niyet çıkarımı.
+	NiyetBaslik   string
+	NiyetAciklama string
+	NiyetSeviye   string // bilgi|dikkat|tehdit
+	OlaySayisi    int
+	Engellenen    int
+
+	Turler    []ZiyaretciTurSatir
+	Yollar    []ZiyaretciYolSatir
+	Akrabalar []ZiyaretciAkrabaSatir
+	Olaylar   []ZiyaretciOlaySatir
+}
+
+type ZiyaretciTurSatir struct {
+	Kod  string
+	Ad   string
+	Adet int
+	Pay  int
+}
+
+type ZiyaretciYolSatir struct {
+	Yol   string
+	Adet  int
+	Durum string
+}
+
+type ZiyaretciAkrabaSatir struct {
+	Anahtar string
+	Adet    int
+	Son     string
+}
+
+type ZiyaretciOlaySatir struct {
+	Zaman      string
+	Yontem     string
+	Yol        string
+	Sorgu      string
+	Durum      int
+	Tur        string
+	TurAd      string
+	Kaynak     string
+	KaynakAd   string
+	Referer    string
+	Engellendi bool
+}
+
+templ TrafikZiyaretciPanel(v TrafikZiyaretciView) {
+	<div id="trafik-ziyaretci" class="tz">
+		<div class="tz-ust">
+			<a class="tz-geri" href="/admin/trafik-guvenligi">← Trafik güvenliği</a>
+			<div class="tz-ust__sag">
+				<span class={"tz-rozet tz-rozet--" + v.Sinif}>{ v.SinifAd }</span>
+				if v.Var {
+					<span class="tz-sayi">{ itoaT(v.Puan) } / 100 puan</span>
+				}
+			</div>
+		</div>
+
+		// NİYET KARTI — sayfanın cevabı.
+		<div class={"tz-niyet tz-niyet--" + v.NiyetSeviye}>
+			<span class="tz-niyet__etiket">Ne yapmaya çalışıyor</span>
+			<h2 class="tz-niyet__baslik">{ v.NiyetBaslik }</h2>
+			<p class="tz-niyet__metin">{ v.NiyetAciklama }</p>
+			<p class="tz-niyet__alt">
+				{ sayiMetni64(int64(v.OlaySayisi)) } istek kaydı
+				if v.Engellenen > 0 {
+					<span class="tz-ayrac">·</span>
+					<strong>{ itoaT(v.Engellenen) } istek engellendi (403)</strong>
+				}
+			</p>
+		</div>
+
+		if !v.Var {
+			<div class="flash warn" style="margin-top:12px">
+				Risk satırı henüz yazılmadı (10 dakikada bir yazılıyor). Aşağıdaki
+				olaylar yine de bu ziyaretçinin gerçek istekleri.
+			</div>
+		}
+
+		// KİMLİK + AĞ
+		<div class="tz-ikili">
+			<div class="card card-pad">
+				<h2 class="tz-h2">Kimlik</h2>
+				<dl class="tz-dl">
+					<dt>Anahtar</dt>
+					<dd><code class="tz-kod">{ v.Anahtar }</code></dd>
+					<dt>IP</dt>
+					<dd>
+						<code class="tz-kod tz-kod--tam">{ v.IP }</code>
+						if v.IPAgg != "" {
+							<span class="tz-soluk">· { v.IPAgg }</span>
+						}
+					</dd>
+					<dt>Ülke</dt>
+					<dd>{ v.Ulke } <span class="tz-soluk">{ v.UlkeKod }</span></dd>
+					<dt>Tarayıcı</dt>
+					<dd><span title={ v.UserAgent }>{ v.UV }</span></dd>
+					if v.WebRTCIP != "" {
+						<dt>WebRTC sızıntısı</dt>
+						<dd><code class="tz-kod tz-kod--sizinti">{ v.WebRTCIP }</code></dd>
+					}
+					<dt>İlk görülme</dt>
+					<dd>{ v.IlkGorulme }</dd>
+					<dt>Son görülme</dt>
+					<dd>{ v.SonGorulme }</dd>
+					if v.Var {
+						<dt>Toplam istek</dt>
+						<dd>{ sayiMetni64(v.IstekSayisi) }</dd>
+						<dt>IP / ülke değişimi</dt>
+						<dd>{ itoaT(v.IPDegisim) } / { itoaT(v.UlkeDegisim) }</dd>
+					}
+				</dl>
+			</div>
+
+			<div class="card card-pad">
+				<h2 class="tz-h2">Ağ</h2>
+				<dl class="tz-dl">
+					<dt>Sağlayıcı</dt>
+					<dd>
+						if v.Saglayici == "" {
+							<span class="tz-soluk">bilinmiyor</span>
+						} else {
+							<strong>{ v.Saglayici }</strong>
+							if v.TurAd != "" {
+								<span class={"tz-tur tz-tur--" + v.Tur}>{ v.TurAd }</span>
+							}
+						}
+					</dd>
+					if v.ASN > 0 {
+						<dt>ASN</dt>
+						<dd>AS{ itoaT(v.ASN) }</dd>
+					}
+					if v.ASNAd != "" {
+						<dt>Ağ adı</dt>
+						<dd class="tz-soluk">{ v.ASNAd }</dd>
+					}
+					<dt>Bayraklar</dt>
+					<dd class="tz-bayraklar">
+						if v.VPN {
+							<span class="tz-bayrak tz-bayrak--vpn">VPN</span>
+						}
+						if v.Proxy {
+							<span class="tz-bayrak tz-bayrak--proxy">proxy</span>
+						}
+						if v.Hosting {
+							<span class="tz-bayrak tz-bayrak--hosting">veri merkezi</span>
+						}
+						if v.Tor {
+							<span class="tz-bayrak tz-bayrak--tor">Tor</span>
+						}
+						if v.Bot {
+							<span class="tz-bayrak tz-bayrak--bot">bot</span>
+						}
+						if v.Temiz && !v.VPN && !v.Proxy && !v.Hosting && !v.Tor && !v.Bot {
+							<span class="tz-soluk">bayrak yok</span>
+						}
+					</dd>
+				</dl>
+
+				if len(v.Sinyaller) > 0 {
+					<h3 class="tz-h3">Sinyaller</h3>
+					<div class="tz-ciplar">
+						for _, s := range v.Sinyaller {
+							<span class="tz-cip">{ s }</span>
+						}
+					</div>
+				}
+
+				if len(v.Akrabalar) > 0 {
+					<h3 class="tz-h3">Aynı IP'den gelen diğer kimlikler</h3>
+					<p class="tz-not">
+						Çerezini silip kimlik değiştiren ziyaretçi burada görünür.
+					</p>
+					<ul class="tz-akraba">
+						for _, a := range v.Akrabalar {
+							<li>
+								<a href={ templ.SafeURL("/admin/trafik-guvenligi/ziyaretci/" + a.Anahtar) }>
+									<code class="tz-kod">{ a.Anahtar }</code>
+								</a>
+								<span class="tz-soluk">{ itoaT(a.Adet) } istek · { a.Son }</span>
+							</li>
+						}
+					</ul>
+				}
+			</div>
+		</div>
+
+		// DAVRANIŞ DAĞILIMI
+		if len(v.Turler) > 0 {
+			<div class="card card-pad" style="margin-top:16px">
+				<h2 class="tz-h2">Ne istedi</h2>
+				<p class="tz-not">İstek türlerinin dağılımı. Sıralama sabit: en kesin kanıt üstte.</p>
+				for _, t := range v.Turler {
+					<div class="tz-cubuk-satir">
+						<span class="tz-cubuk-ad">{ t.Ad }</span>
+						<div class="tz-cubuk">
+							<div class={"tz-cubuk__ic tz-cubuk__ic--" + t.Kod} style={ "width:" + yuzdeMetni(float64(t.Pay)) }></div>
+						</div>
+						<span class="tz-cubuk-sayi">{ sayiMetni64(int64(t.Adet)) } <span class="tz-soluk">%{ itoaT(t.Pay) }</span></span>
+					</div>
+				}
+
+				if len(v.Yollar) > 0 {
+					<h3 class="tz-h3">En sık istenen yollar</h3>
+					<div class="table-scroll">
+						<table class="table tz-tablo tz-tablo--yollar">
+							<thead>
+								<tr><th>Yol</th><th>İstek</th><th>HTTP</th></tr>
+							</thead>
+							<tbody>
+								for _, y := range v.Yollar {
+									<tr>
+										<td><code class="tz-kod">{ y.Yol }</code></td>
+										<td>{ sayiMetni64(int64(y.Adet)) }</td>
+										<td class="tz-soluk">{ y.Durum }</td>
+									</tr>
+								}
+							</tbody>
+						</table>
+					</div>
+				}
+			</div>
+		}
+
+		// OLAY AKIŞI
+		<div class="card card-pad" style="margin-top:16px">
+			<h2 class="tz-h2">İstek akışı</h2>
+			<p class="tz-not">
+				Son { sayiMetni64(int64(len(v.Olaylar))) } istek, yeniden eskiye.
+				Sorgu dizgelerindeki jeton/şifre değerleri maskelenmiştir.
+			</p>
+			if len(v.Olaylar) == 0 {
+				<p class="muted">Kayıt yok. Olay kaydı 14 gün tutulur.</p>
+			} else {
+				<div class="table-scroll">
+					<table class="table tz-tablo tz-tablo--akis">
+						<thead>
+							<tr>
+								<th>Zaman</th>
+								<th>Tür</th>
+								<th>İstek</th>
+								<th>Kaynak</th>
+								<th>HTTP</th>
+							</tr>
+						</thead>
+						<tbody>
+							for _, o := range v.Olaylar {
+								<tr>
+									<td class="tz-zaman">{ o.Zaman }</td>
+									<td><span class={"tz-tur tz-tur--" + o.Tur}>{ o.TurAd }</span></td>
+									<td>
+										<span class="tz-yontem">{ o.Yontem }</span>
+										<code class="tz-kod">{ o.Yol }</code>
+										if o.Sorgu != "" {
+											<span class="tz-sorgu">?{ o.Sorgu }</span>
+										}
+									</td>
+									<td class="tz-soluk">
+										{ o.KaynakAd }
+										if o.Referer != "" {
+											<div class="tz-referer" title={ o.Referer }>{ o.Referer }</div>
+										}
+									</td>
+									<td>
+										if o.Engellendi || o.Durum >= 400 {
+											<span class="tz-durum tz-durum--hata">{ itoaT(o.Durum) }</span>
+										} else {
+											<span class="tz-durum">{ itoaT(o.Durum) }</span>
+										}
+									</td>
+								</tr>
+							}
+						</tbody>
+					</table>
+				</div>
+			}
+		</div>
+
+		// SINIRLAR — listenin dürüstlük kartıyla aynı dil.
+		<div class="card card-pad" style="margin-top:16px">
+			<h2 class="tz-h2">Bu sayfa ne söylemez</h2>
+			<ul class="tz-bilgi">
+				<li>
+					<strong>Niyet okunmaz, tahmin edilir.</strong> "Zafiyet taraması"
+					etiketi /wp-login.php gibi bir yolun istendiği anlamına gelir;
+					isteyenin amacı hakkında kesin bir iddia değildir.
+				</li>
+				<li>
+					<strong>IP tek başına kişi değildir.</strong> Aynı IP bir evde,
+					bir okulda ya da bir VPN düğümünde yüzlerce kişiyi taşıyabilir.
+					Bu sayfa bir tarayıcıyı anlatır, bir insanı değil.
+				</li>
+				<li>
+					<strong>Olay kaydı 14 gündür.</strong> Daha eski davranış burada
+					yok; yalnız özet (puan, sınıf) <em>Trafik güvenliği</em> listesinde.
+				</li>
+			</ul>
+		</div>
+	</div>
+}

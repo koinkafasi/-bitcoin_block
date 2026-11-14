@@ -237,6 +237,38 @@
 .tg-tur--mobil { color: #0891b2; }
 .tg-tur--konut { color: var(--tg-temiz); }
 
+/* Niyet etiketi — listede "ne yapmaya çalışıyor" sütunu.
+   Seviye renkleri niyet kartıyla aynı (bilgi/dikkat/tehdit); iki sayfada
+   aynı etiket aynı rengi göstermeli. */
+.tg-niyet {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 6px;
+  white-space: nowrap;
+  background: color-mix(in srgb, currentColor 10%, transparent);
+  border: 1px solid color-mix(in srgb, currentColor 28%, transparent);
+  color: var(--text-3, #6b7280);
+}
+
+.tg-niyet--bilgi { color: var(--tg-arama); }
+.tg-niyet--dikkat { color: var(--tg-supheli); }
+.tg-niyet--tehdit { color: var(--tg-bot); }
+
+/* Maskeli IP'ye tıklanınca profil açılır; bağlantı olduğu görünsün
+   ama tablo gürültülenmesin. */
+.tg-baglanti {
+  color: inherit;
+  text-decoration: none;
+  border-bottom: 1px dashed color-mix(in srgb, currentColor 45%, transparent);
+}
+
+.tg-baglanti:hover {
+  color: var(--tg-arama);
+  border-bottom-style: solid;
+}
+
 /* ---- tablo ---- */
 
 .tg-tablo {
@@ -481,4 +513,418 @@
   .tg-kpiler {
     grid-template-columns: minmax(0, 1fr);
   }
+}
+
+/* ── Ziyaretçi profili (/admin/trafik-guvenligi/ziyaretci/{anahtar}) ──────
+   14 Kasım 2026.
+
+   NEDEN AYRI ÖNEK (tz-): liste .tg-*, ziyaretçi konumu .zv-* kullanıyor.
+   Üçüncü bir sayfa aynı öneki ödünç alsaydı, birinde yapılan hizalama
+   düzeltmesi diğerini sessizce bozardı (14 Kasım'da .tg-saglayici için
+   tam bu olmuştu).
+
+   Renkler .tg ile AYNI kaynaktan: iki sayfa yan yana açıldığında aynı
+   sınıf aynı rengi göstermeli. Değişkenler burada yeniden tanımlanıyor
+   çünkü .tz, .tg'nin altında değil — kopya değil, aynı jetonlar.
+   ─────────────────────────────────────────────────────────────────────── */
+
+.tz {
+  --tz-temiz: #16a34a;
+  --tz-supheli: #d97706;
+  --tz-yuksek: #ea580c;
+  --tz-bot: #dc2626;
+  --tz-arama: #2563eb;
+  --tz-izgara: var(--border, #e5e5e5);
+}
+
+.tz-ust {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+
+.tz-geri {
+  font-size: 0.86rem;
+  color: var(--text-3, #6b7280);
+  text-decoration: none;
+}
+
+.tz-geri:hover { color: var(--text, #111); }
+
+.tz-ust__sag {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tz-sayi {
+  font-size: 12px;
+  color: var(--text-3, #6b7280);
+  font-variant-numeric: tabular-nums;
+}
+
+.tz-rozet {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 9px;
+  border-radius: 999px;
+  white-space: nowrap;
+  color: #fff;
+  background: #9ca3af;
+}
+
+.tz-rozet--temiz { background: var(--tz-temiz); }
+.tz-rozet--supheli { background: var(--tz-supheli); }
+.tz-rozet--yuksek { background: var(--tz-yuksek); }
+.tz-rozet--bot { background: var(--tz-bot); }
+.tz-rozet--arama { background: var(--tz-arama); }
+
+/* ---- niyet kartı: sayfanın cevabı ---- */
+
+.tz-niyet {
+  border: 1px solid var(--tz-izgara);
+  border-left: 4px solid #9ca3af;
+  border-radius: 10px;
+  padding: 14px 16px;
+  background: var(--surface, #fff);
+}
+
+.tz-niyet--bilgi { border-left-color: var(--tz-arama); }
+.tz-niyet--dikkat { border-left-color: var(--tz-supheli); }
+.tz-niyet--tehdit { border-left-color: var(--tz-bot); }
+
+.tz-niyet__etiket {
+  display: block;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-3, #6b7280);
+  margin-bottom: 4px;
+}
+
+.tz-niyet__baslik {
+  margin: 0 0 6px;
+  font-size: 1.15rem;
+  line-height: 1.3;
+}
+
+.tz-niyet__metin {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.55;
+  color: var(--text-2, #374151);
+  max-width: 78ch;
+}
+
+.tz-niyet__alt {
+  margin: 8px 0 0;
+  font-size: 12px;
+  color: var(--text-3, #6b7280);
+  font-variant-numeric: tabular-nums;
+}
+
+.tz-ayrac { margin: 0 5px; }
+
+/* ---- yerleşim ---- */
+
+.tz-ikili {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 16px;
+  align-items: start;
+}
+
+.tz-h2 {
+  margin: 0 0 8px;
+  font-size: 0.95rem;
+}
+
+.tz-h3 {
+  margin: 14px 0 6px;
+  font-size: 0.85rem;
+  color: var(--text-2, #374151);
+}
+
+.tz-not {
+  margin: 0 0 8px;
+  font-size: 12px;
+  color: var(--text-3, #6b7280);
+}
+
+/* ---- tanım listesi: etiket solda sabit, değer sağda ---- */
+
+.tz-dl {
+  display: grid;
+  grid-template-columns: minmax(90px, max-content) minmax(0, 1fr);
+  gap: 6px 12px;
+  margin: 0;
+  font-size: 12.5px;
+}
+
+.tz-dl dt {
+  color: var(--text-3, #6b7280);
+  font-weight: 500;
+}
+
+.tz-dl dd {
+  margin: 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.tz-soluk {
+  color: var(--text-3, #6b7280);
+  font-size: 11.5px;
+}
+
+.tz-kod {
+  font-size: 11.5px;
+  white-space: nowrap;
+}
+
+/* Tam IP: seçilebilir ve kopyalanabilir olmalı — yönetici bunu bir
+   güvenlik duvarına yapıştıracak. Kırılabilir ama tek parça. */
+.tz-kod--tam {
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  user-select: all;
+}
+
+.tz-kod--sizinti { color: var(--tz-yuksek); font-weight: 600; }
+
+/* ---- bayraklar ---- */
+
+.tz-bayraklar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.tz-bayrak {
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 1px 7px;
+  border-radius: 5px;
+  background: color-mix(in srgb, currentColor 10%, transparent);
+  border: 1px solid color-mix(in srgb, currentColor 28%, transparent);
+}
+
+.tz-bayrak--vpn { color: var(--tz-yuksek); }
+.tz-bayrak--proxy { color: var(--tz-supheli); }
+.tz-bayrak--hosting { color: var(--tz-bot); }
+.tz-bayrak--tor { color: #7c3aed; }
+.tz-bayrak--bot { color: var(--tz-bot); }
+
+.tz-tur {
+  display: inline-block;
+  font-size: 10.5px;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 5px;
+  margin-left: 6px;
+  vertical-align: 1px;
+  background: color-mix(in srgb, currentColor 10%, transparent);
+  border: 1px solid color-mix(in srgb, currentColor 28%, transparent);
+  color: var(--text-3, #6b7280);
+  text-transform: lowercase;
+  white-space: nowrap;
+}
+
+.tz-tur--hosting { color: var(--tz-bot); }
+.tz-tur--vpn { color: var(--tz-yuksek); }
+.tz-tur--tor { color: #7c3aed; }
+.tz-tur--mobil { color: #0891b2; }
+.tz-tur--konut { color: var(--tz-temiz); }
+.tz-tur--zafiyet { color: var(--tz-bot); }
+.tz-tur--tuzak { color: var(--tz-bot); }
+.tz-tur--giris { color: var(--tz-supheli); }
+.tz-tur--yonetim { color: var(--tz-supheli); }
+.tz-tur--besleme { color: #0891b2; }
+.tz-tur--arama { color: var(--tz-arama); }
+.tz-tur--api { color: #7c3aed; }
+
+.tz-ciplar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.tz-cip {
+  font-size: 10.5px;
+  padding: 2px 7px;
+  border-radius: 5px;
+  /* KOYU TEMA KUSURU (ölçüldü 14 Kasım): `--surface-soft` panelde
+     tanımlı DEĞİL, açık gri #f3f4f6'ya düşüyordu; metin ise `--text-2`
+     ile koyu temada açık renk olunca çipler okunmaz hâle geliyordu
+     (ekran görüntüsünde beyaz kutu içinde beyaz yazı). Panelin kendi
+     jetonu `--surface-2` kullanılıyor: iki temada da tanımlı. */
+  background: var(--surface-2, #f3f4f6);
+  border: 1px solid var(--tz-izgara);
+  color: var(--text-2, #374151);
+}
+
+/* ---- akrabalar (pivot) ---- */
+
+.tz-akraba {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 5px;
+  font-size: 12px;
+}
+
+.tz-akraba li {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  align-items: baseline;
+  border-bottom: 1px dashed var(--tz-izgara);
+  padding-bottom: 4px;
+}
+
+.tz-akraba a { text-decoration: none; }
+
+/* ---- tür dağılımı çubukları ---- */
+
+.tz-cubuk-satir {
+  display: grid;
+  grid-template-columns: minmax(110px, max-content) minmax(0, 1fr) max-content;
+  align-items: center;
+  gap: 10px;
+  padding: 5px 0;
+  font-size: 12.5px;
+}
+
+.tz-cubuk-ad { color: var(--text-2, #374151); }
+
+.tz-cubuk {
+  height: 7px;
+  border-radius: 999px;
+  background: var(--tz-izgara);
+  overflow: hidden;
+}
+
+.tz-cubuk__ic {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--accent, #3b82f6);
+  min-width: 2px;
+}
+
+.tz-cubuk__ic--icerik { background: var(--tz-temiz); }
+.tz-cubuk__ic--besleme { background: #0891b2; }
+.tz-cubuk__ic--arama { background: var(--tz-arama); }
+.tz-cubuk__ic--api { background: #7c3aed; }
+.tz-cubuk__ic--giris { background: var(--tz-supheli); }
+.tz-cubuk__ic--yonetim { background: var(--tz-yuksek); }
+.tz-cubuk__ic--zafiyet { background: var(--tz-bot); }
+.tz-cubuk__ic--tuzak { background: var(--tz-bot); }
+.tz-cubuk__ic--diger { background: #9ca3af; }
+
+.tz-cubuk-sayi {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* ---- tablolar ---- */
+
+.tz-tablo { font-size: 12.5px; }
+
+.tz-tablo th {
+  white-space: nowrap;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.tz-tablo td { vertical-align: middle; }
+
+/* Yol sütunu esnek, sayısal sütunlar dar: tablo genişliği kodun
+   nowrap uzunluğuna göre dağılıyordu, sayılar sayfanın en sağına
+   savruluyordu (ölçüldü 1440 px, 14 Kasım).
+   TABLO GENİŞLİĞİ SINIRLI: 4-15 kısa yol için 1370 px'e yayılan bir
+   tablo, gözü satır boyunca 1000 px boşlukta gezdiriyor. İçerik
+   genişliğine yakın bir üst sınır okunurluğu koruyor. */
+.tz-tablo--yollar {
+  max-width: 720px;
+}
+
+.tz-tablo--yollar th:nth-child(2),
+.tz-tablo--yollar td:nth-child(2),
+.tz-tablo--yollar th:nth-child(3),
+.tz-tablo--yollar td:nth-child(3) {
+  width: 1%;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.tz-tablo--akis td { font-size: 12px; }
+
+.tz-zaman {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  color: var(--text-3, #6b7280);
+}
+
+.tz-yontem {
+  font-family: var(--mono, ui-monospace, monospace);
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--text-3, #6b7280);
+  margin-right: 5px;
+}
+
+.tz-sorgu {
+  font-family: var(--mono, ui-monospace, monospace);
+  font-size: 10.5px;
+  color: var(--text-3, #6b7280);
+  margin-left: 4px;
+}
+
+.tz-referer {
+  font-size: 10.5px;
+  color: var(--text-3, #6b7280);
+  max-width: 260px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tz-durum {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: var(--tz-temiz);
+}
+
+.tz-durum--hata { color: var(--tz-bot); }
+
+/* ---- dürüstlük kartı ---- */
+
+.tz-bilgi {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--text-2, #374151);
+  display: grid;
+  gap: 7px;
+}
+
+.tz-bilgi strong { color: var(--text, #111); }
+
+@media (max-width: 900px) {
+  .tz-ikili { grid-template-columns: minmax(0, 1fr); }
+  .tz-cubuk-satir {
+    grid-template-columns: minmax(90px, max-content) minmax(0, 1fr);
+  }
+  .tz-cubuk-sayi { grid-column: 2; text-align: right; }
 }

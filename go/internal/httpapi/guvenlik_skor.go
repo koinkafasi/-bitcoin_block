@@ -81,6 +81,8 @@ type guvenlikKarari struct {
 	Reklam    bool   // reklam gösterilsin mi
 	Engelle   bool   // 403 mü
 	Sinyaller []guvenlikSinyali
+	// UA: son görülen user-agent (profil sayfası "neyle geldi").
+	UA string
 	// Siniflandirildi: ASN bilgisi geldi mi? Gelmediyse sınıf UA/başlık
 	// katmanıyla verilmiş demektir (ilk istek ödünleşimi).
 	Siniflandirildi bool
@@ -175,6 +177,7 @@ func guvenlikHesapla(girdi guvenlikGirdi) *guvenlikKarari {
 		IP:        girdi.IP,
 		Ulke:      girdi.Ulke,
 		Sinyaller: []guvenlikSinyali{},
+		UA:        girdi.UserAgent,
 	}
 	ekle := func(kod string, puan int, neden string) {
 		if puan <= 0 {
@@ -359,6 +362,7 @@ type guvenlikGirdi struct {
 	WebRTCIP      string
 	EtkilesimYok  bool
 
+	UserAgent  string
 	EsikYuksek int
 	EsikBot    int
 	Politika   guvenlikPolitikasi

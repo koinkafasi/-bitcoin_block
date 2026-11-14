@@ -149,6 +149,7 @@ func (s *Server) handleTrafikGuvenligi(w http.ResponseWriter, r *http.Request) {
 			saglayici = "AS" + itoa(k.ASN)
 		}
 		satir := templkit.GuvenlikRiskSatir{
+			Anahtar:     k.Anahtar,
 			Sinif:       k.Sinif,
 			SinifAd:     sinifGoster(k.Sinif),
 			Puan:        k.Puan,
@@ -164,6 +165,36 @@ func (s *Server) handleTrafikGuvenligi(w http.ResponseWriter, r *http.Request) {
 		// staticcheck S1011: tek elemanlı loop yerine doğrudan append.
 		satir.Sinyaller = append(satir.Sinyaller, sinyalListesi(k.Sinyaller)...)
 		v.Satirlar = append(v.Satirlar, satir)
+	}
+
+	// NİYET — listede "ne yapmaya çalışıyor" sütunu.
+	//
+	// TEK SORGU, 120 ANAHTAR: ziyaretçi başına ayrı sorgu paneli
+	// yavaşlatırdı (ziyaretçi konumu panelinde aynı kusur 14 Kasım'da
+	// ölçülmüştü). Olay kaydı yoksa sütun "—" kalır: uydurma etiket
+	// basmaktansa boş bırakmak dürüst.
+	if len(v.Satirlar) > 0 && s.pool != nil {
+		anahtarlar := make([]string, 0, len(v.Satirlar))
+		for _, st := range v.Satirlar {
+			anahtarlar = append(anahtarlar, st.Anahtar)
+		}
+		niyetler, err := repo.OlayNiyetleriToptan(ctx, s.pool, anahtarlar)
+		if err != nil {
+			s.logger.Debug("niyet sayımları okunamadı", "error", err)
+		}
+		for i := range v.Satirlar {
+			sayim := niyetler[v.Satirlar[i].Anahtar]
+			if len(sayim) == 0 {
+				continue
+			}
+			toplam := 0
+			for _, n := range sayim {
+				toplam += n
+			}
+			n := NiyetCikar(sayim, toplam, 0)
+			v.Satirlar[i].Niyet = n.Baslik
+			v.Satirlar[i].NiyetSeviye = n.Seviye
+		}
 	}
 
 	d := s.baseView("tr", "/admin", "Trafik Güvenliği")

@@ -203,6 +203,10 @@ func (g *guvenlikDurum) bayraklariAl(anahtar string, girdi *guvenlikGirdi) {
 }
 
 // withGuvenlik trafik güvenliği katmanı.
+//
+// OLAY KAYDI: her istek visitor_events'e yazılır (14 gün). Karar verildikten
+// SONRA, yanıtın gerçek durum koduyla birlikte — "403 aldı" bilgisi ancak
+// handler çalışınca bilinir. Yazma kuyruğa bırakılır, istek beklemez.
 func (s *Server) withGuvenlik(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
@@ -246,6 +250,7 @@ func (s *Server) withGuvenlik(next http.Handler) http.Handler {
 
 		// UA
 		ua := strings.TrimSpace(r.UserAgent())
+		girdi.UserAgent = ua
 		if ua == "" {
 			girdi.UABos = true
 		} else if oto, neden := otomatikMi(ua); oto {
@@ -324,10 +329,17 @@ func (s *Server) withGuvenlik(next http.Handler) http.Handler {
 			w.Header().Set("Cache-Control", "no-store")
 			w.Header().Set("X-Robots-Tag", "noindex, nofollow")
 			http.Error(w, "403 Forbidden", http.StatusForbidden)
+			s.olayKaydet(r, karar, http.StatusForbidden, true)
 			return
 		}
 
-		next.ServeHTTP(w, r.WithContext(context.WithValue(ctx, guvenlikKarariAnahtari{}, karar)))
+		dw := &durumYazan{ResponseWriter: w}
+		next.ServeHTTP(dw, r.WithContext(context.WithValue(ctx, guvenlikKarariAnahtari{}, karar)))
+		durum := dw.durum
+		if durum == 0 {
+			durum = http.StatusOK
+		}
+		s.olayKaydet(r, karar, durum, false)
 	})
 }
 
@@ -410,6 +422,7 @@ func riskSatiri(k *guvenlikKarari) repo.RiskSatir {
 		Sinyaller:   k.sinyallerJSON(),
 		IPDegisim:   0,
 		IstekSayisi: 1,
+		UserAgent:   k.UA,
 	}
 }
 

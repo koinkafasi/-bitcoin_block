@@ -119,6 +119,9 @@ func main() {
 	// aşılan sorguları tamamlayan tek işçi başlar.
 	app.ASNIsit(workerCtx)
 	app.ASNArkaPlanBaslat(workerCtx)
+	// ZİYARET OLAYLARI: istek başına davranış kaydı (14 gün). İstek yolu
+	// beklemez: middleware kuyruğa bırakır, bu işçi toplu yazar.
+	app.OlayIsci(workerCtx)
 	go scheduler.Run(workerCtx, pool, logger, 30*time.Second)
 	go scheduler.RunBot(workerCtx, pool, logger, 60*time.Second)
 	go scheduler.RunGundem(workerCtx, pool, logger, 60*time.Second)
