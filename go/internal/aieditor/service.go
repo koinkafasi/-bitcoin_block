@@ -304,7 +304,13 @@ func (s *Service) ProcessJob(ctx context.Context, jobID int64) (Result, error) {
 	// soruluyor. Zaman aşımı JSON modundan kaynaklanmadığı için ikinci
 	// denemenin kazandırdığı bir şey yok; maliyeti ise işçi yuvasının 4
 	// dakika tutulması ve sağlayıcıya giden ikinci bir çağrı.
-	if err != nil && !ai.ZamanAsimiHatasi(err) {
+	// Aynı gerekçe içerik hatalarında da geçerli: model çıktıyı düşünme
+	// adımına yazdıysa ya da token sınırında kesildiyse, JSON modunu
+	// bırakmak bunu düzeltmez — aynı biçim yine gelir, yalnız süre ikiye
+	// katlanır. Kota hatasında da denenmez: iş kaybedilmemeli, kuyrukta
+	// beklemeli.
+	if err != nil && !ai.ZamanAsimiHatasi(err) &&
+		!ai.IcerikHatasi(err) && !errors.Is(err, ai.ErrKotaDoldu) {
 		resp, err = s.ai.CompleteStrict(ctx, ai.Request{
 			Messages: messages, MaxTokens: maxTokens, Temperature: 0.25,
 		})

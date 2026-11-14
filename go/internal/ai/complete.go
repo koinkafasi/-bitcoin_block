@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -37,9 +38,35 @@ type Completer interface {
 	Complete(ctx context.Context, req Request) (Response, error)
 }
 
+// kotaKapisi kota tükenmişse boşa çağrı yapılmasını engeller ve şimdiki
+// anı döndürür (iki Complete yolu aynı anı kullanmalı).
+//
+// Chat'te bu kapı vardı, Complete yollarında yoktu — ve hat yalnız
+// Complete yollarını kullanıyor. Yani kota tükendikten sonra her iş
+// körlemesine istek atıp 429 alıp kaybolmaya devam ediyordu.
+func (c *Client) kotaKapisi() (time.Time, error) {
+	simdi := time.Now()
+	if c == nil || c.kota == nil {
+		return simdi, nil
+	}
+	if c.kota.Temizle(simdi) && c.logger != nil {
+		c.logger.Info("ai kotası döndü (sıfırlama geçildi)")
+	}
+	if c.kota.Tukendi(simdi) {
+		return simdi, fmt.Errorf("%w; sıfırlamaya kalan: %s",
+			ErrKotaDoldu, c.kota.BeklemeSuresi(simdi).Round(time.Minute))
+	}
+	return simdi, nil
+}
+
 // Complete sırayla sağlayıcıları dener; hepsi düşerse mock'a düşer.
 func (c *Client) Complete(ctx context.Context, req Request) (Response, error) {
+	simdi, kerr := c.kotaKapisi()
+	if kerr != nil {
+		return Response{}, kerr
+	}
 	var lastErr error
+	var kotaErr error
 	for _, p := range c.providers {
 		cp, ok := p.(Completer)
 		if !ok {
@@ -58,7 +85,18 @@ func (c *Client) Complete(ctx context.Context, req Request) (Response, error) {
 			return resp, nil
 		}
 		lastErr = err
+		if errors.Is(err, ErrKotaDoldu) {
+			kotaErr = err
+			if c.kota != nil {
+				c.kota.Isaretle(simdi)
+			}
+		}
 		c.logger.Warn("ai provider başarısız, sıradakine geçiliyor", "provider", p.Name(), "error", err)
+	}
+	// Kota hatası varsa ONU döndür: çağıran işi kuyrukta bırakmalı,
+	// başarısız saymamalı.
+	if kotaErr != nil {
+		return Response{}, kotaErr
 	}
 	return Response{}, fmt.Errorf("tüm AI sağlayıcıları başarısız: %w", lastErr)
 }
@@ -66,7 +104,12 @@ func (c *Client) Complete(ctx context.Context, req Request) (Response, error) {
 // CompleteStrict mock'a DÜŞMEZ. Editör/research gibi gerçek çıktı gerektiren
 // akışlarda kullanılır; sağlayıcı yoksa veya hata verirse açık hata döner.
 func (c *Client) CompleteStrict(ctx context.Context, req Request) (Response, error) {
+	simdi, kerr := c.kotaKapisi()
+	if kerr != nil {
+		return Response{}, kerr
+	}
 	var lastErr error
+	var kotaErr error
 	for _, p := range c.providers {
 		if p.Name() == "mock" {
 			continue
@@ -88,7 +131,16 @@ func (c *Client) CompleteStrict(ctx context.Context, req Request) (Response, err
 			return resp, nil
 		}
 		lastErr = err
+		if errors.Is(err, ErrKotaDoldu) {
+			kotaErr = err
+			if c.kota != nil {
+				c.kota.Isaretle(simdi)
+			}
+		}
 		c.logger.Warn("ai provider başarısız", "provider", p.Name(), "error", err)
+	}
+	if kotaErr != nil {
+		return Response{}, kotaErr
 	}
 	if lastErr == nil {
 		return Response{}, fmt.Errorf("gerçek AI sağlayıcısı yapılandırılmadı")
@@ -153,6 +205,15 @@ func (p *httpProvider) Complete(ctx context.Context, req Request) (Response, err
 	defer resp.Body.Close()
 	raw, _ := io.ReadAll(io.LimitReader(resp.Body, 2<<20))
 	if resp.StatusCode != http.StatusOK {
+		// KOTA AYRI BİR HATA. Bu sınıflandırma Chat'e eklenmişti ama
+		// üretim hattı Chat'i DEĞİL CompleteStrict'i çağırıyor, yani
+		// 429/402 burada hâlâ sıradan hata sayılıyordu ve iş `failed`
+		// işaretlenip kaybediliyordu. Kota düzeltmesinin yanlış yola
+		// konmuş olması, chatAttemptBudget'in aynı sebeple hiç
+		// uygulanmamasıyla birebir aynı hata.
+		if kerr := kotaHatasi(resp.StatusCode, clip(raw, 200)); kerr != nil {
+			return Response{}, kerr
+		}
 		return Response{}, fmt.Errorf("AI uç noktası %d: %s", resp.StatusCode, clip(raw, 300))
 	}
 	var cr chatCompletionResp
@@ -162,8 +223,17 @@ func (p *httpProvider) Complete(ctx context.Context, req Request) (Response, err
 	if len(cr.Choices) == 0 {
 		return Response{}, fmt.Errorf("AI boş yanıt")
 	}
+	ch := cr.Choices[0]
+	// kesikHataSay=true: bu yolun çıktısı katı JSON. Kesilmiş JSON zaten
+	// ayrıştırılamaz; sebebini burada söylemek, birkaç adım sonra
+	// "geçerli JSON değil" diye ölmesinden iyidir.
+	text, err := metinCikar(ch.FinishReason, ch.Message.Content,
+		ch.Message.Reasoning, cr.Usage.CompletionTokens, true)
+	if err != nil {
+		return Response{}, fmt.Errorf("%s/%s: %w", p.name, model, err)
+	}
 	return Response{
-		Text:             cr.Choices[0].Message.Content,
+		Text:             text,
 		Provider:         p.name,
 		Model:            model,
 		PromptTokens:     cr.Usage.PromptTokens,

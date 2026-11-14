@@ -184,8 +184,15 @@ type apiMsg struct {
 
 type chatCompletionResp struct {
 	Choices []struct {
-		Message struct {
+		// FinishReason "length" ise çıktı token sınırında kesilmiştir.
+		// Eskiden okunmuyordu: kesik JSON ayrıştırıcıya gidiyor ve
+		// hata sebebi yanlış yeri gösteriyordu.
+		FinishReason string `json:"finish_reason"`
+		Message      struct {
 			Content string `json:"content"`
+			// Reasoning: düşünen modeller çıktıyı buraya yazıp
+			// content'i boş bırakıyor. Bkz. icerik.go.
+			Reasoning string `json:"reasoning"`
 		} `json:"message"`
 	} `json:"choices"`
 	Usage struct {
@@ -233,7 +240,22 @@ func (p *httpProvider) Chat(ctx context.Context, messages []Msg) (string, error)
 	if len(cr.Choices) == 0 {
 		return "", fmt.Errorf("AI boş yanıt")
 	}
-	return cr.Choices[0].Message.Content, nil
+	ch := cr.Choices[0]
+	// kesikHataSay=false: burası etkileşimli düz metin yolu (sohbet,
+	// geri bildirim yanıtı, admin aracı). Kesik yanıt kullanıcıya yarım
+	// cümle gösterir ama hiç yanıt göstermemekten iyidir; yine de sessiz
+	// kalmasın diye uyarıya yazılır. Boş içerik ise her yolda hatadır.
+	out, err := metinCikar(ch.FinishReason, ch.Message.Content,
+		ch.Message.Reasoning, cr.Usage.CompletionTokens, false)
+	if err != nil {
+		return "", err
+	}
+	if kesikMi(ch.FinishReason) && p.logger != nil {
+		p.logger.Warn("ai yanıtı token sınırında kesildi",
+			"provider", p.name, "model", p.model,
+			"completion_tokens", cr.Usage.CompletionTokens)
+	}
+	return out, nil
 }
 
 func toAPIMsgs(msgs []Msg) []apiMsg {
