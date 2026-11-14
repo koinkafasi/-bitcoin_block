@@ -240,10 +240,10 @@ func (s *Server) asnArkaPlanaAt(ip string) {
 // tek işçiyle saniyede yüzlerce IP'yi tamamlar. Çok işçi, aynı /24 için
 // yarış (ve gereksiz sorgu) üretirdi.
 func (s *Server) ASNArkaPlanBaslat(ctx context.Context) {
-	//nolint:gosec // G118: bu goroutine istek kapsamlı DEĞİL — süreç ömrü
-	// boyunca yaşayan tek işçidir ve ctx (workerCtx) zaten parametre olarak
-	// alınıyor; içerideki context.Background() yalnız tek sorguluk 2 sn'lik
-	// bütçe için ve kapanışta da tamamlanması gerektiği için bilinçli.
+	// #nosec G118 -- bu goroutine istek kapsamlı DEĞİL: süreç ömrü boyunca
+	// yaşayan tek işçidir ve ctx (workerCtx) zaten parametre olarak alınıyor;
+	// içerideki context.Background() yalnız tek sorguluk 2 sn'lik bütçe için
+	// ve kapanışta da tamamlanması gerektiği için bilinçli.
 	go func() {
 		for {
 			select {
@@ -297,8 +297,8 @@ func (s *Server) asnDBYaz(b asnBilgi) {
 	if s.pool == nil || b.Ag == "" {
 		return
 	}
-	//nolint:gosec // G118: istek yolu bu yazmayı BEKLETMEZ; çağıran istek
-	// bitse bile önbellek satırı yazılmalı. Bilinçli olarak bağımsız bağlam.
+	// #nosec G118 -- istek yolu bu yazmayı BEKLETMEZ; çağıran istek bitse
+	// bile önbellek satırı yazılmalı. Bilinçli olarak bağımsız bağlam.
 	go func() {
 		ctx, iptal := context.WithTimeout(context.Background(), 3*time.Second)
 		defer iptal()
