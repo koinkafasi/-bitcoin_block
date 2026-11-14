@@ -5,6 +5,7 @@ import (
 	"html"
 	"html/template"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -63,6 +64,7 @@ func (s *Server) uretimHattiGovde(ctx context.Context) string {
 	}
 
 	b.WriteString(uretimKutular(ozet))
+	b.WriteString(uretimModel())
 	b.WriteString(s.uretimTeshis(ctx, ozet))
 	b.WriteString(s.uretimSaatlik(ctx))
 	b.WriteString(s.uretimHatalar(ctx))
@@ -116,6 +118,63 @@ func uretimKutular(o repo.UretimOzet) string {
 		itoa(o.Son24Uretilen)+" içerik üretildi (24s)", ""))
 	b.WriteString(`</div>`)
 	return b.String()
+}
+
+// uretimModel hattın HANGİ modeli kullandığını yazar.
+//
+// NEDEN BURADA: 14 Kasım 2026'da hattın %28,5'i kayıptı ve kaybın tek
+// sebebi seçilen modeldi — `auto/best-chat` Türkçe haber yazmayı
+// "önemsiz + kodlama" sayıp ücretsiz katmana düşürüyor, ilk denediği
+// hedef bir güvenlik sınıflandırıcısı oluyordu. Ama bunu öğrenmek
+// kümeye girip bir secret'ı base64'ten çözmeyi gerektirdi. Hattın en
+// belirleyici tek değişkeni panelde görünmüyordu.
+//
+// Değer yalnız ORTAM DEĞİŞKENİNDEN okunur (ai.NewClient de böyle
+// yapıyor); paneldeki `yapay_zeka` ayarları bu yolu etkilemez ve boş
+// olmaları normaldir. Buraya DB'den okumak yanlış cevabı güvenle
+// göstermek olurdu.
+func uretimModel() string {
+	model := strings.TrimSpace(os.Getenv("OMNIROUTE_MODEL"))
+	if model == "" {
+		model = strings.TrimSpace(os.Getenv("OMNIROUTE_DEFAULT_MODEL"))
+	}
+	if model == "" {
+		// ai.NewClient'in son çaresi. Sessizce boş göstermek "model yok"
+		// ile "varsayılana düştü" farkını gizler.
+		model = "gpt-4o-mini (varsayılan — hiçbir değişken verilmemiş)"
+	}
+
+	var uyari string
+	// auto/* birleşimleri yönlendirme kararını OmniRoute'a bırakır ve
+	// ölçümde yanlış sınıflandırıyor. Sabit model bu kararı kaldırır
+	// ama ölü sağlayıcının etrafından da dolaşamaz; ikisi de bilinmeli.
+	if strings.HasPrefix(model, "auto/") {
+		uyari = `<div style="color:#c80;font-size:12px;margin-top:4px">` +
+			`Bu bir <b>otomatik birleşim</b>: model seçimini OmniRoute yapıyor. ` +
+			`Ölçümde (14 Kasım 2026) Türkçe haber yazma isteği ` +
+			`<code>level=trivial intent=code minTier=free</code> diye ` +
+			`sınıflandırılıp ücretsiz katmana düşürüldü ve 89 hedef sırayla ` +
+			`denendi; işlerin %28,5'i zaman aşımından kayboldu.</div>`
+	} else {
+		uyari = `<div class="muted" style="font-size:12px;margin-top:4px">` +
+			`Model <b>sabit</b>: yönlendirme kararı yok. Buna karşılık ` +
+			`sağlayıcı düşerse etrafından dolaşılamaz — hatalar ` +
+			`<code>` + html.EscapeString(repo.ImzaZamanAsimi) + `</code> ` +
+			`olarak birikirse ilk bakılacak yer burası.</div>`
+	}
+
+	dusunme := strings.TrimSpace(os.Getenv("OMNIROUTE_REASONING_EFFORT"))
+	dusunmeSatiri := ""
+	if dusunme != "" {
+		dusunmeSatiri = `<div class="muted" style="font-size:12px">Düşünme çabası: <code>` +
+			html.EscapeString(dusunme) + `</code></div>`
+	}
+
+	return `<div style="border:1px solid var(--cizgi,#333);border-radius:8px;` +
+		`padding:10px 12px;margin-bottom:16px">` +
+		`<div style="font-size:12px;opacity:.7">Hattın kullandığı model</div>` +
+		`<div style="font-family:monospace;font-size:14px;margin-top:2px">` +
+		html.EscapeString(model) + `</div>` + dusunmeSatiri + uyari + `</div>`
 }
 
 // uretimTeshis sayıları CÜMLEYE çevirir.
