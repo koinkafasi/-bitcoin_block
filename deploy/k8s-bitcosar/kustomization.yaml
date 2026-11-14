@@ -41,10 +41,10 @@ resources:
 # çıplak SHA basıyordu ve sevk `not found` ile düştü.
 images:
   - name: ghcr.io/koinkafasi/theblock-site
-    newTag: sha-dddfdca
+    newTag: sha-fea7f43
   - name: ghcr.io/koinkafasi/theblock-image-svc
-    newTag: sha-dddfdca
+    newTag: sha-fea7f43
   - name: ghcr.io/koinkafasi/theblock-search-svc
-    newTag: sha-dddfdca
+    newTag: sha-fea7f43
   - name: ghcr.io/koinkafasi/theblock-collab
-    newTag: sha-dddfdca
+    newTag: sha-fea7f43
