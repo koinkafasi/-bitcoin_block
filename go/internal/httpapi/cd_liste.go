@@ -65,11 +65,11 @@ func (s *Server) cdTurListesi(w http.ResponseWriter, r *http.Request, tur string
 		yol = "/sponsored-content"
 	}
 	v.Shell = s.cdShellCtx(ctx, r, strings.TrimPrefix(yol, "/"))
-	v.Title = v.Baslik + " — " + s.siteName
+	v.Title = v.Baslik + " — " + s.siteAdi()
 	v.Desc = v.Aciklama
 	v.Canonical = s.kanonikKok(r) + yol
 	// CoinDesk video/podcast/sponsorlu sayfaları CollectionPage basıyor.
-	v.JSONLD = string(cdCollectionJSONLD(s.siteName, s.kanonikKok(r), v.Baslik, v.Canonical, ldItems))
+	v.JSONLD = string(cdCollectionJSONLD(s.siteAdi(), s.kanonikKok(r), v.Baslik, v.Canonical, ldItems))
 	v.PageCategory = "section_landing_page"
 	v.ContentCategory = strings.TrimPrefix(yol, "/")
 	v.Locale = "tr"
@@ -87,7 +87,7 @@ func (s *Server) handleCDNewsletters(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	v := templkit.CDNewsletterPage{
 		Shell:           s.cdShellCtx(ctx, r, "newsletters"),
-		Title:           templkit.CDT(s.cdYerel(r), "Bültenler") + " — " + s.siteName,
+		Title:           templkit.CDT(s.cdYerel(r), "Bültenler") + " — " + s.siteAdi(),
 		Desc:            "Günün kripto haberleri ve piyasa özeti e-postanızda. Ücretsiz abone olun.",
 		Canonical:       s.cfg.BaseURL + "/newsletters",
 		PageCategory:    "section_landing_page",
@@ -95,7 +95,7 @@ func (s *Server) handleCDNewsletters(w http.ResponseWriter, r *http.Request) {
 		Locale:          s.cdYerel(r),
 		BaseURL:         strings.TrimRight(s.cfg.BaseURL, "/"),
 	}
-	v.JSONLD = string(siteAdiJSONLD(s.siteName, v.Canonical))
+	v.JSONLD = string(siteAdiJSONLD(s.siteAdi(), v.Canonical))
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.Header().Set("Cache-Control", cacheControlPublic)

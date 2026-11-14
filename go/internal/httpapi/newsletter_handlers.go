@@ -172,7 +172,7 @@ func (s *Server) digestEmail(ctx context.Context, siteID int64) (string, string)
 	base := strings.TrimRight(s.cfg.BaseURL, "/")
 	var b strings.Builder
 	b.WriteString(`<div style="font-family:Arial,Helvetica,sans-serif;max-width:640px;margin:0 auto">`)
-	b.WriteString(`<h2 style="border-bottom:2px solid #eee;padding-bottom:8px">` + htmlEscape(s.siteName) + ` — Günlük Özet</h2>`)
+	b.WriteString(`<h2 style="border-bottom:2px solid #eee;padding-bottom:8px">` + htmlEscape(s.siteAdi()) + ` — Günlük Özet</h2>`)
 	if len(items) == 0 {
 		b.WriteString(`<p>Bugün için içerik bulunmuyor.</p>`)
 	} else {
@@ -183,7 +183,7 @@ func (s *Server) digestEmail(ctx context.Context, siteID int64) (string, string)
 		}
 		b.WriteString(`</ul>`)
 	}
-	b.WriteString(`<p style="color:#888;font-size:12px;margin-top:20px">` + htmlEscape(s.siteName) + ` — bu e-postayı bülten aboneliğiniz için alıyorsunuz.</p>`)
+	b.WriteString(`<p style="color:#888;font-size:12px;margin-top:20px">` + htmlEscape(s.siteAdi()) + ` — bu e-postayı bülten aboneliğiniz için alıyorsunuz.</p>`)
 	b.WriteString(`</div>`)
-	return s.siteName + " — Günlük Özet", b.String()
+	return s.siteAdi() + " — Günlük Özet", b.String()
 }

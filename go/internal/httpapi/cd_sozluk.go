@@ -32,7 +32,7 @@ var sozlukSeviyeSirasi = map[string]int{"Başlangıç": 0, "Orta": 1, "İleri": 
 func (s *Server) handleSozlukPage(w http.ResponseWriter, r *http.Request) {
 	kok := s.kanonikKok(r)
 	v := s.cdSayfaKabuk(r, "sozluk",
-		"Kripto Para ve Blokzincir Sözlüğü — "+s.siteName,
+		"Kripto Para ve Blokzincir Sözlüğü — "+s.siteAdi(),
 		"Kripto para, DeFi, NFT ve blokzincir terimlerinin Türkçe karşılıkları ve açıklamaları.",
 		"Kripto Sözlüğü",
 		"Kripto para, DeFi, Web3, NFT ve blokzincir teknolojisine dair temel kavramlar.",

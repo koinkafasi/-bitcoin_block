@@ -84,7 +84,7 @@ func (s *Server) homeView(r *http.Request) *tmplData {
 
 	langBase := s.langBase(locale)
 
-	d := s.baseView(locale, langBase, s.siteName)
+	d := s.baseView(locale, langBase, s.siteAdi())
 	d.LangBase = langBase
 	d.HomeURL = homeURL(locale)
 	d.Hreflangs = s.yerelHreflang(ctx, s.absBase(r), site.ID, lang, homeURL)
@@ -609,7 +609,7 @@ func (s *Server) handleCategory(w http.ResponseWriter, r *http.Request) {
 	// SEO: kategori adı + açıklama + kendi canonical'ı (sayfa parametresi korunur).
 	absBase := strings.TrimRight(s.absBase(r), "/")
 	d.MetaTitle = title + " — " + d.SiteName
-	d.MetaDesc = metaDesc(intro, title+" kategorisindeki son haberler, güncel gelişmeler ve analizler.", s.siteName)
+	d.MetaDesc = metaDesc(intro, title+" kategorisindeki son haberler, güncel gelişmeler ve analizler.", s.siteAdi())
 	if len(items) == 0 || dusus {
 		d.Robots = "noindex,follow"
 	}
@@ -1705,8 +1705,8 @@ func (s *Server) handleManifest(w http.ResponseWriter, r *http.Request) {
 	}
 	var m map[string]any
 	if json.Unmarshal(b, &m) == nil {
-		m["name"] = s.siteName
-		m["short_name"] = s.siteName
+		m["name"] = s.siteAdi()
+		m["short_name"] = s.siteAdi()
 		m["start_url"] = "/"
 		m["scope"] = "/"
 		if nb, err := json.Marshal(m); err == nil {
@@ -1804,14 +1804,14 @@ func (s *Server) cdArsivSayfasi(w http.ResponseWriter, r *http.Request, locale s
 	kanonik := s.kanonikKok(r) + "/arsiv"
 	v := templkit.CDListePage{
 		Shell:           s.cdShellCtx(ctx, r, "arsiv"),
-		Title:           "Arşiv — " + s.siteName,
+		Title:           "Arşiv — " + s.siteAdi(),
 		Desc:            "Yayınlanan tüm haberler, en yeniden eskiye.",
 		Canonical:       kanonik,
 		Baslik:          "Arşiv",
 		Aciklama:        "Son yayınlanan haberler, en yeniden eskiye.",
 		Stories:         kartlar,
 		BosMetin:        "Henüz yayınlanmış içerik yok.",
-		JSONLD:          string(cdCollectionJSONLD(s.siteName, strings.TrimRight(s.cfg.BaseURL, "/"), "Arşiv", kanonik, ldItems)),
+		JSONLD:          string(cdCollectionJSONLD(s.siteAdi(), strings.TrimRight(s.cfg.BaseURL, "/"), "Arşiv", kanonik, ldItems)),
 		PageCategory:    "section_landing_page",
 		ContentCategory: "archive",
 		Locale:          locale,

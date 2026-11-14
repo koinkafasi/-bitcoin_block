@@ -44,10 +44,10 @@ func (s *Server) cdHesapSayfaOlustur(r *http.Request, d *tmplData, h *hesapData,
 
 	v := templkit.CDHesapSayfa{
 		Shell:     shell,
-		Title:     baslik + " — " + s.siteName,
+		Title:     baslik + " — " + s.siteAdi(),
 		Desc:      aciklama,
 		Canonical: kanonik,
-		JSONLD:    string(siteAdiJSONLD(s.siteName, kanonik)),
+		JSONLD:    string(siteAdiJSONLD(s.siteAdi(), kanonik)),
 		Sekme:     sekme,
 		Nav:       cdHesapNavListesi(h),
 

@@ -60,8 +60,8 @@ func (s *Server) handleZiyaretciler(w http.ResponseWriter, r *http.Request) {
 	}
 	v.KonumZorunlu = s.konumZorunlu(r.Context())
 
-	d := s.baseView("tr", "", s.siteName)
-	d.Title = "Ziyaretçi Konumu — " + s.siteName
+	d := s.baseView("tr", "", s.siteAdi())
+	d.Title = "Ziyaretçi Konumu — " + s.siteAdi()
 	s.renderTemplPage(w, r, d, templkit.ZiyaretcilerPanel(v))
 }
 

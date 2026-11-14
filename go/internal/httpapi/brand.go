@@ -265,8 +265,8 @@ func (s *Server) handleBrandSave(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// Site kimliği: başlık + slogan (Ayarlar→Genel'den taşındı; tek merkez).
-	if baslik := strings.TrimSpace(r.FormValue("site_baslik")); r.Form.Has("site_baslik") {
-		_ = repo.SetSetting(ctx, s.pool, "genel", "site_baslik", mustJSON(map[string]string{"tr": baslik}))
+	if r.Form.Has("site_baslik") {
+		s.siteBaslikKaydet(ctx, r.FormValue("site_baslik"))
 	}
 	if slogan := strings.TrimSpace(r.FormValue("slogan")); r.Form.Has("slogan") {
 		_ = repo.SetSetting(ctx, s.pool, "genel", "slogan", mustJSON(map[string]string{"tr": slogan}))

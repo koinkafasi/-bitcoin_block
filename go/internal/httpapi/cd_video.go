@@ -196,7 +196,7 @@ func (s *Server) handleCDVideos(w http.ResponseWriter, r *http.Request) {
 
 	v := templkit.CDVideoPage{
 		Shell:     s.cdShellCtx(ctx, r, "videos"),
-		Title:     templkit.CDT(s.cdYerel(r), "Videolar") + " — " + s.siteName,
+		Title:     templkit.CDT(s.cdYerel(r), "Videolar") + " — " + s.siteAdi(),
 		Desc:      "Kripto piyasaları, borsa ve yatırım üzerine videolar; canlı yayınlar ve kısa klipler.",
 		Canonical: s.cfg.BaseURL + "/videos",
 		Baslik:    "Videolar",
@@ -207,7 +207,7 @@ func (s *Server) handleCDVideos(w http.ResponseWriter, r *http.Request) {
 		Shorts:    ytKutular(shorts, dil),
 		Yayinlar:  ytKutular(yayinlar, dil),
 		BosMetin:  "Henüz video çekilmedi. YouTube kanalına yeni video düştüğünde bu sayfa otomatik dolar.",
-		JSONLD:    string(siteAdiJSONLD(s.siteName, s.cfg.BaseURL+"/videos")),
+		JSONLD:    string(siteAdiJSONLD(s.siteAdi(), s.cfg.BaseURL+"/videos")),
 	}
 	s.renderCDVideoPage(w, r, v)
 }
@@ -245,7 +245,7 @@ func (s *Server) handleCDShorts(w http.ResponseWriter, r *http.Request) {
 
 	v := templkit.CDVideoPage{
 		Shell:     s.cdShellCtx(ctx, r, "videos"),
-		Title:     templkit.CDT(s.cdYerel(r), "Shorts") + " — " + s.siteName,
+		Title:     templkit.CDT(s.cdYerel(r), "Shorts") + " — " + s.siteAdi(),
 		Desc:      "Kısa videolar: piyasa hareketleri, günün öne çıkan gelişmeleri ve yatırım notları.",
 		Canonical: s.cfg.BaseURL + "/videos/shorts",
 		Baslik:    "Shorts",
@@ -256,7 +256,7 @@ func (s *Server) handleCDShorts(w http.ResponseWriter, r *http.Request) {
 		Shorts:    ytGridHeroHariç(shorts, heroID, 12, dil),
 		BosMetin:  "Henüz kısa video yayınlanmadı. Kanal yeni bir short yüklediğinde burada görünür.",
 		Dikey:     true,
-		JSONLD:    string(siteAdiJSONLD(s.siteName, s.cfg.BaseURL+"/videos/shorts")),
+		JSONLD:    string(siteAdiJSONLD(s.siteAdi(), s.cfg.BaseURL+"/videos/shorts")),
 	}
 	s.renderCDVideoPage(w, r, v)
 }
@@ -318,7 +318,7 @@ func (s *Server) handleCDCanli(w http.ResponseWriter, r *http.Request) {
 
 	v := templkit.CDVideoPage{
 		Shell:           s.cdShellCtx(ctx, r, "videos"),
-		Title:           templkit.CDT(s.cdYerel(r), "Canlı Yayın") + " — " + s.siteName,
+		Title:           templkit.CDT(s.cdYerel(r), "Canlı Yayın") + " — " + s.siteAdi(),
 		Desc:            "Bitcoin, borsa ve piyasa değerlendirmeleri; canlı yayın kayıtları ve güncel yayın akışı.",
 		Canonical:       s.cfg.BaseURL + "/canli-yayin",
 		Baslik:          "Canlı Yayın",
@@ -329,7 +329,7 @@ func (s *Server) handleCDCanli(w http.ResponseWriter, r *http.Request) {
 		KanalID:         kanalID,
 		CanliYayinAktif: canliVar,
 		BosMetin:        "Kanalda henüz canlı yayın kaydı yok.",
-		JSONLD:          string(siteAdiJSONLD(s.siteName, s.cfg.BaseURL+"/canli-yayin")),
+		JSONLD:          string(siteAdiJSONLD(s.siteAdi(), s.cfg.BaseURL+"/canli-yayin")),
 	}
 	s.renderCDVideoPage(w, r, v)
 }
@@ -369,7 +369,7 @@ func (s *Server) handleCDVideoWatch(w http.ResponseWriter, r *http.Request) {
 
 	v := templkit.CDVideoWatch{
 		Shell:     s.cdShellCtx(ctx, r, "videos"),
-		Title:     k.Baslik + " — " + s.siteName,
+		Title:     k.Baslik + " — " + s.siteAdi(),
 		Desc:      aciklama,
 		Canonical: canonical,
 		Sekmeler:  s.cdVideoSekmeler("video"),
@@ -379,7 +379,7 @@ func (s *Server) handleCDVideoWatch(w http.ResponseWriter, r *http.Request) {
 		Videolar:  ytGridHeroHariç(videolar, k.VideoID, 8, dil),
 		Shorts:    ytGridHeroHariç(shorts, k.VideoID, 8, dil),
 		Dikey:     k.Tur == "short",
-		JSONLD:    string(videoJSONLD(s.siteName, hero, canonical, k.YayinAt)),
+		JSONLD:    string(videoJSONLD(s.siteAdi(), hero, canonical, k.YayinAt)),
 	}
 	if v.Desc == "" {
 		v.Desc = "BİTCOŞAR videosu: " + k.Baslik

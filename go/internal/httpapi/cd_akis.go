@@ -124,7 +124,7 @@ func (s *Server) handleCDAkis(w http.ResponseWriter, r *http.Request) {
 		kanonik += "?" + temel.Encode()
 	}
 	v.Shell = s.cdShellCtx(ctx, r, "akis")
-	v.Title = name + " — " + s.siteName
+	v.Title = name + " — " + s.siteAdi()
 	v.Desc = "Kripto ve blockchain haber akışı: " + strings.ToLower(name) + " içerikler."
 	v.Canonical = kanonik
 	v.PageCategory = "section_landing_page"
@@ -138,9 +138,9 @@ func (s *Server) handleCDAkis(w http.ResponseWriter, r *http.Request) {
 		if i >= 12 {
 			break
 		}
-		ld = append(ld, cdLDItem{Headline: st.Title, URL: s.absBase(r) + st.Href, Author: s.siteName})
+		ld = append(ld, cdLDItem{Headline: st.Title, URL: s.absBase(r) + st.Href, Author: s.siteAdi()})
 	}
-	v.JSONLD = string(cdCollectionJSONLD(s.siteName, s.kanonikKok(r), name, kanonik, ld))
+	v.JSONLD = string(cdCollectionJSONLD(s.siteAdi(), s.kanonikKok(r), name, kanonik, ld))
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.Header().Set("Cache-Control", cacheControlPublic)
@@ -156,7 +156,7 @@ func (s *Server) handleCD404(w http.ResponseWriter, r *http.Request) {
 	site := s.siteByDomain(ctx, r.Host)
 	v := templkit.CD404Page{
 		Shell:     s.cdShellCtx(ctx, r, ""),
-		Title:     templkit.CDT(dil, "Sayfa bulunamadı") + " — " + s.siteName,
+		Title:     templkit.CDT(dil, "Sayfa bulunamadı") + " — " + s.siteAdi(),
 		Desc:      "Aradığınız sayfa bulunamadı. Ana sayfaya dönün veya sitede arama yapın.",
 		Canonical: s.kanonikKok(r) + r.URL.Path,
 		Locale:    s.cdYerel(r),

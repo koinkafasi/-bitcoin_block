@@ -175,7 +175,7 @@ func (s *Server) handleSettingsSave(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if r.Form.Has("site_baslik") {
-		set("genel", "site_baslik", map[string]string{"tr": r.FormValue("site_baslik")})
+		s.siteBaslikKaydet(ctx, r.FormValue("site_baslik"))
 	}
 	if r.Form.Has("slogan") {
 		set("genel", "slogan", map[string]string{"tr": r.FormValue("slogan")})
@@ -263,6 +263,15 @@ func (s *Server) handleSettingsSave(w http.ResponseWriter, r *http.Request) {
 	// Entegrasyon kimlikleri templkit'e YENİDEN yayınlanır: değişiklik
 	// sunucu yeniden başlatılmadan sonraki istekte görünür.
 	s.CDEntegrasyonYenile(ctx)
+
+	// Site başlığı/slogan gibi ayarlar hem 10 sn'lik ayar önbelleğine hem
+	// tam sayfa önbelleğine yansıyor. Kaydettikten sonra "neden değişmedi?"
+	// olmasın diye ikisi de hemen boşaltılır (14 Kasım 2026: başlık
+	// panelden kaydedilmiş ama <title> eski adda kalmıştı).
+	s.invalidateContentCache()
+	if s.sayfaCache != nil {
+		s.sayfaCache.temizle()
+	}
 
 	s.audit(r, "ayar_kaydet", "Ayarlar güncellendi")
 	s.settingsResult(w, r, "info", "Ayarlar kaydedildi.")

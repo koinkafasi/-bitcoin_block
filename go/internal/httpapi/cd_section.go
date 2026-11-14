@@ -122,14 +122,14 @@ func (s *Server) handleCDSection(w http.ResponseWriter, r *http.Request, slug st
 
 	v := templkit.CDSectionPage{
 		Shell:     s.cdShellCtx(r.Context(), r, slug),
-		Title:     templkit.CDT(s.cdYerel(r), meta.Ad) + " — " + s.siteName,
+		Title:     templkit.CDT(s.cdYerel(r), meta.Ad) + " — " + s.siteAdi(),
 		Desc:      meta.Aciklama,
 		Canonical: kanonik,
 		Section:   templkit.CDT(s.cdYerel(r), meta.Ad),
 		Href:      "/" + slug,
 		Page:      sayfa,
 		// CoinDesk bölüm sayfası: CollectionPage + mainEntity.ItemList.
-		JSONLD:          string(cdCollectionJSONLD(s.siteName, strings.TrimRight(s.cfg.BaseURL, "/"), templkit.CDT(s.cdYerel(r), meta.Ad), kanonik, ldItems)),
+		JSONLD:          string(cdCollectionJSONLD(s.siteAdi(), strings.TrimRight(s.cfg.BaseURL, "/"), templkit.CDT(s.cdYerel(r), meta.Ad), kanonik, ldItems)),
 		PageCategory:    "section_landing_page",
 		ContentCategory: slug,
 		Locale:          s.cdYerel(r),
@@ -252,7 +252,7 @@ func (s *Server) cdShellCtx(ctx context.Context, r *http.Request, aktif string) 
 		}
 	}
 	sh := templkit.CDShell{
-		SiteName:   s.siteName,
+		SiteName:   s.siteAdi(),
 		SearchHref: "/arama",
 		Locale:     yerel,
 		Nav:        nav,

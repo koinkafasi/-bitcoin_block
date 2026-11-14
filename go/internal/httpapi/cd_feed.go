@@ -28,8 +28,8 @@ func (s *Server) cdRSSXML(baslik, link, aciklama, abs, self string, items []repo
 	sb.WriteString("<description>" + htmlEscape(aciklama) + "</description>")
 	sb.WriteString("<lastBuildDate>" + time.Now().UTC().Format(time.RFC1123Z) + "</lastBuildDate>")
 	sb.WriteString("<language>tr-TR</language>")
-	sb.WriteString("<copyright>© " + time.Now().Format("2006") + " " + htmlEscape(s.siteName) + "</copyright>")
-	sb.WriteString("<generator>" + htmlEscape(s.siteName) + "</generator>")
+	sb.WriteString("<copyright>© " + time.Now().Format("2006") + " " + htmlEscape(s.siteAdi()) + "</copyright>")
+	sb.WriteString("<generator>" + htmlEscape(s.siteAdi()) + "</generator>")
 	sb.WriteString("<ttl>5</ttl>")
 	sb.WriteString("<sy:updatePeriod>hourly</sy:updatePeriod>")
 	sb.WriteString("<sy:updateFrequency>1</sy:updateFrequency>")
@@ -108,7 +108,7 @@ func (s *Server) handleFeed(w http.ResponseWriter, r *http.Request) {
 		slug = strings.TrimSpace(r.URL.Query().Get("category"))
 	}
 
-	title, link, desc := s.siteName, abs+homeURL(locale), s.siteName+" son haberler"
+	title, link, desc := s.siteAdi(), abs+homeURL(locale), s.siteAdi()+" son haberler"
 	self := abs + "/rss.xml"
 	var items []repo.Content
 	if slug != "" {
@@ -125,7 +125,7 @@ func (s *Server) handleFeed(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		items, _ = repo.PublishedBySlug(ctx, s.pool, site.ID, slug, locale, 50)
-		title = cat.Name + " — " + s.siteName
+		title = cat.Name + " — " + s.siteAdi()
 		link = abs + s.langBase(locale) + "/kategori/" + slug
 		desc = cat.Name + " kategorisindeki son haberler"
 		self = abs + "/rss.xml?kategori=" + slug

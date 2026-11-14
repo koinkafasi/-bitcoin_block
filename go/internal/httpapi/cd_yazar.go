@@ -100,9 +100,9 @@ func (s *Server) cdYazarProfilSayfasi(w http.ResponseWriter, r *http.Request, p 
 	kanonik := s.kanonikKok(r) + "/yazar/" + url.PathEscape(p.Slug)
 	if page > 1 {
 		v.OncekiURL = kanonik + "?sayfa=" + strconv.Itoa(page-1)
-		v.Title = p.Name + " — Sayfa " + strconv.Itoa(page) + " | " + s.siteName
+		v.Title = p.Name + " — Sayfa " + strconv.Itoa(page) + " | " + s.siteAdi()
 	} else {
-		v.Title = p.Name + " | " + s.siteName + " Yazar"
+		v.Title = p.Name + " | " + s.siteAdi() + " Yazar"
 	}
 	if page*per < total {
 		v.SonrakiURL = kanonik + "?sayfa=" + strconv.Itoa(page+1)
@@ -113,7 +113,7 @@ func (s *Server) cdYazarProfilSayfasi(w http.ResponseWriter, r *http.Request, p 
 		aciklama = v.Unvan
 	}
 	if aciklama == "" {
-		aciklama = p.Name + " — " + s.siteName + " yazar profili ve yazıları."
+		aciklama = p.Name + " — " + s.siteAdi() + " yazar profili ve yazıları."
 	}
 	v.Desc = aciklama
 	v.Canonical = kanonik
@@ -125,7 +125,7 @@ func (s *Server) cdYazarProfilSayfasi(w http.ResponseWriter, r *http.Request, p 
 		}
 		sameAs = append(sameAs, s2.Href)
 	}
-	v.JSONLD = string(cdKisiJSONLD(s.siteName, kanonik, p.Name, v.Unvan, v.Bio, v.Image, sameAs))
+	v.JSONLD = string(cdKisiJSONLD(s.siteAdi(), kanonik, p.Name, v.Unvan, v.Bio, v.Image, sameAs))
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.Header().Set("Cache-Control", cacheControlPublic)
@@ -142,7 +142,7 @@ func (s *Server) cdYazarlarSayfasi(w http.ResponseWriter, r *http.Request) {
 	kanonik := s.kanonikKok(r) + "/yazarlar"
 	v := templkit.CDYazarlarPage{
 		Shell:           s.cdShellCtx(ctx, r, "yazarlar"),
-		Title:           templkit.CDT(s.cdYerel(r), "Yazarlar ve Editörler") + " — " + s.siteName,
+		Title:           templkit.CDT(s.cdYerel(r), "Yazarlar ve Editörler") + " — " + s.siteAdi(),
 		Desc:            "Haberleri kaleme alan yazarlar, muhabirler ve editörler.",
 		Canonical:       kanonik,
 		PageCategory:    "author_index_page",

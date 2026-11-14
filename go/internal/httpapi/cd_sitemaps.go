@@ -246,6 +246,9 @@ func (s *Server) newsSitemap(abs string, items []repo.Content) string {
 	sb.WriteString(sitemapBaslik)
 	sb.WriteString(`<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:news="http://www.google.com/schemas/sitemap-news/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">`)
 	cut := time.Now().Add(-48 * time.Hour)
+	// Site adı döngü DIŞINDA okunur: her öğe için ayar önbelleğine
+	// gidilmesin (sitemap binlerce URL içerebilir).
+	siteAdi := s.siteAdi()
 	for _, it := range items {
 		if it.PublishedAt == nil || it.PublishedAt.Before(cut) {
 			continue
@@ -253,7 +256,7 @@ func (s *Server) newsSitemap(abs string, items []repo.Content) string {
 		loc := abs + makaleURL(it)
 		sb.WriteString("<url><lastmod>" + it.UpdatedAt.UTC().Format(time.RFC3339) + "</lastmod>")
 		sb.WriteString("<loc>" + htmlEscape(loc) + "</loc><news:news>")
-		sb.WriteString("<news:publication><news:name>" + htmlEscape(s.siteName) + "</news:name><news:language>" + htmlEscape(it.Locale) + "</news:language></news:publication>")
+		sb.WriteString("<news:publication><news:name>" + htmlEscape(siteAdi) + "</news:name><news:language>" + htmlEscape(it.Locale) + "</news:language></news:publication>")
 		sb.WriteString("<news:publication_date>" + it.PublishedAt.UTC().Format(time.RFC3339) + "</news:publication_date>")
 		sb.WriteString("<news:title><![CDATA[ " + strings.ReplaceAll(it.Title, "]]>", "]]]]><![CDATA[>") + " ]]></news:title>")
 		sb.WriteString("</news:news>")

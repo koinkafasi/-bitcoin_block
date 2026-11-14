@@ -201,7 +201,7 @@ func (s *Server) handlePushSend(w http.ResponseWriter, r *http.Request) {
 		s.pushResult(w, r, "info", "Kayıtlı abone yok.")
 		return
 	}
-	title := firstNonEmpty(strings.TrimSpace(r.FormValue("baslik")), s.siteName)
+	title := firstNonEmpty(strings.TrimSpace(r.FormValue("baslik")), s.siteAdi())
 	body := firstNonEmpty(strings.TrimSpace(r.FormValue("metin")), "Yeni içerik yayında!")
 	payload, _ := json.Marshal(map[string]any{"title": title, "body": body, "url": "/"})
 	keys := s.vapidKeys(ctx)

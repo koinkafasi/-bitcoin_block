@@ -53,8 +53,8 @@ func (s *Server) handleRSSList(w http.ResponseWriter, r *http.Request) {
 	d.Menu = s.publicMenu(ctx)
 	d.Footer = s.footerConfig(ctx)
 	d.Theme = themeFromReq(r)
-	d.MetaTitle = "RSS Akışları — " + s.siteName
-	d.MetaDesc = metaDesc(s.siteName+" RSS akışları: tüm haberler ve kategori bazlı beslemeler.", s.siteName)
+	d.MetaTitle = "RSS Akışları — " + s.siteAdi()
+	d.MetaDesc = metaDesc(s.siteAdi()+" RSS akışları: tüm haberler ve kategori bazlı beslemeler.", s.siteAdi())
 	d.Canonical = abs + "/rss-listesi"
 	d.RSSList = &rssListData{Feeds: feeds}
 	s.renderPublic(w, r, "rss_list", d, cacheControlPublic)

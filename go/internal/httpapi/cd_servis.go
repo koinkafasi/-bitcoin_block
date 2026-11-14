@@ -105,7 +105,7 @@ func (s *Server) cdResmiIlanGovde(ctx context.Context, r *http.Request, siteID i
 // cdResmiIlanSayfasi /resmi-ilanlar
 func (s *Server) cdResmiIlanSayfasi(w http.ResponseWriter, r *http.Request, siteID int64) {
 	v := s.cdSayfaKabuk(r, "resmi-ilanlar",
-		"Resmi İlanlar (BİK) — "+s.siteName,
+		"Resmi İlanlar (BİK) — "+s.siteAdi(),
 		"Basın İlan Kurumu resmi ilanları: ihale, duyuru ve tebliğler.",
 		"Resmi İlanlar", "Basın İlan Kurumu resmi ilanları.",
 		s.kanonikKok(r)+"/resmi-ilanlar")

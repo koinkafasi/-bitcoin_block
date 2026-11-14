@@ -56,7 +56,7 @@ func (s *Server) handleCDTag(w http.ResponseWriter, r *http.Request) {
 	aciklama := ad + " etiketli son kripto haberleri ve analizler."
 	v := templkit.CDTagPage{
 		Shell:     s.cdShellCtx(ctx, r, ""),
-		Title:     ad + " " + templkit.CDT(s.cdYerel(r), "Haberleri") + " — " + s.siteName,
+		Title:     ad + " " + templkit.CDT(s.cdYerel(r), "Haberleri") + " — " + s.siteAdi(),
 		Desc:      aciklama,
 		Canonical: kanonik,
 		// CoinDesk deseni: "<Etiket> News" → "Bitcoin Haberleri".
@@ -65,7 +65,7 @@ func (s *Server) handleCDTag(w http.ResponseWriter, r *http.Request) {
 		Page: sayfa,
 		// CoinDesk etiket sayfasında JSON-LD basmıyor; biz CollectionPage
 		// basıyoruz (Google'ın koleksiyon sayfası için doğru tipi).
-		JSONLD:          string(cdCollectionJSONLD(s.siteName, strings.TrimRight(s.cfg.BaseURL, "/"), ad, kanonik, ldItems)),
+		JSONLD:          string(cdCollectionJSONLD(s.siteAdi(), strings.TrimRight(s.cfg.BaseURL, "/"), ad, kanonik, ldItems)),
 		PageCategory:    "tag_page",
 		ContentCategory: "tag",
 		Locale:          s.cdYerel(r),
@@ -168,9 +168,9 @@ func (s *Server) handleCDCoin(w http.ResponseWriter, r *http.Request) {
 		ldItems = append(ldItems, cdLDItem{Headline: row.Name, URL: base + row.Href})
 	}
 	var ld strings.Builder
-	ld.WriteString(string(cdCoinJSONLD(s.siteName, kanonik, bulunan.Name, sym, fiyatMetin, degisimMetin)))
+	ld.WriteString(string(cdCoinJSONLD(s.siteAdi(), kanonik, bulunan.Name, sym, fiyatMetin, degisimMetin)))
 	ld.WriteString(string(breadcrumbScript([]crumb{
-		{Name: s.siteName, URL: base + "/"},
+		{Name: s.siteAdi(), URL: base + "/"},
 		{Name: "Fiyatlar", URL: base + "/price"},
 		{Name: bulunan.Name, URL: kanonik},
 	})))
@@ -180,7 +180,7 @@ func (s *Server) handleCDCoin(w http.ResponseWriter, r *http.Request) {
 
 	v := templkit.CDCoinPage{
 		Shell:           s.cdShellCtx(r.Context(), r, "price"),
-		Title:           bulunan.Name + " (" + sym + ") " + templkit.CDT(s.cdYerel(r), "Fiyatı") + " — " + s.siteName,
+		Title:           bulunan.Name + " (" + sym + ") " + templkit.CDT(s.cdYerel(r), "Fiyatı") + " — " + s.siteAdi(),
 		Desc:            templkit.CDT(s.cdYerel(r), "Canlı fiyat, 24 saatlik değişim ve piyasa sıralaması.") + " — " + bulunan.Name,
 		Canonical:       kanonik,
 		Sym:             sym,

@@ -451,7 +451,7 @@ func (s *Server) cdAbonelikRender(w http.ResponseWriter, r *http.Request, d *tmp
 
 	v := templkit.CDAbonelikSayfa{
 		Shell:           s.cdShellCtx(ctx, r, "abonelik"),
-		Title:           "Abonelik Paketleri — " + s.siteName,
+		Title:           "Abonelik Paketleri — " + s.siteAdi(),
 		Desc:            "Ayrıcalıklı haberlere, analizlere ve reklamsız okuma deneyimine erişin.",
 		Canonical:       s.kanonikKok(r) + "/abonelik",
 		GirisYapildi:    ab.IsLoggedIn,
@@ -490,7 +490,7 @@ func (s *Server) cdAbonelikRender(w http.ResponseWriter, r *http.Request, d *tmp
 	for _, p := range v.Planlar {
 		urunler = append(urunler, cdLDItem{Headline: p.Ad + " aboneliği", URL: v.Canonical})
 	}
-	v.JSONLD = string(cdCollectionJSONLD(s.siteName, s.kanonikKok(r), "Abonelik Paketleri", v.Canonical, urunler))
+	v.JSONLD = string(cdCollectionJSONLD(s.siteAdi(), s.kanonikKok(r), "Abonelik Paketleri", v.Canonical, urunler))
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	if odeme {

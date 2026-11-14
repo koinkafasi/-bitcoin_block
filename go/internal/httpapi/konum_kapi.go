@@ -35,7 +35,7 @@ func (s *Server) konumKapiGerekli(r *http.Request) bool {
 func (s *Server) konumKapiSayfa(w http.ResponseWriter, r *http.Request) {
 	yerel := s.cdYerel(r)
 	v := s.cdSayfaKabuk(r, "hesabim",
-		templkit.CDT(yerel, "Konum izni gerekli")+" — "+s.siteName,
+		templkit.CDT(yerel, "Konum izni gerekli")+" — "+s.siteAdi(),
 		templkit.CDT(yerel, "Üyelik panelini kullanmak için konum izni gerekiyor."),
 		templkit.CDT(yerel, "Konum izni gerekli"),
 		"",

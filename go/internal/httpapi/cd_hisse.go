@@ -222,17 +222,17 @@ func (s *Server) handleCDHisse(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var ld strings.Builder
-	ld.WriteString(string(cdHisseJSONLD(s.siteName, kanonik, d.Ad, d.Sembol, d.Borsa, d.Para,
+	ld.WriteString(string(cdHisseJSONLD(s.siteAdi(), kanonik, d.Ad, d.Sembol, d.Borsa, d.Para,
 		repo.FiyatBicimP(d.Fiyat, d.Para), repo.DegisimBicim(d.Degisim))))
 	ld.WriteString(string(breadcrumbScript([]crumb{
-		{Name: s.siteName, URL: base + "/"},
+		{Name: s.siteAdi(), URL: base + "/"},
 		{Name: templkit.CDT(s.cdYerel(r), "Fiyatlar"), URL: base + "/price"},
 		{Name: d.Ad, URL: kanonik},
 	})))
 
 	v := templkit.CDHisseSayfa{
 		Shell:           s.cdShellCtx(r.Context(), r, "price"),
-		Title:           d.Ad + " (" + d.Sembol + ") " + templkit.CDT(s.cdYerel(r), "Hisse Fiyatı ve Grafiği") + " — " + s.siteName,
+		Title:           d.Ad + " (" + d.Sembol + ") " + templkit.CDT(s.cdYerel(r), "Hisse Fiyatı ve Grafiği") + " — " + s.siteAdi(),
 		Desc:            d.Ad + " (" + d.Sembol + ") güncel hisse fiyatı, " + ar.Ad + " grafiği, gün aralığı, 52 hafta aralığı ve hacim.",
 		Canonical:       kanonik,
 		JSONLD:          ld.String(),

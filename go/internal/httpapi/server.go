@@ -48,7 +48,10 @@ type Server struct {
 	tmpl        *template.Template
 	mux         *http.ServeMux
 
-	siteName         string
+	// Site adı ALAN OLARAK TUTULMAZ: `siteAdi()` değeri ayarlardan kısa
+	// önbellekle okur. Eski hâlde ad yalnız açılışta okunuyordu; panelden
+	// kaydedilen başlık pod yeniden başlayana kadar yayına girmiyordu
+	// (14 Kasım 2026: DB'de "BİTCOŞAR", <title>'da "theblock.com.tr").
 	defaultLangCache string
 	search           *searchsvc.Client
 
@@ -139,7 +142,6 @@ func NewServerApp(cfg config.Config, logger *slog.Logger, pool *pgxpool.Pool, bu
 		spell:         quality.YeniImlaDenetleyici(cfg.HunspellBin, cfg.HunspellDict),
 		tts:           tts.New(cfg.OpenAIKey, cfg.OpenAIBase, cfg.TTSModel, cfg.TTSVoice),
 		mux:           http.NewServeMux(),
-		siteName:      "theblock.com.tr",
 		search:        searchsvc.NewClient(os.Getenv("SEARCH_SVC_URL")),
 		mediaCache:    map[int64]string{},
 		mediaAltCache: map[int64]string{},
@@ -161,7 +163,7 @@ func NewServerApp(cfg config.Config, logger *slog.Logger, pool *pgxpool.Pool, bu
 		cspHashes:      newCSPHashCache(),
 		sayfaCache:     newSayfaOnbellek(),
 	}
-	s.siteName = s.initialSiteName()
+	// Marka adı ilk istekte ayarlardan okunur (bkz. siteAdi).
 	templkit.VarlikSurum = s.assetVer
 
 	// Üçüncü taraf entegrasyon kimliklerini yayına al (GA4, GTM, GSC,
@@ -204,28 +206,67 @@ func (s *Server) assetURL(name string) string {
 	return "/static/" + name + "?v=" + s.assetVer
 }
 
-// initialSiteName ayarlardan site başlığını okur (yoksa varsayılan).
-func (s *Server) initialSiteName() string {
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-	defer cancel()
-	b, err := repo.GetSetting(ctx, s.pool, "genel", "site_baslik")
-	if err != nil {
-		return s.siteName
+// siteAdiVarsayilan ayar okunamazsa gösterilen addır. Eskiden burada
+// "theblock.com.tr" gömülüydü: ayar boş ya da okunamaz olduğunda site eski
+// markayla açılıyordu (14 Kasım 2026'da canlıda görüldü).
+const siteAdiVarsayilan = "BİTCOŞAR"
+
+// siteAdi site başlığını döndürür (settings → genel → site_baslik).
+// Değer cachedSetting ile 10 sn önbelleklenir: her istekte DB'ye gidilmez,
+// ama panelden kaydedilen ad yeniden başlatma beklemeden yayına girer.
+func (s *Server) siteAdi() string {
+	if s.pool == nil {
+		return siteAdiVarsayilan
 	}
-	// {"tr":"..."} veya "str" desteklenir
-	var obj map[string]string
-	if json.Unmarshal(b, &obj) == nil {
-		for _, v := range obj {
-			if v != "" {
+	if ad := siteAdiCoz(s.cachedSetting(context.Background(), "genel", "site_baslik")); ad != "" {
+		return ad
+	}
+	return siteAdiVarsayilan
+}
+
+// siteBaslikKaydet site başlığını yazar. BOŞ değer yazılmaz: ad; <title>,
+// JSON-LD ve RSS'te diğer metinlerle birleştiği için boş bırakılınca site
+// adsız kalıyordu ("— Kripto Haberleri ve Piyasa Verisi"). Panel formundan
+// boş gönderim sessizce yok sayılır (14 Kasım 2026).
+func (s *Server) siteBaslikKaydet(ctx context.Context, ham string) {
+	ad := strings.TrimSpace(ham)
+	if ad == "" {
+		return
+	}
+	b, err := json.Marshal(map[string]string{"tr": ad})
+	if err != nil {
+		return
+	}
+	_ = repo.SetSetting(ctx, s.pool, "genel", "site_baslik", b)
+}
+
+// siteAdiCoz ayar değerini çözer. Kayıt iki biçimde olabilir:
+// {"tr":"BİTCOŞAR"} veya düz "bitcosar". tr öncelikli, sonra en, sonra hangi
+// dil doluysa o. Boş değer boş dize döner; çağıran varsayılana düşer.
+// (Eski kod haritayı sırasız geziyordu: {"tr":"","en":"x"} gibi bir kayıtta
+// hangi dilin döneceği şansa kalıyordu.)
+func siteAdiCoz(ham []byte) string {
+	if len(ham) == 0 {
+		return ""
+	}
+	var m map[string]string
+	if json.Unmarshal(ham, &m) == nil {
+		for _, dil := range []string{"tr", "en"} {
+			if v := strings.TrimSpace(m[dil]); v != "" {
+				return v
+			}
+		}
+		for _, v := range m {
+			if v = strings.TrimSpace(v); v != "" {
 				return v
 			}
 		}
 	}
-	var plain string
-	if json.Unmarshal(b, &plain) == nil && plain != "" {
-		return plain
+	var duz string
+	if json.Unmarshal(ham, &duz) == nil {
+		return strings.TrimSpace(duz)
 	}
-	return s.siteName
+	return ""
 }
 
 func (s *Server) uyeRoute(pattern string, h http.HandlerFunc) {

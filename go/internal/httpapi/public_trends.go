@@ -45,7 +45,7 @@ func (s *Server) handleTrendRSS(w http.ResponseWriter, r *http.Request) {
 	doc := trendRSS{
 		Version: "2.0",
 		Channel: trendRSSChannel{
-			Title:       s.siteName + " — Gündem",
+			Title:       s.siteAdi() + " — Gündem",
 			Link:        base + "/gundem.xml",
 			Description: "Google Trends Türkiye ve site içi gündem terimleri",
 			Language:    locale,

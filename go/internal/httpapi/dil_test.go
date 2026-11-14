@@ -77,7 +77,7 @@ func TestSiteAdiYerellesir(t *testing.T) {
 
 	// Karşılaştırma ORİJİNAL adla yapılmalı: yerelleştirilmiş adla
 	// karşılaştırınca "theblock.com.tr — TheBlok" çıkıyordu.
-	assert.Contains(t, src, "title != s.siteName",
+	assert.Contains(t, src, "title != s.siteAdi()",
 		"site adı karşılaştırması orijinal adla olmalı")
 
 	art := okuDosya(t, "cd_article.go")

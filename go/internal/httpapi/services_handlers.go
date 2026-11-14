@@ -245,7 +245,7 @@ func (s *Server) handleHisselerPage(w http.ResponseWriter, r *http.Request) {
 	v := templkit.CDHisselerPage{
 		Shell:     s.cdShellCtx(ctx, r, "fiyatlar"),
 		Title:     templkit.CDT(s.cdYerel(r), "Tüm Hisseler") + " — " + templkit.CDT(s.cdYerel(r), "BIST hisse fiyatları ve arama"),
-		Desc:      metaDesc("BIST'te işlem gören hisselerin kod, ad, fiyat ve günlük değişimi; hisse arama ve A-Z dizini.", "Tüm hisseler, canlı fiyatlar ve hisse arama — "+s.siteName, s.siteName),
+		Desc:      metaDesc("BIST'te işlem gören hisselerin kod, ad, fiyat ve günlük değişimi; hisse arama ve A-Z dizini.", "Tüm hisseler, canlı fiyatlar ve hisse arama — "+s.siteAdi(), s.siteAdi()),
 		Canonical: strings.TrimRight(s.cfg.BaseURL, "/") + "/borsa/hisseler",
 		Satir:     rows,
 		Harfler:   sayfa.Harfler,
@@ -299,7 +299,7 @@ func (s *Server) handleKriptoPage(w http.ResponseWriter, r *http.Request) {
 	v := templkit.CDKriptoPage{
 		Shell:           s.cdShellCtx(ctx, r, "fiyatlar"),
 		Title:           templkit.CDT(s.cdYerel(r), "Kripto Para") + " — " + templkit.CDT(s.cdYerel(r), "canlı fiyatlar, 24s/7g değişim ve hacim"),
-		Desc:            metaDesc("Bitcoin, Ethereum ve diğer kripto paraların TL fiyatı, 24 saat ve 7 günlük değişimi, hacim ve piyasa değeri; kripto para arama.", "Kripto para fiyatları ve arama — "+s.siteName, s.siteName),
+		Desc:            metaDesc("Bitcoin, Ethereum ve diğer kripto paraların TL fiyatı, 24 saat ve 7 günlük değişimi, hacim ve piyasa değeri; kripto para arama.", "Kripto para fiyatları ve arama — "+s.siteAdi(), s.siteAdi()),
 		Canonical:       strings.TrimRight(s.cfg.BaseURL, "/") + "/borsa/kripto",
 		BaseURL:         strings.TrimRight(s.cfg.BaseURL, "/"),
 		Locale:          s.cdYerel(r),
@@ -445,7 +445,7 @@ func (s *Server) handleSearch(w http.ResponseWriter, r *http.Request) {
 	}
 	v := templkit.CDAramaSayfa{
 		Shell:     s.cdShellCtx(ctx, r, ""),
-		Title:     title + " — " + s.siteName,
+		Title:     title + " — " + s.siteAdi(),
 		Desc:      "bitcosar üzerinde haber, analiz ve piyasa verisi araması.",
 		Canonical: strings.TrimRight(s.cfg.BaseURL, "/") + "/arama",
 		BaseURL:   strings.TrimRight(s.cfg.BaseURL, "/"),

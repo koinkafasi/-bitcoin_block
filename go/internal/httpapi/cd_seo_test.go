@@ -137,7 +137,8 @@ func TestCDMakaleMetasYalnizDoluAlan(t *testing.T) {
 }
 
 func TestCDNewsSitemapCoinDeskBicimi(t *testing.T) {
-	s := &Server{siteName: "BitCoŞaR"}
+	// Site adı artık ayarlardan okunur (siteAdi); havuz yok → varsayılan ad.
+	s := &Server{}
 	yayin := time.Now().Add(-2 * time.Hour)
 	smap := s.newsSitemap("https://x.test", []repo.Content{{
 		ID: 5, Title: `Başlık & <test>`, Locale: "tr",
@@ -155,7 +156,8 @@ func TestCDNewsSitemapCoinDeskBicimi(t *testing.T) {
 }
 
 func TestCDRSSCoinDeskBicimi(t *testing.T) {
-	s := &Server{siteName: "BitCoŞaR"}
+	// Site adı artık ayarlardan okunur (siteAdi); havuz yok → varsayılan ad.
+	s := &Server{}
 	yayin := time.Now().Add(-time.Hour)
 	rss := s.cdRSSXML("BitCoŞaR", "https://x.test/", "açıklama", "https://x.test", "https://x.test/rss.xml",
 		[]repo.Content{{

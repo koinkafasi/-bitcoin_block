@@ -242,9 +242,9 @@ func (s *Server) handleCDPrice(w http.ResponseWriter, r *http.Request) {
 		ldItems = append(ldItems, cdLDItem{Headline: row.Name, URL: base + row.Href})
 	}
 	var ld strings.Builder
-	ld.WriteString(string(siteAdiJSONLD(s.siteName, kanonik)))
+	ld.WriteString(string(siteAdiJSONLD(s.siteAdi(), kanonik)))
 	ld.WriteString(string(breadcrumbScript([]crumb{
-		{Name: s.siteName, URL: base + "/"},
+		{Name: s.siteAdi(), URL: base + "/"},
 		{Name: templkit.CDT(s.cdYerel(r), "Fiyatlar"), URL: kanonik},
 	})))
 	ld.WriteString(string(cdFiyatListesiJSONLD("Cryptocurrency Market Cap Rankings", ldItems)))
@@ -254,7 +254,7 @@ func (s *Server) handleCDPrice(w http.ResponseWriter, r *http.Request) {
 
 	v := templkit.CDPricePage{
 		Shell:           s.cdShellCtx(r.Context(), r, "price"),
-		Title:           templkit.CDT(s.cdYerel(r), "Kripto Fiyatları") + " — " + s.siteName,
+		Title:           templkit.CDT(s.cdYerel(r), "Kripto Fiyatları") + " — " + s.siteAdi(),
 		Desc:            "Bitcoin, Ethereum ve önde gelen kripto paraların canlı fiyatları, 24 saatlik değişimleri ve piyasa sıralaması.",
 		Canonical:       kanonik,
 		Rows:            rows,

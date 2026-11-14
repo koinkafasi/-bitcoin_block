@@ -59,7 +59,7 @@ func (s *Server) handleCeviriciPage(w http.ResponseWriter, r *http.Request) {
 
 	kok := s.kanonikKok(r)
 	v := s.cdSayfaKabuk(r, "cevirici",
-		"Kripto Para ve Döviz Çevirici — "+s.siteName,
+		"Kripto Para ve Döviz Çevirici — "+s.siteAdi(),
 		"Bitcoin, Ethereum ve diğer kripto paraları TL, dolar ve euroya anlık piyasa kuruyla çevirin.",
 		"Kripto ve Döviz Çevirici",
 		"Kripto paraları ve dövizleri birbirine çevirin; kurlar piyasa verisinden gelir.",

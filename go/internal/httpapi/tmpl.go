@@ -1295,7 +1295,7 @@ func (s *Server) baseView(lang, langBase, title string) *tmplData {
 	if loc != "" && loc != "tr" {
 		homeURL = "/" + loc + "/"
 	}
-	siteAdi := s.siteName
+	siteAdi := s.siteAdi()
 	if loc != "tr" {
 		if v := bundle.T(loc, "site.name"); v != "site.name" && strings.TrimSpace(v) != "" {
 			siteAdi = v
@@ -1303,7 +1303,7 @@ func (s *Server) baseView(lang, langBase, title string) *tmplData {
 	}
 	slogan := siteAdi + " — " + s.localeText(loc, "site.suffix", "Güncel Haber Portalı")
 	metaTitle := slogan
-	if title != "" && title != s.siteName {
+	if title != "" && title != s.siteAdi() {
 		metaTitle = title + " — " + siteAdi
 	}
 	megaDesign, catNavDesign := s.menuDesignValues(context.Background())

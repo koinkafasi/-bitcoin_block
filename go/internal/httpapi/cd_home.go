@@ -146,7 +146,7 @@ func (s *Server) handleCDHome(w http.ResponseWriter, r *http.Request) {
 
 	d := templkit.CDHomeView{
 		Shell:     s.cdShellCtx(r.Context(), r, ""),
-		Title:     s.siteName + " — " + templkit.CDT(dil, "Kripto Haberleri ve Piyasa Verisi"),
+		Title:     s.siteAdi() + " — " + templkit.CDT(dil, "Kripto Haberleri ve Piyasa Verisi"),
 		Desc:      templkit.CDT(dil, "Bitcoin, Ethereum ve kripto piyasalarından son haberler, analizler ve canlı fiyatlar."),
 		Canonical: s.kanonikKok(r) + r.URL.Path,
 		Lead:      lead,
@@ -163,7 +163,7 @@ func (s *Server) handleCDHome(w http.ResponseWriter, r *http.Request) {
 		MostRead:  s.cdPopuler(r, 6),
 		Opinion:   s.cdUzmanlar(r, 4),
 		Hreflang:  map[string]string{"tr": s.kanonikKok(r) + "/"},
-		JSONLD:    string(orgJSONLD(s.siteName, s.kanonikKok(r), s.kanonikKok(r)+r.URL.Path)),
+		JSONLD:    string(orgJSONLD(s.siteAdi(), s.kanonikKok(r), s.kanonikKok(r)+r.URL.Path)),
 		// "Explore more from CoinDesk" şeridi — gerçek veriyle.
 		Explore: s.cdExploreDoldur(r, sections),
 		// MODÜLER YERLEŞİM (9 Kasım 2026): sayfa tasarımcısının yazdığı

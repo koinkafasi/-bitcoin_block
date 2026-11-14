@@ -19,7 +19,7 @@ func (s *Server) handleBultenGET(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	locale := langOf(r, s)
 	site := s.siteByDomain(ctx, r.Host)
-	d := s.baseView(locale, s.langBase(locale), s.siteName+" Bülten")
+	d := s.baseView(locale, s.langBase(locale), s.siteAdi()+" Bülten")
 	d.HomeURL = homeURL(locale)
 	d.NavCategories = s.navCategories(ctx)
 	d.Menu = s.publicMenu(ctx)

@@ -12,8 +12,8 @@ import (
 func (s *Server) orgJSONLD() template.JS {
 	base := strings.TrimRight(s.cfg.BaseURL, "/")
 	obj := []map[string]any{
-		{"@context": "https://schema.org", "@type": "Organization", "name": s.siteName, "url": base + "/"},
-		{"@context": "https://schema.org", "@type": "WebSite", "name": s.siteName, "url": base + "/", "inLanguage": "tr",
+		{"@context": "https://schema.org", "@type": "Organization", "name": s.siteAdi(), "url": base + "/"},
+		{"@context": "https://schema.org", "@type": "WebSite", "name": s.siteAdi(), "url": base + "/", "inLanguage": "tr",
 			"potentialAction": map[string]any{
 				"@type":       "SearchAction",
 				"target":      map[string]any{"@type": "EntryPoint", "urlTemplate": base + "/arama?q={search_term_string}"},

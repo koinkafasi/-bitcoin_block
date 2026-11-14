@@ -129,7 +129,7 @@ func (s *Server) cdMakaleGoster(w http.ResponseWriter, r *http.Request, c repo.C
 	if c.AuthorName != "" {
 		v.Author = c.AuthorName
 	} else {
-		v.Author = s.siteName
+		v.Author = s.siteAdi()
 	}
 	v.Dil = templkit.CDMakaleDilIcin(c.Locale)
 	// İÇERİK DİLİ BURADA, EN ERKEN NOKTADA kuruluyor.
@@ -326,7 +326,7 @@ func (s *Server) cdMakaleGoster(w http.ResponseWriter, r *http.Request, c repo.C
 	v.FAQJSONLD = string(faqJSONLD(faqCikar(c.Detail)))
 
 	// CoinDesk makale meta seti (Arc/Parse.ly). Yalnız gerçek veri.
-	v.Metas = cdMakaleMetas(s.siteName, makaleMetaGirdi{
+	v.Metas = cdMakaleMetas(s.siteAdi(), makaleMetaGirdi{
 		ID:         itoa64(c.ID),
 		Baslik:     c.Title,
 		Bolum:      bolumAd,
