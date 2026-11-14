@@ -1777,9 +1777,9 @@ func mockResult(kind, input string) string {
 	case "spot":
 		return input + " hakkındaki haberde tüm detaylar masaya yatırıldı."
 	case "seo_title":
-		return input + " | theblock.com.tr"
+		return input + " | bitcosar.com"
 	case "seo_description":
-		return input + " ile ilgili en güncel gelişmeler theblock.com.tr'de."
+		return input + " ile ilgili en güncel gelişmeler bitcosar.com'da."
 	case "rewrite":
 		return input
 	case "summarize":

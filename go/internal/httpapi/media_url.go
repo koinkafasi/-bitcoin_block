@@ -45,7 +45,7 @@ func (s *Server) handleMediaURLUpload(w http.ResponseWriter, r *http.Request) {
 		mediaErr("Adres geçersiz.")
 		return
 	}
-	req.Header.Set("User-Agent", "TheBlockBot/1.0 (+https://theblock.com.tr)")
+	req.Header.Set("User-Agent", "TheBlockBot/1.0 (+https://bitcosar.com)")
 	req.Header.Set("Accept", "image/*")
 	// #nosec G704 -- safeRemoteHTTPClient: her istekte ve her yönlendirmede
 	// hedefi yeniden doğrular (genel IP, 80/443). Bkz. platform.SafeFetchClient.

@@ -36,7 +36,7 @@ func (s *Server) siteByDomain(ctx context.Context, host string) repo.Site {
 	}
 	domain := strings.ToLower(host)
 	if domain == "" {
-		domain = "theblock.com.tr"
+		domain = varsayilanDomain
 	}
 	// bellek önbelleği (60 sn) — her istekte DB sorgusunu önler
 	s.siteMu.Lock()

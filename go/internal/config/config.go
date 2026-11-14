@@ -65,7 +65,7 @@ func Load() Config {
 		Env:         getEnv("APP_ENV", "production"),
 		Debug:       strings.EqualFold(getEnv("APP_DEBUG", "false"), "true"),
 		ListenAddr:  ":" + getEnv("PORT", "8070"),
-		BaseURL:     getEnv("APP_BASE_URL", "https://theblock.com.tr"),
+		BaseURL:     getEnv("APP_BASE_URL", "https://bitcosar.com"),
 		DatabaseURL: getEnv("DATABASE_URL", ""),
 		RedisURL:    getEnv("REDIS_URL", ""),
 		OpenAIKey:   getEnv("OPENAI_API_KEY", ""),

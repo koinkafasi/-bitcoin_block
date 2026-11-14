@@ -145,7 +145,7 @@ func (s *Server) handleAsistanPOST(w http.ResponseWriter, r *http.Request) {
 	site := s.siteByDomain(ctx, r.Host)
 	locale := langOf(r, s)
 
-	system := "Sen theblock.com.tr haber platformunun asistanısın. Türkçe, kısa ve doğrusal cevap ver. " +
+	system := "Sen " + s.siteAdi() + " haber platformunun asistanısın. Türkçe, kısa ve doğrusal cevap ver. " +
 		"Haberle ilgili değilsen haber uydurma; genel bilgi ver ve kaynak öner."
 	var msgs []ai.Msg
 	if t := strings.TrimSpace(r.FormValue("baglam_baslik")); t != "" {

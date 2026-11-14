@@ -963,7 +963,7 @@ func TrendPanel(v TrendView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 81, "\" placeholder=\"sc-domain:theblock.com.tr\" style=\"flex:1\" aria-label=\"Search Console özelliği\"><button class=\"btn small\" type=\"submit\">Kaydet</button></div></form><div style=\"display:flex;gap:8px;align-items:center;margin-top:8px\"><span class=\"small muted\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 81, "\" placeholder=\"sc-domain:bitcosar.com\" style=\"flex:1\" aria-label=\"Search Console özelliği\"><button class=\"btn small\" type=\"submit\">Kaydet</button></div></form><div style=\"display:flex;gap:8px;align-items:center;margin-top:8px\"><span class=\"small muted\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

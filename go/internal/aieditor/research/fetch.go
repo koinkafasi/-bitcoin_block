@@ -126,7 +126,7 @@ func FetchText(ctx context.Context, rawURL string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	req.Header.Set("User-Agent", "theblock-research/1.0 (+https://theblock.com.tr)")
+	req.Header.Set("User-Agent", "theblock-research/1.0 (+https://bitcosar.com)")
 	req.Header.Set("Accept", "text/html,application/xhtml+xml,text/plain;q=0.9")
 	resp, err := defaultClient().Do(req)
 	if err != nil {

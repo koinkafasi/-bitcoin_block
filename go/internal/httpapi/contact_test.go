@@ -21,8 +21,8 @@ func TestContactDefaultsDomain(t *testing.T) {
 
 func TestContactDefaultsBosDomain(t *testing.T) {
 	c := contactDefaults("   ")
-	assert.Equal(t, "theblock.com.tr", c.Domain, "boş alan adı sabit varsayılana düşer")
-	assert.Equal(t, "info@theblock.com.tr", c.Info)
+	assert.Equal(t, varsayilanDomain, c.Domain, "boş alan adı sabit varsayılana düşer")
+	assert.Equal(t, "info@"+varsayilanDomain, c.Info)
 }
 
 func TestNormalizeContactConfigBosluklariDoldurur(t *testing.T) {
@@ -34,19 +34,19 @@ func TestNormalizeContactConfigBosluklariDoldurur(t *testing.T) {
 }
 
 func TestContactTokensYerTutucu(t *testing.T) {
-	c := contactDefaults("theblock.com.tr")
+	c := contactDefaults("bitcosar.com")
 	c.Telefon = "+90 212 000 00 00"
 	tok := contactTokens(c)
-	assert.Equal(t, "theblock.com.tr", tok["domain"])
-	assert.Equal(t, "info@theblock.com.tr", tok["eposta_info"])
-	assert.Equal(t, "info@theblock.com.tr", tok["eposta"], "{eposta} kısa takma ad")
+	assert.Equal(t, "bitcosar.com", tok["domain"])
+	assert.Equal(t, "info@bitcosar.com", tok["eposta_info"])
+	assert.Equal(t, "info@bitcosar.com", tok["eposta"], "{eposta} kısa takma ad")
 	assert.Equal(t, "+90 212 000 00 00", tok["telefon"])
 
 	in := "Bize {eposta_info} veya {eposta_reklam} adresinden yazın. Site: {domain}. Tel: {telefon}"
 	out := pageTextVars(in, tok)
-	assert.Contains(t, out, "info@theblock.com.tr")
-	assert.Contains(t, out, "reklam@theblock.com.tr")
-	assert.Contains(t, out, "theblock.com.tr")
+	assert.Contains(t, out, "info@bitcosar.com")
+	assert.Contains(t, out, "reklam@bitcosar.com")
+	assert.Contains(t, out, "bitcosar.com")
 	assert.Contains(t, out, "+90 212 000 00 00")
 	assert.NotContains(t, out, "{", "bilinen yer tutucu kalmamalı")
 }

@@ -310,7 +310,7 @@ templ TrendPanel(v TrendView) {
 					<h2 style="margin:0;font-size:1.05rem">Search Console (GSC)</h2>
 					<p class="small muted" style="margin:4px 0 8px">SEO > İndeksleme panelindeki servis hesabı kullanılır. Özellik alanına <code>sc-domain:alanadiniz.com</code> veya <code>https://alanadiniz.com/</code> yazın.</p>
 					<form method="post" action="/admin/trend/gsc/ayar" hx-post="/admin/trend/gsc/ayar" hx-target="#bot-panel" hx-swap="outerHTML">
-						<div class="input-row"><input class="input" name="gsc_property" value={ v.GSCProperty } placeholder="sc-domain:theblock.com.tr" style="flex:1" aria-label="Search Console özelliği"/><button class="btn small" type="submit">Kaydet</button></div>
+						<div class="input-row"><input class="input" name="gsc_property" value={ v.GSCProperty } placeholder="sc-domain:bitcosar.com" style="flex:1" aria-label="Search Console özelliği"/><button class="btn small" type="submit">Kaydet</button></div>
 					</form>
 					<div style="display:flex;gap:8px;align-items:center;margin-top:8px">
 						<span class="small muted">{ gscReadyText(v.GSCReady) }</span>

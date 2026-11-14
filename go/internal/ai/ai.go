@@ -321,9 +321,9 @@ func (p *mockProvider) structured(user string) string {
 		// Düz metin: alana doğrudan yazılır, JSON tırnağı gerekmez.
 		return input + " konusundaki haberde tüm detaylar masaya yatırıldı. Amacımız okuyucuya hızlı ve güvenilir bilgi aktarmak. Devamı haberimizin içeriğinde."
 	case "seo_description":
-		return input + " ile ilgili en güncel gelişmeler, analiz ve ayrıntılı haber — theblock.com.tr'de."
+		return input + " ile ilgili en güncel gelişmeler, analiz ve ayrıntılı haber — bitcosar.com'da."
 	case "seo_title":
-		return input + " | Haber ve Güncel Gelişmeler — theblock.com.tr"
+		return input + " | Haber ve Güncel Gelişmeler — bitcosar.com"
 	case "rewrite":
 		return strings.TrimSpace(input) + "\n\n— (Mock AI yeniden yazımının ilk paragrafı. OmniRoute anahtarı eklenince gerçek üretim aktifleşir.)"
 	case "summarize":

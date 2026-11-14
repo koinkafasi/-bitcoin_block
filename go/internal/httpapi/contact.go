@@ -55,6 +55,11 @@ func (c *ContactConfig) emailFields() []struct {
 	}
 }
 
+// varsayilanDomain yapılandırma/ayar yokken kullanılan alan adıdır.
+// Eskiden gömülü "theblock.com.tr" idi; site bitcosar.com'da yayında
+// olduğu hâlde panel/iletişim varsayılanları eski markayı gösteriyordu.
+const varsayilanDomain = "bitcosar.com"
+
 // contactDefaults alan adından varsayılan adresleri üretir.
 func contactDefaults(domain string) ContactConfig {
 	d := strings.TrimSpace(strings.ToLower(domain))
@@ -63,7 +68,7 @@ func contactDefaults(domain string) ContactConfig {
 		d = d[:i]
 	}
 	if d == "" {
-		d = "theblock.com.tr"
+		d = varsayilanDomain
 	}
 	return ContactConfig{
 		Domain:    d,
@@ -132,7 +137,7 @@ func (s *Server) contactConfig(ctx context.Context) ContactConfig {
 func (s *Server) defaultDomain() string {
 	base := s.cfg.BaseURL
 	if base == "" {
-		return "theblock.com.tr"
+		return varsayilanDomain
 	}
 	if u, err := url.Parse(base); err == nil && u.Host != "" {
 		host := u.Hostname()
@@ -140,7 +145,7 @@ func (s *Server) defaultDomain() string {
 			return host
 		}
 	}
-	return "theblock.com.tr"
+	return varsayilanDomain
 }
 
 // contactTokens metinlerde kullanılan yer tutucuları üretir.

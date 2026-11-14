@@ -60,11 +60,14 @@ func (s *Server) setPushSetting(ctx context.Context, key, val string) {
 	_ = repo.SetSetting(ctx, s.pool, "push", key, b)
 }
 
+// pushSubject VAPID "sub" alanını döndürür. Ayarlanmadıysa iletişim
+// adresinden üretilir; gömülü "info@theblock.com.tr" eski markaydı
+// (14 Kasım 2026: site adı BİTCOŞAR, domain bitcosar.com).
 func (s *Server) pushSubject(ctx context.Context) string {
 	if v := s.pushSetting(ctx, "subject"); v != "" {
 		return v
 	}
-	return "mailto:info@theblock.com.tr"
+	return "mailto:info@" + s.contactConfig(ctx).Domain
 }
 
 // handleScroll makale kaydırma derinliğini artırır (P5 "scroll_view_count" eşdeğeri).

@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-const userAgent = "theblock-trends/1.0 (+https://theblock.com.tr)"
+const userAgent = "theblock-trends/1.0 (+https://bitcosar.com)"
 
 // GoogleTrendsProvider Google Trends Daily Search Trends RSS adaptörü.
 type GoogleTrendsProvider struct {

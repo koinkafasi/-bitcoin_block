@@ -114,7 +114,7 @@ func ValidateOutboundURL(u *url.URL) error {
 }
 
 func DogrulaVeCek(ctx context.Context, rawURL string, timeout time.Duration) (*http.Response, error) {
-	return DogrulaVeCekUA(ctx, rawURL, timeout, "TheBlockBot/1.0 (+https://theblock.com.tr)")
+	return DogrulaVeCekUA(ctx, rawURL, timeout, "TheBlockBot/1.0 (+https://bitcosar.com)")
 }
 
 // DogrulaVeCekUA DogrulaVeCek'in UA'sı özelleştirilebilir sürümü.

@@ -1445,7 +1445,7 @@ func SitelerPanel(v SitelerView) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 137, "</select></div><button class=\"btn\" type=\"submit\">＋ Ekle</button><p class=\"hint\" style=\"margin-top:8px\">Site eklendikten sonra üst şeritten siteyi seçin; içerik/medya o siteye izole olur. Genel site her alan adından çözülür (varsayılan: theblock.com.tr).</p></form></div><div class=\"card card-pad\" style=\"margin-top:16px\"><h2 style=\"margin:0 0 10px;font-size:1.1rem\">3-Site Pilot Dashboard <span class=\"small muted\">· RPM ₺")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 137, "</select></div><button class=\"btn\" type=\"submit\">＋ Ekle</button><p class=\"hint\" style=\"margin-top:8px\">Site eklendikten sonra üst şeritten siteyi seçin; içerik/medya o siteye izole olur. Genel site her alan adından çözülür (varsayılan: bitcosar.com).</p></form></div><div class=\"card card-pad\" style=\"margin-top:16px\"><h2 style=\"margin:0 0 10px;font-size:1.1rem\">3-Site Pilot Dashboard <span class=\"small muted\">· RPM ₺")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

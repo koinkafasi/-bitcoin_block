@@ -381,7 +381,7 @@ func (s *Server) handleTasimaSampleCSV(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte{0xEF, 0xBB, 0xBF}) // BOM (Excel Türkçe uyumu)
 	switch tur {
 	case "yonlendirme":
-		_, _ = io.WriteString(w, "kaynak,hedef,kod\n/eski-haber-123,https://theblock.com.tr/yeni-haber-456,301\n/2019/05/kampanya,https://theblock.com.tr/kampanya,301\n")
+		_, _ = io.WriteString(w, "kaynak,hedef,kod\n/eski-haber-123,https://bitcosar.com/yeni-haber-456,301\n/2019/05/kampanya,https://bitcosar.com/kampanya,301\n")
 	default:
 		_, _ = io.WriteString(w, "baslik,spot,detay,kategori,etiketler,durum,slug,seo_baslik,seo_aciklama,kaynak_url\n")
 		_, _ = io.WriteString(w, "Örnek Haber Başlığı,Kısa özet metni.,Paragraf bir.\nParagraf iki.,Ekonomi,\"ekonomi,piyasa\",taslak,,,,\n")

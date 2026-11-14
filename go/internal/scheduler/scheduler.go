@@ -237,7 +237,9 @@ func submitIndexNowPromoted(ctx context.Context, pool *pgxpool.Pool, logger *slo
 	endpoint := seoSetting(ctx, pool, "indexnow_endpoint")
 	host := strings.TrimRight(seoSetting(ctx, pool, "indexnow_domain"), "/")
 	if host == "" {
-		host = "theblock.com.tr"
+		// Ayar boşsa IndexNow'a eski markanın alan adı gönderiliyordu
+		// (14 Kasım 2026). Site bitcosar.com'da yayında.
+		host = "bitcosar.com"
 	}
 	keyLoc := "https://" + host + "/" + key + ".txt"
 

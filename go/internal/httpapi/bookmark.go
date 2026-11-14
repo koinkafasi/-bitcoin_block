@@ -48,7 +48,7 @@ func (s *Server) handleBookmarkPreview(w http.ResponseWriter, r *http.Request) {
 		s.writeJSON(w, http.StatusBadRequest, map[string]any{"ok": false, "error": "bağlantı geçersiz"})
 		return
 	}
-	req.Header.Set("User-Agent", "TheBlockBot/1.0 (+https://theblock.com.tr)")
+	req.Header.Set("User-Agent", "TheBlockBot/1.0 (+https://bitcosar.com)")
 	req.Header.Set("Accept", "text/html,application/xhtml+xml")
 	client := safeRemoteHTTPClient(7 * time.Second)
 	// #nosec G704 -- bkz. yukarıdaki NewRequestWithContext gerekçesi:
