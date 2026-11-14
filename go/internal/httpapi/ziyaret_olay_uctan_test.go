@@ -76,7 +76,6 @@ func TestOlayKaydiUctanUca(t *testing.T) {
 	})
 	h := s.withGuvenlik(okundu)
 
-	const anahtar = "test-uctan-uca"
 	istekler := []struct {
 		yol, ua  string
 		beklenen int
@@ -102,7 +101,6 @@ func TestOlayKaydiUctanUca(t *testing.T) {
 			t.Errorf("%s → %d, beklenen %d", is.yol, w.Code, is.beklenen)
 		}
 	}
-	_ = anahtar
 
 	// İşçinin turunu bekle (2 sn) + yazma payı.
 	var satirlar []struct {
