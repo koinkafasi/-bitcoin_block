@@ -326,6 +326,9 @@ func (s *Server) routes() {
 	// ("both match /price/markets"). Tek joker (`/{lang}/{rest...}`)
 	// korunup dağıtım handler'da yapılıyor.
 	s.mux.HandleFunc("GET /robots.txt", s.handleRobots)
+	// DMCA.com site sahipliği doğrulaması: kökte dosya olarak isteniyor
+	// (eş meta etiketi cd_head.templ içinde). Bkz. dmca_dogrulama.go.
+	s.mux.HandleFunc("GET /dmca-validation.html", s.handleDMCADogrulama)
 	// Takım logoları kendi altyapımızdan servis edilir (bkz. teamlogo_handlers.go).
 	s.mux.HandleFunc("GET /takim-logo/{key}", s.handleTeamLogo)
 	s.mux.HandleFunc("GET /manifest.webmanifest", s.handleManifest)

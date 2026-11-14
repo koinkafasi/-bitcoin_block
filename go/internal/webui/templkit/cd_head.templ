@@ -111,6 +111,14 @@ var cdDilSirasi = []string{"tr", "en", "de", "es", "ru", "fr", "ar"}
 templ cdHead(h CDHead) {
 	<meta charset="utf-8"/>
 	<meta name="viewport" content="width=device-width, initial-scale=1"/>
+		// DMCA.com site sahipliği doğrulaması — 14 Kasım 2026.
+	//
+	// DMCA paneli iki yöntemden birini kabul ediyor: bu meta etiketi ya da
+	// kökte /dmca-validation.html dosyası. İkisi de yayında tutuluyor ki
+	// denetleyici hangisini ararsa arasın karşılansın (dosya:
+	// httpapi/dmca_dogrulama.go). Jeton panelden BİREBİR kopyalandı;
+	// tek karakter değişirse doğrulama düşer, bu yüzden burada sabit.
+	<meta name="dmca-site-verification" content="UlpPYStLTW94b1g3aW96c25tRWc0Zz090"/>
 	<title>{ h.Title }</title>
 	<meta name="description" content={ h.Desc }/>
 		// CoinDesk robot yönergesi: zengin önizleme izinleri AÇIK
