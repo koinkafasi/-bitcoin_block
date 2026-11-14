@@ -134,6 +134,15 @@ func ayarlarViewFrom(sc *settingsData, locales []i18n.Locale, fl *flashMsg) temp
 	v.GVerification = sc.GVerification
 	v.AdSense = sc.AdSense
 	v.RobotsHTML = sc.RobotsHTML
+	// Entegrasyon kimlikleri forma GERİ basılmalı: bu alanlar görünümde boş
+	// kalırsa "Kaydet" kayıtlı değerleri boş dizeyle ezer (reklam kapanır).
+	v.GTMID = sc.GTMID
+	v.GTMNoScript = sc.GTMNoScript
+	v.ReklamAktif = sc.ReklamAktif
+	v.ReklamZone = sc.ReklamZone
+	v.CointrafficKey = sc.CointrafficKey
+	v.ChromeEklenti = sc.ChromeEklenti
+	v.WebSubHubs = sc.WebSubHubs
 	v.AIEnabled = sc.AIEnabled
 	v.AIProvider = sc.AIProvider
 	v.AIModel = sc.AIModel

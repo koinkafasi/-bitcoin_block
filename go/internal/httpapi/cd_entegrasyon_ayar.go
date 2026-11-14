@@ -32,6 +32,10 @@ var (
 
 	// cointrafficRe Cointraffic wkey.
 	cointrafficRe = regexp.MustCompile(`^[A-Za-z0-9]{6,64}$`)
+
+	// chromeEklentiRe Chrome Web Store eklenti sayfası. Eklenti kimliği
+	// 32 karakter, yalnız a-p; ad parçası isteğe bağlı.
+	chromeEklentiRe = regexp.MustCompile(`^https://chromewebstore\.google\.com/detail/(?:[a-z0-9-]+/)?[a-p]{32}$`)
 )
 
 // websubIzinliHub bilinen WebSub hub alan adları.
@@ -73,6 +77,23 @@ func validReklamZone(s string) string {
 func validCointraffic(s string) string {
 	s = strings.TrimSpace(s)
 	if !cointrafficRe.MatchString(s) {
+		return ""
+	}
+	return s
+}
+
+// validChromeEklenti Chrome Web Store eklenti adresini doğrular.
+//
+// YALNIZ mağaza adresi kabul edilir: değer ana sayfada bağlantı olarak
+// basılıyor; serbest bırakılsaydı panelden herhangi bir siteye yönlendirme
+// konabilirdi. Sorgu dizesi (`?hl=tr`) ve sondaki `/` atılır.
+func validChromeEklenti(s string) string {
+	s = strings.TrimSpace(s)
+	if i := strings.IndexAny(s, "?#"); i >= 0 {
+		s = s[:i]
+	}
+	s = strings.TrimSuffix(s, "/")
+	if !chromeEklentiRe.MatchString(s) {
 		return ""
 	}
 	return s
@@ -123,6 +144,7 @@ func (s *Server) cdEntegrasyonCoz(ctx context.Context) *templkit.CDEntegrasyon {
 	e.ReklamZone = validReklamZone(jsonStr(bag["reklam_zone"]))
 	e.ReklamAktif = jsonStr(bag["reklam_aktif"]) == "1"
 	e.CointrafficKey = validCointraffic(jsonStr(bag["cointraffic_key"]))
+	e.ChromeEklentiURL = validChromeEklenti(jsonStr(bag["chrome_eklenti_url"]))
 	hubs, _ := validWebSubHubs(jsonStr(bag["websub_hubs"]))
 	e.WebSubHubs = hubs
 	return e

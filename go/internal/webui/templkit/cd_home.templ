@@ -799,7 +799,17 @@ templ CDHome(v CDHomeView) {
 				// bile bu sayfalarda reklamın yerleşeceği kutu yoktu.
 				// Ana sayfa trafiğin en yüksek olduğu yer; liderboard
 				// hero'nun ÜSTÜNDE, modül sırasını bozmadan duruyor.
-				@cdReklam(728, 90)
+				//
+				// ÜST SIRA (14 Kasım 2026): reklam ortada kalır; soluna
+				// Milyonerler Kulübü, sağına Chrome eklentisi kartı gelir.
+				// Sarmalayıcı yalnız geniş ekranda ızgaradır; dar ekranda
+				// kartlar gizlenir ve reklam eskisi gibi tek başına
+				// ortalanır (bkz. cd.css .cd-ust-sira).
+				<div class="cd-ust-sira">
+					@cdKulupKart(v.Locale)
+					@cdReklam(728, 90)
+					@cdChromeKart(v.Locale)
+				</div>
 								// MODÜLER YERLEŞİM (9 Kasım 2026): sayfa tasarımcısı yeni
 				// tasarımın alanlarını ayrı bloklar olarak yönetir. Düzen
 				// yazılmamışsa (v.Moduller boş) aşağıdaki VARSAYILAN SIRA

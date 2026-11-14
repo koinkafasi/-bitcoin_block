@@ -36,7 +36,13 @@ type CDEntegrasyon struct {
 	AdSensePub string
 	// CointrafficKey Cointraffic wkey değeri.
 	CointrafficKey string
+	// ChromeEklentiURL Chrome Web Store'daki eklenti sayfası. Boşsa ana
+	// sayfadaki tanıtım kartı basılmaz.
+	ChromeEklentiURL string
 }
+
+// CDKulupURL Milyonerler Kulübü üye paneli (ana sayfadaki giriş kartı).
+const CDKulupURL = "https://traders.bitcosar.com/"
 
 var cdEnt atomic.Pointer[CDEntegrasyon]
 

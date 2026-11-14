@@ -5962,3 +5962,142 @@ html.dark {
     margin: 20px auto;
   }
 }
+
+/* Üst sıra: Milyonerler Kulübü kartı · reklam · Chrome eklentisi kartı
+   (14 Kasım 2026). Kartlar reklamın iki yanındaki boşluğa oturur; reklam
+   ortada kalsın diye üç kolon (1fr · 728 · 1fr). 1280 px altında yan
+   boşluk kartlara yetmiyor: orada kartlar gizli, sarmalayıcı düz blok —
+   reklamın yerleşimi eskisiyle birebir aynı. */
+.cd-ust-kart {
+  display: none;
+}
+
+/* Sarmalayıcı, üst öğesi `.cd-main` gibi SÜTUN ESNEK kutu olmalı. Reklam
+   ağı yuvaya satır içi `display: inline-block` yazıyor; düz blok içinde
+   `margin: auto` o zaman ortalamıyor ve reklam sola yaslanıyor (ölçüldü
+   14 Kasım 2026). Esnek sütunda yerleşim sarmalayıcısız hâliyle aynı. */
+.cd-ust-sira {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-width: 0;
+}
+
+@media (min-width: 1280px) {
+  .cd-ust-sira {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 728px) minmax(0, 1fr);
+    align-items: center;
+    column-gap: 24px;
+  }
+
+  .cd-ust-sira > .cd-reklam {
+    grid-area: 1 / 2;
+  }
+
+  .cd-ust-kart {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    max-width: 100%;
+    margin: 20px 0;
+    padding: 10px 16px 10px 12px;
+    border: 1px solid var(--cd-border);
+    border-radius: var(--cd-radius-lg);
+    font-family: var(--cd-font);
+    text-decoration: none;
+    transition: border-color .15s ease;
+  }
+
+  .cd-ust-kart__simge {
+    flex: none;
+  }
+
+  .cd-ust-kart__metin {
+    display: grid;
+    min-width: 0;
+  }
+
+  .cd-ust-kart__metin b {
+    font-size: 14px;
+    line-height: 20px;
+    font-weight: 700;
+  }
+
+  .cd-ust-kart__metin small {
+    font-size: 12px;
+    line-height: 16px;
+  }
+
+  /* Chrome eklentisi: sayfanın nötr yüzeyi. */
+  .cd-eklenti {
+    grid-area: 1 / 3;
+    justify-self: end;
+    background: var(--cd-surface-soft);
+    color: var(--cd-fg);
+  }
+
+  .cd-eklenti:hover {
+    border-color: var(--cd-border-strong);
+  }
+
+  .cd-eklenti b {
+    color: var(--cd-fg-strong);
+  }
+
+  .cd-eklenti small {
+    color: var(--cd-muted);
+  }
+
+  /* Milyonerler Kulübü: üye paneliyle aynı koyu zemin + altın. Renkler
+     temadan BAĞIMSIZ sabit — kart iki temada da aynı görünür. */
+  .cd-kulup {
+    grid-area: 1 / 1;
+    justify-self: start;
+    background: linear-gradient(135deg, #07090d 0%, #14110a 60%, #2a2110 100%);
+    border-color: rgba(212, 175, 55, .55);
+    color: #fff;
+  }
+
+  .cd-kulup:hover {
+    border-color: #f6e3a1;
+  }
+
+  .cd-kulup b {
+    color: #f6e3a1;
+    letter-spacing: .01em;
+  }
+
+  .cd-kulup small {
+    color: #c9b98a;
+  }
+
+  .cd-kulup__ok {
+    flex: none;
+    color: #d4af37;
+  }
+}
+
+/* 1280–1439 px: yan boşluk ~220 px. Kartlar reklamdan (90 px) uzun
+   olmasın diye sıkışık düzen: ok gizli, simge ve iç boşluk küçük. */
+@media (min-width: 1280px) and (max-width: 1439px) {
+  .cd-ust-kart {
+    gap: 10px;
+    padding: 10px 12px;
+  }
+
+  .cd-kulup .cd-ust-kart__simge {
+    width: 32px;
+    height: 32px;
+  }
+
+  .cd-kulup__ok {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cd-ust-kart {
+    transition: none;
+  }
+}

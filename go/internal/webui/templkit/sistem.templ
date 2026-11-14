@@ -52,6 +52,7 @@ type AyarlarView struct {
 	ReklamAktif  bool
 	ReklamZone   string
 	CointrafficKey string
+	ChromeEklenti string
 	// WebSubHubs: `joinComma` ile basılıyor → dizi.
 	WebSubHubs   []string
 	Renkler      []AyarRenk
@@ -250,6 +251,17 @@ templ AyarlarPanel(v AyarlarView) {
 				<div class="field">
 					<label for="f_cointraffic">Cointraffic wkey</label>
 					<input id="f_cointraffic" class="input" name="cointraffic_key" value={ v.CointrafficKey } placeholder="WP3qEbVT6S"/>
+				</div>
+
+				<h3 style="margin:22px 0 4px;font-size:1rem">Chrome Eklentisi</h3>
+				<p class="hint" style="margin-top:0">
+					Adres girilirse ana sayfada üst reklamın sağında eklenti kartı görünür
+					(yalnız geniş ekranda). Boş bırakılırsa kart basılmaz.
+				</p>
+				<div class="field">
+					<label for="f_chrome_eklenti">Chrome Web Store adresi</label>
+					<input id="f_chrome_eklenti" class="input" name="chrome_eklenti_url" value={ v.ChromeEklenti } placeholder="https://chromewebstore.google.com/detail/…"/>
+					<span class="small muted">Yalnız <code>chromewebstore.google.com/detail/…</code> adresleri kabul edilir.</span>
 				</div>
 
 				<h3 style="margin:22px 0 4px;font-size:1rem">WebSub (yayın bildirimi)</h3>
