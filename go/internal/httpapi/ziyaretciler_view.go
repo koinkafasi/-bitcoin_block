@@ -81,6 +81,11 @@ func ziyaretciSatirView(k repo.ZiyaretciSatir, koordinat bool) templkit.Ziyaretc
 		// OpenStreetMap: API anahtarı istemez, ticari kullanıma açık.
 		out.HaritaURL = "https://www.openstreetmap.org/?mlat=" + out.Enlem +
 			"&mlon=" + out.Boylam + "#map=15/" + out.Enlem + "/" + out.Boylam
+		// Sayfa içi harita: Google Maps gömme adresi (anahtar istemez;
+		// www.google.com CSP frame-src'de zaten izinli). Koordinat sayısal
+		// biçimlendirildiği için adres kaçış gerektirmez.
+		out.HaritaGomURL = "https://www.google.com/maps?q=" + out.Enlem + "," +
+			out.Boylam + "&z=15&output=embed"
 		if k.DogrulukM != nil {
 			out.Dogruluk = "+-" + strconv.Itoa(*k.DogrulukM) + " m"
 		}

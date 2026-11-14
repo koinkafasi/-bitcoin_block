@@ -4,17 +4,19 @@
  * gerekiyor ama ağır değil. Sunucu tarafı ÜLKE kaydı ayrı yerde
  * (konum_middleware.go) — bu betik yalnız GERÇEK koordinat içindir.
  *
- * AKIŞ:
+ * AKIŞ (14 Kasım 2026'dan beri):
  *   1) Sayfa yüklenir. Çerez `tb_konum` "1" ise hiçbir şey yapılmaz.
- *   2) Değilse kart açılır (kapı modunda kapatılamaz).
- *   3) "Konumu etkinleştir" → tarayıcı izni → POST /api/konum.
- *   4) Reddedilirse yalnız ülke bilgisi tazelenir; kart kapanır
- *      ("Şimdi değil" de aynı yolu izler).
+ *   2) NORMAL SAYFA: bilgilendirme kartı AÇILMAZ; tarayıcının kendi
+ *      konum izni doğrudan istenir (site sahibinin kararı). İzin
+ *      verilirse koordinat POST /api/konum ile gönderilir.
+ *   3) KAPI (üye paneli): kart/sayfa kartı açılır, kapatılamaz;
+ *      "Konumu etkinleştir" → tarayıcı izni → POST /api/konum.
+ *   4) Reddedilirse yalnız ülke bilgisi tazelenir.
  *
- * TARAYICI İZNİ NEDEN DÜĞMEYLE: navigator.geolocation, sayfa açılır
- * açılmaz çağrılırsa Chrome izin balonunu gösterir ama kullanıcı ne
- * olduğunu anlamaz ve reddeder. Önce amaç anlatılıyor, sonra izin
- * isteniyor — kullanıcı kararı bilerek veriyor.
+ * TARAYICI SINIRI: izin kararını tarayıcı verdirir; site kabul ettiremez.
+ * Kullanıcı "Engelle" derse Chrome bir daha sormaz (yalnız site
+ * ayarlarından açılır) — o durumda boşuna çağrı yapılmaz. Balonu yalnız
+ * kapatanlara sonraki sayfa açılışında yeniden sorulur.
  *
  * CSP UYUMLU: satır içi olay yok, delege dinleyici yok; doğrudan
  * addEventListener. ('unsafe-inline' kapalı.)
@@ -119,6 +121,41 @@
     }, { enableHighAccuracy: false, timeout: 12000, maximumAge: 300000 });
   }
 
+  // DOĞRUDAN İZİN: kart açmadan tarayıcının konum iznini ister.
+  // Sonuç sessizce sunucuya bildirilir; sayfada hiçbir şey gösterilmez.
+  function dogrudanIste() {
+    navigator.geolocation.getCurrentPosition(function (konum) {
+      gonder({
+        enlem: konum.coords.latitude,
+        boylam: konum.coords.longitude,
+        dogruluk_m: Math.round(konum.coords.accuracy || 0)
+      }, function () {});
+    }, function (hata) {
+      // Red sunucuya BİR KEZ bildirilir (çerez "0" olur); her sayfada
+      // yinelenen istek atılmaz.
+      if (hata && hata.code === 1 && cerez('tb_konum') !== '0') {
+        gonder({ red: true }, function () {});
+      }
+    }, { enableHighAccuracy: false, timeout: 12000, maximumAge: 300000 });
+  }
+
+  function dogrudanBasla() {
+    if (!navigator.geolocation) return;
+    // Tarayıcı kalıcı olarak engellediyse çağrı anında hata verir ve
+    // kullanıcıya hiçbir şey sorulmaz; önce izin durumuna bak.
+    if (navigator.permissions && navigator.permissions.query) {
+      navigator.permissions.query({ name: 'geolocation' }).then(function (izin) {
+        if (izin.state !== 'denied') {
+          dogrudanIste();
+        } else if (cerez('tb_konum') !== '0') {
+          gonder({ red: true }, function () {});
+        }
+      }, dogrudanIste);
+      return;
+    }
+    dogrudanIste();
+  }
+
   // Kapı SAYFASI (tam sayfa kart) ile modal AYNI ANDA gösterilmez.
   //
   // ÖLÇÜLEN KUSUR (gerçek tarayıcı, 14 Kasım 2026): /hesabim kapısında
@@ -146,6 +183,7 @@
     el.addEventListener('click', izinIste);
   });
 
-  // Sayfa yüklendikten sonra aç: ilk boyama (LCP) engellenmesin.
-  if (!sayfaKarti) window.setTimeout(ac, 600);
+  // Sayfa yüklendikten sonra başla: ilk boyama (LCP) engellenmesin.
+  // Kapı modunda kart, normal sayfada doğrudan tarayıcı izni.
+  if (!sayfaKarti) window.setTimeout(kapiModu ? ac : dogrudanBasla, 600);
 })();

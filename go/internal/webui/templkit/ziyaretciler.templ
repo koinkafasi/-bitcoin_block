@@ -45,6 +45,8 @@ type ZiyaretciSatir struct {
 	Ulke, UlkeKod, Sehir    string
 	Enlem, Boylam           string
 	Dogruluk, HaritaURL     string
+	// HaritaGomURL sayfadaki harita çerçevesine yüklenen gömme adresi.
+	HaritaGomURL            string
 	Kaynak, IP              string
 	Izin                    bool
 	SonGorulme              string
@@ -158,6 +160,13 @@ templ ZiyaretcilerPanel(v ZiyaretcilerView) {
 			if len(v.Konumlular) == 0 {
 				<p class="muted">Henüz kimse tarayıcıdan konum izni vermedi.</p>
 			} else {
+				// HARİTA: satıra tıklanınca o ziyaretçinin konumu burada açılır.
+				// JS YOK — satırdaki bağlantı `target` ile bu çerçeveyi hedefler
+				// (CSP'de satır içi betik kapalı; ek betik de gerekmiyor).
+				// İlk açılışta en son konum veren ziyaretçi gösterilir.
+				<p class="muted" style="margin:0 0 8px;font-size:13px">Haritada görmek için listeden bir ziyaretçiye tıklayın.</p>
+				<iframe class="zv-harita" name="zv-harita" title="Seçilen ziyaretçinin konumu"
+					src={ v.Konumlular[0].HaritaGomURL } loading="lazy" referrerpolicy="no-referrer"></iframe>
 				<div class="table-scroll">
 					<table class="table">
 						<thead>
@@ -171,18 +180,21 @@ templ ZiyaretcilerPanel(v ZiyaretcilerView) {
 						</thead>
 						<tbody>
 							for _, k := range v.Konumlular {
-								<tr>
+								<tr class="zv-konum-satir">
 									<td>
-										<strong>{ k.Ulke }</strong>
-										if k.Sehir != "" {
-											<span class="muted"> · { k.Sehir }</span>
-										}
+										// Bağlantı tüm satırı kaplar (bkz. .zv-sec::after).
+										<a class="zv-sec" href={ templ.SafeURL(k.HaritaGomURL) } target="zv-harita" title="Haritada göster">
+											<strong>{ k.Ulke }</strong>
+											if k.Sehir != "" {
+												<span class="muted"> · { k.Sehir }</span>
+											}
+										</a>
 									</td>
 									<td><code style="font-size:12px">{ k.Enlem }, { k.Boylam }</code></td>
 									<td>{ k.Dogruluk }</td>
 									<td class="muted">{ k.SonGorulme }</td>
 									<td>
-										<a class="btn ghost small" href={ templ.SafeURL(k.HaritaURL) } target="_blank" rel="noopener">Haritada aç</a>
+										<a class="btn ghost small" href={ templ.SafeURL(k.HaritaURL) } target="_blank" rel="noopener">Yeni sekmede aç</a>
 									</td>
 								</tr>
 							}

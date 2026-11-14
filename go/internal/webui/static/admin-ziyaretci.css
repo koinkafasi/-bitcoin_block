@@ -110,10 +110,48 @@
   color: var(--muted-foreground, #6b7280);
 }
 
+/* Harita çerçevesi + seçilebilir konum satırları.
+   Bağlantının ::after'ı satırın tamamını kaplar: satırın herhangi bir
+   yerine tıklamak haritayı günceller, ek betik gerekmez. "Yeni sekmede
+   aç" düğmesi katmanın üstünde kalsın diye z-index alır. */
+.zv-harita {
+  display: block;
+  width: 100%;
+  height: 380px;
+  border: 1px solid var(--border, #e5e5e5);
+  border-radius: 12px;
+  margin-bottom: 14px;
+  background: var(--surface-soft, #f4f4f5);
+}
+
+.zv-konum-satir {
+  position: relative;
+  cursor: pointer;
+}
+.zv-konum-satir:hover,
+.zv-konum-satir:focus-within {
+  background: var(--surface-soft, rgba(59, 130, 246, .08));
+}
+
+.zv-sec {
+  color: inherit;
+  text-decoration: none;
+}
+.zv-sec::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+}
+.zv-konum-satir .btn {
+  position: relative;
+  z-index: 1;
+}
+
 @media (max-width: 1100px) {
   .zv-kpiler { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (max-width: 760px) {
   .zv-kpiler { grid-template-columns: minmax(0, 1fr); }
   .zv-ikili { grid-template-columns: minmax(0, 1fr); }
+  .zv-harita { height: 260px; }
 }

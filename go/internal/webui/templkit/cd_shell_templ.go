@@ -1946,9 +1946,9 @@ func cdFooter(s CDShell) templ.Component {
 
 // cdKonumModal ziyaretçi konumu izin kartı.
 //
-// NEDEN TARAYICI İZNİNDEN ÖNCE KART: tarayıcının kendi balonu bağlamsız;
-// kullanıcı ne için istendiğini görmeden reddediyor. Kart önce AMACI
-// anlatıyor, tarayıcı izni ancak düğmeye basılınca isteniyor.
+// YALNIZ KAPI MODUNDA AÇILIR (14 Kasım 2026): normal sayfalarda kart
+// gösterilmiyor, konum.js tarayıcının kendi iznini doğrudan istiyor.
+// Kart üye paneli kapısında amacı anlatmak için duruyor.
 //
 // JS YOKSA: kart hiç açılmaz (hidden) — çalışmayan düğme göstermiyoruz.
 // csp-delegated.js deseniyle aynı ilke.
