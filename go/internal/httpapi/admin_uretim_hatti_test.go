@@ -4,6 +4,7 @@ import (
 	"strings"
 	"testing"
 
+	"theblock/site/internal/aieditor"
 	"theblock/site/internal/repo"
 )
 
@@ -130,5 +131,73 @@ func TestKisaltMetin(t *testing.T) {
 	}
 	if !strings.HasSuffix(got, "…") {
 		t.Errorf("kırpma işareti yok: %q", got)
+	}
+}
+
+// ---- 14 Kasım 2026 ölçümünden sonra eklenenler ----
+
+// GERÇEK AÇLIK ile KISA KUYRUK karıştırılmamalı. Panelin ilk sürümü
+// "kuyruk boş + bekleyen çok" ise "besleme kesik" diyordu; ölçüm bunu
+// çürüttü (kuyruk akıyordu, 24 saatte 371 iş girmişti). Yanlış teşhis
+// okuyanı yanlış yere baktırır.
+func TestUretimTeshisKisaKuyrukBeslemeKesikDemez(t *testing.T) {
+	var s Server
+	// Gerçek durum: kuyruk 0 ama 24 saatte 371 iş girmiş, 1972 taslak var.
+	h := s.uretimTeshis(nil, repo.UretimOzet{
+		Kuyrukta: 0, Son24KuyrugaGiren: 371, BekleyenTaslak: 1972,
+	})
+	if strings.Contains(h, "besleme kesik") {
+		t.Errorf("akan kuyruk 'besleme kesik' sanıldı:\n%s", h)
+	}
+	if !strings.Contains(h, "yayını") {
+		t.Errorf("taslakların yayını beklediği söylenmedi:\n%s", h)
+	}
+}
+
+// Besleme GERÇEKTEN kesikse uyarı yine çıkmalı — düzeltme uyarıyı
+// tümden susturmamalı.
+func TestUretimTeshisGercekAclikUyarir(t *testing.T) {
+	var s Server
+	h := s.uretimTeshis(nil, repo.UretimOzet{
+		Kuyrukta: 0, Son24KuyrugaGiren: 0, BekleyenTaslak: 1972,
+	})
+	if !strings.Contains(h, "besleme kesik") {
+		t.Errorf("gerçek açlık teşhis edilmedi:\n%s", h)
+	}
+}
+
+// uretimRenk: oran yükseldikçe renk kötüleşmeli.
+func TestUretimRenk(t *testing.T) {
+	if uretimRenk(10) != "#3a7" {
+		t.Error("düşük oran yeşil olmalı")
+	}
+	if uretimRenk(30) != "#c80" {
+		t.Error("orta oran sarı olmalı")
+	}
+	if uretimRenk(93) != "#c33" {
+		t.Error("yüksek oran kırmızı olmalı")
+	}
+}
+
+// İNCE EŞİĞİ hedef bandın alt sınırının altında kalmalı: eşik bandın
+// içine girerse "hedefi tutmayan" ile "ince" aynı şey olur ve panel
+// iki ayrı sorunu tek sayıya indirir.
+func TestInceEsikHedefBandinAltinda(t *testing.T) {
+	hedef := aieditor.UzunlukHedefiIcin("haber", "")
+	if repo.InceEsik >= hedef.MinKelime {
+		t.Errorf("ince eşik (%d) haber bandının alt sınırına (%d) girmiş",
+			repo.InceEsik, hedef.MinKelime)
+	}
+}
+
+// repo.UretimHedefAlt, aieditor'deki haber bandının alt sınırını
+// TEKRARLIYOR (repo aieditor'ü içe alamaz, döngü olur). İkisi ayrışırsa
+// panel "hedefi tutan" sayısını yanlış bandla hesaplar ve kimse farkına
+// varmaz. Tekrarı kabul ediyoruz; sessizce ayrışmasını kabul etmiyoruz.
+func TestUretimHedefAltAieditorIleAyni(t *testing.T) {
+	hedef := aieditor.UzunlukHedefiIcin("haber", "")
+	if repo.UretimHedefAlt != hedef.MinKelime {
+		t.Errorf("repo.UretimHedefAlt=%d ama aieditor haber bandı alt sınırı=%d",
+			repo.UretimHedefAlt, hedef.MinKelime)
 	}
 }

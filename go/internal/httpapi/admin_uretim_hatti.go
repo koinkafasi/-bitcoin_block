@@ -68,6 +68,7 @@ func (s *Server) uretimHattiGovde(ctx context.Context) string {
 	b.WriteString(s.uretimHatalar(ctx))
 	b.WriteString(s.uretimCalisanlar(ctx))
 	b.WriteString(s.uretimGorsel(ctx))
+	b.WriteString(s.uretimKalite(ctx))
 	b.WriteString(uretimTrafikYuvasi())
 	b.WriteString(`</div>`)
 	return b.String()
@@ -136,11 +137,24 @@ func (s *Server) uretimTeshis(ctx context.Context, o repo.UretimOzet) string {
 					"kaybı büyütür.")
 		}
 	}
-	if o.Kuyrukta == 0 && o.BekleyenTaslak > 50 {
+	// GERÇEK AÇLIK ile KISA KUYRUK farklı şeyler. Panelin ilk sürümü
+	// ikisini karıştırıyordu: "kuyruk boş + bekleyen taslak çok" ise
+	// "besleme kesik" diyordu. 14 Kasım ölçümü bunu çürüttü — kuyruk
+	// akıyordu (running 2, queued 1) ve 24 saatte 371 iş girmişti;
+	// kuyruk kısa görünüyordu çünkü işler girdiği hızda tüketiliyor.
+	// Taslaklar AI'ı değil YAYINI bekliyordu. Yanlış teşhis okuyanı
+	// yanlış yere baktırır, o yüzden girişi de şarta koydum.
+	if o.Kuyrukta == 0 && o.Son24KuyrugaGiren == 0 && o.BekleyenTaslak > 50 {
 		notlar = append(notlar,
-			"Kuyruk <b>boş</b> ama <b>"+itoa(o.BekleyenTaslak)+"</b> taslak bekliyor: "+
-				"hat işsiz değil, <b>besleme kesik</b>. Yazım otomatiği kapalı olabilir "+
-				"ya da aday sorgusu taslakları süzüyor olabilir.")
+			"Kuyruk boş ve son 24 saatte <b>hiç iş girmemiş</b>, ama <b>"+
+				itoa(o.BekleyenTaslak)+"</b> taslak bekliyor: <b>besleme kesik</b>. "+
+				"Yazım otomatiği kapalı olabilir ya da aday sorgusu taslakları "+
+				"süzüyor olabilir.")
+	} else if o.Kuyrukta == 0 && o.Son24KuyrugaGiren > 0 {
+		notlar = append(notlar,
+			"Kuyruk şu an boş ama son 24 saatte <b>"+itoa(o.Son24KuyrugaGiren)+
+				"</b> iş girmiş: besleme çalışıyor, işler girdiği hızda tükeniyor. "+
+				"Bekleyen taslaklar AI'ı değil <b>yayını</b> bekliyor.")
 	}
 	hedef := aieditor.UzunlukHedefiIcin("haber", "")
 	if o.Son24MedyanKelime > 0 && o.Son24MedyanKelime < hedef.AltSinir() {
@@ -294,3 +308,86 @@ func kisaltMetin(s string, n int) string {
 }
 
 var _ = http.StatusOK
+
+// uretimKalite üretilen metnin YAYINLANABİLİR olup olmadığını gösterir.
+//
+// NEDEN EKLENDİ: panelin ilk sürümü iş sayılarını ve medyan uzunluğu
+// gösteriyordu, ikisi de yeşildi. 14 Kasım 2026 ölçümü asıl sorunun
+// aralarından sızdığını gösterdi:
+//
+//	BEKLEYEN TASLAK (2003) : medyan  71 kelime — 1868'i 150'nin ALTINDA
+//	YAYINDA (bu ay, 1105)  : medyan  98 kelime —  675'i 150'nin ALTINDA
+//
+// Hat çalışıyordu ama ürettiğinin %93'ü yayınlanabilir değildi ve 675
+// ince içerik çoktan yayınlanmıştı. "Kaç iş bitti" sorusu bunu
+// göstermiyor; "ne üretti" sorusu gösteriyor.
+func (s *Server) uretimKalite(ctx context.Context) string {
+	k, err := repo.UretimKaliteOku(ctx, s.pool)
+	if err != nil || (k.Taslak == 0 && k.YayindaAy == 0) {
+		return ""
+	}
+
+	oran := func(pay, toplam int) int {
+		if toplam == 0 {
+			return 0
+		}
+		return pay * 100 / toplam
+	}
+	cubuk := func(yuzde int, renk string) string {
+		return `<div style="background:var(--cizgi,#333);height:8px;border-radius:4px;overflow:hidden;margin:3px 0">` +
+			`<div style="width:` + itoa(yuzde) + `%;height:100%;background:` + renk + `"></div></div>`
+	}
+
+	var b strings.Builder
+	b.WriteString(`<h2 style="font-size:1rem;margin:0 0 6px">Üretilen metin yayınlanabilir mi</h2>`)
+
+	if k.Taslak > 0 {
+		iy := oran(k.InceTaslak, k.Taslak)
+		b.WriteString(`<p class="muted small" style="margin:0"><b>Bekleyen taslak:</b> ` +
+			itoa(k.Taslak) + ` — medyan <b>` + itoa(k.MedyanTaslak) + `</b> kelime, ` +
+			`hedef bandı tutan <b>` + itoa(k.HedefteTaslak) + `</b></p>`)
+		b.WriteString(cubuk(iy, uretimRenk(iy)))
+		b.WriteString(`<p class="muted small" style="margin:0 0 10px">` +
+			`<b>` + itoa(k.InceTaslak) + `</b> taslak (%` + itoa(iy) + `) ` +
+			itoa(repo.InceEsik) + ` kelimenin altında — bu hâliyle yayınlanamaz.</p>`)
+	}
+
+	if k.YayindaAy > 0 {
+		iy := oran(k.InceYayin, k.YayindaAy)
+		b.WriteString(`<p class="muted small" style="margin:0"><b>Bu ay yayınlanan:</b> ` +
+			itoa(k.YayindaAy) + ` — medyan <b>` + itoa(k.MedyanYayin) + `</b> kelime</p>`)
+		b.WriteString(cubuk(iy, uretimRenk(iy)))
+		b.WriteString(`<p class="muted small" style="margin:0 0 10px">` +
+			`<b>` + itoa(k.InceYayin) + `</b> yayınlanmış içerik (%` + itoa(iy) + `) ` +
+			itoa(repo.InceEsik) + ` kelimenin altında. ` +
+			`Yayınlanmış ince içerik taslaktan daha acil: taslak düzeltilebilir, ` +
+			`yayınlanan zarar vermeye başlamıştır.</p>`)
+	}
+
+	// İNCE İÇERİK UYARISI sayıyı cümleye çevirir. Arama sıralamasında öne
+	// çıkma hedefiyle 70-100 kelimelik yazıları toplu yayınlamak birbirini
+	// götüren iki iş; Google bunu "scaled content abuse" başlığında
+	// değerlendiriyor ve yazarın insan mı makine mi olduğuna bakmıyor.
+	if oran(k.InceYayin, k.YayindaAy) >= 30 || oran(k.InceTaslak, k.Taslak) >= 50 {
+		b.WriteString(`<div class="card card-pad" style="margin-bottom:16px;border-left:3px solid #c33">` +
+			`<b>İnce içerik riski</b><p class="small" style="margin:6px 0 0">` +
+			`Üretim hacmi tek başına sıralama kazandırmıyor. Bu oranlarda hacmi ` +
+			`artırmak değerlendirmeyi aşağı çeker; önce uzunluk ve kaynak ` +
+			`derinliği düzeltilmeli. Hattın ürettiği uzunluk sağlayıcı seçimine ` +
+			`de bağlı: yönlendirici isteği "önemsiz" sayıp küçük modellere ` +
+			`düşürdüğünde çıktı kısalıyor.</p></div>`)
+	}
+	return b.String()
+}
+
+// uretimRenk oranı renge çevirir: düşük iyi (yeşil), yüksek kötü (kırmızı).
+func uretimRenk(yuzde int) string {
+	switch {
+	case yuzde >= 50:
+		return "#c33"
+	case yuzde >= 25:
+		return "#c80"
+	default:
+		return "#3a7"
+	}
+}

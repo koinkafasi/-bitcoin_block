@@ -32,6 +32,16 @@ type UretimOzet struct {
 	Son24Tamam int
 	Son24Hata  int
 
+	// Son24KuyrugaGiren son 24 saatte kuyruğa GİREN iş.
+	//
+	// NEDEN GEREKLİ: panelin ilk sürümü "kuyruk boş + bekleyen taslak
+	// çok" durumunu "besleme kesik" diye yorumluyordu. 14 Kasım 2026
+	// ölçümü bunu çürüttü: kuyruk akıyordu (running 2, queued 1) ve 24
+	// saatte 371 iş girmişti — kuyruk kısa görünüyordu çünkü işler
+	// girdiği hızda tüketiliyor. Taslaklar AI'ı değil YAYINI bekliyordu.
+	// Gerçek açlıkla kısa kuyruğu ayırmak için girişi de saymak gerekti.
+	Son24KuyrugaGiren int
+
 	// Son24Uretilen son 24 saatte üretilen özgün içerik.
 	Son24Uretilen int
 	// Son24MedyanKelime üretilen içeriğin medyan uzunluğu.
@@ -73,8 +83,9 @@ func UretimOzetOku(ctx context.Context, pool DB) (UretimOzet, error) {
 	if err := pool.QueryRow(ctx, `
 		SELECT
 		  count(*) FILTER (WHERE status = 'running'),
-		  count(*) FILTER (WHERE status = 'queued')
-		FROM ai_jobs`).Scan(&o.Calisan, &o.Kuyrukta); err != nil {
+		  count(*) FILTER (WHERE status = 'queued'),
+		  count(*) FILTER (WHERE created_at > now() - interval '24 hours')
+		FROM ai_jobs`).Scan(&o.Calisan, &o.Kuyrukta, &o.Son24KuyrugaGiren); err != nil {
 		return o, err
 	}
 
@@ -216,3 +227,100 @@ func UretimGorselDurumu(ctx context.Context, pool DB) (aktarilan, toplam int, er
 		  FROM source_images WHERE bytes > 0`).Scan(&aktarilan, &toplam)
 	return
 }
+
+// UretimKalite üretilen metnin YAYINLANABİLİR olup olmadığını ölçer.
+//
+// NEDEN AYRI BİR ÖLÇÜM: panelin ilk sürümü yalnız "kaç iş bitti" ve
+// "medyan kaç kelime" gösteriyordu. 14 Kasım 2026'da ölçtüğümde asıl
+// sorun bu ikisinin arasından sızdı:
+//
+//	BEKLEYEN TASLAK (2003) : medyan  71 kelime — 1868'i 150'nin ALTINDA
+//	YAYINDA (bu ay, 1105)  : medyan  98 kelime —  675'i 150'nin ALTINDA
+//
+// Yani hat çalışıyordu, iş sayıları yeşildi, ama ürettiği şeyin %93'ü
+// yayınlanabilir değildi — ve 675 ince içerik çoktan yayınlanmıştı.
+// Arama sıralamasında öne çıkma hedefiyle 70-100 kelimelik yazıları
+// toplu yayınlamak birbirini götüren iki iş; Google bunu "scaled
+// content abuse" başlığında değerlendiriyor. Bu yüzden panelde iş
+// sayısının YANINDA ne ürettiği de durmalı.
+type UretimKalite struct {
+	// Taslak bekleyen taslak sayısı, InceTaslak bunların kaçının
+	// eşiğin altında kaldığı, HedefteTaslak kaçının hedef bandı tuttuğu.
+	Taslak        int
+	InceTaslak    int
+	HedefteTaslak int
+	MedyanTaslak  int
+
+	// YayindaAy bu ay yayınlanan, InceYayin bunların kaçının eşiğin
+	// altında olduğu. Yayınlanmış ince içerik taslaktan daha acil:
+	// taslak düzeltilebilir, yayınlanan zarar vermeye başlamıştır.
+	YayindaAy   int
+	InceYayin   int
+	MedyanYayin int
+}
+
+// InceEsik altında kalan metni "ince içerik" sayan kelime sınırı.
+// 150, haber bandının (350-550) alt sınırının epey altında bilinçli
+// seçildi: buranın altı tartışmasız ince, arası tartışılır.
+const InceEsik = 150
+
+// uretimKelimeSayimi bir içeriğin kelime sayısını veren alt sorgu.
+//
+// `strict` ŞART: lax modda jsonpath diziyi otomatik açıp her metin
+// düğümünü İKİ KEZ sayıyor. Bu oturumda tüm uzunluk ölçümleri bir kez
+// bu yüzden iki kat yüksek çıktı ve bantlar yanlış ayarlandı.
+const uretimKelimeSayimi = `
+	(SELECT count(*) FROM (
+	   SELECT regexp_split_to_table(string_agg(t::text, ' '), '\s+') AS w
+	   FROM jsonb_path_query(c.detail, 'strict $.**.text') t
+	 ) q WHERE w <> '')`
+
+// UretimKaliteOku taslak ve yayın tarafının uzunluk dağılımını okur.
+func UretimKaliteOku(ctx context.Context, pool DB) (UretimKalite, error) {
+	var k UretimKalite
+
+	sorgu := `
+		WITH t AS (
+		  SELECT ` + uretimKelimeSayimi + ` AS kelime
+		  FROM contents c
+		  WHERE c.status = 'taslak' AND jsonb_typeof(c.detail) IS NOT NULL
+		)
+		SELECT
+		  count(*),
+		  count(*) FILTER (WHERE kelime < $1),
+		  count(*) FILTER (WHERE kelime >= $2),
+		  COALESCE(round(percentile_disc(0.5) WITHIN GROUP (ORDER BY kelime)), 0)
+		FROM t`
+	if err := pool.QueryRow(ctx, sorgu, InceEsik, UretimHedefAlt).
+		Scan(&k.Taslak, &k.InceTaslak, &k.HedefteTaslak, &k.MedyanTaslak); err != nil {
+		return k, err
+	}
+
+	// YAYIN TARAFI bu ayla sınırlı: eski arşivi bugünün hattına
+	// yazmak yanlış olur, panel "şu an ne yapıyoruz" sorusunu yanıtlıyor.
+	sorgu = `
+		WITH y AS (
+		  SELECT ` + uretimKelimeSayimi + ` AS kelime
+		  FROM contents c
+		  WHERE c.status = 'yayinda'
+		    AND COALESCE(c.published_at, c.created_at) >= date_trunc('month', now())
+		    AND jsonb_typeof(c.detail) IS NOT NULL
+		)
+		SELECT
+		  count(*),
+		  count(*) FILTER (WHERE kelime < $1),
+		  COALESCE(round(percentile_disc(0.5) WITHIN GROUP (ORDER BY kelime)), 0)
+		FROM y`
+	if err := pool.QueryRow(ctx, sorgu, InceEsik).
+		Scan(&k.YayindaAy, &k.InceYayin, &k.MedyanYayin); err != nil {
+		return k, err
+	}
+	return k, nil
+}
+
+// UretimHedefAlt haber bandının alt sınırı (aieditor.UzunlukHedefi ile
+// aynı sayı). repo katmanı aieditor'ü içe alamaz — döngü olur — bu
+// yüzden sabit burada TEKRARLANIYOR. İkisinin ayrışmasını önleyen test
+// httpapi tarafında (TestUretimHedefAltAieditorIleAyni): orası hem
+// repo'yu hem aieditor'ü görebiliyor.
+const UretimHedefAlt = 350
