@@ -286,7 +286,15 @@ func (s *Server) withGuvenlik(next http.Handler) http.Handler {
 			bb := b
 			girdi.ASN = &bb
 		}
-		girdi.Tor = isTorExit(ip)
+		// TOR YALNIZ ŞÜPHELİ AĞDA SORULUR — ÖLÇÜLEN KUSUR (14 Kasım 2026):
+		// yorum "yalnız hosting ise" diyordu ama kod her istekte çağırıyordu.
+		// Tor çıkışları Team Cymru'da sıradan hosting (veya VPN) görünür;
+		// "konut/mobil" sınıfında Tor olma ihtimali yok denecek kadar az.
+		// Her isteğe 60 ms DNS eklemek, sıfır bilgi karşılığında sayfa
+		// gecikmesi demekti. Artık yalnız ağ katmanı şüpheliyse sorulur.
+		if girdi.ASN != nil && (girdi.ASN.Tur == "hosting" || girdi.ASN.Tur == "vpn") {
+			girdi.Tor = isTorExit(ip)
+		}
 
 		// İstemci sinyalleri (varsa)
 		guvenlikDurumlari.bayraklariAl(anahtar, &girdi)
