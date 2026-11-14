@@ -14,6 +14,12 @@
  *   data-cointraffic wkey          → Cointraffic
  *
  * Tüm yüklemeler `async` ve hata toleranslı: bir ağ çökse sayfa etkilenmez.
+ *
+ * RIZA (14 Kasım 2026): hiçbir üçüncü taraf betiği rıza olmadan yüklenmez.
+ *   analitik rızası → GA4 + GTM        reklam rızası → Coinzilla + Cointraffic
+ * Karar cd-cerez.js'in kurduğu `window.cdRiza`dan okunur; ziyaretçi sonradan
+ * onay verirse `cd-riza` olayıyla eksik betikler yüklenir. cd-cerez.js
+ * yüklenmemişse (hata) hiçbir şey yüklenmez: şüphede rıza yok sayılır.
  */
 (function () {
   'use strict';
@@ -37,22 +43,52 @@
     return s;
   }
 
-  // --- GA4 ---------------------------------------------------------------
-  // gtag.js bir kez yüklenir; GA4 ve GTM aynı dataLayer'ı paylaşır.
-  if (ga4) {
+  var analitikYuklendi = false;
+  var reklamYuklendi = false;
+
+  // Google Consent Mode v2: etiketler yüklenmeden ÖNCE rıza durumu bildirilir.
+  function rizaBildir(komut, r) {
     window.dataLayer = window.dataLayer || [];
     window.gtag = window.gtag || function () { window.dataLayer.push(arguments); };
-    window.gtag('js', new Date());
-    window.gtag('config', ga4);
-    betik('https://www.googletagmanager.com/gtag/js?id=' + encodeURIComponent(ga4));
+    window.gtag('consent', komut, {
+      analytics_storage: r.analitik ? 'granted' : 'denied',
+      ad_storage: r.reklam ? 'granted' : 'denied',
+      ad_user_data: r.reklam ? 'granted' : 'denied',
+      ad_personalization: r.reklam ? 'granted' : 'denied'
+    });
   }
 
-  // --- Google Tag Manager ------------------------------------------------
-  if (gtm) {
-    window.dataLayer = window.dataLayer || [];
-    window.dataLayer.push({ 'gtm.start': new Date().getTime(), event: 'gtm.js' });
-    betik('https://www.googletagmanager.com/gtm.js?id=' + encodeURIComponent(gtm));
+  function analitikYukle(r) {
+    if (analitikYuklendi || (!ga4 && !gtm)) return;
+    analitikYuklendi = true;
+    rizaBildir('default', r);
+
+    // --- GA4 -------------------------------------------------------------
+    // gtag.js bir kez yüklenir; GA4 ve GTM aynı dataLayer'ı paylaşır.
+    if (ga4) {
+      window.gtag('js', new Date());
+      window.gtag('config', ga4);
+      betik('https://www.googletagmanager.com/gtag/js?id=' + encodeURIComponent(ga4));
+    }
+
+    // --- Google Tag Manager ----------------------------------------------
+    if (gtm) {
+      window.dataLayer.push({ 'gtm.start': new Date().getTime(), event: 'gtm.js' });
+      betik('https://www.googletagmanager.com/gtm.js?id=' + encodeURIComponent(gtm));
+    }
   }
+
+  // Reklam rızası yokken yuvalar boş gri kutu olarak kalmasın.
+  function yuvalariGizle() {
+    var bos = document.querySelectorAll('.cd-reklam[data-zone]');
+    for (var b = 0; b < bos.length; b++) bos[b].setAttribute('data-reklam-bos', '1');
+  }
+
+  function reklamYukle() {
+    if (reklamYuklendi) return;
+    reklamYuklendi = true;
+    var gizli = document.querySelectorAll('.cd-reklam[data-reklam-bos]');
+    for (var g = 0; g < gizli.length; g++) gizli[g].removeAttribute('data-reklam-bos');
 
   // --- Coinzilla reklam ---------------------------------------------------
   // Zone kimliği yalnız [a-z0-9] ise kullanılır; panelden gelen değer
@@ -115,4 +151,23 @@
   if (cotKey && /^[A-Za-z0-9]{6,64}$/.test(cotKey)) {
     betik('https://appsha1.cointraffic.io/js/?wkey=' + encodeURIComponent(cotKey));
   }
+  }
+
+  // --- Rızaya göre yükle ---------------------------------------------------
+  function uygula(r) {
+    if (r.analitik) {
+      if (analitikYuklendi) rizaBildir('update', r);
+      analitikYukle(r);
+    }
+    if (r.reklam) {
+      reklamYukle();
+    } else {
+      yuvalariGizle();
+    }
+  }
+
+  uygula(window.cdRiza || { analitik: false, reklam: false });
+  document.addEventListener('cd-riza', function (e) {
+    uygula(e.detail || { analitik: false, reklam: false });
+  });
 })();

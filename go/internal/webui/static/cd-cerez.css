@@ -1,0 +1,197 @@
+/* Çerez rızası kartı (cd-cerez.js) — 14 Kasım 2026.
+
+   Alt-sol köşede sabit kart; içerik okunmaya devam eder (sayfayı
+   kilitleyen perde YOK — rıza, içeriğe erişimin şartı değil).
+   "Yalnızca zorunlu" ve "Tümünü kabul et" aynı boyda: reddetmek kabul
+   etmek kadar kolay olmalı (KVKK Çerez Rehberi, GDPR md. 7).
+   Renkler tema jetonlarından: koyu tema kendiliğinden uyar. */
+
+.cd-cerez {
+  position: fixed;
+  left: 16px;
+  bottom: 16px;
+  z-index: 1200;
+  width: min(440px, calc(100vw - 32px));
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
+  padding: 20px;
+  background: var(--cd-bg);
+  color: var(--cd-fg);
+  border: 1px solid var(--cd-border);
+  border-radius: var(--cd-radius-lg);
+  box-shadow: var(--cd-shadow-panel);
+  font-family: var(--cd-font);
+}
+
+.cd-cerez__baslik {
+  margin: 0 0 8px;
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 700;
+  color: var(--cd-fg-strong);
+}
+
+.cd-cerez__metin {
+  margin: 0;
+  font-size: 13px;
+  line-height: 20px;
+  color: var(--cd-muted);
+}
+
+.cd-cerez__metin a {
+  color: var(--cd-fg-strong);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.cd-cerez__liste {
+  margin-top: 14px;
+  border-top: 1px solid var(--cd-border);
+}
+
+.cd-cerez__satir {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--cd-border);
+}
+
+.cd-cerez__satir-metin {
+  display: grid;
+  gap: 2px;
+}
+
+.cd-cerez__satir-metin b {
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 600;
+  color: var(--cd-fg-strong);
+}
+
+.cd-cerez__satir-metin small {
+  font-size: 12px;
+  line-height: 17px;
+  color: var(--cd-muted);
+}
+
+.cd-cerez__hep {
+  flex: none;
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--cd-muted);
+  white-space: nowrap;
+}
+
+/* Anahtar: yerel onay kutusu, görünümü anahtar. Klavye ve ekran
+   okuyucu davranışı tarayıcıdan gelir. */
+.cd-cerez__anahtar {
+  flex: none;
+  appearance: none;
+  -webkit-appearance: none;
+  position: relative;
+  width: 40px;
+  height: 24px;
+  margin: 0;
+  border-radius: 999px;
+  background: var(--cd-border-strong);
+  cursor: pointer;
+  transition: background-color .15s ease;
+}
+
+.cd-cerez__anahtar::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #fff;
+  transition: transform .15s ease;
+}
+
+.cd-cerez__anahtar:checked {
+  background: var(--cd-up);
+}
+
+.cd-cerez__anahtar:checked::after {
+  transform: translateX(16px);
+}
+
+.cd-cerez__dugmeler {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.cd-cerez__dugme {
+  min-height: 40px;
+  padding: 8px 12px;
+  border: 1px solid var(--cd-border-strong);
+  border-radius: var(--cd-radius);
+  background: transparent;
+  color: var(--cd-fg-strong);
+  font: 600 14px/20px var(--cd-font);
+  cursor: pointer;
+}
+
+.cd-cerez__dugme[hidden] {
+  display: none;
+}
+
+.cd-cerez__dugme--ana {
+  background: var(--cd-brand);
+  border-color: var(--cd-brand);
+  color: #000;
+}
+
+.cd-cerez__dugme--ikincil:hover {
+  background: var(--cd-surface-soft);
+}
+
+/* "Seçimimi kaydet": ret/kabul çiftinin altında tam satır. */
+.cd-cerez__dugme--tam {
+  grid-column: 1 / -1;
+  order: 3;
+}
+
+/* "Tercihleri yönet": tam satır, metin düğmesi. */
+.cd-cerez__dugme--metin {
+  grid-column: 1 / -1;
+  order: 3;
+  min-height: 32px;
+  border-color: transparent;
+  color: var(--cd-muted);
+  font-weight: 500;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.cd-cerez__dugme--metin:hover {
+  color: var(--cd-fg-strong);
+}
+
+.cd-cerez :focus-visible {
+  outline: 2px solid var(--cd-fg-strong);
+  outline-offset: 2px;
+}
+
+@media (max-width: 520px) {
+  .cd-cerez {
+    left: 8px;
+    right: 8px;
+    bottom: 8px;
+    width: auto;
+    padding: 16px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cd-cerez__anahtar,
+  .cd-cerez__anahtar::after {
+    transition: none;
+  }
+}

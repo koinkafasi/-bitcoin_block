@@ -132,6 +132,9 @@ func main() {
 	// tazeler ve DEĞİŞTİĞİ ANDA bağlı tüm tarayıcılara iter (SSE).
 	// Sayfa isteklerinden bağımsız: kimse girmezse de önbellek sıcak kalır.
 	app.CanliPiyasaBaslat(workerCtx)
+	// Ziyaretçi konum kayıtları için saklama süresi (12 ay) — aydınlatma
+	// metnindeki süreyi uygular.
+	app.KonumTemizlikBaslat(workerCtx)
 	go scheduler.RunTrends(workerCtx, pool, logger, 6*time.Hour)
 	go scheduler.RunTrendFetch(workerCtx, pool, logger, 30*time.Second)
 	go scheduler.RunTrendScore(workerCtx, pool, logger, 15*time.Minute)

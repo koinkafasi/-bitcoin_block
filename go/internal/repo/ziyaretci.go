@@ -66,6 +66,39 @@ func ZiyaretciKaydet(ctx context.Context, pool *pgxpool.Pool, z ZiyaretciKonum) 
 	return err
 }
 
+// ZiyaretciEskiSil son görülmesi `gun` günden eski satırları siler ve silinen
+// satır sayısını döndürür.
+//
+// NEDEN: KVKK md. 4 ve 7 — kişisel veri, işlendiği amaç için gereken süre
+// kadar tutulur. Aydınlatma metni konum/IP kaydı için 12 ay süre bildiriyor;
+// bu işlev o sözü uygular (bkz. httpapi KonumTemizlikBaslat).
+func ZiyaretciEskiSil(ctx context.Context, pool *pgxpool.Pool, gun int) (int64, error) {
+	if pool == nil || gun <= 0 {
+		return 0, nil
+	}
+	t, err := pool.Exec(ctx,
+		`DELETE FROM visitor_locations WHERE son_görülme < now() - make_interval(days => $1)`, gun)
+	if err != nil {
+		return 0, err
+	}
+	return t.RowsAffected(), nil
+}
+
+// TrafikRiskEskiSil trafik güvenliği kayıtlarında (visitor_risk, migration
+// 0131) son görülmesi `gun` günden eski satırları siler. Aynı saklama
+// süresi: bu tablo da IP ve tarayıcı kimliği tutuyor.
+func TrafikRiskEskiSil(ctx context.Context, pool *pgxpool.Pool, gun int) (int64, error) {
+	if pool == nil || gun <= 0 {
+		return 0, nil
+	}
+	t, err := pool.Exec(ctx,
+		`DELETE FROM visitor_risk WHERE son_gorulme < now() - make_interval(days => $1)`, gun)
+	if err != nil {
+		return 0, err
+	}
+	return t.RowsAffected(), nil
+}
+
 // ZiyaretciOzeti panelin tek seferde okuduğu toplu görünüm.
 type ZiyaretciOzeti struct {
 	Toplam         int64 // benzersiz ziyaretçi (satır)

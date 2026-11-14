@@ -69,7 +69,7 @@ func konumKapiGovde(dil string) string {
     <h2 class="cd-kapi__baslik">` + T("Üyelik paneli için konum izni") + `</h2>
     <p class="cd-kapi__metin">` + T("Hesabınızı güvende tutmak ve size bulunduğunuz bölgeye uygun içerik göstermek için konumunuza ihtiyacımız var. İzin vermeden panel ve kayıt işlemleri açılmıyor.") + `</p>
     <button class="cd-btn cd-btn--kayit" type="button" data-konum-ver>` + T("Konumu etkinleştir") + `</button>
-    <p class="cd-kapi__not">` + T("Konum yaklaşık 11 metreye yuvarlanır, adresiniz kaydedilmez ve üçüncü taraflarla paylaşılmaz. İzni tarayıcı ayarlarından geri alabilirsiniz.") + `</p>
+    <p class="cd-kapi__not">` + T("Konum yaklaşık 11 metreye yuvarlanır, adresiniz kaydedilmez; reklam veya pazarlama amacıyla paylaşılmaz. İzni tarayıcı ayarlarından geri alabilirsiniz.") + `</p>
     <p class="cd-kapi__not"><a href="/">` + T("Ana sayfaya dön") + `</a></p>
   </div>
 </div>`

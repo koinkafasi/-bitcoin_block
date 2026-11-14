@@ -76,8 +76,12 @@ func (s *Server) buildSettingsData(r *http.Request) *tmplData {
 	d.Flash = s.consumeFlash(r)
 
 	sc := &settingsData{Tab: tab}
-	sc.SiteBaslik = jsonStr(genel["site_baslik"])
-	sc.Slogan = jsonStr(genel["slogan"])
+	// site_baslik/slogan {"tr": "..."} olarak saklanır (kayıt aşağıda öyle
+	// yazıyor). Düz jsonStr bunu okuyamıyordu: form alanı boş geliyor ve
+	// "Kaydet" başlığı boş dizeyle eziyordu (14 Kasım 2026, site adı
+	// varsayılana düştü).
+	sc.SiteBaslik = jsonYerelStr(genel["site_baslik"])
+	sc.Slogan = jsonYerelStr(genel["slogan"])
 	sc.Dil = jsonStr(genel["dil"])
 	if bm := obj(genel["bakim_modu"]); bm != nil {
 		sc.BakimModu = bm["aktif"] == true
@@ -318,6 +322,27 @@ func jsonStr(b []byte) string {
 	var s string
 	if json.Unmarshal(b, &s) == nil {
 		return s
+	}
+	return ""
+}
+
+// jsonYerelStr dile göre saklanan metni okur: {"tr": "..."} ya da düz "...".
+// Nesnede önce "tr", yoksa boş olmayan ilk değer döner.
+func jsonYerelStr(b []byte) string {
+	if s := jsonStr(b); s != "" {
+		return s
+	}
+	var m map[string]string
+	if json.Unmarshal(b, &m) != nil {
+		return ""
+	}
+	if v := m["tr"]; v != "" {
+		return v
+	}
+	for _, v := range m {
+		if v != "" {
+			return v
+		}
 	}
 	return ""
 }

@@ -533,6 +533,10 @@ templ cdFooter(s CDShell) {
 					<a href="/gizlilik-politikasi">{ cdT(s.Locale, "Gizlilik") }</a>
 					<a href="/kullanim-kosullari">{ cdT(s.Locale, "Kullanım Koşulları") }</a>
 					<a href="/cerez-politikasi">{ cdT(s.Locale, "Çerez Politikası") }</a>
+					<a href="/kvkk">{ cdT(s.Locale, "KVKK Aydınlatma") }</a>
+					<a href="/gdpr">GDPR</a>
+					// Rıza kartını yeniden açar (cd-cerez.js); JS yoksa politika sayfasına gider.
+					<a href="/cerez-politikasi" data-cerez-ayar>{ cdT(s.Locale, "Çerez tercihleri") }</a>
 					<a href="/reklam-politikasi">{ cdT(s.Locale, "Reklam Politikası") }</a>
 					<a href="/iletisim">{ cdT(s.Locale, "İletişim") }</a>
 					<a href="/rss.xml">RSS</a>
@@ -683,7 +687,7 @@ templ cdKonumModal(s CDShell) {
 						stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
 						<path d="M20 6L9 17l-5-5"></path>
 					</svg>
-					<span>{ cdT(s.Locale, "Üçüncü taraflarla paylaşılmaz.") }</span>
+					<span>{ cdT(s.Locale, "Reklam veya pazarlama amacıyla paylaşılmaz.") }</span>
 				</li>
 			</ul>
 			<div class="cd-konum__dugme">

@@ -277,6 +277,8 @@ templ cdHead(h CDHead) {
 	// 200 KB bütçesi var (cd_tasarim_test.go) ve bu blok her sayfada
 	// gereken ama ağır olmayan bir katman.
 	<link rel="stylesheet" href={ "/static/cd-konum.css?v=" + cdVarlik() }/>
+	// Çerez rızası kartı (cd-cerez.js) — her sayfada, cd.css bütçesinin dışında.
+	<link rel="stylesheet" href={ "/static/cd-cerez.css?v=" + cdVarlik() }/>
 	for _, ek := range h.EkCSS {
 		<link rel="stylesheet" href={ ek + "?v=" + cdVarlik() }/>
 	}
@@ -296,6 +298,10 @@ templ cdHead(h CDHead) {
 	// webdriver, saat dilimi, etkileşim). Sunucu bunları YALNIZ puan
 	// yükseltmek için kullanır; "ben temizim" diyen istemci puanı düşüremez.
 	<script src={ "/static/guvenlik.js?v=" + cdVarlik() } defer></script>
+	// ÇEREZ RIZASI — cd-entegrasyon.js'ten ÖNCE yüklenmeli: `window.cdRiza`
+	// burada kurulur; analitik ve reklam betikleri yalnız rıza varsa
+	// yüklenir (KVKK açık rıza / GDPR). İkisi de `defer`, sıra korunur.
+	<script src={ "/static/cd-cerez.js?v=" + cdVarlik() } defer></script>
 	// ÜÇÜNCÜ TARAF ENTEGRASYONLAR — satır içi KOD YOK.
 	//
 	// GA4 / GTM / Coinzilla / Cointraffic kimlikleri `data-*` ile geçilir;
