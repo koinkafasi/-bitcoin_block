@@ -142,6 +142,7 @@ func ayarlarViewFrom(sc *settingsData, locales []i18n.Locale, fl *flashMsg) temp
 	v.ReklamZone = sc.ReklamZone
 	v.CointrafficKey = sc.CointrafficKey
 	v.ChromeEklenti = sc.ChromeEklenti
+	v.KulupURL = sc.KulupURL
 	v.WebSubHubs = sc.WebSubHubs
 	v.AIEnabled = sc.AIEnabled
 	v.AIProvider = sc.AIProvider

@@ -1,6 +1,9 @@
 package templkit
 
-import "sync/atomic"
+import (
+	"strings"
+	"sync/atomic"
+)
 
 // CDEntegrasyon — üçüncü taraf entegrasyonların DOĞRULANMIŞ kimlikleri.
 //
@@ -39,10 +42,56 @@ type CDEntegrasyon struct {
 	// ChromeEklentiURL Chrome Web Store'daki eklenti sayfası. Boşsa ana
 	// sayfadaki tanıtım kartı basılmaz.
 	ChromeEklentiURL string
+	// KulupURL ana sayfadaki "Milyonerler Kulübü" kartının hedefi. Boşsa
+	// CDKulupURLVarsayilan kullanılır.
+	//
+	// NEDEN AYARLANABİLİR: kartın hedefi zamanla değişiyor — üye paneli
+	// (traders.bitcosar.com) ile sitenin kendi satış sayfası (/funnel)
+	// arasında gidip geliyor. Sabit tutulduğunda her değişiklik kod
+	// değişikliği + imaj sevki demekti; metin panelden düzenlenebilirken
+	// bağlantının kodda kalması tutarsızdı.
+	KulupURL string
 }
 
-// CDKulupURL Milyonerler Kulübü üye paneli (ana sayfadaki giriş kartı).
-const CDKulupURL = "https://traders.bitcosar.com/"
+// CDKulupURLVarsayilan panelden adres girilmediğinde kullanılan hedef.
+//
+// ESKİ DAVRANIŞ KORUNUYOR: ayar boşken kart bugüne kadar olduğu yere
+// (üye paneli) gitmeye devam eder; kimse ayar girmezse hiçbir şey bozulmaz.
+const CDKulupURLVarsayilan = "https://traders.bitcosar.com/"
+
+// CDKulupHref kartın basılacak hedefi (ayar boşsa varsayılan).
+//
+// SAVUNMA KATMANI: adres kaydedilirken httpapi tarafında doğrulanıyor.
+// Burada ikinci bir kapı var çünkü templkit'e değer başka bir yoldan
+// (ileride eklenecek bir çağıran) gelebilir; `javascript:` şeması bir kez
+// basılırsa XSS olur. Yalnız "/" ile başlayan yol ya da https kabul edilir.
+func CDKulupHref() string {
+	e := cdEnt.Load()
+	if e == nil {
+		return CDKulupURLVarsayilan
+	}
+	u := e.KulupURL
+	if u == "" {
+		return CDKulupURLVarsayilan
+	}
+	if strings.HasPrefix(u, "//") || strings.HasPrefix(u, "/\\") {
+		return CDKulupURLVarsayilan
+	}
+	if strings.HasPrefix(u, "/") || strings.HasPrefix(u, "https://") {
+		return u
+	}
+	return CDKulupURLVarsayilan
+}
+
+// CDKulupDis true ise kart yeni sekmede açılmalı.
+//
+// YALNIZ DIŞ ADRESLER: site içi bir yol (/funnel) yeni sekmede açılırsa
+// ziyaretçi ana sayfayı kaybetmiş gibi hisseder; aynı sekmede ilerlemek
+// beklenen davranış.
+func CDKulupDis() bool {
+	return strings.HasPrefix(CDKulupHref(), "http://") ||
+		strings.HasPrefix(CDKulupHref(), "https://")
+}
 
 var cdEnt atomic.Pointer[CDEntegrasyon]
 

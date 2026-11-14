@@ -53,6 +53,8 @@ type AyarlarView struct {
 	ReklamZone   string
 	CointrafficKey string
 	ChromeEklenti string
+	// KulupURL ana sayfadaki "Milyonerler Kulübü" kartının hedefi.
+	KulupURL string
 	// WebSubHubs: `joinComma` ile basılıyor → dizi.
 	WebSubHubs   []string
 	Renkler      []AyarRenk
@@ -251,6 +253,22 @@ templ AyarlarPanel(v AyarlarView) {
 				<div class="field">
 					<label for="f_cointraffic">Cointraffic wkey</label>
 					<input id="f_cointraffic" class="input" name="cointraffic_key" value={ v.CointrafficKey } placeholder="WP3qEbVT6S"/>
+				</div>
+
+				<h3 style="margin:22px 0 4px;font-size:1rem">Milyonerler Kulübü kartı</h3>
+				<p class="hint" style="margin-top:0">
+					Ana sayfada üst reklamın solundaki <b>Milyonerler Kulübü</b> kartının
+					gideceği adres. Boş bırakılırsa üye paneli
+					(<code>traders.bitcosar.com</code>) kullanılır.
+				</p>
+				<div class="field">
+					<label for="f_kulup_url">Kart bağlantısı</label>
+					<input id="f_kulup_url" class="input" name="kulup_url" value={ v.KulupURL } placeholder="/funnel"/>
+					<span class="small muted">
+						Site içi yol (<code>/funnel</code>) ya da mutlak adres
+						(<code>https://…</code>). Site içi hedef aynı sekmede, dış adres
+						yeni sekmede açılır.
+					</span>
 				</div>
 
 				<h3 style="margin:22px 0 4px;font-size:1rem">Chrome Eklentisi</h3>

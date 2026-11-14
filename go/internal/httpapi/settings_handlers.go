@@ -33,6 +33,7 @@ type settingsData struct {
 	ReklamZone     string
 	CointrafficKey string
 	ChromeEklenti  string
+	KulupURL       string
 	WebSubHubs     []string
 	RobotsHTML     string
 	AIProvider     string
@@ -106,6 +107,7 @@ func (s *Server) buildSettingsData(r *http.Request) *tmplData {
 	sc.ReklamZone = ent.ReklamZone
 	sc.CointrafficKey = ent.CointrafficKey
 	sc.ChromeEklenti = ent.ChromeEklentiURL
+	sc.KulupURL = ent.KulupURL
 	sc.WebSubHubs = ent.WebSubHubs
 	sc.AIProvider = jsonStr(aiSet["default_provider"])
 	sc.AIModel = jsonStr(aiSet["model"])
@@ -243,6 +245,7 @@ func (s *Server) handleSettingsSave(w http.ResponseWriter, r *http.Request) {
 	set("baglantilar", "reklam_zone", validReklamZone(r.FormValue("reklam_zone")))
 	set("baglantilar", "cointraffic_key", validCointraffic(r.FormValue("cointraffic_key")))
 	set("baglantilar", "chrome_eklenti_url", validChromeEklenti(r.FormValue("chrome_eklenti_url")))
+	set("baglantilar", "kulup_url", validKulupURL(r.FormValue("kulup_url")))
 	set("baglantilar", "reklam_aktif", func() string {
 		if r.Form.Has("reklam_aktif") {
 			return "1"

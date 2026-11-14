@@ -36,6 +36,22 @@ var (
 	// chromeEklentiRe Chrome Web Store eklenti sayfası. Eklenti kimliği
 	// 32 karakter, yalnız a-p; ad parçası isteğe bağlı.
 	chromeEklentiRe = regexp.MustCompile(`^https://chromewebstore\.google\.com/detail/(?:[a-z0-9-]+/)?[a-p]{32}$`)
+
+	// kulupDisRe "Milyonerler Kulübü" kartının DIŞ hedefi: mutlak https.
+	//
+	// Kimlik/kod alanlarından farklı olarak burada serbest adres gerekiyor
+	// (panel, satış sayfası, kampanya sayfası…). Bu yüzden beyaz liste
+	// yerine ŞEMA + BİÇİM kısıtı: yalnız https, alan adı zorunlu, boşluk
+	// ve tırnak/açı parantezi yok. `javascript:` ve `data:` şemaları bu
+	// kapıdan geçemez.
+	kulupDisRe = regexp.MustCompile(`^https://[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)+(?::[0-9]{1,5})?(?:/[^\s"'<>\\]*)?$`)
+
+	// kulupIcRe site İÇİ hedef: tek eğik çizgiyle başlayan yol.
+	//
+	// `//` ve `/\` BİLEREK reddedilir: tarayıcı ikisini de protokol-göreli
+	// adres sayıp `//evil.example` şeklinde dış siteye gider. Yol
+	// karakterleri ASCII ile sınırlı — yüzde kodlaması kabul edilir.
+	kulupIcRe = regexp.MustCompile(`^/[A-Za-z0-9\-._~/%]*(?:\?[^\s"'<>\\]*)?$`)
 )
 
 // websubIzinliHub bilinen WebSub hub alan adları.
@@ -99,6 +115,37 @@ func validChromeEklenti(s string) string {
 	return s
 }
 
+// validKulupURL "Milyonerler Kulübü" kartının hedefini doğrular.
+//
+// İKİ BİÇİM KABUL EDİLİR:
+//   - site içi yol: "/funnel" (satış sayfası sitede yaşıyor)
+//   - mutlak dış adres: "https://traders.bitcosar.com/"
+//
+// BOŞ DÖNÜŞ "ayar yok" demektir; kart varsayılan hedefe
+// (CDKulupURLVarsayilan) gider. Geçersiz girdi de boş döner — panelden
+// yazılan bozuk bir adres ziyaretçiye `javascript:` olarak gitmesin.
+func validKulupURL(s string) string {
+	s = strings.TrimSpace(s)
+	if s == "" {
+		return ""
+	}
+	// Protokol-göreli ve ters-eğik çizgi varyantları: tarayıcı bunları
+	// dış adres sayar, bu yüzden iç yol sayılmazlar.
+	if strings.HasPrefix(s, "//") || strings.HasPrefix(s, "/\\") {
+		return ""
+	}
+	if strings.HasPrefix(s, "/") {
+		if kulupIcRe.MatchString(s) {
+			return s
+		}
+		return ""
+	}
+	if kulupDisRe.MatchString(s) {
+		return s
+	}
+	return ""
+}
+
 // validWebSubHubs virgül/satır ayrılmış listeyi beyaz listeden süzer.
 //
 // Geçersiz girdiler SESSİZCE atılmaz: çağıran uyarı basabilsin diye
@@ -145,6 +192,7 @@ func (s *Server) cdEntegrasyonCoz(ctx context.Context) *templkit.CDEntegrasyon {
 	e.ReklamAktif = jsonStr(bag["reklam_aktif"]) == "1"
 	e.CointrafficKey = validCointraffic(jsonStr(bag["cointraffic_key"]))
 	e.ChromeEklentiURL = validChromeEklenti(jsonStr(bag["chrome_eklenti_url"]))
+	e.KulupURL = validKulupURL(jsonStr(bag["kulup_url"]))
 	hubs, _ := validWebSubHubs(jsonStr(bag["websub_hubs"]))
 	e.WebSubHubs = hubs
 	return e
