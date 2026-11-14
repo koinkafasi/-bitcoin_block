@@ -163,21 +163,3 @@ func dilUyusmazlik(ulke, dil string) bool {
 	}
 	return uk != dk
 }
-
-// kitaAdi panelde gösterim (şu an panelde kullanılmıyor; ileride ülke
-// kırılımında kıta sütunu için tutuluyor).
-func kitaAdi(k kita) string {
-	switch k {
-	case kitaAvrupa:
-		return "Avrupa"
-	case kitaAmerika:
-		return "Amerika"
-	case kitaAsya:
-		return "Asya"
-	case kitaAfrika:
-		return "Afrika"
-	case kitaOkyanusya:
-		return "Okyanusya"
-	}
-	return "Bilinmiyor"
-}

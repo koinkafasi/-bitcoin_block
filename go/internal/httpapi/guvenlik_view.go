@@ -153,9 +153,8 @@ func (s *Server) handleTrafikGuvenligi(w http.ResponseWriter, r *http.Request) {
 			IstekSayisi: k.IstekSayisi,
 			SonGorulme:  k.SonGorulme.Local().Format("02.01 15:04"),
 		}
-		for _, sn := range sinyalListesi(k.Sinyaller) {
-			satir.Sinyaller = append(satir.Sinyaller, sn)
-		}
+		// staticcheck S1011: tek elemanlı loop yerine doğrudan append.
+		satir.Sinyaller = append(satir.Sinyaller, sinyalListesi(k.Sinyaller)...)
 		v.Satirlar = append(v.Satirlar, satir)
 	}
 

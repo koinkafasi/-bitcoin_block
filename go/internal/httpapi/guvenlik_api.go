@@ -28,11 +28,7 @@ import (
 //   · Saat dilimi/dil uyuşmazlığı SUNUCUDA, IP ülkesine göre hesaplanır;
 //     istemcinin "uyuşuyor" iddiası kabul edilmez.
 
-const (
-	beaconGovdeSinir = 4096
-	// beaconOturumAralik aynı ziyaretçiden en sık beacon kabulü.
-	beaconOturumAralik = 30 * time.Second
-)
+const beaconGovdeSinir = 4096
 
 type beaconGovde struct {
 	Webdriver  bool     `json:"webdriver"`

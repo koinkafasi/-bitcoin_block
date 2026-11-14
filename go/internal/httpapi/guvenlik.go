@@ -440,9 +440,8 @@ func isTorExit(ip string) bool {
 }
 
 type torListe struct {
-	mu     sync.Mutex
-	m      map[string]torKayit
-	sonCek time.Time
+	mu sync.Mutex
+	m  map[string]torKayit
 }
 
 type torKayit struct {
