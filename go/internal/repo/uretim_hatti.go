@@ -60,13 +60,6 @@ type UretimSaat struct {
 	Kelime int // o saatte üretilen içeriğin medyan uzunluğu
 }
 
-// UretimHata gruplanmış başarısızlık nedeni.
-type UretimHata struct {
-	Neden string
-	Adet  int
-	Son   time.Time
-}
-
 // UretimCalisan panelde "şu an ne işleniyor" satırı.
 type UretimCalisan struct {
 	JobID     int64
@@ -153,37 +146,6 @@ func UretimSaatlikOku(ctx context.Context, pool DB) ([]UretimSaat, error) {
 			return nil, err
 		}
 		out = append(out, s)
-	}
-	return out, rows.Err()
-}
-
-// UretimHatalariOku başarısızlık nedenlerini gruplar.
-//
-// NEDEN İLK 80 KARAKTER: hata metinleri adres ve zaman damgası
-// taşıyor, tam metinle gruplamak her satırı ayrı gösterirdi. 80
-// karakter sağlayıcı/hata türünü ayırmaya yetiyor.
-func UretimHatalariOku(ctx context.Context, pool DB, limit int) ([]UretimHata, error) {
-	if limit <= 0 {
-		limit = 6
-	}
-	rows, err := pool.Query(ctx, `
-		SELECT left(COALESCE(error, '(boş)'), 80) AS neden,
-		       count(*), max(created_at)
-		  FROM ai_jobs
-		 WHERE status = 'failed'
-		   AND created_at > now() - interval '24 hours'
-		 GROUP BY 1 ORDER BY 2 DESC LIMIT $1`, limit)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var out []UretimHata
-	for rows.Next() {
-		var h UretimHata
-		if err := rows.Scan(&h.Neden, &h.Adet, &h.Son); err != nil {
-			return nil, err
-		}
-		out = append(out, h)
 	}
 	return out, rows.Err()
 }

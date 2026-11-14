@@ -218,20 +218,38 @@ func (s *Server) uretimSaatlik(ctx context.Context) string {
 	return b.String()
 }
 
+// uretimHatalar başarısızlıkları İMZAYA göre gösterir.
+//
+// İlk sürüm hata metninin ilk 80 karakterine göre gruplıyordu ve bu
+// ayırmıyordu: metinler `AI sağlayıcısına ulaşılamıyor: ... Post
+// "http://omniroute...completions": ` diye başlıyor ve ayırt edici kısım
+// ~139. karakterden sonra geliyor. Ölçümde (14 Kasım 2026) dört ayrı
+// sebep — 236 zaman aşımı, 11 süreç kapanması, 2 bağlam, 1 yetki — tek
+// satıra çöküyordu. Tablo doluydu ama hiçbir şey söylemiyordu.
 func (s *Server) uretimHatalar(ctx context.Context) string {
-	hatalar, err := repo.UretimHatalariOku(ctx, s.pool, 6)
+	hatalar, err := repo.UretimHataImzalariOku(ctx, s.pool, 8)
 	if err != nil || len(hatalar) == 0 {
 		return ""
+	}
+	toplam := 0
+	for _, h := range hatalar {
+		toplam += h.Adet
 	}
 	var b strings.Builder
 	b.WriteString(`<h2 style="font-size:1rem;margin:0 0 6px">Başarısızlık nedenleri (24s)</h2>`)
 	b.WriteString(`<table class="tablo" style="width:100%;margin-bottom:16px"><thead><tr>` +
 		`<th style="text-align:left">Neden</th><th style="width:70px">Adet</th>` +
-		`<th style="width:110px">Son</th></tr></thead><tbody>`)
+		`<th style="width:60px">Pay</th><th style="width:110px">Son</th>` +
+		`</tr></thead><tbody>`)
 	for _, h := range hatalar {
-		b.WriteString(`<tr><td style="font-family:monospace;font-size:11px">` +
-			html.EscapeString(h.Neden) + `</td><td>` + itoa(h.Adet) + `</td><td class="muted small">` +
-			html.EscapeString(h.Son.Local().Format("02.01 15:04")) + `</td></tr>`)
+		pay := oran(h.Adet, toplam)
+		b.WriteString(`<tr><td><b>` + html.EscapeString(h.Imza) + `</b>` +
+			`<div class="muted" style="font-family:monospace;font-size:10px;` +
+			`word-break:break-all;margin-top:2px">` + html.EscapeString(h.Ornek) + `</div></td>` +
+			`<td>` + itoa(h.Adet) + `</td>` +
+			`<td style="color:` + uretimRenk(pay) + `">` + itoa(pay) + `%</td>` +
+			`<td class="muted small">` + html.EscapeString(h.Son.Local().Format("02.01 15:04")) +
+			`</td></tr>`)
 	}
 	b.WriteString(`</tbody></table>`)
 	return b.String()
@@ -327,12 +345,6 @@ func (s *Server) uretimKalite(ctx context.Context) string {
 		return ""
 	}
 
-	oran := func(pay, toplam int) int {
-		if toplam == 0 {
-			return 0
-		}
-		return pay * 100 / toplam
-	}
 	cubuk := func(yuzde int, renk string) string {
 		return `<div style="background:var(--cizgi,#333);height:8px;border-radius:4px;overflow:hidden;margin:3px 0">` +
 			`<div style="width:` + itoa(yuzde) + `%;height:100%;background:` + renk + `"></div></div>`
@@ -378,6 +390,18 @@ func (s *Server) uretimKalite(ctx context.Context) string {
 			`düşürdüğünde çıktı kısalıyor.</p></div>`)
 	}
 	return b.String()
+}
+
+// oran yüzde verir; sıfır bölmeyi sıfır sayar.
+//
+// Paket düzeyinde, çünkü hem kalite çubukları hem hata payı tablosu
+// kullanıyor. Yerel kapanış olarak kalsaydı ikinci kullanım sessizce
+// kendi kopyasını yazardı ve ikisi ayrışabilirdi.
+func oran(pay, toplam int) int {
+	if toplam == 0 {
+		return 0
+	}
+	return pay * 100 / toplam
 }
 
 // uretimRenk oranı renge çevirir: düşük iyi (yeşil), yüksek kötü (kırmızı).
