@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/mail"
 	"net/url"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -256,15 +257,33 @@ var contactLimiter = struct {
 	last map[string]time.Time
 }{last: map[string]time.Time{}}
 
-func contactRateLimited(ip string) bool {
+// contactHizSiniri iki GERÇEK gönderim arasındaki en kısa süre.
+const contactHizSiniri = 45 * time.Second
+
+// contactRateLimited son gönderimden bu yana yeterli süre geçti mi.
+//
+// ÖLÇÜLEN KUSUR (14 Kasım 2026) — KİLİT SADECE BAŞARILI GÖNDERİMDE:
+// eski sürüm bu işlevi DOĞRULAMADAN ÖNCE çağırıyor ve damgayı her denemede
+// vuruyordu. Sonuç: aydınlatma onay kutusunu unutan gerçek kullanıcı
+// "onaylamanız gerekir" hatası alıyor, kutusunu işaretleyip 5 saniye sonra
+// tekrar gönderince "Çok sık gönderim yapıldı, bir dakika sonra deneyin"
+// duvarına çarpıyordu. Tekrar denedikçe damga YENİLENDİĞİ için form
+// kullanıcıya tamamen kilitleniyordu — "iletişim formu çalışmıyor"
+// şikayetinin asıl nedeni buydu. Ölçüm: 1. deneme (onay yok) → onay hatası,
+// 2. deneme (1 sn sonra, onay var) → hız hatası, mesaj kaydı 0.
+//
+// Yeni sözleşme: bu işlev YALNIZ okur; damga `contactHizDamgala` ile ve
+// YALNIZ mesaj gerçekten kaydedildikten sonra vurulur.
+func contactRateLimited(ip string) (limited bool, kalan time.Duration) {
 	now := time.Now()
 	contactLimiter.mu.Lock()
 	defer contactLimiter.mu.Unlock()
-	if t, ok := contactLimiter.last[ip]; ok && now.Sub(t) < 45*time.Second {
-		return true
+	if t, ok := contactLimiter.last[ip]; ok {
+		if gecen := now.Sub(t); gecen < contactHizSiniri {
+			return true, contactHizSiniri - gecen
+		}
 	}
-	contactLimiter.last[ip] = now
-	// Ara sıra temizlik: haritanın sınırsız büyümesini önler.
+	// Fırsatçı temizlik: harita sınırsız büyümesin.
 	if len(contactLimiter.last) > 5000 {
 		for k, v := range contactLimiter.last {
 			if now.Sub(v) > 10*time.Minute {
@@ -272,7 +291,17 @@ func contactRateLimited(ip string) bool {
 			}
 		}
 	}
-	return false
+	return false, 0
+}
+
+// contactHizDamgala başarılı gönderimi işaretler.
+func contactHizDamgala(ip string) {
+	if ip == "" {
+		return
+	}
+	contactLimiter.mu.Lock()
+	contactLimiter.last[ip] = time.Now()
+	contactLimiter.mu.Unlock()
 }
 
 func validEmail(s string) bool {
@@ -295,11 +324,11 @@ func (s *Server) handleContactSubmit(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	ip := clientIP(r)
-	if contactRateLimited(ip) {
-		s.flashRedirect(w, r, s.langBase(langOf(r, s))+"/iletisim#iletisim-form", "error",
-			"Çok sık gönderim yapıldı. Lütfen bir dakika sonra tekrar deneyin.")
-		return
-	}
+
+	// SIRA ÖNEMLİ: hız sınırı DOĞRULAMADAN SONRA kontrol edilir. Aksi hâlde
+	// onay kutusunu unutan gerçek kullanıcı, hatasını düzeltip tekrar
+	// gönderdiğinde "çok sık gönderim" duvarına çarpıyordu (bkz.
+	// contactRateLimited yorumundaki ölçüm).
 	name := strings.TrimSpace(r.FormValue("ad"))
 	email := strings.TrimSpace(r.FormValue("eposta"))
 	phone := strings.TrimSpace(r.FormValue("telefon"))
@@ -315,11 +344,23 @@ func (s *Server) handleContactSubmit(w http.ResponseWriter, r *http.Request) {
 			"Ad, geçerli bir e-posta ve mesaj zorunludur.")
 		return
 	}
-	if len([]rune(name)) > 120 {
-		name = string([]rune(name)[:120])
+	// KONTROL KARAKTERLERİ ATILIR: yeni satır dışındaki C0/C1 karakterleri
+	// panele/log'a düz metin olarak girer; satır sonu dışındakiler anlamsız
+	// ve log enjeksiyonuna yatkındır.
+	name = temizMetin(name, 120)
+	body = temizMetin(body, 5000)
+	phone = temizMetin(phone, 40)
+	subject = temizMetin(subject, 200)
+	if name == "" || body == "" {
+		s.flashRedirect(w, r, s.langBase(langOf(r, s))+"/iletisim#iletisim-form", "error",
+			"Ad ve mesaj zorunludur.")
+		return
 	}
-	if len([]rune(body)) > 5000 {
-		body = string([]rune(body)[:5000])
+	if limited, kalan := contactRateLimited(ip); limited {
+		sn := int(kalan.Seconds()) + 1
+		s.flashRedirect(w, r, s.langBase(langOf(r, s))+"/iletisim#iletisim-form", "error",
+			"Çok sık gönderim yapıldı. "+strconv.Itoa(sn)+" saniye sonra tekrar deneyebilirsiniz.")
+		return
 	}
 	if subject == "" {
 		subject = "diger"
@@ -334,16 +375,64 @@ func (s *Server) handleContactSubmit(w http.ResponseWriter, r *http.Request) {
 	if !known {
 		subject = "diger"
 	}
-	if _, err := repo.AddContactMessage(ctx, s.pool, repo.ContactMessage{
+	// BAĞLANTI SAYISI: bir okuyucu mesajı 4'ten fazla bağlantı içermez;
+	// içeriyorsa spam/tanıtım. Mesaj REDDEDİLMEZ (yanlış pozitifle gerçek
+	// mesaj kaybetmemek için) — "spam" konusuna düşürülür ve panelde ayrı
+	// görünür. SIRA ÖNEMLİ: bu kontrol `known` normalizasyonundan SONRA
+	// gelir, aksi hâlde "spam" bilinmeyen konu sayılıp "diger"e dönerdi
+	// (ölçüldü: 14 Kasım 2026, 6 bağlantılı mesaj "diger" olarak kaydedildi).
+	if baglantiSayisi(body) > 4 {
+		subject = "spam"
+	}
+	id, err := repo.AddContactMessage(ctx, s.pool, repo.ContactMessage{
 		SiteID: s.curSiteID(r), Name: name, Email: email, Phone: phone,
 		Subject: subject, Body: body, IP: ip, UserAgent: r.UserAgent(),
-	}); err != nil {
+	})
+	if err != nil {
 		s.logger.Warn("iletişim mesajı kaydedilemedi", "err", err)
 		s.flashRedirect(w, r, s.langBase(langOf(r, s))+"/iletisim#iletisim-form", "error",
 			"Mesaj kaydedilemedi. Lütfen daha sonra tekrar deneyin.")
 		return
 	}
+	// Damga YALNIZ başarılı kayıttan sonra.
+	contactHizDamgala(ip)
+	// E-POSTA BİLDİRİMİ: mesaj yalnız panele düşerse kimse görmeyebilir.
+	// SMTP kuruluysa konuya göre doğru adrese iletilir; kurulu değilse
+	// sessizce atlanır (hata kullanıcıya yansımaz — mesaj zaten kayıtlı).
+	s.contactBildir(ctx, id, cfg, name, email, phone, subject, body)
 	s.audit(r, "iletisim_mesaj", subject+": "+name)
 	s.flashRedirect(w, r, s.langBase(langOf(r, s))+"/iletisim#iletisim-form", "ok",
 		"Mesajınız bize ulaştı. En kısa sürede yanıt vereceğiz.")
+}
+
+// temizMetin kontrol karakterlerini atar ve uzunluğu rune bazında kırpar.
+// Satır sonu (\n) ve sekme korunur: mesaj gövdesi çok satırlıdır.
+func temizMetin(s string, azami int) string {
+	var b strings.Builder
+	b.Grow(len(s))
+	for _, c := range s {
+		switch {
+		case c == '\n' || c == '\t':
+			b.WriteRune(c)
+		case c < 0x20 || c == 0x7f || (c >= 0x80 && c <= 0x9f):
+			// kontrol karakteri: at
+		default:
+			b.WriteRune(c)
+		}
+	}
+	out := strings.TrimSpace(b.String())
+	if r := []rune(out); len(r) > azami {
+		out = strings.TrimSpace(string(r[:azami]))
+	}
+	return out
+}
+
+// baglantiSayisi metindeki http(s) bağlantılarını sayar.
+func baglantiSayisi(s string) int {
+	n := 0
+	u := strings.ToLower(s)
+	for _, onek := range []string{"http://", "https://", "www."} {
+		n += strings.Count(u, onek)
+	}
+	return n
 }

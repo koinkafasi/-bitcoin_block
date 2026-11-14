@@ -51,6 +51,11 @@ func (s *Server) handleContactAdminGet(w http.ResponseWriter, r *http.Request) {
 	for _, t := range contactTopics() {
 		data.Topics[t.Key] = t.Name
 	}
+	// "spam" yalnız panel etiketidir: formda SEÇENEK OLARAK GÖRÜNMEZ
+	// (kullanıcı kendini spam diye işaretlemesin), ama bağlantı sayısı
+	// yüksek mesajlar bu konuya düşer ve panelde okunur bir adı olmalı —
+	// aksi hâlde rozet BOŞ çıkıyordu.
+	data.Topics["spam"] = "Spam şüphesi"
 	d.Iletisim = data
 	s.render(w, r, "iletisimadmin", d)
 }

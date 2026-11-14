@@ -934,6 +934,14 @@ func (s *Server) handlePage(w http.ResponseWriter, r *http.Request) {
 					Duzeltme: cv.Duzeltme, Telefon: cv.Telefon, Adres: cv.Adres,
 					Calisma: cv.Calisma, FormAktif: cv.FormAktif,
 				}
+				// Konu seçenekleri: sunucudaki tek kaynak (contactTopics)
+				// şablona taşınır. Taşınmadığı için alan serbest metin
+				// kutusuydu ve yanlış yazılan konu sessizce "diger"e
+				// düşüyordu (bkz. CDIletisim yorumu).
+				for _, t := range cv.Konular {
+					v.Iletisim.Konular = append(v.Iletisim.Konular,
+						templkit.CDKonu{Deger: t.Key, Ad: t.Name})
+				}
 			}
 			if d.Page.FlashKind != "" || d.Page.FlashText != "" {
 				v.FlashTip = d.Page.FlashKind

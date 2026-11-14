@@ -50,6 +50,21 @@ type CDIletisim struct {
 	Adres    string
 	Calisma  string
 	FormAktif bool
+	// Konular formun konu seçenekleridir.
+	//
+	// ÖLÇÜLEN KUSUR (14 Kasım 2026): konu alanı SERBEST METİN kutusuydu
+	// ve seçenekler sunucuda (contactTopics) zaten tanımlıydı ama şablona
+	// hiç taşınmıyordu. Kullanıcı "Reklam" yazınca sunucu bu değeri
+	// tanımıyor ve mesajı SESSİZCE "Diğer" konusuna düşürüyordu: doğru
+	// birime gitmesi gereken mesaj yanlış kutuya gidiyordu. Artık gerçek
+	// bir <select>.
+	Konular []CDKonu
+}
+
+// CDKonu konu seçeneği (değer + görünen ad).
+type CDKonu struct {
+	Deger string
+	Ad    string
 }
 
 templ CDKurumsalSayfaView(v CDKurumsalSayfa) {
@@ -159,7 +174,14 @@ templ cdIletisimBlok(c CDIletisim, flashTip, flashMetin, dil string) {
 				</div>
 				<div class="cd-doc__alan">
 					<label for="cd-konu">Konu</label>
-					<input id="cd-konu" name="konu" type="text" maxlength="200"/>
+					<select id="cd-konu" name="konu">
+						if len(c.Konular) == 0 {
+							<option value="diger">{ cdT(dil, "Diğer") }</option>
+						}
+						for _, k := range c.Konular {
+							<option value={ k.Deger }>{ cdT(dil, k.Ad) }</option>
+						}
+					</select>
 				</div>
 				<div class="cd-doc__alan">
 					<label for="cd-mesaj">Mesajınız</label>

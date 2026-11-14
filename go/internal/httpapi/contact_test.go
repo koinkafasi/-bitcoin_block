@@ -34,19 +34,19 @@ func TestNormalizeContactConfigBosluklariDoldurur(t *testing.T) {
 }
 
 func TestContactTokensYerTutucu(t *testing.T) {
-	c := contactDefaults("bitcosar.com")
+	c := contactDefaults("theblock.com.tr")
 	c.Telefon = "+90 212 000 00 00"
 	tok := contactTokens(c)
-	assert.Equal(t, "bitcosar.com", tok["domain"])
-	assert.Equal(t, "info@bitcosar.com", tok["eposta_info"])
-	assert.Equal(t, "info@bitcosar.com", tok["eposta"], "{eposta} kısa takma ad")
+	assert.Equal(t, "theblock.com.tr", tok["domain"])
+	assert.Equal(t, "info@theblock.com.tr", tok["eposta_info"])
+	assert.Equal(t, "info@theblock.com.tr", tok["eposta"], "{eposta} kısa takma ad")
 	assert.Equal(t, "+90 212 000 00 00", tok["telefon"])
 
 	in := "Bize {eposta_info} veya {eposta_reklam} adresinden yazın. Site: {domain}. Tel: {telefon}"
 	out := pageTextVars(in, tok)
-	assert.Contains(t, out, "info@bitcosar.com")
-	assert.Contains(t, out, "reklam@bitcosar.com")
-	assert.Contains(t, out, "bitcosar.com")
+	assert.Contains(t, out, "info@theblock.com.tr")
+	assert.Contains(t, out, "reklam@theblock.com.tr")
+	assert.Contains(t, out, "theblock.com.tr")
 	assert.Contains(t, out, "+90 212 000 00 00")
 	assert.NotContains(t, out, "{", "bilinen yer tutucu kalmamalı")
 }
@@ -68,9 +68,16 @@ func TestValidEmail(t *testing.T) {
 
 func TestContactRateLimit(t *testing.T) {
 	ip := "203.0.113.9"
-	assert.False(t, contactRateLimited(ip), "ilk istek serbest")
-	assert.True(t, contactRateLimited(ip), "aynı IP kısa sürede ikinci kez engellenir")
-	assert.False(t, contactRateLimited("203.0.113.10"), "başka IP etkilenmez")
+	limited, _ := contactRateLimited(ip)
+	assert.False(t, limited, "ilk istek serbest")
+	// Damga artık YALNIZ başarılı gönderimde vurulur (bkz. contact.go):
+	// doğrulama hatası kullanıcıyı kilitlememeli.
+	contactHizDamgala(ip)
+	limited, kalan := contactRateLimited(ip)
+	assert.True(t, limited, "başarılı gönderimden sonra aynı IP engellenir")
+	assert.True(t, kalan > 0, "kalan süre bildirilmeli")
+	limited, _ = contactRateLimited("203.0.113.10")
+	assert.False(t, limited, "başka IP etkilenmez")
 }
 
 func TestContactTopicsBenzersiz(t *testing.T) {

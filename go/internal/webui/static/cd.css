@@ -2911,7 +2911,8 @@ html.cd-ozet-kilit body { overflow: hidden; }
 .cd-doc__alan { display: flex; flex-direction: column; gap: 6px; }
 .cd-doc__alan label { font-size: 14px; line-height: 22px; font-weight: 500; color: var(--cd-fg); }
 .cd-doc__alan input,
-.cd-doc__alan textarea {
+.cd-doc__alan textarea,
+.cd-doc__alan select {
   width: 100%;
   padding: 10px 12px;
   border: 1px solid var(--cd-border-strong);
@@ -2922,9 +2923,17 @@ html.cd-ozet-kilit body { overflow: hidden; }
   font-size: 16px;
   line-height: 24px;
 }
+/* Konu artık serbest metin değil <select>: ok işareti için tarayıcı
+   varsayılanı korunur, yalnız yükseklik input ile eşitlenir (46 px). */
+.cd-doc__alan select {
+  appearance: auto;
+  min-height: 46px;
+  cursor: pointer;
+}
 .cd-doc__alan textarea { resize: vertical; min-height: 120px; }
 .cd-doc__alan input:focus,
-.cd-doc__alan textarea:focus {
+.cd-doc__alan textarea:focus,
+.cd-doc__alan select:focus {
   outline: 0;
   border-color: var(--cd-fg);
 }
