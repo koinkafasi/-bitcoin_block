@@ -81,6 +81,10 @@ type CDShell struct {
 
 	// FaviconURL yüklenen favicon; boşsa statik simge kullanılır.
 	FaviconURL string
+
+	// KonumKapi true ise konum izin penceresi KAPATILAMAZ.
+	// Üyelik paneli gibi "konum olmadan devam edilemez" sayfalarda açılır.
+	KonumKapi bool
 }
 
 var cdFooterColumns = []cdFooterBolum{

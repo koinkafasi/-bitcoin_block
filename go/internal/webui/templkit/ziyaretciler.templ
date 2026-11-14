@@ -1,0 +1,245 @@
+// Ziyaretçi konumu paneli — /admin/ziyaretciler.
+//
+// NEDEN BU SAYFA: panelde "ziyaretçi nereden geliyor" sorusunun cevabı
+// yoktu; yalnız içerik başına okunma sayısı vardı. Burada iki katman
+// AYRI gösterilir, çünkü doğrulukları farklı:
+//   · ÜLKE  — Cloudflare başlığından, izinsiz, herkes için (kaba).
+//   · KONUM — tarayıcı izniyle gelen gerçek koordinat (hassas).
+// İkisini tek listede karıştırmak "herkes konum verdi" yanılgısı üretirdi.
+//
+// Tasarım pano diliyle aynı: kpi döşemeleri, kart, .table. Yeni CSS
+// eklenmedi — var olan sınıflar kullanılıyor (bakım tek yerde kalsın).
+package templkit
+
+// ZiyaretcilerView sayfanın tüm verisi.
+type ZiyaretcilerView struct {
+	Gun        int // 7 | 30 | 90
+	Toplam     int64
+	Son24      int64
+	Konumlu    int64
+	UlkeSayisi int
+	IzinYuzde  int
+
+	Ulkeler     []ZiyaretciUlkeSatir
+	Sehirler    []ZiyaretciSehirSatir
+	Konumlular  []ZiyaretciSatir
+	SonGelenler []ZiyaretciSatir
+
+	KonumZorunlu bool
+}
+
+type ZiyaretciUlkeSatir struct {
+	Kod  string
+	Ad   string
+	Adet int64
+	Pay  float64
+}
+
+type ZiyaretciSehirSatir struct {
+	Ulke  string
+	Sehir string
+	Adet  int64
+}
+
+type ZiyaretciSatir struct {
+	Ulke, UlkeKod, Sehir    string
+	Enlem, Boylam           string
+	Dogruluk, HaritaURL     string
+	Kaynak, IP              string
+	Izin                    bool
+	SonGorulme              string
+}
+
+// ZiyaretcilerPanel paneli çizer.
+templ ZiyaretcilerPanel(v ZiyaretcilerView) {
+	<div id="ziyaretci-panel">
+		<div class="page-head" style="display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap">
+			<div>
+				<h1 style="margin:0;font-size:1.35rem">Ziyaretçi Konumu</h1>
+				<p class="muted" style="margin:4px 0 0">
+					Ülke bilgisi Cloudflare başlığından (izinsiz, kaba); koordinat yalnız tarayıcı izni verenlerden.
+				</p>
+			</div>
+			<div style="display:flex;gap:6px">
+				for _, g := range []int{7, 30, 90} {
+					if g == v.Gun {
+						<a class="btn small" href={ templ.SafeURL("/admin/ziyaretciler?gun=" + itoaT(g)) } aria-current="page">{ itoaT(g) } gün</a>
+					} else {
+						<a class="btn ghost small" href={ templ.SafeURL("/admin/ziyaretciler?gun=" + itoaT(g)) }>{ itoaT(g) } gün</a>
+					}
+				}
+			</div>
+		</div>
+
+		// KPI döşemeleri — pano ile aynı sınıflar.
+		<div class="zv-kpiler">
+			<div class="zv-kpi zv-kpi--1">
+				<span class="zv-kpi__etiket">Benzersiz ziyaretçi</span>
+				<span class="zv-kpi__deger">{ sayiMetni64(v.Toplam) }</span>
+				<span class="zv-kpi__not">son { itoaT(v.Gun) } gün</span>
+			</div>
+			<div class="zv-kpi zv-kpi--2">
+				<span class="zv-kpi__etiket">Son 24 saat</span>
+				<span class="zv-kpi__deger">{ sayiMetni64(v.Son24) }</span>
+				<span class="zv-kpi__not">aktif ziyaretçi</span>
+			</div>
+			<div class="zv-kpi zv-kpi--3">
+				<span class="zv-kpi__etiket">Konum izni</span>
+				<span class="zv-kpi__deger">{ itoaT(v.IzinYuzde) }%</span>
+				<span class="zv-kpi__not">{ sayiMetni64(v.Konumlu) } ziyaretçi koordinat verdi</span>
+			</div>
+			<div class="zv-kpi zv-kpi--4">
+				<span class="zv-kpi__etiket">Ülke</span>
+				<span class="zv-kpi__deger">{ itoaT(v.UlkeSayisi) }</span>
+				<span class="zv-kpi__not">farklı ülkeden geldi</span>
+			</div>
+		</div>
+
+		if !v.KonumZorunlu {
+			<div class="flash warn" style="margin-top:12px">
+				Konum kapısı KAPALI: panel erişimi konum istemiyor, yalnız topluyor.
+			</div>
+		}
+
+		<div class="zv-ikili">
+			// ÜLKE DAĞILIMI
+			<div class="card card-pad">
+				<h2 style="margin-top:0;font-size:1.05rem">Ülke dağılımı</h2>
+				if len(v.Ulkeler) == 0 {
+					<p class="muted">Henüz veri yok. İlk ziyaretçiyle birlikte dolar.</p>
+				}
+				for _, u := range v.Ulkeler {
+					<div class="zv-satir" style="display:block">
+						<div style="display:flex;justify-content:space-between;gap:10px;align-items:baseline">
+							<span>
+								<strong>{ u.Ad }</strong>
+								if u.Kod != "" && u.Kod != "??" {
+									<span class="muted" style="font-size:12px">({ u.Kod })</span>
+								}
+							</span>
+							<span class="badge">{ sayiMetni64(u.Adet) }</span>
+						</div>
+						<div class="zv-cubuk">
+							<div class="zv-cubuk__ic" style={ "width:" + yuzdeMetni(u.Pay) }></div>
+						</div>
+					</div>
+				}
+			</div>
+
+			// ŞEHİR + özet kartı
+			<div class="card card-pad">
+				<h2 style="margin-top:0;font-size:1.05rem">Şehirler</h2>
+				if len(v.Sehirler) == 0 {
+					<p class="muted">
+						Şehir bilgisi yalnız tarayıcı izniyle veya ileride bir GeoIP
+						veritabanıyla dolar. Bugün ülke katmanı çalışıyor.
+					</p>
+				}
+				for _, c := range v.Sehirler {
+					<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px dashed var(--border)">
+						<span>{ c.Sehir } <span class="muted" style="font-size:12px">· { c.Ulke }</span></span>
+						<span class="badge">{ sayiMetni64(c.Adet) }</span>
+					</div>
+				}
+
+				<h2 style="margin:18px 0 0;font-size:1.05rem">Nasıl çalışır</h2>
+				<ul class="zv-bilgi">
+					<li>Ülke: her ziyaretçi için, izin sorulmadan (Cloudflare başlığı).</li>
+					<li>Koordinat: tarayıcı izni verilirse; ~11 m'ye yuvarlanır.</li>
+					<li>IP panelde maskelenir; kişisel kimlik tutulmaz.</li>
+					<li>Ziyaretçi başına tek satır; trafikle büyümez.</li>
+				</ul>
+			</div>
+		</div>
+
+		// GERÇEK KONUM (izinli)
+		<div class="card card-pad" style="margin-top:16px">
+			<h2 style="margin-top:0;font-size:1.05rem">Gerçek konum (izin verenler)</h2>
+			if len(v.Konumlular) == 0 {
+				<p class="muted">Henüz kimse tarayıcıdan konum izni vermedi.</p>
+			} else {
+				<div class="table-scroll">
+					<table class="table">
+						<thead>
+							<tr>
+								<th>Konum</th>
+								<th>Koordinat</th>
+								<th>Doğruluk</th>
+								<th>Son görülme</th>
+								<th></th>
+							</tr>
+						</thead>
+						<tbody>
+							for _, k := range v.Konumlular {
+								<tr>
+									<td>
+										<strong>{ k.Ulke }</strong>
+										if k.Sehir != "" {
+											<span class="muted"> · { k.Sehir }</span>
+										}
+									</td>
+									<td><code style="font-size:12px">{ k.Enlem }, { k.Boylam }</code></td>
+									<td>{ k.Dogruluk }</td>
+									<td class="muted">{ k.SonGorulme }</td>
+									<td>
+										<a class="btn ghost small" href={ templ.SafeURL(k.HaritaURL) } target="_blank" rel="noopener">Haritada aç</a>
+									</td>
+								</tr>
+							}
+						</tbody>
+					</table>
+				</div>
+			}
+		</div>
+
+		// SON GELENLER
+		<div class="card card-pad" style="margin-top:16px">
+			<h2 style="margin-top:0;font-size:1.05rem">Son gelenler</h2>
+			if len(v.SonGelenler) == 0 {
+				<p class="muted">Kayıt yok.</p>
+			} else {
+				<div class="table-scroll">
+					<table class="table">
+						<thead>
+							<tr>
+								<th>Ülke</th>
+								<th>Şehir</th>
+								<th>Kaynak</th>
+								<th>IP</th>
+								<th>Son görülme</th>
+							</tr>
+						</thead>
+						<tbody>
+							for _, k := range v.SonGelenler {
+								<tr>
+									<td>
+										{ k.Ulke }
+										if k.UlkeKod != "" {
+											<span class="muted" style="font-size:12px">({ k.UlkeKod })</span>
+										}
+									</td>
+									<td>
+										if k.Sehir == "" {
+											<span class="muted">—</span>
+										} else {
+											{ k.Sehir }
+										}
+									</td>
+									<td>
+										if k.Kaynak == "tarayici" {
+											<span class="status-pill st-yayinda">tarayıcı</span>
+										} else {
+											<span class="status-pill">IP</span>
+										}
+									</td>
+									<td><code style="font-size:12px">{ k.IP }</code></td>
+									<td class="muted">{ k.SonGorulme }</td>
+								</tr>
+							}
+						</tbody>
+					</table>
+				</div>
+			}
+		</div>
+	</div>
+}

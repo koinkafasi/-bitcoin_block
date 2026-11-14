@@ -65,6 +65,19 @@ func (s *Server) requireMember(w http.ResponseWriter, r *http.Request) (auth.Use
 		http.Redirect(w, r, s.langBase(langOf(r, s))+"/giris?redirect=hesabim", http.StatusFound)
 		return auth.User{}, false
 	}
+	// KONUM KAPISI (14 Kasım 2026): panel, konum izni olmadan açılmaz.
+	// Oturum kontrolünden SONRA: giriş yapmamış ziyaretçi önce girişe
+	// gitmeli, "konum ver" ekranına değil.
+	if s.konumKapiGerekli(r) {
+		if r.Method == http.MethodGet {
+			s.konumKapiSayfa(w, r)
+		} else {
+			// POST: tarayıcıyı kapı sayfasına gönder (form yeniden
+			// gönderilmesin diye GET'e yönlendiriyoruz).
+			http.Redirect(w, r, s.langBase(langOf(r, s))+"/hesabim", http.StatusFound)
+		}
+		return auth.User{}, false
+	}
 	return u, true
 }
 

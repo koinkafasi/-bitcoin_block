@@ -1,0 +1,119 @@
+/* ── Ziyaretçi konumu paneli (/admin/ziyaretciler) ────────────────────────
+   14 Kasım 2026.
+
+   NEDEN AYRI SINIF ÖNEKİ (zv-): ilk sürüm panonun `.pn-kpis`/`.pn-kpi`
+   sınıflarını kullanıyordu. Gerçek tarayıcı ölçümü: KPI döşemeleri GRID
+   OLARAK ÇİZİLMEDİ, düz metin gibi alt alta döküldü — çünkü o grid
+   `.pn-view` sarmalayıcısına bağlı ve bu sayfada öyle bir sarmalayıcı yok.
+   Panonun sınıflarını ödünç almak yerine kendi önekini kullanıyorum:
+   çakışma yok, pano değişince bu sayfa bozulmaz.
+
+   Renkler panelin kendi değişkenlerinden (koyu tema kendiliğinden).
+   ─────────────────────────────────────────────────────────────────────── */
+
+.zv-kpiler {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.zv-kpi {
+  background: var(--card, var(--surface, #fff));
+  border: 1px solid var(--border, #e5e5e5);
+  border-radius: 12px;
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-height: 96px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Sol kenarda renk şeridi: dört döşemeyi ayırt eder, göz yormaz. */
+.zv-kpi::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 3px;
+  background: var(--zv-renk, var(--accent, #3b82f6));
+}
+.zv-kpi--1 { --zv-renk: #3b82f6; }
+.zv-kpi--2 { --zv-renk: #8b5cf6; }
+.zv-kpi--3 { --zv-renk: #10b981; }
+.zv-kpi--4 { --zv-renk: #f59e0b; }
+
+.zv-kpi__etiket {
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 600;
+  letter-spacing: .02em;
+  text-transform: uppercase;
+  color: var(--muted-foreground, #6b7280);
+}
+
+.zv-kpi__deger {
+  font-size: 28px;
+  line-height: 32px;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+  color: var(--foreground, #111827);
+  font-variant-numeric: tabular-nums;
+}
+
+.zv-kpi__not {
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--muted-foreground, #6b7280);
+}
+
+/* Ülke/şehir listeleri */
+.zv-satir {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px dashed var(--border, #e5e5e5);
+}
+.zv-satir:last-child { border-bottom: 0; }
+
+.zv-cubuk {
+  height: 5px;
+  border-radius: 99px;
+  background: var(--surface-soft, var(--border, #e5e5e5));
+  margin-top: 7px;
+  overflow: hidden;
+}
+.zv-cubuk__ic {
+  height: 100%;
+  border-radius: 99px;
+  background: var(--accent, #3b82f6);
+}
+
+/* İki sütunlu üst blok — dar ekranda tek sütuna iner. */
+.zv-ikili {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 14px;
+  align-items: start;
+  margin-top: 16px;
+}
+
+/* Bilgi listesi (nasıl çalışır) */
+.zv-bilgi {
+  margin: 8px 0 0;
+  padding-left: 18px;
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--muted-foreground, #6b7280);
+}
+
+@media (max-width: 1100px) {
+  .zv-kpiler { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 760px) {
+  .zv-kpiler { grid-template-columns: minmax(0, 1fr); }
+  .zv-ikili { grid-template-columns: minmax(0, 1fr); }
+}

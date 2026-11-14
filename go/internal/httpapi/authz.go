@@ -49,6 +49,7 @@ var adminEditorPrefixes = []string{
 	"/admin/bildirim",
 	"/admin/bulten",
 	"/admin/raporlar",
+	"/admin/ziyaretciler",
 	"/admin/olcu",
 	"/admin/iletisim",
 }

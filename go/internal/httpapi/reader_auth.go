@@ -105,6 +105,13 @@ func (s *Server) handleUyeKayit(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/hesabim", http.StatusFound)
 		return
 	}
+	// KONUM KAPISI (14 Kasım 2026): kayıt da konum izni olmadan açılmıyor
+	// (kullanıcı isteği). Giriş (POST /giris) ENGELLENMİYOR: mevcut üye
+	// her zaman hesabına girebilmeli.
+	if s.konumKapiGerekli(r) {
+		s.konumKapiSayfa(w, r)
+		return
+	}
 	d := s.publicView(r, "Kayıt Ol")
 	d.UyeMode = "kayit"
 	if !s.uyeKayitAcik(r.Context()) {
@@ -119,6 +126,11 @@ func (s *Server) handleUyeKayitPost(w http.ResponseWriter, r *http.Request) {
 	_ = r.ParseForm()
 	if !s.botTrapOK(r) {
 		http.Redirect(w, r, "/", http.StatusFound)
+		return
+	}
+	// Sunucu tarafı kapı: JS kapalı/doğrudan POST ile atlanamasın.
+	if s.konumKapiGerekli(r) {
+		http.Redirect(w, r, s.langBase(langOf(r, s))+"/kayit", http.StatusFound)
 		return
 	}
 	name := strings.TrimSpace(r.FormValue("name"))

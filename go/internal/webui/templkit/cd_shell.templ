@@ -627,6 +627,79 @@ templ cdFooter(s CDShell) {
 			</div>
 		</div>
 	</footer>
+	// KONUM İZİN PENCERESİ — her sayfada bir kez (çerezle sınırlanır).
+	// Footer'ın DIŞINDA: <footer> içine modal koymak ekran okuyucu
+	// gezinme bölgesini bozar.
+	@cdKonumModal(s)
+}
+
+// cdKonumModal ziyaretçi konumu izin kartı.
+//
+// NEDEN TARAYICI İZNİNDEN ÖNCE KART: tarayıcının kendi balonu bağlamsız;
+// kullanıcı ne için istendiğini görmeden reddediyor. Kart önce AMACI
+// anlatıyor, tarayıcı izni ancak düğmeye basılınca isteniyor.
+//
+// JS YOKSA: kart hiç açılmaz (hidden) — çalışmayan düğme göstermiyoruz.
+// csp-delegated.js deseniyle aynı ilke.
+//
+// KAPI MODU: sayfa `data-konum-kapi` taşıyorsa kapatma düğmesi yok.
+templ cdKonumModal(s CDShell) {
+	<div class="cd-konum" id="cd-konum" hidden
+		data-konum data-kapi={ cdBoolAttr(s.KonumKapi) }
+		data-baslik={ cdT(s.Locale, "Konumunuzu paylaşın") }
+		data-hata={ cdT(s.Locale, "Konum alınamadı. Tarayıcı izinlerini kontrol edin.") }>
+		<div class="cd-konum__perde" data-konum-kapat></div>
+		<div class="cd-konum__kart" role="dialog" aria-modal="true"
+			aria-labelledby="cd-konum-baslik" aria-describedby="cd-konum-metin">
+			<div class="cd-konum__rozet" aria-hidden="true">
+				<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+					stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"
+					focusable="false">
+					<path d="M12 21s7-6.1 7-11a7 7 0 10-14 0c0 4.9 7 11 7 11z"></path>
+					<circle cx="12" cy="10" r="2.6"></circle>
+				</svg>
+			</div>
+			<h2 class="cd-konum__baslik" id="cd-konum-baslik">{ cdT(s.Locale, "Konumunuzu paylaşın") }</h2>
+			<p class="cd-konum__metin" id="cd-konum-metin">
+				{ cdT(s.Locale, "Bulunduğunuz bölgeye göre yerel piyasa verisi ve içerik gösterebilmemiz için konumunuza ihtiyacımız var.") }
+			</p>
+			<ul class="cd-konum__liste">
+				<li>
+					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+						stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+						<path d="M20 6L9 17l-5-5"></path>
+					</svg>
+					<span>{ cdT(s.Locale, "Konum yalnız bölge istatistiği için kullanılır.") }</span>
+				</li>
+				<li>
+					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+						stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+						<path d="M20 6L9 17l-5-5"></path>
+					</svg>
+					<span>{ cdT(s.Locale, "Yaklaşık 11 metreye yuvarlanır; adresiniz kaydedilmez.") }</span>
+				</li>
+				<li>
+					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+						stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+						<path d="M20 6L9 17l-5-5"></path>
+					</svg>
+					<span>{ cdT(s.Locale, "Üçüncü taraflarla paylaşılmaz.") }</span>
+				</li>
+			</ul>
+			<div class="cd-konum__dugme">
+				<button class="cd-btn cd-btn--ghost cd-konum__kapat" type="button" data-konum-kapat>
+					{ cdT(s.Locale, "Şimdi değil") }
+				</button>
+				<button class="cd-btn cd-btn--kayit" type="button" data-konum-ver>
+					{ cdT(s.Locale, "Konumu etkinleştir") }
+				</button>
+			</div>
+			<div class="cd-konum__durum" data-konum-durum role="status" aria-live="polite"></div>
+			<p class="cd-konum__alt">
+				{ cdT(s.Locale, "İzni tarayıcı ayarlarından her zaman geri alabilirsiniz.") }
+			</p>
+		</div>
+	</div>
 }
 
 // cdBasSimge alan başlıklarının solundaki işaret: üç kademeli blok.

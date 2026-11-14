@@ -273,6 +273,10 @@ templ cdHead(h CDHead) {
 	<link rel="stylesheet" href={ "/static/cd.css?v=" + cdVarlik() }/>
 		// Mega menü: cd.css'in üstüne biner, kendi jetonunu tanımlamaz.
 	<link rel="stylesheet" href={ "/static/cd-menu.css?v=" + cdVarlik() }/>
+	// Ziyaretçi konumu izin penceresi — kendi dosyası, çünkü cd.css'in
+	// 200 KB bütçesi var (cd_tasarim_test.go) ve bu blok her sayfada
+	// gereken ama ağır olmayan bir katman.
+	<link rel="stylesheet" href={ "/static/cd-konum.css?v=" + cdVarlik() }/>
 	for _, ek := range h.EkCSS {
 		<link rel="stylesheet" href={ ek + "?v=" + cdVarlik() }/>
 	}
@@ -285,6 +289,9 @@ templ cdHead(h CDHead) {
 	// betik de her sayfada. Akış yalnız sayfada canlı yüzey varsa açılır
 	// (cd-canli.js ilk satırda kendini kontrol eder).
 	<script src={ "/static/cd-canli.js?v=" + cdVarlik() } defer></script>
+	// Konum: izin penceresi + panel kapısı. Sunucu tarafı ülke kaydı
+	// middleware'de; bu betik yalnız GERÇEK koordinat için.
+	<script src={ "/static/konum.js?v=" + cdVarlik() } defer></script>
 	// ÜÇÜNCÜ TARAF ENTEGRASYONLAR — satır içi KOD YOK.
 	//
 	// GA4 / GTM / Coinzilla / Cointraffic kimlikleri `data-*` ile geçilir;
