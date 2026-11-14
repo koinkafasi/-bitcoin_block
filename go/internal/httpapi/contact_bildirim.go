@@ -77,8 +77,8 @@ func (s *Server) contactBildir(ctx context.Context, id int64, c ContactConfig,
 
 	// İstek bağlamından BAĞIMSIZ: kullanıcı sayfayı kapatsa da bildirim
 	// gitmeli. SMTP yoksa mailer.Send hemen döner (maliyet yok).
-	//nolint:gosec // G118: istek bağlamı kullanıcı sayfayı kapatınca iptal
-	// olur ve bildirim yarıda kesilir; bu iş bilinçli olarak bağımsızdır.
+	// #nosec G118 -- istek bağlamı kullanıcı sayfayı kapatınca iptal olur ve
+	// bildirim yarıda kesilir; bu iş bilinçli olarak bağımsızdır.
 	go func() {
 		bctx, iptal := context.WithTimeout(context.Background(), 15*time.Second)
 		defer iptal()
