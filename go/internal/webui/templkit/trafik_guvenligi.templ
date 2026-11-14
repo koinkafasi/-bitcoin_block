@@ -111,9 +111,9 @@ templ TrafikGuvenligiPanel(v TrafikGuvenligiView) {
 		// gerçek olmayan trafiktir.
 		<div class="tg-kpiler">
 			<div class="tg-kpi tg-kpi--1">
-				<span class="tg-kpi__etiket">Toplam profil</span>
+				<span class="tg-kpi__etiket">İzlenen profil</span>
 				<span class="tg-kpi__deger">{ sayiMetni64(v.Toplam) }</span>
-				<span class="tg-kpi__not">son { itoaT(v.Gun) } günde görülen tarayıcı</span>
+				<span class="tg-kpi__not">çerez almış tarayıcı · son { itoaT(v.Gun) } gün</span>
 			</div>
 			<div class="tg-kpi tg-kpi--2">
 				<span class="tg-kpi__etiket">Gerçek ziyaretçi</span>
@@ -350,6 +350,12 @@ templ TrafikGuvenligiPanel(v TrafikGuvenligiView) {
 				<li>
 					<strong>Gizlilik:</strong> IP'ler panelde maskelenir, kişisel kimlikle
 					birleştirilmez; ziyaretçi başına tek satır tutulur.
+				</li>
+				<li>
+					<strong>"İzlenen profil" ne demek:</strong> çerez almış (yani en az iki
+					sayfa görmüş veya çerez kabul etmiş) tarayıcı. Tek sayfa görüp giden
+					ziyaretçi bu listede görünmez — toplam ziyaretçi sayısı için
+					<em>Ziyaretçi</em> raporu doğru kaynaktır.
 				</li>
 			</ul>
 		</div>

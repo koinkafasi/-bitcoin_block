@@ -202,7 +202,7 @@ func TrafikGuvenligiPanel(v TrafikGuvenligiView) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "<div class=\"tg-kpiler\"><div class=\"tg-kpi tg-kpi--1\"><span class=\"tg-kpi__etiket\">Toplam profil</span> <span class=\"tg-kpi__deger\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "<div class=\"tg-kpiler\"><div class=\"tg-kpi tg-kpi--1\"><span class=\"tg-kpi__etiket\">İzlenen profil</span> <span class=\"tg-kpi__deger\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -215,20 +215,20 @@ func TrafikGuvenligiPanel(v TrafikGuvenligiView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "</span> <span class=\"tg-kpi__not\">son ")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "</span> <span class=\"tg-kpi__not\">çerez almış tarayıcı · son ")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var7 string
 		templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(itoaT(v.Gun))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/trafik_guvenligi.templ`, Line: 116, Col: 48}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/trafik_guvenligi.templ`, Line: 116, Col: 77}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, " günde görülen tarayıcı</span></div><div class=\"tg-kpi tg-kpi--2\"><span class=\"tg-kpi__etiket\">Gerçek ziyaretçi</span> <span class=\"tg-kpi__deger\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, " gün</span></div><div class=\"tg-kpi tg-kpi--2\"><span class=\"tg-kpi__etiket\">Gerçek ziyaretçi</span> <span class=\"tg-kpi__deger\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -866,7 +866,7 @@ func TrafikGuvenligiPanel(v TrafikGuvenligiView) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 83, "\"> <em>Bu puanın üstü engellenir.</em></label></div><div class=\"tg-form__alt\"><button class=\"btn\" type=\"submit\">Politikayı kaydet</button></div></form></div><div class=\"card card-pad\" style=\"margin-top:16px\"><h2 class=\"tg-h2\">Ne yapabilir, ne yapamaz</h2><ul class=\"tg-bilgi\"><li><strong>Yapabilir:</strong> veri merkezi ve ticari VPN ağlarını sağlayıcı (ASN) düzeyinde tanır; sahte botları, tuzak yolu izleyenleri ve hız sınırını aşanları ayırır; VPN'in arkasındaki gerçek bağlantıyı WebRTC sızıntısı varsa yakalar.</li><li><strong>Yapamaz:</strong> VPN arkasındaki gerçek IP'yi kriptografik olarak çıkaramaz. Konut proxy ağı (ev interneti üzerinden satılan proxy) ASN'de \"konut\" görünür; bu katman onu ancak davranış sinyalleriyle yakalayabilir.</li><li><strong>İlk istek ödünleşimi:</strong> yeni bir IP'de ASN sorgusu 120 ms'yi aşarsa sınıflandırma tarayıcı başlıklarıyla yapılır, ağ bilgisi arka planda tamamlanır. Yani bir botun ilk isteği temiz görünebilir; sonraki istekler doğru sınıflanır.</li><li><strong>Gizlilik:</strong> IP'ler panelde maskelenir, kişisel kimlikle birleştirilmez; ziyaretçi başına tek satır tutulur.</li></ul></div></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 83, "\"> <em>Bu puanın üstü engellenir.</em></label></div><div class=\"tg-form__alt\"><button class=\"btn\" type=\"submit\">Politikayı kaydet</button></div></form></div><div class=\"card card-pad\" style=\"margin-top:16px\"><h2 class=\"tg-h2\">Ne yapabilir, ne yapamaz</h2><ul class=\"tg-bilgi\"><li><strong>Yapabilir:</strong> veri merkezi ve ticari VPN ağlarını sağlayıcı (ASN) düzeyinde tanır; sahte botları, tuzak yolu izleyenleri ve hız sınırını aşanları ayırır; VPN'in arkasındaki gerçek bağlantıyı WebRTC sızıntısı varsa yakalar.</li><li><strong>Yapamaz:</strong> VPN arkasındaki gerçek IP'yi kriptografik olarak çıkaramaz. Konut proxy ağı (ev interneti üzerinden satılan proxy) ASN'de \"konut\" görünür; bu katman onu ancak davranış sinyalleriyle yakalayabilir.</li><li><strong>İlk istek ödünleşimi:</strong> yeni bir IP'de ASN sorgusu 120 ms'yi aşarsa sınıflandırma tarayıcı başlıklarıyla yapılır, ağ bilgisi arka planda tamamlanır. Yani bir botun ilk isteği temiz görünebilir; sonraki istekler doğru sınıflanır.</li><li><strong>Gizlilik:</strong> IP'ler panelde maskelenir, kişisel kimlikle birleştirilmez; ziyaretçi başına tek satır tutulur.</li><li><strong>\"İzlenen profil\" ne demek:</strong> çerez almış (yani en az iki sayfa görmüş veya çerez kabul etmiş) tarayıcı. Tek sayfa görüp giden ziyaretçi bu listede görünmez — toplam ziyaretçi sayısı için <em>Ziyaretçi</em> raporu doğru kaynaktır.</li></ul></div></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
