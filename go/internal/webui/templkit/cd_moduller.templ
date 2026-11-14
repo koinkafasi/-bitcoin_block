@@ -30,10 +30,18 @@ templ CDModulCiz(v CDHomeView, m CDModul) {
 // cdHeroModul §8 manşet bloğu — CoinDesk hero'su ÜÇ kolon (spec §7A):
 // 290 sol ray · 608 merkez · 290 sağ ray, kolon arası 80.
 //
-// Sol: Son Haberler · Düşünce Liderliği · tek görselli manşet.
-// Orta: manşet · 8 görselli akış · Basın Bültenleri slider.
+// Sol: Canlı Yayın · Son Haberler · Düşünce Liderliği · tek görselli manşet.
+// Orta: üst liderboard · manşet · 8 görselli akış · Basın Bültenleri slider.
 // Sağ: Bugünün Videoları · Öne Çıkan Araştırma · Bugünün Klipleri
 //      (1284 px altında tamamen gizli).
+//
+// ÜST SIRA KOLONLARA DAĞITILDI (14 Kasım 2026): Milyonerler Kulübü kartı,
+// reklam ve Chrome eklentisi kartı önceden hero'nun üstünde tek satırdı —
+// o bant üç kolonun hizasını bozuyordu. Şimdi her biri kendi kolonunun
+// tepesinde: kartlar Canlı Yayın'ın ve Bugünün Videoları'nın hemen üstünde,
+// reklam manşet başlığının hemen üstünde. Böylece üç kolon tek blok olarak
+// aynı hizada başlar; kart yükseklikleri reklam yuvasıyla (90 px) eşit
+// olduğu için başlıklar da hizalı kalır (bkz. cd.css .cd-ust-kart).
 //
 // Hero ÇİZGİSİZ: CoinDesk'te ana içeriğin ilk modülü `border-top: 0`,
 // `padding: 32px 0` (ölçüldü).
@@ -42,6 +50,7 @@ templ cdHeroModul(v CDHomeView) {
 		<section class="cd-mod cd-mod--cizgisiz">
 			<div class="cd-hero">
 				<aside class="cd-hero__sol">
+					@cdKulupKart(v.Locale)
 					@cdCanliModul(v.Canli)
 					@cdHeroSolRay(v.RailLeft)
 					if v.Dusunce != nil {
@@ -52,11 +61,13 @@ templ cdHeroModul(v CDHomeView) {
 					}
 				</aside>
 				<div class="cd-hero__orta">
+					@cdReklam(728, 90)
 					@cdHeroLead(v.Lead)
 					@cdAkis(v.Akis)
 					@cdBasinSlider(v.Basin, v.Locale)
 				</div>
 				<aside class="cd-hero__sag">
+					@cdChromeKart(v.Locale)
 					@cdVideoModul(v.Videolar, v.Locale)
 					@cdArastirmaModul(v.Arastirma, v.Locale)
 					@cdKlipler(v.Klipler, v.Locale)

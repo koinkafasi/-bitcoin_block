@@ -792,24 +792,21 @@ templ CDHome(v CDHomeView) {
 			// Veri yoksa modül hiç basılmaz.
 			@cdGirisHero(v.Giris, v.Locale)
 			<main class="cd-wrap cd-main">
-				// REKLAM YUVASI (üst liderboard). ÖLÇÜM (13 Kasım 2026):
-				// canlıda ana sayfa, /markets, /price, /videos, /tag/* ve
-				// /borsa/* sayfalarında `class="cd-reklam"` sayısı 0'dı —
-				// yuva yalnız makale şablonunda vardı. Yani CSP düzeltilse
-				// bile bu sayfalarda reklamın yerleşeceği kutu yoktu.
-				// Ana sayfa trafiğin en yüksek olduğu yer; liderboard
-				// hero'nun ÜSTÜNDE, modül sırasını bozmadan duruyor.
+				// ÜST LİDERBOARD — 14 Kasım 2026'da yeri değişti.
 				//
-				// ÜST SIRA (14 Kasım 2026): reklam ortada kalır; soluna
-				// Milyonerler Kulübü, sağına Chrome eklentisi kartı gelir.
-				// Sarmalayıcı yalnız geniş ekranda ızgaradır; dar ekranda
-				// kartlar gizlenir ve reklam eskisi gibi tek başına
-				// ortalanır (bkz. cd.css .cd-ust-sira).
-				<div class="cd-ust-sira">
-					@cdKulupKart(v.Locale)
-					@cdReklam(728, 90)
-					@cdChromeKart(v.Locale)
-				</div>
+				// Öncesi: reklam `main`in en başında TAM GENİŞLİKTE ayrı
+				// bir satırdı (`cd-ust-sira`); solunda Milyonerler Kulübü,
+				// sağında Chrome eklentisi kartı duruyordu. O satır üç
+				// kolonlu manşetin üstünde ayrı bir bant oluşturuyor,
+				// kolon hizasını bozuyordu (ölçüldü: kart+reklam satırı
+				// hero'nun 170 px üstünde, kartlar kolonlarla hizasız).
+				//
+				// Sonrası: reklam orta kolonun, iki kart kendi kolonlarının
+				// EN TEPESİNDE — üç kolon tek blok olarak aynı hizada
+				// başlıyor. Yerleşim cd_moduller.templ cdHeroModul içinde;
+				// genişlik/hiza kuralları cd.css `.cd-hero__orta >
+				// .cd-reklam` ve `.cd-ust-kart` altında.
+
 								// MODÜLER YERLEŞİM (9 Kasım 2026): sayfa tasarımcısı yeni
 				// tasarımın alanlarını ayrı bloklar olarak yönetir. Düzen
 				// yazılmamışsa (v.Moduller boş) aşağıdaki VARSAYILAN SIRA

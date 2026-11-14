@@ -77,11 +77,19 @@ func CDModulCiz(v CDHomeView, m CDModul) templ.Component {
 // cdHeroModul §8 manşet bloğu — CoinDesk hero'su ÜÇ kolon (spec §7A):
 // 290 sol ray · 608 merkez · 290 sağ ray, kolon arası 80.
 //
-// Sol: Son Haberler · Düşünce Liderliği · tek görselli manşet.
-// Orta: manşet · 8 görselli akış · Basın Bültenleri slider.
+// Sol: Canlı Yayın · Son Haberler · Düşünce Liderliği · tek görselli manşet.
+// Orta: üst liderboard · manşet · 8 görselli akış · Basın Bültenleri slider.
 // Sağ: Bugünün Videoları · Öne Çıkan Araştırma · Bugünün Klipleri
 //
 //	(1284 px altında tamamen gizli).
+//
+// ÜST SIRA KOLONLARA DAĞITILDI (14 Kasım 2026): Milyonerler Kulübü kartı,
+// reklam ve Chrome eklentisi kartı önceden hero'nun üstünde tek satırdı —
+// o bant üç kolonun hizasını bozuyordu. Şimdi her biri kendi kolonunun
+// tepesinde: kartlar Canlı Yayın'ın ve Bugünün Videoları'nın hemen üstünde,
+// reklam manşet başlığının hemen üstünde. Böylece üç kolon tek blok olarak
+// aynı hizada başlar; kart yükseklikleri reklam yuvasıyla (90 px) eşit
+// olduğu için başlıklar da hizalı kalır (bkz. cd.css .cd-ust-kart).
 //
 // Hero ÇİZGİSİZ: CoinDesk'te ana içeriğin ilk modülü `border-top: 0`,
 // `padding: 32px 0` (ölçüldü).
@@ -111,6 +119,10 @@ func cdHeroModul(v CDHomeView) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
+			templ_7745c5c3_Err = cdKulupKart(v.Locale).Render(ctx, templ_7745c5c3_Buffer)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
 			templ_7745c5c3_Err = cdCanliModul(v.Canli).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -135,6 +147,10 @@ func cdHeroModul(v CDHomeView) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
+			templ_7745c5c3_Err = cdReklam(728, 90).Render(ctx, templ_7745c5c3_Buffer)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
 			templ_7745c5c3_Err = cdHeroLead(v.Lead).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -148,6 +164,10 @@ func cdHeroModul(v CDHomeView) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "</div><aside class=\"cd-hero__sag\">")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = cdChromeKart(v.Locale).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

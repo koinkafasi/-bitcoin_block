@@ -5963,44 +5963,39 @@ html.dark {
   }
 }
 
-/* Üst sıra: Milyonerler Kulübü kartı · reklam · Chrome eklentisi kartı
-   (14 Kasım 2026). Kartlar reklamın iki yanındaki boşluğa oturur; reklam
-   ortada kalsın diye üç kolon (1fr · 728 · 1fr). 1280 px altında yan
-   boşluk kartlara yetmiyor: orada kartlar gizli, sarmalayıcı düz blok —
-   reklamın yerleşimi eskisiyle birebir aynı. */
+/* Üst kartlar — 14 Kasım 2026: kartlar reklamın yanından ÇIKIP kendi
+   kolonlarının tepesine girdi (sol: Milyonerler Kulübü, sağ: Chrome
+   eklentisi). Üç kolon tek blok olarak başlasın diye kart yüksekliği
+   reklam yuvasıyla eşitlendi (90 px) — böylece "Canlı Yayın", manşet
+   başlığı ve "Bugünün Videoları" aynı hizada kalıyor. 1280 px altında
+   kartlar gizli: o genişlikte hero tek kolona iniyor, kart içeriğin
+   önüne geçmesin. */
 .cd-ust-kart {
   display: none;
 }
 
-/* Sarmalayıcı, üst öğesi `.cd-main` gibi SÜTUN ESNEK kutu olmalı. Reklam
-   ağı yuvaya satır içi `display: inline-block` yazıyor; düz blok içinde
-   `margin: auto` o zaman ortalamıyor ve reklam sola yaslanıyor (ölçüldü
-   14 Kasım 2026). Esnek sütunda yerleşim sarmalayıcısız hâliyle aynı. */
-.cd-ust-sira {
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  min-width: 0;
+/* Orta kolonun tepesindeki liderboard. 728 px'lik standart yuva 608
+   px'lik orta kolona sığmıyor; kırpmak (yaratıcıyı kesmek) yerine iki
+   yandaki 80 px'lik boşluğa taşıyor — her yanda 20 px pay kalıyor.
+   `align-self: center` ŞART: negatif boşlukta `margin: auto` kutuyu
+   sıfırlar ve reklam sağa kayar (ölçüldü 14 Kasım 2026).
+
+   Alt boşluk 8 px: orta kolonun öğe arası boşluğu 16 px, yan raylarınki
+   24 px. Reklam 90 px olduğu için 8 px eklenince manşet başlığı ile
+   "Canlı Yayın" AYNI hizada başlıyor (ölçüldü: 819 px). */
+.cd-hero__orta > .cd-reklam {
+  align-self: center;
+  margin: 0 0 8px;
 }
 
 @media (min-width: 1280px) {
-  .cd-ust-sira {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 728px) minmax(0, 1fr);
-    align-items: center;
-    column-gap: 24px;
-  }
-
-  .cd-ust-sira > .cd-reklam {
-    grid-area: 1 / 2;
-  }
-
   .cd-ust-kart {
     display: inline-flex;
     align-items: center;
     gap: 12px;
     max-width: 100%;
-    margin: 20px 0;
+    min-height: 90px;
+    margin: 0;
     padding: 10px 16px 10px 12px;
     border: 1px solid var(--cd-border);
     border-radius: var(--cd-radius-lg);
@@ -6029,10 +6024,10 @@ html.dark {
     line-height: 16px;
   }
 
-  /* Chrome eklentisi: sayfanın nötr yüzeyi. */
+  /* Chrome eklentisi: sayfanın nötr yüzeyi. Sağ kolonun tepesinde,
+     kolonun sağ kenarına yaslı. */
   .cd-eklenti {
-    grid-area: 1 / 3;
-    justify-self: end;
+    align-self: flex-end;
     background: var(--cd-surface-soft);
     color: var(--cd-fg);
   }
@@ -6050,10 +6045,10 @@ html.dark {
   }
 
   /* Milyonerler Kulübü: üye paneliyle aynı koyu zemin + altın. Renkler
-     temadan BAĞIMSIZ sabit — kart iki temada da aynı görünür. */
+     temadan BAĞIMSIZ sabit — kart iki temada da aynı görünür. Sol kolonun
+     tepesinde, "Canlı Yayın" başlığının hemen üstünde. */
   .cd-kulup {
-    grid-area: 1 / 1;
-    justify-self: start;
+    align-self: flex-start;
     background: linear-gradient(135deg, #07090d 0%, #14110a 60%, #2a2110 100%);
     border-color: rgba(212, 175, 55, .55);
     color: #fff;
