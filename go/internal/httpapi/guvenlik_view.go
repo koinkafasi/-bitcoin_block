@@ -140,11 +140,19 @@ func (s *Server) handleTrafikGuvenligi(w http.ResponseWriter, r *http.Request) {
 	}
 
 	for _, k := range ozet.Satirlar {
+		// Sağlayıcı: AS adı bütçe içinde gelmediyse ASN numarası gösterilir.
+		// Ölçüldü (14 Kasım 2026): Hetzner bot satırı "—" gösteriyordu çünkü
+		// AS adı sorgusu 120 ms bütçesini aşmıştı; oysa ASN numarası (24940)
+		// elde vardı ve teşhis için yeterli.
+		saglayici := asnSaglayiciEtiket(k.ASNAd)
+		if saglayici == "" && k.ASN > 0 {
+			saglayici = "AS" + itoa(k.ASN)
+		}
 		satir := templkit.GuvenlikRiskSatir{
 			Sinif:       k.Sinif,
 			SinifAd:     sinifGoster(k.Sinif),
 			Puan:        k.Puan,
-			Saglayici:   asnSaglayiciEtiket(k.ASNAd),
+			Saglayici:   saglayici,
 			Tur:         k.ASNTur,
 			TurAd:       turAdlari[k.ASNTur],
 			Ulke:        k.Ulke,

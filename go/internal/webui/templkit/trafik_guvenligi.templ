@@ -226,8 +226,12 @@ templ TrafikGuvenligiPanel(v TrafikGuvenligiView) {
 										if s.Saglayici == "" {
 											<span class="muted">—</span>
 										} else {
-											<span>{ s.Saglayici }</span>
-											<span class="tg-soluk">{ s.TurAd }</span>
+											<span class="tg-saglayici">
+												<span class="tg-saglayici__ad">{ s.Saglayici }</span>
+												if s.TurAd != "" {
+													<span class={"tg-tur tg-tur--" + s.Tur}>{ s.TurAd }</span>
+												}
+											</span>
 										}
 									</td>
 									<td>

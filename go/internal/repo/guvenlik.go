@@ -233,15 +233,33 @@ func RiskOzet(ctx context.Context, pool *pgxpool.Pool, gun int) (RiskOzeti, erro
 	rows.Close()
 
 	rs, err := pool.Query(ctx, `
-		SELECT anahtar, COALESCE(visitor_id::text,''), host(ip), COALESCE(ip_ag,''),
-		       COALESCE(asn,0), COALESCE(asn_ad,''), COALESCE(asn_ulke,''),
-		       COALESCE(asn_tur,'bilinmiyor'), COALESCE(ulke,''), puan,
-		       COALESCE(sinif,'temiz'), vpn, proxy, hosting, tor, bot,
-		       sinyaller::text, COALESCE(host(webrtc_ip),''),
-		       ip_degisim, ulke_degisim, istek_sayisi, ilk_gorulme, son_gorulme
-		  FROM visitor_risk
-		 WHERE son_gorulme >= now() - make_interval(days => $1)
-		 ORDER BY puan DESC, son_gorulme DESC
+		SELECT v.anahtar, COALESCE(v.visitor_id::text,''), host(v.ip), COALESCE(v.ip_ag,''),
+		       COALESCE(v.asn, a.asn, 0),
+		       COALESCE(NULLIF(v.asn_ad,''), a.asn_ad, ''),
+		       COALESCE(NULLIF(v.asn_ulke,''), a.ulke, ''),
+		       -- ASN SINIFI DA ÖNBELLEKTEN TAMAMLANIR. NEDEN: ASN sorgusu
+		       -- 120 ms bütçesini aşarsa ilk istekte sınıf "bilinmiyor"
+		       -- kalıyor, zenginleştirme arka planda ip_asn'e yazılıyor ve
+		       -- visitor_risk satırı ancak 10 dk sonra güncelleniyordu.
+		       -- Ölçüldü (14 Kasım 2026): Hetzner botu panelde sağlayıcısız
+		       -- ("—") görünüyordu, oysa 5.9.0.0/16 → AS24940 hosting
+		       -- önbellekte hazırdı. Panel artık ip_asn'den okur.
+		       CASE WHEN v.asn_tur <> 'bilinmiyor' THEN v.asn_tur
+		            ELSE COALESCE(a.tur, 'bilinmiyor') END,
+		       COALESCE(v.ulke,''), v.puan,
+		       COALESCE(v.sinif,'temiz'), v.vpn, v.proxy, v.hosting, v.tor, v.bot,
+		       v.sinyaller::text, COALESCE(host(v.webrtc_ip),''),
+		       v.ip_degisim, v.ulke_degisim, v.istek_sayisi, v.ilk_gorulme, v.son_gorulme
+		  FROM visitor_risk v
+		  -- inet << cidr: IP bu öneğin içinde mi. Önek başına tek satır var.
+		  LEFT JOIN LATERAL (
+		      SELECT i.asn, i.asn_ad, i.ulke, i.tur
+		        FROM ip_asn i
+		       WHERE v.ip IS NOT NULL AND v.ip << i.ag::cidr
+		       LIMIT 1
+		  ) a ON TRUE
+		 WHERE v.son_gorulme >= now() - make_interval(days => $1)
+		 ORDER BY v.puan DESC, v.son_gorulme DESC
 		 LIMIT 120`, gun)
 	if err != nil {
 		return o, err

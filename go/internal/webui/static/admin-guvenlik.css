@@ -309,6 +309,29 @@
   white-space: nowrap;
 }
 
+/* Sağlayıcı hücresi: marka adı tek satırda, tür etiketi ALTINDA.
+   ÖLÇÜLEN KUSUR (14 Kasım 2026): tür etiketi marka adıyla aynı satırdaydı
+   ve "HETZNER-AS veri merkezi" iki satıra kırılıp satır hizasını bozuyordu. */
+.tg-saglayici {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.tg-saglayici__ad {
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 190px;
+}
+
+.tg-saglayici .tg-tur {
+  margin-left: 0;
+  align-self: flex-start;
+}
+
 /* Sızan IP görsel olarak ayrışsın: bu bir suç delili, süs değil. */
 .tg-kod--sizinti {
   color: var(--tg-bot);

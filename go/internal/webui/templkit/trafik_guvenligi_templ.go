@@ -639,234 +639,262 @@ func TrafikGuvenligiPanel(v TrafikGuvenligiView) templ.Component {
 						return templ_7745c5c3_Err
 					}
 				} else {
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 54, "<span>")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 54, "<span class=\"tg-saglayici\"><span class=\"tg-saglayici__ad\">")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
 					var templ_7745c5c3_Var36 string
 					templ_7745c5c3_Var36, templ_7745c5c3_Err = templ.JoinStringErrs(s.Saglayici)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/trafik_guvenligi.templ`, Line: 229, Col: 30}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/trafik_guvenligi.templ`, Line: 230, Col: 56}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var36))
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 55, "</span> <span class=\"tg-soluk\">")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 55, "</span> ")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					var templ_7745c5c3_Var37 string
-					templ_7745c5c3_Var37, templ_7745c5c3_Err = templ.JoinStringErrs(s.TurAd)
-					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/trafik_guvenligi.templ`, Line: 230, Col: 43}
+					if s.TurAd != "" {
+						var templ_7745c5c3_Var37 = []any{"tg-tur tg-tur--" + s.Tur}
+						templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var37...)
+						if templ_7745c5c3_Err != nil {
+							return templ_7745c5c3_Err
+						}
+						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 56, "<span class=\"")
+						if templ_7745c5c3_Err != nil {
+							return templ_7745c5c3_Err
+						}
+						var templ_7745c5c3_Var38 string
+						templ_7745c5c3_Var38, templ_7745c5c3_Err = templ.ResolveAttributeValue(templ.CSSClasses(templ_7745c5c3_Var37).String())
+						if templ_7745c5c3_Err != nil {
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/trafik_guvenligi.templ`, Line: 1, Col: 0}
+						}
+						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var38)
+						if templ_7745c5c3_Err != nil {
+							return templ_7745c5c3_Err
+						}
+						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 57, "\">")
+						if templ_7745c5c3_Err != nil {
+							return templ_7745c5c3_Err
+						}
+						var templ_7745c5c3_Var39 string
+						templ_7745c5c3_Var39, templ_7745c5c3_Err = templ.JoinStringErrs(s.TurAd)
+						if templ_7745c5c3_Err != nil {
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/trafik_guvenligi.templ`, Line: 232, Col: 62}
+						}
+						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var39))
+						if templ_7745c5c3_Err != nil {
+							return templ_7745c5c3_Err
+						}
+						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 58, "</span>")
+						if templ_7745c5c3_Err != nil {
+							return templ_7745c5c3_Err
+						}
 					}
-					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var37))
-					if templ_7745c5c3_Err != nil {
-						return templ_7745c5c3_Err
-					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 56, "</span>")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 59, "</span>")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 57, "</td><td>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 60, "</td><td>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				if s.Ulke == "" {
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 58, "<span class=\"muted\">—</span>")
-					if templ_7745c5c3_Err != nil {
-						return templ_7745c5c3_Err
-					}
-				} else {
-					var templ_7745c5c3_Var38 string
-					templ_7745c5c3_Var38, templ_7745c5c3_Err = templ.JoinStringErrs(s.Ulke)
-					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/trafik_guvenligi.templ`, Line: 237, Col: 19}
-					}
-					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var38))
-					if templ_7745c5c3_Err != nil {
-						return templ_7745c5c3_Err
-					}
-				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 59, "</td><td><code class=\"tg-kod\">")
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				var templ_7745c5c3_Var39 string
-				templ_7745c5c3_Var39, templ_7745c5c3_Err = templ.JoinStringErrs(s.IP)
-				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/trafik_guvenligi.templ`, Line: 240, Col: 40}
-				}
-				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var39))
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 60, "</code></td><td>")
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				if s.WebRTCIP == "" {
 					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 61, "<span class=\"muted\">—</span>")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
 				} else {
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 62, "<code class=\"tg-kod tg-kod--sizinti\">")
-					if templ_7745c5c3_Err != nil {
-						return templ_7745c5c3_Err
-					}
 					var templ_7745c5c3_Var40 string
-					templ_7745c5c3_Var40, templ_7745c5c3_Err = templ.JoinStringErrs(s.WebRTCIP)
+					templ_7745c5c3_Var40, templ_7745c5c3_Err = templ.JoinStringErrs(s.Ulke)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/trafik_guvenligi.templ`, Line: 245, Col: 60}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/trafik_guvenligi.templ`, Line: 241, Col: 19}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var40))
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 63, "</code>")
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 62, "</td><td><code class=\"tg-kod\">")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var41 string
+				templ_7745c5c3_Var41, templ_7745c5c3_Err = templ.JoinStringErrs(s.IP)
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/trafik_guvenligi.templ`, Line: 244, Col: 40}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var41))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 63, "</code></td><td>")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				if s.WebRTCIP == "" {
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 64, "<span class=\"muted\">—</span>")
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+				} else {
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 65, "<code class=\"tg-kod tg-kod--sizinti\">")
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					var templ_7745c5c3_Var42 string
+					templ_7745c5c3_Var42, templ_7745c5c3_Err = templ.JoinStringErrs(s.WebRTCIP)
+					if templ_7745c5c3_Err != nil {
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/trafik_guvenligi.templ`, Line: 249, Col: 60}
+					}
+					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var42))
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 66, "</code>")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 64, "</td><td><div class=\"tg-ciplar\">")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 67, "</td><td><div class=\"tg-ciplar\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				for _, sn := range s.Sinyaller {
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 65, "<span class=\"tg-cip\">")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 68, "<span class=\"tg-cip\">")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					var templ_7745c5c3_Var41 string
-					templ_7745c5c3_Var41, templ_7745c5c3_Err = templ.JoinStringErrs(sn)
+					var templ_7745c5c3_Var43 string
+					templ_7745c5c3_Var43, templ_7745c5c3_Err = templ.JoinStringErrs(sn)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/trafik_guvenligi.templ`, Line: 251, Col: 37}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/trafik_guvenligi.templ`, Line: 255, Col: 37}
 					}
-					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var41))
-					if templ_7745c5c3_Err != nil {
-						return templ_7745c5c3_Err
-					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 66, "</span>")
+					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var43))
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 69, "</span>")
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 67, "</div></td><td class=\"muted\">")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 70, "</div></td><td class=\"muted\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				var templ_7745c5c3_Var42 string
-				templ_7745c5c3_Var42, templ_7745c5c3_Err = templ.JoinStringErrs(sayiMetni64(s.IstekSayisi))
+				var templ_7745c5c3_Var44 string
+				templ_7745c5c3_Var44, templ_7745c5c3_Err = templ.JoinStringErrs(sayiMetni64(s.IstekSayisi))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/trafik_guvenligi.templ`, Line: 255, Col: 55}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/trafik_guvenligi.templ`, Line: 259, Col: 55}
 				}
-				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var42))
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 68, "</td><td class=\"muted\">")
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var44))
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				var templ_7745c5c3_Var43 string
-				templ_7745c5c3_Var43, templ_7745c5c3_Err = templ.JoinStringErrs(s.SonGorulme)
-				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/trafik_guvenligi.templ`, Line: 256, Col: 41}
-				}
-				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var43))
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 71, "</td><td class=\"muted\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 69, "</td></tr>")
+				var templ_7745c5c3_Var45 string
+				templ_7745c5c3_Var45, templ_7745c5c3_Err = templ.JoinStringErrs(s.SonGorulme)
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/trafik_guvenligi.templ`, Line: 260, Col: 41}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var45))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 72, "</td></tr>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 70, "</tbody></table></div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 73, "</tbody></table></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 71, "</div><div class=\"card card-pad\" style=\"margin-top:16px\"><h2 class=\"tg-h2\">Politika</h2><p class=\"tg-not\">Varsayılan: veri merkezi engellenir, ticari VPN yalnız işaretlenir. VPN'in arkasında gerçek okuyucu olabilir; engellemek okuyucu kaybettirir.</p><form method=\"post\" action=\"/admin/trafik-guvenligi\" class=\"tg-form\"><label class=\"tg-anahtar\"><input type=\"checkbox\" name=\"aktif\" value=\"1\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 74, "</div><div class=\"card card-pad\" style=\"margin-top:16px\"><h2 class=\"tg-h2\">Politika</h2><p class=\"tg-not\">Varsayılan: veri merkezi engellenir, ticari VPN yalnız işaretlenir. VPN'in arkasında gerçek okuyucu olabilir; engellemek okuyucu kaybettirir.</p><form method=\"post\" action=\"/admin/trafik-guvenligi\" class=\"tg-form\"><label class=\"tg-anahtar\"><input type=\"checkbox\" name=\"aktif\" value=\"1\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		if v.Aktif {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 72, " checked")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 75, " checked")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 73, "> <span><strong>Koruma açık</strong> <em>Kapatılırsa sayım eski davranışa döner (her istek sayılır).</em></span></label> <label class=\"tg-anahtar\"><input type=\"checkbox\" name=\"hosting_engel\" value=\"1\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 76, "> <span><strong>Koruma açık</strong> <em>Kapatılırsa sayım eski davranışa döner (her istek sayılır).</em></span></label> <label class=\"tg-anahtar\"><input type=\"checkbox\" name=\"hosting_engel\" value=\"1\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		if v.HostingEngel {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 74, " checked")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 77, " checked")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 75, "> <span><strong>Veri merkezi / hosting engelle</strong> <em>Hetzner, DigitalOcean, OVH… Gerçek okuyucu neredeyse hiç gelmez.</em></span></label> <label class=\"tg-anahtar\"><input type=\"checkbox\" name=\"vpn_engel\" value=\"1\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 78, "> <span><strong>Veri merkezi / hosting engelle</strong> <em>Hetzner, DigitalOcean, OVH… Gerçek okuyucu neredeyse hiç gelmez.</em></span></label> <label class=\"tg-anahtar\"><input type=\"checkbox\" name=\"vpn_engel\" value=\"1\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		if v.VPNEngel {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 76, " checked")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 79, " checked")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 77, "> <span><strong>Ticari VPN ve Tor engelle</strong> <em>Kapalıyken işaretlenir ve sayılmaz, ama sayfa açılır.</em></span></label> <label class=\"tg-anahtar\"><input type=\"checkbox\" name=\"bot_engel\" value=\"1\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 80, "> <span><strong>Ticari VPN ve Tor engelle</strong> <em>Kapalıyken işaretlenir ve sayılmaz, ama sayfa açılır.</em></span></label> <label class=\"tg-anahtar\"><input type=\"checkbox\" name=\"bot_engel\" value=\"1\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		if v.BotEngel {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 78, " checked")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 81, " checked")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 79, "> <span><strong>Bot engelle</strong> <em>Yüksek riskli istekler 403 alır.</em></span></label> <label class=\"tg-anahtar\"><input type=\"checkbox\" name=\"webrtc\" value=\"1\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 82, "> <span><strong>Bot engelle</strong> <em>Yüksek riskli istekler 403 alır.</em></span></label> <label class=\"tg-anahtar\"><input type=\"checkbox\" name=\"webrtc\" value=\"1\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		if v.WebRTC {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 80, " checked")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 83, " checked")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 81, "> <span><strong>WebRTC sızıntı tespiti</strong> <em>Gizlilik maliyeti: tarayıcı yerel ağ adresini açığa verebilir. Yalnız sayısal IP karşılaştırılır.</em></span></label><div class=\"tg-esikler\"><label class=\"tg-esik\"><span>Yüksek risk eşiği</span> <input type=\"number\" name=\"esik_yuksek\" min=\"30\" max=\"100\" value=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 84, "> <span><strong>WebRTC sızıntı tespiti</strong> <em>Gizlilik maliyeti: tarayıcı yerel ağ adresini açığa verebilir. Yalnız sayısal IP karşılaştırılır.</em></span></label><div class=\"tg-esikler\"><label class=\"tg-esik\"><span>Yüksek risk eşiği</span> <input type=\"number\" name=\"esik_yuksek\" min=\"30\" max=\"100\" value=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var44 string
-		templ_7745c5c3_Var44, templ_7745c5c3_Err = templ.ResolveAttributeValue(itoaT(v.EsikYuksek))
+		var templ_7745c5c3_Var46 string
+		templ_7745c5c3_Var46, templ_7745c5c3_Err = templ.ResolveAttributeValue(itoaT(v.EsikYuksek))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/trafik_guvenligi.templ`, Line: 312, Col: 92}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/trafik_guvenligi.templ`, Line: 316, Col: 92}
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var44)
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 82, "\"> <em>Bu puanın üstü sayılmaz ve reklam gizlenir.</em></label> <label class=\"tg-esik\"><span>Bot eşiği</span> <input type=\"number\" name=\"esik_bot\" min=\"50\" max=\"100\" value=\"")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var46)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var45 string
-		templ_7745c5c3_Var45, templ_7745c5c3_Err = templ.ResolveAttributeValue(itoaT(v.EsikBot))
-		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/trafik_guvenligi.templ`, Line: 317, Col: 86}
-		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var45)
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 85, "\"> <em>Bu puanın üstü sayılmaz ve reklam gizlenir.</em></label> <label class=\"tg-esik\"><span>Bot eşiği</span> <input type=\"number\" name=\"esik_bot\" min=\"50\" max=\"100\" value=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 83, "\"> <em>Bu puanın üstü engellenir.</em></label></div><div class=\"tg-form__alt\"><button class=\"btn\" type=\"submit\">Politikayı kaydet</button></div></form></div><div class=\"card card-pad\" style=\"margin-top:16px\"><h2 class=\"tg-h2\">Ne yapabilir, ne yapamaz</h2><ul class=\"tg-bilgi\"><li><strong>Yapabilir:</strong> veri merkezi ve ticari VPN ağlarını sağlayıcı (ASN) düzeyinde tanır; sahte botları, tuzak yolu izleyenleri ve hız sınırını aşanları ayırır; VPN'in arkasındaki gerçek bağlantıyı WebRTC sızıntısı varsa yakalar.</li><li><strong>Yapamaz:</strong> VPN arkasındaki gerçek IP'yi kriptografik olarak çıkaramaz. Konut proxy ağı (ev interneti üzerinden satılan proxy) ASN'de \"konut\" görünür; bu katman onu ancak davranış sinyalleriyle yakalayabilir.</li><li><strong>İlk istek ödünleşimi:</strong> yeni bir IP'de ASN sorgusu 120 ms'yi aşarsa sınıflandırma tarayıcı başlıklarıyla yapılır, ağ bilgisi arka planda tamamlanır. Yani bir botun ilk isteği temiz görünebilir; sonraki istekler doğru sınıflanır.</li><li><strong>Gizlilik:</strong> IP'ler panelde maskelenir, kişisel kimlikle birleştirilmez; ziyaretçi başına tek satır tutulur.</li><li><strong>\"İzlenen profil\" ne demek:</strong> çerez almış (yani en az iki sayfa görmüş veya çerez kabul etmiş) tarayıcı. Tek sayfa görüp giden ziyaretçi bu listede görünmez — toplam ziyaretçi sayısı için <em>Ziyaretçi</em> raporu doğru kaynaktır.</li></ul></div></div>")
+		var templ_7745c5c3_Var47 string
+		templ_7745c5c3_Var47, templ_7745c5c3_Err = templ.ResolveAttributeValue(itoaT(v.EsikBot))
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `go/internal/webui/templkit/trafik_guvenligi.templ`, Line: 321, Col: 86}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var47)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 86, "\"> <em>Bu puanın üstü engellenir.</em></label></div><div class=\"tg-form__alt\"><button class=\"btn\" type=\"submit\">Politikayı kaydet</button></div></form></div><div class=\"card card-pad\" style=\"margin-top:16px\"><h2 class=\"tg-h2\">Ne yapabilir, ne yapamaz</h2><ul class=\"tg-bilgi\"><li><strong>Yapabilir:</strong> veri merkezi ve ticari VPN ağlarını sağlayıcı (ASN) düzeyinde tanır; sahte botları, tuzak yolu izleyenleri ve hız sınırını aşanları ayırır; VPN'in arkasındaki gerçek bağlantıyı WebRTC sızıntısı varsa yakalar.</li><li><strong>Yapamaz:</strong> VPN arkasındaki gerçek IP'yi kriptografik olarak çıkaramaz. Konut proxy ağı (ev interneti üzerinden satılan proxy) ASN'de \"konut\" görünür; bu katman onu ancak davranış sinyalleriyle yakalayabilir.</li><li><strong>İlk istek ödünleşimi:</strong> yeni bir IP'de ASN sorgusu 120 ms'yi aşarsa sınıflandırma tarayıcı başlıklarıyla yapılır, ağ bilgisi arka planda tamamlanır. Yani bir botun ilk isteği temiz görünebilir; sonraki istekler doğru sınıflanır.</li><li><strong>Gizlilik:</strong> IP'ler panelde maskelenir, kişisel kimlikle birleştirilmez; ziyaretçi başına tek satır tutulur.</li><li><strong>\"İzlenen profil\" ne demek:</strong> çerez almış (yani en az iki sayfa görmüş veya çerez kabul etmiş) tarayıcı. Tek sayfa görüp giden ziyaretçi bu listede görünmez — toplam ziyaretçi sayısı için <em>Ziyaretçi</em> raporu doğru kaynaktır.</li></ul></div></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
