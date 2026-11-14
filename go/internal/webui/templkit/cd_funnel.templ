@@ -1,0 +1,592 @@
+package templkit
+
+// Funnel satış sayfası (bitcosar.com/funnel) — Milyonerler Kulübü için
+// Trader Bitcoşar sinyal aboneliği.
+//
+// BAĞIMSIZ KABUK: bu sayfa cd.css'in üstüne kendi stil dosyasını
+// (funnel.css) bindirir ve site üst çubuğunu/şeridini KULLANMAZ. Gerekçe:
+// tasarım referansı ayrı bir görsel dil (koyu gözlemevi + aurora); site
+// kabuğu (haber menüsü, fiyat şeridi, reklam yuvaları) satış sayfasının
+// tek işini bölüyordu. `cdHead` yine ortak: başlık/meta/canonical/JSON-LD
+// tek kaynaktan gelsin.
+//
+// GÖRSELLER GERÇEK: /static/funnel/*.webp dosyaları traders.bitcosar.com
+// panelinden alınmış ekran görüntüleridir (14 Kasım 2026). Sahte arayüz
+// çizilmedi; fiyatlar paneldeki plan kayıtlarıyla aynı.
+
+// CDFunnelPlan panelde tanımlı bir abonelik planı.
+type CDFunnelPlan struct {
+	Ad         string
+	Aciklama   string
+	Tutar      string
+	Donem      string
+	Ozellikler []string
+	CtaHref    string
+	// OneCikan kartı iris çerçeveyle öne çıkarır (öneri, "en çok satan"
+	// iddiası DEĞİL — panelde tek abone Bronz'da).
+	OneCikan bool
+	Rozet    string
+}
+
+// CDFunnelSSS tek bir soru/cevap. Cevap düz metindir; JSON-LD aynı
+// metinden üretilir (iki yerde ayrışmasın).
+type CDFunnelSSS struct {
+	Soru  string
+	Cevap string
+}
+
+// CDFunnel sayfa verisi.
+type CDFunnel struct {
+	Shell     CDShell
+	Title     string
+	Desc      string
+	Canonical string
+	JSONLD    string
+	Plans     []CDFunnelPlan
+	SSS       []CDFunnelSSS
+	KayitHref string
+	GirisHref string
+	PanelHref string
+	SiteHref  string
+}
+
+// CDFunnelSayfa satış sayfası.
+templ CDFunnelSayfa(v CDFunnel) {
+	<!doctype html>
+	<html lang="tr">
+		<head>
+			@cdHead(CDHead{
+				Title:      v.Title,
+				Desc:       v.Desc,
+				Canonical:  v.Canonical,
+				OGType:     "website",
+				Image:      "/static/funnel/panel-sinyaller.webp",
+				ImageAlt:   "Trader Bitcoşar panelinde sinyal listesi: yön, giriş, stop ve hedefler",
+				SiteName:   v.Shell.SiteName,
+				Locale:     "tr",
+				JSONLD:     v.JSONLD,
+				BaseURL:    v.Shell.BaseURL,
+				FaviconURL: v.Shell.FaviconURL,
+				EkCSS:      []string{"/static/funnel.css"},
+			})
+		</head>
+		<body class="fnl">
+			<header class="fnl-nav">
+				<div class="fnl-wrap fnl-nav__ic">
+					<a class="fnl-nav__marka" href="/" aria-label={ v.Shell.SiteName + " ana sayfa" }>
+						if v.Shell.LogoURL != "" {
+							<img src={ v.Shell.LogoURL } alt={ v.Shell.SiteName } width="132" height="29" decoding="async"/>
+						} else {
+							<img src="/static/img/logo-bitcosar-2x.png" srcset="/static/img/logo-bitcosar-1x.png 1x, /static/img/logo-bitcosar-2x.png 2x" alt={ v.Shell.SiteName } width="132" height="29" decoding="async"/>
+						}
+					</a>
+					<nav class="fnl-nav__menu" aria-label="Sayfa içi">
+						<a class="fnl-nav__link" href="#sistem">Sistem</a>
+						<a class="fnl-nav__link" href="#seffaflik">Şeffaflık</a>
+						<a class="fnl-nav__link" href="#planlar">Planlar</a>
+						<a class="fnl-nav__link" href="#sorular">Sorular</a>
+					</nav>
+					<div class="fnl-nav__sag">
+						<a class="fnl-pill fnl-pill--hayalet fnl-pill--kucuk" href={ v.GirisHref }>Giriş yap</a>
+						<a class="fnl-pill fnl-pill--iris fnl-pill--kucuk" href={ v.KayitHref }>Hesap oluştur</a>
+					</div>
+				</div>
+			</header>
+
+			@fnlHero(v)
+			@fnlSistem(v)
+			@fnlSeffaflik(v)
+			@fnlPlanlar(v)
+			@fnlBaslangic(v)
+			@fnlSorular(v)
+			@fnlKapanis(v)
+			@fnlAlt(v)
+		</body>
+	</html>
+}
+
+// fnlHero — aurora huzmesi + gerçek panel ekranı.
+templ fnlHero(v CDFunnel) {
+	<section class="fnl-hero" aria-labelledby="fnl-baslik">
+		<div class="fnl-hero__huzme" aria-hidden="true"></div>
+		<div class="fnl-hero__patlama" aria-hidden="true"></div>
+		<div class="fnl-hero__izgara" aria-hidden="true"></div>
+		<div class="fnl-leke fnl-leke--iris" style="top:-140px;left:-120px" aria-hidden="true"></div>
+		<div class="fnl-leke fnl-leke--ember" style="top:22%;right:-140px" aria-hidden="true"></div>
+
+		<div class="fnl-wrap fnl-hero__ic">
+			<div class="fnl-hero__metin">
+				<p class="fnl-eyebrow fnl-giris">Milyonerler Kulübü · Trader Bitcoşar</p>
+				<h1 class="fnl-display fnl-h1 fnl-hero__h1" id="fnl-baslik">
+					<span class="fnl-kelime" style="--i:0">Her</span>
+					<span class="fnl-kelime" style="--i:1">sinyalin</span>
+					<span class="fnl-kelime" style="--i:2">girişi,</span>
+					<br/>
+					<span class="fnl-kelime" style="--i:3">stopu</span>
+					<span class="fnl-kelime" style="--i:4">ve</span>
+					<span class="fnl-kelime fnl-em" style="--i:5">sonucu</span>
+					<span class="fnl-kelime" style="--i:6">yazılı.</span>
+				</h1>
+				<p class="fnl-govde fnl-hero__lead fnl-giris fnl-giris--3">
+					Kulüp üyeleri için kurulmuş sinyal paneli. Sinyal yayınlandığı anda
+					panelde ve Telegram'da; her işlemin hedefe ulaşıp ulaşmadığı kayıt
+					altında. Başarı oranı yalnızca kapanmış sinyallerden hesaplanır.
+				</p>
+				<div class="fnl-cta-satir fnl-giris fnl-giris--4">
+					<a class="fnl-pill fnl-pill--iris" href={ v.KayitHref }>
+						Paneli gör
+						<span class="fnl-pill__ok" aria-hidden="true">→</span>
+					</a>
+					<a class="fnl-pill fnl-pill--hayalet" href="#planlar">Planları incele</a>
+				</div>
+				<ul class="fnl-hero__maddeler fnl-giris fnl-giris--5">
+					<li>
+						<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+							<polyline points="20 6 9 17 4 12"></polyline>
+						</svg>
+						Kredi kartı, kripto veya havale
+					</li>
+					<li>
+						<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+							<polyline points="20 6 9 17 4 12"></polyline>
+						</svg>
+						Aboneliğini istediğin an durdur
+					</li>
+					<li>
+						<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+							<polyline points="20 6 9 17 4 12"></polyline>
+						</svg>
+						Telegram'a anında bildirim
+					</li>
+				</ul>
+			</div>
+
+			<div class="fnl-giris fnl-giris--5">
+				@fnlEkran(fnlEkranVeri{
+					Adres: "traders.bitcosar.com/signals",
+					Src:   "/static/funnel/panel-sinyaller.webp",
+					Alt:   "Panelin sinyaller ekranı: toplam sinyal, açık pozisyon, hedefe ulaşan ve başarı oranı kartları; altında yön, giriş, stop, hedefler ve durum sütunları",
+					Canli: "Canlı panel",
+					Genislik: 1044,
+					Yukseklik: 900,
+					Oncelik: true,
+					Sonuk:   true,
+				})
+			</div>
+		</div>
+	</section>
+}
+
+// fnlEkranVeri tarayıcı çerçevesi verisi.
+type fnlEkranVeri struct {
+	Adres     string
+	Src       string
+	Alt       string
+	Canli     string
+	Genislik  int
+	Yukseklik int
+	Oncelik   bool
+	Acik      bool
+	Yapiskan  bool
+	Sonuk     bool
+	Altyazi   string
+}
+
+// fnlEkran ürün ekran görüntüsünü tarayıcı çerçevesine alır.
+templ fnlEkran(e fnlEkranVeri) {
+	<figure class={ "fnl-ekran", templ.KV("fnl-ekran--acik", e.Acik), templ.KV("fnl-ekran--yapiskan", e.Yapiskan), templ.KV("fnl-ekran--sonuk", e.Sonuk) }>
+		<div class="fnl-ekran__serit" aria-hidden="true">
+			<span class="fnl-ekran__nokta"></span>
+			<span class="fnl-ekran__nokta"></span>
+			<span class="fnl-ekran__nokta"></span>
+			<span class="fnl-ekran__adres">{ e.Adres }</span>
+			if e.Canli != "" {
+				<span class="fnl-ekran__canli">
+					<span class="fnl-nokta"></span>
+					{ e.Canli }
+				</span>
+			}
+		</div>
+		<img src={ e.Src } alt={ e.Alt }
+			width={ fnlSayi(e.Genislik) } height={ fnlSayi(e.Yukseklik) }
+			loading={ fnlYukleme(e.Oncelik) } decoding="async"/>
+		if e.Altyazi != "" {
+			<figcaption class="fnl-cok-kucuk fnl-soluk" style="padding:12px 16px;border-top:1px solid rgba(74,75,80,.45)">
+				{ e.Altyazi }
+			</figcaption>
+		}
+	</figure>
+}
+
+// fnlSistem — panelin üç işi.
+templ fnlSistem(v CDFunnel) {
+	<section class="fnl-bant fnl-bant--obsisdyen" id="sistem" aria-labelledby="fnl-sistem-baslik">
+		<div class="fnl-wrap fnl-bant__ic">
+			<div class="fnl-baslik-blok fnl-belir">
+				<p class="fnl-eyebrow">Sistem</p>
+				<h2 class="fnl-display fnl-h2" id="fnl-sistem-baslik">Bir mesaj değil, talimat.</h2>
+				<p class="fnl-govde">
+					Her sinyalde parite, yön, zaman aralığı ve borsa; altında açılış
+					fiyatı, zarar durdurma ve üç kademeli kâr al seviyesi var. Yorum
+					gerekmiyor: hangi fiyatta ne olacağı yazılı.
+				</p>
+			</div>
+
+			<div class="fnl-izgara-3">
+				<article class="fnl-kart fnl-kart--isima-iris fnl-belir">
+					<span class="fnl-kart__ikon" aria-hidden="true">
+						<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+							<circle cx="12" cy="12" r="9"></circle>
+							<circle cx="12" cy="12" r="4"></circle>
+							<line x1="12" y1="1.5" x2="12" y2="6"></line>
+							<line x1="12" y1="18" x2="12" y2="22.5"></line>
+						</svg>
+					</span>
+					<h3 class="fnl-h4">Ne, nerede, ne zaman</h3>
+					<p class="fnl-govde fnl-govde--kucuk">
+						Parite, yön (AL/SAT), zaman aralığı ve borsa en üstte. Açılış,
+						stop ve üç kâr al seviyesi altında. Sinyal okunurken tahmin
+						yapılmıyor.
+					</p>
+					<p class="fnl-kart__dip">BTC Spot · BTC Vadeli · M15 – D1</p>
+				</article>
+
+				<article class="fnl-kart fnl-belir">
+					<span class="fnl-kart__ikon fnl-kart__ikon--ember" aria-hidden="true">
+						<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+							<line x1="22" y1="2" x2="11" y2="13"></line>
+							<polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+						</svg>
+					</span>
+					<h3 class="fnl-h4">Telegram'a aynı anda</h3>
+					<p class="fnl-govde fnl-govde--kucuk">
+						Yayın anında geçerli aboneliği olan her aboneye teslim kaydı
+						açılır. Beş denemede ulaşmayan gönderim kalıcı başarısız sayılır
+						ve Bildirimler sayfasında görünür — sessizce kaybolmaz.
+					</p>
+					<p class="fnl-kart__dip">Aboneliği olmayan sinyali görmez</p>
+				</article>
+
+				<article class="fnl-kart fnl-belir">
+					<span class="fnl-kart__ikon" aria-hidden="true">
+						<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+							<rect x="2" y="5" width="20" height="14" rx="2.5"></rect>
+							<line x1="2" y1="10" x2="22" y2="10"></line>
+							<line x1="6" y1="15" x2="10" y2="15"></line>
+						</svg>
+					</span>
+					<h3 class="fnl-h4">Plan, abone, tahsilat</h3>
+					<p class="fnl-govde fnl-govde--kucuk">
+						Bronz, Altın, Premium. Hangi sinyalin hangi plana gittiği kural
+						olarak tanımlı; abonelik ataması, bitiş tarihi ve tahsilat aynı
+						panelde yürüyor.
+					</p>
+					<p class="fnl-kart__dip">Abonelik bitince sinyaller durur</p>
+				</article>
+			</div>
+
+			<div class="fnl-ikili" style="margin-top:72px">
+				<div class="fnl-ikili__metin">
+					<p class="fnl-eyebrow">Yayın akışı</p>
+					<h2 class="fnl-display fnl-h2">Yayınlamak, form doldurmak kadar kısa.</h2>
+					<p class="fnl-govde">
+						Sinyal setini, pariteyi ve yönü seç; açılış, stop ve hedefleri
+						gir. Yayın kime gideceğine sen karar veriyorsun.
+					</p>
+					<ul class="fnl-madde-liste">
+						<li>
+							<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>
+							Tüm planlara açık, ya da yalnız seçtiğin abonelere
+						</li>
+						<li>
+							<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>
+							İleri tarihli yayın: boş bırakılırsa hemen gider
+						</li>
+						<li>
+							<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>
+							Telegram mesajı 1–48 saat sonra otomatik silinebilir
+						</li>
+						<li>
+							<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>
+							Yanlış giden sinyal geri alınabilir
+						</li>
+					</ul>
+				</div>
+				@fnlEkran(fnlEkranVeri{
+					Adres: "traders.bitcosar.com/signals/new",
+					Src:   "/static/funnel/panel-yeni-sinyal.webp",
+					Alt:   "Yeni sinyal formu: sinyal seti, parite, borsa, yön, zaman aralığı, açılış fiyatı, zarar durdurma, kaldıraç ve üç kâr al alanı",
+					Genislik: 870,
+					Yukseklik: 760,
+					Sonuk:   true,
+				})
+			</div>
+		</div>
+	</section>
+}
+
+// fnlSeffaflik — açık bant; başarı oranının tanımı.
+templ fnlSeffaflik(v CDFunnel) {
+	<section class="fnl-bant fnl-bant--kar" id="seffaflik" aria-labelledby="fnl-seffaflik-baslik">
+		<div class="fnl-wrap fnl-bant__ic">
+			<div class="fnl-uc-dort">
+				<div>
+					<p class="fnl-eyebrow">Şeffaflık</p>
+					<h2 class="fnl-display fnl-h2" id="fnl-seffaflik-baslik">
+						Başarı oranı,<br/>kapanmış sinyallerden.
+					</h2>
+					<p class="fnl-govde" style="margin-top:18px;color:#4c4d51">
+						Panelin kendi tanımı bu. Açık pozisyonlar orana katılmaz —
+						katılsaydı oran yapay olarak yüksek görünürdü.
+					</p>
+					<p class="fnl-formul">
+						<code>hedefe ulaşan</code>
+						<span aria-hidden="true">÷</span>
+						<code>hedefe ulaşan + stop olan</code>
+					</p>
+					<ul class="fnl-kucuk-liste">
+						<li>
+							<span aria-hidden="true">01</span>
+							<p>
+								<strong>Açık pozisyon sayılmaz</strong>
+								Devam eden işlemin sonucu belli olmadığı için orana girmez.
+							</p>
+						</li>
+						<li>
+							<span aria-hidden="true">02</span>
+							<p>
+								<strong>Her sonuç tek tek işaretli</strong>
+								Hedefe ulaştı, stop oldu, iptal — kapanan her sinyal
+								listede sonucuyla duruyor.
+							</p>
+						</li>
+						<li>
+							<span aria-hidden="true">03</span>
+							<p>
+								<strong>Geciken giriş yazılı kural</strong>
+								Açılış fiyatı geçtiyse işleme girmemek genellikle daha
+								doğrudur: stop mesafesi aynı kalırken hedefe uzaklık azalır.
+							</p>
+						</li>
+					</ul>
+				</div>
+				<div>
+					@fnlEkran(fnlEkranVeri{
+						Adres: "traders.bitcosar.com/signals",
+						Src:   "/static/funnel/panel-tablo.webp",
+						Alt:   "Panelin sinyal tablosu: her satırda parite, yön, giriş, stop, kademeli hedefler, görünürlük, sonuç ve durum sütunları",
+						Genislik: 940,
+						Yukseklik: 230,
+						Acik:    true,
+					})
+					<p class="fnl-cok-kucuk" style="margin-top:18px;color:#5c5d61;line-height:1.6">
+						Panelden alınan gerçek tablo: 6 sinyal, 1 açık pozisyon, 2 kapanmış
+						sinyal. Örnek küçük; oran bu yüzden yüksek görünüyor.
+					</p>
+					<p class="fnl-cok-kucuk" style="margin-top:12px;color:#5c5d61;line-height:1.6">
+						Geçmiş performans gelecek getiriyi garanti etmez. Sinyaller
+						yatırım tavsiyesi değildir; karar ve risk size aittir.
+					</p>
+				</div>
+			</div>
+		</div>
+	</section>
+}
+
+// fnlPlanlar — panelde tanımlı üç plan, gerçek fiyatlarla.
+templ fnlPlanlar(v CDFunnel) {
+	<section class="fnl-bant fnl-bant--bosluk" id="planlar" aria-labelledby="fnl-planlar-baslik">
+		<div class="fnl-wrap fnl-bant__ic">
+			<div class="fnl-baslik-blok fnl-baslik-blok--orta fnl-belir">
+				<p class="fnl-eyebrow">Planlar</p>
+				<h2 class="fnl-display fnl-h2" id="fnl-planlar-baslik">Üç plan, tek panel.</h2>
+				<p class="fnl-govde">
+					Fiyatlar aylık ve ABD doları. Aboneliğin açıldığında seçtiğin
+					plandaki tüm sinyaller panelde ve Telegram'da görünür.
+				</p>
+			</div>
+
+			<div class="fnl-planlar">
+				for _, p := range v.Plans {
+					@fnlPlanKart(p)
+				}
+			</div>
+
+			<p class="fnl-plan-not">
+				Kredi kartında abonelik dönem sonunda otomatik yenilenir. Kripto
+				(USDT, BTC) ve banka havalesinde otomatik yenileme yoktur; süre
+				dolmadan hatırlatma e-postası gönderilir. Fiyat değişikliği mevcut
+				dönemini etkilemez — yeni fiyat ancak bir sonraki yenilemede geçerli
+				olur.
+			</p>
+		</div>
+	</section>
+}
+
+templ fnlPlanKart(p CDFunnelPlan) {
+	<article class={ "fnl-plan fnl-belir", templ.KV("fnl-plan--one-cikan", p.OneCikan) }>
+		if p.Rozet != "" {
+			<span class="fnl-plan__rozet">{ p.Rozet }</span>
+		}
+		<h3 class="fnl-plan__ad">{ p.Ad }</h3>
+		<p class="fnl-plan__aciklama">{ p.Aciklama }</p>
+		<p class="fnl-plan__fiyat">
+			<span class="fnl-plan__tutar">{ p.Tutar }</span>
+			<span class="fnl-plan__donem">{ p.Donem }</span>
+		</p>
+		<ul class="fnl-plan__ozellikler">
+			for _, o := range p.Ozellikler {
+				<li>
+					<span class="fnl-plan__tik" aria-hidden="true">
+						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+					</span>
+					{ o }
+				</li>
+			}
+		</ul>
+		<a class={ "fnl-pill", templ.KV("fnl-pill--iris", p.OneCikan), templ.KV("fnl-pill--hayalet", !p.OneCikan) } href={ p.CtaHref }>
+			{p.Ad} ile başla
+			<span class="fnl-pill__ok" aria-hidden="true">→</span>
+		</a>
+	</article>
+}
+
+// fnlBaslangic — üç adım.
+templ fnlBaslangic(v CDFunnel) {
+	<section class="fnl-bant fnl-bant--obsisdyen" aria-labelledby="fnl-baslangic-baslik">
+		<div class="fnl-wrap fnl-bant__ic">
+			<div class="fnl-baslik-blok fnl-belir">
+				<p class="fnl-eyebrow">Başlangıç</p>
+				<h2 class="fnl-display fnl-h2" id="fnl-baslangic-baslik">Üç adımda açılır.</h2>
+			</div>
+			<div class="fnl-adimlar">
+				<article class="fnl-adim">
+					<span class="fnl-adim__no" aria-hidden="true">01</span>
+					<h3 class="fnl-h4" style="margin-top:16px">Hesap oluştur</h3>
+					<p class="fnl-govde fnl-govde--kucuk fnl-soluk" style="margin-top:8px">
+						Ad, e-posta, telefon ve şifre. Telegram ile gireceksen kod
+						doğrulaması da gerekmiyor.
+					</p>
+				</article>
+				<article class="fnl-adim">
+					<span class="fnl-adim__no" aria-hidden="true">02</span>
+					<h3 class="fnl-h4" style="margin-top:16px">Planını seç</h3>
+					<p class="fnl-govde fnl-govde--kucuk fnl-soluk" style="margin-top:8px">
+						Ödemeyi kredi kartı, kripto veya havale ile yap; aboneliğin
+						genellikle aynı iş günü içinde açılır.
+					</p>
+				</article>
+				<article class="fnl-adim">
+					<span class="fnl-adim__no" aria-hidden="true">03</span>
+					<h3 class="fnl-h4" style="margin-top:16px">Telegram'ı bağla</h3>
+					<p class="fnl-govde fnl-govde--kucuk fnl-soluk" style="margin-top:8px">
+						Sinyaller sayfasındaki üç adım: kod oluştur, botu başlat, kodu
+						gönder. Bağlandığı anda yeni sinyaller telefonuna düşer.
+					</p>
+				</article>
+			</div>
+			<div class="fnl-cta-satir">
+				<a class="fnl-pill fnl-pill--iris" href={ v.KayitHref }>
+					Hesap oluştur
+					<span class="fnl-pill__ok" aria-hidden="true">→</span>
+				</a>
+				<a class="fnl-pill fnl-pill--hayalet" href={ v.PanelHref }>Panele git</a>
+			</div>
+		</div>
+	</section>
+}
+
+// fnlSorular — SSS. Cevap metni JSON-LD ile AYNI kaynaktan gelir.
+templ fnlSorular(v CDFunnel) {
+	<section class="fnl-bant fnl-bant--keten" id="sorular" aria-labelledby="fnl-sorular-baslik">
+		<div class="fnl-wrap fnl-bant__ic">
+			<div class="fnl-baslik-blok fnl-belir">
+				<p class="fnl-eyebrow">Sorular</p>
+				<h2 class="fnl-display fnl-h2" id="fnl-sorular-baslik">Aklında kalan olmasın.</h2>
+			</div>
+			<div class="fnl-sss">
+				for _, s := range v.SSS {
+					<details class="fnl-sss__oge">
+						<summary>
+							<span>{ s.Soru }</span>
+							<span class="fnl-sss__isaret" aria-hidden="true"></span>
+						</summary>
+						<div class="fnl-sss__govde">
+							<p>{ s.Cevap }</p>
+						</div>
+					</details>
+				}
+			</div>
+			<p class="fnl-govde fnl-govde--kucuk" style="margin-top:28px;color:#4c4d51">
+				Cevabını bulamadığın bir şey varsa <a href="/iletisim" style="color:#3d63ae">bize yaz</a>.
+			</p>
+		</div>
+	</section>
+}
+
+// fnlKapanis — son çağrı, aynı aurora ailesi (düşük yoğunlukta).
+templ fnlKapanis(v CDFunnel) {
+	<section class="fnl-kapanis" aria-labelledby="fnl-kapanis-baslik">
+		<div class="fnl-kapanis__huzme" aria-hidden="true"></div>
+		<div class="fnl-leke fnl-leke--iris" style="bottom:-220px;left:-160px" aria-hidden="true"></div>
+		<div class="fnl-leke fnl-leke--ember" style="bottom:-200px;right:-140px" aria-hidden="true"></div>
+		<div class="fnl-wrap fnl-kapanis__ic">
+			<p class="fnl-eyebrow" style="justify-content:center">Milyonerler Kulübü</p>
+			<h2 class="fnl-display fnl-h2" id="fnl-kapanis-baslik">Panelde görüşürüz.</h2>
+			<p class="fnl-govde">
+				Hesabını oluştur, planını birlikte açalım. İlk sinyal yayınlandığında
+				hem panelde hem Telegram'da olacak.
+			</p>
+			<div class="fnl-cta-satir">
+				<a class="fnl-pill fnl-pill--beyaz" href={ v.KayitHref }>
+					Hesap oluştur
+					<span class="fnl-pill__ok" aria-hidden="true">→</span>
+				</a>
+				<a class="fnl-pill fnl-pill--hayalet" href={ v.GirisHref }>Giriş yap</a>
+			</div>
+			<p class="fnl-kapanis__not">
+				Kripto varlıklar yüksek oynaklık taşır; anaparanın tamamını
+				kaybetme riski vardır. Paneldeki sinyaller ve performans verileri
+				yatırım tavsiyesi değildir.
+			</p>
+		</div>
+	</section>
+}
+
+// fnlAlt — alt bilgi.
+templ fnlAlt(v CDFunnel) {
+	<footer class="fnl-alt">
+		<span class="fnl-alt__hayalet" aria-hidden="true">{ v.Shell.SiteName }</span>
+		<div class="fnl-wrap">
+			<div class="fnl-alt__ust">
+				<div class="fnl-alt__marka">
+					if v.Shell.LogoURL != "" {
+						<img src={ v.Shell.LogoURL } alt={ v.Shell.SiteName } width="132" height="29" decoding="async"/>
+					} else {
+						<img src="/static/img/logo-bitcosar-2x.png" srcset="/static/img/logo-bitcosar-1x.png 1x, /static/img/logo-bitcosar-2x.png 2x" alt={ v.Shell.SiteName } width="132" height="29" decoding="async"/>
+					}
+					<p class="fnl-alt__slogan">
+						Milyonerler Kulübü için sinyal paneli. Girişi, stopu ve sonucu
+						kayıtlı.
+					</p>
+				</div>
+				<nav class="fnl-alt__menu" aria-label="Alt bilgi">
+					<a href={ v.PanelHref }>Panel</a>
+					<a href="#planlar">Planlar</a>
+					<a href="#sorular">Sorular</a>
+					<a href="/iletisim">İletişim</a>
+					<a href={ v.SiteHref }>bitcosar.com</a>
+				</nav>
+			</div>
+			<p class="fnl-alt__yasal">
+				Kripto varlıklar yüksek oynaklık taşır; kaldıraçlı işlemlerde
+				anaparanın tamamını kaybetme riski vardır. Bu sayfadaki sinyaller,
+				performans verileri ve oranlar bilgilendirme amaçlıdır; yatırım
+				danışmanlığı veya alım-satım tavsiyesi değildir. Geçmiş performans
+				gelecek getiriyi garanti etmez. Abonelik koşulları, ödeme ve iade
+				esasları panele giriş yaptığında geçerli olan sözleşmeye tabidir.
+			</p>
+			<p class="fnl-alt__telif">© 2026 { v.Shell.SiteName }. Tüm hakları saklıdır.</p>
+		</div>
+	</footer>
+}
