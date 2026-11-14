@@ -294,8 +294,20 @@ func (s *Server) withGuvenlik(next http.Handler) http.Handler {
 		karar := guvenlikHesapla(girdi)
 
 		// DB yazımı: sınıf değiştiyse veya 10 dk geçtiyse.
+		//
+		// ÇEREZSİZ SATIR YAZILMAZ (sayılan istisna hariç) — ÖLÇÜLEN KUSUR
+		// (14 Kasım 2026): ilk istekte çerez henüz yok (withKonum onu
+		// zincirin İÇİNDE yazıyor), bu yüzden anahtar "ip:<adres>" oluyor;
+		// ikinci istekte çerez gelince ayrı bir UUID satırı doğuyordu.
+		// Aynı ziyaretçi panelde İKİ satır görünüp "toplam profil"i
+		// şişiriyordu. Kural:
+		//   · çerez varsa            → yaz (kimlik kararlı)
+		//   · sayılmayan sınıf       → yaz (bot/arama/VPN çerez almaz,
+		//                              panelde görünmeleri gerekir)
+		//   · çerezsiz + sayılan     → YAZMA; birazdan çerezle gelecek
+		yaz := gecerliUUID(anahtar) || !karar.Sayilir
 		o := guvenlikDurumlari.ozet(anahtar)
-		if time.Since(o.SonYazma) > riskYazmaAralik || o.SonSinif != karar.Sinif {
+		if yaz && (time.Since(o.SonYazma) > riskYazmaAralik || o.SonSinif != karar.Sinif) {
 			guvenlikDurumlari.yazmaIsaretle(anahtar, karar.Sinif)
 			s.riskArkaPlandaYaz(karar)
 		}

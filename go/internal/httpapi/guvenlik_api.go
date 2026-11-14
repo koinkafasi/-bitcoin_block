@@ -58,14 +58,22 @@ func (s *Server) guvenlikAPI(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// ANAHTAR: çerez varsa tb_vid, yoksa "ip:<adres>" — withGuvenlik ile
+	// AYNI kural. Çerez yoksa isteği reddetmek yanlıştı (ölçüldü 14 Kasım
+	// 2026): canlıda beacon'ların hiçbiri gelmiyordu çünkü `tb_vid`
+	// HttpOnly olduğu için istemci çerezi göremiyor, "çerez yok" sanıp
+	// isteği hiç atmıyordu. Anonim kabul güvenli: anahtarın IP kısmını
+	// SUNUCU belirler, istemci kendi IP'sini seçemez; en kötü ihtimalle
+	// saldırgan KENDİ puanını yükseltir.
 	anahtar := s.ziyaretciID(w, r, false)
-	if anahtar == "" {
-		// Anonim beacon kabul edilmez: çerezsiz istek zaten ASN/UA
-		// katmanıyla sınıflanıyor.
-		w.WriteHeader(http.StatusNoContent)
-		return
-	}
 	ip := clientIP(r)
+	if anahtar == "" {
+		if ip == "" || isPrivateIP(ip) {
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+		anahtar = "ip:" + ip
+	}
 	ulke := cfUlke(r)
 
 	d := guvenlikDurumlari.al(anahtar, ip, ulke)

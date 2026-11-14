@@ -26,26 +26,23 @@
   var BEKLEME_MS = 2500;   // bağlantı ve etkileşim için kısa gözlem
   var ETKILESIM_MS = 6000; // "etkileşim yok" kararı bundan sonra
 
-  function cerezVar(ad) {
-    var parcalar = document.cookie ? document.cookie.split(';') : [];
-    for (var i = 0; i < parcalar.length; i++) {
-      var p = parcalar[i].trim();
-      if (p.indexOf(ad + '=') === 0) return true;
-    }
-    return false;
-  }
-
   // Aynı sekmede tekrar göndermemek için oturum işareti. Sayfa başına
   // DEĞİL oturum başına: aksi hâlde her makale görüntülemesi bir istek
   // daha atardı (gereksiz yük).
+
+  // ÇEREZ KAPISI YOK — ÖLÇÜLEN KUSUR (14 Kasım 2026):
+  // `tb_vid` HttpOnly olduğu için `document.cookie` onu HİÇ göstermez.
+  // İlk sürüm "çerez yoksa gönderme" diyordu; sonuç: canlıda tek bir
+  // beacon bile gitmedi (gerçek Chromium ölçümü: /api/guvenlik isteği 0).
+  // Sunucu anahtarı çerez yoksa "ip:<adres>" olarak kuruyor (bkz.
+  // withGuvenlik), beacon da aynı anahtarla yazılır. İstemciye güvenmek
+  // gerekmiyor: IP'yi sunucu kendi görüyor.
   try {
     if (sessionStorage.getItem(OTURUM_ANAHTAR)) return;
     sessionStorage.setItem(OTURUM_ANAHTAR, '1');
   } catch (e) {
     /* gizli modda sessionStorage atabilir; yine de devam */
   }
-
-  if (!cerezVar('tb_vid')) return;
 
   // ---- WebGL çizim birimi: yazılım rasterleştirici headless işaretidir.
   function gpuBilgisi() {
