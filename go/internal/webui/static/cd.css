@@ -5976,17 +5976,12 @@ html.dark {
 
 /* Orta kolonun tepesindeki liderboard — 14 Kasım 2026.
    Yuva ÇİZGİDEN ÇİZGİYE: iki yandaki dikey ayırma çizgileri orta
-   kolonun 40 px dışında duruyor, yani yuva 608 + 2×40 = 688 px.
-   Coinzilla bölgesi 728×90 SABİT — genişlik parametresi yok sayılıyor
-   (ölçüldü: 608 istendiğinde de 728×90 iframe basıldı, `serve/view.php?
-   w=728&h=90`). Bu yüzden kreatif kırpılmıyor, ÖLÇEKLENİYOR:
-   688/728 = 0.945055 → 688×85; kenarları tam çizgilerin üstüne oturur.
-   `max-width: none` şart: `.cd-reklam iframe` kuralı iframe'i 688'e
-   sıkıştırıyor, sonra ölçek 650'ye düşürüyordu (ölçüldü).
-
-   Yuva yüksekliği 90 px kalıyor, alt boşluk 8 px; orta kolonun öğe
-   arası 16 px olduğu için toplam 24 → manşet başlığı "Canlı Yayın" ve
-   "Bugünün Videoları" ile AYNI hizada başlıyor (ölçüldü: 819 px). */
+   kolonun 40 px dışında duruyor, yani yuva = kolon + 2×40 px
+   (1440'ta 608 + 80 = 688; dar ekranda kolonla birlikte daralır).
+   Coinzilla iframe'i `width: 100%` ile geliyor (ölçüldü) — yani yuva
+   genişliğine UYUYOR, sabit 728 basmıyor; bu yüzden kırpma/ölçekleme
+   gerekmiyor, yuvayı doğru genişliğe koymak yetiyor.
+   `!important` şart: ağ yuvaya satır içi `width: 728px` yazıyor. */
 .cd-hero__orta > .cd-reklam {
   align-self: center;
   margin: 0 0 8px;
@@ -5994,17 +5989,10 @@ html.dark {
 
 @media (min-width: 1284px) {
   .cd-hero__orta > .cd-reklam {
+    align-self: flex-start;
     width: calc(100% + 80px) !important;
     max-width: none !important;
     margin-left: -40px;
-  }
-
-  /* Ağ yuvaya satır içi `display: inline-block` ve 728 px yazıyor;
-     içerik soldan başladığı için ölçek de sol kenardan uygulanıyor. */
-  .cd-hero__orta > .cd-reklam > * {
-    max-width: none;
-    transform-origin: left center;
-    transform: scale(0.945055);
   }
 }
 
