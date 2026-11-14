@@ -14,7 +14,7 @@ const dmcaDogrulamaJeton = "UlpPYStLTW94b1g3aW96c25tRWc0Zz090"
 
 // handleDMCADogrulama /dmca-validation.html sunar.
 //
-// Yol KÖKTEN isteniyor; /static/ altına konan dosya işe yaramaz. Jeton 40
+// Yol KÖKTEN isteniyor; /static/ altına konan dosya işe yaramaz. Jeton 33
 // bayt olduğu için gömülü dosya yerine sabit tutuluyor — ayrı bir dosya
 // yolu, embed listesi ve disk bağımlılığı getirirdi.
 //
