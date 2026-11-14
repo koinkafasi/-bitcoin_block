@@ -105,6 +105,7 @@
       'resmi-ilanlar': 'Resmi İlanlar', reklamlar: 'Reklamlar', adsense: 'AdSense / GA',
       raporlar: 'Raporlar', siteler: 'Siteler', bot: 'Bot', 'ai-kaynak': 'AI Kaynak',
       ziyaretciler: 'Ziyaretçi Konumu',
+      'trafik-guvenligi': 'Trafik Güvenliği',
       ayarlar: 'Ayarlar', gorunum: 'Görünüm', merkez: 'Site Merkezi', menu: 'Menü',
       iletisim: 'İletişim & Form',
       header: 'Header', footer: 'Footer', marka: 'Marka', mahrecler: 'Mahreçler',
@@ -492,8 +493,8 @@
         match: [/^\/admin\/seo(\/|$)/, /^\/admin\/backlink(\/|$)/, /^\/admin\/indexleme(\/|$)/, /^\/admin\/tasima(\/|$)/, /^\/admin\/paylasim(\/|$)/, /^\/admin\/bulten(\/|$)/],
         items: [['SEO & İç Link', '/admin/seo'], ['İç Link Ağı', '/admin/backlink'], ['İndeksleme', '/admin/indexleme'], ['Taşıma & 301', '/admin/tasima'], ['Sosyal Paylaşım', '/admin/paylasim'], ['Bülten', '/admin/bulten']] },
       { id: 'gelir', label: 'Gelir',
-        match: [/^\/admin\/reklamlar(\/|$)/, /^\/admin\/adsense(\/|$)/, /^\/admin\/raporlar(\/|$)/, /^\/admin\/ziyaretciler(\/|$)/],
-        items: [['Reklamlar', '/admin/reklamlar'], ['AdSense / GA', '/admin/adsense'], ['Raporlar', '/admin/raporlar'], ['Ziyaretçi', '/admin/ziyaretciler']] },
+        match: [/^\/admin\/reklamlar(\/|$)/, /^\/admin\/adsense(\/|$)/, /^\/admin\/raporlar(\/|$)/, /^\/admin\/ziyaretciler(\/|$)/, /^\/admin\/trafik-guvenligi(\/|$)/],
+        items: [['Reklamlar', '/admin/reklamlar'], ['AdSense / GA', '/admin/adsense'], ['Raporlar', '/admin/raporlar'], ['Ziyaretçi', '/admin/ziyaretciler'], ['Trafik Güvenliği', '/admin/trafik-guvenligi']] },
       // "Üretim Hattı" İLK SIRADA: hattın çalışıp çalışmadığı bu
       // çalışma alanındaki diğer her şeyin ön koşulu. Yan menüye 12.
       // madde eklemek yerine buraya kondu — menü bilerek 11 çalışma

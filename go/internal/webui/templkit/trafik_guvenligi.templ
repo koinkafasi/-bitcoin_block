@@ -1,0 +1,357 @@
+// Trafik güvenliği paneli — /admin/trafik-guvenligi.
+//
+// NEDEN AYRI SAYFA: soru "kaç okunma var" değil, "bu okumaların kaçı
+// gerçek". Ziyaretçi konumu sayfası coğrafyayı gösterir; bu sayfa sayının
+// GÜVENİLİRLİĞİNİ gösterir. İkisini tek sayfada karıştırmak, "12.483
+// ziyaretçi" rakamının yanına sessizce "1.902'si bot" yazmak olurdu.
+//
+// TASARIM DİLİ: ziyaretçi paneliyle aynı (kendi sınıf öneki, panelin
+// değişkenleri). Pano `.pn-*` sınıfları KULLANILMAZ — o grid `.pn-view`
+// sarmalayıcısına bağlı; 14 Kasım'da ölçüldü, KPI'lar düz metne düşüyordu.
+package templkit
+
+// TrafikGuvenligiView sayfanın tüm verisi.
+type TrafikGuvenligiView struct {
+	Gun int
+	// Aktif: güvenlik katmanı açık mı? Kapalıyken sayım eski davranışta.
+	Aktif bool
+
+	// Politika (formun açık/kapalı durumları).
+	VPNEngel     bool
+	HostingEngel bool
+	BotEngel     bool
+	WebRTC       bool
+	EsikYuksek   int
+	EsikBot      int
+
+	// KPI
+	Toplam  int64
+	Gercek  int64 // temiz
+	Supheli int64
+	Yuksek  int64
+	Bot     int64
+	Arama   int64
+	VPN     int64
+	Hosting int64
+	Tor     int64
+	// GercekYuzde: temiz / toplam.
+	GercekYuzde int
+
+	ASN       []GuvenlikASNSatir
+	Sinyaller []GuvenlikSinyalSatir
+	Satirlar  []GuvenlikRiskSatir
+}
+
+type GuvenlikASNSatir struct {
+	Etiket string
+	Tur    string // hosting|vpn|mobil|konut|...
+	ASN    int
+	Adet   int64
+	Pay    float64
+}
+
+type GuvenlikSinyalSatir struct {
+	Kod  string
+	Ad   string
+	Adet int64
+	Pay  float64
+}
+
+type GuvenlikRiskSatir struct {
+	Sinif       string // temiz|supheli|yuksek|bot|arama
+	SinifAd     string
+	Puan        int
+	Saglayici   string
+	Tur         string
+	TurAd       string
+	Ulke        string
+	IP          string
+	WebRTCIP    string
+	Sinyaller   []string
+	IstekSayisi int64
+	SonGorulme  string
+}
+
+// TrafikGuvenligiPanel paneli çizer.
+templ TrafikGuvenligiPanel(v TrafikGuvenligiView) {
+	<div id="trafik-guvenligi" class="tg">
+		// BAŞLIK GÖSTERİLMEZ: admin yerleşimi `d.Title`ı zaten büyük H1
+		// olarak basıyor. Burada ikinci bir H1 basmak ölçüldü (14 Kasım
+		// 2026): sayfa "Trafik Güvenliği — Bitcoşar" ve "Trafik Güvenliği"
+		// diye iki kez başlıyordu.
+		<div class="tg-baslik">
+			<p class="tg-baslik__alt">
+				VPN, proxy, veri merkezi ve bot trafiğini ayırır; gerçek ziyaretçi sayısını
+				bunlardan arındırır.
+			</p>
+			<div class="tg-baslik__sag">
+				if v.Aktif {
+					<span class="tg-durum tg-durum--acik">koruma açık</span>
+				} else {
+					<span class="tg-durum tg-durum--kapali">koruma kapalı</span>
+				}
+				for _, g := range []int{7, 30, 90} {
+					if g == v.Gun {
+						<a class="tg-sec tg-sec--aktif" href={ templ.SafeURL("/admin/trafik-guvenligi?gun=" + itoaT(g)) } aria-current="page">{ itoaT(g) } gün</a>
+					} else {
+						<a class="tg-sec" href={ templ.SafeURL("/admin/trafik-guvenligi?gun=" + itoaT(g)) }>{ itoaT(g) } gün</a>
+					}
+				}
+			</div>
+		</div>
+
+		if !v.Aktif {
+			<div class="flash warn" style="margin-top:12px">
+				Güvenlik katmanı KAPALI: okunmalar bot/VPN ayrımı yapılmadan sayılıyor.
+				Aşağıdaki politikadan açabilirsiniz.
+			</div>
+		}
+
+		// KPI — beş döşeme. "Gerçek" ile "toplam" yan yana: fark, kaybettiğin
+		// gerçek olmayan trafiktir.
+		<div class="tg-kpiler">
+			<div class="tg-kpi tg-kpi--1">
+				<span class="tg-kpi__etiket">Toplam profil</span>
+				<span class="tg-kpi__deger">{ sayiMetni64(v.Toplam) }</span>
+				<span class="tg-kpi__not">son { itoaT(v.Gun) } günde görülen tarayıcı</span>
+			</div>
+			<div class="tg-kpi tg-kpi--2">
+				<span class="tg-kpi__etiket">Gerçek ziyaretçi</span>
+				<span class="tg-kpi__deger">{ sayiMetni64(v.Gercek) }</span>
+				<span class="tg-kpi__not">%{ itoaT(v.GercekYuzde) } · bunlar sayılıyor</span>
+			</div>
+			<div class="tg-kpi tg-kpi--3">
+				<span class="tg-kpi__etiket">Şüpheli / yüksek</span>
+				<span class="tg-kpi__deger">{ sayiMetni64(v.Supheli + v.Yuksek) }</span>
+				<span class="tg-kpi__not">sayılmıyor, reklam gizli</span>
+			</div>
+			<div class="tg-kpi tg-kpi--4">
+				<span class="tg-kpi__etiket">Bot</span>
+				<span class="tg-kpi__deger">{ sayiMetni64(v.Bot) }</span>
+				<span class="tg-kpi__not">engelleniyor, sayılmıyor</span>
+			</div>
+			<div class="tg-kpi tg-kpi--5">
+				<span class="tg-kpi__etiket">VPN / veri merkezi</span>
+				<span class="tg-kpi__deger">{ sayiMetni64(v.VPN + v.Hosting) }</span>
+				<span class="tg-kpi__not">{ sayiMetni64(v.VPN) } VPN · { sayiMetni64(v.Hosting) } hosting · { sayiMetni64(v.Tor) } Tor</span>
+			</div>
+		</div>
+
+		<div class="tg-ikili">
+			// SAĞLAYICI DAĞILIMI
+			<div class="card card-pad">
+				<h2 class="tg-h2">Ağ sağlayıcıları</h2>
+				<p class="tg-not">Hangi ağlardan geldiğiniz. Veri merkezi ve VPN satırları şüphenin kaynağı.</p>
+				if len(v.ASN) == 0 {
+					<p class="muted">Henüz ASN verisi yok. İlk ziyaretlerle dolar.</p>
+				}
+				for _, a := range v.ASN {
+					<div class="tg-satir">
+						<div class="tg-satir__ust">
+							<span class="tg-satir__ad">
+								{ a.Etiket }
+								if a.ASN > 0 {
+									<span class="tg-soluk">AS{ itoaT(a.ASN) }</span>
+								}
+								<span class={"tg-tur tg-tur--" + a.Tur}>{ a.Tur }</span>
+							</span>
+							<span class="badge">{ sayiMetni64(a.Adet) }</span>
+						</div>
+						<div class="tg-cubuk">
+							<div class={"tg-cubuk__ic tg-cubuk__ic--" + a.Tur} style={ "width:" + yuzdeMetni(a.Pay) }></div>
+						</div>
+					</div>
+				}
+			</div>
+
+			// SİNYAL KIRILIMI
+			<div class="card card-pad">
+				<h2 class="tg-h2">Sinyal kırılımı</h2>
+				<p class="tg-not">Hangi kanıt kaç ziyaretçide görüldü. Puanlar toplanarak sınıfı belirler.</p>
+				if len(v.Sinyaller) == 0 {
+					<p class="muted">Sinyal yok: ya trafik temiz ya katman yeni açıldı.</p>
+				}
+				for _, s := range v.Sinyaller {
+					<div class="tg-satir">
+						<div class="tg-satir__ust">
+							<span class="tg-satir__ad">{ s.Ad } <span class="tg-soluk">{ s.Kod }</span></span>
+							<span class="badge">{ sayiMetni64(s.Adet) }</span>
+						</div>
+						<div class="tg-cubuk">
+							<div class="tg-cubuk__ic tg-cubuk__ic--supheli" style={ "width:" + yuzdeMetni(s.Pay) }></div>
+						</div>
+					</div>
+				}
+			</div>
+		</div>
+
+		// RİSKLİ ZİYARETÇİLER
+		<div class="card card-pad" style="margin-top:16px">
+			<h2 class="tg-h2">Riskli ziyaretçiler</h2>
+			<p class="tg-not">
+				IP'ler maskeli. "Sızan IP", tarayıcının WebRTC ile açığa verdirdiği ve
+				sunucunun gördüğünden farklı adrestir — VPN'in arkasını gösterir.
+			</p>
+			if len(v.Satirlar) == 0 {
+				<p class="muted">Kayıt yok.</p>
+			} else {
+				<div class="table-scroll">
+					<table class="table tg-tablo">
+						<thead>
+							<tr>
+								<th>Sınıf</th>
+								<th>Puan</th>
+								<th>Sağlayıcı</th>
+								<th>Ülke</th>
+								<th>IP</th>
+								<th>Sızan IP</th>
+								<th>Sinyaller</th>
+								<th>İstek</th>
+								<th>Son görülme</th>
+							</tr>
+						</thead>
+						<tbody>
+							for _, s := range v.Satirlar {
+								<tr>
+									<td><span class={"tg-rozet tg-rozet--" + s.Sinif}>{ s.SinifAd }</span></td>
+									<td>
+										<div class="tg-puan">
+											<span class="tg-puan__deger">{ itoaT(s.Puan) }</span>
+											<div class="tg-puan__bar">
+												<div class={"tg-puan__ic tg-puan__ic--" + s.Sinif} style={ "width:" + yuzdeMetni(float64(s.Puan)) }></div>
+											</div>
+										</div>
+									</td>
+									<td>
+										if s.Saglayici == "" {
+											<span class="muted">—</span>
+										} else {
+											<span>{ s.Saglayici }</span>
+											<span class="tg-soluk">{ s.TurAd }</span>
+										}
+									</td>
+									<td>
+										if s.Ulke == "" {
+											<span class="muted">—</span>
+										} else {
+											{ s.Ulke }
+										}
+									</td>
+									<td><code class="tg-kod">{ s.IP }</code></td>
+									<td>
+										if s.WebRTCIP == "" {
+											<span class="muted">—</span>
+										} else {
+											<code class="tg-kod tg-kod--sizinti">{ s.WebRTCIP }</code>
+										}
+									</td>
+									<td>
+										<div class="tg-ciplar">
+											for _, sn := range s.Sinyaller {
+												<span class="tg-cip">{ sn }</span>
+											}
+										</div>
+									</td>
+									<td class="muted">{ sayiMetni64(s.IstekSayisi) }</td>
+									<td class="muted">{ s.SonGorulme }</td>
+								</tr>
+							}
+						</tbody>
+					</table>
+				</div>
+			}
+		</div>
+
+		// POLİTİKA
+		<div class="card card-pad" style="margin-top:16px">
+			<h2 class="tg-h2">Politika</h2>
+			<p class="tg-not">
+				Varsayılan: veri merkezi engellenir, ticari VPN yalnız işaretlenir.
+				VPN'in arkasında gerçek okuyucu olabilir; engellemek okuyucu kaybettirir.
+			</p>
+			<form method="post" action="/admin/trafik-guvenligi" class="tg-form">
+				<label class="tg-anahtar">
+					<input type="checkbox" name="aktif" value="1" checked?={ v.Aktif }/>
+					<span>
+						<strong>Koruma açık</strong>
+						<em>Kapatılırsa sayım eski davranışa döner (her istek sayılır).</em>
+					</span>
+				</label>
+				<label class="tg-anahtar">
+					<input type="checkbox" name="hosting_engel" value="1" checked?={ v.HostingEngel }/>
+					<span>
+						<strong>Veri merkezi / hosting engelle</strong>
+						<em>Hetzner, DigitalOcean, OVH… Gerçek okuyucu neredeyse hiç gelmez.</em>
+					</span>
+				</label>
+				<label class="tg-anahtar">
+					<input type="checkbox" name="vpn_engel" value="1" checked?={ v.VPNEngel }/>
+					<span>
+						<strong>Ticari VPN ve Tor engelle</strong>
+						<em>Kapalıyken işaretlenir ve sayılmaz, ama sayfa açılır.</em>
+					</span>
+				</label>
+				<label class="tg-anahtar">
+					<input type="checkbox" name="bot_engel" value="1" checked?={ v.BotEngel }/>
+					<span>
+						<strong>Bot engelle</strong>
+						<em>Yüksek riskli istekler 403 alır.</em>
+					</span>
+				</label>
+				<label class="tg-anahtar">
+					<input type="checkbox" name="webrtc" value="1" checked?={ v.WebRTC }/>
+					<span>
+						<strong>WebRTC sızıntı tespiti</strong>
+						<em>Gizlilik maliyeti: tarayıcı yerel ağ adresini açığa verebilir. Yalnız sayısal IP karşılaştırılır.</em>
+					</span>
+				</label>
+
+				<div class="tg-esikler">
+					<label class="tg-esik">
+						<span>Yüksek risk eşiği</span>
+						<input type="number" name="esik_yuksek" min="30" max="100" value={ itoaT(v.EsikYuksek) }/>
+						<em>Bu puanın üstü sayılmaz ve reklam gizlenir.</em>
+					</label>
+					<label class="tg-esik">
+						<span>Bot eşiği</span>
+						<input type="number" name="esik_bot" min="50" max="100" value={ itoaT(v.EsikBot) }/>
+						<em>Bu puanın üstü engellenir.</em>
+					</label>
+				</div>
+
+				<div class="tg-form__alt">
+					<button class="btn" type="submit">Politikayı kaydet</button>
+				</div>
+			</form>
+		</div>
+
+		// SINIRLAR — dürüstlük kartı.
+		<div class="card card-pad" style="margin-top:16px">
+			<h2 class="tg-h2">Ne yapabilir, ne yapamaz</h2>
+			<ul class="tg-bilgi">
+				<li>
+					<strong>Yapabilir:</strong> veri merkezi ve ticari VPN ağlarını sağlayıcı
+					(ASN) düzeyinde tanır; sahte botları, tuzak yolu izleyenleri ve hız
+					sınırını aşanları ayırır; VPN'in arkasındaki gerçek bağlantıyı
+					WebRTC sızıntısı varsa yakalar.
+				</li>
+				<li>
+					<strong>Yapamaz:</strong> VPN arkasındaki gerçek IP'yi kriptografik
+					olarak çıkaramaz. Konut proxy ağı (ev interneti üzerinden satılan
+					proxy) ASN'de "konut" görünür; bu katman onu ancak davranış
+					sinyalleriyle yakalayabilir.
+				</li>
+				<li>
+					<strong>İlk istek ödünleşimi:</strong> yeni bir IP'de ASN sorgusu
+					120 ms'yi aşarsa sınıflandırma tarayıcı başlıklarıyla yapılır,
+					ağ bilgisi arka planda tamamlanır. Yani bir botun ilk isteği
+					temiz görünebilir; sonraki istekler doğru sınıflanır.
+				</li>
+				<li>
+					<strong>Gizlilik:</strong> IP'ler panelde maskelenir, kişisel kimlikle
+					birleştirilmez; ziyaretçi başına tek satır tutulur.
+				</li>
+			</ul>
+		</div>
+	</div>
+}

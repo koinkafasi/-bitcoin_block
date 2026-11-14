@@ -96,10 +96,27 @@ func (s *Server) okunmaKaydet(ctx context.Context, id int64) {
 	if ctx.Value(okunmaSaymaAnahtari{}) != nil {
 		return // arka plan yenilemesi: kullanıcı okuması değil
 	}
+	if !okunmaSayilirCtx(ctx) {
+		return // güvenlik kararı: bot/VPN/şüpheli → sayılmaz
+	}
 	if okunmayiIsaretle(ctx, id) {
 		return // sayfa önbelleği katmanı sayacak
 	}
 	okunmaTamponu.ekle(id)
+}
+
+// okunmaSayilirCtx okunmanın sayılıp sayılmayacağını güvenlik kararından
+// okur. Karar yoksa (güvenlik katmanı kapalı) SAYILIR — eski davranış.
+//
+// NEDEN CTX: okunmaKaydet yalnız bağlam alıyor; karar middleware tarafından
+// aynı bağlama konuyor. Ayrı bir parametre geçirmek tüm çağrı zincirini
+// değiştirirdi.
+func okunmaSayilirCtx(ctx context.Context) bool {
+	k, ok := ctx.Value(guvenlikKarariAnahtari{}).(*guvenlikKarari)
+	if !ok || k == nil {
+		return true
+	}
+	return k.Sayilir
 }
 
 func OkunmaSayaciBaslat(ctx context.Context, pool *pgxpool.Pool, logger *slog.Logger, aralik time.Duration) {

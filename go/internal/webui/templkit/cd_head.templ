@@ -292,6 +292,10 @@ templ cdHead(h CDHead) {
 	// Konum: izin penceresi + panel kapısı. Sunucu tarafı ülke kaydı
 	// middleware'de; bu betik yalnız GERÇEK koordinat için.
 	<script src={ "/static/konum.js?v=" + cdVarlik() } defer></script>
+	// TRAFİK GÜVENLİĞİ: tarayıcının gördüğü sinyaller (WebRTC sızıntısı,
+	// webdriver, saat dilimi, etkileşim). Sunucu bunları YALNIZ puan
+	// yükseltmek için kullanır; "ben temizim" diyen istemci puanı düşüremez.
+	<script src={ "/static/guvenlik.js?v=" + cdVarlik() } defer></script>
 	// ÜÇÜNCÜ TARAF ENTEGRASYONLAR — satır içi KOD YOK.
 	//
 	// GA4 / GTM / Coinzilla / Cointraffic kimlikleri `data-*` ile geçilir;

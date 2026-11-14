@@ -189,8 +189,19 @@ func NewServerApp(cfg config.Config, logger *slog.Logger, pool *pgxpool.Pool, bu
 	s.routes()
 
 	return &http.Server{
-		Addr:         cfg.ListenAddr,
-		Handler:      s.withSayfaOnbellek(s.disKatman(s.withRequestID(s.withSecurityHeaders(s.withSameOrigin(s.withIPBlock(s.withSite(s.withHTMLCSP(s.localeAliasMiddleware(s.withKonum(s.mux)))))))))),
+		Addr: cfg.ListenAddr,
+		Handler: s.withGuvenlik(
+			s.withSayfaOnbellek(
+				s.disKatman(
+					s.withRequestID(
+						s.withSecurityHeaders(
+							s.withSameOrigin(
+								s.withIPBlock(
+									s.withSite(
+										s.withHTMLCSP(
+											s.localeAliasMiddleware(
+												s.withKonum(
+													s.mux))))))))))),
 		ReadTimeout:  15 * time.Second,
 		WriteTimeout: 60 * time.Second,
 		IdleTimeout:  60 * time.Second,
@@ -400,6 +411,9 @@ func (s *Server) routes() {
 	// Ülke katmanı middleware'de (withKonum) toplanır, burada yalnız
 	// enlem/boylam kaydedilir.
 	s.mux.HandleFunc("POST /api/konum", s.konumAPI)
+	// Trafik güvenliği: tarayıcının gördüğü sinyaller (WebRTC/webdriver/
+	// saat dilimi). Yalnız PUANI YÜKSELTİR — gerekçe guvenlik_api.go.
+	s.mux.HandleFunc("POST /api/guvenlik", s.guvenlikAPI)
 	s.mux.HandleFunc("GET /api/hava/{slug}", s.handleAPIHava)
 	s.mux.HandleFunc("GET /api/trends", s.handleAPITrends)
 	s.mux.HandleFunc("GET /api/digest", s.handleAPIDigest)
@@ -716,6 +730,8 @@ func (s *Server) routes() {
 		{"POST", "/admin/dosyalar/toplu", s.handleMediaBulk},
 		{"GET", "/admin/raporlar", s.handleReports},
 		{"GET", "/admin/ziyaretciler", s.handleZiyaretciler},
+		{"GET", "/admin/trafik-guvenligi", s.handleTrafikGuvenligi},
+		{"POST", "/admin/trafik-guvenligi", s.handleTrafikGuvenligiKaydet},
 		{"GET", "/admin/raporlar/ai-export", s.handleReportsAIExport},
 		{"GET", "/admin/yorumlar", s.handleCommentsGet},
 		{"POST", "/admin/yorumlar/{id}/onayla", s.handleCommentApprove},

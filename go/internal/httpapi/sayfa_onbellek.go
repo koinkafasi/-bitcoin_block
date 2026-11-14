@@ -317,7 +317,11 @@ func (s *Server) withSayfaOnbellek(next http.Handler) http.Handler {
 			} else {
 				cache.bayat.Add(1)
 			}
-			if g.okunmaID != 0 {
+			// SAYIM KAPISI: önbellek isabetinde sayfa kim gelirse gelsin
+			// servis edilir, ama SAYIM yalnız güvenlik kararı "sayılır"
+			// diyorsa yapılır. Ölçülen sızıntı buydu: bot, önbellekteki
+			// yazıyı tekrar tekrar isteyip okunma yazdırabiliyordu.
+			if g.okunmaID != 0 && sayilirMi(r) {
 				okunmaTamponu.ekle(g.okunmaID)
 			}
 			s.sayfaSun(w, r, g)
@@ -341,10 +345,23 @@ func (s *Server) withSayfaOnbellek(next http.Handler) http.Handler {
 			next.ServeHTTP(cw, r)
 			if g, ok := sayfaGirdiCikar(cw); ok {
 				g.okunmaID = isaret.al()
-				if g.okunmaID != 0 {
+				// Aynı kapı: yeni üretimde de karar sayılır demiyorsa yazma.
+				if g.okunmaID != 0 && sayilirMi(r) {
 					okunmaTamponu.ekle(g.okunmaID)
 				}
 				cache.koy(anahtar, g)
+			} else if id := isaret.al(); id != 0 && sayilirMi(r) {
+				// ÖLÇÜLEN KUSUR (14 Kasım 2026): yanıt önbelleğe
+				// ALINAMADIĞINDA sayım tamamen kayboluyordu. Sebep:
+				// çerezi olmayan ziyaretçiye `Set-Cookie` yazılıyor
+				// (withKonum → tb_vid/tb_geo), önbellek böyle yanıtı
+				// saklamıyor, handler da sayımı önbellek katmanına
+				// devretmiş oluyordu (okunmayiIsaretle) → kimse saymıyor.
+				// Ölçüm: çerezsiz 3 istek → hit +0; çerezli 3 istek → +3.
+				// Düzeltme: önbelleğe alınamayan yanıtın okunması BURADA
+				// sayılır. Aynı istek iki kez sayılmaz çünkü bu dal yalnız
+				// önbelleğe yazma başarısızken çalışır.
+				okunmaTamponu.ekle(id)
 			}
 			return
 		}
