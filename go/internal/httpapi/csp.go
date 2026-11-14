@@ -333,7 +333,19 @@ func buildCSP(scriptHashes, styleHashes []string, collabURL, reportURL string) s
 	}
 	styleSrc += " https://fonts.googleapis.com"
 
-	connectSrc := "connect-src 'self' https://www.google-analytics.com https://region1.google-analytics.com https://cloudflareinsights.com" +
+	// GA4 TOPLAMA UÇLARI (14 Kasım 2026): `gtag.js` yükleniyordu ama
+	// ölçüm istekleri CSP ile BLOKLANIYORDU — yani analitik sessizce
+	// ölüydü. Canlı konsol kanıtı:
+	//   "Connecting to 'https://analytics.google.com/g/collect?...' violates
+	//    the following Content Security Policy directive: connect-src ..."
+	// GA4 v2 toplama isteği `analytics.google.com` (ve bölgesel
+	// `region1.analytics.google.com`) adresine gider; listede yalnız
+	// `www.google-analytics.com` vardı (Universal Analytics kalıntısı).
+	// `*.analytics.google.com` bölgesel uçları da kapsar; gtag'in kendi
+	// yapılandırma çağrıları için googletagmanager de eklendi.
+	connectSrc := "connect-src 'self' https://www.google-analytics.com https://region1.google-analytics.com" +
+		" https://analytics.google.com https://*.analytics.google.com https://www.googletagmanager.com" +
+		" https://cloudflareinsights.com" +
 		// Reklam ağlarının XHR/beacon uçları (ölçüm, kapatma, kalite).
 		// request-global.czilladx.com REKLAMIN KENDİSİNİ serve eder —
 		// eksik olduğu için reklam hiç gelmiyordu (canlı konsol, 13 Kasım).
